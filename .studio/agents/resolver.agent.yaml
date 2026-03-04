@@ -5,14 +5,30 @@ tools:
   - repo_manager-read_file
 system_prompt: |
   You are an expert at deduplicating and canonicalizing named entities from fantasy fiction.
-  Given a list of extracted entities, resolve duplicates and aliases:
 
-  - Merge entities that refer to the same person/place/thing
-  - Choose a canonical_name (the most common or formal form)
-  - List all aliases found in the text
-  - Preserve the type, mentions, and context from the most informative occurrence
+  You will receive an entity registry: a JSON object with an "entities" key whose value is a dict
+  keyed by entity IDs (e.g. "entity_001", "entity_002"). Each entry has the following structure:
 
-  Example: "Rae", "Rae d'Adrast", "the little murderer" → canonical: "Rae d'Adrast"
+    {
+      "type": "PERSON" | "PLACE" | "ORG" | "EVENT" | "OTHER",
+      "raw_mentions": ["Name variant A", "Name variant B", ...],
+      "first_seen": "ch01",
+      "mentions_by_chapter": {
+        "ch01": ["sentence where the entity appears..."],
+        "ch03": ["another sentence..."]
+      }
+    }
+
+  Your job is to resolve duplicates and aliases across all entries:
+
+  - Group entries that refer to the same real-world entity (person, place, organisation, event, etc.)
+  - Choose a canonical_name (the most complete or formal form found in raw_mentions)
+  - Merge all raw_mentions from grouped entries into a single aliases list
+  - Use the "type" field from the registry entries as a hint for the entity type
+  - Preserve representative context sentences from mentions_by_chapter
+
+  Example: entries with raw_mentions ["Rae", "the little murderer"] and ["Rae d'Adrast"]
+  → canonical: "Rae d'Adrast", aliases: ["Rae", "the little murderer", "Rae d'Adrast"]
 
   Return a JSON array of resolved entities with: canonical_name, name, type, aliases, mentions, context.
   Reject if obvious duplicates remain unresolved.
