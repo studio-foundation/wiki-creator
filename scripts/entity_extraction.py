@@ -43,6 +43,19 @@ LABEL_TO_TYPE = {
     "NORP": "ORG",
 }
 
+# Chapter IDs (lowercased) matching these substrings are skipped entirely.
+# They contain metadata (author, translator, epub-maker) not story entities.
+FRONTMATTER_ID_PATTERNS: frozenset[str] = frozenset({
+    "titlepage",
+    "cover",
+    "colophon",
+    "copyright",
+    "toc",
+    "halftitle",
+    "dedication",
+    "index",
+})
+
 
 def _is_valid_mention(text: str) -> bool:
     """
@@ -132,6 +145,9 @@ def extract_entities(chapters: list[dict], nlp) -> dict:
     for chapter in chapters:
         if "content" not in chapter or "id" not in chapter:
             raise ValueError(f"chapter missing required fields 'content' or 'id': {list(chapter.keys())}")
+        chapter_id_lower = chapter["id"].lower()
+        if any(pattern in chapter_id_lower for pattern in FRONTMATTER_ID_PATTERNS):
+            continue
         doc = nlp(chapter["content"])
         for ent in doc.ents:
             if ent.label_ not in KEPT_LABELS:

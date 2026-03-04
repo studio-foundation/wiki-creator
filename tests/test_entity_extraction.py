@@ -5,7 +5,7 @@ import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from scripts.entity_extraction import extract_entities, extract_context, split_entities, KEPT_LABELS, _is_valid_mention
+from scripts.entity_extraction import extract_entities, extract_context, split_entities, KEPT_LABELS, _is_valid_mention, FRONTMATTER_ID_PATTERNS
 
 
 @pytest.fixture(scope="module")
@@ -234,3 +234,49 @@ def test_is_valid_mention_accepts_valid_names():
     assert _is_valid_mention("Merci") is True   # ambiguous — left to LLM
     assert _is_valid_mention("Balthazar") is True
     assert _is_valid_mention("Don Basilio") is True
+
+
+# --- Frontmatter chapter skip tests ---
+
+
+def test_frontmatter_patterns_exist():
+    """The module must export a frozenset of lowercase frontmatter patterns."""
+    assert isinstance(FRONTMATTER_ID_PATTERNS, (set, frozenset))
+    assert "titlepage" in FRONTMATTER_ID_PATTERNS
+
+
+def test_skips_titlepage_chapter(nlp):
+    """Entities from a Titlepage.xhtml chapter must not appear in the registry."""
+    chapters = [
+        {"id": "Titlepage.xhtml", "title": "Title Page",
+         "content": "Harry Potter is a renowned wizard from England."},
+        {"id": "ch01", "title": "Chapter 1",
+         "content": "Harry Potter walked through London on a cold morning."},
+    ]
+    result = extract_entities(chapters, nlp)
+    for entry in result["entities"].values():
+        assert "Titlepage.xhtml" not in entry["mentions_by_chapter"], (
+            f"Frontmatter chapter leaked into registry: {entry}"
+        )
+
+
+def test_skips_cover_chapter(nlp):
+    """Chapter IDs that include 'cover' are also frontmatter."""
+    chapters = [
+        {"id": "cover.xhtml", "title": "Cover",
+         "content": "Alice Liddell discovered a magical land called Wonderland."},
+    ]
+    result = extract_entities(chapters, nlp)
+    assert result["entities"] == {}, (
+        f"Cover chapter should produce no entities, got: {result['entities']}"
+    )
+
+
+def test_non_frontmatter_chapter_not_skipped(nlp):
+    """Normal chapter IDs must still be processed."""
+    chapters = [
+        {"id": "chapter01.xhtml", "title": "Chapter 1",
+         "content": "Alice walked into London and met Harry Potter."},
+    ]
+    result = extract_entities(chapters, nlp)
+    assert result["entities"] != {}, "Normal chapter should not be skipped"
