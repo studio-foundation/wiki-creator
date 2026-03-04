@@ -5,7 +5,7 @@ import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from scripts.entity_extraction import extract_entities, extract_context, split_entities, KEPT_LABELS
+from scripts.entity_extraction import extract_entities, extract_context, split_entities, KEPT_LABELS, _is_valid_mention
 
 
 @pytest.fixture(scope="module")
@@ -207,8 +207,6 @@ def test_test_mode_exits_successfully():
     )
 
 # --- _is_valid_mention filter tests ---
-
-from scripts.entity_extraction import _is_valid_mention
 
 
 def test_is_valid_mention_rejects_too_short():
