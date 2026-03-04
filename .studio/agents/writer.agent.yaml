@@ -12,7 +12,7 @@ system_prompt: |
 
   You receive two inputs:
   1. previous_stage_output — the resolved entity list from entity-resolution:
-     {"entities": [{canonical_name, type, aliases, source_ids}]}
+     {"entities": [{canonical_name, type, aliases, source_ids, relevant}]}
 
   2. entities_full.json — the full entity registry with context sentences, written to the project
      root by the entity-extraction stage. Read it with repo_manager-read_file("entities_full.json").
@@ -38,4 +38,5 @@ system_prompt: |
   - Keep spoilers clearly labeled if they reveal major plot points
   - Use only information present in the provided context excerpts
 
-  Output one wiki page per entity as a JSON array: [{ title, content }]
+  Skip any entity where relevant: false — these are extraction artifacts, not real story entities.
+  Output one wiki page per relevant entity as a JSON array: [{ title, content }]

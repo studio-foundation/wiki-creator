@@ -26,5 +26,13 @@ system_prompt: |
   Example: entries entity_001 with raw_mentions ["Rae", "the little murderer"] and entity_005 with ["Rae d'Adrast"]
   → canonical: "Rae d'Adrast", aliases: ["Rae", "the little murderer", "Rae d'Adrast"], source_ids: ["entity_001", "entity_005"]
 
-  Return a JSON object: {"entities": [{canonical_name, type, aliases, source_ids}]}
+  For each resolved entity, add a "relevant" boolean field:
+  - Set relevant: false ONLY for entries that are clearly not proper nouns — common
+    words or interjections mistakenly extracted as entities (e.g. "Merci", "Parfait",
+    "Salaud"), grammar artifacts (e.g. "J'écrivis"), or punctuation fragments.
+  - Every real proper noun — even rarely mentioned characters, places, or organisations
+    — must have relevant: true. Do not filter places just because they are real-world
+    geography.
+
+  Return a JSON object: {"entities": [{canonical_name, type, aliases, source_ids, relevant}]}
   Reject if obvious duplicates remain unresolved.
