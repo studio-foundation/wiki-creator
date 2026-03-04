@@ -156,6 +156,8 @@ def extract_entities(chapters: list[dict], nlp) -> dict:
             key = ent.text.lower().strip()
             if not key:
                 continue
+            if not _is_valid_mention(ent.text):
+                continue
 
             context = extract_context(doc, ent)
 
