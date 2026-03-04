@@ -205,3 +205,34 @@ def test_test_mode_exits_successfully():
     assert "Sample (first 3 entities" in result.stdout, (
         f"Expected entity sample in output. Got:\n{result.stdout}"
     )
+
+# --- _is_valid_mention filter tests ---
+
+from scripts.entity_extraction import _is_valid_mention
+
+
+def test_is_valid_mention_rejects_too_short():
+    assert _is_valid_mention("E") is False
+    assert _is_valid_mention("Me") is False
+    assert _is_valid_mention("II") is False
+    assert _is_valid_mention("Ah") is False
+    assert _is_valid_mention("Or") is False
+
+
+def test_is_valid_mention_rejects_lowercase_start():
+    assert _is_valid_mention("objectai") is False
+    assert _is_valid_mention("plaidais-je") is False
+
+
+def test_is_valid_mention_rejects_non_alpha_start():
+    """Dash-prefixed dialog fragments like '— Liberté' must be rejected."""
+    assert _is_valid_mention("— Liberté") is False
+    assert _is_valid_mention("  ") is False
+
+
+def test_is_valid_mention_accepts_valid_names():
+    assert _is_valid_mention("David Martín") is True
+    assert _is_valid_mention("Barcelone") is True
+    assert _is_valid_mention("Merci") is True   # ambiguous — left to LLM
+    assert _is_valid_mention("Balthazar") is True
+    assert _is_valid_mention("Don Basilio") is True

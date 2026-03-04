@@ -43,6 +43,24 @@ LABEL_TO_TYPE = {
     "NORP": "ORG",
 }
 
+
+def _is_valid_mention(text: str) -> bool:
+    """
+    Return True if `text` looks like a valid proper-noun mention.
+
+    Rejects:
+    - Strings shorter than 3 characters (single letters, "Ah", "II", etc.)
+    - Strings whose first non-whitespace character is not an uppercase letter
+      (lowercase verbs, dash-prefixed dialog fragments, punctuation artifacts)
+    """
+    stripped = text.strip()
+    if len(stripped) < 3:
+        return False
+    if not stripped[0].isupper():
+        return False
+    return True
+
+
 # Hardcoded chapters for --test mode (English, uses en_core_web_sm)
 TEST_CHAPTERS = [
     {
