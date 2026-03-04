@@ -1,0 +1,43 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Book {
+  id        String     @id @default(cuid())
+  title     String
+  author    String?
+  filePath  String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  entities  Entity[]
+  wikiPages WikiPage[]
+}
+
+model Entity {
+  id        String    @id @default(cuid())
+  name      String
+  type      String    // PERSON, PLACE, ORG, EVENT, etc.
+  aliases   String    @default("[]") // JSON array of alternative names
+  bookId    String
+  book      Book      @relation(fields: [bookId], references: [id])
+  wikiPage  WikiPage?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model WikiPage {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  entityId  String   @unique
+  entity    Entity   @relation(fields: [entityId], references: [id])
+  bookId    String
+  book      Book     @relation(fields: [bookId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

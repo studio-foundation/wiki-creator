@@ -1,0 +1,6 @@
+description: |
+  Complete the wiki for "A Dark and Hollow Star" series.
+  Parse book 3, extract all named entities (characters, locations, organizations, events),
+  resolve aliases, and generate Markdown wiki pages for each entity.
+
+file_path: books/a-dark-and-hollow-star-3.epub

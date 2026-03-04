@@ -1,0 +1,33 @@
+name: wiki-pipeline
+description: Generate structured wiki pages from an EPUB book
+version: 1
+
+stages:
+  - name: entity-extraction
+    kind: analysis
+    agent: extractor
+    ralph:
+      max_attempts: 3
+    context:
+      include:
+        - input
+
+  - name: entity-resolution
+    kind: analysis
+    agent: resolver
+    ralph:
+      max_attempts: 3
+    context:
+      include:
+        - input
+        - previous_stage_output
+
+  - name: wiki-generation
+    kind: analysis
+    agent: writer
+    ralph:
+      max_attempts: 3
+    context:
+      include:
+        - input
+        - previous_stage_output

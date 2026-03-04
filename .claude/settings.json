@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//home/arianeguay/dev/src/Studio/**)",
+      "mcp__claude_ai_Linear__list_issues",
+      "mcp__claude_ai_Linear__list_projects",
+      "mcp__claude_ai_Linear__list_comments",
+      "Bash(studio --help)",
+      "Bash(studio templates list)",
+      "Bash(studio run --help)",
+      "Bash(studio list pipelines)"
+    ]
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "commit-commands@claude-plugins-official": true,
+    "pr-review-toolkit@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true,
+    "claude-code-setup@claude-plugins-official": true,
+    "superpowers@superpowers-dev": true,
+    "linear@claude-plugins-official": true
+  }
+}

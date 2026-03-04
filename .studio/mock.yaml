@@ -1,0 +1,95 @@
+# Mock outputs for wiki-pipeline
+# Used with: studio run wiki-pipeline --provider mock
+stages:
+  entity-extraction:
+    output:
+      entities:
+        - name: "Rae d'Adrast"
+          type: PERSON
+          mentions: 142
+          context:
+            - "Rae d'Adrast stepped into the shadow, her daggers already drawn."
+            - "They called her the little murderer, but Rae preferred her real name."
+        - name: "Aurelian Rogue"
+          type: PLACE
+          mentions: 38
+          context:
+            - "The Aurelian Rogue sprawled beneath the city, a maze of tunnels and secrets."
+        - name: "The Hollow Court"
+          type: ORG
+          mentions: 27
+          context:
+            - "The Hollow Court had ruled the underground for three hundred years."
+    tool_calls: []
+
+  entity-resolution:
+    output:
+      entities:
+        - canonical_name: "Rae d'Adrast"
+          name: "Rae d'Adrast"
+          type: PERSON
+          aliases: ["Rae", "the little murderer", "d'Adrast"]
+          mentions: 142
+          context:
+            - "Rae d'Adrast stepped into the shadow, her daggers already drawn."
+        - canonical_name: "Aurelian Rogue"
+          name: "Aurelian Rogue"
+          type: PLACE
+          aliases: ["the Rogue", "the underground city"]
+          mentions: 38
+          context:
+            - "The Aurelian Rogue sprawled beneath the city, a maze of tunnels and secrets."
+        - canonical_name: "The Hollow Court"
+          name: "The Hollow Court"
+          type: ORG
+          aliases: ["the Court", "Hollow Court"]
+          mentions: 27
+          context:
+            - "The Hollow Court had ruled the underground for three hundred years."
+    tool_calls: []
+
+  wiki-generation:
+    output:
+      pages:
+        - title: "Rae d'Adrast"
+          content: |
+            # Rae d'Adrast
+
+            **Rae d'Adrast** (also known as *the little murderer*) is a central character
+            in the series. Known for her deadly precision with daggers and her complicated
+            relationship with the underground world of the Aurelian Rogue.
+
+            ## Background
+
+            Rae operates in the shadows of the Aurelian Rogue, navigating the political
+            tensions between rival factions.
+
+            ## Aliases
+
+            - Rae
+            - The little murderer
+            - d'Adrast
+        - title: "Aurelian Rogue"
+          content: |
+            # Aurelian Rogue
+
+            The **Aurelian Rogue** is the vast underground city that serves as the primary
+            setting of the series. A labyrinthine network of tunnels, markets, and hidden
+            courts beneath the surface city.
+
+            ## Significance
+
+            Home to the Hollow Court and numerous criminal factions, the Rogue operates
+            by its own laws, largely independent of the surface world.
+        - title: "The Hollow Court"
+          content: |
+            # The Hollow Court
+
+            The **Hollow Court** is the ruling body of the Aurelian Rogue, having governed
+            the underground city for over three centuries.
+
+            ## Role in the Story
+
+            The Court's authority is central to the political conflicts driving the narrative,
+            with multiple factions vying for influence or outright control.
+    tool_calls: []

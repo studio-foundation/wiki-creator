@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Prisma
+/generated/
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Environment
+.env*
+!.env.example
+
+# Studio (generated)
+.studio/config.yaml
+.studio/runs/
+*.keymap.json
+
+# Git worktrees
+.worktrees/
+
+# Misc
+.DS_Store
+*.pem
