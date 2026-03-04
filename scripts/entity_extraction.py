@@ -33,6 +33,16 @@ import sys
 # English (en_core_web_*): PERSON, GPE, LOC, ORG, FAC, NORP
 KEPT_LABELS = {"PER", "LOC", "ORG", "PERSON", "GPE", "FAC", "NORP"}
 
+LABEL_TO_TYPE = {
+    "PER": "PERSON",
+    "PERSON": "PERSON",
+    "LOC": "PLACE",
+    "GPE": "PLACE",
+    "FAC": "PLACE",
+    "ORG": "ORG",
+    "NORP": "ORG",
+}
+
 
 def extract_context(doc, span) -> str:
     """
@@ -85,6 +95,7 @@ def extract_entities(chapters: list[dict], nlp) -> dict:
                 entity_counter += 1
                 registry[key] = {
                     "id": f"entity_{entity_counter:03d}",
+                    "type": LABEL_TO_TYPE.get(ent.label_, "OTHER"),
                     "raw_mentions": [ent.text],
                     "first_seen": chapter["id"],
                     "mentions_by_chapter": {},
@@ -94,7 +105,8 @@ def extract_entities(chapters: list[dict], nlp) -> dict:
                     registry[key]["raw_mentions"].append(ent.text)
 
             registry[key]["mentions_by_chapter"].setdefault(chapter["id"], [])
-            registry[key]["mentions_by_chapter"][chapter["id"]].append(context)
+            if len(registry[key]["mentions_by_chapter"][chapter["id"]]) < 3:
+                registry[key]["mentions_by_chapter"][chapter["id"]].append(context)
 
     return {
         "entities": {

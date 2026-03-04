@@ -40,6 +40,7 @@ class WikiPageDraft:
 @dataclass
 class EntityRegistryEntry:
     raw_mentions: list[str]
+    type: str
     first_seen: str
     mentions_by_chapter: dict[str, list[str]]
 

@@ -123,3 +123,14 @@ def test_first_seen_is_correct(nlp):
     ]
     assert len(london_entries) >= 1, "London should be recognized as a GPE entity"
     assert london_entries[0]["first_seen"] == "ch01"
+
+
+def test_entity_type_is_included(nlp):
+    """Each entity entry should have a type field."""
+    chapters = [
+        {"id": "ch01", "title": "Chapter 1", "content": "Alice walked into London."}
+    ]
+    result = extract_entities(chapters, nlp)
+    for entry in result["entities"].values():
+        assert "type" in entry, f"Missing 'type' field in entry: {entry}"
+        assert entry["type"] in {"PERSON", "PLACE", "ORG", "OTHER"}
