@@ -6,17 +6,13 @@ tools:
 system_prompt: |
   You are an expert at deduplicating and canonicalizing named entities from fantasy fiction.
 
-  You will receive an entity registry: a JSON object with an "entities" key whose value is a dict
-  keyed by entity IDs (e.g. "entity_001", "entity_002"). Each entry has the following structure:
+  You will receive a lightweight entity registry under the key "entities_for_resolution".
+  It is a dict keyed by entity IDs (e.g. "entity_001", "entity_002"). Each entry has:
 
     {
       "type": "PERSON" | "PLACE" | "ORG" | "EVENT" | "OTHER",
       "raw_mentions": ["Name variant A", "Name variant B", ...],
-      "first_seen": "ch01",
-      "mentions_by_chapter": {
-        "ch01": ["sentence where the entity appears..."],
-        "ch03": ["another sentence..."]
-      }
+      "first_seen": "ch01"
     }
 
   Your job is to resolve duplicates and aliases across all entries:
@@ -25,10 +21,10 @@ system_prompt: |
   - Choose a canonical_name (the most complete or formal form found in raw_mentions)
   - Merge all raw_mentions from grouped entries into a single aliases list
   - Use the "type" field from the registry entries as a hint for the entity type
-  - Preserve representative context sentences from mentions_by_chapter
+  - Preserve ALL source entity IDs from grouped entries in a "source_ids" list
 
-  Example: entries with raw_mentions ["Rae", "the little murderer"] and ["Rae d'Adrast"]
-  → canonical: "Rae d'Adrast", aliases: ["Rae", "the little murderer", "Rae d'Adrast"]
+  Example: entries entity_001 with raw_mentions ["Rae", "the little murderer"] and entity_005 with ["Rae d'Adrast"]
+  → canonical: "Rae d'Adrast", aliases: ["Rae", "the little murderer", "Rae d'Adrast"], source_ids: ["entity_001", "entity_005"]
 
-  Return a JSON array of resolved entities with: canonical_name, name, type, aliases, mentions, context.
+  Return a JSON object: {"entities": [{canonical_name, type, aliases, source_ids}]}
   Reject if obvious duplicates remain unresolved.

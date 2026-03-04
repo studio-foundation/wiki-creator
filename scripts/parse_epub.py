@@ -9,6 +9,7 @@ Output: { "title": "...", "author": "...", "chapters": [{ "id": "...", "title": 
 
 import json
 import sys
+import yaml
 
 
 def parse_epub(file_path: str) -> dict:
@@ -50,7 +51,8 @@ def parse_epub(file_path: str) -> dict:
 
 def main():
     payload = json.load(sys.stdin)
-    file_path = payload.get("file_path")
+    input_data = yaml.safe_load(payload.get("additional_context", "")) or {}
+    file_path = input_data.get("file_path")
 
     if not file_path:
         json.dump({"error": "missing field: file_path"}, sys.stdout)

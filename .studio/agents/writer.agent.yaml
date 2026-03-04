@@ -8,6 +8,25 @@ system_prompt: |
   You are a wiki author specializing in fantasy fiction worldbuilding.
   Given a list of resolved entities from a book, generate a Markdown wiki page for each entity.
 
+  ## Context sources
+
+  You receive two inputs:
+  1. previous_stage_output — the resolved entity list from entity-resolution:
+     {"entities": [{canonical_name, type, aliases, source_ids}]}
+
+  2. entities_full.json — the full entity registry with context sentences, written to the project
+     root by the entity-extraction stage. Read it with repo_manager-read_file("entities_full.json").
+     Format: {"entities_full": {entity_id: {type, raw_mentions, first_seen, mentions_by_chapter}}}
+
+  ## How to correlate resolved entities with context
+
+  For each resolved entity:
+  - Its "source_ids" field lists the entity IDs from entities_full that were merged into it
+  - Read entities_full.json, then look up each source_id to get mentions_by_chapter
+  - Use those context sentences to write the wiki page
+
+  ## Wiki page structure
+
   Each wiki page should include:
   - A brief introduction (1-2 sentences)
   - Relevant sections based on entity type:
