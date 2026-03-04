@@ -4,22 +4,25 @@ stages:
   entity-extraction:
     output:
       entities:
-        - name: "Rae d'Adrast"
+        entity_001:
           type: PERSON
-          mentions: 142
-          context:
-            - "Rae d'Adrast stepped into the shadow, her daggers already drawn."
-            - "They called her the little murderer, but Rae preferred her real name."
-        - name: "Aurelian Rogue"
+          raw_mentions:
+            - "Rae d'Adrast"
+            - "Rae"
+          first_seen: chapitre_01
+          mentions_by_chapter:
+            chapitre_01:
+              - "Rae d'Adrast ouvrit la porte de la taverne et observa la salle."
+            chapitre_03:
+              - "Rae s'arrêta au carrefour, hésitant entre les deux chemins."
+        entity_002:
           type: PLACE
-          mentions: 38
-          context:
-            - "The Aurelian Rogue sprawled beneath the city, a maze of tunnels and secrets."
-        - name: "The Hollow Court"
-          type: ORG
-          mentions: 27
-          context:
-            - "The Hollow Court had ruled the underground for three hundred years."
+          raw_mentions:
+            - "Hollowmere"
+          first_seen: chapitre_01
+          mentions_by_chapter:
+            chapitre_01:
+              - "La ville de Hollowmere était silencieuse cette nuit-là."
     tool_calls: []
 
   entity-resolution:

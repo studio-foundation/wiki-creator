@@ -24,8 +24,18 @@ def parse_epub(file_path: str) -> dict:
     author = book.get_metadata("DC", "creator")
     author = author[0][0] if author else None
 
+    # Use EPUB spine order (the official reading order)
+    spine_ids = [item_id for item_id, _ in book.spine]
+    items_by_id = {
+        item.get_id(): item
+        for item in book.get_items_of_type(ebooklib.ITEM_DOCUMENT)
+    }
+
     chapters = []
-    for item in book.get_items_of_type(ebooklib.ITEM_DOCUMENT):
+    for spine_id in spine_ids:
+        item = items_by_id.get(spine_id)
+        if item is None:
+            continue
         soup = BeautifulSoup(item.get_content(), "html.parser")
         text = soup.get_text(separator="\n", strip=True)
         if text:

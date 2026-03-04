@@ -3,15 +3,22 @@ description: Generate structured wiki pages from an EPUB book
 version: 1
 
 stages:
-  - name: entity-extraction
-    kind: analysis
-    agent: extractor
-    contract: entity-extraction
-    ralph:
-      max_attempts: 3
+  - name: epub-parse
+    kind: extraction
+    executor: script
+    command: python scripts/parse_epub.py
     context:
       include:
         - input
+
+  - name: entity-extraction
+    kind: extraction
+    executor: script
+    command: python scripts/entity_extraction.py
+    context:
+      include:
+        - input
+        - previous_stage_output
 
   - name: entity-resolution
     kind: analysis
