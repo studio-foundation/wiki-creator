@@ -1,0 +1,5 @@
+name: wiki-generation
+version: 1
+schema:
+  required_fields:
+    - pages
