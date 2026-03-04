@@ -6,6 +6,7 @@ stages:
   - name: entity-extraction
     kind: analysis
     agent: extractor
+    contract: entity-extraction
     ralph:
       max_attempts: 3
     context:
@@ -15,6 +16,7 @@ stages:
   - name: entity-resolution
     kind: analysis
     agent: resolver
+    contract: entity-resolution
     ralph:
       max_attempts: 3
     context:
@@ -25,6 +27,7 @@ stages:
   - name: wiki-generation
     kind: analysis
     agent: writer
+    contract: wiki-generation
     ralph:
       max_attempts: 3
     context:
