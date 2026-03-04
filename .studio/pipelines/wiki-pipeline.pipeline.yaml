@@ -6,7 +6,8 @@ stages:
   - name: epub-parse
     kind: extraction
     executor: script
-    command: python scripts/parse_epub.py
+    runtime: python
+    script: scripts/parse_epub.py
     context:
       include:
         - input
@@ -14,7 +15,9 @@ stages:
   - name: entity-extraction
     kind: extraction
     executor: script
-    command: python scripts/entity_extraction.py
+    runtime: python
+    script: scripts/entity_extraction.py
+    timeout_ms: 600000
     context:
       include:
         - input

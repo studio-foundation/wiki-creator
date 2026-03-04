@@ -34,6 +34,9 @@ env/
 # Git worktrees
 .worktrees/
 
+# Pipeline artifacts
+entities_full.json
+
 # Misc
 .DS_Store
 *.pem

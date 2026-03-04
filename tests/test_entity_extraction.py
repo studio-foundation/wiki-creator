@@ -5,7 +5,7 @@ import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from scripts.entity_extraction import extract_entities, extract_context, KEPT_LABELS
+from scripts.entity_extraction import extract_entities, extract_context, split_entities, KEPT_LABELS
 
 
 @pytest.fixture(scope="module")
@@ -134,3 +134,74 @@ def test_entity_type_is_included(nlp):
     for entry in result["entities"].values():
         assert "type" in entry, f"Missing 'type' field in entry: {entry}"
         assert entry["type"] in {"PERSON", "PLACE", "ORG", "OTHER"}
+
+
+# --- split_entities tests ---
+
+def test_split_entities_for_resolution_has_no_mentions_by_chapter(nlp):
+    """entities_for_resolution must not include mentions_by_chapter."""
+    chapters = [
+        {"id": "ch01", "title": "Chapter 1", "content": "Alice walked into London."}
+    ]
+    result = extract_entities(chapters, nlp)
+    entities_for_resolution, _ = split_entities(result["entities"])
+    for entry in entities_for_resolution.values():
+        assert "mentions_by_chapter" not in entry, (
+            f"entities_for_resolution must not contain mentions_by_chapter: {entry}"
+        )
+
+
+def test_split_entities_full_has_mentions_by_chapter(nlp):
+    """entities_full must include mentions_by_chapter."""
+    chapters = [
+        {"id": "ch01", "title": "Chapter 1", "content": "Alice walked into London."}
+    ]
+    result = extract_entities(chapters, nlp)
+    _, entities_full = split_entities(result["entities"])
+    for entry in entities_full.values():
+        assert "mentions_by_chapter" in entry, (
+            f"entities_full must contain mentions_by_chapter: {entry}"
+        )
+
+
+def test_split_entities_same_keys(nlp):
+    """Both split outputs must have the same entity IDs."""
+    chapters = [
+        {"id": "ch01", "title": "Chapter 1", "content": "Sherlock Holmes visited Watson in London."}
+    ]
+    result = extract_entities(chapters, nlp)
+    entities_for_resolution, entities_full = split_entities(result["entities"])
+    assert set(entities_for_resolution.keys()) == set(entities_full.keys())
+
+
+def test_split_entities_for_resolution_has_core_fields(nlp):
+    """entities_for_resolution entries must have type, raw_mentions, and first_seen."""
+    chapters = [
+        {"id": "ch01", "title": "Chapter 1", "content": "Elizabeth Bennet met Mr. Darcy in London."}
+    ]
+    result = extract_entities(chapters, nlp)
+    entities_for_resolution, _ = split_entities(result["entities"])
+    for entity_id, entry in entities_for_resolution.items():
+        assert "type" in entry, f"[{entity_id}] missing 'type'"
+        assert "raw_mentions" in entry, f"[{entity_id}] missing 'raw_mentions'"
+        assert "first_seen" in entry, f"[{entity_id}] missing 'first_seen'"
+
+
+# --- --test mode integration test ---
+
+def test_test_mode_exits_successfully():
+    """python scripts/entity_extraction.py --test should exit 0 and print a summary."""
+    import subprocess
+    result = subprocess.run(
+        [sys.executable, "scripts/entity_extraction.py", "--test"],
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, f"--test mode failed:\nstdout={result.stdout}\nstderr={result.stderr}"
+    assert "Total entities extracted:" in result.stdout, (
+        f"Expected entity count in output. Got:\n{result.stdout}"
+    )
+    assert "Sample (first 3 entities" in result.stdout, (
+        f"Expected entity sample in output. Got:\n{result.stdout}"
+    )
