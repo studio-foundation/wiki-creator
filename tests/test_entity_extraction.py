@@ -113,13 +113,13 @@ def test_entity_ids_are_sequential(nlp):
 def test_first_seen_is_correct(nlp):
     """first_seen should be the chapter ID where the entity first appears."""
     chapters = [
-        {"id": "ch01", "title": "Chapter 1", "content": "The city of London was quiet."},
-        {"id": "ch02", "title": "Chapter 2", "content": "London was busy the next day."},
+        {"id": "ch01", "title": "Chapter 1", "content": "Sherlock Holmes visited London on a grey morning."},
+        {"id": "ch02", "title": "Chapter 2", "content": "Sherlock Holmes walked through London again the next day."},
     ]
     result = extract_entities(chapters, nlp)
     london_entries = [
         entry for entry in result["entities"].values()
         if any("london" in m.lower() for m in entry["raw_mentions"])
     ]
-    if london_entries:
-        assert london_entries[0]["first_seen"] == "ch01"
+    assert len(london_entries) >= 1, "London should be recognized as a GPE entity"
+    assert london_entries[0]["first_seen"] == "ch01"

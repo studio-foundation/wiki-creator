@@ -44,10 +44,12 @@ def extract_context(doc, span) -> str:
         return span.text
 
     span_sent_start = span.sent.start
-    sent_idx = next(
-        (i for i, s in enumerate(sentences) if s.start == span_sent_start),
-        0,
-    )
+    try:
+        sent_idx = next(
+            i for i, s in enumerate(sentences) if s.start == span_sent_start
+        )
+    except StopIteration:
+        return span.sent.text
 
     start = max(0, sent_idx - 1)
     end = min(len(sentences), sent_idx + 2)
@@ -66,6 +68,8 @@ def extract_entities(chapters: list[dict], nlp) -> dict:
     entity_counter = 0
 
     for chapter in chapters:
+        if "content" not in chapter or "id" not in chapter:
+            raise ValueError(f"chapter missing required fields 'content' or 'id': {list(chapter.keys())}")
         doc = nlp(chapter["content"])
         for ent in doc.ents:
             if ent.label_ not in KEPT_LABELS:
@@ -113,7 +117,11 @@ def main():
     import spacy
     nlp = spacy.load(spacy_model)
 
-    result = extract_entities(chapters, nlp)
+    try:
+        result = extract_entities(chapters, nlp)
+    except ValueError as e:
+        json.dump({"error": str(e)}, sys.stdout)
+        sys.exit(1)
     json.dump(result, sys.stdout, ensure_ascii=False)
 
 
