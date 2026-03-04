@@ -1,6 +1,8 @@
 description: |
-  Complete the wiki for "A Dark and Hollow Star" series.
-  Parse book 3, extract all named entities (characters, locations, organizations, events),
+  Build a wiki for "Le Jeu de l'ange" (The Angel's Game) by Carlos Ruiz Zafón,
+  book 2 of the Cemetery of Forgotten Books series.
+  Parse the book, extract all named entities (characters, locations, organizations, events),
   resolve aliases, and generate Markdown wiki pages for each entity.
 
-file_path: books/a-dark-and-hollow-star-3.epub
+file_path: books/carlos-ruiz-zafon/le-jeu-de-lange.epub
+spacy_model: fr_core_news_lg
