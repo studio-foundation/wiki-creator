@@ -101,13 +101,22 @@ echo '{"file_path": "/path/to/book.epub"}' | python scripts/parse_epub.py
 
 Tout nouveau script suit ce même pattern : `payload = json.load(sys.stdin)` / `json.dump(result, sys.stdout)`.
 
+Le contexte envoyé par Studio a ce format :
+```json
+{
+  "additional_context": "<yaml string de l'input>",
+  "previous_outputs": {"epub-parse": {...}, ...}
+}
+```
+Lire `yaml.safe_load(payload["additional_context"])` pour l'input, et `payload["previous_outputs"]["<stage-name>"]` pour le stage précédent.
+
 ---
 
 ## Studio — Concepts clés pour ce projet
 
 **Template `analysis/`** — Ce projet suit le pattern analysis : content-extraction → entity-recognition → structuring.
 
-**Script executor** — Stages sans LLM. Le stage appelle un script shell/Python au lieu d'un agent. Configuré dans le pipeline YAML via `executor: script` + `command: python scripts/parse_epub.py`.
+**Script executor** — Stages sans LLM. Le stage appelle un script shell/Python au lieu d'un agent. Configuré dans le pipeline YAML via `executor: script` + `runtime: python` + `script: scripts/parse_epub.py`. Le champ `script` est le chemin du fichier seulement (sans le runtime). Le `runtime` est requis explicitement — il ne se déduit pas du champ `script`.
 
 **Context propagation** — Chaque stage déclare `context.include: [input, previous_stage_output]`. Sans ça, le stage n'a accès à rien.
 
