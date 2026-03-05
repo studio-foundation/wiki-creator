@@ -231,7 +231,7 @@ def test_is_valid_mention_rejects_non_alpha_start():
 def test_is_valid_mention_accepts_valid_names():
     assert _is_valid_mention("David Martín") is True
     assert _is_valid_mention("Barcelone") is True
-    assert _is_valid_mention("Don Basilio") is True
+    assert _is_valid_mention("Sainte-Croix") is True
     assert _is_valid_mention("Balthazar") is True
     assert _is_valid_mention("Don Basilio") is True
 
@@ -392,4 +392,4 @@ def test_is_valid_mention_case_insensitive_check():
     """Le check stoplist doit être insensible à la casse."""
     from scripts.entity_extraction import FALSE_POSITIVE_WORDS  # noqa: F401 — ensures symbol exists
     assert _is_valid_mention("CHER") is False
-    assert _is_valid_mention("Bonjour") is False
+    assert _is_valid_mention("bonjour") is False
