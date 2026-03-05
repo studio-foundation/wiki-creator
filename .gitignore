@@ -35,7 +35,9 @@ env/
 .worktrees/
 
 # Pipeline artifacts
-entities_full.json
+persons_full.json
+places_full.json
+orgs_full.json
 extraction-*.jsonl
 
 # Misc

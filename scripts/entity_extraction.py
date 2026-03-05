@@ -14,14 +14,14 @@ Output (stdout — passed to entity-resolution as previous_stage_output):
     }
   }
 
-Side effect (file written to project root):
-  entities_full.json — same registry with "mentions_by_chapter" included,
+Side effects (files written to project root):
+  persons_full.json, places_full.json, orgs_full.json — full entity registry split by type,
   read by wiki-generation via repo_manager-read_file.
 
 Standalone test mode:
   python scripts/entity_extraction.py --test
   Runs on hardcoded English chapters, prints entity count + 3-entity sample.
-  Does not write entities_full.json.
+  Does not write persons_full.json, places_full.json, or orgs_full.json.
 """
 
 import json
@@ -220,7 +220,7 @@ def run_test_mode() -> None:
     """
     Standalone test mode: run entity extraction on hardcoded chapters.
     Prints entity count by type and a sample of 3 entities.
-    Does not read stdin or write entities_full.json.
+    Does not read stdin or write persons_full.json, places_full.json, or orgs_full.json.
     """
     import spacy
 
