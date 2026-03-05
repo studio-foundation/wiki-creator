@@ -5,7 +5,7 @@ import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from scripts.entity_extraction import extract_entities, extract_context, split_entities, KEPT_LABELS, _is_valid_mention, FRONTMATTER_ID_PATTERNS
+from scripts.entity_extraction import extract_entities, extract_context, split_entities, split_by_type, KEPT_LABELS, _is_valid_mention, FRONTMATTER_ID_PATTERNS
 
 
 @pytest.fixture(scope="module")
@@ -280,3 +280,71 @@ def test_non_frontmatter_chapter_not_skipped(nlp):
     ]
     result = extract_entities(chapters, nlp)
     assert result["entities"] != {}, "Normal chapter should not be skipped"
+
+
+# --- split_by_type tests ---
+
+def test_split_by_type_separates_by_type(nlp):
+    """split_by_type must return separate dicts for PERSON, PLACE, ORG."""
+    chapters = [
+        {"id": "ch01", "title": "Chapter 1", "content": "Alice walked into London and met the Royal Society."}
+    ]
+    result = extract_entities(chapters, nlp)
+    _, entities_full = split_entities(result["entities"])
+    by_type = split_by_type(entities_full)
+
+    assert "PERSON" in by_type
+    assert "PLACE" in by_type
+    assert "ORG" in by_type
+
+
+def test_split_by_type_entities_are_in_correct_bucket(nlp):
+    """Every entity in a bucket must have the matching type."""
+    chapters = [
+        {"id": "ch01", "title": "Chapter 1", "content": "Alice walked into London and met the Royal Society."}
+    ]
+    result = extract_entities(chapters, nlp)
+    _, entities_full = split_entities(result["entities"])
+    by_type = split_by_type(entities_full)
+
+    for type_key in ("PERSON", "PLACE", "ORG"):
+        for entity_id, entity in by_type[type_key].items():
+            assert entity["type"] == type_key, (
+                f"[{entity_id}] is in bucket {type_key!r} but has type={entity['type']!r}"
+            )
+
+
+def test_split_by_type_covers_all_entities(nlp):
+    """All entities from entities_full must appear in exactly one bucket."""
+    chapters = [
+        {"id": "ch01", "title": "Chapter 1", "content": "Alice walked into London and met the Royal Society."}
+    ]
+    result = extract_entities(chapters, nlp)
+    _, entities_full = split_entities(result["entities"])
+    by_type = split_by_type(entities_full)
+
+    all_bucket_ids = set()
+    for bucket in by_type.values():
+        all_bucket_ids |= set(bucket.keys())
+
+    known_types = {e["type"] for e in entities_full.values()} & {"PERSON", "PLACE", "ORG"}
+    expected_ids = {
+        eid for eid, e in entities_full.items() if e["type"] in known_types
+    }
+    assert all_bucket_ids == expected_ids
+
+
+def test_split_by_type_entities_retain_mentions_by_chapter(nlp):
+    """Entities in each bucket must still have mentions_by_chapter."""
+    chapters = [
+        {"id": "ch01", "title": "Chapter 1", "content": "Alice walked into London."}
+    ]
+    result = extract_entities(chapters, nlp)
+    _, entities_full = split_entities(result["entities"])
+    by_type = split_by_type(entities_full)
+
+    for bucket in by_type.values():
+        for entity_id, entity in bucket.items():
+            assert "mentions_by_chapter" in entity, (
+                f"[{entity_id}] missing mentions_by_chapter in split_by_type output"
+            )
