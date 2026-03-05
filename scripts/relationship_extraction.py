@@ -762,10 +762,13 @@ def main() -> None:
         relationships = classify_relationships(relationships)
         stats["classified"] = sum(1 for r in relationships if r.get("relationship_type"))
 
+    narrator = resolution_output.get("narrator", None)
+
     json.dump({
         "entities": entities,
         "relationships": relationships,
         "stats": stats,
+        "narrator": narrator,
     }, sys.stdout, ensure_ascii=False)
 
 
