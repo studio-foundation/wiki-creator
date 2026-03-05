@@ -35,7 +35,11 @@ def clean_chapter_text(text: str) -> str:
     return text.strip()
 
 
+MIN_CHAPTER_CHARS = 100
+
+
 def parse_epub(file_path: str) -> dict:
+    import os
     import ebooklib
     from ebooklib import epub
     from bs4 import BeautifulSoup
@@ -48,12 +52,16 @@ def parse_epub(file_path: str) -> dict:
     author = book.get_metadata("DC", "creator")
     author = author[0][0] if author else None
 
-    # Use EPUB spine order (the official reading order)
+    # Use EPUB spine order (the official reading order).
+    # Build items_by_id keyed by both item.get_id() and filename stem so that
+    # spine idrefs (which may differ from the manifest IDs after a write/read
+    # round-trip) are resolved correctly.
     spine_ids = [item_id for item_id, _ in book.spine]
-    items_by_id = {
-        item.get_id(): item
-        for item in book.get_items_of_type(ebooklib.ITEM_DOCUMENT)
-    }
+    items_by_id = {}
+    for item in book.get_items_of_type(ebooklib.ITEM_DOCUMENT):
+        items_by_id[item.get_id()] = item
+        stem = os.path.splitext(item.get_name())[0]
+        items_by_id[stem] = item
 
     chapters = []
     for spine_id in spine_ids:
@@ -61,13 +69,16 @@ def parse_epub(file_path: str) -> dict:
         if item is None:
             continue
         soup = BeautifulSoup(item.get_content(), "html.parser")
-        text = soup.get_text(separator="\n", strip=True)
-        if text:
-            chapters.append({
-                "id": item.get_id(),
-                "title": item.get_name(),
-                "content": text,
-            })
+        raw_text = soup.get_text(separator="\n", strip=True)
+        cleaned = clean_chapter_text(raw_text)
+        if len(cleaned) < MIN_CHAPTER_CHARS:
+            continue
+        stem = os.path.splitext(item.get_name())[0]
+        chapters.append({
+            "id": stem,
+            "title": item.get_name(),
+            "content": cleaned,
+        })
 
     return {"title": title, "author": author, "chapters": chapters}
 

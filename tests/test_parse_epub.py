@@ -73,3 +73,70 @@ def test_clean_html_nbsp_handled():
     # html.unescape converts &nbsp; to \u00a0, which is acceptable
     assert "&nbsp;" not in result  # the raw entity is gone
     assert "hello" in result and "world" in result
+
+
+def test_short_chapter_filtered(tmp_path):
+    """Chapters with fewer than 100 chars of content are excluded from output."""
+    import ebooklib
+    from ebooklib import epub
+
+    # Build a minimal EPUB with one short and one normal chapter
+    book = epub.EpubBook()
+    book.set_title("Test Book")
+    book.set_language("fr")
+
+    short_item = epub.EpubHtml(title="Short", file_name="short.xhtml", lang="fr")
+    short_item.set_content(b"<html><body><p>Court.</p></body></html>")
+
+    long_item = epub.EpubHtml(title="Long", file_name="long.xhtml", lang="fr")
+    long_content = "<html><body><p>" + "A" * 150 + "</p></body></html>"
+    long_item.set_content(long_content.encode())
+
+    book.add_item(short_item)
+    book.add_item(long_item)
+    book.spine = [("short", True), ("long", True)]
+    book.add_item(epub.EpubNcx())
+    book.add_item(epub.EpubNav())
+
+    epub_path = str(tmp_path / "test.epub")
+    epub.write_epub(epub_path, book)
+
+    from scripts.parse_epub import parse_epub
+    result = parse_epub(epub_path)
+
+    ids = [c["id"] for c in result["chapters"]]
+    assert "short" not in ids, "Short chapter should be filtered out"
+    assert "long" in ids, "Long chapter should be included"
+
+
+def test_parse_epub_content_is_cleaned(tmp_path):
+    """Chapter content returned by parse_epub has isolated \\n replaced by spaces."""
+    import ebooklib
+    from ebooklib import epub
+
+    book = epub.EpubBook()
+    book.set_title("Test Book")
+    book.set_language("fr")
+
+    item = epub.EpubHtml(title="Chapter", file_name="chap.xhtml", lang="fr")
+    # Create content long enough to pass the 100-char filter
+    content = "<html><body>" + "<p>" + "A" * 120 + "</p>" + "</body></html>"
+    item.set_content(content.encode())
+
+    book.add_item(item)
+    book.spine = [("chap", True)]
+    book.add_item(epub.EpubNcx())
+    book.add_item(epub.EpubNav())
+
+    epub_path = str(tmp_path / "test.epub")
+    epub.write_epub(epub_path, book)
+
+    from scripts.parse_epub import parse_epub
+    result = parse_epub(epub_path)
+
+    assert len(result["chapters"]) == 1
+    # Content should not have isolated newlines (clean_chapter_text applied)
+    content = result["chapters"][0]["content"]
+    # After cleaning: no sequence of \n followed by a non-\n char mid-content
+    import re
+    assert not re.search(r'(?<!\n)\n(?!\n)', content), "Isolated \\n found in output — clean_chapter_text not applied"
