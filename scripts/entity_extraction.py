@@ -169,10 +169,12 @@ def extract_entities(chapters: list[dict], nlp) -> dict:
                     "raw_mentions": [ent.text],
                     "first_seen": chapter["id"],
                     "mentions_by_chapter": {},
+                    "mention_count": 1,
                 }
             else:
                 if ent.text not in registry[key]["raw_mentions"]:
                     registry[key]["raw_mentions"].append(ent.text)
+                registry[key]["mention_count"] += 1
 
             registry[key]["mentions_by_chapter"].setdefault(chapter["id"], [])
             if len(registry[key]["mentions_by_chapter"][chapter["id"]]) < 3:
@@ -189,7 +191,7 @@ def extract_entities(chapters: list[dict], nlp) -> dict:
 def split_entities(entities: dict) -> tuple[dict, dict]:
     """
     Split the full entity registry into two structures:
-    - entities_for_resolution: lightweight (type, raw_mentions, first_seen only)
+    - entities_for_resolution: lightweight (type, raw_mentions, first_seen, mention_count)
     - entities_full: complete (includes mentions_by_chapter)
 
     Returns (entities_for_resolution, entities_full).

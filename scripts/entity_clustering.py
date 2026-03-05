@@ -253,12 +253,17 @@ def build_clusters(entities: dict) -> tuple[list[dict], dict]:
             all_mentions = []
             first_seen_chapters = []
             entity_type = entities[members[0]].get("type", "OTHER")
+            total_mentions = 0
 
             for eid in members:
                 all_mentions.extend(entities[eid]["raw_mentions"])
                 fs = entities[eid].get("first_seen", "")
                 if fs:
                     first_seen_chapters.append(fs)
+                entity = entities[eid]
+                total_mentions += entity.get(
+                    "mention_count", len(entity.get("raw_mentions", []))
+                )
 
             # Pick the mention with the most substantive tokens (after title stripping)
             # "David Martín" > "Monsieur Martín" (2 real tokens vs 1)
@@ -276,8 +281,10 @@ def build_clusters(entities: dict) -> tuple[list[dict], dict]:
                 "entity_ids": members,
                 "first_seen": min(first_seen_chapters) if first_seen_chapters else "",
                 "entity_count": len(members),
+                "total_mentions": total_mentions,
             })
 
+    clusters_list.sort(key=lambda c: c["total_mentions"], reverse=True)
     return clusters_list, unclustered
 
 
@@ -321,7 +328,7 @@ def run_test_mode() -> None:
     for c in clusters:
         print(
             f"  {c['cluster_id']} [{c['type']}] "
-            f"({c['entity_count']} entités, first_seen={c['first_seen']})"
+            f"({c['entity_count']} entités, first_seen={c['first_seen']}, total_mentions={c['total_mentions']})"
         )
         print(f"    canonical: {c['canonical_candidate']}")
         print(f"    mentions:  {c['all_mentions']}")
@@ -372,6 +379,9 @@ def main() -> None:
             "entity_ids": [eid],
             "entity_count": 1,
             "first_seen": entity.get("first_seen", ""),
+            "total_mentions": entity.get(
+                "mention_count", len(entity.get("raw_mentions", []))
+            ),
         }
         for eid, entity in unclustered.items()
     ]
