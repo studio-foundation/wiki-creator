@@ -439,3 +439,19 @@ def test_truncate_mention_all_lowercase_returns_full(nlp):
     result = _truncate_mention(span)
     # Pas de token propre → retourne tout (comportement de fallback)
     assert result == span.text
+
+
+def test_save_chapters_json_writes_chapter_texts(tmp_path):
+    """save_chapters_json must write chapter id → content mapping."""
+    import json
+    from scripts.entity_extraction import save_chapters_json
+
+    chapters = [
+        {"id": "ch01", "title": "Ch 1", "content": "Hello world."},
+        {"id": "ch02", "title": "Ch 2", "content": "Goodbye world."},
+    ]
+    out = tmp_path / "chapters.json"
+    save_chapters_json(chapters, path=str(out))
+
+    data = json.loads(out.read_text())
+    assert data == {"chapters": {"ch01": "Hello world.", "ch02": "Goodbye world."}}

@@ -320,6 +320,13 @@ def run_test_mode() -> None:
         print(f"  {filename}: {size} chars ({len(by_type[type_key])} entities)")
 
 
+def save_chapters_json(chapters: list[dict], path: str = "chapters.json") -> None:
+    """Save raw chapter text to chapters.json for downstream coref stage."""
+    data = {"chapters": {ch["id"]: ch["content"] for ch in chapters}}
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False)
+
+
 def main() -> None:
     if "--test" in sys.argv:
         run_test_mode()
@@ -358,6 +365,8 @@ def main() -> None:
     for type_key, (filename, json_key) in type_files.items():
         with open(filename, "w", encoding="utf-8") as f:
             json.dump({json_key: by_type[type_key]}, f, ensure_ascii=False)
+
+    save_chapters_json(chapters)
 
     # Output lightweight entities to stdout → becomes entity-resolution's previous_stage_output
     json.dump({"entities_for_resolution": entities_for_resolution}, sys.stdout, ensure_ascii=False)
