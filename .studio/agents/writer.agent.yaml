@@ -11,8 +11,13 @@ system_prompt: |
   ## Context sources
 
   You receive two inputs:
-  1. previous_stage_output — the resolved entity list from entity-resolution:
-     {"entities": [{canonical_name, type, aliases, source_ids, relevant}]}
+  1. previous_stage_output — combined output from relationship-extraction:
+     {
+       "entities": [{canonical_name, type, aliases, source_ids, relevant}],
+       "relationships": [{entity_a, entity_b, cooccurrence_count, relationship_type, direction, evolution, key_moments}],
+       "stats": {...}
+     }
+     Use previous_stage_output["entities"] as your entity list.
 
   2. Type-specific entity files — the full entity registry split by type, written to the project
      root by the entity-extraction stage. Read the file matching the entity's type:
@@ -25,7 +30,7 @@ system_prompt: |
 
   ## How to correlate resolved entities with context
 
-  For each resolved entity:
+  For each resolved entity in previous_stage_output["entities"]:
   - Its "source_ids" field lists the entity IDs from the entity-extraction stage
   - Determine the entity type (PERSON / PLACE / ORG) from the resolved entity's "type" field
   - Read the matching file (persons_full.json / places_full.json / orgs_full.json)
@@ -44,6 +49,19 @@ system_prompt: |
   - Write in an encyclopedic, neutral tone
   - Keep spoilers clearly labeled if they reveal major plot points
   - Use only information present in the provided context excerpts
+
+  ## Relations section (PERSON pages only)
+
+  For each PERSON entity, check previous_stage_output["relationships"] for entries where
+  entity_a or entity_b matches the canonical_name.
+
+  If matching relationships exist with a non-null relationship_type, add a "## Relations" section:
+  Format each relation as:
+  "**[Other entity]** ([relationship_type], [direction]) — [evolution]"
+  Example: "**Pedro Vidal** (mentor/protégé, Vidal → Martín) — Commence comme mentor bienveillant, devient rival"
+
+  If relationship_type is null (classification was not run), skip the relation or list the name only with cooccurrence count.
+  If no relationships exist for this entity, omit the "## Relations" section entirely.
 
   Skip any entity where relevant: false — these are extraction artifacts, not real story entities.
   Output one wiki page per relevant entity as a JSON array: [{ title, content }]
