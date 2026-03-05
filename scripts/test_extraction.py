@@ -17,7 +17,7 @@ from datetime import datetime
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from scripts.parse_epub import parse_epub
-from scripts.entity_extraction import extract_entities, split_entities
+from scripts.entity_extraction import extract_entities, split_entities, split_by_type
 
 BOOK_PATH = "books/carlos-ruiz-zafon/le-jeu-de-lange.epub"
 SPACY_MODEL = "fr_core_news_lg"
@@ -63,6 +63,16 @@ def main() -> None:
         f"\n  entities_for_resolution = {slim_size:>7,} chars  (→ entity-resolution)"
         f"\n  reduction: {100 * slim_size // full_size}% of full"
     )
+
+    by_type = split_by_type(entities_full)
+    print("\nPer-type file sizes:")
+    for type_key, (filename, json_key) in [
+        ("PERSON", ("persons_full.json", "persons_full")),
+        ("PLACE", ("places_full.json", "places_full")),
+        ("ORG", ("orgs_full.json", "orgs_full")),
+    ]:
+        size = len(json.dumps({json_key: by_type[type_key]}, ensure_ascii=False))
+        print(f"  {filename}: {size:>10,} chars  ({len(by_type[type_key])} entities)")
 
     if output_path is None:
         ts = datetime.now().strftime("%Y-%m-%dT%Hh%Mm")
