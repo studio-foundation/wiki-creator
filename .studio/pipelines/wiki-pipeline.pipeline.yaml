@@ -44,6 +44,17 @@ stages:
         - input
         - previous_stage_output
 
+  - name: relationship-extraction
+    kind: analysis
+    executor: script
+    runtime: python
+    script: scripts/relationship_extraction.py
+    contract: relationship-extraction
+    context:
+      include:
+        - input
+        - previous_stage_output
+
   - name: wiki-generation
     kind: analysis
     agent: writer

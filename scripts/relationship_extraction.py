@@ -415,7 +415,11 @@ def main() -> None:
         relationships = classify_relationships(relationships)
         stats["classified"] = sum(1 for r in relationships if r.get("relationship_type"))
 
-    json.dump({"relationships": relationships, "stats": stats}, sys.stdout, ensure_ascii=False)
+    json.dump({
+        "entities": entities,
+        "relationships": relationships,
+        "stats": stats,
+    }, sys.stdout, ensure_ascii=False)
 
 
 if __name__ == "__main__":
