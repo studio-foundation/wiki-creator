@@ -36,8 +36,10 @@ def test_clean_isolated_newline_replaced_by_space():
 
 
 def test_clean_isolated_newline_mid_word():
-    """Single \\n mid-word → space (I\\nntéressant becomes I ntéressant)."""
-    assert clean_chapter_text("I\nntéressant") == "I ntéressant"
+    """Single \\n between a capital letter and a lowercase word is a lettrine artefact.
+    After \\n→space (step 3) and then lettrine join (step 3b), 'I\\nntéressant' → 'Intéressant'.
+    """
+    assert clean_chapter_text("I\nntéressant") == "Intéressant"
 
 
 def test_clean_double_newline_preserved():
@@ -165,3 +167,9 @@ def test_clean_lettrine_does_not_affect_abbreviations():
     """M. Pedro, Dr. House etc. ne sont pas modifiés (point après la lettre)."""
     assert clean_chapter_text("M. Pedro") == "M. Pedro"
     assert clean_chapter_text("Dr. House") == "Dr. House"
+
+
+def test_clean_lettrine_with_newline_separator():
+    """BeautifulSoup produces 'P\\nedro' for <span>P</span>edro — must also be joined."""
+    assert clean_chapter_text("P\nedro Vidal") == "Pedro Vidal"
+    assert clean_chapter_text("L\norca") == "Lorca"
