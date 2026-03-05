@@ -39,9 +39,12 @@ Standalone test:
   python scripts/relationship_extraction.py --test
   python scripts/relationship_extraction.py --test --classify
   python scripts/relationship_extraction.py --test --window 3 --threshold 2
+  python scripts/relationship_extraction.py --test --coref
+  python scripts/relationship_extraction.py --live --coref
 """
 
 import json
+import os
 import re
 import sys
 
@@ -165,7 +168,126 @@ def build_cooccurrence_graph(
     return relationships, stats
 
 
-def run_test_mode(window_size: int, threshold: int) -> None:
+# French pronouns that might resolve to an entity when no NE is present
+_FR_PRONOUNS = frozenset({
+    "il", "elle", "ils", "elles", "lui", "leur",
+    "le", "la", "les", "l'", "l\u2019", "y", "en",
+    "se", "s'", "s\u2019",
+})
+
+
+def enrich_mentions_with_coref(
+    chapters: dict[str, str],
+    entities: list[dict],
+    mentions_by_entity: dict[str, dict[str, list[str]]],
+    silence_window: int = 5,
+) -> dict[str, dict[str, list[str]]]:
+    """
+    Enrich mentions_by_entity with pronoun sentences via a spaCy-only heuristic.
+
+    For each chapter, process sentences with fr_core_news_lg. Track the last known
+    PERSON canonical entity ("active entity"). When a sentence has French pronouns
+    but no PERSON entity, add it to the active entity's mentions. Reset the active
+    entity after `silence_window` consecutive sentences with no PERSON mention.
+
+    Args:
+        chapters: {chapter_id: full_text} from chapters.json
+        entities: resolved entities list (canonical_name, aliases, type, relevant)
+        mentions_by_entity: existing {canonical → {chapter_id → [sentences]}}
+        silence_window: reset active entity after this many sentences with no PERSON
+
+    Returns:
+        mentions_by_entity enriched in-place (also returned for convenience)
+    """
+    import spacy
+
+    if not chapters:
+        return mentions_by_entity
+
+    # Build name→canonical lookup
+    persons = [e for e in entities if e.get("type") == "PERSON" and e.get("relevant", True)]
+    name_to_canonical: dict[str, str] = {}
+    for entity in persons:
+        canonical = entity["canonical_name"]
+        name_to_canonical[canonical.lower()] = canonical
+        for alias in entity.get("aliases", []):
+            if len(alias) >= 4:
+                name_to_canonical[alias.lower()] = canonical
+
+    if not name_to_canonical:
+        return mentions_by_entity
+
+    try:
+        nlp = spacy.load("fr_core_news_lg")
+    except Exception as e:
+        print(f"[WARN] spaCy load failed: {e}", file=sys.stderr)
+        return mentions_by_entity
+
+    total_added = 0
+
+    for chapter_id, text in chapters.items():
+        if not text or not text.strip():
+            continue
+
+        try:
+            doc = nlp(text)
+        except Exception as e:
+            print(f"[WARN] spaCy failed on {chapter_id}: {e}", file=sys.stderr)
+            continue
+
+        active_entity: str | None = None
+        silence_count: int = 0
+
+        for sent in doc.sents:
+            # Find PERSON entities in this sentence
+            sent_persons = []
+            for ent in sent.ents:
+                if ent.label_ == "PER":
+                    canon = name_to_canonical.get(ent.text.lower())
+                    if canon:
+                        sent_persons.append(canon)
+
+            if sent_persons:
+                # Update active entity (last seen person in sentence)
+                active_entity = sent_persons[-1]
+                silence_count = 0
+                continue
+
+            # No PERSON in this sentence
+            silence_count += 1
+            if silence_count > silence_window:
+                active_entity = None
+
+            if active_entity is None:
+                continue
+
+            # Check for French pronouns
+            has_pronoun = any(
+                token.pos_ == "PRON" and token.text.lower() in _FR_PRONOUNS
+                for token in sent
+            )
+            if not has_pronoun:
+                continue
+
+            # Add sentence to active entity's mentions
+            sentence = sent.text.strip()
+            if not sentence:
+                continue
+
+            if active_entity not in mentions_by_entity:
+                mentions_by_entity[active_entity] = {}
+            if chapter_id not in mentions_by_entity[active_entity]:
+                mentions_by_entity[active_entity][chapter_id] = []
+            existing = mentions_by_entity[active_entity][chapter_id]
+            if sentence not in existing:
+                existing.append(sentence)
+                total_added += 1
+
+    print(f"[coref] Pronoun sentences added: {total_added}", file=sys.stderr)
+    return mentions_by_entity
+
+
+def run_test_mode(window_size: int, threshold: int, coref: bool = False) -> None:
     """Run with hardcoded Le Jeu de l'Ange data."""
     entities = [
         {"canonical_name": "David Martín", "type": "PERSON", "aliases": ["Martín", "David"], "relevant": True},
@@ -198,6 +320,11 @@ def run_test_mode(window_size: int, threshold: int) -> None:
                 "Martín regarda Vidal avec méfiance.",
                 "Corelli attendait Martín dans son bureau.",
             ],
+            "ch04": [
+                "Il s'assit près de la fenêtre et contempla la nuit.",
+                "Elle lui tendit la lettre sans un mot.",
+                "Il la prit et la lut lentement.",
+            ],
         },
         "Pedro Vidal": {
             "ch01": [
@@ -209,6 +336,9 @@ def run_test_mode(window_size: int, threshold: int) -> None:
             "ch03": [
                 "Vidal arriva et interrompit leur conversation.",
                 "Martín regarda Vidal avec méfiance.",
+            ],
+            "ch04": [
+                "Il s'assit près de la fenêtre et contempla la nuit.",
             ],
         },
         "Andreas Corelli": {
@@ -239,6 +369,19 @@ def run_test_mode(window_size: int, threshold: int) -> None:
             ],
         },
     }
+
+    if coref:
+        # In test mode, chapters.json is not available.
+        # Build a minimal chapters dict from existing mentions for demo.
+        chapters_demo: dict[str, str] = {}
+        for canonical, by_chapter in mentions_by_entity.items():
+            for chapter_id, sentences in by_chapter.items():
+                text = " ".join(sentences)
+                if chapter_id in chapters_demo:
+                    chapters_demo[chapter_id] += " " + text
+                else:
+                    chapters_demo[chapter_id] = text
+        mentions_by_entity = enrich_mentions_with_coref(chapters_demo, entities, mentions_by_entity)
 
     relationships, stats = build_cooccurrence_graph(
         entities, mentions_by_entity, window_size, threshold
@@ -370,9 +513,8 @@ def _load_mentions_from_files() -> dict[str, dict[str, list[str]]]:
     return mentions
 
 
-def run_live_mode(window_size: int, threshold: int) -> None:
+def run_live_mode(window_size: int, threshold: int, coref: bool = False) -> None:
     """Live mode: read persons_full.json, cluster entities, then run co-occurrence on real data."""
-    import os
     import sys as _sys
     import importlib.util
 
@@ -482,6 +624,15 @@ def run_live_mode(window_size: int, threshold: int) -> None:
                 merged[chapter_id].extend(sentences)
         mentions_by_entity[canonical] = merged
 
+    if coref:
+        if not os.path.exists("chapters.json"):
+            print("[WARN] chapters.json not found — run make test first.", file=sys.stderr)
+        else:
+            with open("chapters.json", encoding="utf-8") as f:
+                chapters_data = json.load(f)
+            chapters = chapters_data.get("chapters", {})
+            mentions_by_entity = enrich_mentions_with_coref(chapters, entities, mentions_by_entity)
+
     print(f"=== LIVE MODE — relationship-extraction ===\n")
     print(f"Loaded {len(entities)} persons from persons_full.json")
     print(f"Window size: {window_size}  |  Threshold: {threshold}\n")
@@ -558,12 +709,14 @@ def main() -> None:
         idx = args.index("--threshold")
         threshold = int(args[idx + 1])
 
+    coref = "--coref" in args
+
     if "--test" in args:
-        run_test_mode(window_size, threshold)
+        run_test_mode(window_size, threshold, coref=coref)
         return
 
     if "--live" in args:
-        run_live_mode(window_size, threshold)
+        run_live_mode(window_size, threshold, coref=coref)
         return
 
     payload = json.load(sys.stdin)
@@ -579,17 +732,27 @@ def main() -> None:
     # Parse classify flag from additional_context (YAML string)
     import yaml
     do_classify = False
+    do_coref = False
     raw_context = payload.get("additional_context", "")
     if raw_context:
         try:
             additional = yaml.safe_load(raw_context) or {}
             do_classify = bool(additional.get("classify", False))
+            do_coref = bool(additional.get("coref", False))
             window_size = int(additional.get("window", window_size))
             threshold = int(additional.get("threshold", threshold))
         except Exception:
             pass
 
     mentions_by_entity = _load_mentions_from_files()
+
+    if do_coref:
+        import os as _os
+        if _os.path.exists("chapters.json"):
+            with open("chapters.json", encoding="utf-8") as f:
+                chapters_data = json.load(f)
+            chapters = chapters_data.get("chapters", {})
+            mentions_by_entity = enrich_mentions_with_coref(chapters, entities, mentions_by_entity)
 
     relationships, stats = build_cooccurrence_graph(
         entities, mentions_by_entity, window_size, threshold
