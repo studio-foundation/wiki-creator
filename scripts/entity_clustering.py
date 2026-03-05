@@ -21,8 +21,10 @@ Output (stdout):
       },
       ...
     ],
-    "unclustered": { ... },  # entities that didn't match anything
-    "stats": { "input_entities": 549, "output_clusters": 180, "reduction_pct": 67 }
+    "stats": {
+      "input_entities": 549, "output_clusters": 7,
+      "unclustered_wrapped": 2, "total_items": 9, "reduction_pct": 60
+    }
   }
 
 Standalone test mode:
@@ -340,8 +342,6 @@ def main() -> None:
     if "--test" in sys.argv:
         run_test_mode()
         return
-
-    import yaml
 
     payload = json.load(sys.stdin)
 
