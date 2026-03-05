@@ -315,7 +315,7 @@ def test_split_by_type_entities_are_in_correct_bucket(nlp):
 
 
 def test_split_by_type_covers_all_entities(nlp):
-    """All entities from entities_full must appear in exactly one bucket."""
+    """All entities from entities_full must appear in exactly one bucket (no drops, no duplicates)."""
     chapters = [
         {"id": "ch01", "title": "Chapter 1", "content": "Alice walked into London and met the Royal Society."}
     ]
@@ -323,15 +323,20 @@ def test_split_by_type_covers_all_entities(nlp):
     _, entities_full = split_entities(result["entities"])
     by_type = split_by_type(entities_full)
 
-    all_bucket_ids = set()
+    all_bucket_ids: set[str] = set()
+    total_count = 0
     for bucket in by_type.values():
         all_bucket_ids |= set(bucket.keys())
+        total_count += len(bucket)
 
     known_types = {e["type"] for e in entities_full.values()} & {"PERSON", "PLACE", "ORG"}
     expected_ids = {
         eid for eid, e in entities_full.items() if e["type"] in known_types
     }
-    assert all_bucket_ids == expected_ids
+    assert all_bucket_ids == expected_ids, f"Bucket IDs don't match expected: {all_bucket_ids ^ expected_ids}"
+    assert total_count == len(expected_ids), (
+        f"Duplicate entities across buckets: total_count={total_count} but expected {len(expected_ids)} unique entities"
+    )
 
 
 def test_split_by_type_entities_retain_mentions_by_chapter(nlp):
@@ -343,6 +348,9 @@ def test_split_by_type_entities_retain_mentions_by_chapter(nlp):
     _, entities_full = split_entities(result["entities"])
     by_type = split_by_type(entities_full)
 
+    assert any(len(b) > 0 for b in by_type.values()), (
+        "Expected at least one entity to be classified into a bucket"
+    )
     for bucket in by_type.values():
         for entity_id, entity in bucket.items():
             assert "mentions_by_chapter" in entity, (
