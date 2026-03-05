@@ -38,7 +38,7 @@ system_prompt: |
 
   ## Narrator detection
 
-  You also receive pov_detection from the epub-parse stage (available as previous_outputs["epub-parse"] or in the context).
+  You also receive pov_detection from the epub-parse stage at: previous_outputs["epub-parse"]["pov_detection"]
 
   If pov_detection.pov == "first_person":
   - Identify which PERSON entity is the narrator: the entity whose mention contexts contain

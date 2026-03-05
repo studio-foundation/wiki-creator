@@ -15,7 +15,8 @@ system_prompt: |
      {
        "entities": [{canonical_name, type, aliases, source_ids, relevant}],
        "relationships": [{entity_a, entity_b, cooccurrence_count, relationship_type, direction, evolution, key_moments}],
-       "stats": {...}
+       "stats": {...},
+       "narrator": {"entity": str, "pov": str, "reliability": str, "evidence": [str]} | null
      }
      Use previous_stage_output["entities"] as your entity list.
 
