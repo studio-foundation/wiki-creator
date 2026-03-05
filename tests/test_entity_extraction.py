@@ -231,7 +231,7 @@ def test_is_valid_mention_rejects_non_alpha_start():
 def test_is_valid_mention_accepts_valid_names():
     assert _is_valid_mention("David Martín") is True
     assert _is_valid_mention("Barcelone") is True
-    assert _is_valid_mention("Merci") is True   # ambiguous — left to LLM
+    assert _is_valid_mention("Sainte-Croix") is True
     assert _is_valid_mention("Balthazar") is True
     assert _is_valid_mention("Don Basilio") is True
 
@@ -356,3 +356,40 @@ def test_split_by_type_entities_retain_mentions_by_chapter(nlp):
             assert "mentions_by_chapter" in entity, (
                 f"[{entity_id}] missing mentions_by_chapter in split_by_type output"
             )
+
+
+# --- FALSE_POSITIVE_WORDS / stoplist tests ---
+
+
+def test_false_positive_words_is_frozenset():
+    """FALSE_POSITIVE_WORDS doit être un frozenset exportable."""
+    from scripts.entity_extraction import FALSE_POSITIVE_WORDS  # fails until Task 2 is implemented
+    assert isinstance(FALSE_POSITIVE_WORDS, frozenset)
+    assert len(FALSE_POSITIVE_WORDS) > 0
+
+
+def test_is_valid_mention_rejects_stoplist_words():
+    """Les mots de la stoplist, seuls, doivent être rejetés."""
+    from scripts.entity_extraction import FALSE_POSITIVE_WORDS  # noqa: F401 — ensures symbol exists
+    assert _is_valid_mention("Cher") is False
+    assert _is_valid_mention("Chère") is False
+    assert _is_valid_mention("Monsieur") is False
+    assert _is_valid_mention("Madame") is False
+    assert _is_valid_mention("Bonjour") is False
+    assert _is_valid_mention("Merci") is False
+    assert _is_valid_mention("Adieu") is False
+
+
+def test_is_valid_mention_allows_multiword_with_stoplist_root():
+    """Les entités multi-mots contenant un mot de la stoplist doivent passer."""
+    from scripts.entity_extraction import FALSE_POSITIVE_WORDS  # noqa: F401 — ensures symbol exists
+    assert _is_valid_mention("Le Cher") is True
+    assert _is_valid_mention("Monsieur Lefebvre") is True
+    assert _is_valid_mention("Département du Cher") is True
+
+
+def test_is_valid_mention_case_insensitive_check():
+    """Le check stoplist doit être insensible à la casse."""
+    from scripts.entity_extraction import FALSE_POSITIVE_WORDS  # noqa: F401 — ensures symbol exists
+    assert _is_valid_mention("CHER") is False
+    assert _is_valid_mention("bonjour") is False
