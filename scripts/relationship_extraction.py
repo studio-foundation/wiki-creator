@@ -39,6 +39,8 @@ Standalone test:
   python scripts/relationship_extraction.py --test
   python scripts/relationship_extraction.py --test --classify
   python scripts/relationship_extraction.py --test --window 3 --threshold 2
+  python scripts/relationship_extraction.py --test --coref
+  python scripts/relationship_extraction.py --live --coref
 """
 
 import json
@@ -165,29 +167,43 @@ def build_cooccurrence_graph(
     return relationships, stats
 
 
+# French pronouns that might resolve to an entity when no NE is present
+_FR_PRONOUNS = frozenset({
+    "il", "elle", "ils", "elles", "lui", "leur",
+    "le", "la", "les", "l'", "l\u2019", "y", "en",
+    "se", "s'", "s\u2019",
+})
+
+
 def enrich_mentions_with_coref(
     chapters: dict[str, str],
     entities: list[dict],
     mentions_by_entity: dict[str, dict[str, list[str]]],
+    silence_window: int = 5,
 ) -> dict[str, dict[str, list[str]]]:
     """
-    Enrich mentions_by_entity with pronoun sentences resolved via coreferee.
+    Enrich mentions_by_entity with pronoun sentences via a spaCy-only heuristic.
 
-    For each chapter text, run spaCy + coreferee. For each coreference chain
-    whose head maps to a known canonical entity, add pronoun sentences to
-    mentions_by_entity[canonical][chapter_id] (no duplicates).
+    For each chapter, process sentences with fr_core_news_lg. Track the last known
+    PERSON canonical entity ("active entity"). When a sentence has French pronouns
+    but no PERSON entity, add it to the active entity's mentions. Reset the active
+    entity after `silence_window` consecutive sentences with no PERSON mention.
 
     Args:
         chapters: {chapter_id: full_text} from chapters.json
         entities: resolved entities list (canonical_name, aliases, type, relevant)
         mentions_by_entity: existing {canonical → {chapter_id → [sentences]}}
+        silence_window: reset active entity after this many sentences with no PERSON
 
     Returns:
         mentions_by_entity enriched in-place (also returned for convenience)
     """
     import spacy
 
-    # Build name→canonical lookup (same logic as build_cooccurrence_graph)
+    if not chapters:
+        return mentions_by_entity
+
+    # Build name→canonical lookup
     persons = [e for e in entities if e.get("type") == "PERSON" and e.get("relevant", True)]
     name_to_canonical: dict[str, str] = {}
     for entity in persons:
@@ -197,15 +213,13 @@ def enrich_mentions_with_coref(
             if len(alias) >= 4:
                 name_to_canonical[alias.lower()] = canonical
 
-    if not name_to_canonical or not chapters:
+    if not name_to_canonical:
         return mentions_by_entity
 
-    # Load spaCy + coreferee once
     try:
         nlp = spacy.load("fr_core_news_lg")
-        nlp.add_pipe("coreferee")
     except Exception as e:
-        print(f"[WARN] coreferee load failed: {e}", file=sys.stderr)
+        print(f"[WARN] spaCy load failed: {e}", file=sys.stderr)
         return mentions_by_entity
 
     total_added = 0
@@ -213,47 +227,60 @@ def enrich_mentions_with_coref(
     for chapter_id, text in chapters.items():
         if not text or not text.strip():
             continue
+
         try:
             doc = nlp(text)
         except Exception as e:
             print(f"[WARN] spaCy failed on {chapter_id}: {e}", file=sys.stderr)
             continue
 
-        if not doc._.coref_chains:
-            continue
+        active_entity: str | None = None
+        silence_count: int = 0
 
-        for chain in doc._.coref_chains:
-            # Find the canonical entity for this chain (look at all mentions)
-            canonical = None
-            for mention in chain:
-                for token_idx in mention:
-                    token_text = doc[token_idx].text
-                    canon = name_to_canonical.get(token_text.lower())
+        for sent in doc.sents:
+            # Find PERSON entities in this sentence
+            sent_persons = []
+            for ent in sent.ents:
+                if ent.label_ == "PER":
+                    canon = name_to_canonical.get(ent.text.lower())
                     if canon:
-                        canonical = canon
-                        break
-                if canonical:
-                    break
+                        sent_persons.append(canon)
 
-            if not canonical:
+            if sent_persons:
+                # Update active entity (last seen person in sentence)
+                active_entity = sent_persons[-1]
+                silence_count = 0
                 continue
 
-            # Add pronoun sentences to mentions
-            for mention in chain:
-                for token_idx in mention:
-                    token = doc[token_idx]
-                    if token.pos_ == "PRON":
-                        sentence = token.sent.text.strip()
-                        if not sentence:
-                            continue
-                        if canonical not in mentions_by_entity:
-                            mentions_by_entity[canonical] = {}
-                        if chapter_id not in mentions_by_entity[canonical]:
-                            mentions_by_entity[canonical][chapter_id] = []
-                        existing = mentions_by_entity[canonical][chapter_id]
-                        if sentence not in existing:
-                            existing.append(sentence)
-                            total_added += 1
+            # No PERSON in this sentence
+            silence_count += 1
+            if silence_count > silence_window:
+                active_entity = None
+
+            if active_entity is None:
+                continue
+
+            # Check for French pronouns
+            has_pronoun = any(
+                token.pos_ == "PRON" and token.text.lower() in _FR_PRONOUNS
+                for token in sent
+            )
+            if not has_pronoun:
+                continue
+
+            # Add sentence to active entity's mentions
+            sentence = sent.text.strip()
+            if not sentence:
+                continue
+
+            if active_entity not in mentions_by_entity:
+                mentions_by_entity[active_entity] = {}
+            if chapter_id not in mentions_by_entity[active_entity]:
+                mentions_by_entity[active_entity][chapter_id] = []
+            existing = mentions_by_entity[active_entity][chapter_id]
+            if sentence not in existing:
+                existing.append(sentence)
+                total_added += 1
 
     print(f"[coref] Pronoun sentences added: {total_added}", file=sys.stderr)
     return mentions_by_entity

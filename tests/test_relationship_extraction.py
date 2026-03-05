@@ -1,25 +1,13 @@
-"""Tests for scripts/relationship_extraction.py — coref enrichment."""
+"""Tests for scripts/relationship_extraction.py — spaCy-only pronoun heuristic."""
 import sys
 import os
-
-import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.relationship_extraction import enrich_mentions_with_coref
 
 
-@pytest.mark.skip(
-    reason=(
-        "coreferee does not support fr_core_news_lg version 3.8.0 on this environment "
-        "(Python 3.14 + spaCy 3.8). "
-        "Error: 'spaCy model fr_core_news_lg version 3.8.0 is not supported by Coreferee.' "
-        "The function degrades gracefully (returns mentions unchanged). "
-        "Re-enable when a supported spaCy model version is installed "
-        "(coreferee requires fr_core_news_lg <=3.4.x)."
-    )
-)
 def test_enrich_mentions_adds_pronoun_sentence():
-    """Pronoun sentence referring to a known entity must be added to its mentions."""
+    """Pronoun sentence after a named entity must be added to its mentions."""
     chapters = {
         "ch01": (
             "David Martín était un écrivain qui vivait à Barcelone. "
@@ -55,6 +43,8 @@ def test_enrich_mentions_no_crash_on_empty_chapters():
 
 def test_enrich_mentions_no_duplicate_sentences():
     """Already-present sentences must not be added again."""
+    # This sentence has no pronouns, so it won't be re-added via coref logic.
+    # We just verify existing sentences are not duplicated.
     sentence = "David Martín était un écrivain qui vivait à Barcelone."
     chapters = {"ch01": sentence}
     entities = [
@@ -64,3 +54,27 @@ def test_enrich_mentions_no_duplicate_sentences():
 
     enriched = enrich_mentions_with_coref(chapters, entities, mentions_by_entity)
     assert enriched["David Martín"]["ch01"].count(sentence) == 1
+
+
+def test_enrich_mentions_resets_after_silence():
+    """Active entity resets after silence_window sentences with no PERSON."""
+    # After 6 sentences with no entity, the active entity resets
+    # and pronouns in a later sentence should NOT be attributed
+    silence_sentences = " ".join([f"La pluie tombait sur la ville." for _ in range(6)])
+    chapters = {
+        "ch01": (
+            "David Martín entra dans la pièce. "  # sets active_entity = David Martín
+            + silence_sentences +                   # 6 sentences, resets after 5
+            " Il pleuvait encore."                  # pronoun but active_entity is None
+        ),
+    }
+    entities = [
+        {"canonical_name": "David Martín", "type": "PERSON", "aliases": ["Martín"], "relevant": True},
+    ]
+    mentions_by_entity: dict = {}
+
+    enriched = enrich_mentions_with_coref(chapters, entities, mentions_by_entity, silence_window=5)
+
+    # "Il pleuvait encore." should NOT be in David Martín's mentions
+    dm_mentions = enriched.get("David Martín", {}).get("ch01", [])
+    assert "Il pleuvait encore." not in dm_mentions
