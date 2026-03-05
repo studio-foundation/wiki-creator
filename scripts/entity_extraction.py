@@ -290,9 +290,16 @@ def main() -> None:
 
     entities_for_resolution, entities_full = split_entities(result["entities"])
 
-    # Write full entities to disk for wiki-generation to read via repo_manager-read_file
-    with open("entities_full.json", "w", encoding="utf-8") as f:
-        json.dump({"entities_full": entities_full}, f, ensure_ascii=False)
+    # Write full entities to disk split by type, for wiki-generation to read via repo_manager-read_file
+    by_type = split_by_type(entities_full)
+    type_files = {
+        "PERSON": ("persons_full.json", "persons_full"),
+        "PLACE": ("places_full.json", "places_full"),
+        "ORG": ("orgs_full.json", "orgs_full"),
+    }
+    for type_key, (filename, json_key) in type_files.items():
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump({json_key: by_type[type_key]}, f, ensure_ascii=False)
 
     # Output lightweight entities to stdout → becomes entity-resolution's previous_stage_output
     json.dump({"entities_for_resolution": entities_for_resolution}, sys.stdout, ensure_ascii=False)
