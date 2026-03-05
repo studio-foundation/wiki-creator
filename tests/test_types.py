@@ -1,4 +1,23 @@
+import json
+import subprocess
+import sys
+
 from wiki_creator.types import EntityRegistryEntry, EntityRegistry, ExtractedRelationship
+
+
+def test_studio_mode_missing_entities():
+    """Studio mode with empty previous_outputs returns error JSON, exit 1."""
+    payload = json.dumps({"previous_outputs": {}, "additional_context": ""})
+    result = subprocess.run(
+        [sys.executable, "scripts/relationship_extraction.py"],
+        input=payload,
+        capture_output=True,
+        text=True,
+        cwd="/home/arianeguay/dev/src/wiki-creator-by-studio/.worktrees/stu-229-relationship-extraction",
+    )
+    assert result.returncode == 1
+    out = json.loads(result.stdout)
+    assert "error" in out
 
 
 def test_entity_registry_entry_has_required_fields():

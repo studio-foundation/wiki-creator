@@ -338,6 +338,34 @@ Classifie leur relation. Réponds en JSON uniquement, sans markdown :
     return result
 
 
+def _load_mentions_from_files() -> dict[str, dict[str, list[str]]]:
+    """
+    Load mentions_by_chapter from per-type entity files written by entity-extraction.
+    Returns {first_raw_mention: {chapter_id: [sentences]}}.
+    Files are read from the current working directory (where Studio runs).
+    """
+    import os
+
+    mentions: dict[str, dict[str, list[str]]] = {}
+    type_files = {
+        "persons_full.json": "persons_full",
+        "places_full.json": "places_full",
+        "orgs_full.json": "orgs_full",
+    }
+
+    for filename, key in type_files.items():
+        if not os.path.exists(filename):
+            continue
+        with open(filename, encoding="utf-8") as f:
+            data = json.load(f)
+        for entity_id, entry in data.get(key, {}).items():
+            raw = entry.get("raw_mentions", [])
+            name = raw[0] if raw else entity_id
+            mentions[name] = entry.get("mentions_by_chapter", {})
+
+    return mentions
+
+
 def main() -> None:
     args = sys.argv[1:]
 
@@ -357,8 +385,37 @@ def main() -> None:
         return
 
     payload = json.load(sys.stdin)
-    # Studio mode: implemented in Task 5
-    json.dump({"error": "Studio mode not yet implemented"}, sys.stdout, ensure_ascii=False)
+
+    prev_outputs = payload.get("previous_outputs", {})
+    resolution_output = prev_outputs.get("entity-resolution", {})
+    entities = resolution_output.get("entities", [])
+
+    if not entities:
+        json.dump({"error": "missing entity-resolution output"}, sys.stdout, ensure_ascii=False)
+        sys.exit(1)
+
+    # Parse classify flag from additional_context (YAML string)
+    import yaml
+    do_classify = False
+    raw_context = payload.get("additional_context", "")
+    if raw_context:
+        try:
+            additional = yaml.safe_load(raw_context) or {}
+            do_classify = bool(additional.get("classify", False))
+        except Exception:
+            pass
+
+    mentions_by_entity = _load_mentions_from_files()
+
+    relationships, stats = build_cooccurrence_graph(
+        entities, mentions_by_entity, window_size, threshold
+    )
+
+    if do_classify:
+        relationships = classify_relationships(relationships)
+        stats["classified"] = sum(1 for r in relationships if r.get("relationship_type"))
+
+    json.dump({"relationships": relationships, "stats": stats}, sys.stdout, ensure_ascii=False)
 
 
 if __name__ == "__main__":
