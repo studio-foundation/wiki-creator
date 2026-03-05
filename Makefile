@@ -14,4 +14,4 @@ test-relationships:
 
 test: test-extraction
 	python scripts/entity_clustering.py --live
-	python scripts/relationship_extraction.py --test
+	python scripts/relationship_extraction.py --live
