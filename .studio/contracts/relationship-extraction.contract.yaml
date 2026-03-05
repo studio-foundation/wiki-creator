@@ -5,3 +5,4 @@ schema:
     - entities
     - relationships
     - stats
+  # narrator is passed through from entity-resolution (nullable)
