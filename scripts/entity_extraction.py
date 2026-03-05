@@ -94,6 +94,31 @@ def _is_valid_mention(text: str) -> bool:
     return True
 
 
+def _truncate_mention(span) -> str:
+    """
+    Tronque un span spaCy au dernier token qui ressemble à un nom propre.
+
+    Un token est considéré "propre" si son texte commence par une majuscule
+    (is_title) ou si son POS tag est PROPN.
+
+    Si aucun token n'est propre (cas dégénéré), retourne le span complet.
+
+    Exemples :
+      "Barcelone de ténèbres" → "Barcelone"
+      "Victor Grandes me sourit" → "Victor Grandes"
+      "Victor Hugo" → "Victor Hugo" (inchangé)
+    """
+    tokens = list(span)
+    last_proper = 0  # fallback : 0 → on retournera le span complet si aucun propre
+    for i in range(len(tokens) - 1, -1, -1):
+        if tokens[i].is_title or tokens[i].pos_ == "PROPN":
+            last_proper = i + 1
+            break
+    if last_proper == 0:
+        return span.text
+    return span.doc[span.start : span.start + last_proper].text
+
+
 # Hardcoded chapters for --test mode (English, uses en_core_web_sm)
 TEST_CHAPTERS = [
     {
@@ -173,10 +198,11 @@ def extract_entities(chapters: list[dict], nlp) -> dict:
             if ent.label_ not in KEPT_LABELS:
                 continue
 
-            key = ent.text.lower().strip()
+            mention_text = _truncate_mention(ent)
+            key = mention_text.lower().strip()
             if not key:
                 continue
-            if not _is_valid_mention(ent.text):
+            if not _is_valid_mention(mention_text):
                 continue
 
             context = extract_context(doc, ent)
@@ -186,14 +212,14 @@ def extract_entities(chapters: list[dict], nlp) -> dict:
                 registry[key] = {
                     "id": f"entity_{entity_counter:03d}",
                     "type": LABEL_TO_TYPE.get(ent.label_, "OTHER"),
-                    "raw_mentions": [ent.text],
+                    "raw_mentions": [mention_text],
                     "first_seen": chapter["id"],
                     "mentions_by_chapter": {},
                     "mention_count": 1,
                 }
             else:
-                if ent.text not in registry[key]["raw_mentions"]:
-                    registry[key]["raw_mentions"].append(ent.text)
+                if mention_text not in registry[key]["raw_mentions"]:
+                    registry[key]["raw_mentions"].append(mention_text)
                 registry[key]["mention_count"] += 1
 
             registry[key]["mentions_by_chapter"].setdefault(chapter["id"], [])

@@ -5,7 +5,10 @@ import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from scripts.entity_extraction import extract_entities, extract_context, split_entities, split_by_type, KEPT_LABELS, _is_valid_mention, FRONTMATTER_ID_PATTERNS
+from scripts.entity_extraction import (
+    extract_entities, extract_context, split_entities, split_by_type,
+    KEPT_LABELS, _is_valid_mention, FRONTMATTER_ID_PATTERNS, _truncate_mention
+)
 
 
 @pytest.fixture(scope="module")
@@ -393,3 +396,46 @@ def test_is_valid_mention_case_insensitive_check():
     from scripts.entity_extraction import FALSE_POSITIVE_WORDS  # noqa: F401 — ensures symbol exists
     assert _is_valid_mention("CHER") is False
     assert _is_valid_mention("bonjour") is False
+
+
+# --- _truncate_mention tests ---
+
+
+def test_truncate_mention_drops_trailing_lowercase_tokens(nlp):
+    """Trailing lowercase tokens are dropped."""
+    doc = nlp("She visited New York city streets yesterday.")
+    start = next(i for i, t in enumerate(doc) if t.text == "New")
+    # Find "city" as the last token to include (non-proper)
+    york_idx = next(i for i, t in enumerate(doc) if t.text == "York")
+    city_idx = york_idx + 1  # "city"
+    span = doc[start:city_idx + 1]  # "New York city"
+    result = _truncate_mention(span)
+    assert "city" not in result, f"Expected 'city' to be dropped, got {result!r}"
+    assert "New" in result, f"Expected 'New' to be in result, got {result!r}"
+
+
+def test_truncate_mention_keeps_multiword_proper_noun(nlp):
+    """Un nom propre multi-mots sans queue est retourné intact."""
+    doc = nlp("I met Victor Hugo yesterday.")
+    start = next(i for i, t in enumerate(doc) if t.text == "Victor")
+    end = next(i for i, t in enumerate(doc) if t.text == "Hugo") + 1
+    span = doc[start:end]
+    result = _truncate_mention(span)
+    assert result == "Victor Hugo", f"Expected 'Victor Hugo', got {result!r}"
+
+
+def test_truncate_mention_single_token(nlp):
+    """Un span d'un seul token propre est retourné tel quel."""
+    doc = nlp("Alice smiled.")
+    span = doc[0:1]  # "Alice"
+    result = _truncate_mention(span)
+    assert result == "Alice", f"Expected 'Alice', got {result!r}"
+
+
+def test_truncate_mention_all_lowercase_returns_full(nlp):
+    """Si aucun token n'est title/PROPN, retourner le span complet (cas dégénéré)."""
+    doc = nlp("the quick brown fox.")
+    span = doc[0:4]
+    result = _truncate_mention(span)
+    # Pas de token propre → retourne tout (comportement de fallback)
+    assert result == span.text

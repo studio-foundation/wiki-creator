@@ -36,8 +36,10 @@ def test_clean_isolated_newline_replaced_by_space():
 
 
 def test_clean_isolated_newline_mid_word():
-    """Single \\n mid-word → space (I\\nntéressant becomes I ntéressant)."""
-    assert clean_chapter_text("I\nntéressant") == "I ntéressant"
+    """Single \\n between a capital letter and a lowercase word is a lettrine artefact.
+    After \\n→space (step 3) and then lettrine join (step 3b), 'I\\nntéressant' → 'Intéressant'.
+    """
+    assert clean_chapter_text("I\nntéressant") == "Intéressant"
 
 
 def test_clean_double_newline_preserved():
@@ -68,11 +70,17 @@ def test_clean_html_mdash():
 
 
 def test_clean_html_nbsp_handled():
-    """&nbsp; is unescaped by html.unescape (becomes \\u00a0, non-breaking space)."""
+    """&nbsp; est converti en espace standard (pas en \\xa0)."""
     result = clean_chapter_text("hello&nbsp;world")
-    # html.unescape converts &nbsp; to \u00a0, which is acceptable
-    assert "&nbsp;" not in result  # the raw entity is gone
-    assert "hello" in result and "world" in result
+    assert "&nbsp;" not in result
+    assert "\xa0" not in result  # doit être normalisé, pas laissé comme \xa0
+    assert result == "hello world"
+
+
+def test_clean_xa0_normalized_to_space():
+    """\\xa0 brut (non-breaking space) est normalisé en espace standard."""
+    assert clean_chapter_text("M.\xa0Martín") == "M. Martín"
+    assert clean_chapter_text("Mme\xa0Vidal") == "Mme Vidal"
 
 
 def test_short_chapter_filtered(tmp_path):
@@ -144,3 +152,24 @@ def test_parse_epub_content_is_cleaned(tmp_path):
         "Isolated \\n found — clean_chapter_text was not applied"
     # Sanity: content is not empty and has actual text
     assert "Sentence" in ch_content
+
+
+def test_clean_lettrine_space_joined():
+    """Une lettre majuscule isolée suivie d'un espace et d'un mot en minuscule
+    est joinée (artefact lettrine HTML : 'P edro' → 'Pedro').
+    """
+    assert clean_chapter_text("P edro Vidal") == "Pedro Vidal"
+    assert clean_chapter_text("L orca") == "Lorca"
+    assert clean_chapter_text("B arcelone") == "Barcelone"
+
+
+def test_clean_lettrine_does_not_affect_abbreviations():
+    """M. Pedro, Dr. House etc. ne sont pas modifiés (point après la lettre)."""
+    assert clean_chapter_text("M. Pedro") == "M. Pedro"
+    assert clean_chapter_text("Dr. House") == "Dr. House"
+
+
+def test_clean_lettrine_with_newline_separator():
+    """BeautifulSoup produces 'P\\nedro' for <span>P</span>edro — must also be joined."""
+    assert clean_chapter_text("P\nedro Vidal") == "Pedro Vidal"
+    assert clean_chapter_text("L\norca") == "Lorca"
