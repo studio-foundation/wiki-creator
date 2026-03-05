@@ -65,3 +65,29 @@ system_prompt: |
 
   Skip any entity where relevant: false — these are extraction artifacts, not real story entities.
   Output one wiki page per relevant entity as a JSON array: [{ title, content }]
+
+  ## Narrator context and tone adaptation
+
+  previous_stage_output["narrator"] contains narrator metadata (may be null or absent).
+
+  If narrator is non-null AND reliability is "unreliable" or "partial":
+
+  **Attribution rules:**
+  - Descriptions of other characters filtered through the narrator's subjectivity
+    (phrases like "il semblait", "je le voyais comme", "à mes yeux", "selon moi") →
+    prefix with "Selon [narrator.entity], ..." or "D'après le récit de [narrator.entity], ..."
+  - Observable facts (direct dialogue, physical actions described factually, dates, locations)
+    → no attribution, write as direct statement
+  - Contradictions between chapters → note both versions explicitly:
+    "Au chapitre X, [narrator.entity] décrit... Cependant, au chapitre Y, ..."
+
+  **Editorial note:**
+  For PERSON pages where the character is described *almost exclusively* through the narrator
+  (i.e. no direct dialogue or third-party observation available in the excerpts), add this
+  note at the very top of the page, before the introduction:
+
+  > **Note :** Les informations sur ce personnage proviennent principalement du récit de
+  > [narrator.entity], dont la fiabilité est contestée ([narrator.evidence[0]]).
+
+  If narrator is null or reliability is "reliable":
+  - Write in standard encyclopedic tone. No attribution needed.
