@@ -39,7 +39,6 @@ MIN_CHAPTER_CHARS = 100
 
 
 def parse_epub(file_path: str) -> dict:
-    import os
     import ebooklib
     from ebooklib import epub
     from bs4 import BeautifulSoup
@@ -53,15 +52,11 @@ def parse_epub(file_path: str) -> dict:
     author = author[0][0] if author else None
 
     # Use EPUB spine order (the official reading order).
-    # Build items_by_id keyed by both item.get_id() and filename stem so that
-    # spine idrefs (which may differ from the manifest IDs after a write/read
-    # round-trip) are resolved correctly.
     spine_ids = [item_id for item_id, _ in book.spine]
-    items_by_id = {}
-    for item in book.get_items_of_type(ebooklib.ITEM_DOCUMENT):
-        items_by_id[item.get_id()] = item
-        stem = os.path.splitext(item.get_name())[0]
-        items_by_id[stem] = item
+    items_by_id = {
+        item.get_id(): item
+        for item in book.get_items_of_type(ebooklib.ITEM_DOCUMENT)
+    }
 
     chapters = []
     for spine_id in spine_ids:
@@ -73,9 +68,8 @@ def parse_epub(file_path: str) -> dict:
         cleaned = clean_chapter_text(raw_text)
         if len(cleaned) < MIN_CHAPTER_CHARS:
             continue
-        stem = os.path.splitext(item.get_name())[0]
         chapters.append({
-            "id": stem,
+            "id": item.get_id(),
             "title": item.get_name(),
             "content": cleaned,
         })

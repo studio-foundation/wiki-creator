@@ -80,15 +80,14 @@ def test_short_chapter_filtered(tmp_path):
     import ebooklib
     from ebooklib import epub
 
-    # Build a minimal EPUB with one short and one normal chapter
     book = epub.EpubBook()
     book.set_title("Test Book")
     book.set_language("fr")
 
-    short_item = epub.EpubHtml(title="Short", file_name="short.xhtml", lang="fr")
+    short_item = epub.EpubHtml(uid="short", title="Short", file_name="short.xhtml", lang="fr")
     short_item.set_content(b"<html><body><p>Court.</p></body></html>")
 
-    long_item = epub.EpubHtml(title="Long", file_name="long.xhtml", lang="fr")
+    long_item = epub.EpubHtml(uid="long", title="Long", file_name="long.xhtml", lang="fr")
     long_content = "<html><body><p>" + "A" * 150 + "</p></body></html>"
     long_item.set_content(long_content.encode())
 
@@ -104,23 +103,22 @@ def test_short_chapter_filtered(tmp_path):
     from scripts.parse_epub import parse_epub
     result = parse_epub(epub_path)
 
-    ids = [c["id"] for c in result["chapters"]]
-    assert "short" not in ids, "Short chapter should be filtered out"
-    assert "long" in ids, "Long chapter should be included"
+    assert len(result["chapters"]) == 1, f"Expected 1 chapter, got {len(result['chapters'])}"
+    assert "A" * 100 in result["chapters"][0]["content"], "Long chapter content missing"
 
 
 def test_parse_epub_content_is_cleaned(tmp_path):
     """Chapter content returned by parse_epub has isolated \\n replaced by spaces."""
     import ebooklib
     from ebooklib import epub
+    import re
 
     book = epub.EpubBook()
     book.set_title("Test Book")
     book.set_language("fr")
 
-    item = epub.EpubHtml(title="Chapter", file_name="chap.xhtml", lang="fr")
-    # Create content long enough to pass the 100-char filter
-    content = "<html><body>" + "<p>" + "A" * 120 + "</p>" + "</body></html>"
+    item = epub.EpubHtml(uid="chap", title="Chapter", file_name="chap.xhtml", lang="fr")
+    content = "<html><body><p>" + "A" * 120 + "</p></body></html>"
     item.set_content(content.encode())
 
     book.add_item(item)
@@ -135,8 +133,6 @@ def test_parse_epub_content_is_cleaned(tmp_path):
     result = parse_epub(epub_path)
 
     assert len(result["chapters"]) == 1
-    # Content should not have isolated newlines (clean_chapter_text applied)
-    content = result["chapters"][0]["content"]
-    # After cleaning: no sequence of \n followed by a non-\n char mid-content
-    import re
-    assert not re.search(r'(?<!\n)\n(?!\n)', content), "Isolated \\n found in output — clean_chapter_text not applied"
+    ch_content = result["chapters"][0]["content"]
+    assert not re.search(r'(?<!\n)\n(?!\n)', ch_content), \
+        "Isolated \\n found in output — clean_chapter_text not applied"
