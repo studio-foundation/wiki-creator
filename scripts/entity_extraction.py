@@ -261,6 +261,16 @@ def run_test_mode() -> None:
         f"({100 * slim_size // full_size if full_size else 0}% of full)"
     )
 
+    by_type = split_by_type(entities)
+    print("\nPer-type file sizes (chars):")
+    for type_key, (filename, json_key) in [
+        ("PERSON", ("persons_full.json", "persons_full")),
+        ("PLACE", ("places_full.json", "places_full")),
+        ("ORG", ("orgs_full.json", "orgs_full")),
+    ]:
+        size = len(json.dumps({json_key: by_type[type_key]}, ensure_ascii=False))
+        print(f"  {filename}: {size} chars ({len(by_type[type_key])} entities)")
+
 
 def main() -> None:
     if "--test" in sys.argv:
