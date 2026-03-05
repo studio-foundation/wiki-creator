@@ -22,6 +22,11 @@ def clean_chapter_text(text: str) -> str:
     #     html.unescape() convertit &nbsp; → \xa0, donc ce replace vient après.
     text = text.replace('\xa0', ' ')
 
+    # 1c. Joindre lettre majuscule isolée + mot suivant en minuscule
+    #     Artefact lettrine HTML : <span>P</span>edro → "P edro" → "Pedro"
+    #     Ne touche pas "M. Pedro" (suivi d'un point) ni les fins de phrase.
+    text = re.sub(r'(?<!\w)([A-ZÀÂÇÉÈÊËÎÏÔÙÛÜ]) ([a-záàâçéèêëîïôùûü])', r'\1\2', text)
+
     # 2. Collapse runs of 2+ newlines into exactly \n\n (paragraph break)
     text = re.sub(r'\n{2,}', '\n\n', text)
 

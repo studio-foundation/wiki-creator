@@ -150,3 +150,18 @@ def test_parse_epub_content_is_cleaned(tmp_path):
         "Isolated \\n found — clean_chapter_text was not applied"
     # Sanity: content is not empty and has actual text
     assert "Sentence" in ch_content
+
+
+def test_clean_lettrine_space_joined():
+    """Une lettre majuscule isolée suivie d'un espace et d'un mot en minuscule
+    est joinée (artefact lettrine HTML : 'P edro' → 'Pedro').
+    """
+    assert clean_chapter_text("P edro Vidal") == "Pedro Vidal"
+    assert clean_chapter_text("L orca") == "Lorca"
+    assert clean_chapter_text("B arcelone") == "Barcelone"
+
+
+def test_clean_lettrine_does_not_affect_abbreviations():
+    """M. Pedro, Dr. House etc. ne sont pas modifiés (point après la lettre)."""
+    assert clean_chapter_text("M. Pedro") == "M. Pedro"
+    assert clean_chapter_text("Dr. House") == "Dr. House"
