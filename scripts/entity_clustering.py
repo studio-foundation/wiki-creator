@@ -350,9 +350,74 @@ def run_test_mode() -> None:
 
 # --- Studio pipeline interface ---
 
+def run_live_mode() -> None:
+    """Live mode: read the latest extraction-*.jsonl and run clustering on real data."""
+    import glob
+
+    jsonl_files = sorted(glob.glob("extraction-*.jsonl"), reverse=True)
+    if not jsonl_files:
+        print("No extraction-*.jsonl file found. Run make test-extraction first.", file=sys.stderr)
+        sys.exit(1)
+
+    latest = jsonl_files[0]
+    print(f"Reading {latest}...\n", file=sys.stderr)
+
+    entities = {}
+    with open(latest, encoding="utf-8") as f:
+        for line in f:
+            e = json.loads(line)
+            mention_count = sum(len(v) for v in e.get("mentions_by_chapter", {}).values())
+            entities[e["id"]] = {
+                "type": e["type"],
+                "raw_mentions": e["raw_mentions"],
+                "first_seen": e.get("first_seen", ""),
+                "mention_count": mention_count or len(e.get("raw_mentions", [])),
+            }
+
+    clusters, unclustered = build_clusters(entities)
+    all_clusters = sorted(clusters + [
+        {
+            "cluster_id": f"single_{eid}",
+            "type": entity.get("type", "OTHER"),
+            "canonical_candidate": entity["raw_mentions"][0] if entity.get("raw_mentions") else eid,
+            "all_mentions": entity.get("raw_mentions", []),
+            "entity_ids": [eid],
+            "entity_count": 1,
+            "first_seen": entity.get("first_seen", ""),
+            "total_mentions": entity.get("mention_count", len(entity.get("raw_mentions", []))),
+        }
+        for eid, entity in unclustered.items()
+    ], key=lambda c: c["total_mentions"], reverse=True)
+
+    total = len(entities)
+    output_count = len(all_clusters)
+    multi = [c for c in all_clusters if c["entity_count"] > 1]
+
+    print(f"=== LIVE CLUSTERING — {latest} ===\n")
+    print(f"Top 20 clusters (multi-entités, par total_mentions) :\n")
+    for c in multi[:20]:
+        print(
+            f"  {c['cluster_id']} [{c['type']}] "
+            f"{c['entity_count']}→1  {c['total_mentions']} mentions  {c['canonical_candidate']}"
+        )
+        print(f"    {c['all_mentions']}")
+        print()
+
+    print(f"=== STATS ===")
+    print(f"  Input entities:    {total}")
+    print(f"  Multi-clusters:    {len(multi)}")
+    print(f"  Unclustered:       {len(all_clusters) - len(multi)}")
+    print(f"  Total output:      {output_count}")
+    print(f"  Reduction:         {100 - 100 * output_count // total if total else 0}%")
+
+
 def main() -> None:
     if "--test" in sys.argv:
         run_test_mode()
+        return
+
+    if "--live" in sys.argv:
+        run_live_mode()
         return
 
     payload = json.load(sys.stdin)
