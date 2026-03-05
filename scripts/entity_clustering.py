@@ -385,7 +385,7 @@ def main() -> None:
         }
         for eid, entity in unclustered.items()
     ]
-    all_clusters = clusters + single_clusters
+    all_clusters = sorted(clusters + single_clusters, key=lambda c: c["total_mentions"], reverse=True)
 
     result = {
         "clusters": all_clusters,
