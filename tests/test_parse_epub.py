@@ -54,3 +54,22 @@ def test_clean_multiple_spaces_normalized():
 def test_clean_leading_trailing_whitespace_stripped():
     """Leading/trailing whitespace stripped."""
     assert clean_chapter_text("  hello world  ") == "hello world"
+
+
+def test_clean_html_entities_amp():
+    """&amp; is unescaped to &."""
+    assert clean_chapter_text("AT&amp;T") == "AT&T"
+
+
+def test_clean_html_mdash():
+    """&mdash; is unescaped to the em dash character."""
+    result = clean_chapter_text("word&mdash;word")
+    assert "\u2014" in result  # em dash U+2014
+
+
+def test_clean_html_nbsp_handled():
+    """&nbsp; is unescaped by html.unescape (becomes \\u00a0, non-breaking space)."""
+    result = clean_chapter_text("hello&nbsp;world")
+    # html.unescape converts &nbsp; to \u00a0, which is acceptable
+    assert "&nbsp;" not in result  # the raw entity is gone
+    assert "hello" in result and "world" in result
