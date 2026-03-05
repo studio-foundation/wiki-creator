@@ -36,7 +36,11 @@ env/
 
 # Pipeline artifacts
 entities_full.json
+extraction-*.jsonl
 
 # Misc
 .DS_Store
 *.pem
+
+# Books
+books/
