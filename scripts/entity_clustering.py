@@ -172,8 +172,13 @@ def should_cluster_tokens(name1: str, name2: str) -> bool:
 
 def should_cluster_jw(name1: str, name2: str) -> bool:
     """Jaro-Winkler on normalized full names (orthographic variants)."""
-    n1 = normalize_for_comparison(" ".join(tokenize_name(name1)))
-    n2 = normalize_for_comparison(" ".join(tokenize_name(name2)))
+    t1 = tokenize_name(name1)
+    t2 = tokenize_name(name2)
+    # Same safety as token path: single given names don't match each other
+    if is_single_given_name(t1) and is_single_given_name(t2):
+        return False
+    n1 = normalize_for_comparison(" ".join(t1))
+    n2 = normalize_for_comparison(" ".join(t2))
     if not n1 or not n2:
         return False
     # Only match if names are roughly the same length (avoids "Mar" matching "Martín")
@@ -347,7 +352,7 @@ def main() -> None:
 
     # Get entities from previous stage output
     prev_outputs = payload.get("previous_outputs", {})
-    extraction_output = next(iter(prev_outputs.values()), {}) if prev_outputs else {}
+    extraction_output = prev_outputs.get("entity-extraction", {})
     entities = extraction_output.get("entities_for_resolution", {})
 
     if not entities:

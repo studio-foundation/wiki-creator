@@ -87,8 +87,10 @@ def test_cluster_jw_barcelona_barcelone():
     assert should_cluster_jw("Barcelona", "Barcelone") is True
 
 def test_cluster_jw_martin_accent():
-    # "Martin" vs "Martín" — accent variant
-    assert should_cluster_jw("Martin", "Martín") is True
+    # "Martin" vs "Martín" are both single given names — guard blocks them from matching
+    assert should_cluster_jw("Martin", "Martín") is False
+    # Multi-token names with accent difference should still match
+    assert should_cluster_jw("David Martin", "David Martín") is True
 
 def test_cluster_jw_different_names():
     # Clearly different names should not match
