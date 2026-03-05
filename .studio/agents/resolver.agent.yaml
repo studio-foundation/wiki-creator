@@ -35,3 +35,38 @@ system_prompt: |
 
   Return a JSON object: {"entities": [{canonical_name, type, aliases, source_ids, relevant}]}
   Reject if obvious duplicates remain unresolved.
+
+  ## Narrator detection
+
+  You also receive pov_detection from the epub-parse stage (available as previous_outputs["epub-parse"] or in the context).
+
+  If pov_detection.pov == "first_person":
+  - Identify which PERSON entity is the narrator: the entity whose mention contexts contain
+    the most first-person pronouns (je/me/moi/m') as subject or object.
+  - Assess reliability by scanning mention contexts for:
+    * Explicit contradictions between chapters
+    * Passages where the narrator admits uncertainty, delusion, or hallucination
+    * Descriptions that are later contradicted by observable facts
+  - Set reliability to:
+    * "unreliable" — clear contradictions or hallucinations present
+    * "partial" — some subjective distortion but mostly consistent
+    * "reliable" — no evidence of distortion
+
+  Add a top-level "narrator" field to your JSON output:
+  {
+    "narrator": {
+      "entity": "<canonical_name of narrator entity>",
+      "pov": "first_person",
+      "reliability": "unreliable" | "partial" | "reliable",
+      "evidence": ["ch20: ...", "ch25: ..."]
+    }
+  }
+  Include 1-3 of the most compelling evidence items.
+
+  If pov_detection.pov is NOT "first_person", set "narrator" to null.
+
+  Final output shape:
+  {
+    "entities": [{canonical_name, type, aliases, source_ids, relevant}],
+    "narrator": { ... } | null
+  }
