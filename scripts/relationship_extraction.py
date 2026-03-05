@@ -277,6 +277,66 @@ def run_test_mode(window_size: int, threshold: int) -> None:
             all_ok = False
     print(f"\n{'All expected pairs found.' if all_ok else 'SOME PAIRS MISSING — check algorithm.'}")
 
+    if "--classify" in sys.argv:
+        print("\n=== CLASSIFY MODE ===")
+        relationships = classify_relationships(relationships)
+        classified_count = sum(1 for r in relationships if r.get("relationship_type"))
+        print(f"Classified {classified_count}/{len(relationships)} relationships")
+        for r in relationships[:5]:
+            print(f"  {r['entity_a']} ↔ {r['entity_b']}: {r['relationship_type']} ({r['direction']})")
+            if r.get("evolution"):
+                print(f"    Evolution: {r['evolution']}")
+        stats["classified"] = classified_count
+
+
+def classify_relationships(relationships: list[dict]) -> list[dict]:
+    """Classify relationships using Haiku. Fails gracefully per pair."""
+    import anthropic
+
+    client = anthropic.Anthropic()
+    result = []
+
+    for rel in relationships:
+        contexts_text = "\n".join(
+            f'{i+1}. "{ctx}"' for i, ctx in enumerate(rel["sample_contexts"][:3])
+        )
+        prompt = f"""Voici des extraits d'un roman où deux personnages apparaissent ensemble.
+Personnage A : {rel['entity_a']}
+Personnage B : {rel['entity_b']}
+Cooccurrences : {rel['cooccurrence_count']}
+
+Extraits :
+{contexts_text}
+
+Classifie leur relation. Réponds en JSON uniquement, sans markdown :
+{{
+  "relationship_type": "famille|mentor/protégé|amoureux|antagoniste|allié|employeur/employé|ami|connaissance|autre",
+  "direction": "symétrique|A→B|B→A",
+  "evolution": "en une phrase, comment la relation évolue",
+  "key_moments": ["chXX: description courte"]
+}}"""
+
+        try:
+            response = client.messages.create(
+                model="claude-haiku-4-5-20251001",
+                max_tokens=300,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            classification = json.loads(response.content[0].text)
+            rel = {
+                **rel,
+                "relationship_type": classification.get("relationship_type"),
+                "direction": classification.get("direction"),
+                "evolution": classification.get("evolution"),
+                "key_moments": classification.get("key_moments", []),
+            }
+        except Exception as e:
+            print(f"  [WARN] classification failed for {rel['entity_a']}↔{rel['entity_b']}: {e}", file=sys.stderr)
+
+        result.append(rel)
+
+    return result
+
 
 def main() -> None:
     args = sys.argv[1:]
