@@ -165,6 +165,100 @@ def build_cooccurrence_graph(
     return relationships, stats
 
 
+def enrich_mentions_with_coref(
+    chapters: dict[str, str],
+    entities: list[dict],
+    mentions_by_entity: dict[str, dict[str, list[str]]],
+) -> dict[str, dict[str, list[str]]]:
+    """
+    Enrich mentions_by_entity with pronoun sentences resolved via coreferee.
+
+    For each chapter text, run spaCy + coreferee. For each coreference chain
+    whose head maps to a known canonical entity, add pronoun sentences to
+    mentions_by_entity[canonical][chapter_id] (no duplicates).
+
+    Args:
+        chapters: {chapter_id: full_text} from chapters.json
+        entities: resolved entities list (canonical_name, aliases, type, relevant)
+        mentions_by_entity: existing {canonical → {chapter_id → [sentences]}}
+
+    Returns:
+        mentions_by_entity enriched in-place (also returned for convenience)
+    """
+    import spacy
+
+    # Build name→canonical lookup (same logic as build_cooccurrence_graph)
+    persons = [e for e in entities if e.get("type") == "PERSON" and e.get("relevant", True)]
+    name_to_canonical: dict[str, str] = {}
+    for entity in persons:
+        canonical = entity["canonical_name"]
+        name_to_canonical[canonical.lower()] = canonical
+        for alias in entity.get("aliases", []):
+            if len(alias) >= 4:
+                name_to_canonical[alias.lower()] = canonical
+
+    if not name_to_canonical or not chapters:
+        return mentions_by_entity
+
+    # Load spaCy + coreferee once
+    try:
+        nlp = spacy.load("fr_core_news_lg")
+        nlp.add_pipe("coreferee")
+    except Exception as e:
+        print(f"[WARN] coreferee load failed: {e}", file=sys.stderr)
+        return mentions_by_entity
+
+    total_added = 0
+
+    for chapter_id, text in chapters.items():
+        if not text or not text.strip():
+            continue
+        try:
+            doc = nlp(text)
+        except Exception as e:
+            print(f"[WARN] spaCy failed on {chapter_id}: {e}", file=sys.stderr)
+            continue
+
+        if not doc._.coref_chains:
+            continue
+
+        for chain in doc._.coref_chains:
+            # Find the canonical entity for this chain (look at all mentions)
+            canonical = None
+            for mention in chain:
+                for token_idx in mention:
+                    token_text = doc[token_idx].text
+                    canon = name_to_canonical.get(token_text.lower())
+                    if canon:
+                        canonical = canon
+                        break
+                if canonical:
+                    break
+
+            if not canonical:
+                continue
+
+            # Add pronoun sentences to mentions
+            for mention in chain:
+                for token_idx in mention:
+                    token = doc[token_idx]
+                    if token.pos_ == "PRON":
+                        sentence = token.sent.text.strip()
+                        if not sentence:
+                            continue
+                        if canonical not in mentions_by_entity:
+                            mentions_by_entity[canonical] = {}
+                        if chapter_id not in mentions_by_entity[canonical]:
+                            mentions_by_entity[canonical][chapter_id] = []
+                        existing = mentions_by_entity[canonical][chapter_id]
+                        if sentence not in existing:
+                            existing.append(sentence)
+                            total_added += 1
+
+    print(f"[coref] Pronoun sentences added: {total_added}", file=sys.stderr)
+    return mentions_by_entity
+
+
 def run_test_mode(window_size: int, threshold: int) -> None:
     """Run with hardcoded Le Jeu de l'Ange data."""
     entities = [
