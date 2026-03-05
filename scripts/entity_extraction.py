@@ -201,6 +201,21 @@ def split_entities(entities: dict) -> tuple[dict, dict]:
     return entities_for_resolution, entities
 
 
+def split_by_type(entities_full: dict) -> dict[str, dict]:
+    """
+    Partition entities_full by entity type.
+
+    Returns a dict with keys "PERSON", "PLACE", "ORG".
+    Entities with other types (e.g. "OTHER") are silently dropped.
+    """
+    result: dict[str, dict] = {"PERSON": {}, "PLACE": {}, "ORG": {}}
+    for entity_id, entity in entities_full.items():
+        t = entity.get("type", "OTHER")
+        if t in result:
+            result[t][entity_id] = entity
+    return result
+
+
 def run_test_mode() -> None:
     """
     Standalone test mode: run entity extraction on hardcoded chapters.
