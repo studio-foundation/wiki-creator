@@ -118,7 +118,12 @@ def test_parse_epub_content_is_cleaned(tmp_path):
     book.set_language("fr")
 
     item = epub.EpubHtml(uid="chap", title="Chapter", file_name="chap.xhtml", lang="fr")
-    content = "<html><body><p>" + "A" * 120 + "</p></body></html>"
+    # Multiple <p> tags: BS4's get_text(separator="\\n") will insert \\n between them.
+    # After clean_chapter_text, those isolated \\n become spaces.
+    # Total content long enough to pass the 100-char filter.
+    sentences = ["Sentence " + str(i) + " with some words." for i in range(10)]
+    p_tags = "".join(f"<p>{s}</p>" for s in sentences)
+    content = f"<html><body>{p_tags}</body></html>"
     item.set_content(content.encode())
 
     book.add_item(item)
@@ -134,5 +139,8 @@ def test_parse_epub_content_is_cleaned(tmp_path):
 
     assert len(result["chapters"]) == 1
     ch_content = result["chapters"][0]["content"]
+    # If clean_chapter_text ran, isolated \\n are gone
     assert not re.search(r'(?<!\n)\n(?!\n)', ch_content), \
-        "Isolated \\n found in output — clean_chapter_text not applied"
+        "Isolated \\n found — clean_chapter_text was not applied"
+    # Sanity: content is not empty and has actual text
+    assert "Sentence" in ch_content
