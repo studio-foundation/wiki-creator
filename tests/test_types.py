@@ -1,4 +1,5 @@
 import json
+import pathlib
 import subprocess
 import sys
 
@@ -7,13 +8,14 @@ from wiki_creator.types import EntityRegistryEntry, EntityRegistry, ExtractedRel
 
 def test_studio_mode_missing_entities():
     """Studio mode with empty previous_outputs returns error JSON, exit 1."""
+    project_root = pathlib.Path(__file__).parent.parent
     payload = json.dumps({"previous_outputs": {}, "additional_context": ""})
     result = subprocess.run(
         [sys.executable, "scripts/relationship_extraction.py"],
         input=payload,
         capture_output=True,
         text=True,
-        cwd="/home/arianeguay/dev/src/wiki-creator-by-studio/.worktrees/stu-229-relationship-extraction",
+        cwd=str(project_root),
     )
     assert result.returncode == 1
     out = json.loads(result.stdout)

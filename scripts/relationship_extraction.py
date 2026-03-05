@@ -96,14 +96,18 @@ def build_cooccurrence_graph(
 
     # Build unified chapter sentences (deduplicated, order-preserved) across all entity mentions
     chapter_sentences: dict[str, list[str]] = {}
+    chapter_seen: dict[str, set[str]] = {}
     for canonical, chapters in mentions_by_entity.items():
         if canonical not in persons_canonical:
             continue
         for chapter_id, sentences in chapters.items():
             if chapter_id not in chapter_sentences:
                 chapter_sentences[chapter_id] = []
+            if chapter_id not in chapter_seen:
+                chapter_seen[chapter_id] = set()
             for sent in sentences:
-                if sent not in chapter_sentences[chapter_id]:
+                if sent not in chapter_seen[chapter_id]:
+                    chapter_seen[chapter_id].add(sent)
                     chapter_sentences[chapter_id].append(sent)
 
     # Slide window once per chapter
@@ -251,10 +255,6 @@ def run_test_mode(window_size: int, threshold: int) -> None:
             print(f"    sample: {rel['sample_contexts'][0][:80]}...")
         print()
 
-    print(f"=== STATS ===")
-    for k, v in stats.items():
-        print(f"  {k}: {v}")
-
     # Validation
     top_pairs = {
         (r["entity_a"], r["entity_b"]) for r in relationships
@@ -287,6 +287,10 @@ def run_test_mode(window_size: int, threshold: int) -> None:
             if r.get("evolution"):
                 print(f"    Evolution: {r['evolution']}")
         stats["classified"] = classified_count
+
+    print(f"\n=== STATS ===")
+    for k, v in stats.items():
+        print(f"  {k}: {v}")
 
 
 def classify_relationships(relationships: list[dict]) -> list[dict]:
@@ -402,6 +406,8 @@ def main() -> None:
         try:
             additional = yaml.safe_load(raw_context) or {}
             do_classify = bool(additional.get("classify", False))
+            window_size = int(additional.get("window", window_size))
+            threshold = int(additional.get("threshold", threshold))
         except Exception:
             pass
 
