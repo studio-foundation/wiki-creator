@@ -68,11 +68,17 @@ def test_clean_html_mdash():
 
 
 def test_clean_html_nbsp_handled():
-    """&nbsp; is unescaped by html.unescape (becomes \\u00a0, non-breaking space)."""
+    """&nbsp; est converti en espace standard (pas en \\xa0)."""
     result = clean_chapter_text("hello&nbsp;world")
-    # html.unescape converts &nbsp; to \u00a0, which is acceptable
-    assert "&nbsp;" not in result  # the raw entity is gone
-    assert "hello" in result and "world" in result
+    assert "&nbsp;" not in result
+    assert "\xa0" not in result  # doit être normalisé, pas laissé comme \xa0
+    assert result == "hello world"
+
+
+def test_clean_xa0_normalized_to_space():
+    """\\xa0 brut (non-breaking space) est normalisé en espace standard."""
+    assert clean_chapter_text("M.\xa0Martín") == "M. Martín"
+    assert clean_chapter_text("Mme\xa0Vidal") == "Mme Vidal"
 
 
 def test_short_chapter_filtered(tmp_path):

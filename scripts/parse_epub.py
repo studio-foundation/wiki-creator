@@ -18,6 +18,9 @@ def clean_chapter_text(text: str) -> str:
     """Normalize chapter text to remove noise before LLM processing."""
     # 1. Unescape HTML entities (&nbsp; → space, &mdash; → —, etc.)
     text = html.unescape(text)
+    # 1b. Normaliser \xa0 (non-breaking space) en espace standard
+    #     html.unescape() convertit &nbsp; → \xa0, donc ce replace vient après.
+    text = text.replace('\xa0', ' ')
 
     # 2. Collapse runs of 2+ newlines into exactly \n\n (paragraph break)
     text = re.sub(r'\n{2,}', '\n\n', text)
