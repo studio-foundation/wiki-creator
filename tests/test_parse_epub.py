@@ -25,3 +25,32 @@ def test_parse_epub_module_imports():
     """parse_epub module can be imported and parse_epub function exists."""
     from scripts.parse_epub import parse_epub
     assert callable(parse_epub)
+
+
+from scripts.parse_epub import clean_chapter_text
+
+
+def test_clean_isolated_newline_replaced_by_space():
+    """Single \\n inside text → space (A. C.\\nVidal becomes A. C. Vidal)."""
+    assert clean_chapter_text("A. C.\nVidal") == "A. C. Vidal"
+
+
+def test_clean_isolated_newline_mid_word():
+    """Single \\n mid-word → space (I\\nntéressant becomes I ntéressant)."""
+    assert clean_chapter_text("I\nntéressant") == "I ntéressant"
+
+
+def test_clean_double_newline_preserved():
+    """Double \\n\\n (paragraph break) is preserved."""
+    result = clean_chapter_text("Paragraph one.\n\nParagraph two.")
+    assert result == "Paragraph one.\n\nParagraph two."
+
+
+def test_clean_multiple_spaces_normalized():
+    """Multiple consecutive spaces → single space."""
+    assert clean_chapter_text("hello   world") == "hello world"
+
+
+def test_clean_leading_trailing_whitespace_stripped():
+    """Leading/trailing whitespace stripped."""
+    assert clean_chapter_text("  hello world  ") == "hello world"
