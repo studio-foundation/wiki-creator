@@ -48,3 +48,17 @@ class EntityRegistryEntry:
 @dataclass
 class EntityRegistry:
     entities: dict[str, EntityRegistryEntry]
+
+
+@dataclass
+class ExtractedRelationship:
+    entity_a: str
+    entity_b: str
+    cooccurrence_count: int
+    chapters: list[str] = field(default_factory=list)
+    sample_contexts: list[str] = field(default_factory=list)
+    # LLM-filled fields (None if --classify not used)
+    relationship_type: str | None = None
+    direction: str | None = None
+    evolution: str | None = None
+    key_moments: list[str] = field(default_factory=list)
