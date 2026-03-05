@@ -370,6 +370,180 @@ def _load_mentions_from_files() -> dict[str, dict[str, list[str]]]:
     return mentions
 
 
+def run_live_mode(window_size: int, threshold: int) -> None:
+    """Live mode: read persons_full.json, cluster entities, then run co-occurrence on real data."""
+    import os
+    import sys as _sys
+    import importlib.util
+
+    if not os.path.exists("persons_full.json"):
+        print("persons_full.json not found. Run make test-extraction first.", file=sys.stderr)
+        sys.exit(1)
+
+    # Load entity_clustering to reuse its build_clusters function
+    clustering_path = os.path.join(os.path.dirname(__file__), "entity_clustering.py")
+    spec = importlib.util.spec_from_file_location("entity_clustering", clustering_path)
+    clustering_mod = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
+    spec.loader.exec_module(clustering_mod)  # type: ignore[union-attr]
+
+    with open("persons_full.json", encoding="utf-8") as f:
+        data = json.load(f)
+
+    persons_data = data.get("persons_full", {})
+
+    # Build entities dict in format expected by build_clusters
+    clustering_input = {}
+    raw_mentions_map: dict[str, dict[str, list[str]]] = {}  # entity_id → mentions_by_chapter
+    for entity_id, entry in persons_data.items():
+        raw = entry.get("raw_mentions", [])
+        if not raw:
+            continue
+        mention_count = sum(len(v) for v in entry.get("mentions_by_chapter", {}).values())
+        clustering_input[entity_id] = {
+            "type": "PERSON",
+            "raw_mentions": raw,
+            "first_seen": entry.get("first_seen", ""),
+            "mention_count": mention_count or len(raw),
+        }
+        raw_mentions_map[entity_id] = entry.get("mentions_by_chapter", {})
+
+    clusters, unclustered = clustering_mod.build_clusters(clustering_input)
+
+    # Build entities list from clusters
+    entities = []
+    # maps canonical_name → list of entity_ids in the cluster
+    cluster_members: dict[str, list[str]] = {}
+
+    _SALUTATION_PREFIXES = frozenset({"cher", "chère", "dear", "très"})
+
+    def _pick_canonical(all_mentions: list[str], member_ids: list[str]) -> str:
+        """
+        Pick the best canonical name from a cluster's mentions.
+        Prefer the most-mentioned form that:
+          1. Is not all-caps
+          2. Does not start with a salutation ('Cher', etc.)
+          3. Has 1-3 real tokens after title stripping
+        Falls back to the entity_clustering candidate if nothing qualifies.
+        """
+        # Score each mention by how many sentences it appears in across the book
+        scores: dict[str, int] = {}
+        for mention in all_mentions:
+            count = 0
+            for eid in member_ids:
+                for sents in raw_mentions_map.get(eid, {}).values():
+                    count += sum(1 for s in sents if mention.lower() in s.lower())
+            scores[mention] = count
+
+        def is_good(mention: str) -> bool:
+            if mention == mention.upper() and len(mention) > 2:
+                return False  # skip ALL-CAPS forms
+            words = mention.split()
+            if words and words[0].lower() in _SALUTATION_PREFIXES:
+                return False  # skip salutations
+            return True
+
+        good_mentions = [m for m in all_mentions if is_good(m)]
+        if not good_mentions:
+            good_mentions = all_mentions
+
+        return max(good_mentions, key=lambda m: scores.get(m, 0))
+
+    for c in clusters:
+        canonical = _pick_canonical(c["all_mentions"], c["entity_ids"])
+        entities.append({
+            "canonical_name": canonical,
+            "type": "PERSON",
+            "aliases": [m for m in c["all_mentions"] if m != canonical],
+            "relevant": True,
+        })
+        cluster_members[canonical] = c["entity_ids"]
+
+    for entity_id, entry in unclustered.items():
+        raw = entry.get("raw_mentions", [])
+        if not raw:
+            continue
+        canonical = max(raw, key=lambda n: len(n))
+        entities.append({
+            "canonical_name": canonical,
+            "type": "PERSON",
+            "aliases": [m for m in raw if m != canonical],
+            "relevant": True,
+        })
+        cluster_members[canonical] = [entity_id]
+
+    # Build mentions_by_entity: merge mentions_by_chapter across all cluster members
+    mentions_by_entity: dict[str, dict[str, list[str]]] = {}
+    for canonical, member_ids in cluster_members.items():
+        merged: dict[str, list[str]] = {}
+        for eid in member_ids:
+            for chapter_id, sentences in raw_mentions_map.get(eid, {}).items():
+                if chapter_id not in merged:
+                    merged[chapter_id] = []
+                merged[chapter_id].extend(sentences)
+        mentions_by_entity[canonical] = merged
+
+    print(f"=== LIVE MODE — relationship-extraction ===\n")
+    print(f"Loaded {len(entities)} persons from persons_full.json")
+    print(f"Window size: {window_size}  |  Threshold: {threshold}\n")
+
+    relationships, stats = build_cooccurrence_graph(
+        entities, mentions_by_entity, window_size, threshold
+    )
+
+    print(f"Top 20 relations (cooccurrence_count desc):\n")
+    for rel in relationships[:20]:
+        print(f"  {rel['entity_a']} ↔ {rel['entity_b']}")
+        print(f"    count={rel['cooccurrence_count']}  chapters={len(rel['chapters'])}")
+        if rel.get("sample_contexts"):
+            snippet = rel["sample_contexts"][0][:80]
+            print(f"    sample: {snippet}...")
+        print()
+
+    print(f"=== STATS ===")
+    for k, v in stats.items():
+        print(f"  {k}: {v}")
+
+    # Fuzzy validation: look for expected pairs in top 20 using word-token matching
+    def pair_found(name_a: str, name_b: str) -> bool:
+        words_a = {w.lower() for w in name_a.split() if len(w) >= 4}
+        words_b = {w.lower() for w in name_b.split() if len(w) >= 4}
+        for rel in relationships[:20]:
+            ea = rel["entity_a"].lower()
+            eb = rel["entity_b"].lower()
+            if any(w in ea for w in words_a) and any(w in eb for w in words_b):
+                return True
+            if any(w in eb for w in words_a) and any(w in ea for w in words_b):
+                return True
+        return False
+
+    # Also check top 40 for rank reporting
+    def pair_rank(name_a: str, name_b: str) -> int | None:
+        words_a = {w.lower() for w in name_a.split() if len(w) >= 4}
+        words_b = {w.lower() for w in name_b.split() if len(w) >= 4}
+        for i, rel in enumerate(relationships):
+            ea = rel["entity_a"].lower()
+            eb = rel["entity_b"].lower()
+            if any(w in ea for w in words_a) and any(w in eb for w in words_b):
+                return i + 1
+            if any(w in eb for w in words_a) and any(w in ea for w in words_b):
+                return i + 1
+        return None
+
+    expected = [
+        ("David Martín", "Pedro Vidal"),
+        ("David Martín", "Andreas Corelli"),
+        ("David Martín", "Isabella"),
+    ]
+    print(f"\n=== VALIDATION (top 20) ===")
+    for a, b in expected:
+        if pair_found(a, b):
+            print(f"  ✓  {a} ↔ {b}")
+        else:
+            rank = pair_rank(a, b)
+            rank_info = f" (rank #{rank})" if rank else " (not found)"
+            print(f"  ✗ NOT IN TOP 20{rank_info}  {a} ↔ {b}")
+
+
 def main() -> None:
     args = sys.argv[1:]
 
@@ -386,6 +560,10 @@ def main() -> None:
 
     if "--test" in args:
         run_test_mode(window_size, threshold)
+        return
+
+    if "--live" in args:
+        run_live_mode(window_size, threshold)
         return
 
     payload = json.load(sys.stdin)
