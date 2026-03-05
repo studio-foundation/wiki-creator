@@ -23,6 +23,16 @@ stages:
         - input
         - previous_stage_output
 
+  - name: entity-clustering
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/entity_clustering.py
+    contract: entity-clustering
+    context:
+      include:
+        - previous_stage_output
+
   - name: entity-resolution
     kind: analysis
     agent: resolver
