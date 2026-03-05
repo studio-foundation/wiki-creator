@@ -44,6 +44,7 @@ Standalone test:
 """
 
 import json
+import os
 import re
 import sys
 
@@ -286,7 +287,7 @@ def enrich_mentions_with_coref(
     return mentions_by_entity
 
 
-def run_test_mode(window_size: int, threshold: int) -> None:
+def run_test_mode(window_size: int, threshold: int, coref: bool = False) -> None:
     """Run with hardcoded Le Jeu de l'Ange data."""
     entities = [
         {"canonical_name": "David Martín", "type": "PERSON", "aliases": ["Martín", "David"], "relevant": True},
@@ -319,6 +320,11 @@ def run_test_mode(window_size: int, threshold: int) -> None:
                 "Martín regarda Vidal avec méfiance.",
                 "Corelli attendait Martín dans son bureau.",
             ],
+            "ch04": [
+                "Il s'assit près de la fenêtre et contempla la nuit.",
+                "Elle lui tendit la lettre sans un mot.",
+                "Il la prit et la lut lentement.",
+            ],
         },
         "Pedro Vidal": {
             "ch01": [
@@ -330,6 +336,9 @@ def run_test_mode(window_size: int, threshold: int) -> None:
             "ch03": [
                 "Vidal arriva et interrompit leur conversation.",
                 "Martín regarda Vidal avec méfiance.",
+            ],
+            "ch04": [
+                "Il s'assit près de la fenêtre et contempla la nuit.",
             ],
         },
         "Andreas Corelli": {
@@ -360,6 +369,19 @@ def run_test_mode(window_size: int, threshold: int) -> None:
             ],
         },
     }
+
+    if coref:
+        # In test mode, chapters.json is not available.
+        # Build a minimal chapters dict from existing mentions for demo.
+        chapters_demo: dict[str, str] = {}
+        for canonical, by_chapter in mentions_by_entity.items():
+            for chapter_id, sentences in by_chapter.items():
+                text = " ".join(sentences)
+                if chapter_id in chapters_demo:
+                    chapters_demo[chapter_id] += " " + text
+                else:
+                    chapters_demo[chapter_id] = text
+        mentions_by_entity = enrich_mentions_with_coref(chapters_demo, entities, mentions_by_entity)
 
     relationships, stats = build_cooccurrence_graph(
         entities, mentions_by_entity, window_size, threshold
@@ -491,9 +513,8 @@ def _load_mentions_from_files() -> dict[str, dict[str, list[str]]]:
     return mentions
 
 
-def run_live_mode(window_size: int, threshold: int) -> None:
+def run_live_mode(window_size: int, threshold: int, coref: bool = False) -> None:
     """Live mode: read persons_full.json, cluster entities, then run co-occurrence on real data."""
-    import os
     import sys as _sys
     import importlib.util
 
@@ -603,6 +624,15 @@ def run_live_mode(window_size: int, threshold: int) -> None:
                 merged[chapter_id].extend(sentences)
         mentions_by_entity[canonical] = merged
 
+    if coref:
+        if not os.path.exists("chapters.json"):
+            print("[WARN] chapters.json not found — run make test first.", file=sys.stderr)
+        else:
+            with open("chapters.json", encoding="utf-8") as f:
+                chapters_data = json.load(f)
+            chapters = chapters_data.get("chapters", {})
+            mentions_by_entity = enrich_mentions_with_coref(chapters, entities, mentions_by_entity)
+
     print(f"=== LIVE MODE — relationship-extraction ===\n")
     print(f"Loaded {len(entities)} persons from persons_full.json")
     print(f"Window size: {window_size}  |  Threshold: {threshold}\n")
@@ -679,12 +709,14 @@ def main() -> None:
         idx = args.index("--threshold")
         threshold = int(args[idx + 1])
 
+    coref = "--coref" in args
+
     if "--test" in args:
-        run_test_mode(window_size, threshold)
+        run_test_mode(window_size, threshold, coref=coref)
         return
 
     if "--live" in args:
-        run_live_mode(window_size, threshold)
+        run_live_mode(window_size, threshold, coref=coref)
         return
 
     payload = json.load(sys.stdin)
@@ -700,17 +732,27 @@ def main() -> None:
     # Parse classify flag from additional_context (YAML string)
     import yaml
     do_classify = False
+    do_coref = False
     raw_context = payload.get("additional_context", "")
     if raw_context:
         try:
             additional = yaml.safe_load(raw_context) or {}
             do_classify = bool(additional.get("classify", False))
+            do_coref = bool(additional.get("coref", False))
             window_size = int(additional.get("window", window_size))
             threshold = int(additional.get("threshold", threshold))
         except Exception:
             pass
 
     mentions_by_entity = _load_mentions_from_files()
+
+    if do_coref:
+        import os as _os
+        if _os.path.exists("chapters.json"):
+            with open("chapters.json", encoding="utf-8") as f:
+                chapters_data = json.load(f)
+            chapters = chapters_data.get("chapters", {})
+            mentions_by_entity = enrich_mentions_with_coref(chapters, entities, mentions_by_entity)
 
     relationships, stats = build_cooccurrence_graph(
         entities, mentions_by_entity, window_size, threshold
