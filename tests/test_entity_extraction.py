@@ -5,7 +5,7 @@ import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from scripts.entity_extraction import extract_entities, extract_context, split_entities, split_by_type, KEPT_LABELS, _is_valid_mention, FRONTMATTER_ID_PATTERNS, FALSE_POSITIVE_WORDS
+from scripts.entity_extraction import extract_entities, extract_context, split_entities, split_by_type, KEPT_LABELS, _is_valid_mention, FRONTMATTER_ID_PATTERNS
 
 
 @pytest.fixture(scope="module")
@@ -363,12 +363,14 @@ def test_split_by_type_entities_retain_mentions_by_chapter(nlp):
 
 def test_false_positive_words_is_frozenset():
     """FALSE_POSITIVE_WORDS doit être un frozenset exportable."""
+    from scripts.entity_extraction import FALSE_POSITIVE_WORDS  # fails until Task 2 is implemented
     assert isinstance(FALSE_POSITIVE_WORDS, frozenset)
     assert len(FALSE_POSITIVE_WORDS) > 0
 
 
 def test_is_valid_mention_rejects_stoplist_words():
     """Les mots de la stoplist, seuls, doivent être rejetés."""
+    from scripts.entity_extraction import FALSE_POSITIVE_WORDS  # noqa: F401 — ensures symbol exists
     assert _is_valid_mention("Cher") is False
     assert _is_valid_mention("Chère") is False
     assert _is_valid_mention("Monsieur") is False
@@ -380,6 +382,7 @@ def test_is_valid_mention_rejects_stoplist_words():
 
 def test_is_valid_mention_allows_multiword_with_stoplist_root():
     """Les entités multi-mots contenant un mot de la stoplist doivent passer."""
+    from scripts.entity_extraction import FALSE_POSITIVE_WORDS  # noqa: F401 — ensures symbol exists
     assert _is_valid_mention("Le Cher") is True
     assert _is_valid_mention("Monsieur Lefebvre") is True
     assert _is_valid_mention("Département du Cher") is True
@@ -387,5 +390,6 @@ def test_is_valid_mention_allows_multiword_with_stoplist_root():
 
 def test_is_valid_mention_case_insensitive_check():
     """Le check stoplist doit être insensible à la casse."""
+    from scripts.entity_extraction import FALSE_POSITIVE_WORDS  # noqa: F401 — ensures symbol exists
     assert _is_valid_mention("CHER") is False
     assert _is_valid_mention("Bonjour") is False
