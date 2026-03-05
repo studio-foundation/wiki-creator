@@ -78,3 +78,74 @@ def test_enrich_mentions_resets_after_silence():
     # "Il pleuvait encore." should NOT be in David Martín's mentions
     dm_mentions = enriched.get("David Martín", {}).get("ch01", [])
     assert "Il pleuvait encore." not in dm_mentions
+
+
+def test_narrator_passthrough_in_output():
+    """narrator from entity-resolution is passed through to output unchanged."""
+    import json
+    import subprocess
+    import sys
+    import os
+
+    narrator = {
+        "entity": "David Martín",
+        "pov": "first_person",
+        "reliability": "unreliable",
+        "evidence": ["ch20: hallucinations"],
+    }
+    resolution_output = {
+        "entities": [
+            {"canonical_name": "David Martín", "type": "PERSON", "aliases": [], "source_ids": [], "relevant": True}
+        ],
+        "narrator": narrator,
+    }
+    payload = {
+        "previous_outputs": {
+            "entity-resolution": resolution_output,
+            "epub-parse": {"title": "Test", "author": None, "chapters": [], "pov_detection": {"pov": "first_person", "first_person_count": 100, "total_tokens": 500, "confidence": "high"}},
+        },
+        "additional_context": "",
+    }
+    result = subprocess.run(
+        [sys.executable, "scripts/relationship_extraction.py"],
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+        cwd=os.path.join(os.path.dirname(__file__), ".."),
+    )
+    assert result.returncode == 0, f"Script failed: {result.stderr}"
+    output = json.loads(result.stdout)
+    assert "narrator" in output, "narrator key missing from output"
+    assert output["narrator"] == narrator
+
+
+def test_narrator_passthrough_null_when_absent():
+    """If entity-resolution has no narrator, output narrator is None."""
+    import json
+    import subprocess
+    import sys
+    import os
+
+    resolution_output = {
+        "entities": [
+            {"canonical_name": "David Martín", "type": "PERSON", "aliases": [], "source_ids": [], "relevant": True}
+        ],
+        # no narrator key
+    }
+    payload = {
+        "previous_outputs": {
+            "entity-resolution": resolution_output,
+            "epub-parse": {"title": "Test", "author": None, "chapters": [], "pov_detection": {"pov": "omniscient", "first_person_count": 0, "total_tokens": 500, "confidence": "high"}},
+        },
+        "additional_context": "",
+    }
+    result = subprocess.run(
+        [sys.executable, "scripts/relationship_extraction.py"],
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+        cwd=os.path.join(os.path.dirname(__file__), ".."),
+    )
+    assert result.returncode == 0, f"Script failed: {result.stderr}"
+    output = json.loads(result.stdout)
+    assert output.get("narrator") is None

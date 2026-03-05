@@ -4,7 +4,7 @@ Stage 1: EPUB Parsing
 Script executor interface: reads JSON from stdin, writes JSON to stdout.
 
 Input:  { "file_path": "/path/to/book.epub" }
-Output: { "title": "...", "author": "...", "chapters": [{ "id": "...", "title": "...", "content": "..." }] }
+Output: { "title": "...", "author": "...", "chapters": [{ "id": "...", "title": "...", "content": "..." }], "pov_detection": { "pov": "...", "first_person_count": int, "total_tokens": int, "confidence": "..." } }
 """
 
 import html
@@ -42,6 +42,46 @@ def clean_chapter_text(text: str) -> str:
     text = '\n\n'.join(p for p in paragraphs if p)
 
     return text.strip()
+
+
+# French first-person pronouns (word-boundary matched)
+_FIRST_PERSON_RE = re.compile(
+    r"\b(?:je|me|moi|mon|ma|mes)\b|\bm'|\bj'",
+    re.IGNORECASE,
+)
+
+
+def detect_pov(text: str) -> dict:
+    """Detect narrative point of view from raw chapter text."""
+    tokens = text.split()
+    total_tokens = len(tokens)
+    if total_tokens == 0:
+        return {"pov": "omniscient", "first_person_count": 0, "total_tokens": 0, "confidence": "low"}
+
+    first_person_count = len(_FIRST_PERSON_RE.findall(text))
+    ratio = first_person_count / total_tokens
+
+    if ratio > 0.05:
+        confidence = "high"
+        pov = "first_person"
+    elif ratio > 0.01:
+        confidence = "medium"
+        pov = "first_person"
+    else:
+        confidence = "low" if ratio > 0 else "high"
+        has_thought_markers = bool(re.search(
+            r"\b(il pensait|elle pensait|il savait|elle savait|il sentait|elle sentait)\b",
+            text,
+            re.IGNORECASE,
+        ))
+        pov = "third_limited" if has_thought_markers else "omniscient"
+
+    return {
+        "pov": pov,
+        "first_person_count": first_person_count,
+        "total_tokens": total_tokens,
+        "confidence": confidence,
+    }
 
 
 MIN_CHAPTER_CHARS = 100
@@ -83,7 +123,33 @@ def parse_epub(file_path: str) -> dict:
             "content": cleaned,
         })
 
-    return {"title": title, "author": author, "chapters": chapters}
+    # Compute POV per chapter, then take modal result for robustness
+    # (avoids dilution in mixed-POV or frame-narrative books)
+    if chapters:
+        chapter_results = [detect_pov(ch["content"]) for ch in chapters]
+        pov_counts: dict[str, int] = {}
+        for r in chapter_results:
+            pov_counts[r["pov"]] = pov_counts.get(r["pov"], 0) + 1
+        modal_pov = max(pov_counts, key=lambda p: pov_counts[p])
+        # Aggregate stats from all chapters
+        total_fp = sum(r["first_person_count"] for r in chapter_results)
+        total_tokens = sum(r["total_tokens"] for r in chapter_results)
+        # Re-assess confidence from aggregate ratio
+        agg_ratio = total_fp / total_tokens if total_tokens > 0 else 0
+        if modal_pov == "first_person":
+            confidence = "high" if agg_ratio > 0.05 else "medium" if agg_ratio > 0.01 else "low"
+        else:
+            confidence = "high"
+        pov_detection = {
+            "pov": modal_pov,
+            "first_person_count": total_fp,
+            "total_tokens": total_tokens,
+            "confidence": confidence,
+        }
+    else:
+        pov_detection = {"pov": "omniscient", "first_person_count": 0, "total_tokens": 0, "confidence": "low"}
+
+    return {"title": title, "author": author, "chapters": chapters, "pov_detection": pov_detection}
 
 
 def main():

@@ -173,3 +173,65 @@ def test_clean_lettrine_with_newline_separator():
     """BeautifulSoup produces 'P\\nedro' for <span>P</span>edro — must also be joined."""
     assert clean_chapter_text("P\nedro Vidal") == "Pedro Vidal"
     assert clean_chapter_text("L\norca") == "Lorca"
+
+
+from scripts.parse_epub import detect_pov
+
+
+def test_detect_pov_first_person_high_confidence():
+    """Dense first-person pronouns → first_person, high confidence."""
+    text = ("je marchais dans la rue. " * 20 +
+            "Il faisait beau. " * 5)
+    result = detect_pov(text)
+    assert result["pov"] == "first_person"
+    assert result["confidence"] == "high"
+    assert result["first_person_count"] > 0
+    assert result["total_tokens"] > 0
+
+
+def test_detect_pov_first_person_medium_confidence():
+    """Moderate first-person pronoun density → first_person, medium confidence."""
+    text = ("je marchais. " * 7 + "Il faisait beau. " * 93)
+    result = detect_pov(text)
+    assert result["pov"] == "first_person"
+    assert result["confidence"] == "medium"
+
+
+def test_detect_pov_not_first_person():
+    """No first-person pronouns → not first_person."""
+    text = "Il marchait dans la rue. Elle regardait par la fenêtre. " * 50
+    result = detect_pov(text)
+    assert result["pov"] != "first_person"
+
+
+def test_detect_pov_output_shape():
+    """Output always has required keys."""
+    result = detect_pov("Some text here.")
+    assert "pov" in result
+    assert "first_person_count" in result
+    assert "total_tokens" in result
+    assert "confidence" in result
+
+
+def test_parse_epub_output_includes_pov_detection(tmp_path):
+    """parse_epub() output includes pov_detection key."""
+    import ebooklib
+    from ebooklib import epub
+
+    book = epub.EpubBook()
+    book.set_title("Test")
+    book.set_language("fr")
+    item = epub.EpubHtml(uid="ch1", title="Ch1", file_name="ch1.xhtml", lang="fr")
+    content = "<html><body><p>" + ("je marchais dans la rue. " * 30) + "</p></body></html>"
+    item.set_content(content.encode())
+    book.add_item(item)
+    book.spine = [("ch1", True)]
+    book.add_item(epub.EpubNcx())
+    book.add_item(epub.EpubNav())
+    epub_path = str(tmp_path / "test.epub")
+    epub.write_epub(epub_path, book)
+
+    from scripts.parse_epub import parse_epub
+    result = parse_epub(epub_path)
+    assert "pov_detection" in result
+    assert result["pov_detection"]["pov"] == "first_person"
