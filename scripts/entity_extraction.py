@@ -56,6 +56,19 @@ FRONTMATTER_ID_PATTERNS: frozenset[str] = frozenset({
     "index",
 })
 
+# Words that are never narrative entities in French literary prose.
+# Check is performed on the full normalized entity text (stripped + lowercased),
+# so multi-word entities like "Le Cher" or "Monsieur Lefebvre" are not affected.
+FALSE_POSITIVE_WORDS: frozenset[str] = frozenset({
+    # Epistolary salutations (spaCy classifies "Cher" as PLACE — dept. du Cher)
+    "cher", "chère", "chers", "chères",
+    # Titles used alone without a proper name
+    "monsieur", "madame", "mademoiselle",
+    # Functional words captured via sentence-initial uppercase
+    "excusez", "pardonnez", "intéressant",
+    "merci", "bonjour", "bonsoir", "adieu",
+})
+
 
 def _is_valid_mention(text: str) -> bool:
     """
@@ -65,11 +78,16 @@ def _is_valid_mention(text: str) -> bool:
     - Strings shorter than 3 characters (single letters, "Ah", "II", etc.)
     - Strings whose first non-whitespace character is not an uppercase letter
       (lowercase verbs, dash-prefixed dialog fragments, punctuation artifacts)
+    - Single-word strings that match FALSE_POSITIVE_WORDS (French salutations,
+      standalone titles, functional words captured via initial uppercase).
+      Multi-word entities like "Le Cher" or "Monsieur Lefebvre" are not blocked.
     """
     stripped = text.strip()
     if len(stripped) < 3:
         return False
     if not stripped[0].isupper():
+        return False
+    if stripped.lower() in FALSE_POSITIVE_WORDS:
         return False
     return True
 
