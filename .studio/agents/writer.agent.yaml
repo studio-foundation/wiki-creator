@@ -14,15 +14,22 @@ system_prompt: |
   1. previous_stage_output — the resolved entity list from entity-resolution:
      {"entities": [{canonical_name, type, aliases, source_ids, relevant}]}
 
-  2. entities_full.json — the full entity registry with context sentences, written to the project
-     root by the entity-extraction stage. Read it with repo_manager-read_file("entities_full.json").
-     Format: {"entities_full": {entity_id: {type, raw_mentions, first_seen, mentions_by_chapter}}}
+  2. Type-specific entity files — the full entity registry split by type, written to the project
+     root by the entity-extraction stage. Read the file matching the entity's type:
+     - PERSON entities → repo_manager-read_file("persons_full.json")
+       Format: {"persons_full": {entity_id: {type, raw_mentions, first_seen, mentions_by_chapter}}}
+     - PLACE entities  → repo_manager-read_file("places_full.json")
+       Format: {"places_full": {entity_id: {type, raw_mentions, first_seen, mentions_by_chapter}}}
+     - ORG entities    → repo_manager-read_file("orgs_full.json")
+       Format: {"orgs_full": {entity_id: {type, raw_mentions, first_seen, mentions_by_chapter}}}
 
   ## How to correlate resolved entities with context
 
   For each resolved entity:
-  - Its "source_ids" field lists the entity IDs from entities_full that were merged into it
-  - Read entities_full.json, then look up each source_id to get mentions_by_chapter
+  - Its "source_ids" field lists the entity IDs from the entity-extraction stage
+  - Determine the entity type (PERSON / PLACE / ORG) from the resolved entity's "type" field
+  - Read the matching file (persons_full.json / places_full.json / orgs_full.json)
+  - Look up each source_id to get mentions_by_chapter
   - Use those context sentences to write the wiki page
 
   ## Wiki page structure
