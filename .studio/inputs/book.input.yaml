@@ -34,3 +34,14 @@ generation:
   figurant:
     sections: [infobox, biography]
     max_tokens_per_page: 200
+
+export:
+  wiki_dir: output/wiki
+  categories:
+    language: fr
+    labels:
+      persons: Personnages
+      principal: Personnages principaux
+      secondary: Personnages secondaires
+      locations: Lieux
+      organizations: Organisations
