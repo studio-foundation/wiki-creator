@@ -6,3 +6,31 @@ description: |
 
 file_path: books/carlos-ruiz-zafon/le-jeu-de-lange.epub
 spacy_model: fr_core_news_lg
+
+# Entity importance classification — 'auto' uses percentile distribution
+# Override with explicit values if the auto-detected tiers are wrong for your book
+thresholds: auto
+# Example explicit config (uncomment to use):
+# thresholds:
+#   characters:
+#     principal: { min_mentions: 50, min_chapters: 15 }
+#     secondary: { min_mentions: 10, min_chapters: 3 }
+#     figurant: { min_mentions: 3 }
+#     ignored_below: 3
+#   locations:
+#     major: { min_mentions: 20, min_chapters: 5 }
+#     minor: { min_mentions: 3 }
+#   organizations:
+#     major: { min_mentions: 10 }
+#     minor: { min_mentions: 3 }
+
+generation:
+  principal:
+    sections: [infobox, biography, personality, physical, powers, relationships, trivia, references]
+    max_tokens_per_page: 2000
+  secondary:
+    sections: [infobox, biography, relationships, references]
+    max_tokens_per_page: 800
+  figurant:
+    sections: [infobox, biography]
+    max_tokens_per_page: 200

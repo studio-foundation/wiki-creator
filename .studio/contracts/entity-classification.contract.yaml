@@ -1,0 +1,9 @@
+name: entity-classification
+version: 1
+schema:
+  required_fields:
+    - entities
+    - relationships
+  # Each entity must include:
+  #   total_mentions (int), chapters_present (int), importance (str)
+  # importance values: "principal" | "secondary" | "figurant" | "ignored"
