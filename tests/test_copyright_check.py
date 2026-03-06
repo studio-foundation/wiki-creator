@@ -1,6 +1,3 @@
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.copyright_check import tokenize, mask_short_quotes
 
 
@@ -33,3 +30,9 @@ def test_mask_short_quotes_double_quotes():
     text = 'Elle murmura "mon dieu" et ferma les yeux.'
     result = mask_short_quotes(text, max_words=5)
     assert "mon dieu" not in result
+
+
+def test_tokenize_splits_on_apostrophe_and_hyphen():
+    # Documents intentional behavior: l'homme → ["l", "homme"], peut-être → ["peut", "être"]
+    tokens = tokenize("l'homme peut-être")
+    assert tokens == ["l", "homme", "peut", "être"]

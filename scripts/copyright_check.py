@@ -12,10 +12,8 @@ Standalone test:
   python scripts/copyright_check.py --test --threshold 10
 """
 
-import json
 import re
-import sys
-from typing import Dict, List, Tuple
+from typing import List
 
 
 def tokenize(text: str) -> List[str]:
