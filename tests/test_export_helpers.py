@@ -16,6 +16,10 @@ def test_page_filename_preserves_accents():
     assert page_filename("Barcelone") == "Barcelone"
 
 
+def test_page_filename_sanitizes_slashes():
+    assert "/" not in page_filename("Le Café / Bar")
+
+
 def test_category_tags_principal_person():
     labels = {
         "persons": "Personnages",

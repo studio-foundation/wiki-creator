@@ -1,6 +1,9 @@
 # tests/test_md2wiki.py
-import pytest
 from wiki_creator.md2wiki import convert
+
+
+def test_h1_heading():
+    assert convert("# Titre principal") == "= Titre principal ="
 
 
 def test_h2_heading():

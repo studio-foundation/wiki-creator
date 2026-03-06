@@ -4,8 +4,10 @@ from __future__ import annotations
 
 
 def page_filename(canonical_name: str) -> str:
-    """Convert canonical name to wiki filename (spaces → underscores)."""
-    return canonical_name.replace(" ", "_")
+    """Convert canonical name to wiki filename (spaces → underscores, slashes removed)."""
+    name = canonical_name.replace(" ", "_")
+    name = name.replace("/", "_")
+    return name
 
 
 def category_tags(entity_type: str, importance: str, labels: dict) -> list[str]:

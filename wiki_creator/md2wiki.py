@@ -22,13 +22,15 @@ def _convert_line(line: str) -> str:
     if line.startswith(">"):
         return ""
 
-    # Headings (order matters: h4 before h3 before h2)
+    # Headings (order matters: most specific prefix first)
     if line.startswith("#### "):
         return "==== " + _convert_inline(line[5:]) + " ===="
     if line.startswith("### "):
         return "=== " + _convert_inline(line[4:]) + " ==="
     if line.startswith("## "):
         return "== " + _convert_inline(line[3:]) + " =="
+    if line.startswith("# "):
+        return "= " + _convert_inline(line[2:]) + " ="
 
     # Inline markup
     line = _convert_inline(line)

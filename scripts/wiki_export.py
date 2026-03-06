@@ -101,9 +101,21 @@ def main() -> None:
 
 
 def _build_categories_wiki(labels: dict) -> str:
+    """Generate categories.wiki — a reference page listing the wiki's category hierarchy."""
     lines = [
-        f"[[Category:{labels['principal']}|{labels['persons']}]]",
-        f"[[Category:{labels['secondary']}|{labels['persons']}]]",
+        "= Catégories =",
+        "This page documents the category hierarchy used in this wiki.",
+        "",
+        f"== {labels['persons']} ==",
+        f"* [[Category:{labels['persons']}]]",
+        f"** [[Category:{labels['principal']}]]",
+        f"** [[Category:{labels['secondary']}]]",
+        "",
+        f"== {labels['locations']} ==",
+        f"* [[Category:{labels['locations']}]]",
+        "",
+        f"== {labels['organizations']} ==",
+        f"* [[Category:{labels['organizations']}]]",
     ]
     return "\n".join(lines)
 

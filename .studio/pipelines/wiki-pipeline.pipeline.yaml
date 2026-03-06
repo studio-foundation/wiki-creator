@@ -87,5 +87,4 @@ stages:
       include:
         - input
         - epub-parse
-        - entity-classification
         - previous_stage_output
