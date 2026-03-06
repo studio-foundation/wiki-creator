@@ -1,0 +1,9 @@
+name: epub-parse
+version: 1
+schema:
+  required_fields:
+    - title
+    - chapters
+    - pov_detection
+# author intentionally omitted — nullable in some EPUBs
+# Semantic guard: chapters not empty — checked in script (parse_epub.py)

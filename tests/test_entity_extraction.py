@@ -455,3 +455,34 @@ def test_save_chapters_json_writes_chapter_texts(tmp_path):
 
     data = json.loads(out.read_text())
     assert data == {"chapters": {"ch01": "Hello world.", "ch02": "Goodbye world."}}
+
+
+def test_main_exits_on_empty_entities():
+    """main() must exit 1 with error JSON when no entities are extracted."""
+    import subprocess
+    import json as _json
+
+    # Chapters whose content produces zero named entities (no PERSON/PLACE/ORG)
+    payload = _json.dumps({
+        "additional_context": "spacy_model: en_core_web_sm",
+        "previous_outputs": {
+            "epub-parse": {
+                "title": "Test",
+                "author": None,
+                "chapters": [
+                    {"id": "ch01", "title": "Ch1", "content": "It was 42 degrees. The year was 1900."},
+                ],
+            }
+        },
+    })
+    result = subprocess.run(
+        [sys.executable, "scripts/entity_extraction.py"],
+        input=payload,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 1, f"Expected exit 1, got {result.returncode}. stdout={result.stdout}"
+    output = _json.loads(result.stdout)
+    assert "error" in output, f"Expected error field in output: {output}"
+    assert "no entities" in output["error"].lower(), f"Unexpected error message: {output['error']}"

@@ -176,3 +176,46 @@ def test_build_clusters_canonical_picks_most_complete():
     }
     clusters, _ = build_clusters(entities)
     assert clusters[0]["canonical_candidate"] == "Pedro Vidal"
+
+
+def test_main_warns_when_no_reduction_and_many_entities():
+    """main() must print a stderr warning when reduction_pct==0 with >10 input entities."""
+    import subprocess
+    import json as _json
+    import sys
+
+    # 11 completely unique entities — nothing will cluster
+    # Names are deliberately dissimilar (different lengths, no shared prefix)
+    # so Jaro-Winkler and token overlap both fail to group them
+    distinct_names = [
+        "Aardvark", "Benzene", "Calypso", "Driftwood", "Eggnog",
+        "Fjord", "Guacamole", "Harpoon", "Igloo", "Jabiru", "Kestrel",
+    ]
+    entities = {
+        f"entity_{i:03d}": {
+            "type": "PERSON",
+            "raw_mentions": [distinct_names[i - 1]],
+            "first_seen": f"ch{i:02d}",
+            "mention_count": 1,
+        }
+        for i in range(1, 12)  # 11 entities
+    }
+    payload = _json.dumps({
+        "additional_context": "",
+        "previous_outputs": {
+            "entity-extraction": {
+                "entities_for_resolution": entities,
+            }
+        },
+    })
+    result = subprocess.run(
+        [sys.executable, "scripts/entity_clustering.py"],
+        input=payload,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, f"Expected exit 0, got {result.returncode}. stderr={result.stderr}"
+    assert "reduction_pct=0" in result.stderr, (
+        f"Expected reduction_pct warning in stderr. Got: {result.stderr!r}"
+    )

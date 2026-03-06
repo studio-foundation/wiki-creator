@@ -8,6 +8,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/parse_epub.py
+    contract: epub-parse
     context:
       include:
         - input
@@ -17,6 +18,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/entity_extraction.py
+    contract: entity-extraction
     timeout_ms: 600000
     context:
       include:
@@ -87,6 +89,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/wiki_export.py
+    contract: wiki-export
     context:
       include:
         - input
