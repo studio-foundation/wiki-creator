@@ -35,17 +35,86 @@ stages:
       include:
         - previous_stage_output
 
-  - name: entity-resolution
-    kind: analysis
-    agent: resolver
-    contract: entity-resolution
-    ralph:
-      max_attempts: 3
+  - name: split-clusters
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/split_clusters.py
+    contract: split-clusters
     context:
       include:
-        - input
-        - epub-parse
         - previous_stage_output
+
+  - group: entity-resolution
+    mode: parallel
+    max_iterations: 1
+    on_failure: collect-all
+    stages:
+      - name: entity-resolution-PERSON
+        kind: analysis
+        agent: resolver
+        contract: entity-resolution
+        ralph:
+          max_attempts: 3
+        context:
+          include:
+            - epub-parse
+            - split-clusters
+            - stage_name
+
+      - name: entity-resolution-PLACE
+        kind: analysis
+        agent: resolver
+        contract: entity-resolution
+        ralph:
+          max_attempts: 3
+        context:
+          include:
+            - split-clusters
+            - stage_name
+
+      - name: entity-resolution-ORG
+        kind: analysis
+        agent: resolver
+        contract: entity-resolution
+        ralph:
+          max_attempts: 2
+        context:
+          include:
+            - split-clusters
+            - stage_name
+
+      - name: entity-resolution-EVENT
+        kind: analysis
+        agent: resolver
+        contract: entity-resolution
+        ralph:
+          max_attempts: 2
+        context:
+          include:
+            - split-clusters
+            - stage_name
+
+      - name: entity-resolution-OTHER
+        kind: analysis
+        agent: resolver
+        contract: entity-resolution
+        ralph:
+          max_attempts: 2
+        context:
+          include:
+            - split-clusters
+            - stage_name
+
+  - name: merge-entities
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/merge_entities.py
+    contract: merge-entities
+    context:
+      include:
+        - all_stage_outputs
 
   - name: relationship-extraction
     kind: analysis

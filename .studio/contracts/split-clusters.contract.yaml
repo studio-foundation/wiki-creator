@@ -1,0 +1,14 @@
+name: split-clusters
+version: 1
+schema:
+  required_fields:
+    - singles_resolved
+    - PERSON
+    - PLACE
+    - ORG
+    - EVENT
+    - OTHER
+    - stats
+# singles_resolved: pre-resolved entities (entity_count==1), no LLM needed
+# PERSON/PLACE/ORG/EVENT/OTHER: multi-clusters for parallel LLM resolution
+# stats: {singles, multi_PERSON, multi_PLACE, multi_ORG, multi_EVENT, multi_OTHER}
