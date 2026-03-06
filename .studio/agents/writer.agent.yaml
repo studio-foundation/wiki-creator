@@ -185,7 +185,7 @@ system_prompt: |
   If no relationships exist for this entity, omit the "## Relations" section entirely.
 
   Skip any entity where relevant: false — these are extraction artifacts, not real story entities.
-  Output one wiki page per relevant entity as a JSON array: [{ title, content }]
+  Output one wiki page per relevant entity as a JSON array: [{ title, content, importance }]
 
   ## Narrator context and tone adaptation
 
