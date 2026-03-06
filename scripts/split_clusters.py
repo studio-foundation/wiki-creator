@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+"""
+Stage: split-clusters (script executor, no LLM)
+
+Partitions entity-clustering output into:
+- singles_resolved: entity_count==1, pre-resolved (no LLM needed)
+- PERSON/PLACE/ORG/EVENT/OTHER: multi-clusters for parallel LLM resolution
+
+Input (Studio stdin):
+  previous_outputs["entity-clustering"]["clusters"]
+
+Output (stdout):
+  {
+    "singles_resolved": [{canonical_name, type, aliases, source_ids, relevant}],
+    "PERSON": [...multi-clusters],
+    "PLACE":  [...multi-clusters],
+    "ORG":    [...multi-clusters],
+    "EVENT":  [...multi-clusters],
+    "OTHER":  [...multi-clusters],
+    "stats":  {singles, multi_PERSON, multi_PLACE, ...}
+  }
+"""
+
+import json
+import sys
+
+ENTITY_TYPES = ("PERSON", "PLACE", "ORG", "EVENT", "OTHER")
+
+
+def split_clusters(clusters: list[dict]) -> dict:
+    singles_resolved = []
+    multi_by_type: dict[str, list] = {t: [] for t in ENTITY_TYPES}
+
+    for cluster in clusters:
+        entity_type = cluster.get("type", "OTHER")
+        if entity_type not in multi_by_type:
+            entity_type = "OTHER"
+
+        if cluster.get("entity_count", 1) == 1:
+            singles_resolved.append({
+                "canonical_name": cluster["canonical_candidate"],
+                "type": entity_type,
+                "aliases": cluster.get("all_mentions", [cluster["canonical_candidate"]]),
+                "source_ids": cluster.get("entity_ids", []),
+                "relevant": True,
+            })
+        else:
+            multi_by_type[entity_type].append(cluster)
+
+    stats = {"singles": len(singles_resolved)}
+    for t in ENTITY_TYPES:
+        stats[f"multi_{t}"] = len(multi_by_type[t])
+
+    return {"singles_resolved": singles_resolved, **multi_by_type, "stats": stats}
+
+
+def main() -> None:
+    payload = json.load(sys.stdin)
+    prev = payload.get("previous_outputs", {})
+    clusters = prev.get("entity-clustering", {}).get("clusters", [])
+
+    if not clusters:
+        print("Warning: no clusters in entity-clustering output", file=sys.stderr)
+
+    result = split_clusters(clusters)
+    json.dump(result, sys.stdout, ensure_ascii=False)
+
+
+if __name__ == "__main__":
+    main()
