@@ -12,10 +12,15 @@ Standalone test:
   python scripts/copyright_check.py --test --threshold 10
 """
 
+import argparse
 import json
 import re
 import sys
 from typing import Dict, List, Tuple
+
+import ebooklib
+from ebooklib import epub
+from bs4 import BeautifulSoup
 
 
 def tokenize(text: str) -> List[str]:
@@ -87,3 +92,124 @@ def find_violations(
         else:
             i += 1
     return violations
+
+
+def load_epub_chapters(epub_path: str) -> List[dict]:
+    """Extract chapter text from EPUB file. Returns list of {id, content}."""
+    book = epub.read_epub(epub_path, options={"ignore_ncx": True})
+    chapters = []
+    for item in book.get_items_of_type(ebooklib.ITEM_DOCUMENT):
+        soup = BeautifulSoup(item.get_content(), "html.parser")
+        text = soup.get_text(separator=" ")
+        text = re.sub(r"\s+", " ", text).strip()
+        if len(text) > 100:  # skip nav/boilerplate
+            chapters.append({"id": item.get_id(), "content": text})
+    return chapters
+
+
+def check_page(page: dict, source_index: Dict[tuple, str], n: int = 15) -> List[dict]:
+    """Check a single wiki page for verbatim matches. Returns list of violation dicts."""
+    masked = mask_short_quotes(page["content"], max_words=5)
+    tokens = tokenize(masked)
+    raw_violations = find_violations(tokens, source_index, n=n)
+    return [
+        {
+            "page_title": page["title"],
+            "chapter": v["chapter"],
+            "wiki_excerpt": v["wiki_excerpt"],
+            "consecutive_words": v["consecutive_words"],
+        }
+        for v in raw_violations
+    ]
+
+
+def format_output(pages_checked: int, violations: List[dict]) -> dict:
+    """Format the hook output JSON."""
+    if not violations:
+        return {"status": "pass", "checked_pages": pages_checked, "violations": []}
+
+    titles = sorted({v["page_title"] for v in violations})
+    titles_str = ", ".join(f"[{t}]" for t in titles)
+    feedback = (
+        f"Violations copyright détectées dans : {titles_str}. "
+        "Reformule ces passages en paraphrasant — "
+        "ne reproduis pas les mots exacts du livre source."
+    )
+    return {
+        "status": "fail",
+        "checked_pages": pages_checked,
+        "violations": violations,
+        "feedback": feedback,
+    }
+
+
+def run_check(pages: List[dict], epub_path: str, threshold: int = 15) -> dict:
+    """Full pipeline: load epub, build index, check all pages."""
+    chapters = load_epub_chapters(epub_path)
+    source_index = build_source_index(chapters, n=threshold)
+    all_violations = []
+    for page in pages:
+        all_violations.extend(check_page(page, source_index, n=threshold))
+    return format_output(pages_checked=len(pages), violations=all_violations)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--epub", help="Path to EPUB file")
+    parser.add_argument("--test", action="store_true", help="Run with fixture data")
+    parser.add_argument("--threshold", type=int, default=15, help="Min consecutive words for violation")
+    args = parser.parse_args()
+
+    if args.test:
+        # Fixture test: inject known verbatim passage to verify detection
+        fake_chapters = [
+            {
+                "id": "ch01",
+                "content": (
+                    "David Martín prit le manuscrit entre ses mains tremblantes "
+                    "et le déposa sur la table en bois verni avec soin et précision."
+                ),
+            }
+        ]
+        fake_pages = [
+            {
+                "title": "Test — verbatim page",
+                "content": (
+                    "David Martín prit le manuscrit entre ses mains tremblantes "
+                    "et le déposa sur la table en bois verni avec soin et précision."
+                ),
+                "importance": "principal",
+            },
+            {
+                "title": "Test — clean page",
+                "content": "Ce personnage est un auteur vivant à Barcelone.",
+                "importance": "secondary",
+            },
+        ]
+        source_index = build_source_index(fake_chapters, n=args.threshold)
+        violations = []
+        for page in fake_pages:
+            violations.extend(check_page(page, source_index, n=args.threshold))
+        result = format_output(pages_checked=len(fake_pages), violations=violations)
+        json.dump(result, sys.stdout, ensure_ascii=False, indent=2)
+
+        assert result["status"] == "fail", f"Expected fail, got: {result}"
+        assert result["violations"][0]["page_title"] == "Test — verbatim page"
+        print("\n✓ --test passed", file=sys.stderr)
+        return
+
+    if not args.epub:
+        print("Error: --epub required (or use --test)", file=sys.stderr)
+        sys.exit(1)
+
+    payload = json.load(sys.stdin)
+    pages = payload.get("pages", [])
+    result = run_check(pages, args.epub, threshold=args.threshold)
+    json.dump(result, sys.stdout, ensure_ascii=False)
+
+    if result["status"] == "fail":
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

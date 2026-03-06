@@ -1,5 +1,6 @@
 from scripts.copyright_check import tokenize, mask_short_quotes
 from scripts.copyright_check import build_source_index, find_violations
+from scripts.copyright_check import check_page, format_output
 
 
 def test_tokenize_lowercases_and_strips_punctuation():
@@ -90,3 +91,53 @@ def test_find_violations_short_quote_exempted():
     masked = mask_short_quotes(text, max_words=5)
     violations = find_violations(tokenize(masked), index, n=15)
     assert violations == []
+
+
+WIKI_PAGES = [
+    {
+        "title": "David Martín",
+        "content": (
+            "David Martín prit le manuscrit entre ses mains tremblantes "
+            "et le déposa sur la table en bois verni avec soin. "
+            "Il referma les yeux et écouta le silence de la nuit.\n\n"
+            "Il était un écrivain célèbre dans tout Barcelone."
+        ),
+        "importance": "principal",
+    },
+    {
+        "title": "Barcelone",
+        "content": "Barcelone est la capitale de la Catalogne.",
+        "importance": "secondary",
+    },
+]
+
+
+def test_check_page_detects_violation():
+    index = build_source_index(SOURCE_CHAPTERS, n=15)
+    violations = check_page(WIKI_PAGES[0], index, n=15)
+    assert len(violations) >= 1
+    assert violations[0]["page_title"] == "David Martín"
+    assert violations[0]["chapter"] == "ch01"
+    assert violations[0]["consecutive_words"] >= 15
+
+
+def test_check_page_clean_page_returns_empty():
+    index = build_source_index(SOURCE_CHAPTERS, n=15)
+    violations = check_page(WIKI_PAGES[1], index, n=15)
+    assert violations == []
+
+
+def test_format_output_pass():
+    result = format_output(pages_checked=10, violations=[])
+    assert result["status"] == "pass"
+    assert result["violations"] == []
+    assert result["checked_pages"] == 10
+
+
+def test_format_output_fail_includes_feedback():
+    viol = [{"page_title": "David Martín", "chapter": "ch01",
+              "wiki_excerpt": "...", "consecutive_words": 18}]
+    result = format_output(pages_checked=10, violations=viol)
+    assert result["status"] == "fail"
+    assert "David Martín" in result["feedback"]
+    assert len(result["violations"]) == 1
