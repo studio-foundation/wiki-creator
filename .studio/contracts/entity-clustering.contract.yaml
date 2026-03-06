@@ -4,3 +4,5 @@ schema:
   required_fields:
     - clusters
     - stats
+# Semantic guard: if stats.reduction_pct == 0 and stats.input_entities > 10 → stderr warning
+# Guard is checked in script (entity_clustering.py), not enforced here (valid for small books)
