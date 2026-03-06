@@ -104,7 +104,7 @@ def compute_auto_thresholds(
 def assign_importance(
     entity_type: str,
     total_mentions: int,
-    chapters_present: int,
+    chapters_present: int,  # available for future min_chapters threshold support
     thresholds: dict[str, dict[str, int]],
 ) -> str:
     """Assign importance tier based on thresholds dict.
