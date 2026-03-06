@@ -149,3 +149,16 @@ def test_narrator_passthrough_null_when_absent():
     assert result.returncode == 0, f"Script failed: {result.stderr}"
     output = json.loads(result.stdout)
     assert output.get("narrator") is None
+
+
+def test_coref_worker_returns_list():
+    """_coref_worker returns a list (empty when fastcoref not available)."""
+    from scripts.relationship_extraction import _coref_worker
+    result = _coref_worker(("ch01", "Il travaillait.", {"david martín": "David Martín"}))
+    assert isinstance(result, list)
+    # Each item is (canonical, chapter_id, sentence)
+    for item in result:
+        assert len(item) == 3
+        assert isinstance(item[0], str)
+        assert isinstance(item[1], str)
+        assert isinstance(item[2], str)
