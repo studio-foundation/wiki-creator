@@ -149,3 +149,116 @@ def test_narrator_passthrough_null_when_absent():
     assert result.returncode == 0, f"Script failed: {result.stderr}"
     output = json.loads(result.stdout)
     assert output.get("narrator") is None
+
+
+def test_coref_worker_returns_list():
+    """_coref_worker returns a list (empty when fastcoref not available)."""
+    from scripts.relationship_extraction import _coref_worker
+    result = _coref_worker(("ch01", "Il travaillait.", {"david martín": "David Martín"}))
+    assert isinstance(result, list)
+    # Each item is (canonical, chapter_id, sentence)
+    for item in result:
+        assert len(item) == 3
+        assert isinstance(item[0], str)
+        assert isinstance(item[1], str)
+        assert isinstance(item[2], str)
+
+
+def test_enrich_fastcoref_accepts_workers_param():
+    """enrich_mentions_with_fastcoref accepts workers param without crashing."""
+    import inspect
+    from scripts.relationship_extraction import enrich_mentions_with_fastcoref
+    sig = inspect.signature(enrich_mentions_with_fastcoref)
+    assert "workers" in sig.parameters
+    assert sig.parameters["workers"].default == 1
+
+
+def test_main_parses_workers_flag(monkeypatch):
+    """--workers N is parsed and passed through to run_live_mode."""
+    import sys
+    import scripts.relationship_extraction as rel
+
+    captured = {}
+
+    def fake_run_live(window_size, threshold, coref=False, workers=1):
+        captured["workers"] = workers
+
+    monkeypatch.setattr(rel, "run_live_mode", fake_run_live)
+    monkeypatch.setattr(sys, "argv", ["rel.py", "--live", "--coref", "--workers", "4"])
+    rel.main()
+
+    assert captured["workers"] == 4
+
+
+def test_parallel_merge_matches_direct_process_chapters():
+    """Parallel path merge produces same sentences as _process_chapter_clusters directly.
+
+    We mock ProcessPoolExecutor.map to return pre-computed results from
+    _process_chapter_clusters, then verify enrich_mentions_with_fastcoref
+    (workers=2) merges them into mentions_by_entity identically.
+    """
+    from unittest.mock import patch, MagicMock
+    import scripts.relationship_extraction as rel
+
+    chapters = {
+        "ch01": "David Martín entra dans la pièce. Il ferma la porte derrière lui.",
+        "ch02": "Pedro Vidal écrivit toute la nuit. Il signa le contrat au matin.",
+    }
+    entities = [
+        {"canonical_name": "David Martín", "type": "PERSON", "aliases": ["Martín", "David"], "relevant": True},
+        {"canonical_name": "Pedro Vidal", "type": "PERSON", "aliases": ["Vidal"], "relevant": True},
+    ]
+
+    # Build the name_to_canonical map the same way the function does
+    name_to_canonical: dict[str, str] = {}
+    for entity in entities:
+        if entity.get("type") == "PERSON" and entity.get("relevant", True):
+            canonical = entity["canonical_name"]
+            name_to_canonical[canonical.lower()] = canonical
+            for alias in entity.get("aliases", []):
+                if len(alias) >= 3:
+                    name_to_canonical[alias.lower()] = canonical
+
+    # What _process_chapter_clusters would return for each chapter
+    # (We compute it directly here so the test doesn't depend on fastcoref)
+    # Since fastcoref isn't available in CI, raw_clusters will be empty → []
+    # We simulate non-empty results manually.
+    # Simulate a worker returning the same sentence twice (e.g., from overlapping clusters)
+    # The merge should deduplicate — only one copy should end up in mentions_by_entity
+    simulated_worker_results = {
+        "ch01": [
+            ("David Martín", "ch01", "Il ferma la porte derrière lui."),
+            ("David Martín", "ch01", "Il ferma la porte derrière lui."),  # duplicate
+        ],
+        "ch02": [("Pedro Vidal", "ch02", "Il signa le contrat au matin.")],
+    }
+
+    # Fake executor that returns pre-computed results without loading the model
+    class FakeExecutor:
+        def __enter__(self): return self
+        def __exit__(self, *a): pass
+        def map(self, fn, items):
+            return [simulated_worker_results.get(item[0], []) for item in items]
+
+    mentions = {"David Martín": {}, "Pedro Vidal": {}}
+    with patch("concurrent.futures.ProcessPoolExecutor", return_value=FakeExecutor()):
+        result = rel.enrich_mentions_with_fastcoref(chapters, entities, mentions, workers=2)
+
+    # Verify the expected sentences are present (from simulated worker results)
+    dm_sentences = result.get("David Martín", {}).get("ch01", [])
+    pv_sentences = result.get("Pedro Vidal", {}).get("ch02", [])
+
+    assert "Il ferma la porte derrière lui." in dm_sentences, (
+        f"Expected David Martín ch01 sentence, got: {dm_sentences}"
+    )
+    assert "Il signa le contrat au matin." in pv_sentences, (
+        f"Expected Pedro Vidal ch02 sentence, got: {pv_sentences}"
+    )
+
+    # Verify deduplication: same sentence returned twice by worker → only once in result
+    assert dm_sentences.count("Il ferma la porte derrière lui.") == 1, (
+        f"Expected exactly 1 copy after dedup, got: {dm_sentences}"
+    )
+    assert pv_sentences.count("Il signa le contrat au matin.") == 1, (
+        f"Expected exactly 1 copy after dedup, got: {pv_sentences}"
+    )

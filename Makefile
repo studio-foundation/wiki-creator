@@ -1,4 +1,4 @@
-.PHONY: run test-extraction test-clustering test-relationships test
+.PHONY: run test-extraction test-clustering test-relationships test test-coref test-coref-parallel
 
 run:
 	studio run wiki-pipeline --input-file .studio/inputs/book.input.yaml --live
@@ -19,3 +19,7 @@ test: test-extraction
 test-coref: test-extraction
 	python scripts/entity_clustering.py --live
 	python scripts/relationship_extraction.py --live --coref
+
+test-coref-parallel: test-extraction
+	python scripts/entity_clustering.py --live
+	python scripts/relationship_extraction.py --live --coref --workers 4

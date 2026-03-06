@@ -41,6 +41,15 @@ Standalone test:
   python scripts/relationship_extraction.py --test --window 3 --threshold 2
   python scripts/relationship_extraction.py --test --coref
   python scripts/relationship_extraction.py --live --coref
+  python scripts/relationship_extraction.py --live --coref --workers 4
+  python scripts/relationship_extraction.py --test --coref --workers 2
+
+Workers / RAM budget (LingMessCoref ~590M params per worker):
+  --workers 1  :  ~3 GB  (default, safe on any machine)
+  --workers 2  :  ~5 GB
+  --workers 4  :  ~10 GB (recommended on 16 GB machines)
+  --workers 8  :  ~20 GB (recommended on 32 GB machines)
+  If a worker runs out of memory, it returns [] for its chapter (graceful skip).
 """
 
 import json
@@ -341,10 +350,123 @@ def _decode_mention_offsets(mention: object) -> tuple[int, int] | None:
         return None
 
 
+def _process_chapter_clusters(
+    raw_clusters: list,
+    chunk: str,
+    chapter_id: str,
+    name_to_canonical: dict[str, str],
+) -> list[tuple[str, str, str]]:
+    """Process fastcoref clusters for one chapter chunk.
+
+    Returns a deduplicated list of (canonical_name, chapter_id, sentence) tuples.
+    """
+    results: list[tuple[str, str, str]] = []
+    seen: set[tuple[str, str, str]] = set()
+
+    for cluster in raw_clusters:
+        decoded: list[tuple[str, int, int]] = []
+        for mention in cluster:
+            offsets = _decode_mention_offsets(mention)
+            if offsets is None:
+                continue
+            start, end = offsets
+            if 0 <= start < end <= len(chunk):
+                decoded.append((chunk[start:end], start, end))
+
+        if not decoded:
+            continue
+
+        canonical: str | None = None
+        for m_text, _, _ in sorted(decoded, key=lambda x: -len(x[0])):
+            candidate = name_to_canonical.get(m_text.lower())
+            if candidate:
+                canonical = candidate
+                break
+            first_word = m_text.split()[0].lower() if m_text.split() else ""
+            candidate = name_to_canonical.get(first_word)
+            if candidate:
+                canonical = candidate
+                break
+
+        if not canonical:
+            continue
+
+        for m_text, start, _ in decoded:
+            tokens = m_text.lower().split()
+            is_pronoun = (len(tokens) == 1 and tokens[0] in _FR_PRONOUNS) or (
+                len(tokens) <= 2
+                and any(t in _FR_PRONOUNS for t in tokens)
+                and m_text.lower() not in name_to_canonical
+            )
+            if not is_pronoun:
+                continue
+
+            sentence = _find_sentence_containing(chunk, start)
+            if sentence:
+                key = (canonical, chapter_id, sentence)
+                if key not in seen:
+                    seen.add(key)
+                    results.append((canonical, chapter_id, sentence))
+
+    return results
+
+
+def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
+    """Worker function for ProcessPoolExecutor: load model + process one chapter.
+
+    Each worker process loads its own LingMessCoref instance (~590 MB RAM).
+    Must be a top-level function (picklable by multiprocessing).
+
+    Args:
+        args: (chapter_id, text, name_to_canonical)
+            name_to_canonical: {lowercased_name: canonical_name}
+
+    Returns:
+        List of (canonical_name, chapter_id, sentence) tuples to be merged
+        by the parent process. Returns [] on any error (graceful degradation).
+    """
+    chapter_id, text, name_to_canonical = args
+    if not text or not text.strip():
+        return []
+
+    chunk = text[:8000]
+
+    try:
+        import spacy
+        from fastcoref import spacy_component  # noqa: F401
+
+        _patch_attn_eager()
+        nlp = spacy.load(
+            "fr_core_news_lg",
+            exclude=["parser", "lemmatizer", "ner", "textcat"],
+        )
+        nlp.add_pipe(
+            "fastcoref",
+            config={
+                "model_architecture": "LingMessCoref",
+                "model_path": "biu-nlp/lingmess-coref",
+                "device": "cpu",
+            },
+        )
+        doc = nlp(chunk, component_cfg={"fastcoref": {"resolve_text": True}})
+    except MemoryError:
+        import sys as _sys
+        print(f"[coref/worker] MemoryError on {chapter_id} — skipping", file=_sys.stderr)
+        return []
+    except Exception as e:
+        import sys as _sys
+        print(f"[coref/worker] Error on {chapter_id}: {e}", file=_sys.stderr)
+        return []
+
+    raw_clusters = doc._.coref_clusters or []
+    return _process_chapter_clusters(raw_clusters, chunk, chapter_id, name_to_canonical)
+
+
 def enrich_mentions_with_fastcoref(
     chapters: dict[str, str],
     entities: list[dict],
     mentions_by_entity: dict[str, dict[str, list[str]]],
+    workers: int = 1,
 ) -> dict[str, dict[str, list[str]]]:
     """Enrich mentions using fastcoref + LingMessCoref for accurate coreference.
 
@@ -359,6 +481,9 @@ def enrich_mentions_with_fastcoref(
         chapters: {chapter_id: full_text} from chapters.json
         entities: resolved entities (canonical_name, aliases, type, relevant)
         mentions_by_entity: existing {canonical → {chapter_id → [sentences]}}
+        workers: number of parallel processes (default 1 = sequential).
+                 Each worker loads its own model (~590 MB RAM per worker).
+                 RAM budget: 1 worker=~3 GB, 4 workers=~10 GB, 8 workers=~20 GB.
 
     Returns:
         mentions_by_entity enriched in-place (also returned for convenience)
@@ -379,92 +504,85 @@ def enrich_mentions_with_fastcoref(
     if not name_to_canonical:
         return mentions_by_entity
 
-    # Load spaCy + LingMessCoref once for all chapters (~590 M params on CPU)
-    try:
-        import spacy
-        from fastcoref import spacy_component  # noqa: F401 — registers the pipe
-
-        _patch_attn_eager()
-        nlp = spacy.load(
-            "fr_core_news_lg",
-            exclude=["parser", "lemmatizer", "ner", "textcat"],
-        )
-        nlp.add_pipe(
-            "fastcoref",
-            config={
-                "model_architecture": "LingMessCoref",
-                "model_path": "biu-nlp/lingmess-coref",
-                "device": "cpu",
-            },
-        )
-    except Exception as e:
-        print(
-            f"[WARN] fastcoref unavailable ({e}) — falling back to heuristic",
-            file=sys.stderr,
-        )
-        return enrich_mentions_with_coref(chapters, entities, mentions_by_entity)
-
     total_added = 0
 
-    for chapter_id, text in chapters.items():
-        if not text or not text.strip():
-            continue
+    if workers <= 1:
+        # Sequential path — load model once, iterate chapters
+        try:
+            import spacy
+            from fastcoref import spacy_component  # noqa: F401
 
-        chunk = text[:8000]  # LingMessCoref practical context limit on CPU
+            _patch_attn_eager()
+            nlp = spacy.load(
+                "fr_core_news_lg",
+                exclude=["parser", "lemmatizer", "ner", "textcat"],
+            )
+            nlp.add_pipe(
+                "fastcoref",
+                config={
+                    "model_architecture": "LingMessCoref",
+                    "model_path": "biu-nlp/lingmess-coref",
+                    "device": "cpu",
+                },
+            )
+        except Exception as e:
+            print(
+                f"[WARN] fastcoref unavailable ({e}) — falling back to heuristic",
+                file=sys.stderr,
+            )
+            return enrich_mentions_with_coref(chapters, entities, mentions_by_entity)
+
+        for chapter_id, text in chapters.items():
+            if not text or not text.strip():
+                continue
+            chunk = text[:8000]
+            try:
+                doc = nlp(chunk, component_cfg={"fastcoref": {"resolve_text": True}})
+            except Exception as e:
+                print(f"[WARN] fastcoref inference failed on {chapter_id}: {e}", file=sys.stderr)
+                continue
+
+            raw_clusters = doc._.coref_clusters or []
+            for canonical, cid, sentence in _process_chapter_clusters(raw_clusters, chunk, chapter_id, name_to_canonical):
+                if canonical not in mentions_by_entity:
+                    mentions_by_entity[canonical] = {}
+                if cid not in mentions_by_entity[canonical]:
+                    mentions_by_entity[canonical][cid] = []
+                existing = mentions_by_entity[canonical][cid]
+                if sentence not in existing:
+                    existing.append(sentence)
+                    total_added += 1
+
+    else:
+        # Parallel path — one worker process per chapter, each loads own model
+        from concurrent.futures import ProcessPoolExecutor
+        import multiprocessing
+
+        chapter_items = [
+            (cid, text, name_to_canonical)
+            for cid, text in chapters.items()
+            if text and text.strip()
+        ]
+
+        actual_workers = min(workers, len(chapter_items), multiprocessing.cpu_count())
+        print(
+            f"[coref/parallel] {len(chapter_items)} chapters, {actual_workers} workers",
+            file=sys.stderr,
+        )
 
         try:
-            doc = nlp(chunk, component_cfg={"fastcoref": {"resolve_text": True}})
+            with ProcessPoolExecutor(max_workers=actual_workers) as executor:
+                all_results = list(executor.map(_coref_worker, chapter_items))
         except Exception as e:
-            print(f"[WARN] fastcoref inference failed on {chapter_id}: {e}", file=sys.stderr)
-            continue
+            print(
+                f"[WARN] Parallel coref failed ({type(e).__name__}: {e}) — falling back to sequential (workers=1)",
+                file=sys.stderr,
+            )
+            return enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=1)
 
-        raw_clusters = doc._.coref_clusters or []
-
-        for cluster in raw_clusters:
-            # Decode all mentions to (text, start_char, end_char)
-            decoded: list[tuple[str, int, int]] = []
-            for mention in cluster:
-                offsets = _decode_mention_offsets(mention)
-                if offsets is None:
-                    continue
-                start, end = offsets
-                if 0 <= start < end <= len(chunk):
-                    decoded.append((chunk[start:end], start, end))
-
-            if not decoded:
-                continue
-
-            # Find canonical entity: longest mention that matches a known name
-            canonical: str | None = None
-            for m_text, _, _ in sorted(decoded, key=lambda x: -len(x[0])):
-                candidate = name_to_canonical.get(m_text.lower())
-                if candidate:
-                    canonical = candidate
-                    break
-                first_word = m_text.split()[0].lower() if m_text.split() else ""
-                candidate = name_to_canonical.get(first_word)
-                if candidate:
-                    canonical = candidate
-                    break
-
-            if not canonical:
-                continue
-
-            # Attribute pronoun mentions in this cluster to the canonical entity
-            for m_text, start, _ in decoded:
-                tokens = m_text.lower().split()
-                is_pronoun = (len(tokens) == 1 and tokens[0] in _FR_PRONOUNS) or (
-                    len(tokens) <= 2
-                    and any(t in _FR_PRONOUNS for t in tokens)
-                    and m_text.lower() not in name_to_canonical
-                )
-                if not is_pronoun:
-                    continue
-
-                sentence = _find_sentence_containing(chunk, start)
-                if not sentence:
-                    continue
-
+        # Merge results from all workers
+        for worker_results in all_results:
+            for canonical, chapter_id, sentence in worker_results:
                 if canonical not in mentions_by_entity:
                     mentions_by_entity[canonical] = {}
                 if chapter_id not in mentions_by_entity[canonical]:
@@ -478,7 +596,7 @@ def enrich_mentions_with_fastcoref(
     return mentions_by_entity
 
 
-def run_test_mode(window_size: int, threshold: int, coref: bool = False) -> None:
+def run_test_mode(window_size: int, threshold: int, coref: bool = False, workers: int = 1) -> None:
     """Run with hardcoded Le Jeu de l'Ange data."""
     entities = [
         {"canonical_name": "David Martín", "type": "PERSON", "aliases": ["Martín", "David"], "relevant": True},
@@ -572,7 +690,7 @@ def run_test_mode(window_size: int, threshold: int, coref: bool = False) -> None
                     chapters_demo[chapter_id] += " " + text
                 else:
                     chapters_demo[chapter_id] = text
-        mentions_by_entity = enrich_mentions_with_fastcoref(chapters_demo, entities, mentions_by_entity)
+        mentions_by_entity = enrich_mentions_with_fastcoref(chapters_demo, entities, mentions_by_entity, workers=workers)
 
     relationships, stats = build_cooccurrence_graph(
         entities, mentions_by_entity, window_size, threshold
@@ -704,7 +822,7 @@ def _load_mentions_from_files() -> dict[str, dict[str, list[str]]]:
     return mentions
 
 
-def run_live_mode(window_size: int, threshold: int, coref: bool = False) -> None:
+def run_live_mode(window_size: int, threshold: int, coref: bool = False, workers: int = 1) -> None:
     """Live mode: read persons_full.json, cluster entities, then run co-occurrence on real data."""
     import sys as _sys
     import importlib.util
@@ -822,7 +940,7 @@ def run_live_mode(window_size: int, threshold: int, coref: bool = False) -> None
             with open("chapters.json", encoding="utf-8") as f:
                 chapters_data = json.load(f)
             chapters = chapters_data.get("chapters", {})
-            mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity)
+            mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=workers)
 
     print(f"=== LIVE MODE — relationship-extraction ===\n")
     print(f"Loaded {len(entities)} persons from persons_full.json")
@@ -902,12 +1020,17 @@ def main() -> None:
 
     coref = "--coref" in args
 
+    workers = 1
+    if "--workers" in args:
+        idx = args.index("--workers")
+        workers = int(args[idx + 1])
+
     if "--test" in args:
-        run_test_mode(window_size, threshold, coref=coref)
+        run_test_mode(window_size, threshold, coref=coref, workers=workers)
         return
 
     if "--live" in args:
-        run_live_mode(window_size, threshold, coref=coref)
+        run_live_mode(window_size, threshold, coref=coref, workers=workers)
         return
 
     payload = json.load(sys.stdin)
@@ -932,6 +1055,7 @@ def main() -> None:
             do_coref = bool(additional.get("coref", False))
             window_size = int(additional.get("window", window_size))
             threshold = int(additional.get("threshold", threshold))
+            workers = int(additional.get("workers", workers))
         except Exception:
             pass
 
@@ -943,7 +1067,7 @@ def main() -> None:
             with open("chapters.json", encoding="utf-8") as f:
                 chapters_data = json.load(f)
             chapters = chapters_data.get("chapters", {})
-            mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity)
+            mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=workers)
 
     relationships, stats = build_cooccurrence_graph(
         entities, mentions_by_entity, window_size, threshold
