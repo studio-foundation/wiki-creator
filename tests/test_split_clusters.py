@@ -81,6 +81,19 @@ def test_stats_counts():
     assert result["stats"]["multi_PLACE"] == 1
 
 
+def test_unknown_type_routed_to_other():
+    unknown_cluster = {
+        "cluster_id": "cluster_999", "type": "CREATURE", "entity_count": 2,
+        "canonical_candidate": "Dragon",
+        "all_mentions": ["Dragon", "Le Dragon"],
+        "entity_ids": ["e099", "e100"],
+        "first_seen": "ch01", "total_mentions": 5,
+    }
+    result = split_clusters([unknown_cluster])
+    assert result["OTHER"] == [unknown_cluster]
+    assert "CREATURE" not in result
+
+
 def test_studio_interface():
     """Integration: Studio stdin/stdout contract."""
     payload = json.dumps({
