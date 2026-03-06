@@ -43,6 +43,9 @@ def _convert_inline(text: str) -> str:
     return text
 
 
+# EVENT and OTHER are intentionally absent: the pipeline does not generate wiki
+# pages for those entity types, so they fall through to the generic "Infobox"
+# fallback in make_infobox_call().
 _TEMPLATE_NAMES = {
     "PERSON": "Infobox character",
     "PLACE": "Infobox location",
@@ -58,7 +61,7 @@ def make_infobox_call(entity_type: str, fields: dict) -> str:
     template = _TEMPLATE_NAMES.get(entity_type, "Infobox")
     lines = ["{{" + template]
     for key, value in fields.items():
-        if value:
+        if value is not None and value != "":
             lines.append(f"|{key}={value}")
     lines.append("}}")
     return "\n".join(lines)

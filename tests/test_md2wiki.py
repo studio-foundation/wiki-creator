@@ -98,3 +98,10 @@ def test_infobox_format():
     for line in lines[1:-1]:
         assert line.startswith("|")
         assert "=" in line
+
+
+def test_infobox_unknown_type_uses_generic_fallback():
+    fields = {"name": "La Bataille"}
+    result = make_infobox_call("EVENT", fields)
+    assert result.startswith("{{Infobox\n")
+    assert "|name=La Bataille" in result
