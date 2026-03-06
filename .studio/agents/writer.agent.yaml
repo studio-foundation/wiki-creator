@@ -1,6 +1,6 @@
 name: writer
-provider: anthropic
-model: claude-sonnet-4-6
+provider: ollama
+model: qwen3.5
 tools:
   - repo_manager-read_file
   - repo_manager-write_file
