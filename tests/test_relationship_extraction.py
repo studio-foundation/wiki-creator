@@ -162,3 +162,12 @@ def test_coref_worker_returns_list():
         assert isinstance(item[0], str)
         assert isinstance(item[1], str)
         assert isinstance(item[2], str)
+
+
+def test_enrich_fastcoref_accepts_workers_param():
+    """enrich_mentions_with_fastcoref accepts workers param without crashing."""
+    import inspect
+    from scripts.relationship_extraction import enrich_mentions_with_fastcoref
+    sig = inspect.signature(enrich_mentions_with_fastcoref)
+    assert "workers" in sig.parameters
+    assert sig.parameters["workers"].default == 1
