@@ -41,6 +41,15 @@ Standalone test:
   python scripts/relationship_extraction.py --test --window 3 --threshold 2
   python scripts/relationship_extraction.py --test --coref
   python scripts/relationship_extraction.py --live --coref
+  python scripts/relationship_extraction.py --live --coref --workers 4
+  python scripts/relationship_extraction.py --test --coref --workers 2
+
+Workers / RAM budget (LingMessCoref ~590M params per worker):
+  --workers 1  :  ~3 GB  (default, safe on any machine)
+  --workers 2  :  ~5 GB
+  --workers 4  :  ~10 GB (recommended on 16 GB machines)
+  --workers 8  :  ~20 GB (recommended on 32 GB machines)
+  If a worker runs out of memory, it returns [] for its chapter (graceful skip).
 """
 
 import json
