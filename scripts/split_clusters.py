@@ -38,9 +38,9 @@ def split_clusters(clusters: list[dict]) -> dict:
 
         if cluster.get("entity_count", 1) == 1:
             singles_resolved.append({
-                "canonical_name": cluster["canonical_candidate"],
+                "canonical_name": cluster.get("canonical_candidate", ""),
                 "type": entity_type,
-                "aliases": cluster.get("all_mentions", [cluster["canonical_candidate"]]),
+                "aliases": cluster.get("all_mentions", [cluster.get("canonical_candidate", "")]),
                 "source_ids": cluster.get("entity_ids", []),
                 "relevant": True,
             })
@@ -63,6 +63,9 @@ def main() -> None:
         print("Warning: no clusters in entity-clustering output", file=sys.stderr)
 
     result = split_clusters(clusters)
+    empty_names = [s for s in result["singles_resolved"] if not s["canonical_name"]]
+    if empty_names:
+        print(f"Warning: {len(empty_names)} singles have empty canonical_name", file=sys.stderr)
     json.dump(result, sys.stdout, ensure_ascii=False)
 
 
