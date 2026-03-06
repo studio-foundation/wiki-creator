@@ -73,6 +73,10 @@ stages:
     contract: wiki-generation
     ralph:
       max_attempts: 3
+    hooks:
+      on_stage_complete:
+        - command: "echo '{\"pages\": {{output.pages | tojson}}, \"epub_path\": \"{{input.file_path}}\"}' | python scripts/copyright_check.py"
+          on_failure: reject
     context:
       include:
         - input
