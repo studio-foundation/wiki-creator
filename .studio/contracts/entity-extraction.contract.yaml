@@ -2,4 +2,5 @@ name: entity-extraction
 version: 1
 schema:
   required_fields:
-    - entities
+    - entities_for_resolution
+# Semantic guard: entities_for_resolution not empty — checked in script (entity_extraction.py)
