@@ -77,3 +77,15 @@ stages:
       include:
         - input
         - previous_stage_output
+
+  - name: wiki-export
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/wiki_export.py
+    context:
+      include:
+        - input
+        - epub-parse
+        - entity-classification
+        - previous_stage_output
