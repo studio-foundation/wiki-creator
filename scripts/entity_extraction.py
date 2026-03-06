@@ -355,6 +355,10 @@ def main() -> None:
 
     entities_for_resolution, entities_full = split_entities(result["entities"])
 
+    if not entities_for_resolution:
+        json.dump({"error": "no entities extracted — verify spaCy model and input chapters"}, sys.stdout)
+        sys.exit(1)
+
     # Write full entities to disk split by type, for wiki-generation to read via repo_manager-read_file
     by_type = split_by_type(entities_full)
     type_files = {
