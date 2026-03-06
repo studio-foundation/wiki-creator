@@ -87,11 +87,24 @@ def test_main_page_content_contains_title():
         {"title": "Barcelone", "importance": "principal", "entity_type": "PLACE"},
         {"title": "Figurant X", "importance": "figurant", "entity_type": "PERSON"},
     ]
+    labels = {
+        "persons": "Personnages",
+        "locations": "Lieux",
+        "organizations": "Organisations",
+    }
     content = main_page_content(
         book_title="Le Jeu de l'Ange",
         author="Carlos Ruiz Zafón",
         pages=pages,
+        labels=labels,
     )
     assert "Le Jeu de l'Ange" in content
     assert "David Martín" in content
     assert "Barcelone" in content
+    assert "Category:Personnages" in content
+    assert "Category:Lieux" in content
+
+
+def test_infobox_template_unsupported_type_raises():
+    with pytest.raises(ValueError, match="No infobox template"):
+        infobox_template_content("EVENT")

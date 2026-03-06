@@ -93,7 +93,7 @@ def main() -> None:
     files_written += 1
 
     # Write Main_Page.wiki
-    main_content = main_page_content(book_title, author, pages)
+    main_content = main_page_content(book_title, author, pages, labels)
     (wiki_dir / "Main_Page.wiki").write_text(main_content, encoding="utf-8")
     files_written += 1
 

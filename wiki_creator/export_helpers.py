@@ -85,10 +85,12 @@ _INFOBOX_TEMPLATES = {
 
 def infobox_template_content(entity_type: str) -> str:
     """Return the MediaWiki template source for the given entity type."""
+    if entity_type not in _INFOBOX_TEMPLATES:
+        raise ValueError(f"No infobox template for entity type: {entity_type!r}")
     return _INFOBOX_TEMPLATES[entity_type]
 
 
-def main_page_content(book_title: str, author: str, pages: list[dict]) -> str:
+def main_page_content(book_title: str, author: str, pages: list[dict], labels: dict | None = None) -> str:
     """Generate Main_Page.wiki content from pipeline data."""
     persons = [p for p in pages if p["entity_type"] == "PERSON"]
     places = [p for p in pages if p["entity_type"] == "PLACE"]
@@ -96,6 +98,10 @@ def main_page_content(book_title: str, author: str, pages: list[dict]) -> str:
 
     principals = [p for p in persons if p["importance"] == "principal"][:8]
     major_places = [p for p in places if p["importance"] == "principal"][:5]
+
+    persons_label = labels.get("persons", "Personnages") if labels else "Personnages"
+    locations_label = labels.get("locations", "Lieux") if labels else "Lieux"
+    orgs_label = labels.get("organizations", "Organisations") if labels else "Organisations"
 
     lines = [
         f"= {book_title} =",
@@ -114,9 +120,9 @@ def main_page_content(book_title: str, author: str, pages: list[dict]) -> str:
     lines += [
         "",
         "== Navigation ==",
-        "* [[:Category:Personnages|Tous les personnages]]",
-        "* [[:Category:Lieux|Tous les lieux]]",
-        "* [[:Category:Organisations|Toutes les organisations]]",
+        f"* [[:Category:{persons_label}|Tous les personnages]]",
+        f"* [[:Category:{locations_label}|Tous les lieux]]",
+        f"* [[:Category:{orgs_label}|Toutes les organisations]]",
         "",
         "== Statistiques ==",
         f"* {len(pages)} pages wiki",
