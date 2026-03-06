@@ -60,6 +60,12 @@ def test_output_shape():
     assert "narrator" in result
 
 
+def test_empty_stage_outputs_returns_empty():
+    result = merge_entities({})
+    assert result["entities"] == []
+    assert result["narrator"] is None
+
+
 def test_studio_interface():
     """Integration: Studio stdin/stdout contract with all_stage_outputs key."""
     payload = json.dumps({

@@ -43,7 +43,7 @@ def merge_entities(all_stage_outputs: dict) -> dict:
     # LLM-resolved multi-clusters
     for stage_name in RESOLVER_STAGES:
         stage_out = all_stage_outputs.get(stage_name)
-        if not stage_out:
+        if stage_out is None:
             continue
         entities.extend(stage_out.get("entities", []))
         if narrator is None and stage_out.get("narrator"):
