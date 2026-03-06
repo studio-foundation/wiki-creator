@@ -341,56 +341,17 @@ def _decode_mention_offsets(mention: object) -> tuple[int, int] | None:
         return None
 
 
-def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
-    """Worker function for ProcessPoolExecutor: load model + process one chapter.
+def _process_chapter_clusters(
+    raw_clusters: list,
+    chunk: str,
+    chapter_id: str,
+    name_to_canonical: dict[str, str],
+) -> list[tuple[str, str, str]]:
+    """Process fastcoref clusters for one chapter chunk.
 
-    Each worker process loads its own LingMessCoref instance (~590 MB RAM).
-    Must be a top-level function (picklable by multiprocessing).
-
-    Args:
-        args: (chapter_id, text, name_to_canonical)
-            name_to_canonical: {lowercased_name: canonical_name}
-
-    Returns:
-        List of (canonical_name, chapter_id, sentence) tuples to be merged
-        by the parent process. Returns [] on any error (graceful degradation).
+    Returns a deduplicated list of (canonical_name, chapter_id, sentence) tuples.
     """
-    chapter_id, text, name_to_canonical = args
-    if not text or not text.strip():
-        return []
-
-    chunk = text[:8000]
     results: list[tuple[str, str, str]] = []
-
-    try:
-        import spacy
-        from fastcoref import spacy_component  # noqa: F401
-
-        _patch_attn_eager()
-        nlp = spacy.load(
-            "fr_core_news_lg",
-            exclude=["parser", "lemmatizer", "ner", "textcat"],
-        )
-        nlp.add_pipe(
-            "fastcoref",
-            config={
-                "model_architecture": "LingMessCoref",
-                "model_path": "biu-nlp/lingmess-coref",
-                "device": "cpu",
-            },
-        )
-        doc = nlp(chunk, component_cfg={"fastcoref": {"resolve_text": True}})
-    except MemoryError:
-        import sys as _sys
-        print(f"[coref/worker] MemoryError on {chapter_id} — skipping", file=_sys.stderr)
-        return []
-    except Exception as e:
-        import sys as _sys
-        print(f"[coref/worker] Error on {chapter_id}: {e}", file=_sys.stderr)
-        return []
-
-    raw_clusters = doc._.coref_clusters or []
-
     seen: set[tuple[str, str, str]] = set()
 
     for cluster in raw_clusters:
@@ -439,6 +400,57 @@ def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
                     results.append((canonical, chapter_id, sentence))
 
     return results
+
+
+def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
+    """Worker function for ProcessPoolExecutor: load model + process one chapter.
+
+    Each worker process loads its own LingMessCoref instance (~590 MB RAM).
+    Must be a top-level function (picklable by multiprocessing).
+
+    Args:
+        args: (chapter_id, text, name_to_canonical)
+            name_to_canonical: {lowercased_name: canonical_name}
+
+    Returns:
+        List of (canonical_name, chapter_id, sentence) tuples to be merged
+        by the parent process. Returns [] on any error (graceful degradation).
+    """
+    chapter_id, text, name_to_canonical = args
+    if not text or not text.strip():
+        return []
+
+    chunk = text[:8000]
+
+    try:
+        import spacy
+        from fastcoref import spacy_component  # noqa: F401
+
+        _patch_attn_eager()
+        nlp = spacy.load(
+            "fr_core_news_lg",
+            exclude=["parser", "lemmatizer", "ner", "textcat"],
+        )
+        nlp.add_pipe(
+            "fastcoref",
+            config={
+                "model_architecture": "LingMessCoref",
+                "model_path": "biu-nlp/lingmess-coref",
+                "device": "cpu",
+            },
+        )
+        doc = nlp(chunk, component_cfg={"fastcoref": {"resolve_text": True}})
+    except MemoryError:
+        import sys as _sys
+        print(f"[coref/worker] MemoryError on {chapter_id} — skipping", file=_sys.stderr)
+        return []
+    except Exception as e:
+        import sys as _sys
+        print(f"[coref/worker] Error on {chapter_id}: {e}", file=_sys.stderr)
+        return []
+
+    raw_clusters = doc._.coref_clusters or []
+    return _process_chapter_clusters(raw_clusters, chunk, chapter_id, name_to_canonical)
 
 
 def enrich_mentions_with_fastcoref(
@@ -522,57 +534,15 @@ def enrich_mentions_with_fastcoref(
                 continue
 
             raw_clusters = doc._.coref_clusters or []
-
-            for cluster in raw_clusters:
-                decoded: list[tuple[str, int, int]] = []
-                for mention in cluster:
-                    offsets = _decode_mention_offsets(mention)
-                    if offsets is None:
-                        continue
-                    start, end = offsets
-                    if 0 <= start < end <= len(chunk):
-                        decoded.append((chunk[start:end], start, end))
-
-                if not decoded:
-                    continue
-
-                canonical: str | None = None
-                for m_text, _, _ in sorted(decoded, key=lambda x: -len(x[0])):
-                    candidate = name_to_canonical.get(m_text.lower())
-                    if candidate:
-                        canonical = candidate
-                        break
-                    first_word = m_text.split()[0].lower() if m_text.split() else ""
-                    candidate = name_to_canonical.get(first_word)
-                    if candidate:
-                        canonical = candidate
-                        break
-
-                if not canonical:
-                    continue
-
-                for m_text, start, _ in decoded:
-                    tokens = m_text.lower().split()
-                    is_pronoun = (len(tokens) == 1 and tokens[0] in _FR_PRONOUNS) or (
-                        len(tokens) <= 2
-                        and any(t in _FR_PRONOUNS for t in tokens)
-                        and m_text.lower() not in name_to_canonical
-                    )
-                    if not is_pronoun:
-                        continue
-
-                    sentence = _find_sentence_containing(chunk, start)
-                    if not sentence:
-                        continue
-
-                    if canonical not in mentions_by_entity:
-                        mentions_by_entity[canonical] = {}
-                    if chapter_id not in mentions_by_entity[canonical]:
-                        mentions_by_entity[canonical][chapter_id] = []
-                    existing = mentions_by_entity[canonical][chapter_id]
-                    if sentence not in existing:
-                        existing.append(sentence)
-                        total_added += 1
+            for canonical, cid, sentence in _process_chapter_clusters(raw_clusters, chunk, chapter_id, name_to_canonical):
+                if canonical not in mentions_by_entity:
+                    mentions_by_entity[canonical] = {}
+                if cid not in mentions_by_entity[canonical]:
+                    mentions_by_entity[canonical][cid] = []
+                existing = mentions_by_entity[canonical][cid]
+                if sentence not in existing:
+                    existing.append(sentence)
+                    total_added += 1
 
     else:
         # Parallel path — one worker process per chapter, each loads own model
@@ -594,9 +564,9 @@ def enrich_mentions_with_fastcoref(
         try:
             with ProcessPoolExecutor(max_workers=actual_workers) as executor:
                 all_results = list(executor.map(_coref_worker, chapter_items))
-        except MemoryError:
+        except Exception as e:
             print(
-                "[WARN] MemoryError in parallel coref — falling back to sequential (workers=1)",
+                f"[WARN] Parallel coref failed ({type(e).__name__}: {e}) — falling back to sequential (workers=1)",
                 file=sys.stderr,
             )
             return enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=1)
