@@ -14,7 +14,7 @@ dependencies = [
     "lxml>=5.0",
     "anthropic>=0.40",
     "pyyaml>=6.0",
-    "coreferee>=1.4",
+    "fastcoref>=2.1",
 ]
 
 [project.optional-dependencies]

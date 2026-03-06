@@ -39,7 +39,7 @@ persons_full.json
 places_full.json
 orgs_full.json
 extraction-*.jsonl
-
+chapters.json
 # Misc
 .DS_Store
 *.pem

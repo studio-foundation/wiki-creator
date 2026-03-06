@@ -287,6 +287,197 @@ def enrich_mentions_with_coref(
     return mentions_by_entity
 
 
+# ---------------------------------------------------------------------------
+# fastcoref / LingMessCoref — accurate coreference (STU-237)
+# ---------------------------------------------------------------------------
+
+def _patch_attn_eager() -> None:
+    """Force attn_implementation='eager' for AutoModel.from_config.
+
+    LingMessCoref (LongformerModel) doesn't support SDPA in transformers >= 4.45.
+    See: https://github.com/huggingface/transformers/issues/28005
+    """
+    import transformers
+
+    if getattr(transformers.AutoModel.from_config, "_patched_eager", False):
+        return
+    _orig = transformers.AutoModel.from_config.__func__
+
+    @classmethod  # type: ignore[misc]
+    def _patched(cls, config, **kwargs):  # type: ignore[misc]
+        kwargs.setdefault("attn_implementation", "eager")
+        return _orig(cls, config, **kwargs)
+
+    _patched._patched_eager = True  # type: ignore[attr-defined]
+    transformers.AutoModel.from_config = _patched
+
+
+_SENT_BOUNDARY = re.compile(r'(?<=[.!?»])\s+(?=[A-ZÀÂÇÈÉÊÎÔÙÛÜ\u2014«])')
+
+
+def _find_sentence_containing(text: str, char_start: int) -> str:
+    """Return the sentence in text that contains the character at char_start."""
+    boundaries = [0] + [m.end() for m in _SENT_BOUNDARY.finditer(text)] + [len(text)]
+    for i in range(len(boundaries) - 1):
+        if boundaries[i] <= char_start < boundaries[i + 1]:
+            return text[boundaries[i]:boundaries[i + 1]].strip()
+    return text[max(0, char_start - 80):min(len(text), char_start + 120)].strip()
+
+
+def _decode_mention_offsets(mention: object) -> tuple[int, int] | None:
+    """Extract (start_char, end_char) from a fastcoref mention object."""
+    if hasattr(mention, "start_char"):
+        return mention.start_char, mention.end_char  # type: ignore[attr-defined]
+    if isinstance(mention, (tuple, list)) and len(mention) == 2:
+        try:
+            return int(mention[0]), int(mention[1])
+        except (ValueError, TypeError):
+            pass
+    # String repr "(110, 112)"
+    try:
+        coords = str(mention).strip("()").split(",")
+        return int(coords[0].strip()), int(coords[1].strip())
+    except Exception:
+        return None
+
+
+def enrich_mentions_with_fastcoref(
+    chapters: dict[str, str],
+    entities: list[dict],
+    mentions_by_entity: dict[str, dict[str, list[str]]],
+) -> dict[str, dict[str, list[str]]]:
+    """Enrich mentions using fastcoref + LingMessCoref for accurate coreference.
+
+    For each chapter (first 8 000 chars), run LingMessCoref to get coreference
+    clusters. For each cluster containing a known PERSON entity mention, find
+    pronoun mentions in the same cluster and attribute their sentences to that
+    entity.
+
+    Falls back silently to the naive heuristic if fastcoref is not installed.
+
+    Args:
+        chapters: {chapter_id: full_text} from chapters.json
+        entities: resolved entities (canonical_name, aliases, type, relevant)
+        mentions_by_entity: existing {canonical → {chapter_id → [sentences]}}
+
+    Returns:
+        mentions_by_entity enriched in-place (also returned for convenience)
+    """
+    if not chapters:
+        return mentions_by_entity
+
+    # Build name → canonical lookup for PERSON entities
+    persons = [e for e in entities if e.get("type") == "PERSON" and e.get("relevant", True)]
+    name_to_canonical: dict[str, str] = {}
+    for entity in persons:
+        canonical = entity["canonical_name"]
+        name_to_canonical[canonical.lower()] = canonical
+        for alias in entity.get("aliases", []):
+            if len(alias) >= 3:
+                name_to_canonical[alias.lower()] = canonical
+
+    if not name_to_canonical:
+        return mentions_by_entity
+
+    # Load spaCy + LingMessCoref once for all chapters (~590 M params on CPU)
+    try:
+        import spacy
+        from fastcoref import spacy_component  # noqa: F401 — registers the pipe
+
+        _patch_attn_eager()
+        nlp = spacy.load(
+            "fr_core_news_lg",
+            exclude=["parser", "lemmatizer", "ner", "textcat"],
+        )
+        nlp.add_pipe(
+            "fastcoref",
+            config={
+                "model_architecture": "LingMessCoref",
+                "model_path": "biu-nlp/lingmess-coref",
+                "device": "cpu",
+            },
+        )
+    except Exception as e:
+        print(
+            f"[WARN] fastcoref unavailable ({e}) — falling back to heuristic",
+            file=sys.stderr,
+        )
+        return enrich_mentions_with_coref(chapters, entities, mentions_by_entity)
+
+    total_added = 0
+
+    for chapter_id, text in chapters.items():
+        if not text or not text.strip():
+            continue
+
+        chunk = text[:8000]  # LingMessCoref practical context limit on CPU
+
+        try:
+            doc = nlp(chunk, component_cfg={"fastcoref": {"resolve_text": True}})
+        except Exception as e:
+            print(f"[WARN] fastcoref inference failed on {chapter_id}: {e}", file=sys.stderr)
+            continue
+
+        raw_clusters = doc._.coref_clusters or []
+
+        for cluster in raw_clusters:
+            # Decode all mentions to (text, start_char, end_char)
+            decoded: list[tuple[str, int, int]] = []
+            for mention in cluster:
+                offsets = _decode_mention_offsets(mention)
+                if offsets is None:
+                    continue
+                start, end = offsets
+                if 0 <= start < end <= len(chunk):
+                    decoded.append((chunk[start:end], start, end))
+
+            if not decoded:
+                continue
+
+            # Find canonical entity: longest mention that matches a known name
+            canonical: str | None = None
+            for m_text, _, _ in sorted(decoded, key=lambda x: -len(x[0])):
+                candidate = name_to_canonical.get(m_text.lower())
+                if candidate:
+                    canonical = candidate
+                    break
+                first_word = m_text.split()[0].lower() if m_text.split() else ""
+                candidate = name_to_canonical.get(first_word)
+                if candidate:
+                    canonical = candidate
+                    break
+
+            if not canonical:
+                continue
+
+            # Attribute pronoun mentions in this cluster to the canonical entity
+            for m_text, start, _ in decoded:
+                tokens = m_text.lower().split()
+                is_pronoun = (len(tokens) == 1 and tokens[0] in _FR_PRONOUNS) or (
+                    len(tokens) <= 2
+                    and any(t in _FR_PRONOUNS for t in tokens)
+                    and m_text.lower() not in name_to_canonical
+                )
+                if not is_pronoun:
+                    continue
+
+                sentence = _find_sentence_containing(chunk, start)
+                if not sentence:
+                    continue
+
+                if canonical not in mentions_by_entity:
+                    mentions_by_entity[canonical] = {}
+                if chapter_id not in mentions_by_entity[canonical]:
+                    mentions_by_entity[canonical][chapter_id] = []
+                existing = mentions_by_entity[canonical][chapter_id]
+                if sentence not in existing:
+                    existing.append(sentence)
+                    total_added += 1
+
+    print(f"[coref/fastcoref] Pronoun sentences added: {total_added}", file=sys.stderr)
+    return mentions_by_entity
+
+
 def run_test_mode(window_size: int, threshold: int, coref: bool = False) -> None:
     """Run with hardcoded Le Jeu de l'Ange data."""
     entities = [
@@ -381,7 +572,7 @@ def run_test_mode(window_size: int, threshold: int, coref: bool = False) -> None
                     chapters_demo[chapter_id] += " " + text
                 else:
                     chapters_demo[chapter_id] = text
-        mentions_by_entity = enrich_mentions_with_coref(chapters_demo, entities, mentions_by_entity)
+        mentions_by_entity = enrich_mentions_with_fastcoref(chapters_demo, entities, mentions_by_entity)
 
     relationships, stats = build_cooccurrence_graph(
         entities, mentions_by_entity, window_size, threshold
@@ -631,7 +822,7 @@ def run_live_mode(window_size: int, threshold: int, coref: bool = False) -> None
             with open("chapters.json", encoding="utf-8") as f:
                 chapters_data = json.load(f)
             chapters = chapters_data.get("chapters", {})
-            mentions_by_entity = enrich_mentions_with_coref(chapters, entities, mentions_by_entity)
+            mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity)
 
     print(f"=== LIVE MODE — relationship-extraction ===\n")
     print(f"Loaded {len(entities)} persons from persons_full.json")
@@ -752,7 +943,7 @@ def main() -> None:
             with open("chapters.json", encoding="utf-8") as f:
                 chapters_data = json.load(f)
             chapters = chapters_data.get("chapters", {})
-            mentions_by_entity = enrich_mentions_with_coref(chapters, entities, mentions_by_entity)
+            mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity)
 
     relationships, stats = build_cooccurrence_graph(
         entities, mentions_by_entity, window_size, threshold
