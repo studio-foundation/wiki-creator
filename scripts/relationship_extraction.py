@@ -587,7 +587,7 @@ def enrich_mentions_with_fastcoref(
     return mentions_by_entity
 
 
-def run_test_mode(window_size: int, threshold: int, coref: bool = False) -> None:
+def run_test_mode(window_size: int, threshold: int, coref: bool = False, workers: int = 1) -> None:
     """Run with hardcoded Le Jeu de l'Ange data."""
     entities = [
         {"canonical_name": "David Martín", "type": "PERSON", "aliases": ["Martín", "David"], "relevant": True},
@@ -681,7 +681,7 @@ def run_test_mode(window_size: int, threshold: int, coref: bool = False) -> None
                     chapters_demo[chapter_id] += " " + text
                 else:
                     chapters_demo[chapter_id] = text
-        mentions_by_entity = enrich_mentions_with_fastcoref(chapters_demo, entities, mentions_by_entity)
+        mentions_by_entity = enrich_mentions_with_fastcoref(chapters_demo, entities, mentions_by_entity, workers=workers)
 
     relationships, stats = build_cooccurrence_graph(
         entities, mentions_by_entity, window_size, threshold
@@ -813,7 +813,7 @@ def _load_mentions_from_files() -> dict[str, dict[str, list[str]]]:
     return mentions
 
 
-def run_live_mode(window_size: int, threshold: int, coref: bool = False) -> None:
+def run_live_mode(window_size: int, threshold: int, coref: bool = False, workers: int = 1) -> None:
     """Live mode: read persons_full.json, cluster entities, then run co-occurrence on real data."""
     import sys as _sys
     import importlib.util
@@ -931,7 +931,7 @@ def run_live_mode(window_size: int, threshold: int, coref: bool = False) -> None
             with open("chapters.json", encoding="utf-8") as f:
                 chapters_data = json.load(f)
             chapters = chapters_data.get("chapters", {})
-            mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity)
+            mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=workers)
 
     print(f"=== LIVE MODE — relationship-extraction ===\n")
     print(f"Loaded {len(entities)} persons from persons_full.json")
@@ -1011,12 +1011,17 @@ def main() -> None:
 
     coref = "--coref" in args
 
+    workers = 1
+    if "--workers" in args:
+        idx = args.index("--workers")
+        workers = int(args[idx + 1])
+
     if "--test" in args:
-        run_test_mode(window_size, threshold, coref=coref)
+        run_test_mode(window_size, threshold, coref=coref, workers=workers)
         return
 
     if "--live" in args:
-        run_live_mode(window_size, threshold, coref=coref)
+        run_live_mode(window_size, threshold, coref=coref, workers=workers)
         return
 
     payload = json.load(sys.stdin)
@@ -1041,6 +1046,7 @@ def main() -> None:
             do_coref = bool(additional.get("coref", False))
             window_size = int(additional.get("window", window_size))
             threshold = int(additional.get("threshold", threshold))
+            workers = int(additional.get("workers", workers))
         except Exception:
             pass
 
@@ -1052,7 +1058,7 @@ def main() -> None:
             with open("chapters.json", encoding="utf-8") as f:
                 chapters_data = json.load(f)
             chapters = chapters_data.get("chapters", {})
-            mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity)
+            mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=workers)
 
     relationships, stats = build_cooccurrence_graph(
         entities, mentions_by_entity, window_size, threshold

@@ -171,3 +171,20 @@ def test_enrich_fastcoref_accepts_workers_param():
     sig = inspect.signature(enrich_mentions_with_fastcoref)
     assert "workers" in sig.parameters
     assert sig.parameters["workers"].default == 1
+
+
+def test_main_parses_workers_flag(monkeypatch):
+    """--workers N is parsed and passed through to run_live_mode."""
+    import sys
+    import scripts.relationship_extraction as rel
+
+    captured = {}
+
+    def fake_run_live(window_size, threshold, coref=False, workers=1):
+        captured["workers"] = workers
+
+    monkeypatch.setattr(rel, "run_live_mode", fake_run_live)
+    monkeypatch.setattr(sys, "argv", ["rel.py", "--live", "--coref", "--workers", "4"])
+    rel.main()
+
+    assert captured["workers"] == 4
