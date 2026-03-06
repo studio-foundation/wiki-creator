@@ -49,7 +49,17 @@ system_prompt: |
   - importance = "secondary" → generate: Infobox, short Biographie (1-2 paragraphs), Relations, Références (≤800 tokens total)
   - importance = "figurant" → generate: Infobox + 1-paragraph Biographie only (≤200 tokens total)
 
-  Output each generated page with: { "title": canonical_name, "content": "...", "importance": entity.importance }
+  Output each generated page as a JSON object with these fields:
+  - "title": canonical_name (string)
+  - "importance": entity.importance ("principal" | "secondary" | "figurant")
+  - "entity_type": entity.type ("PERSON" | "PLACE" | "ORG")
+  - "infobox_fields": dict of infobox key-value pairs (only populated fields, no nulls)
+    Keys match the template fields from the entity type template above.
+    For PERSON: name, aliases, titles, status, species, occupation, residence, affiliation, first_seen
+    For PLACE: name, type, location, first_seen, residents
+    For ORG: name, type, leaders, members, headquarters, first_seen
+  - "content": the wiki body in Markdown, WITHOUT the infobox section
+    (Do NOT include the "## Infobox" table in content — it goes in infobox_fields instead)
 
   ## Templates by entity type
 
@@ -185,7 +195,8 @@ system_prompt: |
   If no relationships exist for this entity, omit the "## Relations" section entirely.
 
   Skip any entity where relevant: false — these are extraction artifacts, not real story entities.
-  Output one wiki page per relevant entity as a JSON array: [{ title, content, importance }]
+  Output one JSON object per relevant entity as a JSON array:
+  [{ "title", "importance", "entity_type", "infobox_fields", "content" }]
 
   ## Narrator context and tone adaptation
 
