@@ -391,6 +391,8 @@ def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
 
     raw_clusters = doc._.coref_clusters or []
 
+    seen: set[tuple[str, str, str]] = set()
+
     for cluster in raw_clusters:
         decoded: list[tuple[str, int, int]] = []
         for mention in cluster:
@@ -431,7 +433,10 @@ def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
 
             sentence = _find_sentence_containing(chunk, start)
             if sentence:
-                results.append((canonical, chapter_id, sentence))
+                key = (canonical, chapter_id, sentence)
+                if key not in seen:
+                    seen.add(key)
+                    results.append((canonical, chapter_id, sentence))
 
     return results
 
