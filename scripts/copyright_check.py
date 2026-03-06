@@ -16,11 +16,13 @@ import argparse
 import json
 import re
 import sys
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import ebooklib
 from ebooklib import epub
 from bs4 import BeautifulSoup
+
+MIN_CHAPTER_CHARS = 100  # Skip EPUB nav/boilerplate items shorter than this
 
 
 def tokenize(text: str) -> List[str]:
@@ -102,7 +104,7 @@ def load_epub_chapters(epub_path: str) -> List[dict]:
         soup = BeautifulSoup(item.get_content(), "html.parser")
         text = soup.get_text(separator=" ")
         text = re.sub(r"\s+", " ", text).strip()
-        if len(text) > 100:  # skip nav/boilerplate
+        if len(text) > MIN_CHAPTER_CHARS:
             chapters.append({"id": item.get_id(), "content": text})
     return chapters
 
@@ -193,8 +195,12 @@ def main() -> None:
         result = format_output(pages_checked=len(fake_pages), violations=violations)
         json.dump(result, sys.stdout, ensure_ascii=False, indent=2)
 
-        assert result["status"] == "fail", f"Expected fail, got: {result}"
-        assert result["violations"][0]["page_title"] == "Test — verbatim page"
+        if result["status"] != "fail":
+            print(f"ERROR: Expected fail, got: {result}", file=sys.stderr)
+            sys.exit(1)
+        if not result["violations"] or result["violations"][0]["page_title"] != "Test — verbatim page":
+            print(f"ERROR: Expected violation for 'Test — verbatim page', got: {result['violations']}", file=sys.stderr)
+            sys.exit(1)
         print("\n✓ --test passed", file=sys.stderr)
         return
 
