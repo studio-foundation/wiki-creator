@@ -52,3 +52,49 @@ def test_italic_not_bold():
 
 def test_bold_and_italic_same_line():
     assert convert("**bold** and *italic*") == "'''bold''' and ''italic''"
+
+
+from wiki_creator.md2wiki import make_infobox_call
+
+
+def test_infobox_person():
+    fields = {"name": "David Martín", "status": "Vivant", "occupation": "Écrivain"}
+    result = make_infobox_call("PERSON", fields)
+    assert result.startswith("{{Infobox character")
+    assert "|name=David Martín" in result
+    assert "|status=Vivant" in result
+    assert "|occupation=Écrivain" in result
+    assert result.strip().endswith("}}")
+
+
+def test_infobox_place():
+    fields = {"name": "Barcelone", "type": "Ville"}
+    result = make_infobox_call("PLACE", fields)
+    assert result.startswith("{{Infobox location")
+
+
+def test_infobox_org():
+    fields = {"name": "La Roseraie"}
+    result = make_infobox_call("ORG", fields)
+    assert result.startswith("{{Infobox organization")
+
+
+def test_infobox_empty_fields_omitted():
+    """Fields with empty/None values must not appear in the call."""
+    fields = {"name": "X", "status": "", "occupation": None}
+    result = make_infobox_call("PERSON", fields)
+    assert "|status=" not in result
+    assert "|occupation=" not in result
+
+
+def test_infobox_format():
+    """Each field on its own line, no trailing whitespace."""
+    fields = {"name": "X", "status": "Vivant"}
+    result = make_infobox_call("PERSON", fields)
+    lines = result.strip().splitlines()
+    assert lines[0] == "{{Infobox character"
+    assert lines[-1] == "}}"
+    # Middle lines are |key=value
+    for line in lines[1:-1]:
+        assert line.startswith("|")
+        assert "=" in line

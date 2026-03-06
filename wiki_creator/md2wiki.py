@@ -41,3 +41,24 @@ def _convert_inline(text: str) -> str:
     # Italic (*text*) → ''text'' — only single asterisks remaining
     text = re.sub(r"\*(.+?)\*", r"''\1''", text)
     return text
+
+
+_TEMPLATE_NAMES = {
+    "PERSON": "Infobox character",
+    "PLACE": "Infobox location",
+    "ORG": "Infobox organization",
+}
+
+
+def make_infobox_call(entity_type: str, fields: dict) -> str:
+    """Return the wikitext template call for the given entity type.
+
+    Empty/None values are omitted. Each field on its own line.
+    """
+    template = _TEMPLATE_NAMES.get(entity_type, "Infobox")
+    lines = ["{{" + template]
+    for key, value in fields.items():
+        if value:
+            lines.append(f"|{key}={value}")
+    lines.append("}}")
+    return "\n".join(lines)
