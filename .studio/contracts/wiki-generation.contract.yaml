@@ -3,3 +3,5 @@ version: 1
 schema:
   required_fields:
     - pages
+  # Each page must include: title (str), content (str), importance (str)
+  # importance mirrors the entity's importance level from entity-classification
