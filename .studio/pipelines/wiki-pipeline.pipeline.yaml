@@ -40,6 +40,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/split_clusters.py
+    contract: split-clusters
     context:
       include:
         - previous_stage_output
@@ -110,6 +111,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/merge_entities.py
+    contract: merge-entities
     context:
       include:
         - all_stage_outputs
