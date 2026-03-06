@@ -48,3 +48,7 @@ def test_italic_not_bold():
     """Single asterisk = italic, double = bold. No cross-contamination."""
     assert convert("*seul*") == "''seul''"
     assert convert("**double**") == "'''double'''"
+
+
+def test_bold_and_italic_same_line():
+    assert convert("**bold** and *italic*") == "'''bold''' and ''italic''"

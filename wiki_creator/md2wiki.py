@@ -24,11 +24,11 @@ def _convert_line(line: str) -> str:
 
     # Headings (order matters: h4 before h3 before h2)
     if line.startswith("#### "):
-        return "==== " + line[5:] + " ===="
+        return "==== " + _convert_inline(line[5:]) + " ===="
     if line.startswith("### "):
-        return "=== " + line[4:] + " ==="
+        return "=== " + _convert_inline(line[4:]) + " ==="
     if line.startswith("## "):
-        return "== " + line[3:] + " =="
+        return "== " + _convert_inline(line[3:]) + " =="
 
     # Inline markup
     line = _convert_inline(line)
