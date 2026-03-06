@@ -463,6 +463,13 @@ def main() -> None:
         },
     }
 
+    if result["stats"]["reduction_pct"] == 0 and result["stats"]["input_entities"] > 10:
+        print(
+            f"Warning: reduction_pct=0 with {result['stats']['input_entities']} input entities — "
+            "no clustering occurred, check clustering thresholds",
+            file=sys.stderr,
+        )
+
     json.dump(result, sys.stdout, ensure_ascii=False)
 
 
