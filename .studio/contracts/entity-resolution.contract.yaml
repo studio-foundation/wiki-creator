@@ -3,7 +3,6 @@ version: 1
 schema:
   required_fields:
     - entities
-  # Each entity in the list must include:
-  #   canonical_name (str), type (str), aliases (list), source_ids (list), relevant (bool)
-  # narrator is nullable — omit or null for omniscient/third-person POV
-  # narrator shape when present: { entity: str, pov: str, reliability: str, evidence: [str] }
+    - narrator
+# narrator: null pour POV omniscient/troisième personne
+# Chaque entité : canonical_name, type, aliases, source_ids, relevant
