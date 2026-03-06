@@ -66,6 +66,14 @@ def main() -> None:
     empty_names = [s for s in result["singles_resolved"] if not s["canonical_name"]]
     if empty_names:
         print(f"Warning: {len(empty_names)} singles have empty canonical_name", file=sys.stderr)
+
+    # Pass through pov_detection from epub-parse so entity-resolution-PERSON
+    # can detect narrator without needing a named stage reference (which doesn't
+    # work inside group stages in Studio).
+    pov_detection = prev.get("epub-parse", {}).get("pov_detection")
+    if pov_detection is not None:
+        result["pov_detection"] = pov_detection
+
     json.dump(result, sys.stdout, ensure_ascii=False)
 
 

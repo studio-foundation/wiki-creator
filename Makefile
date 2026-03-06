@@ -22,4 +22,4 @@ test-coref: test-extraction
 
 test-coref-parallel: test-extraction
 	python scripts/entity_clustering.py --live
-	python scripts/relationship_extraction.py --live --coref --workers 4
+	python scripts/relationship_extraction.py --live --coref --workers 8

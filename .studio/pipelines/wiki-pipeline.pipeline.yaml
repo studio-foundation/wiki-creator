@@ -58,8 +58,7 @@ stages:
           max_attempts: 3
         context:
           include:
-            - epub-parse
-            - split-clusters
+            - previous_stage_output
             - stage_name
 
       - name: entity-resolution-PLACE
@@ -70,7 +69,7 @@ stages:
           max_attempts: 3
         context:
           include:
-            - split-clusters
+            - previous_stage_output
             - stage_name
 
       - name: entity-resolution-ORG
@@ -81,7 +80,7 @@ stages:
           max_attempts: 2
         context:
           include:
-            - split-clusters
+            - previous_stage_output
             - stage_name
 
       - name: entity-resolution-EVENT
@@ -92,7 +91,7 @@ stages:
           max_attempts: 2
         context:
           include:
-            - split-clusters
+            - previous_stage_output
             - stage_name
 
       - name: entity-resolution-OTHER
@@ -103,7 +102,7 @@ stages:
           max_attempts: 2
         context:
           include:
-            - split-clusters
+            - previous_stage_output
             - stage_name
 
   - name: merge-entities
