@@ -223,8 +223,13 @@ def test_parallel_merge_matches_direct_process_chapters():
     # (We compute it directly here so the test doesn't depend on fastcoref)
     # Since fastcoref isn't available in CI, raw_clusters will be empty → []
     # We simulate non-empty results manually.
+    # Simulate a worker returning the same sentence twice (e.g., from overlapping clusters)
+    # The merge should deduplicate — only one copy should end up in mentions_by_entity
     simulated_worker_results = {
-        "ch01": [("David Martín", "ch01", "Il ferma la porte derrière lui.")],
+        "ch01": [
+            ("David Martín", "ch01", "Il ferma la porte derrière lui."),
+            ("David Martín", "ch01", "Il ferma la porte derrière lui."),  # duplicate
+        ],
         "ch02": [("Pedro Vidal", "ch02", "Il signa le contrat au matin.")],
     }
 
@@ -250,7 +255,10 @@ def test_parallel_merge_matches_direct_process_chapters():
         f"Expected Pedro Vidal ch02 sentence, got: {pv_sentences}"
     )
 
-    # Verify no duplicates
-    assert len(dm_sentences) == dm_sentences.count("Il ferma la porte derrière lui.") + (len(dm_sentences) - dm_sentences.count("Il ferma la porte derrière lui."))
-    assert len(set(dm_sentences)) == len(dm_sentences), f"Duplicates in David Martín ch01: {dm_sentences}"
-    assert len(set(pv_sentences)) == len(pv_sentences), f"Duplicates in Pedro Vidal ch02: {pv_sentences}"
+    # Verify deduplication: same sentence returned twice by worker → only once in result
+    assert dm_sentences.count("Il ferma la porte derrière lui.") == 1, (
+        f"Expected exactly 1 copy after dedup, got: {dm_sentences}"
+    )
+    assert pv_sentences.count("Il signa le contrat au matin.") == 1, (
+        f"Expected exactly 1 copy after dedup, got: {pv_sentences}"
+    )
