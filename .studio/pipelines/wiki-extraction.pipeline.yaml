@@ -1,0 +1,46 @@
+name: wiki-extraction
+description: Parse EPUB and extract/cluster entities — run once per book
+version: 1
+
+stages:
+  - name: epub-parse
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/parse_epub.py
+    contract: epub-parse
+    context:
+      include:
+        - input
+
+  - name: entity-extraction
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/entity_extraction.py
+    contract: entity-extraction
+    timeout_ms: 600000
+    context:
+      include:
+        - input
+        - previous_stage_output
+
+  - name: entity-clustering
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/entity_clustering.py
+    contract: entity-clustering
+    context:
+      include:
+        - previous_stage_output
+
+  - name: split-clusters
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/split_clusters.py
+    contract: split-clusters
+    context:
+      include:
+        - previous_stage_output

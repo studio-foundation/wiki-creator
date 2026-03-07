@@ -1,0 +1,62 @@
+name: wiki-generation
+description: Generate wiki pages from classified entities — re-runnable per batch
+version: 1
+
+stages:
+  - name: epub-parse
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/load_epub_data.py
+    contract: epub-parse
+    context:
+      include:
+        - input
+
+  - name: entity-classification
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/load_classified_entities.py
+    contract: entity-classification
+    context:
+      include:
+        - input
+
+  - name: wiki-preparation
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/wiki_preparation.py
+    contract: wiki-preparation
+    context:
+      include:
+        - input
+        - previous_stage_output
+
+  - name: wiki-generation
+    kind: analysis
+    agent: writer-lite
+    contract: wiki-page
+    ralph:
+      max_attempts: 3
+    hooks:
+      on_stage_complete:
+        - command: "echo '{\"pages\": {{output.pages | tojson}}}' | python scripts/copyright_check.py --epub {{input.file_path}}"
+          on_failure: reject
+    context:
+      include:
+        - input
+        - previous_stage_output
+
+  - name: wiki-export
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/wiki_export.py
+    contract: wiki-export
+    context:
+      include:
+        - input
+        - epub-parse
+        - previous_stage_output

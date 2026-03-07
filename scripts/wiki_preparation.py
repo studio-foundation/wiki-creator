@@ -26,9 +26,16 @@ import json
 import os
 import sys
 
-BATCH_SIZE = 15
+BATCH_SIZE_BY_IMPORTANCE = {
+    "principal": 5,   # full template ~750 tokens × 5 = 3750 tokens — safe under 8192
+    "secondary": 10,  # short template ~400 tokens × 10 = 4000 tokens — safe
+    "figurant": 20,   # infobox only ~150 tokens × 20 = 3000 tokens — safe
+}
 MAX_MENTIONS_PER_CHAPTER = 5
 MAX_CHAPTERS = 25
+# Cap total context chars per entity to avoid haiku-4-5 input context overflow
+# Principal entities can have thousands of mentions — we cap to keep batches manageable
+MAX_CONTEXT_CHARS_PER_ENTITY = 8000
 
 
 def load_registry(path: str, key: str) -> dict:
@@ -59,8 +66,14 @@ def extract_context(entity: dict, persons: dict, places: dict, orgs: dict) -> di
 
     # Cap per chapter and total chapters to limit bundle size
     result = {}
+    total_chars = 0
     for chapter in sorted(combined.keys())[:MAX_CHAPTERS]:
-        result[chapter] = combined[chapter][:MAX_MENTIONS_PER_CHAPTER]
+        mentions = combined[chapter][:MAX_MENTIONS_PER_CHAPTER]
+        chapter_chars = sum(len(m) for m in mentions)
+        if total_chars + chapter_chars > MAX_CONTEXT_CHARS_PER_ENTITY:
+            break
+        result[chapter] = mentions
+        total_chars += chapter_chars
 
     return result
 
@@ -112,32 +125,45 @@ def build_entity_bundle(
 
 
 def write_batches(entity_bundles: list[dict], narrator: object) -> list[dict]:
-    """Split entity bundles into batch files. Returns batch manifest."""
+    """Split entity bundles into batch files, with smaller batches for principal entities.
+
+    Uses BATCH_SIZE_BY_IMPORTANCE to avoid haiku-4-5's 8192-token output limit.
+    """
     os.makedirs("wiki_inputs", exist_ok=True)
 
     batches = []
-    for i in range(0, len(entity_bundles), BATCH_SIZE):
-        batch_entities = entity_bundles[i : i + BATCH_SIZE]
-        batch_id = f"batch_{i // BATCH_SIZE:03d}"
-        file_path = f"wiki_inputs/{batch_id}.json"
+    batch_index = 0
 
-        batch_data = {
-            "batch_id": batch_id,
-            "narrator": narrator,
-            "entities": batch_entities,
-        }
-        with open(file_path, "w", encoding="utf-8") as f:
-            json.dump(batch_data, f, ensure_ascii=False, indent=2)
+    # Group by importance, process each group with appropriate batch size
+    for importance in ("principal", "secondary", "figurant"):
+        group = [e for e in entity_bundles if e["importance"] == importance]
+        if not group:
+            continue
+        batch_size = BATCH_SIZE_BY_IMPORTANCE[importance]
+        for i in range(0, len(group), batch_size):
+            batch_entities = group[i : i + batch_size]
+            batch_id = f"batch_{batch_index:03d}"
+            file_path = f"wiki_inputs/{batch_id}.json"
 
-        batches.append({
-            "batch_id": batch_id,
-            "file": file_path,
-            "entity_count": len(batch_entities),
-        })
-        print(
-            f"  Wrote {file_path} ({len(batch_entities)} entities)",
-            file=sys.stderr,
-        )
+            batch_data = {
+                "batch_id": batch_id,
+                "narrator": narrator,
+                "entities": batch_entities,
+            }
+            with open(file_path, "w", encoding="utf-8") as f:
+                json.dump(batch_data, f, ensure_ascii=False, indent=2)
+
+            batches.append({
+                "batch_id": batch_id,
+                "file": file_path,
+                "entity_count": len(batch_entities),
+                "importance": importance,
+            })
+            print(
+                f"  Wrote {file_path} ({len(batch_entities)} {importance} entities)",
+                file=sys.stderr,
+            )
+            batch_index += 1
 
     return batches
 

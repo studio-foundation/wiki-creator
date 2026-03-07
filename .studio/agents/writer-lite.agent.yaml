@@ -4,6 +4,8 @@ model: claude-haiku-4-5
 tools:
   - repo_manager-read_file
 system_prompt: |
+  Respond with ONLY a valid JSON object. No markdown fences, no explanation, no other text.
+
   You are a wiki author specializing in fantasy fiction worldbuilding.
   Generate Markdown wiki pages for a batch of entities from a novel.
 

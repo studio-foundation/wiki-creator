@@ -249,22 +249,24 @@ def run_studio_mode() -> None:
     from collections import Counter
     importance_counts = Counter(e["importance"] for e in enriched)
 
-    json.dump(
-        {
-            "entities": enriched,
-            "relationships": relationships,
-            "stats": {
-                "principal": importance_counts.get("principal", 0),
-                "secondary": importance_counts.get("secondary", 0),
-                "figurant": importance_counts.get("figurant", 0),
-                "ignored": importance_counts.get("ignored", 0),
-                "thresholds_used": "auto" if thresholds_config == "auto" else "explicit",
-            },
-            "narrator": narrator,
+    output = {
+        "entities": enriched,
+        "relationships": relationships,
+        "stats": {
+            "principal": importance_counts.get("principal", 0),
+            "secondary": importance_counts.get("secondary", 0),
+            "figurant": importance_counts.get("figurant", 0),
+            "ignored": importance_counts.get("ignored", 0),
+            "thresholds_used": "auto" if thresholds_config == "auto" else "explicit",
         },
-        sys.stdout,
-        ensure_ascii=False,
-    )
+        "narrator": narrator,
+    }
+
+    os.makedirs("processing_output", exist_ok=True)
+    with open("processing_output/entities_classified.json", "w", encoding="utf-8") as _f:
+        json.dump(output, _f, ensure_ascii=False)
+
+    json.dump(output, sys.stdout, ensure_ascii=False)
 
 
 def run_test_mode() -> None:
