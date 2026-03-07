@@ -1,0 +1,108 @@
+name: wiki-resolution
+description: Resolve entities and extract relationships — run once per book
+version: 1
+
+stages:
+  - name: split-clusters
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/load_splits.py
+    contract: split-clusters
+    context:
+      include:
+        - input
+
+  - group: entity-resolution
+    mode: parallel
+    max_iterations: 1
+    on_failure: collect-all
+    stages:
+      - name: entity-resolution-PERSON
+        kind: analysis
+        agent: resolver
+        contract: entity-resolution
+        ralph:
+          max_attempts: 3
+        context:
+          include:
+            - previous_stage_output
+            - stage_name
+
+      - name: entity-resolution-PLACE
+        kind: analysis
+        agent: resolver
+        contract: entity-resolution
+        ralph:
+          max_attempts: 3
+        context:
+          include:
+            - previous_stage_output
+            - stage_name
+
+      - name: entity-resolution-ORG
+        kind: analysis
+        agent: resolver
+        contract: entity-resolution
+        ralph:
+          max_attempts: 3
+        context:
+          include:
+            - previous_stage_output
+            - stage_name
+
+      - name: entity-resolution-EVENT
+        kind: analysis
+        agent: resolver
+        contract: entity-resolution
+        condition: "stages.split-clusters.output.stats.multi_EVENT > 0"
+        ralph:
+          max_attempts: 2
+        context:
+          include:
+            - previous_stage_output
+            - stage_name
+
+      - name: entity-resolution-OTHER
+        kind: analysis
+        agent: resolver
+        contract: entity-resolution
+        condition: "stages.split-clusters.output.stats.multi_OTHER > 0"
+        ralph:
+          max_attempts: 2
+        context:
+          include:
+            - previous_stage_output
+            - stage_name
+
+  - name: merge-entities
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/merge_entities.py
+    contract: merge-entities
+    context:
+      include:
+        - all_stage_outputs
+
+  - name: relationship-extraction
+    kind: analysis
+    executor: script
+    runtime: python
+    script: scripts/relationship_extraction.py
+    contract: relationship-extraction
+    context:
+      include:
+        - input
+        - previous_stage_output
+
+  - name: entity-classification
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/entity_classification.py
+    contract: entity-classification
+    context:
+      include:
+        - input
+        - previous_stage_output
