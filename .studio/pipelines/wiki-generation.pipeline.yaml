@@ -40,10 +40,17 @@ stages:
     contract: wiki-page
     ralph:
       max_attempts: 3
-    hooks:
-      on_stage_complete:
-        - command: "echo '{\"pages\": {{output.pages | tojson}}}' | python scripts/copyright_check.py --epub {{input.file_path}}"
-          on_failure: reject
+    context:
+      include:
+        - input
+        - previous_stage_output
+
+  - name: copyright-check
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/copyright_check.py
+    contract: copyright-check
     context:
       include:
         - input

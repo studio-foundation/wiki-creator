@@ -1,0 +1,8 @@
+name: resolve-clusters
+version: 1
+schema:
+  required_fields:
+    - entities
+# narrator: null (narrator detection not implemented in script stage)
+# entities: all resolved entities from all types (PERSON, PLACE, ORG, EVENT, OTHER) + singles
+# Each entity: canonical_name, type, aliases, source_ids, relevant

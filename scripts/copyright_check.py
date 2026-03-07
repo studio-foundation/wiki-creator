@@ -111,7 +111,7 @@ def load_epub_chapters(epub_path: str) -> List[dict]:
 
 def check_page(page: dict, source_index: Dict[tuple, str], n: int = 15) -> List[dict]:
     """Check a single wiki page for verbatim matches. Returns list of violation dicts."""
-    masked = mask_short_quotes(page["content"], max_words=5)
+    masked = mask_short_quotes(page.get("content", ""), max_words=5)
     tokens = tokenize(masked)
     raw_violations = find_violations(tokens, source_index, n=n)
     return [
@@ -204,13 +204,35 @@ def main() -> None:
         print("\n✓ --test passed", file=sys.stderr)
         return
 
-    if not args.epub:
-        print("Error: --epub required (or use --test)", file=sys.stderr)
+    payload = json.load(sys.stdin)
+
+    # Studio pipeline stage format: {"additional_context": "...", "previous_outputs": {...}}
+    # Standalone format: {"pages": [...]}
+    pages = payload.get("pages")
+    epub_path = args.epub
+
+    if pages is None:
+        import yaml
+        previous = payload.get("previous_outputs", {})
+        wiki_gen = previous.get("wiki-generation", {})
+        pages = wiki_gen.get("pages", [])
+        if not epub_path:
+            try:
+                ctx = yaml.safe_load(payload.get("additional_context", "{}") or "{}")
+                epub_path = ctx.get("file_path", "")
+            except Exception:
+                epub_path = ""
+
+    if not epub_path:
+        print("Error: epub path not found (pass --epub or run as a pipeline stage with input.file_path)", file=sys.stderr)
         sys.exit(1)
 
-    payload = json.load(sys.stdin)
-    pages = payload.get("pages", [])
-    result = run_check(pages, args.epub, threshold=args.threshold)
+    if not pages:
+        json.dump({"status": "pass", "checked_pages": 0, "violations": [], "pages": []}, sys.stdout, ensure_ascii=False)
+        return
+
+    result = run_check(pages, epub_path, threshold=args.threshold)
+    result["pages"] = pages  # pass through for wiki-export
     json.dump(result, sys.stdout, ensure_ascii=False)
 
     if result["status"] == "fail":

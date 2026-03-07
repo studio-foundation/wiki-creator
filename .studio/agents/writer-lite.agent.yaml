@@ -1,6 +1,6 @@
 name: writer-lite
 provider: ollama
-model: qwen3:8b
+model: qwen2.5
 tools:
   - repo_manager-read_file
 system_prompt: |

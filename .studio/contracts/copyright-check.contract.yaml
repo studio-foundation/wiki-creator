@@ -1,0 +1,9 @@
+name: copyright-check
+version: 1
+schema:
+  required_fields:
+    - status
+# status: "pass" | "fail"
+# checked_pages: number of pages checked
+# violations: list of {page_title, chapter, wiki_excerpt, consecutive_words}
+# feedback: rejection message (only present if status == "fail")

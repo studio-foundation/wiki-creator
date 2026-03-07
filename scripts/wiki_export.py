@@ -32,7 +32,11 @@ def main() -> None:
     input_cfg = yaml.safe_load(payload["additional_context"])
     prev = payload["previous_outputs"]
 
-    pages = prev["wiki-generation"]["pages"]
+    pages = (
+        prev.get("copyright-check", {}).get("pages")
+        or prev.get("wiki-generation", {}).get("pages")
+        or []
+    )
     epub = prev["epub-parse"]
     book_title = epub.get("title", "Wiki")
     author = epub.get("author", "")

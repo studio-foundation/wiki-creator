@@ -1,6 +1,6 @@
 name: writer
 provider: ollama
-model: qwen3:8b
+model: qwen2.5
 tools:
   - studio_run-run_pipeline
 system_prompt: |

@@ -1,7 +1,31 @@
-.PHONY: run test-extraction test-clustering test-relationships test test-coref test-coref-parallel
+.PHONY: run run-extraction run-resolution run-generation run-all \
+        test-extraction test-clustering test-relationships test test-coref test-coref-parallel
 
+BOOK ?= books/carlos-ruiz-zafon/le-jeu-de-lange.yaml
+
+# Full run via orchestrator
 run:
-	studio run wiki-pipeline --input-file .studio/inputs/book.input.yaml --live --verbose
+	python run_wiki.py --book $(BOOK)
+
+# Individual pipeline stages
+run-extraction:
+	studio run wiki-extraction --input-file $(BOOK) --live --verbose
+
+run-resolution:
+	studio run wiki-resolution --input-file $(BOOK) --live --verbose
+
+run-generation:
+	studio run wiki-generation --input-file $(BOOK) --live --verbose
+
+# Orchestrator shortcuts
+run-from-resolution:
+	python run_wiki.py --book $(BOOK) --restart wiki-resolution
+
+run-from-generation:
+	python run_wiki.py --book $(BOOK) --restart wiki-generation
+
+run-status:
+	python run_wiki.py --book $(BOOK) --status
 
 test-extraction:
 	python scripts/test_extraction.py

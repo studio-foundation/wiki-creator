@@ -2,56 +2,31 @@
 """
 Stage: merge-entities (script executor, no LLM)
 
-Concatenates resolved entities from:
-- split-clusters singles_resolved (pre-resolved, no LLM)
-- entity-resolution-PERSON / PLACE / ORG / EVENT / OTHER (parallel LLM outputs)
-
-Narrator: taken from entity-resolution-PERSON (only one that can detect a narrator).
+Passes through the output of resolve-clusters.
+resolve-clusters already includes all entity types (singles + multi-clusters).
 
 Input (Studio stdin):
   all_stage_outputs: {
-    "split-clusters": { "singles_resolved": [...] },
-    "entity-resolution-PERSON": { "entities": [...], "narrator": {...}|null },
-    "entity-resolution-PLACE":  { "entities": [...], "narrator": null },
+    "resolve-clusters": { "entities": [...], "narrator": null },
     ...
   }
 
 Output (stdout):
-  { "entities": [...all concatenated], "narrator": {...}|null }
+  { "entities": [...], "narrator": null }
 """
 
 import json
 import sys
 
-RESOLVER_STAGES = (
-    "entity-resolution-PERSON",
-    "entity-resolution-PLACE",
-    "entity-resolution-ORG",
-    "entity-resolution-EVENT",
-    "entity-resolution-OTHER",
-)
-
 
 def merge_entities(all_stage_outputs: dict) -> dict:
-    entities: list[dict] = []
-    narrator = None
+    resolve_out = all_stage_outputs.get("resolve-clusters", {})
+    entities = resolve_out.get("entities", [])
+    narrator = resolve_out.get("narrator", None)
 
-    # Singles pre-resolved by split-clusters
-    split_out = all_stage_outputs.get("split-clusters", {})
-    entities.extend(split_out.get("singles_resolved", []))
-
-    # LLM-resolved multi-clusters
-    for stage_name in RESOLVER_STAGES:
-        stage_out = all_stage_outputs.get(stage_name)
-        if stage_out is None:
-            continue
-        stage_entities = stage_out.get("entities", [])
-        if isinstance(stage_entities, list):
-            entities.extend(stage_entities)
-        else:
-            print(f"Warning: {stage_name} returned non-list entities, skipping", file=sys.stderr)
-        if narrator is None and stage_out.get("narrator"):
-            narrator = stage_out["narrator"]
+    if not isinstance(entities, list):
+        print("Warning: resolve-clusters returned non-list entities", file=sys.stderr)
+        entities = []
 
     return {"entities": entities, "narrator": narrator}
 
