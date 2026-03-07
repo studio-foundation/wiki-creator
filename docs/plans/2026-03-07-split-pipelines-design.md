@@ -71,11 +71,11 @@ Single script at project root. Manages the 3-pipeline sequence.
 ### CLI flags
 
 ```bash
-python run_wiki.py --book books/le-jeu-de-lange.yaml            # full run
-python run_wiki.py --book books/le-jeu-de-lange.yaml --restart wiki-resolution
-python run_wiki.py --book books/le-jeu-de-lange.yaml --batch 0,2,5
-python run_wiki.py --book books/le-jeu-de-lange.yaml --retries 5
-python run_wiki.py --book books/le-jeu-de-lange.yaml --status
+python run_wiki.py --book books/carlos-ruiz-zafon/le-jeu-de-lange.yaml            # full run
+python run_wiki.py --book books/carlos-ruiz-zafon/le-jeu-de-lange.yaml --restart wiki-resolution
+python run_wiki.py --book books/carlos-ruiz-zafon/le-jeu-de-lange.yaml --batch 0,2,5
+python run_wiki.py --book books/carlos-ruiz-zafon/le-jeu-de-lange.yaml --retries 5
+python run_wiki.py --book books/carlos-ruiz-zafon/le-jeu-de-lange.yaml --status
 ```
 
 ### Behaviour
@@ -96,7 +96,7 @@ python run_wiki.py --book books/le-jeu-de-lange.yaml --status
 | `.studio/pipelines/wiki-resolution.pipeline.yaml` | Stages 5–8 (resolution group + classification) |
 | `.studio/pipelines/wiki-generation.pipeline.yaml` | Stages 9–11 (preparation + generation + export) |
 | `run_wiki.py` | Orchestrator script |
-| `books/le-jeu-de-lange.yaml` | Book config file (input for orchestrator) |
+| `books/carlos-ruiz-zafon/le-jeu-de-lange.yaml` | Book config file (input for orchestrator) |
 
 ## Files to Delete / Deprecate
 
