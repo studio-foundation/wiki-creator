@@ -5,7 +5,6 @@ Orchestrator for wiki creation pipeline.
 Usage:
     python run_wiki.py --book books/carlos-ruiz-zafon/le-jeu-de-lange.yaml
     python run_wiki.py --book books/carlos-ruiz-zafon/le-jeu-de-lange.yaml --restart wiki-resolution
-    python run_wiki.py --book books/carlos-ruiz-zafon/le-jeu-de-lange.yaml --batch 0,2,5
     python run_wiki.py --book books/carlos-ruiz-zafon/le-jeu-de-lange.yaml --retries 5
     python run_wiki.py --book books/carlos-ruiz-zafon/le-jeu-de-lange.yaml --status
 """
@@ -90,7 +89,6 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Wiki creation orchestrator")
     parser.add_argument("--book", required=True, help="Path to book YAML config")
     parser.add_argument("--restart", choices=PIPELINES, help="Restart from this pipeline")
-    parser.add_argument("--batch", help="Comma-separated batch IDs for wiki-generation (e.g. 0,2,5)")
     parser.add_argument("--retries", type=int, default=3, help="Max attempts per pipeline")
     parser.add_argument("--status", action="store_true", help="Show run status and exit")
     args = parser.parse_args()
@@ -128,11 +126,7 @@ def main() -> None:
             }
             save_state(args.book, state)
 
-            extra = []
-            if pipeline == "wiki-generation" and args.batch:
-                extra = ["--batch", args.batch]
-
-            ok = run_pipeline(pipeline, args.book, extra)
+            ok = run_pipeline(pipeline, args.book)
 
             if ok:
                 missing = check_outputs(pipeline)
