@@ -47,3 +47,8 @@ wiki_inputs/
 
 # Books
 books/
+
+# Pipeline split output
+processing_output/
+.wiki_runs/
+!processing_output/.gitkeep
