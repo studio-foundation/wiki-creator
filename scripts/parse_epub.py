@@ -9,6 +9,7 @@ Output: { "title": "...", "author": "...", "chapters": [{ "id": "...", "title": 
 
 import html
 import json
+import os
 import re
 import sys
 import yaml
@@ -162,6 +163,9 @@ def main():
         sys.exit(1)
 
     result = parse_epub(file_path)
+    os.makedirs("processing_output", exist_ok=True)
+    with open("processing_output/epub_data.json", "w", encoding="utf-8") as _f:
+        json.dump(result, _f, ensure_ascii=False)
     json.dump(result, sys.stdout, ensure_ascii=False)
 
 
