@@ -71,11 +71,11 @@ Single script at project root. Manages the 3-pipeline sequence.
 ### CLI flags
 
 ```bash
-python run_wiki.py --book books/carlos-ruiz-zafon/le-jeu-de-lange.yaml            # full run
-python run_wiki.py --book books/carlos-ruiz-zafon/le-jeu-de-lange.yaml --restart wiki-resolution
-python run_wiki.py --book books/carlos-ruiz-zafon/le-jeu-de-lange.yaml --batch 0,2,5
-python run_wiki.py --book books/carlos-ruiz-zafon/le-jeu-de-lange.yaml --retries 5
-python run_wiki.py --book books/carlos-ruiz-zafon/le-jeu-de-lange.yaml --status
+python run_wiki.py --book books/le-jeu-de-lange.yaml            # full run
+python run_wiki.py --book books/le-jeu-de-lange.yaml --restart wiki-resolution
+python run_wiki.py --book books/le-jeu-de-lange.yaml --batch 0,2,5
+python run_wiki.py --book books/le-jeu-de-lange.yaml --retries 5
+python run_wiki.py --book books/le-jeu-de-lange.yaml --status
 ```
 
 ### Behaviour
