@@ -22,6 +22,7 @@ Output (stdout):
 """
 
 import json
+import os
 import sys
 
 ENTITY_TYPES = ("PERSON", "PLACE", "ORG", "EVENT", "OTHER")
@@ -74,7 +75,6 @@ def main() -> None:
     if pov_detection is not None:
         result["pov_detection"] = pov_detection
 
-    import os
     os.makedirs("processing_output", exist_ok=True)
     with open("processing_output/splits.json", "w", encoding="utf-8") as _f:
         json.dump(result, _f, ensure_ascii=False)

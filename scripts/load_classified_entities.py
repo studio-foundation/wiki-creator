@@ -11,6 +11,7 @@ import sys
 
 def main() -> None:
     json.load(sys.stdin)
+    # Path relative to project root (Studio sets CWD to project root when running scripts)
     path = "processing_output/entities_classified.json"
     if not os.path.exists(path):
         print(

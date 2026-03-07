@@ -11,6 +11,7 @@ import sys
 
 def main() -> None:
     json.load(sys.stdin)  # consume stdin (Studio requires it)
+    # Path relative to project root (Studio sets CWD to project root when running scripts)
     path = "processing_output/splits.json"
     if not os.path.exists(path):
         print(
