@@ -30,7 +30,8 @@ REQUIRED_FILES = {
 
 
 def book_slug(book_path: str) -> str:
-    return Path(book_path).stem
+    p = Path(book_path)
+    return f"{p.parent.name}_{p.stem}"
 
 
 def state_path(book_path: str) -> Path:
@@ -92,6 +93,10 @@ def main() -> None:
     parser.add_argument("--retries", type=int, default=3, help="Max attempts per pipeline")
     parser.add_argument("--status", action="store_true", help="Show run status and exit")
     args = parser.parse_args()
+
+    if not Path(args.book).exists():
+        print(f"[ERROR] Book config not found: {args.book}", file=sys.stderr)
+        sys.exit(1)
 
     if args.status:
         print_status(args.book)
