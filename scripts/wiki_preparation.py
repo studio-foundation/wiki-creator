@@ -27,14 +27,15 @@ import os
 import sys
 
 BATCH_SIZE_BY_IMPORTANCE = {
-    "principal": 5,   # full template ~750 tokens × 5 = 3750 tokens — safe under 8192
+    "principal": 3,   # full template ~1500 tokens × 3 = 4500 tokens — safe under 8192
     "secondary": 10,  # short template ~400 tokens × 10 = 4000 tokens — safe
     "figurant": 20,   # infobox only ~150 tokens × 20 = 3000 tokens — safe
 }
+# Hard cap on total context chars per batch — prevents long batches even within size limits
+MAX_BATCH_CONTEXT_CHARS = 20000
 MAX_MENTIONS_PER_CHAPTER = 5
 MAX_CHAPTERS = 25
-# Cap total context chars per entity to avoid haiku-4-5 input context overflow
-# Principal entities can have thousands of mentions — we cap to keep batches manageable
+# Cap total context chars per entity
 MAX_CONTEXT_CHARS_PER_ENTITY = 8000
 
 
@@ -124,45 +125,62 @@ def build_entity_bundle(
     }
 
 
-def write_batches(entity_bundles: list[dict], narrator: object) -> list[dict]:
-    """Split entity bundles into batch files, with smaller batches for principal entities.
+def _flush_batch(
+    entities: list[dict],
+    narrator: object,
+    batch_index: int,
+    importance: str,
+    ctx_chars: int,
+    batches: list[dict],
+) -> None:
+    batch_id = f"batch_{batch_index:03d}"
+    file_path = f"wiki_inputs/{batch_id}.json"
+    # Narrator only affects PERSON pages — pass null for non-PERSON batches
+    batch_types = {e.get("type") for e in entities}
+    batch_narrator = narrator if "PERSON" in batch_types else None
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump({"batch_id": batch_id, "narrator": batch_narrator, "entities": entities}, f, ensure_ascii=False, indent=2)
+    batches.append({"batch_id": batch_id, "file": file_path, "entity_count": len(entities), "importance": importance})
+    print(f"  Wrote {file_path} ({len(entities)} {importance} entities, {ctx_chars} chars)", file=sys.stderr)
 
-    Uses BATCH_SIZE_BY_IMPORTANCE to avoid haiku-4-5's 8192-token output limit.
+
+def write_batches(entity_bundles: list[dict], narrator: object) -> list[dict]:
+    """Split entity bundles into batch files.
+
+    Splits by BOTH entity count (importance-dependent) AND total context chars per batch
+    to stay within haiku-4-5's 8192 output token limit.
     """
     os.makedirs("wiki_inputs", exist_ok=True)
 
-    batches = []
+    batches: list[dict] = []
     batch_index = 0
 
-    # Group by importance, process each group with appropriate batch size
     for importance in ("principal", "secondary", "figurant"):
         group = [e for e in entity_bundles if e["importance"] == importance]
         if not group:
             continue
         batch_size = BATCH_SIZE_BY_IMPORTANCE[importance]
-        for i in range(0, len(group), batch_size):
-            batch_entities = group[i : i + batch_size]
-            batch_id = f"batch_{batch_index:03d}"
-            file_path = f"wiki_inputs/{batch_id}.json"
 
-            batch_data = {
-                "batch_id": batch_id,
-                "narrator": narrator,
-                "entities": batch_entities,
-            }
-            with open(file_path, "w", encoding="utf-8") as f:
-                json.dump(batch_data, f, ensure_ascii=False, indent=2)
-
-            batches.append({
-                "batch_id": batch_id,
-                "file": file_path,
-                "entity_count": len(batch_entities),
-                "importance": importance,
-            })
-            print(
-                f"  Wrote {file_path} ({len(batch_entities)} {importance} entities)",
-                file=sys.stderr,
+        current_batch: list[dict] = []
+        current_ctx = 0
+        for entity in group:
+            entity_ctx = sum(
+                sum(len(m) for m in mentions)
+                for mentions in entity["context_by_chapter"].values()
             )
+            if current_batch and (
+                len(current_batch) >= batch_size
+                or current_ctx + entity_ctx > MAX_BATCH_CONTEXT_CHARS
+            ):
+                _flush_batch(current_batch, narrator, batch_index, importance, current_ctx, batches)
+                batch_index += 1
+                current_batch = []
+                current_ctx = 0
+            current_batch.append(entity)
+            current_ctx += entity_ctx
+
+        if current_batch:
+            _flush_batch(current_batch, narrator, batch_index, importance, current_ctx, batches)
             batch_index += 1
 
     return batches

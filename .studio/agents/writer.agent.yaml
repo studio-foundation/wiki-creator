@@ -1,6 +1,6 @@
 name: writer
-provider: anthropic
-model: claude-haiku-4-5
+provider: ollama
+model: qwen3:8b
 tools:
   - studio_run-run_pipeline
 system_prompt: |

@@ -3,6 +3,5 @@ version: 1
 schema:
   required_fields:
     - entities
-    - narrator
 # narrator: null pour POV omniscient/troisième personne
 # Chaque entité : canonical_name, type, aliases, source_ids, relevant

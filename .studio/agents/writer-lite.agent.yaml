@@ -1,6 +1,6 @@
 name: writer-lite
-provider: anthropic
-model: claude-haiku-4-5
+provider: ollama
+model: qwen3:8b
 tools:
   - repo_manager-read_file
 system_prompt: |
