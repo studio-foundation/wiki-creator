@@ -27,6 +27,16 @@ _SUBDIR = {
 }
 
 
+def _load_epub_data() -> dict:
+    """Fallback: read epub metadata directly from disk."""
+    import os
+    path = "processing_output/epub_data.json"
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+
 def main() -> None:
     payload = json.load(sys.stdin)
     input_cfg = yaml.safe_load(payload["additional_context"])
@@ -37,7 +47,7 @@ def main() -> None:
         or prev.get("wiki-generation", {}).get("pages")
         or []
     )
-    epub = prev["epub-parse"]
+    epub = prev.get("epub-parse") or _load_epub_data()
     book_title = epub.get("title", "Wiki")
     author = epub.get("author", "")
 

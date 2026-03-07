@@ -14,7 +14,13 @@ run-extraction:
 run-resolution:
 	studio run wiki-resolution --input-file $(BOOK) --live --verbose
 
-run-generation:
+generate-pages:
+	python scripts/generate_wiki_pages.py
+
+generate-pages-dry:
+	python scripts/generate_wiki_pages.py --dry-run
+
+run-generation: generate-pages
 	studio run wiki-generation --input-file $(BOOK) --live --verbose
 
 # Orchestrator shortcuts
