@@ -1,7 +1,7 @@
 .PHONY: run test-extraction test-clustering test-relationships test test-coref test-coref-parallel
 
 run:
-	studio run wiki-pipeline --input-file .studio/inputs/book.input.yaml --live
+	studio run wiki-pipeline --input-file .studio/inputs/book.input.yaml --live --verbose
 
 test-extraction:
 	python scripts/test_extraction.py

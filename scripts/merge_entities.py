@@ -45,7 +45,11 @@ def merge_entities(all_stage_outputs: dict) -> dict:
         stage_out = all_stage_outputs.get(stage_name)
         if stage_out is None:
             continue
-        entities.extend(stage_out.get("entities", []))
+        stage_entities = stage_out.get("entities", [])
+        if isinstance(stage_entities, list):
+            entities.extend(stage_entities)
+        else:
+            print(f"Warning: {stage_name} returned non-list entities, skipping", file=sys.stderr)
         if narrator is None and stage_out.get("narrator"):
             narrator = stage_out["narrator"]
 
@@ -54,7 +58,7 @@ def merge_entities(all_stage_outputs: dict) -> dict:
 
 def main() -> None:
     payload = json.load(sys.stdin)
-    all_stage_outputs = payload.get("all_stage_outputs", {})
+    all_stage_outputs = payload.get("previous_outputs", payload.get("all_stage_outputs", {}))
 
     if not all_stage_outputs:
         print("Warning: all_stage_outputs is empty", file=sys.stderr)

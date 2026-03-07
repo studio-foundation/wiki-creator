@@ -40,6 +40,7 @@ places_full.json
 orgs_full.json
 extraction-*.jsonl
 chapters.json
+wiki_inputs/
 # Misc
 .DS_Store
 *.pem

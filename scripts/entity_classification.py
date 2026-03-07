@@ -226,7 +226,12 @@ def run_studio_mode() -> None:
     prev_outputs = payload.get("previous_outputs", {})
     rel_output = prev_outputs.get("relationship-extraction", {})
     entities = rel_output.get("entities", [])
-    relationships = rel_output.get("relationships", [])
+    # Strip sample_contexts and chapters from relationships — not needed by wiki-generation
+    # (reduces context size from ~800k to manageable for the writer LLM)
+    relationships = [
+        {k: v for k, v in r.items() if k not in ("sample_contexts", "chapters")}
+        for r in rel_output.get("relationships", [])
+    ]
     narrator = rel_output.get("narrator", None)
 
     if not entities:

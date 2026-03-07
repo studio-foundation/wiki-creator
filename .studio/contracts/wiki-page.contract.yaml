@@ -1,0 +1,11 @@
+name: wiki-page
+version: 1
+schema:
+  required_fields:
+    - pages
+# pages: list of generated wiki page objects
+#   title (str)             — canonical_name
+#   importance (str)        — "principal" | "secondary" | "figurant"
+#   entity_type (str)       — "PERSON" | "PLACE" | "ORG"
+#   infobox_fields (object) — key-value pairs for infobox template (no nulls)
+#   content (str)           — Markdown body WITHOUT infobox section

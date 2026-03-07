@@ -1,0 +1,259 @@
+{
+  "entities": [
+    {
+      "canonical_name": "Éditions de la Lumière",
+      "type": "ORG",
+      "aliases": [
+        "Éditions de la Lumière",
+        "Éditions de la Lumière, publication de textes religieux"
+      ],
+      "source_ids": [
+        "entity_069"
+      ],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Sempere & Fils",
+      "type": "ORG",
+      "aliases": [
+        "Sempere & Fils",
+        "librairie Sempere & Fils"
+      ],
+      "source_ids": [
+        "entity_083"
+      ],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Barrido & Escobillas",
+      "type": "ORG",
+      "aliases": [
+        "Barrido & Escobillas",
+        "Barrido, & Escobillas",
+        "Barriclo & Escobillas"
+      ],
+      "source_ids": [
+        "entity_144",
+        "entity_164",
+        "entity_226"
+      ],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Banque hispano-coloniale",
+      "type": "ORG",
+      "aliases": [
+        "Banque hispano-coloniale",
+        "Banque hispano-américaine"
+      ],
+      "source_ids": [
+        "entity_222"
+      ],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Radio Barcelona",
+      "type": "ORG",
+      "aliases": [
+        "Radio Barcelona"
+      ],
+      "source_ids": [
+        "entity_104"
+      ],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Bar Almirall",
+      "type": "ORG",
+      "aliases": [
+        "bar Almirall",
+        "Almirall"
+      ],
+      "source_ids": [
+        "entity_132"
+      ],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Sayrach, Muntaner & Cruells",
+      "type": "ORG",
+      "aliases": [
+        "cabinet d'avocats Sayrach, Muntaner & Cruells",
+        "Sayrach",
+        "Muntaner & Cruells"
+      ],
+      "source_ids": [
+        "entity_135",
+        "entity_136"
+      ],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Restaurant Set Portes",
+      "type": "ORG",
+      "aliases": [
+        "restaurant Set Portes",
+        "Set Portes"
+      ],
+      "source_ids": [
+        "entity_100"
+      ],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Cercle hippique",
+      "type": "ORG",
+      "aliases": [
+        "Cercle hippique",
+        "Cercle"
+      ],
+      "source_ids": [
+        "entity_327"
+      ],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Sœurs de la Charité",
+      "type": "ORG",
+      "aliases": [
+        "Sœurs de la Charité"
+      ],
+      "source_ids": [
+        "entity_328"
+      ],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Collège des avocats",
+      "type": "ORG",
+      "aliases": [
+        "Collège des avocats",
+        "Collège"
+      ],
+      "source_ids": [
+        "entity_336"
+      ],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Café Novedades",
+      "type": "ORG",
+      "aliases": [
+        "café Novedades",
+        "Novedades"
+      ],
+      "source_ids": [
+        "entity_347"
+      ],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Ateneo Barcelonés",
+      "type": "ORG",
+      "aliases": [
+        "Ateneo Barcelonés"
+      ],
+      "source_ids": [
+        "entity_433"
+      ],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Cabinet Valera & Associés",
+      "type": "ORG",
+      "aliases": [
+        "cabinet d'avocats Valera & Associés",
+        "Valera & Associés",
+        "cabinet Valera & Marlasca",
+        "Valera & Marlasca"
+      ],
+      "source_ids": [
+        "entity_436",
+        "entity_468"
+      ],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Club de natation de Barcelone",
+      "type": "ORG",
+      "aliases": [
+        "Club de natation de Barcelone"
+      ],
+      "source_ids": [
+        "entity_440"
+      ],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Banque d'Espagne",
+      "type": "ORG",
+      "aliases": [
+        "Banque d'Espagne"
+      ],
+      "source_ids": [
+        "entity_448"
+      ],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Société L'Avenir",
+      "type": "ORG",
+      "aliases": [
+        "société L'Avenir",
+        "L'Avenir"
+      ],
+      "source_ids": [
+        "entity_470"
+      ],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Épicerie Can Gispert",
+      "type": "ORG",
+      "aliases": [
+        "Can Gispert",
+        "épicerie de Can Gispert"
+      ],
+      "source_ids": [
+        "entity_493"
+      ],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Ateliers funéraires Sanabre & Fils",
+      "type": "ORG",
+      "aliases": [
+        "Sanabre & Fils",
+        "ateliers de tailleurs de pierres funéraires"
+      ],
+      "source_ids": [
+        "entity_527"
+      ],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Cimetière Can Tunis",
+      "type": "ORG",
+      "aliases": [
+        "Can Tunis",
+        "cimetière de Can Tunis"
+      ],
+      "source_ids": [
+        "entity_530"
+      ],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Banque de Sabadell",
+      "type": "ORG",
+      "aliases": [
+        "Banque de Sabadell"
+      ],
+      "source_ids": [
+        "entity_534"
+      ],
+      "relevant": true
+    }
+  ],
+  "narrator": null
+}

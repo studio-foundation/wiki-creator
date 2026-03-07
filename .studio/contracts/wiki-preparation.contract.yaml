@@ -1,0 +1,10 @@
+name: wiki-preparation
+version: 1
+schema:
+  required_fields:
+    - batches
+    - total_entities
+    - narrator
+# batches: [{batch_id, file, entity_count}] — paths to wiki_inputs/batch_*.json files
+# total_entities: number of entities to process (non-ignored)
+# narrator: narrator metadata from entity-resolution-PERSON, or null
