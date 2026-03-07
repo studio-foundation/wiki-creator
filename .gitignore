@@ -45,8 +45,9 @@ wiki_inputs/
 .DS_Store
 *.pem
 
-# Books
+# Books (EPUBs ignored, YAML configs tracked)
 books/
+!books/**/*.yaml
 
 # Pipeline split output
 processing_output/
