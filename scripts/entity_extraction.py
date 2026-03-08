@@ -27,6 +27,15 @@ Standalone test mode:
 import json
 import sys
 import yaml
+from wiki_creator.paths import book_paths_from_epub, BookPaths
+
+
+def _paths_from_payload(payload: dict) -> BookPaths:
+    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    file_path = ctx.get("file_path")
+    if not file_path:
+        raise ValueError("missing file_path in additional_context")
+    return book_paths_from_epub(file_path)
 
 # Entity labels to keep. Covers both French and English spaCy models.
 # French (fr_core_news_*): PER, LOC, ORG
@@ -399,6 +408,8 @@ def main() -> None:
         sys.exit(1)
 
     # Write full entities to disk split by type, for wiki-generation to read via repo_manager-read_file
+    paths = _paths_from_payload(payload)
+    paths.processing.mkdir(parents=True, exist_ok=True)
     by_type = split_by_type(entities_full)
     type_files = {
         "PERSON": ("persons_full.json", "persons_full"),
@@ -406,10 +417,10 @@ def main() -> None:
         "ORG": ("orgs_full.json", "orgs_full"),
     }
     for type_key, (filename, json_key) in type_files.items():
-        with open(filename, "w", encoding="utf-8") as f:
+        with open(paths.processing / filename, "w", encoding="utf-8") as f:
             json.dump({json_key: by_type[type_key]}, f, ensure_ascii=False)
 
-    save_chapters_json(chapters)
+    save_chapters_json(chapters, path=str(paths.processing / "chapters.json"))
 
     # Output lightweight entities to stdout → becomes entity-resolution's previous_stage_output
     json.dump({"entities_for_resolution": entities_for_resolution}, sys.stdout, ensure_ascii=False)

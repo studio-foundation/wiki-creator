@@ -31,6 +31,18 @@ import json
 import os
 import sys
 from collections import defaultdict
+from pathlib import Path
+
+import yaml
+from wiki_creator.paths import book_paths_from_epub, BookPaths
+
+
+def _paths_from_payload(payload: dict) -> BookPaths:
+    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    file_path = ctx.get("file_path")
+    if not file_path:
+        raise ValueError("missing file_path in additional_context")
+    return book_paths_from_epub(file_path)
 
 
 # --- Pure functions (testable) ---
@@ -204,11 +216,12 @@ def _parse_explicit_thresholds(config: dict) -> dict[str, dict[str, int]]:
 
 # --- Studio entrypoint ---
 
-def _load_entity_files() -> tuple[dict, dict, dict]:
-    """Read *_full.json files from project root. Return empty dicts if missing."""
-    def load(path: str, key: str) -> dict:
-        if os.path.exists(path):
-            with open(path, encoding="utf-8") as f:
+def _load_entity_files(processing_dir: Path) -> tuple[dict, dict, dict]:
+    """Read *_full.json files from the processing directory. Return empty dicts if missing."""
+    def load(name: str, key: str) -> dict:
+        p = processing_dir / name
+        if p.exists():
+            with open(p, encoding="utf-8") as f:
                 return json.load(f).get(key, {})
         return {}
 
@@ -220,8 +233,6 @@ def _load_entity_files() -> tuple[dict, dict, dict]:
 
 
 def run_studio_mode() -> None:
-    import yaml
-
     payload = json.load(sys.stdin)
     prev_outputs = payload.get("previous_outputs", {})
     rel_output = prev_outputs.get("relationship-extraction", {})
@@ -242,7 +253,8 @@ def run_studio_mode() -> None:
     book_input = yaml.safe_load(additional_ctx) if additional_ctx else {}
     thresholds_config = book_input.get("thresholds", "auto")
 
-    persons_full, places_full, orgs_full = _load_entity_files()
+    paths = _paths_from_payload(payload)
+    persons_full, places_full, orgs_full = _load_entity_files(paths.processing)
 
     enriched = classify_entities(entities, persons_full, places_full, orgs_full, thresholds_config)
 
@@ -262,8 +274,8 @@ def run_studio_mode() -> None:
         "narrator": narrator,
     }
 
-    os.makedirs("processing_output", exist_ok=True)
-    with open("processing_output/entities_classified.json", "w", encoding="utf-8") as _f:
+    paths.processing.mkdir(parents=True, exist_ok=True)
+    with open(paths.processing / "entities_classified.json", "w", encoding="utf-8") as _f:
         json.dump(output, _f, ensure_ascii=False)
 
     json.dump(output, sys.stdout, ensure_ascii=False)

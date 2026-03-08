@@ -2,7 +2,7 @@
         test-extraction test-clustering test-relationships test test-coref test-coref-parallel \
         clean
 
-BOOK ?= books/carlos-ruiz-zafon/le-jeu-de-lange.yaml
+BOOK ?= library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml
 
 # Full run via orchestrator
 run:
@@ -16,10 +16,10 @@ run-resolution:
 	studio run wiki-resolution --input-file $(BOOK) --live --verbose
 
 generate-pages:
-	python scripts/generate_wiki_pages.py
+	python scripts/generate_wiki_pages.py --book $(BOOK)
 
 generate-pages-dry:
-	python scripts/generate_wiki_pages.py --dry-run
+	python scripts/generate_wiki_pages.py --book $(BOOK) --dry-run
 
 run-preparation:
 	studio run wiki-preparation --input-file $(BOOK) --live --verbose
@@ -40,7 +40,7 @@ run-status:
 	python run_wiki.py --book $(BOOK) --status
 
 test-extraction:
-	python scripts/test_extraction.py
+	python scripts/test_extraction.py --book $(BOOK)
 
 test-clustering:
 	python scripts/entity_clustering.py --test
@@ -61,6 +61,6 @@ test-coref-parallel: test-extraction
 	python scripts/relationship_extraction.py --live --coref --workers 8
 
 clean:  ## Remove generated files (keeps .gitkeep sentinels)
-	find processing_output wiki_inputs output/wiki -not -name '.gitkeep' -delete 2>/dev/null || true
-	@touch processing_output/.gitkeep
-	rm -f persons_full.json places_full.json orgs_full.json chapters.json
+	@SERIES_DIR=$$(python -c "from wiki_creator.paths import book_paths_from_yaml; p = book_paths_from_yaml('$(BOOK)'); print(p.processing.parent.parent)"); \
+	find $$SERIES_DIR/processing_output $$SERIES_DIR/wiki_inputs $$SERIES_DIR/output \
+	     -not -name '.gitkeep' -delete 2>/dev/null || true

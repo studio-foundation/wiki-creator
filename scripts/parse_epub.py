@@ -14,6 +14,15 @@ import re
 import sys
 import unicodedata
 import yaml
+from wiki_creator.paths import book_paths_from_epub, BookPaths
+
+
+def _paths_from_payload(payload: dict) -> BookPaths:
+    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    file_path = ctx.get("file_path")
+    if not file_path:
+        raise ValueError("missing file_path in additional_context")
+    return book_paths_from_epub(file_path)
 
 # Typographic ligatures that EPUB fonts may encode as single codepoints.
 _LIGATURES: dict[str, str] = {
@@ -250,8 +259,9 @@ def main():
         sys.exit(1)
 
     result = parse_epub(file_path)
-    os.makedirs("processing_output", exist_ok=True)
-    with open("processing_output/epub_data.json", "w", encoding="utf-8") as _f:
+    paths = _paths_from_payload(payload)
+    paths.processing.mkdir(parents=True, exist_ok=True)
+    with open(paths.processing / "epub_data.json", "w", encoding="utf-8") as _f:
         json.dump(result, _f, ensure_ascii=False)
     json.dump(result, sys.stdout, ensure_ascii=False)
 

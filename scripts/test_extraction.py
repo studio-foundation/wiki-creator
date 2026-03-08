@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """
 Standalone test: run entity extraction on the full book and print a summary.
-Usage: python scripts/test_extraction.py [book_path] [spacy_model] [output.jsonl]
-Defaults to the book configured in .studio/inputs/book.input.yaml.
+
+Usage:
+    python scripts/test_extraction.py --book library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml
 
 Output JSONL format (one line per entity):
   {"id": "entity_001", "type": "PERSON", "raw_mentions": [...], "first_seen": "ch01",
    "mentions_by_chapter": {"ch01": ["sentence..."]}}
 """
 
+import argparse
 import json
 import sys
 import os
@@ -18,15 +20,25 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from scripts.parse_epub import parse_epub
 from scripts.entity_extraction import extract_entities, split_entities, split_by_type
+from wiki_creator.paths import book_paths_from_yaml
 
-BOOK_PATH = "books/carlos-ruiz-zafon/le-jeu-de-lange.epub"
 SPACY_MODEL = "fr_core_news_lg"
 
 
 def main() -> None:
-    book_path = sys.argv[1] if len(sys.argv) > 1 else BOOK_PATH
-    spacy_model = sys.argv[2] if len(sys.argv) > 2 else SPACY_MODEL
-    output_path = sys.argv[3] if len(sys.argv) > 3 else None
+    parser = argparse.ArgumentParser(description="Run entity extraction on a full book")
+    parser.add_argument(
+        "--book", required=True,
+        help="Path to book yaml, e.g. library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml",
+    )
+    parser.add_argument("--spacy-model", default=SPACY_MODEL, help="spaCy model to use")
+    args = parser.parse_args()
+
+    paths = book_paths_from_yaml(args.book)
+    paths.processing.mkdir(parents=True, exist_ok=True)
+
+    book_path = str(paths.epub)
+    spacy_model = args.spacy_model
 
     print(f"Parsing {book_path}...", file=sys.stderr)
     book = parse_epub(book_path)
@@ -74,9 +86,20 @@ def main() -> None:
         size = len(json.dumps({json_key: by_type[type_key]}, ensure_ascii=False))
         print(f"  {filename}: {size:>10,} chars  ({len(by_type[type_key])} entities)")
 
-    if output_path is None:
-        ts = datetime.now().strftime("%Y-%m-%dT%Hh%Mm")
-        output_path = f"extraction-{ts}.jsonl"
+    # Write per-type full JSON files to processing dir
+    type_files = {
+        "PERSON": ("persons_full.json", "persons_full"),
+        "PLACE": ("places_full.json", "places_full"),
+        "ORG": ("orgs_full.json", "orgs_full"),
+    }
+    for type_key, (filename, json_key) in type_files.items():
+        out_path = paths.processing / filename
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump({json_key: by_type[type_key]}, f, ensure_ascii=False)
+        print(f"  Written: {out_path}", file=sys.stderr)
+
+    ts = datetime.now().strftime("%Y-%m-%dT%Hh%Mm")
+    output_path = paths.processing / f"extraction-{ts}.jsonl"
 
     with open(output_path, "w", encoding="utf-8") as f:
         for entity_id, entity in entities_full.items():

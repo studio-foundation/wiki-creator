@@ -24,6 +24,16 @@ Output (stdout):
 import json
 import os
 import sys
+import yaml
+from wiki_creator.paths import book_paths_from_epub, BookPaths
+
+
+def _paths_from_payload(payload: dict) -> BookPaths:
+    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    file_path = ctx.get("file_path")
+    if not file_path:
+        raise ValueError("missing file_path in additional_context")
+    return book_paths_from_epub(file_path)
 
 ENTITY_TYPES = ("PERSON", "PLACE", "ORG", "EVENT", "OTHER")
 
@@ -80,8 +90,9 @@ def main() -> None:
     if pov_detection is not None:
         result["pov_detection"] = pov_detection
 
-    os.makedirs("processing_output", exist_ok=True)
-    with open("processing_output/splits.json", "w", encoding="utf-8") as _f:
+    paths = _paths_from_payload(payload)
+    paths.processing.mkdir(parents=True, exist_ok=True)
+    with open(paths.processing / "splits.json", "w", encoding="utf-8") as _f:
         json.dump(result, _f, ensure_ascii=False)
 
     json.dump(result, sys.stdout, ensure_ascii=False)

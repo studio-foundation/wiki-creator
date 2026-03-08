@@ -12,26 +12,36 @@ Output (stdout): {"pages": [...]}
 import json
 import os
 import sys
+import yaml
+from wiki_creator.paths import book_paths_from_epub, BookPaths
 
-OUTPUT_FILE = "processing_output/wiki_pages.json"
+
+def _paths_from_payload(payload: dict) -> BookPaths:
+    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    file_path = ctx.get("file_path")
+    if not file_path:
+        raise ValueError("missing file_path in additional_context")
+    return book_paths_from_epub(file_path)
 
 
 def main() -> None:
-    json.load(sys.stdin)  # consume stdin (Studio requires it)
+    payload = json.load(sys.stdin)  # consume stdin (Studio requires it)
+    paths = _paths_from_payload(payload)
+    output_file = str(paths.processing / "wiki_pages.json")
 
-    if not os.path.exists(OUTPUT_FILE):
+    if not os.path.exists(output_file):
         print(
-            f"[ERROR] {OUTPUT_FILE} not found.\n"
+            f"[ERROR] {output_file} not found.\n"
             "Run first: python scripts/generate_wiki_pages.py",
             file=sys.stderr,
         )
         sys.exit(1)
 
-    with open(OUTPUT_FILE, encoding="utf-8") as f:
+    with open(output_file, encoding="utf-8") as f:
         data = json.load(f)
 
     pages = data.get("pages", [])
-    print(f"[load-wiki-pages] Loaded {len(pages)} pages from {OUTPUT_FILE}", file=sys.stderr)
+    print(f"[load-wiki-pages] Loaded {len(pages)} pages from {output_file}", file=sys.stderr)
     json.dump({"pages": pages}, sys.stdout, ensure_ascii=False)
 
 

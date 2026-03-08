@@ -1,0 +1,46 @@
+description: |
+  Build a wiki for "Le Jeu de l'ange" (The Angel's Game) by Carlos Ruiz Zafón,
+  book 2 of the Cemetery of Forgotten Books series.
+  Parse the book, extract all named entities (characters, locations, organizations, events),
+  resolve aliases, and generate Markdown wiki pages for each entity.
+
+file_path: library/carlos-ruiz-zafon/el-cementerio-de-los-libros-olvidados/books/02-le-jeu-de-lange.epub
+spacy_model: fr_core_news_lg
+
+# Entity importance classification — 'auto' uses percentile distribution
+# Override with explicit values if the auto-detected tiers are wrong for your book
+thresholds: auto
+# Example explicit config (uncomment to use):
+# thresholds:
+#   characters:
+#     principal: { min_mentions: 50, min_chapters: 15 }
+#     secondary: { min_mentions: 10, min_chapters: 3 }
+#     figurant: { min_mentions: 3 }
+#     ignored_below: 3
+#   locations:
+#     major: { min_mentions: 20, min_chapters: 5 }
+#     minor: { min_mentions: 3 }
+#   organizations:
+#     major: { min_mentions: 10 }
+#     minor: { min_mentions: 3 }
+
+generation:
+  principal:
+    sections: [infobox, biography, personality, physical, powers, relationships, trivia, references]
+    max_tokens_per_page: 2000
+  secondary:
+    sections: [infobox, biography, relationships, references]
+    max_tokens_per_page: 800
+  figurant:
+    sections: [infobox, biography]
+    max_tokens_per_page: 200
+
+export:
+  categories:
+    language: fr
+    labels:
+      persons: Personnages
+      principal: Personnages principaux
+      secondary: Personnages secondaires
+      locations: Lieux
+      organizations: Organisations

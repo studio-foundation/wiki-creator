@@ -26,6 +26,17 @@ import json
 import os
 import sys
 
+import yaml
+from wiki_creator.paths import book_paths_from_epub, BookPaths
+
+
+def _paths_from_payload(payload: dict) -> BookPaths:
+    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    file_path = ctx.get("file_path")
+    if not file_path:
+        raise ValueError("missing file_path in additional_context")
+    return book_paths_from_epub(file_path)
+
 BATCH_SIZE_BY_IMPORTANCE = {
     "principal": 3,   # full template ~1500 tokens × 3 = 4500 tokens — safe under 8192
     "secondary": 10,  # short template ~400 tokens × 10 = 4000 tokens — safe
@@ -132,9 +143,11 @@ def _flush_batch(
     importance: str,
     ctx_chars: int,
     batches: list[dict],
+    wiki_inputs_dir: "Path",
 ) -> None:
+    from pathlib import Path
     batch_id = f"batch_{batch_index:03d}"
-    file_path = f"wiki_inputs/{batch_id}.json"
+    file_path = str(wiki_inputs_dir / f"{batch_id}.json")
     # Narrator only affects PERSON pages — pass null for non-PERSON batches
     batch_types = {e.get("type") for e in entities}
     batch_narrator = narrator if "PERSON" in batch_types else None
@@ -144,13 +157,14 @@ def _flush_batch(
     print(f"  Wrote {file_path} ({len(entities)} {importance} entities, {ctx_chars} chars)", file=sys.stderr)
 
 
-def write_batches(entity_bundles: list[dict], narrator: object) -> list[dict]:
+def write_batches(entity_bundles: list[dict], narrator: object, paths: "BookPaths") -> list[dict]:
     """Split entity bundles into batch files.
 
     Splits by BOTH entity count (importance-dependent) AND total context chars per batch
     to stay within haiku-4-5's 8192 output token limit.
     """
-    os.makedirs("wiki_inputs", exist_ok=True)
+    wiki_inputs_dir = paths.wiki_inputs
+    wiki_inputs_dir.mkdir(parents=True, exist_ok=True)
 
     batches: list[dict] = []
     batch_index = 0
@@ -172,7 +186,7 @@ def write_batches(entity_bundles: list[dict], narrator: object) -> list[dict]:
                 len(current_batch) >= batch_size
                 or current_ctx + entity_ctx > MAX_BATCH_CONTEXT_CHARS
             ):
-                _flush_batch(current_batch, narrator, batch_index, importance, current_ctx, batches)
+                _flush_batch(current_batch, narrator, batch_index, importance, current_ctx, batches, wiki_inputs_dir)
                 batch_index += 1
                 current_batch = []
                 current_ctx = 0
@@ -180,7 +194,7 @@ def write_batches(entity_bundles: list[dict], narrator: object) -> list[dict]:
             current_ctx += entity_ctx
 
         if current_batch:
-            _flush_batch(current_batch, narrator, batch_index, importance, current_ctx, batches)
+            _flush_batch(current_batch, narrator, batch_index, importance, current_ctx, batches, wiki_inputs_dir)
             batch_index += 1
 
     return batches
@@ -200,9 +214,10 @@ def main() -> None:
         json.dump({"batches": [], "total_entities": 0, "narrator": None}, sys.stdout)
         return
 
-    persons = load_registry("persons_full.json", "persons_full")
-    places = load_registry("places_full.json", "places_full")
-    orgs = load_registry("orgs_full.json", "orgs_full")
+    paths = _paths_from_payload(payload)
+    persons = load_registry(str(paths.processing / "persons_full.json"), "persons_full")
+    places = load_registry(str(paths.processing / "places_full.json"), "places_full")
+    orgs = load_registry(str(paths.processing / "orgs_full.json"), "orgs_full")
 
     # Only process entities that will have a wiki page
     relevant_entities = [
@@ -219,7 +234,7 @@ def main() -> None:
         for e in relevant_entities
     ]
 
-    batches = write_batches(entity_bundles, narrator)
+    batches = write_batches(entity_bundles, narrator, paths)
 
     json.dump(
         {

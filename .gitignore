@@ -40,17 +40,18 @@ places_full.json
 orgs_full.json
 extraction-*.jsonl
 chapters.json
-wiki_inputs/
 # Misc
 .DS_Store
 *.pem
 
 # Books (EPUBs ignored, YAML configs tracked)
-books/
+/books/
 !books/**/*.yaml
+library/**/*.epub
+!library/**/*.yaml
 
-# Pipeline split output
-processing_output/
+# Pipeline output dirs (per-series)
+library/**/processing_output/
+library/**/wiki_inputs/
+library/**/output/
 .wiki_runs/
-!processing_output/.gitkeep
-output/wiki/

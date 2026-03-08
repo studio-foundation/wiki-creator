@@ -3,14 +3,14 @@
 Standalone pre-processing script: generate wiki pages via Ollama.
 
 Run this BEFORE the wiki-generation Studio pipeline.
-Results are saved to processing_output/wiki_pages.json and loaded
+Results are saved to <book processing dir>/wiki_pages.json and loaded
 by load_wiki_pages.py inside the pipeline.
 
 Usage:
-    python scripts/generate_wiki_pages.py
-    python scripts/generate_wiki_pages.py --model llama3:8b
-    python scripts/generate_wiki_pages.py --importance principal secondary
-    python scripts/generate_wiki_pages.py --dry-run
+    python scripts/generate_wiki_pages.py --book library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml
+    python scripts/generate_wiki_pages.py --book library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml --model llama3:8b
+    python scripts/generate_wiki_pages.py --book library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml --importance principal secondary
+    python scripts/generate_wiki_pages.py --book library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml --dry-run
 """
 
 import argparse
@@ -19,9 +19,9 @@ import os
 import sys
 import urllib.request
 
+from wiki_creator.paths import book_paths_from_yaml
+
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
-OUTPUT_FILE = "processing_output/wiki_pages.json"
-WIKI_INPUTS_DIR = "wiki_inputs"
 
 
 def call_ollama(prompt: str, model: str, timeout: int) -> str:
@@ -124,16 +124,16 @@ def parse_response(raw: str, entity: dict) -> dict:
         return make_stub_page(entity)
 
 
-def load_batch_files(importance_filter: list[str] | None) -> list[tuple[str, dict]]:
-    """Load all batch files from wiki_inputs/, optionally filtering by importance."""
-    if not os.path.isdir(WIKI_INPUTS_DIR):
-        print(f"[ERROR] {WIKI_INPUTS_DIR}/ not found. Run wiki-preparation first.", file=sys.stderr)
+def load_batch_files(wiki_inputs_dir: str, importance_filter: list[str] | None) -> list[tuple[str, dict]]:
+    """Load all batch files from wiki_inputs_dir, optionally filtering by importance."""
+    if not os.path.isdir(wiki_inputs_dir):
+        print(f"[ERROR] {wiki_inputs_dir}/ not found. Run wiki-preparation first.", file=sys.stderr)
         sys.exit(1)
 
-    batch_files = sorted(f for f in os.listdir(WIKI_INPUTS_DIR) if f.endswith(".json"))
+    batch_files = sorted(f for f in os.listdir(wiki_inputs_dir) if f.endswith(".json"))
     result = []
     for fname in batch_files:
-        path = os.path.join(WIKI_INPUTS_DIR, fname)
+        path = os.path.join(wiki_inputs_dir, fname)
         with open(path, encoding="utf-8") as f:
             batch = json.load(f)
         if importance_filter:
@@ -143,10 +143,10 @@ def load_batch_files(importance_filter: list[str] | None) -> list[tuple[str, dic
     return result
 
 
-def load_book_title() -> str:
-    """Try to load book title from processing_output/epub_data.json."""
+def load_book_title(epub_data_path: str) -> str:
+    """Try to load book title from epub_data.json."""
     try:
-        with open("processing_output/epub_data.json", encoding="utf-8") as f:
+        with open(epub_data_path, encoding="utf-8") as f:
             data = json.load(f)
             return data.get("title", "the novel")
     except Exception:
@@ -155,6 +155,10 @@ def load_book_title() -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--book", required=True,
+        help="Path to book yaml, e.g. library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml",
+    )
     parser.add_argument("--model", default=os.environ.get("WIKI_MODEL", "qwen2.5"), help="Ollama model")
     parser.add_argument("--timeout", type=int, default=120, help="Timeout per entity (seconds)")
     parser.add_argument("--importance", nargs="+", choices=["principal", "secondary", "figurant"],
@@ -162,19 +166,23 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true", help="Skip LLM calls, output stubs only")
     args = parser.parse_args()
 
-    book_title = load_book_title()
-    batches = load_batch_files(args.importance)
+    book_paths = book_paths_from_yaml(args.book)
+    output_file = str(book_paths.processing / "wiki_pages.json")
+    wiki_inputs_dir = str(book_paths.wiki_inputs)
+
+    book_title = load_book_title(str(book_paths.processing / "epub_data.json"))
+    batches = load_batch_files(wiki_inputs_dir, args.importance)
 
     if not batches:
         print("[WARN] No batch files found or all batches empty after filter.", file=sys.stderr)
-        _save([], args)
+        _save([], output_file)
         return
 
     total_entities = sum(len(b["entities"]) for _, b in batches)
     print(f"[generate-wiki-pages] {total_entities} entities across {len(batches)} batches | model={args.model}", file=sys.stderr)
 
     # Load existing pages to resume interrupted runs
-    all_pages = [p for p in _load_existing() if not p.get("_failed")]
+    all_pages = [p for p in _load_existing(output_file) if not p.get("_failed")]
     done_titles = {p["title"] for p in all_pages}
     if done_titles:
         print(f"[generate-wiki-pages] Resuming — {len(done_titles)} pages already done", file=sys.stderr)
@@ -198,7 +206,7 @@ def main() -> None:
                     print(f"  [STUB] {name} (no context)", file=sys.stderr)
                     page = make_stub_page(entity)
                     all_pages.append(page)
-                    _save(all_pages)
+                    _save(all_pages, output_file)
                     done_titles.add(name)
                     continue
 
@@ -206,7 +214,7 @@ def main() -> None:
                     print(f"  [DRY]  {name}", file=sys.stderr)
                     page = make_stub_page(entity)
                     all_pages.append(page)
-                    _save(all_pages)
+                    _save(all_pages, output_file)
                     done_titles.add(name)
                     continue
 
@@ -216,29 +224,29 @@ def main() -> None:
                     raw = call_ollama(prompt, args.model, args.timeout)
                     page = parse_response(raw, entity)
                     all_pages.append(page)
-                    _save(all_pages)
+                    _save(all_pages, output_file)
                     done_titles.add(name)
                     print(" ✓", file=sys.stderr)
                 except Exception as e:
                     print(f" ✗ {e}", file=sys.stderr)
                     page = make_stub_page(entity, failed=True)
                     all_pages.append(page)
-                    _save(all_pages)
+                    _save(all_pages, output_file)
                     # Do NOT add to done_titles — will be retried on next run
     except KeyboardInterrupt:
         print(f"\n[generate-wiki-pages] Interrupted — {len(all_pages)} pages saved", file=sys.stderr)
 
 
-def _save(pages: list[dict]) -> None:
-    os.makedirs("processing_output", exist_ok=True)
-    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+def _save(pages: list[dict], output_file: str) -> None:
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+    with open(output_file, "w", encoding="utf-8") as f:
         json.dump({"pages": pages}, f, ensure_ascii=False, indent=2)
 
 
-def _load_existing() -> list[dict]:
-    if os.path.exists(OUTPUT_FILE):
+def _load_existing(output_file: str) -> list[dict]:
+    if os.path.exists(output_file):
         try:
-            with open(OUTPUT_FILE, encoding="utf-8") as f:
+            with open(output_file, encoding="utf-8") as f:
                 return json.load(f).get("pages", [])
         except Exception:
             pass

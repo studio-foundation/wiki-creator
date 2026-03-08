@@ -19,6 +19,15 @@ from wiki_creator.export_helpers import (
     infobox_template_content,
     main_page_content,
 )
+from wiki_creator.paths import book_paths_from_epub, BookPaths
+
+
+def _paths_from_payload(payload: dict) -> BookPaths:
+    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    file_path = ctx.get("file_path")
+    if not file_path:
+        raise ValueError("missing file_path in additional_context")
+    return book_paths_from_epub(file_path)
 
 _SUBDIR = {
     "PERSON": "characters",
@@ -27,11 +36,10 @@ _SUBDIR = {
 }
 
 
-def _load_epub_data() -> dict:
+def _load_epub_data(paths: BookPaths) -> dict:
     """Fallback: read epub metadata directly from disk."""
-    import os
-    path = "processing_output/epub_data.json"
-    if os.path.exists(path):
+    path = paths.processing / "epub_data.json"
+    if path.exists():
         with open(path, encoding="utf-8") as f:
             return json.load(f)
     return {}
@@ -42,17 +50,19 @@ def main() -> None:
     input_cfg = yaml.safe_load(payload["additional_context"])
     prev = payload["previous_outputs"]
 
+    paths = _paths_from_payload(payload)
+
     pages = (
         prev.get("copyright-check", {}).get("pages")
         or prev.get("wiki-generation", {}).get("pages")
         or []
     )
-    epub = prev.get("epub-parse") or _load_epub_data()
+    epub = prev.get("epub-parse") or _load_epub_data(paths)
     book_title = epub.get("title", "Wiki")
     author = epub.get("author", "")
 
     export_cfg = input_cfg.get("export", {})
-    wiki_dir = Path(export_cfg.get("wiki_dir", "output/wiki"))
+    wiki_dir = paths.output
     labels_cfg = export_cfg.get("categories", {}).get("labels", {})
     labels = {
         "persons": labels_cfg.get("persons", "Personnages"),

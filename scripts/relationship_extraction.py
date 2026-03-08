@@ -56,6 +56,18 @@ import json
 import os
 import re
 import sys
+from pathlib import Path
+
+import yaml
+from wiki_creator.paths import book_paths_from_epub, book_paths_from_yaml, BookPaths
+
+
+def _paths_from_payload(payload: dict) -> BookPaths:
+    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    file_path = ctx.get("file_path")
+    if not file_path:
+        raise ValueError("missing file_path in additional_context")
+    return book_paths_from_epub(file_path)
 
 
 DEFAULT_WINDOW = 5
@@ -815,14 +827,12 @@ Classifie leur relation. Réponds en JSON uniquement, sans markdown :
     return result
 
 
-def _load_mentions_from_files() -> dict[str, dict[str, list[str]]]:
+def _load_mentions_from_files(processing_dir: Path) -> dict[str, dict[str, list[str]]]:
     """
     Load mentions_by_chapter from per-type entity files written by entity-extraction.
     Returns {first_raw_mention: {chapter_id: [sentences]}}.
-    Files are read from the current working directory (where Studio runs).
+    Files are read from the processing_dir for the book.
     """
-    import os
-
     mentions: dict[str, dict[str, list[str]]] = {}
     type_files = {
         "persons_full.json": "persons_full",
@@ -831,9 +841,10 @@ def _load_mentions_from_files() -> dict[str, dict[str, list[str]]]:
     }
 
     for filename, key in type_files.items():
-        if not os.path.exists(filename):
+        p = processing_dir / filename
+        if not p.exists():
             continue
-        with open(filename, encoding="utf-8") as f:
+        with open(p, encoding="utf-8") as f:
             data = json.load(f)
         for entity_id, entry in data.get(key, {}).items():
             raw = entry.get("raw_mentions", [])
@@ -846,6 +857,7 @@ def _load_mentions_from_files() -> dict[str, dict[str, list[str]]]:
 def run_live_mode(
     window_size: int,
     threshold: int,
+    paths: "BookPaths",
     coref: bool = False,
     workers: int = 1,
     min_cooccurrence: int | None = None,
@@ -855,8 +867,9 @@ def run_live_mode(
     import sys as _sys
     import importlib.util
 
-    if not os.path.exists("persons_full.json"):
-        print("persons_full.json not found. Run make test-extraction first.", file=sys.stderr)
+    persons_path = paths.processing / "persons_full.json"
+    if not persons_path.exists():
+        print(f"{persons_path} not found. Run make test-extraction first.", file=sys.stderr)
         sys.exit(1)
 
     # Load entity_clustering to reuse its build_clusters function
@@ -865,7 +878,7 @@ def run_live_mode(
     clustering_mod = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
     spec.loader.exec_module(clustering_mod)  # type: ignore[union-attr]
 
-    with open("persons_full.json", encoding="utf-8") as f:
+    with open(persons_path, encoding="utf-8") as f:
         data = json.load(f)
 
     persons_data = data.get("persons_full", {})
@@ -962,16 +975,17 @@ def run_live_mode(
         mentions_by_entity[canonical] = merged
 
     if coref:
-        if not os.path.exists("chapters.json"):
+        chapters_path = paths.processing / "chapters.json"
+        if not chapters_path.exists():
             print("[WARN] chapters.json not found — run make test first.", file=sys.stderr)
         else:
-            with open("chapters.json", encoding="utf-8") as f:
+            with open(chapters_path, encoding="utf-8") as f:
                 chapters_data = json.load(f)
             chapters = chapters_data.get("chapters", {})
             mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=workers)
 
     print(f"=== LIVE MODE — relationship-extraction ===\n")
-    print(f"Loaded {len(entities)} persons from persons_full.json")
+    print(f"Loaded {len(entities)} persons from {persons_path}")
     print(f"Window size: {window_size}  |  Threshold: {threshold}\n")
 
     relationships, stats = build_cooccurrence_graph(
@@ -1074,8 +1088,16 @@ def main() -> None:
         return
 
     if "--live" in args:
+        book_yaml = None
+        if "--book" in args:
+            idx = args.index("--book")
+            book_yaml = args[idx + 1]
+        if book_yaml is None:
+            print("--live requires --book <path/to/book.yaml>", file=sys.stderr)
+            sys.exit(1)
+        live_paths = book_paths_from_yaml(book_yaml)
         run_live_mode(
-            window_size, threshold, coref=coref, workers=workers,
+            window_size, threshold, paths=live_paths, coref=coref, workers=workers,
             min_cooccurrence=min_cooccurrence,
             min_chapters_together=min_chapters_together,
         )
@@ -1096,7 +1118,6 @@ def main() -> None:
         sys.exit(1)
 
     # Parse classify flag from additional_context (YAML string)
-    import yaml
     do_classify = False
     do_coref = False
     min_cooccurrence_val = None
@@ -1118,12 +1139,13 @@ def main() -> None:
             min_cooccurrence_val = None
             min_chapters_together = DEFAULT_MIN_CHAPTERS_TOGETHER
 
-    mentions_by_entity = _load_mentions_from_files()
+    paths = _paths_from_payload(payload)
+    mentions_by_entity = _load_mentions_from_files(paths.processing)
 
     if do_coref:
-        import os as _os
-        if _os.path.exists("chapters.json"):
-            with open("chapters.json", encoding="utf-8") as f:
+        chapters_path = paths.processing / "chapters.json"
+        if chapters_path.exists():
+            with open(chapters_path, encoding="utf-8") as f:
                 chapters_data = json.load(f)
             chapters = chapters_data.get("chapters", {})
             mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=workers)

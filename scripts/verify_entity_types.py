@@ -24,6 +24,7 @@ import json
 import re
 import sys
 import yaml
+from wiki_creator.paths import book_paths_from_epub, BookPaths
 
 # Keywords that indicate a genuine geographic entity — skip LLM for these
 GEOGRAPHIC_KEYWORDS = frozenset({
@@ -36,15 +37,18 @@ GEOGRAPHIC_KEYWORDS = frozenset({
 
 DEFAULT_MODEL = "mistral:7b-instruct"
 
-TYPE_TO_FILE = {
-    "PLACE": "places_full.json",
-    "ORG": "orgs_full.json",
-}
-
 TYPE_TO_KEY = {
     "PLACE": "places_full",
     "ORG": "orgs_full",
 }
+
+
+def _paths_from_payload(payload: dict) -> BookPaths:
+    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    file_path = ctx.get("file_path")
+    if not file_path:
+        raise ValueError("missing file_path in additional_context")
+    return book_paths_from_epub(file_path)
 
 
 def is_obvious_geographic(name: str) -> bool:
@@ -56,33 +60,33 @@ def is_obvious_geographic(name: str) -> bool:
 def load_context_for_cluster(
     entity_ids: list[str],
     original_type: str,
-    search_dirs: list[str] | None = None,
+    type_files: dict[str, str] | None = None,
     max_sentences: int = 3,
 ) -> list[str]:
     """
     Load up to max_sentences context snippets for the given entity_ids
     from the appropriate *_full.json file.
 
-    search_dirs: directories to look for the JSON file (default: ["."]).
+    type_files: mapping of entity type to full file path (default: root-level files).
     Returns a flat list of sentence strings.
     """
-    if search_dirs is None:
-        search_dirs = ["."]
+    if type_files is None:
+        type_files = {
+            "PLACE": "places_full.json",
+            "ORG": "orgs_full.json",
+        }
 
-    filename = TYPE_TO_FILE.get(original_type)
     json_key = TYPE_TO_KEY.get(original_type)
-    if not filename or not json_key:
+    file_path = type_files.get(original_type)
+    if not file_path or not json_key:
         return []
 
     data: dict = {}
-    for d in search_dirs:
-        path = f"{d}/{filename}"
-        try:
-            with open(path, encoding="utf-8") as f:
-                data = json.load(f).get(json_key, {})
-            break
-        except (FileNotFoundError, json.JSONDecodeError):
-            continue
+    try:
+        with open(file_path, encoding="utf-8") as f:
+            data = json.load(f).get(json_key, {})
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
 
     sentences: list[str] = []
     for eid in entity_ids:
@@ -151,7 +155,7 @@ def _call_ollama(name: str, context_sentences: list[str], model: str) -> str | N
 def verify_clusters(
     clusters: list[dict],
     model: str = DEFAULT_MODEL,
-    search_dirs: list[str] | None = None,
+    type_files: dict[str, str] | None = None,
 ) -> list[dict]:
     """
     Identify and return corrections for clusters that should be reclassified.
@@ -169,7 +173,7 @@ def verify_clusters(
             continue
 
         entity_ids = cluster.get("entity_ids", [])
-        context = load_context_for_cluster(entity_ids, original_type, search_dirs)
+        context = load_context_for_cluster(entity_ids, original_type, type_files)
         if not context:
             continue
 
@@ -209,8 +213,14 @@ def main() -> None:
         )
         return
 
+    paths = _paths_from_payload(payload)
+    type_files = {
+        "PLACE": str(paths.processing / "places_full.json"),
+        "ORG":   str(paths.processing / "orgs_full.json"),
+    }
+
     model = input_data.get("ollama_model", DEFAULT_MODEL)
-    corrections = verify_clusters(clusters, model=model)
+    corrections = verify_clusters(clusters, model=model, type_files=type_files)
     corrected_clusters = apply_corrections(clusters, corrections)
 
     json.dump(
