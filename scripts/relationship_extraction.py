@@ -80,6 +80,10 @@ def build_cooccurrence_graph(
         mentions_by_entity: {canonical_name: {chapter_id: [sentence, ...]}}
         window_size: sliding window of N sentences
         threshold: minimum co-occurrence count to include in output
+        min_cooccurrence: minimum co-occurrence count to include. Overrides threshold
+            when provided. Defaults to None (falls back to threshold).
+        min_chapters_together: minimum number of distinct chapters the pair must
+            co-occur in. Defaults to DEFAULT_MIN_CHAPTERS_TOGETHER (2).
 
     Returns:
         (relationships list, stats dict)
