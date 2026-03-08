@@ -457,6 +457,33 @@ def test_save_chapters_json_writes_chapter_texts(tmp_path):
     assert data == {"chapters": {"ch01": "Hello world.", "ch02": "Goodbye world."}}
 
 
+def test_pos_filter_rejects_verb_at_sentence_start():
+    """Capitalized French verb at dialogue start must not appear as entity."""
+    nlp = spacy.load("fr_core_news_lg")
+    chapters = [
+        {
+            "id": "ch01",
+            "content": (
+                "Pedro Vidal tendit le manuscrit à Martín. "
+                "— Regarde, il est là. "
+                "— Avez-vous lu ce chapitre ? "
+                "— Sériez-vous d'accord ?"
+            ),
+        }
+    ]
+    result = extract_entities(chapters, nlp)
+    raw_mentions = [
+        m
+        for e in result["entities"].values()
+        for m in e["raw_mentions"]
+    ]
+    assert "Regarde" not in raw_mentions
+    assert "Avez" not in raw_mentions
+    assert "Sériez" not in raw_mentions
+    # True entities must survive
+    assert any("Vidal" in m or "Martín" in m for m in raw_mentions)
+
+
 def test_main_exits_on_empty_entities():
     """main() must exit 1 with error JSON when no entities are extracted."""
     import subprocess
