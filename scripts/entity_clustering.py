@@ -112,6 +112,21 @@ def is_single_given_name(tokens: list[str]) -> bool:
     return len(tokens) == 1 and len(tokens[0]) <= 8
 
 
+def extract_surname_and_firstname(name: str) -> tuple[str, list[str]]:
+    """
+    Extract (surname, first_names) from a name after title stripping.
+    Convention: last token = surname, all preceding tokens = first names.
+    Returns normalized (lowercase, accent-stripped) tokens.
+    """
+    tokens = tokenize_name(name)
+    if not tokens:
+        return "", []
+    normalized = [normalize_for_comparison(t) for t in tokens]
+    if len(normalized) == 1:
+        return normalized[0], []
+    return normalized[-1], normalized[:-1]
+
+
 # --- Similarity algorithms ---
 
 def jaro_similarity(s1: str, s2: str) -> float:
@@ -312,8 +327,153 @@ def build_clusters(entities: dict) -> tuple[list[dict], dict]:
                 "total_mentions": total_mentions,
             })
 
+    # Rule 2 post-processing: split clusters with conflicting first names
+    clusters_list, unclustered = split_conflicting_first_names(clusters_list, unclustered, entities)
     clusters_list.sort(key=lambda c: c["total_mentions"], reverse=True)
     return clusters_list, unclustered
+
+
+def _make_cluster(cluster_id: str, eids: list[str], entities: dict) -> dict:
+    """Build a cluster dict from a list of entity IDs."""
+    all_mentions = []
+    first_seen_chapters = []
+    total_mentions = 0
+    entity_type = entities[eids[0]].get("type", "OTHER") if eids else "OTHER"
+
+    for eid in eids:
+        entity = entities[eid]
+        all_mentions.extend(entity.get("raw_mentions", []))
+        fs = entity.get("first_seen", "")
+        if fs:
+            first_seen_chapters.append(fs)
+        total_mentions += entity.get("mention_count", len(entity.get("raw_mentions", [])))
+
+    def canonical_score(mention):
+        tokens = tokenize_name(mention)
+        return (len(tokens), len(" ".join(tokens)))
+
+    canonical = max(all_mentions, key=canonical_score) if all_mentions else eids[0]
+
+    return {
+        "cluster_id": cluster_id,
+        "type": entity_type,
+        "canonical_candidate": canonical,
+        "all_mentions": sorted(set(all_mentions), key=len, reverse=True),
+        "entity_ids": eids,
+        "first_seen": min(first_seen_chapters) if first_seen_chapters else "",
+        "entity_count": len(eids),
+        "total_mentions": total_mentions,
+    }
+
+
+def split_conflicting_first_names(
+    clusters: list[dict],
+    unclustered: dict,
+    entities: dict,
+) -> tuple[list[dict], dict]:
+    """
+    Rule 2 post-processing: split clusters where multiple full-name entities
+    share a surname but have incompatible first names, or where bare-surname
+    entities have conflicting gender titles (e.g. Mme Vidal vs M. Vidal both
+    transitively merged via bare "Vidal").
+
+    Strategy:
+    - For each multi-entity cluster, group full-name entities by (surname, first_name_set).
+    - If there are 2+ distinct first-name groups for the same surname → split.
+    - Bare-surname entities (no first name) with no gender title go into the most
+      populated first-name group.
+    - Bare-surname entities WITH gender titles are assigned to their gender group
+      (feminine together, masculine together); if a cluster has mixed-gender
+      bare-surname entities with no full-name disambiguator, they are split by gender.
+    - If it's a tie, log a warning to stderr.
+    - New sub-clusters get reassigned cluster_ids.
+    """
+    new_clusters = []
+    cluster_counter = [0]
+
+    def next_cluster_id() -> str:
+        cluster_counter[0] += 1
+        return f"cluster_{cluster_counter[0]:03d}"
+
+    for cluster in clusters:
+        if cluster["entity_count"] < 2:
+            new_clusters.append(cluster)
+            continue
+
+        # Group entities: full-name (has first name) vs bare-surname (surname only)
+        # For bare-surname entities, also track their gender from title prefix
+        by_surname: dict[str, list[tuple[frozenset, str]]] = {}
+        # bare_surname: list of (eid, gender_group) where gender_group is
+        # "masc", "fem", or "neutral"
+        bare_surname_eids: list[tuple[str, str]] = []
+
+        for eid in cluster["entity_ids"]:
+            mention = entities[eid]["raw_mentions"][0] if entities[eid].get("raw_mentions") else eid
+            surname, firsts = extract_surname_and_firstname(mention)
+            if not surname or not firsts:
+                # Determine gender from title prefix
+                titles = extract_leading_titles(mention)
+                if titles & MASCULINE_TITLES:
+                    gender = "masc"
+                elif titles & FEMININE_TITLES:
+                    gender = "fem"
+                else:
+                    gender = "neutral"
+                bare_surname_eids.append((eid, gender))
+                continue
+            by_surname.setdefault(surname, []).append((frozenset(firsts), eid))
+
+        # Check for conflict: same surname, 2+ distinct first-name groups
+        split_happened = False
+        for surname, entries in by_surname.items():
+            distinct_groups: dict[frozenset, list[str]] = {}
+            for firsts_set, eid in entries:
+                distinct_groups.setdefault(firsts_set, []).append(eid)
+
+            if len(distinct_groups) < 2:
+                continue  # no conflict for this surname
+
+            split_happened = True
+            sorted_groups = sorted(distinct_groups.items(), key=lambda x: -len(x[1]))
+
+            # Assign bare-surname entities to the largest first-name group
+            if bare_surname_eids:
+                if len(sorted_groups) >= 2 and len(sorted_groups[0][1]) == len(sorted_groups[1][1]):
+                    print(
+                        f"Warning: ambiguous bare-surname cluster for '{surname}' "
+                        f"— cannot deterministically assign to first-name group, "
+                        f"logging for LLM resolution",
+                        file=sys.stderr,
+                    )
+                sorted_groups[0][1].extend(eid for eid, _gender in bare_surname_eids)
+
+            for _firsts_set, eids in sorted_groups:
+                new_clusters.append(_make_cluster(next_cluster_id(), eids, entities))
+
+            break  # handle one surname conflict per cluster
+
+        if not split_happened:
+            # Check for gender conflict among bare-surname entities when no
+            # full-name conflict was detected (e.g. "Mme Vidal" + "M. Vidal" +
+            # "Vidal" all merged transitively).
+            masc_eids = [eid for eid, g in bare_surname_eids if g == "masc"]
+            fem_eids = [eid for eid, g in bare_surname_eids if g == "fem"]
+            neutral_eids = [eid for eid, g in bare_surname_eids if g == "neutral"]
+            full_name_eids = [eid for entries in by_surname.values() for _, eid in entries]
+
+            if masc_eids and fem_eids:
+                # Split by gender: masculine group gets full-name entities and neutrals
+                # (best guess: a bare "Vidal" is more likely the main male character)
+                masc_group = masc_eids + full_name_eids + neutral_eids
+                fem_group = fem_eids
+                split_happened = True
+                new_clusters.append(_make_cluster(next_cluster_id(), masc_group, entities))
+                new_clusters.append(_make_cluster(next_cluster_id(), fem_group, entities))
+            else:
+                # No conflict found — re-assign a fresh cluster_id for consistency
+                new_clusters.append(_make_cluster(next_cluster_id(), cluster["entity_ids"], entities))
+
+    return new_clusters, unclustered
 
 
 # --- Test mode ---
