@@ -100,3 +100,36 @@ def test_apply_corrections_leaves_others_unchanged():
     result = apply_corrections(clusters, corrections)
     assert result[0]["type"] == "PERSON"   # Martín unchanged
     assert result[1]["type"] == "PERSON"   # Barrido corrected
+
+
+# --- pass-through integration (no Ollama) ---
+
+def test_passthrough_mode_via_main(monkeypatch, capsys):
+    """When verify_entity_types is false, output equals input clusters unchanged."""
+    import io
+    clusters = [
+        {"cluster_id": "single_entity_042", "type": "PLACE",
+         "canonical_candidate": "Barrido", "all_mentions": ["Barrido"],
+         "entity_ids": ["entity_042"], "entity_count": 1, "total_mentions": 5}
+    ]
+    payload = {
+        "additional_context": "verify_entity_types: false",
+        "previous_outputs": {
+            "entity-clustering": {
+                "clusters": clusters,
+                "stats": {"input_entities": 1, "total_items": 1}
+            }
+        }
+    }
+    monkeypatch.setattr("sys.stdin", io.TextIOWrapper(
+        io.BytesIO(json.dumps(payload).encode()), encoding="utf-8"
+    ))
+    captured_output = io.StringIO()
+    monkeypatch.setattr("sys.stdout", captured_output)
+
+    from scripts.verify_entity_types import main
+    main()
+
+    result = json.loads(captured_output.getvalue())
+    assert result["type_corrections"] == []
+    assert result["clusters"][0]["type"] == "PLACE"  # unchanged
