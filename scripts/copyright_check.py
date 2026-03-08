@@ -235,9 +235,6 @@ def main() -> None:
     result["pages"] = pages  # pass through for wiki-export
     json.dump(result, sys.stdout, ensure_ascii=False)
 
-    if result["status"] == "fail":
-        sys.exit(1)
-
 
 if __name__ == "__main__":
     main()

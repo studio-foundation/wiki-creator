@@ -88,6 +88,62 @@ def detect_pov(text: str) -> dict:
 MIN_CHAPTER_CHARS = 100
 
 
+def _build_toc_title_map(toc, parent_title: str = "") -> dict:
+    """Recursively build a mapping from filename to title from the EPUB TOC.
+
+    When a chapter has only a bare number/short title and belongs to a named
+    section, the section name is prepended: "Premier acte … — 15."
+    """
+    result = {}
+    for item in toc:
+        if isinstance(item, tuple):
+            section, children = item
+            href = section.href.split('#')[0] if section.href else ''
+            if href and section.title:
+                result[href] = section.title
+                result[os.path.basename(href)] = section.title
+            result.update(_build_toc_title_map(children, parent_title=section.title or parent_title))
+        else:
+            href = item.href.split('#')[0] if item.href else ''
+            if href and item.title:
+                # If the chapter title is just a short label (number, roman numeral…)
+                # and we have a parent section, prepend it for context.
+                title = item.title
+                if parent_title and len(title) <= 6:
+                    title = f"{parent_title} — {title}"
+                result[href] = title
+                result[os.path.basename(href)] = title
+    return result
+
+
+def _extract_chapter_title(soup, item, toc_titles: dict) -> str:
+    """Find the best human-readable title for a chapter item."""
+    name = item.get_name()
+    basename = os.path.basename(name)
+
+    # 1. TOC (NCX/nav) — most reliable
+    toc_title = toc_titles.get(name) or toc_titles.get(basename)
+    if toc_title:
+        return toc_title
+
+    # 2. First heading in the HTML
+    heading = soup.find(['h1', 'h2', 'h3'])
+    if heading:
+        text = heading.get_text(strip=True)
+        if text:
+            return text
+
+    # 3. <title> tag
+    title_tag = soup.find('title')
+    if title_tag:
+        text = title_tag.get_text(strip=True)
+        if text:
+            return text
+
+    # 4. Fallback: filename
+    return basename
+
+
 def parse_epub(file_path: str) -> dict:
     import ebooklib
     from ebooklib import epub
@@ -100,6 +156,8 @@ def parse_epub(file_path: str) -> dict:
 
     author = book.get_metadata("DC", "creator")
     author = author[0][0] if author else None
+
+    toc_titles = _build_toc_title_map(book.toc)
 
     # Use EPUB spine order (the official reading order).
     spine_ids = [item_id for item_id, _ in book.spine]
@@ -120,7 +178,7 @@ def parse_epub(file_path: str) -> dict:
             continue
         chapters.append({
             "id": item.get_id(),
-            "title": item.get_name(),
+            "title": _extract_chapter_title(soup, item, toc_titles),
             "content": cleaned,
         })
 

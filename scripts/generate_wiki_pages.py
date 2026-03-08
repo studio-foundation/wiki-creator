@@ -93,14 +93,17 @@ The "content" field must be a Markdown string. Use \\n for newlines inside the s
 Output ONLY the JSON object, nothing else."""
 
 
-def make_stub_page(entity: dict) -> dict:
-    return {
+def make_stub_page(entity: dict, failed: bool = False) -> dict:
+    page = {
         "title": entity["canonical_name"],
         "importance": entity["importance"],
         "entity_type": entity["type"],
         "infobox_fields": {},
         "content": "## Biographie\n\n*Informations insuffisantes disponibles pour cette entité.*",
     }
+    if failed:
+        page["_failed"] = True
+    return page
 
 
 def parse_response(raw: str, entity: dict) -> dict:
@@ -170,46 +173,76 @@ def main() -> None:
     total_entities = sum(len(b["entities"]) for _, b in batches)
     print(f"[generate-wiki-pages] {total_entities} entities across {len(batches)} batches | model={args.model}", file=sys.stderr)
 
-    all_pages = []
-    for path, batch in batches:
-        batch_id = batch.get("batch_id", os.path.basename(path))
-        entities = batch.get("entities", [])
-        print(f"\n[{batch_id}] {len(entities)} entities", file=sys.stderr)
+    # Load existing pages to resume interrupted runs
+    all_pages = [p for p in _load_existing() if not p.get("_failed")]
+    done_titles = {p["title"] for p in all_pages}
+    if done_titles:
+        print(f"[generate-wiki-pages] Resuming — {len(done_titles)} pages already done", file=sys.stderr)
 
-        for entity in entities:
-            name = entity.get("canonical_name", "?")
-            importance = entity.get("importance", "figurant")
-            context = entity.get("context_by_chapter", {})
+    try:
+        for path, batch in batches:
+            batch_id = batch.get("batch_id", os.path.basename(path))
+            entities = batch.get("entities", [])
+            print(f"\n[{batch_id}] {len(entities)} entities", file=sys.stderr)
 
-            if not context:
-                print(f"  [STUB] {name} (no context)", file=sys.stderr)
-                all_pages.append(make_stub_page(entity))
-                continue
+            for entity in entities:
+                name = entity.get("canonical_name", "?")
+                importance = entity.get("importance", "figurant")
+                context = entity.get("context_by_chapter", {})
 
-            if args.dry_run:
-                print(f"  [DRY]  {name}", file=sys.stderr)
-                all_pages.append(make_stub_page(entity))
-                continue
+                if name in done_titles:
+                    print(f"  [SKIP] {name} (already done)", file=sys.stderr)
+                    continue
 
-            print(f"  [GEN]  {name} ({importance})", file=sys.stderr, end="", flush=True)
-            try:
-                prompt = build_prompt(entity, book_title)
-                raw = call_ollama(prompt, args.model, args.timeout)
-                page = parse_response(raw, entity)
-                all_pages.append(page)
-                print(" ✓", file=sys.stderr)
-            except Exception as e:
-                print(f" ✗ {e}", file=sys.stderr)
-                all_pages.append(make_stub_page(entity))
+                if not context:
+                    print(f"  [STUB] {name} (no context)", file=sys.stderr)
+                    page = make_stub_page(entity)
+                    all_pages.append(page)
+                    _save(all_pages)
+                    done_titles.add(name)
+                    continue
 
-    _save(all_pages, args)
+                if args.dry_run:
+                    print(f"  [DRY]  {name}", file=sys.stderr)
+                    page = make_stub_page(entity)
+                    all_pages.append(page)
+                    _save(all_pages)
+                    done_titles.add(name)
+                    continue
+
+                print(f"  [GEN]  {name} ({importance})", file=sys.stderr, end="", flush=True)
+                try:
+                    prompt = build_prompt(entity, book_title)
+                    raw = call_ollama(prompt, args.model, args.timeout)
+                    page = parse_response(raw, entity)
+                    all_pages.append(page)
+                    _save(all_pages)
+                    done_titles.add(name)
+                    print(" ✓", file=sys.stderr)
+                except Exception as e:
+                    print(f" ✗ {e}", file=sys.stderr)
+                    page = make_stub_page(entity, failed=True)
+                    all_pages.append(page)
+                    _save(all_pages)
+                    # Do NOT add to done_titles — will be retried on next run
+    except KeyboardInterrupt:
+        print(f"\n[generate-wiki-pages] Interrupted — {len(all_pages)} pages saved", file=sys.stderr)
 
 
-def _save(pages: list[dict], args: argparse.Namespace) -> None:
+def _save(pages: list[dict]) -> None:
     os.makedirs("processing_output", exist_ok=True)
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump({"pages": pages}, f, ensure_ascii=False, indent=2)
-    print(f"\n[generate-wiki-pages] {len(pages)} pages saved to {OUTPUT_FILE}", file=sys.stderr)
+
+
+def _load_existing() -> list[dict]:
+    if os.path.exists(OUTPUT_FILE):
+        try:
+            with open(OUTPUT_FILE, encoding="utf-8") as f:
+                return json.load(f).get("pages", [])
+        except Exception:
+            pass
+    return []
 
 
 if __name__ == "__main__":
