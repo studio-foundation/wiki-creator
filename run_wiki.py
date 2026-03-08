@@ -25,7 +25,14 @@ REQUIRED_FILES = {
     "wiki-resolution": [
         "processing_output/entities_classified.json",
     ],
-    "wiki-generation": [],
+    "wiki-generation": [
+        "processing_output/wiki_pages.json",
+    ],
+}
+
+# Scripts to run before a pipeline (pre-steps)
+PRE_STEPS = {
+    "wiki-generation": ["python", "scripts/generate_wiki_pages.py"],
 }
 
 
@@ -120,6 +127,15 @@ def main() -> None:
         if stage_state.get("status") == "completed":
             print(f"  {pipeline}: already completed, skipping")
             continue
+
+        # Run pre-steps before the pipeline (e.g. generate_wiki_pages.py before wiki-generation)
+        if pipeline in PRE_STEPS:
+            pre_cmd = PRE_STEPS[pipeline]
+            print(f"\n[pre-step] {' '.join(pre_cmd)}", flush=True)
+            pre_result = subprocess.run(pre_cmd)
+            if pre_result.returncode != 0:
+                print(f"\n[ERROR] Pre-step failed for {pipeline}. Aborting.")
+                sys.exit(1)
 
         attempt = 0
         success = False

@@ -35,15 +35,14 @@ stages:
         - previous_stage_output
 
   - name: wiki-generation
-    kind: analysis
-    agent: writer-lite
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/load_wiki_pages.py
     contract: wiki-page
-    ralph:
-      max_attempts: 3
     context:
       include:
         - input
-        - previous_stage_output
 
   - name: copyright-check
     kind: extraction
@@ -65,5 +64,4 @@ stages:
     context:
       include:
         - input
-        - epub-parse
         - previous_stage_output

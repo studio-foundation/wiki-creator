@@ -175,6 +175,64 @@ def test_clean_lettrine_with_newline_separator():
     assert clean_chapter_text("L\norca") == "Lorca"
 
 
+def test_clean_unicode_nfc_normalization():
+    """Decomposed Unicode (NFD) characters are normalized to NFC."""
+    import unicodedata
+    # 'é' as NFD (e + combining acute accent) should become NFC 'é'
+    nfd_text = unicodedata.normalize('NFD', "héros")
+    assert len(nfd_text) > len("héros")  # NFD has more codepoints
+    assert clean_chapter_text(nfd_text) == "héros"
+
+
+def test_clean_ligature_fi():
+    """Typographic ﬁ ligature is resolved to 'fi'."""
+    assert clean_chapter_text("ﬁction") == "fiction"
+
+
+def test_clean_ligature_fl():
+    """Typographic ﬂ ligature is resolved to 'fl'."""
+    assert clean_chapter_text("ﬂeur") == "fleur"
+
+
+def test_clean_ligature_ff():
+    """Typographic ﬀ ligature is resolved to 'ff'."""
+    assert clean_chapter_text("ﬀ") == "ff"
+
+
+def test_clean_ligature_ffi():
+    """Typographic ﬃ ligature is resolved to 'ffi'."""
+    # "aﬃche" = a + ﬃ(ffi) + che → "affiche"
+    assert clean_chapter_text("a\ufb03che") == "affiche"
+
+
+def test_clean_apostrophe_typographique():
+    """Typographic right single quotation mark is normalized to ASCII apostrophe."""
+    assert clean_chapter_text("l\u2019ami") == "l'ami"
+    assert clean_chapter_text("c\u2019est") == "c'est"
+
+
+def test_clean_guillemets_normalisés():
+    """French guillemets « » are normalized to double quotes."""
+    assert clean_chapter_text("\u00abBonjour\u00bb") == '"Bonjour"'
+
+
+def test_clean_a_grave_artifact():
+    """'Àla', 'Àson', 'Àsa' artifacts get spaces re-inserted."""
+    assert clean_chapter_text("Àla fin") == "À la fin"
+    assert clean_chapter_text("Àson tour") == "À son tour"
+    assert clean_chapter_text("Àsa place") == "À sa place"
+
+
+def test_clean_a_grave_does_not_alter_correct_text():
+    """'À la' with proper spacing is preserved (not double-spaced)."""
+    assert clean_chapter_text("À la maison") == "À la maison"
+
+
+def test_clean_narrow_no_break_space():
+    """Narrow no-break space (U+202F) is normalized to a regular space."""
+    assert clean_chapter_text("10\u202fkm") == "10 km"
+
+
 from scripts.parse_epub import detect_pov
 
 
