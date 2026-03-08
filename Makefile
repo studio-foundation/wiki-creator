@@ -60,6 +60,7 @@ test-coref-parallel: test-extraction
 	python scripts/entity_clustering.py --live
 	python scripts/relationship_extraction.py --live --coref --workers 8
 
-clean:
-	rm -rf processing_output/ wiki_inputs/ output/wiki/
+clean:  ## Remove generated files (keeps .gitkeep sentinels)
+	find processing_output wiki_inputs output/wiki -not -name '.gitkeep' -delete 2>/dev/null || true
+	@touch processing_output/.gitkeep
 	rm -f persons_full.json places_full.json orgs_full.json chapters.json

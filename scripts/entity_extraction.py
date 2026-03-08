@@ -72,6 +72,42 @@ FALSE_POSITIVE_WORDS: frozenset[str] = frozenset({
 })
 
 
+# POS tags that disqualify a span from being a named entity.
+# Capitalized verb/adjective/adverb at sentence start is a common false positive
+# in French dialogue (e.g. "— Regarde", "— Avez-vous", "— Sériez-vous").
+_BAD_POS: frozenset[str] = frozenset({"VERB", "AUX", "ADJ", "ADV"})
+
+
+def _is_valid_span(span) -> bool:
+    """
+    Return True if the spaCy span looks like a proper-noun entity.
+
+    For mono-token spans: reject if the token's POS is a verb, aux, adjective, or adverb.
+    For multi-token spans: use the syntactic head (span.root); reject if its POS is bad.
+
+    Additionally, rejects spans that are immediately preceded by a dialogue dash (—).
+    French NER models often misclassify sentence-initial verbs/adjectives after dialogue
+    dashes as PROPN (e.g. "— Regarde" → PER with pos=PROPN). The preceding dash is the
+    reliable signal since POS tagging itself is confused in these contexts.
+    """
+    tokens = list(span)
+    if len(tokens) == 1:
+        tok = tokens[0]
+        if tok.pos_ in _BAD_POS:
+            return False
+        # Reject if immediately preceded by a dialogue dash (French dialogue marker)
+        if tok.i > 0 and span.doc[tok.i - 1].text in {"—", "–", "-"}:
+            return False
+    else:
+        head = span.root
+        if head.pos_ in _BAD_POS:
+            return False
+        # Reject multi-token spans that start immediately after a dialogue dash
+        if span.start > 0 and span.doc[span.start - 1].text in {"—", "–", "-"}:
+            return False
+    return True
+
+
 def _is_valid_mention(text: str) -> bool:
     """
     Return True if `text` looks like a valid proper-noun mention.
@@ -204,6 +240,8 @@ def extract_entities(chapters: list[dict], nlp) -> dict:
             if not key:
                 continue
             if not _is_valid_mention(mention_text):
+                continue
+            if not _is_valid_span(ent):          # ← new line
                 continue
 
             context = extract_context(doc, ent)
