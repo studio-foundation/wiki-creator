@@ -1,0 +1,35 @@
+name: wiki-preparation
+description: Prepare wiki batch files from classified entities — runs wiki-preparation script
+version: 1
+
+stages:
+  - name: epub-parse
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/load_epub_data.py
+    contract: epub-parse
+    context:
+      include:
+        - input
+
+  - name: entity-classification
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/load_classified_entities.py
+    contract: entity-classification
+    context:
+      include:
+        - input
+
+  - name: wiki-preparation
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/wiki_preparation.py
+    contract: wiki-preparation
+    context:
+      include:
+        - input
+        - previous_stage_output

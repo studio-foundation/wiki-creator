@@ -5,6 +5,8 @@ Orchestrator for wiki creation pipeline.
 Usage:
     python run_wiki.py --book books/carlos-ruiz-zafon/le-jeu-de-lange.yaml
     python run_wiki.py --book books/carlos-ruiz-zafon/le-jeu-de-lange.yaml --restart wiki-resolution
+    python run_wiki.py --book books/carlos-ruiz-zafon/le-jeu-de-lange.yaml --restart wiki-preparation
+    python run_wiki.py --book books/carlos-ruiz-zafon/le-jeu-de-lange.yaml --restart pages-export
     python run_wiki.py --book books/carlos-ruiz-zafon/le-jeu-de-lange.yaml --retries 5
     python run_wiki.py --book books/carlos-ruiz-zafon/le-jeu-de-lange.yaml --status
 """
@@ -15,7 +17,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-PIPELINES = ["wiki-extraction", "wiki-resolution", "wiki-generation"]
+PIPELINES = ["wiki-extraction", "wiki-resolution", "wiki-preparation", "pages-export"]
 
 REQUIRED_FILES = {
     "wiki-extraction": [
@@ -25,14 +27,15 @@ REQUIRED_FILES = {
     "wiki-resolution": [
         "processing_output/entities_classified.json",
     ],
-    "wiki-generation": [
+    "wiki-preparation": ["wiki_inputs"],  # side-effect: creates wiki_inputs/batch_*.json
+    "pages-export": [
         "processing_output/wiki_pages.json",
     ],
 }
 
 # Scripts to run before a pipeline (pre-steps)
 PRE_STEPS = {
-    "wiki-generation": ["python", "scripts/generate_wiki_pages.py"],
+    "pages-export": ["python", "scripts/generate_wiki_pages.py"],
 }
 
 
@@ -96,7 +99,7 @@ def print_status(book_path: str) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Wiki creation orchestrator")
     parser.add_argument("--book", required=True, help="Path to book YAML config")
-    parser.add_argument("--restart", choices=PIPELINES, help="Restart from this pipeline")
+    parser.add_argument("--restart", choices=PIPELINES + ["wiki-generation"], help="Restart from this pipeline")
     parser.add_argument("--retries", type=int, default=3, help="Max attempts per pipeline")
     parser.add_argument("--status", action="store_true", help="Show run status and exit")
     args = parser.parse_args()
@@ -112,6 +115,11 @@ def main() -> None:
     state = load_state(args.book)
 
     # Determine start pipeline
+    # "wiki-generation" is kept as a backwards-compatible alias for "wiki-preparation"
+    _RESTART_ALIASES = {"wiki-generation": "wiki-preparation"}
+    if args.restart and args.restart in _RESTART_ALIASES:
+        args.restart = _RESTART_ALIASES[args.restart]
+
     start_idx = 0
     if args.restart:
         start_idx = PIPELINES.index(args.restart)
@@ -123,10 +131,15 @@ def main() -> None:
     for pipeline in PIPELINES[start_idx:]:
         stage_state = state.setdefault("stages", {}).get(pipeline, {})
 
-        # Skip if already completed (unless we're restarting)
+        # Skip if already completed AND output files are still present
         if stage_state.get("status") == "completed":
-            print(f"  {pipeline}: already completed, skipping")
-            continue
+            missing = check_outputs(pipeline)
+            if not missing:
+                print(f"  {pipeline}: already completed, skipping")
+                continue
+            print(f"  {pipeline}: outputs missing ({', '.join(missing)}), re-running")
+            state["stages"][pipeline] = {}
+            save_state(args.book, state)
 
         # Run pre-steps before the pipeline (e.g. generate_wiki_pages.py before wiki-generation)
         if pipeline in PRE_STEPS:

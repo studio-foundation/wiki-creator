@@ -1,4 +1,4 @@
-.PHONY: run run-extraction run-resolution run-generation run-all \
+.PHONY: run run-extraction run-resolution run-preparation run-generation pages-export run-all \
         test-extraction test-clustering test-relationships test test-coref test-coref-parallel \
         clean
 
@@ -21,10 +21,13 @@ generate-pages:
 generate-pages-dry:
 	python scripts/generate_wiki_pages.py --dry-run
 
-pages-export:
-	studio run wiki-generation --input-file $(BOOK) --live --verbose
+run-preparation:
+	studio run wiki-preparation --input-file $(BOOK) --live --verbose
 
-run-generation: generate-pages && pages-export
+pages-export:
+	studio run pages-export --input-file $(BOOK) --live --verbose
+
+run-generation: run-preparation generate-pages pages-export
 
 # Orchestrator shortcuts
 run-from-resolution:

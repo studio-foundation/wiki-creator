@@ -53,3 +53,4 @@ books/
 processing_output/
 .wiki_runs/
 !processing_output/.gitkeep
+output/wiki/

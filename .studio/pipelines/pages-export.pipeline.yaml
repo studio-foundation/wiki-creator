@@ -1,0 +1,36 @@
+name: pages-export
+description: Load generated wiki pages, check copyright, and export to wikitext
+version: 1
+
+stages:
+  - name: wiki-generation
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/load_wiki_pages.py
+    contract: wiki-page
+    context:
+      include:
+        - input
+
+  - name: copyright-check
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/copyright_check.py
+    contract: copyright-check
+    context:
+      include:
+        - input
+        - previous_stage_output
+
+  - name: wiki-export
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/wiki_export.py
+    contract: wiki-export
+    context:
+      include:
+        - input
+        - previous_stage_output
