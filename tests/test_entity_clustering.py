@@ -382,3 +382,19 @@ def test_cluster_jw_same_full_name_variant_allowed():
 def test_cluster_jw_different_surname_not_blocked_by_rule3():
     # Different surname → normal JW, Rule 3 doesn't apply
     assert should_cluster_jw("Barcelona", "Barcelone") is True
+
+
+def test_build_clusters_logs_warning_for_ambiguous_bare_surname(capsys):
+    """AC5: When a bare-surname entity bridges two distinct first-name clusters of equal size,
+    a warning is printed to stderr."""
+    entities = {
+        "e_cs": {"type": "PERSON", "raw_mentions": ["Cristina Sagnier"], "first_seen": "ch12"},
+        "e_ms": {"type": "PERSON", "raw_mentions": ["Manuel Sagnier"], "first_seen": "ch05"},
+        "e_s":  {"type": "PERSON", "raw_mentions": ["Sagnier"], "first_seen": "ch04"},
+    }
+    # Both first-name groups have 1 entity each (equal) → warning expected
+    clusters, unclustered = build_clusters(entities)
+    captured = capsys.readouterr()
+    assert "ambiguous" in captured.err.lower() or "warning" in captured.err.lower(), (
+        f"Expected an ambiguity warning in stderr. Got: {captured.err!r}"
+    )
