@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Loader stage for wiki-generation pipeline.
-Reads processing_output/epub_data.json and re-emits it as stage output.
+Reads <series_dir>/processing_output/epub_data.json and re-emits it as stage output.
 Named 'epub-parse' in the pipeline so wiki_export.py finds it in previous_outputs.
 """
 import json
@@ -14,7 +14,6 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
-
 from wiki_creator.paths import book_paths_from_epub, BookPaths
 
 

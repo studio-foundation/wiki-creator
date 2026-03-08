@@ -15,6 +15,9 @@ import sys
 import time
 from pathlib import Path
 
+_root = Path(__file__).resolve().parent.parent
+if str(_root) not in sys.path:
+    sys.path.insert(0, str(_root))
 from wiki_creator.paths import book_paths_from_yaml
 
 CORELLI_ALIASES = {"corelli", "le patron", "andreas corelli", "m. corelli"}

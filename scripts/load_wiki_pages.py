@@ -2,7 +2,7 @@
 """
 Stage: wiki-generation (script executor, no LLM)
 
-Loads pre-generated wiki pages from processing_output/wiki_pages.json.
+Loads pre-generated wiki pages from <series_dir>/processing_output/wiki_pages.json.
 Run scripts/generate_wiki_pages.py first to generate the pages.
 
 Input (Studio stdin): consumed and ignored
@@ -19,7 +19,6 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
-
 from wiki_creator.paths import book_paths_from_epub, BookPaths
 
 
