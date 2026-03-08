@@ -21,6 +21,7 @@ Output (stdout):
 """
 
 import json
+import re
 import sys
 import yaml
 
@@ -139,7 +140,7 @@ def _call_ollama(name: str, context_sentences: list[str], model: str) -> str | N
         resp.raise_for_status()
         reply = resp.json().get("response", "").upper()
         for label in ("PERSON", "PLACE", "ORG"):
-            if label in reply:
+            if re.search(rf"\b{label}\b", reply):
                 return label
         return None
     except Exception as exc:
