@@ -33,6 +33,8 @@ GEOGRAPHIC_KEYWORDS = frozenset({
     "calle", "plaza", "barrio",  # Spanish geographic terms
 })
 
+DEFAULT_MODEL = "mistral:7b-instruct"
+
 TYPE_TO_FILE = {
     "PLACE": "places_full.json",
     "ORG": "orgs_full.json",
@@ -132,7 +134,7 @@ def _call_ollama(name: str, context_sentences: list[str], model: str) -> str | N
         resp = requests.post(
             "http://localhost:11434/api/generate",
             json={"model": model, "prompt": prompt, "stream": False},
-            timeout=30,
+            timeout=30,  # Ollama can be slow on first model load
         )
         resp.raise_for_status()
         reply = resp.json().get("response", "").upper()
@@ -147,7 +149,7 @@ def _call_ollama(name: str, context_sentences: list[str], model: str) -> str | N
 
 def verify_clusters(
     clusters: list[dict],
-    model: str = "mistral:7b-instruct",
+    model: str = DEFAULT_MODEL,
     search_dirs: list[str] | None = None,
 ) -> list[dict]:
     """
@@ -206,7 +208,7 @@ def main() -> None:
         )
         return
 
-    model = input_data.get("ollama_model", "mistral:7b-instruct")
+    model = input_data.get("ollama_model", DEFAULT_MODEL)
     corrections = verify_clusters(clusters, model=model)
     corrected_clusters = apply_corrections(clusters, corrections)
 
