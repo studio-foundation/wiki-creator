@@ -523,6 +523,14 @@ TEST_ENTITIES = {
     # Noise that should stay unclustered
     "entity_070": {"type": "ORG", "raw_mentions": ["Intoxiqué"], "first_seen": "ch05"},
     "entity_071": {"type": "PERSON", "raw_mentions": ["Piquillo"], "first_seen": "ch09"},
+    # STU-249: Sagnier family — Cristina (romantic interest) and Manuel (her father)
+    "entity_080": {"type": "PERSON", "raw_mentions": ["Cristina Sagnier"], "first_seen": "ch12"},
+    "entity_081": {"type": "PERSON", "raw_mentions": ["Manuel Sagnier"], "first_seen": "ch05"},
+    "entity_082": {"type": "PERSON", "raw_mentions": ["Sagnier"], "first_seen": "ch04"},
+    "entity_083": {"type": "PERSON", "raw_mentions": ["Mlle Cristina"], "first_seen": "ch13"},
+    # STU-249: Vidal family — Pedro (son) and Mme Vidal (Cristina after marriage, out of scope)
+    "entity_090": {"type": "PERSON", "raw_mentions": ["Mme Vidal"], "first_seen": "ch25"},
+    "entity_091": {"type": "PERSON", "raw_mentions": ["M. Vidal"], "first_seen": "ch07"},
 }
 
 
