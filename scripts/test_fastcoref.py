@@ -3,9 +3,9 @@
 STU-237 — Test fastcoref + LingMessCoref on French literary text.
 
 Usage:
-    python scripts/test_fastcoref.py
-    python scripts/test_fastcoref.py --chapter x106.xhtml  # default
-    python scripts/test_fastcoref.py --chapter x106.xhtml x107.xhtml x108.xhtml
+    python scripts/test_fastcoref.py --book library/carlos-ruiz-zafon/le-jeu-de-lange/books/le-jeu-de-lange.yaml
+    python scripts/test_fastcoref.py --book library/... --chapter x106.xhtml  # specific chapter
+    python scripts/test_fastcoref.py --book library/... --chapter x106.xhtml x107.xhtml x108.xhtml
 """
 from __future__ import annotations
 
@@ -15,15 +15,13 @@ import sys
 import time
 from pathlib import Path
 
-CHAPTERS_PATH = Path(__file__).parent.parent / "chapters.json"
-# chapters.json is gitignored — look in the main worktree if not present locally
-if not CHAPTERS_PATH.exists():
-    CHAPTERS_PATH = Path(__file__).resolve().parents[3] / "chapters.json"
+from wiki_creator.paths import book_paths_from_yaml
+
 CORELLI_ALIASES = {"corelli", "le patron", "andreas corelli", "m. corelli"}
 
 
-def load_chapters() -> dict[str, str]:
-    with open(CHAPTERS_PATH) as f:
+def load_chapters(chapters_path: Path) -> dict[str, str]:
+    with open(chapters_path) as f:
         data = json.load(f)
     return data["chapters"]
 
@@ -157,11 +155,16 @@ def print_result(result: dict) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Test fastcoref + LingMessCoref sur Le Jeu de l'Ange")
+    parser = argparse.ArgumentParser(description="Test fastcoref + LingMessCoref sur un livre")
+    parser.add_argument(
+        "--book", required=True,
+        help="Path to book yaml, e.g. library/carlos-ruiz-zafon/le-jeu-de-lange/books/le-jeu-de-lange.yaml",
+    )
     parser.add_argument("--chapter", nargs="+", help="IDs de chapitres à tester (ex: x106.xhtml)")
     args = parser.parse_args()
 
-    chapters = load_chapters()
+    chapters_path = book_paths_from_yaml(args.book).processing / "chapters.json"
+    chapters = load_chapters(chapters_path)
 
     if args.chapter:
         chapter_ids = args.chapter

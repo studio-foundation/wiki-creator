@@ -40,7 +40,7 @@ run-status:
 	python run_wiki.py --book $(BOOK) --status
 
 test-extraction:
-	python scripts/test_extraction.py
+	python scripts/test_extraction.py --book $(BOOK)
 
 test-clustering:
 	python scripts/entity_clustering.py --test
