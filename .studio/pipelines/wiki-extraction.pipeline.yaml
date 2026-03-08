@@ -54,4 +54,5 @@ stages:
     contract: split-clusters
     context:
       include:
+        - input
         - previous_stage_output
