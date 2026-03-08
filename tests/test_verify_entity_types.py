@@ -2,7 +2,6 @@
 import sys
 import os
 import json
-import tempfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.verify_entity_types import (
