@@ -64,6 +64,10 @@ TITLE_PREFIXES = frozenset({
 
 JW_THRESHOLD = 0.92  # Jaro-Winkler threshold for orthographic variant matching
 
+# Gender-discriminating title sets (subset of TITLE_PREFIXES)
+MASCULINE_TITLES = frozenset({"m.", "mr.", "monsieur", "señor", "don"})
+FEMININE_TITLES = frozenset({"mme", "mme.", "madame", "señora", "doña"})
+
 
 # --- String utilities ---
 
@@ -80,6 +84,27 @@ def tokenize_name(name: str) -> list[str]:
     while tokens and tokens[0] in TITLE_PREFIXES:
         tokens = tokens[1:]
     return [t for t in tokens if t]
+
+
+def extract_leading_titles(name: str) -> frozenset[str]:
+    """Return the set of title prefixes at the START of a name (stops at first non-title)."""
+    tokens = name.lower().strip().split()
+    result = set()
+    for t in tokens:
+        if t in TITLE_PREFIXES:
+            result.add(t)
+        else:
+            break
+    return frozenset(result)
+
+
+def has_conflicting_gender_title(name1: str, name2: str) -> bool:
+    """Rule 1: block merge if one name has a feminine title and the other a masculine title."""
+    t1 = extract_leading_titles(name1)
+    t2 = extract_leading_titles(name2)
+    masc1, fem1 = bool(t1 & MASCULINE_TITLES), bool(t1 & FEMININE_TITLES)
+    masc2, fem2 = bool(t2 & MASCULINE_TITLES), bool(t2 & FEMININE_TITLES)
+    return (masc1 and fem2) or (fem1 and masc2)
 
 
 def is_single_given_name(tokens: list[str]) -> bool:
@@ -188,7 +213,10 @@ def should_cluster_jw(name1: str, name2: str) -> bool:
 
 
 def should_cluster(name1: str, name2: str) -> bool:
-    """Combined matching: token overlap OR Jaro-Winkler."""
+    """Combined matching with pre-filter rules for obvious wrong merges."""
+    # Rule 1: conflicting gender titles → definitely different people
+    if has_conflicting_gender_title(name1, name2):
+        return False
     return should_cluster_tokens(name1, name2) or should_cluster_jw(name1, name2)
 
 

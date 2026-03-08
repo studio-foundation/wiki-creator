@@ -11,6 +11,8 @@ from scripts.entity_clustering import (
     should_cluster_jw,
     should_cluster,
     build_clusters,
+    extract_leading_titles,
+    has_conflicting_gender_title,
 )
 
 
@@ -176,6 +178,57 @@ def test_build_clusters_canonical_picks_most_complete():
     }
     clusters, _ = build_clusters(entities)
     assert clusters[0]["canonical_candidate"] == "Pedro Vidal"
+
+
+# --- extract_leading_titles ---
+
+def test_extract_leading_titles_mme():
+    assert "mme" in extract_leading_titles("Mme Vidal")
+
+def test_extract_leading_titles_monsieur():
+    assert "monsieur" in extract_leading_titles("Monsieur Vidal")
+
+def test_extract_leading_titles_no_title():
+    assert extract_leading_titles("Pedro Vidal") == frozenset()
+
+def test_extract_leading_titles_stops_at_first_non_title():
+    assert extract_leading_titles("M. Vidal") == frozenset({"m."})
+
+
+# --- has_conflicting_gender_title ---
+
+def test_gender_conflict_mme_vs_m():
+    assert has_conflicting_gender_title("Mme Vidal", "M. Vidal") is True
+
+def test_gender_conflict_madame_vs_monsieur():
+    assert has_conflicting_gender_title("Madame Dupont", "Monsieur Dupont") is True
+
+def test_gender_conflict_senora_vs_senor():
+    assert has_conflicting_gender_title("Señora Ramos", "Señor Ramos") is True
+
+def test_gender_conflict_reversed():
+    assert has_conflicting_gender_title("M. Vidal", "Mme Vidal") is True
+
+def test_no_gender_conflict_same_title():
+    assert has_conflicting_gender_title("Mme Vidal", "Mme Dupont") is False
+
+def test_no_gender_conflict_no_title():
+    assert has_conflicting_gender_title("Pedro Vidal", "Vidal") is False
+
+def test_no_gender_conflict_mme_vs_no_title():
+    assert has_conflicting_gender_title("Mme Vidal", "Pedro Vidal") is False
+
+
+# --- should_cluster with Rule 1 ---
+
+def test_should_cluster_blocks_mme_vs_m():
+    assert should_cluster("Mme Vidal", "M. Vidal") is False
+
+def test_should_cluster_blocks_madame_vs_monsieur():
+    assert should_cluster("Madame Vidal", "Monsieur Vidal") is False
+
+def test_should_cluster_allows_mme_variants():
+    assert should_cluster("Mme Vidal", "Mme de Vidal") is True
 
 
 def test_main_warns_when_no_reduction_and_many_entities():
