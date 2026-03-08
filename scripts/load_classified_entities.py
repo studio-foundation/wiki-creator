@@ -7,12 +7,22 @@ Named 'entity-classification' in the pipeline so wiki_preparation.py finds it un
 import json
 import os
 import sys
+import yaml
+from wiki_creator.paths import book_paths_from_epub, BookPaths
+
+
+def _paths_from_payload(payload: dict) -> BookPaths:
+    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    file_path = ctx.get("file_path")
+    if not file_path:
+        raise ValueError("missing file_path in additional_context")
+    return book_paths_from_epub(file_path)
 
 
 def main() -> None:
-    json.load(sys.stdin)
-    # Path relative to project root (Studio sets CWD to project root when running scripts)
-    path = "processing_output/entities_classified.json"
+    payload = json.load(sys.stdin)
+    paths = _paths_from_payload(payload)
+    path = str(paths.processing / "entities_classified.json")
     if not os.path.exists(path):
         print(
             f"[ERROR] {path} not found. Run wiki-resolution first:\n"
