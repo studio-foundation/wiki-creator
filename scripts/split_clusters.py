@@ -58,7 +58,12 @@ def split_clusters(clusters: list[dict]) -> dict:
 def main() -> None:
     payload = json.load(sys.stdin)
     prev = payload.get("previous_outputs", {})
-    clusters = prev.get("entity-clustering", {}).get("clusters", [])
+    # verify-entity-types (if present) sits between entity-clustering and split-clusters
+    # and emits the same clusters shape — prefer it as the source of truth.
+    clusters = (
+        prev.get("verify-entity-types", {}).get("clusters")
+        or prev.get("entity-clustering", {}).get("clusters", [])
+    )
 
     if not clusters:
         print("Warning: no clusters in entity-clustering output", file=sys.stderr)
