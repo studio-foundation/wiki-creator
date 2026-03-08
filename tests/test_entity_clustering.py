@@ -367,3 +367,18 @@ def test_main_warns_when_no_reduction_and_many_entities():
     assert "reduction_pct=0" in result.stderr, (
         f"Expected reduction_pct warning in stderr. Got: {result.stderr!r}"
     )
+
+
+def test_cluster_jw_same_surname_different_firstname_blocked():
+    # "Cristina Sagnier" vs "Manuel Sagnier": surname-driven match → should NOT cluster
+    assert should_cluster_jw("Cristina Sagnier", "Manuel Sagnier") is False
+
+
+def test_cluster_jw_same_full_name_variant_allowed():
+    # Legitimate accent variant → should cluster
+    assert should_cluster_jw("David Martín", "David Martin") is True
+
+
+def test_cluster_jw_different_surname_not_blocked_by_rule3():
+    # Different surname → normal JW, Rule 3 doesn't apply
+    assert should_cluster_jw("Barcelona", "Barcelone") is True
