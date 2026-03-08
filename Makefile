@@ -2,7 +2,7 @@
         test-extraction test-clustering test-relationships test test-coref test-coref-parallel \
         clean
 
-BOOK ?= library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml
+BOOK ?= library/carlos-ruiz-zafon/el-cementerio-de-los-libros-olvidados/books/02-le-jeu-de-lange.yaml
 
 # Full run via orchestrator
 run:
