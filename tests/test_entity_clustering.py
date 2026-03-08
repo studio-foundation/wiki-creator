@@ -11,6 +11,9 @@ from scripts.entity_clustering import (
     should_cluster_jw,
     should_cluster,
     build_clusters,
+    extract_leading_titles,
+    has_conflicting_gender_title,
+    extract_surname_and_firstname,
 )
 
 
@@ -178,6 +181,151 @@ def test_build_clusters_canonical_picks_most_complete():
     assert clusters[0]["canonical_candidate"] == "Pedro Vidal"
 
 
+# --- extract_leading_titles ---
+
+def test_extract_leading_titles_mme():
+    assert "mme" in extract_leading_titles("Mme Vidal")
+
+def test_extract_leading_titles_monsieur():
+    assert "monsieur" in extract_leading_titles("Monsieur Vidal")
+
+def test_extract_leading_titles_no_title():
+    assert extract_leading_titles("Pedro Vidal") == frozenset()
+
+def test_extract_leading_titles_stops_at_first_non_title():
+    assert extract_leading_titles("M. Vidal") == frozenset({"m."})
+
+
+# --- has_conflicting_gender_title ---
+
+def test_gender_conflict_mme_vs_m():
+    assert has_conflicting_gender_title("Mme Vidal", "M. Vidal") is True
+
+def test_gender_conflict_madame_vs_monsieur():
+    assert has_conflicting_gender_title("Madame Dupont", "Monsieur Dupont") is True
+
+def test_gender_conflict_senora_vs_senor():
+    assert has_conflicting_gender_title("Señora Ramos", "Señor Ramos") is True
+
+def test_gender_conflict_reversed():
+    assert has_conflicting_gender_title("M. Vidal", "Mme Vidal") is True
+
+def test_no_gender_conflict_same_title():
+    assert has_conflicting_gender_title("Mme Vidal", "Mme Dupont") is False
+
+def test_no_gender_conflict_no_title():
+    assert has_conflicting_gender_title("Pedro Vidal", "Vidal") is False
+
+def test_no_gender_conflict_mme_vs_no_title():
+    assert has_conflicting_gender_title("Mme Vidal", "Pedro Vidal") is False
+
+
+# --- should_cluster with Rule 1 ---
+
+def test_should_cluster_blocks_mme_vs_m():
+    assert should_cluster("Mme Vidal", "M. Vidal") is False
+
+def test_should_cluster_blocks_madame_vs_monsieur():
+    assert should_cluster("Madame Vidal", "Monsieur Vidal") is False
+
+def test_should_cluster_allows_mme_variants():
+    assert should_cluster("Mme Vidal", "Mme de Vidal") is True
+
+
+# --- extract_surname_and_firstname ---
+
+def test_extract_surname_and_firstname_full_name():
+    surname, firsts = extract_surname_and_firstname("Cristina Sagnier")
+    assert surname == "sagnier"
+    assert firsts == ["cristina"]
+
+def test_extract_surname_and_firstname_no_first():
+    surname, firsts = extract_surname_and_firstname("Sagnier")
+    assert surname == "sagnier"
+    assert firsts == []
+
+def test_extract_surname_and_firstname_with_title():
+    # Title stripped before extraction
+    surname, firsts = extract_surname_and_firstname("M. Sagnier")
+    assert surname == "sagnier"
+    assert firsts == []
+
+def test_extract_surname_and_firstname_three_tokens():
+    surname, firsts = extract_surname_and_firstname("A. C. Vidal")
+    assert surname == "vidal"
+    assert firsts == ["a.", "c."]
+
+
+# --- build_clusters AC tests ---
+
+def test_build_clusters_sagnier_family_separated():
+    """AC1: Cristina Sagnier and Manuel Sagnier must be in SEPARATE clusters."""
+    entities = {
+        "e_cs": {"type": "PERSON", "raw_mentions": ["Cristina Sagnier"], "first_seen": "ch12"},
+        "e_ms": {"type": "PERSON", "raw_mentions": ["Manuel Sagnier"], "first_seen": "ch05"},
+        "e_s":  {"type": "PERSON", "raw_mentions": ["Sagnier"], "first_seen": "ch04"},
+        "e_mlle": {"type": "PERSON", "raw_mentions": ["Mlle Cristina"], "first_seen": "ch13"},
+    }
+    clusters, unclustered = build_clusters(entities)
+
+    def cluster_of(eid):
+        for c in clusters:
+            if eid in c["entity_ids"]:
+                return c["cluster_id"]
+        return None
+
+    cs_cluster = cluster_of("e_cs")
+    ms_cluster = cluster_of("e_ms")
+
+    assert cs_cluster is not None, "Cristina Sagnier should be in a cluster"
+    assert ms_cluster is not None, "Manuel Sagnier should be in a cluster"
+    assert cs_cluster != ms_cluster, (
+        f"Cristina Sagnier and Manuel Sagnier must be in different clusters, "
+        f"but both are in {cs_cluster}"
+    )
+
+
+def test_build_clusters_mme_vidal_separated_from_m():
+    """AC2: Mme Vidal must not be in the same cluster as M. Vidal."""
+    entities = {
+        "e_mme":   {"type": "PERSON", "raw_mentions": ["Mme Vidal"], "first_seen": "ch10"},
+        "e_m":     {"type": "PERSON", "raw_mentions": ["M. Vidal"], "first_seen": "ch01"},
+        "e_pedro": {"type": "PERSON", "raw_mentions": ["Pedro Vidal"], "first_seen": "ch01"},
+        "e_vidal": {"type": "PERSON", "raw_mentions": ["Vidal"], "first_seen": "ch01"},
+        "e_don":   {"type": "PERSON", "raw_mentions": ["Don Pedro"], "first_seen": "ch03"},
+    }
+    clusters, unclustered = build_clusters(entities)
+
+    all_items = list(clusters) + [
+        {"cluster_id": f"unc_{eid}", "entity_ids": [eid]}
+        for eid in unclustered
+    ]
+
+    def cluster_of(eid):
+        for c in all_items:
+            if eid in c["entity_ids"]:
+                return c["cluster_id"]
+        return None
+
+    mme_cluster = cluster_of("e_mme")
+    m_cluster = cluster_of("e_m")
+
+    assert mme_cluster != m_cluster, "Mme Vidal must not be with M. Vidal"
+
+
+def test_build_clusters_pedro_vidal_aliases_stay_together():
+    """AC3: Pedro Vidal, Don Pedro, Vidal, M. Vidal stay in one cluster (legitimate aliases)."""
+    entities = {
+        "e_pedro": {"type": "PERSON", "raw_mentions": ["Pedro Vidal"], "first_seen": "ch01"},
+        "e_don":   {"type": "PERSON", "raw_mentions": ["Don Pedro"], "first_seen": "ch03"},
+        "e_vidal": {"type": "PERSON", "raw_mentions": ["Vidal"], "first_seen": "ch01"},
+        "e_m":     {"type": "PERSON", "raw_mentions": ["M. Vidal"], "first_seen": "ch02"},
+    }
+    clusters, unclustered = build_clusters(entities)
+    assert len(clusters) == 1, f"Expected 1 cluster, got {len(clusters)}: {[c['entity_ids'] for c in clusters]}"
+    assert set(clusters[0]["entity_ids"]) == {"e_pedro", "e_don", "e_vidal", "e_m"}
+
+
 def test_main_warns_when_no_reduction_and_many_entities():
     """main() must print a stderr warning when reduction_pct==0 with >10 input entities."""
     import subprocess
@@ -218,4 +366,35 @@ def test_main_warns_when_no_reduction_and_many_entities():
     assert result.returncode == 0, f"Expected exit 0, got {result.returncode}. stderr={result.stderr}"
     assert "reduction_pct=0" in result.stderr, (
         f"Expected reduction_pct warning in stderr. Got: {result.stderr!r}"
+    )
+
+
+def test_cluster_jw_same_surname_different_firstname_blocked():
+    # "Cristina Sagnier" vs "Manuel Sagnier": surname-driven match → should NOT cluster
+    assert should_cluster_jw("Cristina Sagnier", "Manuel Sagnier") is False
+
+
+def test_cluster_jw_same_full_name_variant_allowed():
+    # Legitimate accent variant → should cluster
+    assert should_cluster_jw("David Martín", "David Martin") is True
+
+
+def test_cluster_jw_different_surname_not_blocked_by_rule3():
+    # Different surname → normal JW, Rule 3 doesn't apply
+    assert should_cluster_jw("Barcelona", "Barcelone") is True
+
+
+def test_build_clusters_logs_warning_for_ambiguous_bare_surname(capsys):
+    """AC5: When a bare-surname entity bridges two distinct first-name clusters of equal size,
+    a warning is printed to stderr."""
+    entities = {
+        "e_cs": {"type": "PERSON", "raw_mentions": ["Cristina Sagnier"], "first_seen": "ch12"},
+        "e_ms": {"type": "PERSON", "raw_mentions": ["Manuel Sagnier"], "first_seen": "ch05"},
+        "e_s":  {"type": "PERSON", "raw_mentions": ["Sagnier"], "first_seen": "ch04"},
+    }
+    # Both first-name groups have 1 entity each (equal) → warning expected
+    clusters, unclustered = build_clusters(entities)
+    captured = capsys.readouterr()
+    assert "ambiguous" in captured.err.lower() or "warning" in captured.err.lower(), (
+        f"Expected an ambiguity warning in stderr. Got: {captured.err!r}"
     )
