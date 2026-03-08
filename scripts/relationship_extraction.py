@@ -60,6 +60,8 @@ import sys
 
 DEFAULT_WINDOW = 5
 DEFAULT_THRESHOLD = 5
+DEFAULT_MIN_COOCCURRENCE = 3
+DEFAULT_MIN_CHAPTERS_TOGETHER = 2
 
 
 def build_cooccurrence_graph(
@@ -67,6 +69,8 @@ def build_cooccurrence_graph(
     mentions_by_entity: dict[str, dict[str, list[str]]],
     window_size: int = DEFAULT_WINDOW,
     threshold: int = DEFAULT_THRESHOLD,
+    min_cooccurrence: int | None = None,
+    min_chapters_together: int = DEFAULT_MIN_CHAPTERS_TOGETHER,
 ) -> tuple[list[dict], dict]:
     """
     Build weighted co-occurrence graph between PERSON entities.
@@ -80,6 +84,8 @@ def build_cooccurrence_graph(
     Returns:
         (relationships list, stats dict)
     """
+    effective_min_cooc = min_cooccurrence if min_cooccurrence is not None else threshold
+
     # Filter to PERSON entities that are relevant
     persons = [e for e in entities if e.get("type") == "PERSON" and e.get("relevant", True)]
 
@@ -147,10 +153,10 @@ def build_cooccurrence_graph(
                     if len(cooc[key]["contexts"]) < 3:
                         cooc[key]["contexts"].append(window[0])
 
-    # Build output: filter by threshold, sort by count desc
+    # Build output: filter by min_cooccurrence and min_chapters_together
     relationships = []
     for (a, b), data in cooc.items():
-        if data["count"] >= threshold:
+        if data["count"] >= effective_min_cooc and len(data["chapters"]) >= min_chapters_together:
             relationships.append({
                 "entity_a": a,
                 "entity_b": b,
@@ -171,7 +177,9 @@ def build_cooccurrence_graph(
         "pairs_above_threshold": pairs_above,
         "classified": 0,
         "window_size": window_size,
-        "threshold": threshold,
+        "threshold": effective_min_cooc,
+        "min_cooccurrence": effective_min_cooc,
+        "min_chapters_together": min_chapters_together,
     }
 
     return relationships, stats
@@ -596,7 +604,14 @@ def enrich_mentions_with_fastcoref(
     return mentions_by_entity
 
 
-def run_test_mode(window_size: int, threshold: int, coref: bool = False, workers: int = 1) -> None:
+def run_test_mode(
+    window_size: int,
+    threshold: int,
+    coref: bool = False,
+    workers: int = 1,
+    min_cooccurrence: int | None = None,
+    min_chapters_together: int = DEFAULT_MIN_CHAPTERS_TOGETHER,
+) -> None:
     """Run with hardcoded Le Jeu de l'Ange data."""
     entities = [
         {"canonical_name": "David Martín", "type": "PERSON", "aliases": ["Martín", "David"], "relevant": True},
@@ -693,7 +708,9 @@ def run_test_mode(window_size: int, threshold: int, coref: bool = False, workers
         mentions_by_entity = enrich_mentions_with_fastcoref(chapters_demo, entities, mentions_by_entity, workers=workers)
 
     relationships, stats = build_cooccurrence_graph(
-        entities, mentions_by_entity, window_size, threshold
+        entities, mentions_by_entity, window_size, threshold,
+        min_cooccurrence=min_cooccurrence,
+        min_chapters_together=min_chapters_together,
     )
 
     print(f"=== TEST MODE — relationship-extraction ===\n")
@@ -822,7 +839,14 @@ def _load_mentions_from_files() -> dict[str, dict[str, list[str]]]:
     return mentions
 
 
-def run_live_mode(window_size: int, threshold: int, coref: bool = False, workers: int = 1) -> None:
+def run_live_mode(
+    window_size: int,
+    threshold: int,
+    coref: bool = False,
+    workers: int = 1,
+    min_cooccurrence: int | None = None,
+    min_chapters_together: int = DEFAULT_MIN_CHAPTERS_TOGETHER,
+) -> None:
     """Live mode: read persons_full.json, cluster entities, then run co-occurrence on real data."""
     import sys as _sys
     import importlib.util
@@ -947,7 +971,9 @@ def run_live_mode(window_size: int, threshold: int, coref: bool = False, workers
     print(f"Window size: {window_size}  |  Threshold: {threshold}\n")
 
     relationships, stats = build_cooccurrence_graph(
-        entities, mentions_by_entity, window_size, threshold
+        entities, mentions_by_entity, window_size, threshold,
+        min_cooccurrence=min_cooccurrence,
+        min_chapters_together=min_chapters_together,
     )
 
     print(f"Top 20 relations (cooccurrence_count desc):\n")
@@ -1025,12 +1051,30 @@ def main() -> None:
         idx = args.index("--workers")
         workers = int(args[idx + 1])
 
+    min_cooccurrence = None
+    if "--min-cooccurrence" in args:
+        idx = args.index("--min-cooccurrence")
+        min_cooccurrence = int(args[idx + 1])
+
+    min_chapters_together = DEFAULT_MIN_CHAPTERS_TOGETHER
+    if "--min-chapters" in args:
+        idx = args.index("--min-chapters")
+        min_chapters_together = int(args[idx + 1])
+
     if "--test" in args:
-        run_test_mode(window_size, threshold, coref=coref, workers=workers)
+        run_test_mode(
+            window_size, threshold, coref=coref, workers=workers,
+            min_cooccurrence=min_cooccurrence,
+            min_chapters_together=min_chapters_together,
+        )
         return
 
     if "--live" in args:
-        run_live_mode(window_size, threshold, coref=coref, workers=workers)
+        run_live_mode(
+            window_size, threshold, coref=coref, workers=workers,
+            min_cooccurrence=min_cooccurrence,
+            min_chapters_together=min_chapters_together,
+        )
         return
 
     payload = json.load(sys.stdin)
@@ -1051,6 +1095,8 @@ def main() -> None:
     import yaml
     do_classify = False
     do_coref = False
+    min_cooccurrence_val = None
+    min_chapters_together = DEFAULT_MIN_CHAPTERS_TOGETHER
     raw_context = payload.get("additional_context", "")
     if raw_context:
         try:
@@ -1060,8 +1106,13 @@ def main() -> None:
             window_size = int(additional.get("window", window_size))
             threshold = int(additional.get("threshold", threshold))
             workers = int(additional.get("workers", workers))
+            min_cooccurrence_val = additional.get("min_cooccurrence")
+            if min_cooccurrence_val is not None:
+                min_cooccurrence_val = int(min_cooccurrence_val)
+            min_chapters_together = int(additional.get("min_chapters_together", DEFAULT_MIN_CHAPTERS_TOGETHER))
         except Exception:
-            pass
+            min_cooccurrence_val = None
+            min_chapters_together = DEFAULT_MIN_CHAPTERS_TOGETHER
 
     mentions_by_entity = _load_mentions_from_files()
 
@@ -1074,7 +1125,9 @@ def main() -> None:
             mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=workers)
 
     relationships, stats = build_cooccurrence_graph(
-        entities, mentions_by_entity, window_size, threshold
+        entities, mentions_by_entity, window_size, threshold,
+        min_cooccurrence=min_cooccurrence_val,
+        min_chapters_together=min_chapters_together,
     )
 
     if do_classify:

@@ -180,7 +180,7 @@ def test_main_parses_workers_flag(monkeypatch):
 
     captured = {}
 
-    def fake_run_live(window_size, threshold, coref=False, workers=1):
+    def fake_run_live(window_size, threshold, coref=False, workers=1, min_cooccurrence=None, min_chapters_together=2):
         captured["workers"] = workers
 
     monkeypatch.setattr(rel, "run_live_mode", fake_run_live)
@@ -262,3 +262,73 @@ def test_parallel_merge_matches_direct_process_chapters():
     assert pv_sentences.count("Il signa le contrat au matin.") == 1, (
         f"Expected exactly 1 copy after dedup, got: {pv_sentences}"
     )
+
+
+# ---------------------------------------------------------------------------
+# STU-248: min_cooccurrence and min_chapters_together filters
+# ---------------------------------------------------------------------------
+
+def _stu248_entities():
+    return [
+        {"canonical_name": "David Martín", "type": "PERSON", "aliases": ["Martín"], "relevant": True},
+        {"canonical_name": "Pedro Vidal",  "type": "PERSON", "aliases": ["Vidal"],  "relevant": True},
+        {"canonical_name": "Regarde",      "type": "PERSON", "aliases": [],          "relevant": True},
+    ]
+
+
+def _stu248_mentions():
+    return {
+        "David Martín": {
+            "ch01": ["Vidal tendit le manuscrit à Martín.", "Martín retrouva Vidal."],
+            "ch02": ["Martín reçut une lettre.", "Vidal encouragea Martín."],
+        },
+        "Pedro Vidal": {
+            "ch01": ["Vidal tendit le manuscrit à Martín.", "Martín retrouva Vidal."],
+            "ch02": ["Vidal encouragea Martín."],
+        },
+        "Regarde": {
+            "ch01": ["— Regarde, il est là."],
+        },
+    }
+
+
+def test_false_entity_filtered_by_min_chapters():
+    """'Regarde' only appears in 1 chapter — must be filtered with min_chapters_together=2."""
+    from scripts.relationship_extraction import build_cooccurrence_graph
+    rels, stats = build_cooccurrence_graph(
+        _stu248_entities(),
+        _stu248_mentions(),
+        window_size=5,
+        min_cooccurrence=2,
+        min_chapters_together=2,
+    )
+    entity_names = {r["entity_a"] for r in rels} | {r["entity_b"] for r in rels}
+    assert "Regarde" not in entity_names
+
+
+def test_true_relation_survives_filter():
+    """Martín ↔ Vidal appears in 2 chapters — must survive the filter."""
+    from scripts.relationship_extraction import build_cooccurrence_graph
+    rels, stats = build_cooccurrence_graph(
+        _stu248_entities(),
+        _stu248_mentions(),
+        window_size=5,
+        min_cooccurrence=2,
+        min_chapters_together=2,
+    )
+    pairs = {(r["entity_a"], r["entity_b"]) for r in rels}
+    assert ("David Martín", "Pedro Vidal") in pairs or ("Pedro Vidal", "David Martín") in pairs
+
+
+def test_stats_include_new_fields():
+    """Stats dict must expose min_cooccurrence and min_chapters_together."""
+    from scripts.relationship_extraction import build_cooccurrence_graph
+    _, stats = build_cooccurrence_graph(
+        _stu248_entities(),
+        _stu248_mentions(),
+        window_size=5,
+        min_cooccurrence=3,
+        min_chapters_together=2,
+    )
+    assert stats["min_cooccurrence"] == 3
+    assert stats["min_chapters_together"] == 2
