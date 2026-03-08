@@ -7,6 +7,10 @@ description: |
 file_path: books/carlos-ruiz-zafon/le-jeu-de-lange.epub
 spacy_model: fr_core_news_lg
 
+# Verify entity types after clustering (corrects PERSON misclassified as PLACE/ORG)
+verify_entity_types: true
+ollama_model: mistral:7b-instruct
+
 # Entity importance classification — 'auto' uses percentile distribution
 # Override with explicit values if the auto-detected tiers are wrong for your book
 thresholds: auto
