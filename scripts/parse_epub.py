@@ -12,33 +12,62 @@ import json
 import os
 import re
 import sys
+import unicodedata
 import yaml
+
+# Typographic ligatures that EPUB fonts may encode as single codepoints.
+_LIGATURES: dict[str, str] = {
+    '\ufb00': 'ff',
+    '\ufb01': 'fi',
+    '\ufb02': 'fl',
+    '\ufb03': 'ffi',
+    '\ufb04': 'ffl',
+    '\ufb05': 'st',
+    '\ufb06': 'st',
+}
 
 
 def clean_chapter_text(text: str) -> str:
-    """Normalize chapter text to remove noise before LLM processing."""
-    # 1. Unescape HTML entities (&nbsp; → space, &mdash; → —, etc.)
-    text = html.unescape(text)
-    # 1b. Normaliser \xa0 (non-breaking space) en espace standard
-    #     html.unescape() convertit &nbsp; → \xa0, donc ce replace vient après.
-    text = text.replace('\xa0', ' ')
+    """Normalize chapter text to remove noise before NLP processing."""
+    # 0. Unicode NFC normalization — must be first to compose combining characters
+    text = unicodedata.normalize('NFC', text)
 
-    # 2. Collapse runs of 2+ newlines into exactly \n\n (paragraph break)
+    # 1. Resolve typographic ligatures (ﬁ → fi, ﬂ → fl, ﬀ → ff, …)
+    for lig, repl in _LIGATURES.items():
+        text = text.replace(lig, repl)
+
+    # 2. Normalize typographic apostrophes and guillemets
+    text = text.replace('\u2019', "'").replace('\u2018', "'")  # ' ' → '
+    text = text.replace('\u00ab', '"').replace('\u00bb', '"')  # « » → "
+
+    # 3. Unescape HTML entities (&nbsp; → \xa0, &mdash; → —, etc.)
+    text = html.unescape(text)
+
+    # 3b. Normalize non-breaking spaces → regular space
+    #     html.unescape() converts &nbsp; → \xa0, so this comes after step 3.
+    text = text.replace('\u00a0', ' ').replace('\u202f', ' ')
+
+    # 4. Collapse runs of 2+ newlines into exactly \n\n (paragraph break)
     text = re.sub(r'\n{2,}', '\n\n', text)
 
-    # 3. Replace remaining single \n with a space
+    # 5. Replace remaining single \n with a space
     text = re.sub(r'(?<!\n)\n(?!\n)', ' ', text)
 
-    # 3b. Joindre lettre majuscule isolée + mot suivant en minuscule
-    #     Artefact lettrine HTML : <span>P</span>edro → "P\nedro" (via BS4) → après step 3 → "P edro" → "Pedro"
-    #     Doit venir APRÈS step 3 pour que le \n ait déjà été converti en espace.
+    # 5b. Joindre lettre majuscule isolée + mot suivant en minuscule
+    #     Artefact lettrine HTML : <span>P</span>edro → "P\nedro" (via BS4) → après step 5 → "P edro" → "Pedro"
+    #     Doit venir APRÈS step 5 pour que le \n ait déjà été converti en espace.
     #     Ne touche pas "M. Pedro" (suivi d'un point) ni les fins de phrase.
     text = re.sub(r'(?<!\w)([A-ZÀÂÇÉÈÊËÎÏÔÙÛÜ]) ([a-záàâçéèêëîïôùûü])', r'\1\2', text)
 
-    # 4. Normalize runs of spaces/tabs to a single space
+    # 5c. Re-insert spaces eaten after À (e.g. "Àla" → "À la", "Àson" → "À son").
+    #     Fixes EPUB encoding artifacts where the space after the preposition À was lost.
+    #     Also restores any "À la" → "Àla" false positive introduced by step 5b above.
+    text = re.sub(r'À([a-zéèêëàâùûüîïôœæç])', r'À \1', text)
+
+    # 6. Normalize runs of spaces/tabs to a single space
     text = re.sub(r'[ \t]{2,}', ' ', text)
 
-    # 5. Strip each paragraph
+    # 7. Strip each paragraph
     paragraphs = [p.strip() for p in text.split('\n\n')]
     text = '\n\n'.join(p for p in paragraphs if p)
 
