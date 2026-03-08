@@ -17,31 +17,38 @@ import subprocess
 import sys
 from pathlib import Path
 
+from wiki_creator.paths import book_paths_from_yaml
+
 PIPELINES = ["wiki-extraction", "wiki-resolution", "wiki-preparation", "pages-export"]
 
-REQUIRED_FILES = {
-    "wiki-extraction": [
-        "processing_output/splits.json",
-        "processing_output/epub_data.json",
-    ],
-    "wiki-resolution": [
-        "processing_output/entities_classified.json",
-    ],
-    "wiki-preparation": ["wiki_inputs"],  # side-effect: creates wiki_inputs/batch_*.json
-    "pages-export": [
-        "processing_output/wiki_pages.json",
-    ],
-}
+
+def required_files(book_path: str) -> dict[str, list[str]]:
+    p = book_paths_from_yaml(book_path)
+    return {
+        "wiki-extraction": [
+            str(p.processing / "splits.json"),
+            str(p.processing / "epub_data.json"),
+        ],
+        "wiki-resolution": [
+            str(p.processing / "entities_classified.json"),
+        ],
+        "wiki-preparation": [str(p.wiki_inputs)],
+        "pages-export": [
+            str(p.processing / "wiki_pages.json"),
+        ],
+    }
+
 
 # Scripts to run before a pipeline (pre-steps)
 PRE_STEPS = {
-    "pages-export": ["python", "scripts/generate_wiki_pages.py"],
+    "pages-export": ["python", "scripts/generate_wiki_pages.py", "--book"],
 }
 
 
 def book_slug(book_path: str) -> str:
     p = Path(book_path)
-    return f"{p.parent.name}_{p.stem}"
+    # e.g. sarah_j_maas__throne-of-glass__01-throne-of-glass
+    return "__".join([p.parent.parent.parent.name, p.parent.parent.name, p.stem])
 
 
 def state_path(book_path: str) -> Path:
@@ -79,9 +86,9 @@ def run_pipeline(pipeline: str, book_path: str, extra_args: list[str] | None = N
     return result.returncode == 0
 
 
-def check_outputs(pipeline: str) -> list[str]:
+def check_outputs(pipeline: str, book_path: str) -> list[str]:
     """Return list of missing output files for a pipeline."""
-    return [f for f in REQUIRED_FILES.get(pipeline, []) if not os.path.exists(f)]
+    return [f for f in required_files(book_path).get(pipeline, []) if not os.path.exists(f)]
 
 
 def print_status(book_path: str) -> None:
@@ -133,7 +140,7 @@ def main() -> None:
 
         # Skip if already completed AND output files are still present
         if stage_state.get("status") == "completed":
-            missing = check_outputs(pipeline)
+            missing = check_outputs(pipeline, args.book)
             if not missing:
                 print(f"  {pipeline}: already completed, skipping")
                 continue
@@ -143,7 +150,7 @@ def main() -> None:
 
         # Run pre-steps before the pipeline (e.g. generate_wiki_pages.py before wiki-generation)
         if pipeline in PRE_STEPS:
-            pre_cmd = PRE_STEPS[pipeline]
+            pre_cmd = PRE_STEPS[pipeline] + [args.book]
             print(f"\n[pre-step] {' '.join(pre_cmd)}", flush=True)
             pre_result = subprocess.run(pre_cmd)
             if pre_result.returncode != 0:
@@ -163,7 +170,7 @@ def main() -> None:
             ok = run_pipeline(pipeline, args.book)
 
             if ok:
-                missing = check_outputs(pipeline)
+                missing = check_outputs(pipeline, args.book)
                 if missing:
                     print(f"\n[WARN] {pipeline} succeeded but expected files are missing:")
                     for f in missing:
