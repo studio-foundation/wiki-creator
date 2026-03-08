@@ -16,10 +16,10 @@ run-resolution:
 	studio run wiki-resolution --input-file $(BOOK) --live --verbose
 
 generate-pages:
-	python scripts/generate_wiki_pages.py
+	python scripts/generate_wiki_pages.py --book $(BOOK)
 
 generate-pages-dry:
-	python scripts/generate_wiki_pages.py --dry-run
+	python scripts/generate_wiki_pages.py --book $(BOOK) --dry-run
 
 run-preparation:
 	studio run wiki-preparation --input-file $(BOOK) --live --verbose
