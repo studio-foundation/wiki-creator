@@ -335,6 +335,8 @@ def build_clusters(entities: dict) -> tuple[list[dict], dict]:
 
 def _make_cluster(cluster_id: str, eids: list[str], entities: dict) -> dict:
     """Build a cluster dict from a list of entity IDs."""
+    if not eids:
+        raise ValueError(f"Cannot create cluster {cluster_id} with empty entity list")
     all_mentions = []
     first_seen_chapters = []
     total_mentions = 0
@@ -425,6 +427,7 @@ def split_conflicting_first_names(
 
         # Check for conflict: same surname, 2+ distinct first-name groups
         split_happened = False
+        conflicting_surname = None
         for surname, entries in by_surname.items():
             distinct_groups: dict[frozenset, list[str]] = {}
             for firsts_set, eid in entries:
@@ -434,6 +437,7 @@ def split_conflicting_first_names(
                 continue  # no conflict for this surname
 
             split_happened = True
+            conflicting_surname = surname
             sorted_groups = sorted(distinct_groups.items(), key=lambda x: -len(x[1]))
 
             # Assign bare-surname entities to the largest first-name group
@@ -452,6 +456,15 @@ def split_conflicting_first_names(
 
             break  # handle one surname conflict per cluster
 
+        # Emit orphaned entities from other (non-conflicting) surnames
+        if split_happened:
+            for other_surname, other_entries in by_surname.items():
+                if other_surname == conflicting_surname:
+                    continue
+                orphan_eids = [eid for _, eid in other_entries]
+                if orphan_eids:
+                    new_clusters.append(_make_cluster(next_cluster_id(), orphan_eids, entities))
+
         if not split_happened:
             # Check for gender conflict among bare-surname entities when no
             # full-name conflict was detected (e.g. "Mme Vidal" + "M. Vidal" +
@@ -464,6 +477,12 @@ def split_conflicting_first_names(
             if masc_eids and fem_eids:
                 # Split by gender: masculine group gets full-name entities and neutrals
                 # (best guess: a bare "Vidal" is more likely the main male character)
+                if neutral_eids:
+                    print(
+                        f"Warning: assigning {len(neutral_eids)} neutral bare-surname entities "
+                        f"to masculine group by default — may need LLM resolution",
+                        file=sys.stderr,
+                    )
                 masc_group = masc_eids + full_name_eids + neutral_eids
                 fem_group = fem_eids
                 split_happened = True
