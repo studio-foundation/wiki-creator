@@ -193,6 +193,7 @@ def extract_entities(chapters: list[dict], nlp) -> dict:
         chapter_id_lower = chapter["id"].lower()
         if any(pattern in chapter_id_lower for pattern in FRONTMATTER_ID_PATTERNS):
             continue
+        chapter_label = chapter.get("title") or chapter["id"]
         doc = nlp(chapter["content"])
         for ent in doc.ents:
             if ent.label_ not in KEPT_LABELS:
@@ -213,7 +214,7 @@ def extract_entities(chapters: list[dict], nlp) -> dict:
                     "id": f"entity_{entity_counter:03d}",
                     "type": LABEL_TO_TYPE.get(ent.label_, "OTHER"),
                     "raw_mentions": [mention_text],
-                    "first_seen": chapter["id"],
+                    "first_seen": chapter_label,
                     "mentions_by_chapter": {},
                     "mention_count": 1,
                 }
@@ -222,9 +223,9 @@ def extract_entities(chapters: list[dict], nlp) -> dict:
                     registry[key]["raw_mentions"].append(mention_text)
                 registry[key]["mention_count"] += 1
 
-            registry[key]["mentions_by_chapter"].setdefault(chapter["id"], [])
-            if len(registry[key]["mentions_by_chapter"][chapter["id"]]) < 3:
-                registry[key]["mentions_by_chapter"][chapter["id"]].append(context)
+            registry[key]["mentions_by_chapter"].setdefault(chapter_label, [])
+            if len(registry[key]["mentions_by_chapter"][chapter_label]) < 3:
+                registry[key]["mentions_by_chapter"][chapter_label].append(context)
 
     return {
         "entities": {
