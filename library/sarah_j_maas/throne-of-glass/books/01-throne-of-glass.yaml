@@ -1,11 +1,11 @@
 description: |
-  Build a wiki for "Le Jeu de l'ange" (The Angel's Game) by Carlos Ruiz Zafón,
-  book 2 of the Cemetery of Forgotten Books series.
+  Build a wiki for "Throne of Glass" by Sarah J. Maas,
+  book 1 of the Throne of Glass series.
   Parse the book, extract all named entities (characters, locations, organizations, events),
   resolve aliases, and generate Markdown wiki pages for each entity.
 
-file_path: books/carlos-ruiz-zafon/le-jeu-de-lange.epub
-spacy_model: fr_core_news_lg
+file_path: library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.epub
+spacy_model: en_core_web_lg
 
 # Entity importance classification — 'auto' uses percentile distribution
 # Override with explicit values if the auto-detected tiers are wrong for your book
@@ -36,12 +36,11 @@ generation:
     max_tokens_per_page: 200
 
 export:
-  wiki_dir: output/wiki
   categories:
-    language: fr
+    language: en
     labels:
-      persons: Personnages
-      principal: Personnages principaux
-      secondary: Personnages secondaires
-      locations: Lieux
-      organizations: Organisations
+      persons: Characters
+      principal: Main Characters
+      secondary: Secondary Characters
+      locations: Locations
+      organizations: Organizations

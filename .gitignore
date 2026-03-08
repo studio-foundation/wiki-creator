@@ -46,8 +46,10 @@ wiki_inputs/
 *.pem
 
 # Books (EPUBs ignored, YAML configs tracked)
-books/
+/books/
 !books/**/*.yaml
+library/**/*.epub
+!library/**/*.yaml
 
 # Pipeline split output
 processing_output/
