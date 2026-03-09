@@ -6,6 +6,8 @@ description: |
 
 file_path: library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.epub
 spacy_model: en_core_web_lg
+coref: true
+workers: 8
 
 # Entity importance classification — 'auto' uses percentile distribution
 # Override with explicit values if the auto-detected tiers are wrong for your book

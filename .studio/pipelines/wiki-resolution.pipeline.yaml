@@ -39,6 +39,7 @@ stages:
     runtime: python
     script: scripts/relationship_extraction.py
     contract: relationship-extraction
+    timeout_ms: 600000
     context:
       include:
         - input

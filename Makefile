@@ -55,16 +55,16 @@ test-relationships:
 	python scripts/relationship_extraction.py --test
 
 test: test-extraction
-	python scripts/entity_clustering.py --live
-	python scripts/relationship_extraction.py --live
+	python scripts/entity_clustering.py --live --book $(BOOK)
+	python scripts/relationship_extraction.py --live --book $(BOOK)
 
 test-coref: test-extraction
-	python scripts/entity_clustering.py --live
-	python scripts/relationship_extraction.py --live --coref
+	python scripts/entity_clustering.py --live --book $(BOOK)
+	python scripts/relationship_extraction.py --live --book $(BOOK) --coref
 
 test-coref-parallel: test-extraction
-	python scripts/entity_clustering.py --live
-	python scripts/relationship_extraction.py --live --coref --workers 8
+	python scripts/entity_clustering.py --live --book $(BOOK)
+	python scripts/relationship_extraction.py --live --book $(BOOK) --coref --workers 8
 
 clean:  ## Remove generated files (keeps .gitkeep sentinels)
 	@SERIES_DIR=$$(python -c "from wiki_creator.paths import book_paths_from_yaml; p = book_paths_from_yaml('$(BOOK)'); print(p.processing.parent.parent)"); \
