@@ -44,6 +44,11 @@ _DEFAULT_MAX_BULLETS = 3
 _DEFAULT_LLM_MODEL = "qwen2.5"
 _DEFAULT_LLM_TIMEOUT_SECONDS = 45
 _VALID_SUMMARY_MODES = {"extractive", "llm"}
+_ACTION_CUES = (
+    "found", "discovered", "revealed", "warned", "reported", "followed",
+    "attacked", "killed", "escaped", "met", "decided", "realized", "uncovered",
+    "arrived", "left", "returned", "asked", "opened", "closed",
+)
 
 
 @dataclass(frozen=True)
@@ -148,6 +153,17 @@ def _looks_noisy(sentence: str) -> bool:
     return False
 
 
+def _looks_dialogue_heavy(sentence: str) -> bool:
+    stripped = sentence.strip()
+    if not stripped:
+        return False
+    if stripped.startswith(("“", "\"", "'")):
+        return True
+
+    quote_chars = sum(1 for ch in stripped if ch in {'"', "“", "”", "'"})
+    return (quote_chars / max(len(stripped), 1)) > 0.05
+
+
 def _score_sentence(sentence: str, index: int, total: int) -> float:
     tokens = re.findall(r"[A-Za-zÀ-ÿ']+", sentence)
     token_count = len(tokens)
@@ -159,10 +175,18 @@ def _score_sentence(sentence: str, index: int, total: int) -> float:
 
     # Light position prior to keep some early context without forcing the first sentence.
     position_bonus = max(0.0, 1.0 - (index / max(total, 1)))
-    return (proper_nouns / token_count) * 2.0 + unique_ratio + position_bonus * 0.25
+    lowered = sentence.lower()
+    action_bonus = 0.0
+    for cue in _ACTION_CUES:
+        if cue in lowered:
+            action_bonus += 0.15
+
+    dialogue_penalty = 0.75 if _looks_dialogue_heavy(sentence) else 0.0
+    return (proper_nouns / token_count) * 2.0 + unique_ratio + position_bonus * 0.25 + action_bonus - dialogue_penalty
 
 
-def summarize_chapter(chapter: dict) -> dict:
+def summarize_chapter(chapter: dict, config: ChapterSummaryConfig | None = None) -> dict:
+    cfg = config or ChapterSummaryConfig()
     chapter_id = str(chapter.get("id", "")).strip()
     chapter_title = str(chapter.get("title", "")).strip()
     sentences = _split_sentences(chapter.get("content", ""))
@@ -171,33 +195,38 @@ def summarize_chapter(chapter: dict) -> dict:
         if not _looks_noisy(s)
     ]
 
+    quality_flags: list[str] = []
     if not candidates:
         bullets = [_FALLBACK_BULLET]
+        quality_flags.append("low_signal")
     else:
         ranked = sorted(
             candidates,
             key=lambda item: _score_sentence(item[1], item[0], len(sentences)),
             reverse=True,
-        )[:3]
+        )[: cfg.max_bullets]
         chosen_idxs = {idx for idx, _ in ranked}
-        bullets = [s for i, s in enumerate(sentences) if i in chosen_idxs][:3]
+        bullets = [s for i, s in enumerate(sentences) if i in chosen_idxs][: cfg.max_bullets]
         if not bullets:
             bullets = [_FALLBACK_BULLET]
+            quality_flags.append("low_signal")
 
     return {
         "chapter_id": chapter_id,
         "chapter_title": chapter_title,
         "summary_bullets": bullets,
+        "summary_method": "extractive",
+        "quality_flags": quality_flags,
     }
 
 
-def summarize_chapters(chapters: list[dict]) -> dict[str, dict]:
+def summarize_chapters(chapters: list[dict], config: ChapterSummaryConfig | None = None) -> dict[str, dict]:
     result: dict[str, dict] = {}
     for chapter in chapters:
         key = _chapter_key(chapter)
         if not key:
             continue
-        result[key] = summarize_chapter(chapter)
+        result[key] = summarize_chapter(chapter, config=config)
     return result
 
 
@@ -225,8 +254,9 @@ def main() -> None:
     payload = json.load(sys.stdin)
     epub_data = _epub_output_from_payload(payload)
     chapters = epub_data.get("chapters", [])
+    config = _chapter_summary_config_from_payload(payload)
 
-    chapter_summaries = summarize_chapters(chapters)
+    chapter_summaries = summarize_chapters(chapters, config=config)
     out = {"chapter_summaries": chapter_summaries}
 
     paths = _paths_from_payload(payload)

@@ -142,3 +142,46 @@ def test_chapter_summary_config_sanitizes_invalid_values() -> None:
     assert cfg.max_bullets == 3
     assert cfg.llm_fallback_to_extractive is True
     assert cfg.llm_timeout_seconds == 45
+
+
+def test_summarize_chapter_extractive_deprioritizes_dialogue_fragments() -> None:
+    chapter = {
+        "id": "ch04",
+        "title": "Chapter 4",
+        "content": (
+            '"No," Dorian said with a shrug, glancing toward Chaol in the corridor. '
+            '"You always say that," Chaol replied, his tone clipped and impatient. '
+            "Celaena discovered a hidden passage behind the map room and followed the draft. "
+            "She found chalk marks that linked Duke Perrington to the dead champion. "
+            "By dusk, she reported the evidence to Nehemia and asked for discretion."
+        ),
+    }
+
+    result = summarize_chapter(chapter)
+
+    assert result["summary_method"] == "extractive"
+    assert result["quality_flags"] == []
+    assert all(not bullet.strip().startswith('"') for bullet in result["summary_bullets"])
+    assert any("hidden passage" in bullet.lower() for bullet in result["summary_bullets"])
+
+
+def test_summarize_chapter_extractive_spans_chapter_progression() -> None:
+    chapter = {
+        "id": "ch05",
+        "title": "Chapter 5",
+        "content": (
+            "At dawn, Celaena met Chaol in the training yard to review the day's schedule. "
+            "Before noon, she slipped into the library stacks to compare old maps. "
+            "In the afternoon, she followed a servant through the west corridor to a locked archive. "
+            "At sunset, she decoded a ledger that tied Cain to the sabotage. "
+            "After nightfall, she warned Dorian that the final duel might be rigged."
+        ),
+    }
+
+    result = summarize_chapter(chapter)
+    bullets = result["summary_bullets"]
+
+    assert len(bullets) == 3
+    assert any("dawn" in b.lower() or "before noon" in b.lower() for b in bullets)
+    assert any("afternoon" in b.lower() or "sunset" in b.lower() for b in bullets)
+    assert any("nightfall" in b.lower() for b in bullets)
