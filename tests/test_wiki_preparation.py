@@ -4,6 +4,7 @@ from pathlib import Path
 
 from scripts.wiki_preparation import (
     build_entity_bundle,
+    stage_outputs_from_payload,
     write_batches,
 )
 
@@ -188,3 +189,154 @@ def test_write_batches_counts_related_context_chars_for_splitting(tmp_path: Path
     batches = write_batches(entities, narrator=None, paths=_Paths())
 
     assert len(batches) == 2
+
+
+def test_build_entity_bundle_adds_chapter_summary_context_for_person():
+    persons, places, orgs, events = _registries()
+    entity = {
+        "canonical_name": "Dorian Havilliard",
+        "type": "PERSON",
+        "importance": "principal",
+        "source_ids": ["p1"],
+    }
+    entities_by_name = {"Dorian Havilliard": entity}
+    chapter_summaries = {
+        "ch01": {
+            "chapter_id": "ch01",
+            "chapter_title": "Chapter 1",
+            "summary_bullets": ["Dorian meets Chaol."],
+        },
+        "ch02": {
+            "chapter_id": "ch02",
+            "chapter_title": "Chapter 2",
+            "summary_bullets": ["Dorian discusses strategy."],
+        },
+        "ch03": {
+            "chapter_id": "ch03",
+            "chapter_title": "Chapter 3",
+            "summary_bullets": ["This chapter should be ignored for Dorian."],
+        },
+    }
+
+    bundle = build_entity_bundle(
+        entity,
+        [],
+        persons,
+        places,
+        orgs,
+        events,
+        entities_by_name,
+        chapter_summaries=chapter_summaries,
+        chapter_summary_max=8,
+    )
+
+    assert [x["chapter_key"] for x in bundle["chapter_summary_context"]] == ["ch01", "ch02"]
+
+
+def test_build_entity_bundle_skips_chapter_summary_context_for_non_person():
+    persons, places, orgs, events = _registries()
+    entity = {
+        "canonical_name": "Adarlan",
+        "type": "PLACE",
+        "importance": "secondary",
+        "source_ids": [],
+    }
+    entities_by_name = {"Adarlan": entity}
+    chapter_summaries = {
+        "ch01": {
+            "chapter_id": "ch01",
+            "chapter_title": "Chapter 1",
+            "summary_bullets": ["Dorian enters the city."],
+        }
+    }
+
+    bundle = build_entity_bundle(
+        entity,
+        [],
+        persons,
+        places,
+        orgs,
+        events,
+        entities_by_name,
+        chapter_summaries=chapter_summaries,
+        chapter_summary_max=8,
+    )
+
+    assert bundle["chapter_summary_context"] == []
+
+
+def test_build_entity_bundle_limits_chapter_summary_context_size():
+    persons, places, orgs, events = _registries()
+    persons["p1"]["mentions_by_chapter"] = {
+        f"ch{i:02d}": [f"Dorian mention {i}."] for i in range(1, 13)
+    }
+    entity = {
+        "canonical_name": "Dorian Havilliard",
+        "type": "PERSON",
+        "importance": "principal",
+        "source_ids": ["p1"],
+    }
+    entities_by_name = {"Dorian Havilliard": entity}
+    chapter_summaries = {
+        f"ch{i:02d}": {
+            "chapter_id": f"ch{i:02d}",
+            "chapter_title": f"Chapter {i}",
+            "summary_bullets": [f"Bullet {i}"],
+        }
+        for i in range(1, 13)
+    }
+
+    bundle = build_entity_bundle(
+        entity,
+        [],
+        persons,
+        places,
+        orgs,
+        events,
+        entities_by_name,
+        chapter_summaries=chapter_summaries,
+        chapter_summary_max=4,
+    )
+
+    assert len(bundle["chapter_summary_context"]) == 4
+
+
+def test_write_batches_counts_chapter_summary_context_chars_for_splitting(tmp_path: Path):
+    long_bullet = "y" * 12000
+    entities = [
+        {
+            "canonical_name": "Dorian Havilliard",
+            "importance": "principal",
+            "type": "PERSON",
+            "context_by_chapter": {"ch01": ["court"]},
+            "related_context": [],
+            "chapter_summary_context": [{"chapter_key": "ch01", "summary_bullets": [long_bullet]}],
+        },
+        {
+            "canonical_name": "Chaol Westfall",
+            "importance": "principal",
+            "type": "PERSON",
+            "context_by_chapter": {"ch01": ["guard"]},
+            "related_context": [],
+            "chapter_summary_context": [{"chapter_key": "ch01", "summary_bullets": [long_bullet]}],
+        },
+    ]
+
+    class _Paths:
+        wiki_inputs = tmp_path
+
+    batches = write_batches(entities, narrator=None, paths=_Paths())
+
+    assert len(batches) == 2
+
+
+def test_stage_outputs_from_payload_reads_all_stage_outputs():
+    payload = {
+        "all_stage_outputs": {
+            "entity-classification": {"entities": [{"canonical_name": "Dorian"}]},
+            "chapter-summary": {"chapter_summaries": {"ch01": {"summary_bullets": ["x"]}}},
+        }
+    }
+    classification, chapter_summary = stage_outputs_from_payload(payload)
+    assert len(classification["entities"]) == 1
+    assert "ch01" in chapter_summary["chapter_summaries"]

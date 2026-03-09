@@ -91,6 +91,7 @@ def build_prompt(entity: dict, book_title: str, sections: list[str]) -> str:
     aliases = entity.get("aliases", [])
     context = entity.get("context_by_chapter", {})
     related_context = entity.get("related_context", [])
+    chapter_summary_context = entity.get("chapter_summary_context", [])
 
     context_lines = []
     for chapter, mentions in list(context.items())[:15]:
@@ -112,6 +113,20 @@ def build_prompt(entity: dict, book_title: str, sections: list[str]) -> str:
         for snippet in rel.get("support_snippets", [])[:2]:
             related_lines.append(f"    - Snippet: {snippet}")
     related_block = "\n".join(related_lines) if related_lines else "  (no related entities available)"
+
+    chapter_summary_lines = []
+    for chapter in chapter_summary_context[:8]:
+        chapter_key = chapter.get("chapter_key", "").strip()
+        if not chapter_key:
+            continue
+        chapter_summary_lines.append(f"  - Chapter: {chapter_key}")
+        for bullet in chapter.get("summary_bullets", [])[:3]:
+            chapter_summary_lines.append(f"    - {bullet}")
+    chapter_summary_block = (
+        "\n".join(chapter_summary_lines)
+        if chapter_summary_lines
+        else "  (no chapter summaries available)"
+    )
 
     alias_str = ", ".join(a for a in aliases if a != name) or "none"
     length_guide = {
@@ -136,10 +151,15 @@ Text excerpts from the book that mention this entity:
 Known related entities (disambiguation context):
 {related_block}
 
+Chapter summaries for chapters where this entity appears:
+{chapter_summary_block}
+
 RULES:
 - Write in encyclopedic French.
 - Use ONLY information from the excerpts above. Do NOT use your training knowledge about this book.
 - Use this block only to disambiguate likely related entities.
+- Direct excerpts have priority over chapter summaries.
+- Treat chapter summaries as orientation context, not strong evidence.
 - If excerpts are empty or insufficient, write a minimal page.
 - {length_guide}
 - Use exactly these sections in this order: {sections_str}.
@@ -236,6 +256,9 @@ def parse_response(raw: str, entity: dict) -> dict:
         page.setdefault("entity_type", entity["type"])
         page.setdefault("infobox_fields", {})
         page.setdefault("content", "")
+        if not _is_page_complete(page):
+            print(f"    [WARN] Empty content for {entity['canonical_name']}, using failed stub", file=sys.stderr)
+            return make_stub_page(entity, failed=True)
         if not page["infobox_fields"] and page["content"]:
             page["infobox_fields"] = _extract_infobox_fields_from_content(page["content"])
         return page
@@ -281,10 +304,16 @@ def load_book_config(book_yaml_path: str) -> dict:
         return {}
 
 
-def generation_profile(config: dict, importance: str) -> tuple[list[str], int]:
+def generation_profile(config: dict, importance: str, entity_type: str | None = None) -> tuple[list[str], int]:
     profile = config.get(importance, {})
     default_sections = _DEFAULT_SECTIONS_BY_IMPORTANCE.get(importance, _DEFAULT_SECTIONS_BY_IMPORTANCE["figurant"])
-    sections = profile.get("sections", default_sections)
+
+    sections_by_type = profile.get("sections_by_type", {})
+    type_override = None
+    if isinstance(sections_by_type, dict) and entity_type:
+        type_override = sections_by_type.get(str(entity_type).upper())
+
+    sections = type_override if type_override is not None else profile.get("sections", default_sections)
     if not isinstance(sections, list) or not sections:
         sections = default_sections
     max_tokens = profile.get("max_tokens_per_page", DEFAULT_NUM_PREDICT)
@@ -328,7 +357,7 @@ def main() -> None:
     print(f"[generate-wiki-pages] {total_entities} entities across {len(batches)} batches | model={args.model}", file=sys.stderr)
 
     # Load existing pages to resume interrupted runs
-    all_pages = [p for p in _load_existing(output_file) if not p.get("_failed")]
+    all_pages = [p for p in _load_existing(output_file) if not p.get("_failed") and _is_page_complete(p)]
     done_titles = {p["title"] for p in all_pages}
     if done_titles:
         print(f"[generate-wiki-pages] Resuming — {len(done_titles)} pages already done", file=sys.stderr)
@@ -366,7 +395,7 @@ def main() -> None:
 
                 print(f"  [GEN]  {name} ({importance})", file=sys.stderr, end="", flush=True)
                 try:
-                    sections, max_tokens = generation_profile(generation_cfg, importance)
+                    sections, max_tokens = generation_profile(generation_cfg, importance, entity.get("type"))
                     prompt = build_prompt(entity, book_title, sections=sections)
                     raw = call_ollama(prompt, args.model, args.timeout, num_predict=max_tokens)
                     page = parse_response(raw, entity)
@@ -398,6 +427,11 @@ def _load_existing(output_file: str) -> list[dict]:
         except Exception:
             pass
     return []
+
+
+def _is_page_complete(page: dict) -> bool:
+    content = page.get("content", "")
+    return isinstance(content, str) and bool(content.strip())
 
 
 if __name__ == "__main__":

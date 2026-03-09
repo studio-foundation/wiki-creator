@@ -1,0 +1,13 @@
+name: chapter-summary
+version: 1
+schema:
+  required_fields:
+    - chapter_summaries
+# chapter_summaries:
+#   {
+#     "<chapter_key>": {
+#       "chapter_id": "ch01",
+#       "chapter_title": "Chapter 1",
+#       "summary_bullets": ["...", "...", "..."]
+#     }
+#   }

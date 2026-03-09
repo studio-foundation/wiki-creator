@@ -29,8 +29,13 @@ thresholds: auto
 #     minor: { min_mentions: 3 }
 
 generation:
+  chapter_summary_max_chapters_per_entity: 8
   principal:
     sections: [infobox, biography, personality, physical, powers, relationships, trivia, references]
+    sections_by_type:
+      PLACE: [infobox, biography, physical, relationships, trivia, references]
+      ORG: [infobox, biography, relationships, references]
+      EVENT: [infobox, biography, relationships, references]
     max_tokens_per_page: 2000
   secondary:
     sections: [infobox, biography, relationships, references]

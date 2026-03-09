@@ -3,8 +3,10 @@
 import json
 
 from scripts.generate_wiki_pages import (
+    _is_page_complete,
     build_prompt,
     call_ollama,
+    generation_profile,
     parse_response,
 )
 
@@ -146,6 +148,38 @@ def test_build_prompt_includes_related_context_block_and_strict_rules():
     assert "Do NOT turn cooccurrence into narrative causality." in prompt
 
 
+def test_build_prompt_includes_chapter_summary_context_block_and_rules():
+    entity = {
+        "canonical_name": "Dorian Havilliard",
+        "importance": "principal",
+        "type": "PERSON",
+        "aliases": ["Dorian"],
+        "context_by_chapter": {
+            "Chapter 1": ["Dorian entered the hall."],
+        },
+        "chapter_summary_context": [
+            {
+                "chapter_key": "Chapter 1",
+                "summary_bullets": [
+                    "Dorian meets Chaol at court.",
+                    "The King issues new orders.",
+                ],
+            }
+        ],
+    }
+    prompt = build_prompt(
+        entity,
+        "Mon Livre",
+        sections=["infobox", "biography", "relationships", "references"],
+    )
+
+    assert "Chapter summaries for chapters where this entity appears:" in prompt
+    assert "Chapter: Chapter 1" in prompt
+    assert "Dorian meets Chaol at court." in prompt
+    assert "Direct excerpts have priority over chapter summaries." in prompt
+    assert "Treat chapter summaries as orientation context, not strong evidence." in prompt
+
+
 def test_call_ollama_uses_custom_num_predict(monkeypatch):
     captured = {}
 
@@ -171,3 +205,44 @@ def test_call_ollama_uses_custom_num_predict(monkeypatch):
     assert response == "ok"
     assert captured["timeout"] == 30
     assert captured["body"]["options"]["num_predict"] == 2222
+
+
+def test_generation_profile_prefers_sections_by_type_override():
+    cfg = {
+        "principal": {
+            "sections": ["infobox", "biography", "personality", "references"],
+            "sections_by_type": {
+                "PLACE": ["infobox", "biography", "physical", "references"],
+            },
+            "max_tokens_per_page": 900,
+        }
+    }
+
+    sections, max_tokens = generation_profile(cfg, "principal", "PLACE")
+
+    assert sections == ["infobox", "biography", "physical", "references"]
+    assert max_tokens == 900
+
+
+def test_parse_response_marks_empty_content_as_failed_stub():
+    raw = (
+        '{"title":"Yulemas","importance":"principal","entity_type":"EVENT",'
+        '"infobox_fields":{},"content":""}'
+    )
+    entity = {
+        "canonical_name": "Yulemas",
+        "importance": "principal",
+        "type": "EVENT",
+    }
+
+    page = parse_response(raw, entity)
+
+    assert page["_failed"] is True
+    assert page["title"] == "Yulemas"
+    assert page["content"] != ""
+
+
+def test_is_page_complete_rejects_empty_or_whitespace_content():
+    assert _is_page_complete({"title": "A", "content": "## Biographie\n\nTexte."}) is True
+    assert _is_page_complete({"title": "A", "content": ""}) is False
+    assert _is_page_complete({"title": "A", "content": "   \n\t"}) is False
