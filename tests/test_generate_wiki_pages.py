@@ -110,6 +110,42 @@ def test_build_prompt_includes_requested_sections_in_order():
     assert '## Références\\n\\n' in prompt
 
 
+def test_build_prompt_includes_related_context_block_and_strict_rules():
+    entity = {
+        "canonical_name": "Dorian Havilliard",
+        "importance": "principal",
+        "type": "PERSON",
+        "aliases": ["Dorian"],
+        "context_by_chapter": {
+            "ch01": ["Dorian entra dans la salle du conseil."],
+        },
+        "related_context": [
+            {
+                "related_name": "Celaena",
+                "cooccurrence_count": 175,
+                "related_type": "PERSON",
+                "related_importance": "principal",
+                "support_snippets": [
+                    "Celaena observa Dorian sans parler.",
+                    "Dorian et Celaena discutent du Test.",
+                ],
+            }
+        ],
+    }
+    prompt = build_prompt(
+        entity,
+        "Mon Livre",
+        sections=["infobox", "biography", "relationships", "references"],
+    )
+
+    assert "Known related entities (disambiguation context):" in prompt
+    assert "Name: Celaena" in prompt
+    assert "Cooccurrence count: 175" in prompt
+    assert "Use this block only to disambiguate likely related entities." in prompt
+    assert "If ambiguous, omit rather than infer." in prompt
+    assert "Do NOT turn cooccurrence into narrative causality." in prompt
+
+
 def test_call_ollama_uses_custom_num_predict(monkeypatch):
     captured = {}
 

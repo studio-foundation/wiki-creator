@@ -491,6 +491,11 @@ def test_is_valid_mention_rejects_collapsed_first_person_artifacts():
     assert _is_valid_mention("Ilike") is False
 
 
+def test_is_valid_mention_rejects_coordinated_duo_mentions():
+    assert _is_valid_mention("Celaena and Chaol") is False
+    assert _is_valid_mention("Celaena et Chaol") is False
+
+
 # --- _truncate_mention tests ---
 
 

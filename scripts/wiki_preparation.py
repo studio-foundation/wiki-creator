@@ -55,6 +55,8 @@ MAX_MENTIONS_PER_CHAPTER = 5
 MAX_CHAPTERS = 25
 # Cap total context chars per entity
 MAX_CONTEXT_CHARS_PER_ENTITY = 8000
+MAX_RELATED_ENTITIES = 5
+MAX_RELATED_SNIPPETS = 2
 
 
 def load_registry(path: str, key: str) -> dict:
@@ -124,6 +126,76 @@ def filter_relationships(canonical_name: str, relationships: list[dict]) -> list
     ]
 
 
+def _entity_context_char_count(entity_bundle: dict) -> int:
+    """Estimate context size for batching from direct + related context."""
+    direct_ctx = sum(
+        sum(len(m) for m in mentions)
+        for mentions in entity_bundle.get("context_by_chapter", {}).values()
+    )
+    related_ctx = 0
+    for rel in entity_bundle.get("related_context", []):
+        related_ctx += len(rel.get("related_name", ""))
+        related_ctx += len(str(rel.get("cooccurrence_count", "")))
+        related_ctx += len(rel.get("related_type", "") or "")
+        related_ctx += len(rel.get("related_importance", "") or "")
+        related_ctx += sum(len(s) for s in rel.get("support_snippets", []))
+    return direct_ctx + related_ctx
+
+
+def _support_snippets_for_entity(
+    entity: dict,
+    persons: dict,
+    places: dict,
+    orgs: dict,
+    events: dict,
+) -> list[str]:
+    ctx = extract_context(entity, persons, places, orgs, events)
+    snippets: list[str] = []
+    for chapter in sorted(ctx.keys()):
+        for mention in ctx[chapter]:
+            snippets.append(mention)
+            if len(snippets) >= MAX_RELATED_SNIPPETS:
+                return snippets
+    return snippets
+
+
+def build_related_context(
+    canonical_name: str,
+    relationships: list[dict],
+    entities_by_name: dict[str, dict],
+    persons: dict,
+    places: dict,
+    orgs: dict,
+    events: dict,
+) -> list[dict]:
+    related_rows = []
+    for rel in filter_relationships(canonical_name, relationships):
+        a = rel.get("entity_a")
+        b = rel.get("entity_b")
+        related_name = b if a == canonical_name else a
+        if not related_name or not isinstance(related_name, str):
+            continue
+        related_name = related_name.strip()
+        if not related_name:
+            continue
+
+        related_entity = entities_by_name.get(related_name, {})
+        support_snippets = []
+        if related_entity:
+            support_snippets = _support_snippets_for_entity(related_entity, persons, places, orgs, events)
+
+        related_rows.append({
+            "related_name": related_name,
+            "cooccurrence_count": int(rel.get("cooccurrence_count", 0) or 0),
+            "related_type": related_entity.get("type") if related_entity else None,
+            "related_importance": related_entity.get("importance") if related_entity else None,
+            "support_snippets": support_snippets,
+        })
+
+    related_rows.sort(key=lambda r: r.get("cooccurrence_count", 0), reverse=True)
+    return related_rows[:MAX_RELATED_ENTITIES]
+
+
 def build_entity_bundle(
     entity: dict,
     relationships: list[dict],
@@ -131,6 +203,7 @@ def build_entity_bundle(
     places: dict,
     orgs: dict,
     events: dict,
+    entities_by_name: dict[str, dict],
 ) -> dict:
     canonical_name = entity["canonical_name"]
     return {
@@ -143,6 +216,15 @@ def build_entity_bundle(
         "first_seen": get_first_seen(entity, persons, places, orgs, events),
         "context_by_chapter": extract_context(entity, persons, places, orgs, events),
         "relationships": filter_relationships(canonical_name, relationships),
+        "related_context": build_related_context(
+            canonical_name,
+            relationships,
+            entities_by_name,
+            persons,
+            places,
+            orgs,
+            events,
+        ),
     }
 
 
@@ -188,10 +270,7 @@ def write_batches(entity_bundles: list[dict], narrator: object, paths: "BookPath
         current_batch: list[dict] = []
         current_ctx = 0
         for entity in group:
-            entity_ctx = sum(
-                sum(len(m) for m in mentions)
-                for mentions in entity["context_by_chapter"].values()
-            )
+            entity_ctx = _entity_context_char_count(entity)
             if current_batch and (
                 len(current_batch) >= batch_size
                 or current_ctx + entity_ctx > MAX_BATCH_CONTEXT_CHARS
@@ -240,8 +319,13 @@ def main() -> None:
         file=sys.stderr,
     )
 
+    entities_by_name = {
+        e.get("canonical_name", ""): e
+        for e in relevant_entities
+        if e.get("canonical_name")
+    }
     entity_bundles = [
-        build_entity_bundle(e, relationships, persons, places, orgs, events)
+        build_entity_bundle(e, relationships, persons, places, orgs, events, entities_by_name)
         for e in relevant_entities
     ]
 

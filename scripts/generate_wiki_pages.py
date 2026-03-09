@@ -90,12 +90,28 @@ def build_prompt(entity: dict, book_title: str, sections: list[str]) -> str:
     importance = entity["importance"]
     aliases = entity.get("aliases", [])
     context = entity.get("context_by_chapter", {})
+    related_context = entity.get("related_context", [])
 
     context_lines = []
     for chapter, mentions in list(context.items())[:15]:
         for mention in mentions[:3]:
             context_lines.append(f"  [{chapter}] {mention}")
     context_block = "\n".join(context_lines) if context_lines else "  (no excerpts available)"
+
+    related_lines = []
+    for rel in related_context[:5]:
+        related_name = rel.get("related_name", "").strip()
+        if not related_name:
+            continue
+        related_type = rel.get("related_type") or "unknown"
+        related_importance = rel.get("related_importance") or "unknown"
+        cooccurrence = rel.get("cooccurrence_count", 0)
+        related_lines.append(
+            f"  - Name: {related_name} | Type: {related_type} | Importance: {related_importance} | Cooccurrence count: {cooccurrence}"
+        )
+        for snippet in rel.get("support_snippets", [])[:2]:
+            related_lines.append(f"    - Snippet: {snippet}")
+    related_block = "\n".join(related_lines) if related_lines else "  (no related entities available)"
 
     alias_str = ", ".join(a for a in aliases if a != name) or "none"
     length_guide = {
@@ -117,14 +133,20 @@ Entity:
 Text excerpts from the book that mention this entity:
 {context_block}
 
+Known related entities (disambiguation context):
+{related_block}
+
 RULES:
 - Write in encyclopedic French.
 - Use ONLY information from the excerpts above. Do NOT use your training knowledge about this book.
+- Use this block only to disambiguate likely related entities.
 - If excerpts are empty or insufficient, write a minimal page.
 - {length_guide}
 - Use exactly these sections in this order: {sections_str}.
 - The "Infobox" section must contain one bullet per field in the format "- Key: Value".
 - Do NOT invent plot details, relationships, or facts not in the excerpts.
+- If ambiguous, omit rather than infer.
+- Do NOT turn cooccurrence into narrative causality.
 
 Output this JSON object:
 {{

@@ -250,6 +250,10 @@ FALSE_POSITIVE_WORDS: frozenset[str] = frozenset({
     "merci", "bonjour", "bonsoir", "adieu",
 })
 
+# Coordinating conjunctions that frequently produce parser artifacts like
+# "Celaena and Chaol" as a single PERSON mention.
+COORDINATION_CONNECTORS: frozenset[str] = frozenset({"and", "et", "&", "y"})
+
 # Common English OCR/parsing artifacts where "I <verb>" is collapsed as one token
 # (e.g. "I would" -> "Iwould"), often mis-tagged as PERSON by NER.
 FIRST_PERSON_ARTIFACT_TAILS_EN: frozenset[str] = frozenset({
@@ -313,6 +317,15 @@ def _is_valid_mention(text: str) -> bool:
         return False
     if not stripped[0].isupper():
         return False
+    # Reject coordinated multi-name artifacts: "X and Y", "X et Y", etc.
+    tokens = stripped.split()
+    if len(tokens) >= 3:
+        for i in range(1, len(tokens) - 1):
+            if tokens[i].lower() not in COORDINATION_CONNECTORS:
+                continue
+            left, right = tokens[i - 1], tokens[i + 1]
+            if left[:1].isupper() and right[:1].isupper():
+                return False
     if " " not in stripped:
         lowered = stripped.lower()
         if lowered in FALSE_POSITIVE_WORDS:
