@@ -18,6 +18,12 @@ import json
 import os
 import sys
 import urllib.request
+from pathlib import Path
+
+# Ensure project root is importable when running as `python scripts/<file>.py`.
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from wiki_creator.paths import book_paths_from_yaml
 
@@ -108,11 +114,21 @@ def make_stub_page(entity: dict, failed: bool = False) -> dict:
 
 def parse_response(raw: str, entity: dict) -> dict:
     raw = raw.strip()
-    if raw.startswith("```"):
-        lines = raw.split("\n")
-        raw = "\n".join(lines[1:-1]) if len(lines) > 2 else raw
+    decoder = json.JSONDecoder()
+    page = None
+    for i, ch in enumerate(raw):
+        if ch != "{":
+            continue
+        try:
+            candidate, _ = decoder.raw_decode(raw[i:])
+        except json.JSONDecodeError:
+            continue
+        if isinstance(candidate, dict):
+            page = candidate
+            break
     try:
-        page = json.loads(raw)
+        if page is None:
+            raise json.JSONDecodeError("No JSON object found", raw, 0)
         page.setdefault("title", entity["canonical_name"])
         page.setdefault("importance", entity["importance"])
         page.setdefault("entity_type", entity["type"])

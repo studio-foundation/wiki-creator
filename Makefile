@@ -8,6 +8,12 @@ BOOK ?= library/carlos-ruiz-zafon/el-cementerio-de-los-libros-olvidados/books/02
 run:
 	python run_wiki.py --book $(BOOK)
 
+run-angel-game:
+	python run_wiki.py --book library/carlos-ruiz-zafon/el-cementerio-de-los-libros-olvidados/books/02-le-jeu-de-lange.yaml
+
+run-tog:
+	python run_wiki.py --book library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml
+
 # Individual pipeline stages
 run-extraction:
 	studio run wiki-extraction --input-file $(BOOK) --live --verbose

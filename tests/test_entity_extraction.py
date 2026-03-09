@@ -8,7 +8,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.entity_extraction import (
     extract_entities, extract_context, split_entities, split_by_type,
     KEPT_LABELS, _is_valid_mention, FRONTMATTER_ID_PATTERNS, _truncate_mention,
-    _get_min_mentions_absolute, filter_entities_by_min_mentions
+    _get_min_mentions_absolute, filter_entities_by_min_mentions,
+    _spacy_model_candidates, _load_spacy_model_with_fallback
 )
 
 
@@ -554,6 +555,27 @@ def test_filter_entities_by_min_mentions_excludes_below_threshold():
     }
     filtered = filter_entities_by_min_mentions(entities_full, min_mentions_absolute=3)
     assert set(filtered.keys()) == {"entity_002", "entity_003"}
+
+
+def test_spacy_model_candidates_for_english_adds_sm_fallback():
+    assert _spacy_model_candidates("en_core_web_lg") == ["en_core_web_lg", "en_core_web_sm"]
+
+
+def test_load_spacy_model_with_fallback_uses_second_candidate():
+    calls = []
+
+    def fake_load(model_name):
+        calls.append(model_name)
+        if model_name == "en_core_web_lg":
+            raise OSError("missing model")
+        if model_name == "en_core_web_sm":
+            return {"model": model_name}
+        raise OSError("unexpected model")
+
+    nlp, loaded = _load_spacy_model_with_fallback(fake_load, "en_core_web_lg")
+    assert loaded == "en_core_web_sm"
+    assert nlp == {"model": "en_core_web_sm"}
+    assert calls == ["en_core_web_lg", "en_core_web_sm"]
 
 
 def test_main_writes_only_entities_meeting_min_mentions_threshold(tmp_path):

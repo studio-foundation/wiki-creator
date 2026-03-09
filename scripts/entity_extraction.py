@@ -26,7 +26,14 @@ Standalone test mode:
 
 import json
 import sys
+from pathlib import Path
 import yaml
+
+# Ensure project root is importable when running as `python scripts/<file>.py`.
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from wiki_creator.paths import book_paths_from_epub, BookPaths
 
 
@@ -70,6 +77,31 @@ def filter_entities_by_min_mentions(entities_full: dict, min_mentions_absolute: 
         for entity_id, entity in entities_full.items()
         if _entity_total_mentions(entity) >= min_mentions_absolute
     }
+
+
+def _spacy_model_candidates(requested_model: str) -> list[str]:
+    """Return ordered candidate models for robust loading."""
+    candidates = [requested_model]
+    if requested_model.startswith("en_core_web_") and requested_model != "en_core_web_sm":
+        candidates.append("en_core_web_sm")
+    if requested_model.startswith("fr_core_news_"):
+        if requested_model != "fr_core_news_lg":
+            candidates.append("fr_core_news_lg")
+        if requested_model != "fr_core_news_sm":
+            candidates.append("fr_core_news_sm")
+    # De-duplicate while preserving order.
+    return list(dict.fromkeys(candidates))
+
+
+def _load_spacy_model_with_fallback(spacy_load, requested_model: str):
+    """Try requested spaCy model, then language-appropriate fallbacks."""
+    errors = []
+    for model in _spacy_model_candidates(requested_model):
+        try:
+            return spacy_load(model), model
+        except OSError as exc:
+            errors.append(f"{model}: {exc}")
+    raise OSError("Unable to load spaCy model. Tried: " + " | ".join(errors))
 
 # Entity labels to keep. Covers both French and English spaCy models.
 # French (fr_core_news_*): PER, LOC, ORG
@@ -355,7 +387,7 @@ def run_test_mode() -> None:
     import spacy
 
     print("Loading en_core_web_sm...", file=sys.stderr)
-    nlp = spacy.load("en_core_web_sm")
+    nlp, _ = _load_spacy_model_with_fallback(spacy.load, "en_core_web_sm")
 
     print("Extracting entities from 3 hardcoded chapters...", file=sys.stderr)
     try:
@@ -427,7 +459,13 @@ def main() -> None:
         sys.exit(1)
 
     import spacy
-    nlp = spacy.load(spacy_model)
+    try:
+        nlp, loaded_model = _load_spacy_model_with_fallback(spacy.load, spacy_model)
+    except OSError as e:
+        json.dump({"error": str(e)}, sys.stdout, ensure_ascii=False)
+        sys.exit(1)
+    if loaded_model != spacy_model:
+        print(f"[WARN] spaCy model '{spacy_model}' not available; using '{loaded_model}'", file=sys.stderr)
 
     try:
         result = extract_entities(chapters, nlp)
