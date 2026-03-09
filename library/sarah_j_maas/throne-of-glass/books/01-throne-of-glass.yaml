@@ -9,6 +9,10 @@ spacy_model: en_core_web_lg
 
 # Entity importance classification — 'auto' uses percentile distribution
 # Override with explicit values if the auto-detected tiers are wrong for your book
+#
+# Absolute pre-filter applied before clustering/classification:
+# entities with total mentions below this value are dropped early.
+min_mentions_absolute: 3
 thresholds: auto
 # Example explicit config (uncomment to use):
 # thresholds:

@@ -7,7 +7,8 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.entity_extraction import (
     extract_entities, extract_context, split_entities, split_by_type,
-    KEPT_LABELS, _is_valid_mention, FRONTMATTER_ID_PATTERNS, _truncate_mention
+    KEPT_LABELS, _is_valid_mention, FRONTMATTER_ID_PATTERNS, _truncate_mention,
+    _get_min_mentions_absolute, filter_entities_by_min_mentions
 )
 
 
@@ -488,6 +489,11 @@ def test_main_exits_on_empty_entities():
     """main() must exit 1 with error JSON when no entities are extracted."""
     import subprocess
     import json as _json
+    env = os.environ.copy()
+    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    env["PYTHONPATH"] = (
+        f"{repo_root}:{env['PYTHONPATH']}" if env.get("PYTHONPATH") else repo_root
+    )
 
     # Chapters whose content produces zero named entities (no PERSON/PLACE/ORG)
     payload = _json.dumps({
@@ -507,9 +513,100 @@ def test_main_exits_on_empty_entities():
         input=payload,
         capture_output=True,
         text=True,
+        env=env,
         timeout=60,
     )
     assert result.returncode == 1, f"Expected exit 1, got {result.returncode}. stdout={result.stdout}"
     output = _json.loads(result.stdout)
     assert "error" in output, f"Expected error field in output: {output}"
     assert "no entities" in output["error"].lower(), f"Unexpected error message: {output['error']}"
+
+
+def test_get_min_mentions_absolute_defaults_to_3():
+    assert _get_min_mentions_absolute({}) == 3
+
+
+def test_get_min_mentions_absolute_accepts_valid_int():
+    assert _get_min_mentions_absolute({"min_mentions_absolute": 1}) == 1
+    assert _get_min_mentions_absolute({"min_mentions_absolute": 3}) == 3
+    assert _get_min_mentions_absolute({"min_mentions_absolute": 10}) == 10
+
+
+def test_get_min_mentions_absolute_invalid_falls_back_and_warns(capsys):
+    assert _get_min_mentions_absolute({"min_mentions_absolute": "abc"}) == 3
+    captured = capsys.readouterr()
+    assert "invalid min_mentions_absolute" in captured.err
+
+    assert _get_min_mentions_absolute({"min_mentions_absolute": -1}) == 3
+    captured = capsys.readouterr()
+    assert "invalid min_mentions_absolute" in captured.err
+
+    assert _get_min_mentions_absolute({"min_mentions_absolute": True}) == 3
+    captured = capsys.readouterr()
+    assert "invalid min_mentions_absolute" in captured.err
+
+
+def test_filter_entities_by_min_mentions_excludes_below_threshold():
+    entities_full = {
+        "entity_001": {"type": "PERSON", "mention_count": 1, "mentions_by_chapter": {"ch01": ["m1"]}},
+        "entity_002": {"type": "PERSON", "mention_count": 3, "mentions_by_chapter": {"ch01": ["m1", "m2", "m3"]}},
+        "entity_003": {"type": "PLACE", "mention_count": 5, "mentions_by_chapter": {"ch01": ["m1", "m2", "m3"]}},
+    }
+    filtered = filter_entities_by_min_mentions(entities_full, min_mentions_absolute=3)
+    assert set(filtered.keys()) == {"entity_002", "entity_003"}
+
+
+def test_main_writes_only_entities_meeting_min_mentions_threshold(tmp_path):
+    """main() should exclude low-mention entities from persons_full.json."""
+    import json as _json
+    import subprocess
+    env = os.environ.copy()
+    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    env["PYTHONPATH"] = (
+        f"{repo_root}:{env['PYTHONPATH']}" if env.get("PYTHONPATH") else repo_root
+    )
+
+    book_yaml = tmp_path / "library" / "author" / "series" / "books" / "book.yaml"
+    book_yaml.parent.mkdir(parents=True, exist_ok=True)
+    book_yaml.write_text("description: test", encoding="utf-8")
+
+    payload = _json.dumps({
+        "additional_context": (
+            f"file_path: {book_yaml}\n"
+            "spacy_model: en_core_web_sm\n"
+            "min_mentions_absolute: 3\n"
+        ),
+        "previous_outputs": {
+            "epub-parse": {
+                "title": "Test",
+                "author": None,
+                "chapters": [
+                    {
+                        "id": "ch01",
+                        "title": "Ch1",
+                        "content": "Alice met Bob. Alice smiled. Alice waved.",
+                    },
+                ],
+            }
+        },
+    })
+
+    result = subprocess.run(
+        [sys.executable, "scripts/entity_extraction.py"],
+        input=payload,
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=60,
+    )
+    assert result.returncode == 0, f"Expected exit 0, got {result.returncode}. stderr={result.stderr}"
+
+    processing = book_yaml.parent.parent / "processing_output" / "book"
+    persons_data = _json.loads((processing / "persons_full.json").read_text(encoding="utf-8"))
+    all_mentions = [
+        mention
+        for entity in persons_data["persons_full"].values()
+        for mention in entity.get("raw_mentions", [])
+    ]
+    assert any("Alice" in mention for mention in all_mentions), f"Expected Alice in {all_mentions}"
+    assert all("Bob" not in mention for mention in all_mentions), f"Bob should be filtered out: {all_mentions}"

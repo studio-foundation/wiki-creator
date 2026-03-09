@@ -37,6 +37,40 @@ def _paths_from_payload(payload: dict) -> BookPaths:
         raise ValueError("missing file_path in additional_context")
     return book_paths_from_epub(file_path)
 
+
+DEFAULT_MIN_MENTIONS_ABSOLUTE = 3
+
+
+def _get_min_mentions_absolute(input_data: dict) -> int:
+    """Parse min_mentions_absolute from YAML config with safe fallback."""
+    value = input_data.get("min_mentions_absolute", DEFAULT_MIN_MENTIONS_ABSOLUTE)
+    if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
+        return value
+    if "min_mentions_absolute" in input_data:
+        print(
+            f"[WARN] invalid min_mentions_absolute={value!r}; "
+            f"falling back to {DEFAULT_MIN_MENTIONS_ABSOLUTE}",
+            file=sys.stderr,
+        )
+    return DEFAULT_MIN_MENTIONS_ABSOLUTE
+
+
+def _entity_total_mentions(entity: dict) -> int:
+    """Return entity total mentions, preferring mention_count when available."""
+    mention_count = entity.get("mention_count")
+    if isinstance(mention_count, int) and mention_count >= 0:
+        return mention_count
+    return sum(len(mentions) for mentions in entity.get("mentions_by_chapter", {}).values())
+
+
+def filter_entities_by_min_mentions(entities_full: dict, min_mentions_absolute: int) -> dict:
+    """Keep only entities whose total mentions are >= min_mentions_absolute."""
+    return {
+        entity_id: entity
+        for entity_id, entity in entities_full.items()
+        if _entity_total_mentions(entity) >= min_mentions_absolute
+    }
+
 # Entity labels to keep. Covers both French and English spaCy models.
 # French (fr_core_news_*): PER, LOC, ORG
 # English (en_core_web_*): PERSON, GPE, LOC, ORG, FAC, NORP
@@ -401,10 +435,15 @@ def main() -> None:
         json.dump({"error": str(e)}, sys.stdout)
         sys.exit(1)
 
-    entities_for_resolution, entities_full = split_entities(result["entities"])
+    min_mentions_absolute = _get_min_mentions_absolute(input_data)
+    filtered_entities = filter_entities_by_min_mentions(result["entities"], min_mentions_absolute)
+    entities_for_resolution, entities_full = split_entities(filtered_entities)
 
     if not entities_for_resolution:
-        json.dump({"error": "no entities extracted — verify spaCy model and input chapters"}, sys.stdout)
+        json.dump(
+            {"error": "no entities extracted after min_mentions_absolute filter — verify spaCy model and input chapters"},
+            sys.stdout,
+        )
         sys.exit(1)
 
     # Write full entities to disk split by type, for wiki-generation to read via repo_manager-read_file
