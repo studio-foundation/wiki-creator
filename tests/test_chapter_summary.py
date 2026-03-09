@@ -1,6 +1,7 @@
 """Tests for scripts/chapter_summary.py."""
 
 from scripts.chapter_summary import (
+    _chapter_summary_config_from_payload,
     _epub_output_from_payload,
     summarize_chapter,
     summarize_chapters,
@@ -85,3 +86,59 @@ def test_epub_output_from_payload_prefers_all_stage_outputs():
     }
     out = _epub_output_from_payload(payload)
     assert out["chapters"][0]["id"] == "ch01"
+
+
+def test_chapter_summary_config_defaults_when_missing() -> None:
+    payload = {"additional_context": "file_path: library/book.epub"}
+
+    cfg = _chapter_summary_config_from_payload(payload)
+
+    assert cfg.mode == "extractive"
+    assert cfg.max_bullets == 3
+    assert cfg.llm_fallback_to_extractive is True
+    assert cfg.llm_model == "qwen2.5"
+    assert cfg.llm_timeout_seconds == 45
+
+
+def test_chapter_summary_config_honors_explicit_values() -> None:
+    payload = {
+        "additional_context": (
+            "file_path: library/book.epub\n"
+            "generation:\n"
+            "  chapter_summary:\n"
+            "    mode: llm\n"
+            "    max_bullets: 4\n"
+            "    llm_fallback_to_extractive: false\n"
+            "    llm_model: llama3:8b\n"
+            "    llm_timeout_seconds: 20\n"
+        )
+    }
+
+    cfg = _chapter_summary_config_from_payload(payload)
+
+    assert cfg.mode == "llm"
+    assert cfg.max_bullets == 4
+    assert cfg.llm_fallback_to_extractive is False
+    assert cfg.llm_model == "llama3:8b"
+    assert cfg.llm_timeout_seconds == 20
+
+
+def test_chapter_summary_config_sanitizes_invalid_values() -> None:
+    payload = {
+        "additional_context": (
+            "file_path: library/book.epub\n"
+            "generation:\n"
+            "  chapter_summary:\n"
+            "    mode: invalid\n"
+            "    max_bullets: -2\n"
+            "    llm_fallback_to_extractive: nope\n"
+            "    llm_timeout_seconds: 0\n"
+        )
+    }
+
+    cfg = _chapter_summary_config_from_payload(payload)
+
+    assert cfg.mode == "extractive"
+    assert cfg.max_bullets == 3
+    assert cfg.llm_fallback_to_extractive is True
+    assert cfg.llm_timeout_seconds == 45

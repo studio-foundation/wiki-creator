@@ -25,6 +25,7 @@ Side effects:
 import json
 import re
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 import yaml
@@ -39,6 +40,19 @@ from wiki_creator.paths import BookPaths, book_paths_from_epub
 _FALLBACK_BULLET = "No reliable summary available for this chapter."
 _MIN_SENTENCE_CHARS = 25
 _MAX_SENTENCE_CHARS = 320
+_DEFAULT_MAX_BULLETS = 3
+_DEFAULT_LLM_MODEL = "qwen2.5"
+_DEFAULT_LLM_TIMEOUT_SECONDS = 45
+_VALID_SUMMARY_MODES = {"extractive", "llm"}
+
+
+@dataclass(frozen=True)
+class ChapterSummaryConfig:
+    mode: str = "extractive"
+    max_bullets: int = _DEFAULT_MAX_BULLETS
+    llm_fallback_to_extractive: bool = True
+    llm_model: str = _DEFAULT_LLM_MODEL
+    llm_timeout_seconds: int = _DEFAULT_LLM_TIMEOUT_SECONDS
 
 
 def _paths_from_payload(payload: dict) -> BookPaths:
@@ -47,6 +61,64 @@ def _paths_from_payload(payload: dict) -> BookPaths:
     if not file_path:
         raise ValueError("missing file_path in additional_context")
     return book_paths_from_epub(file_path)
+
+
+def _as_bool(value: object, default: bool) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"true", "1", "yes", "on"}:
+            return True
+        if normalized in {"false", "0", "no", "off"}:
+            return False
+    return default
+
+
+def _as_positive_int(value: object, default: int) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return default
+    if parsed <= 0:
+        return default
+    return parsed
+
+
+def _chapter_summary_config_from_payload(payload: dict) -> ChapterSummaryConfig:
+    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    generation_cfg = ctx.get("generation", {}) if isinstance(ctx, dict) else {}
+    summary_cfg = generation_cfg.get("chapter_summary", {}) if isinstance(generation_cfg, dict) else {}
+    if not isinstance(summary_cfg, dict):
+        summary_cfg = {}
+
+    mode = str(summary_cfg.get("mode", "extractive")).strip().lower()
+    if mode not in _VALID_SUMMARY_MODES:
+        mode = "extractive"
+
+    max_bullets = _as_positive_int(summary_cfg.get("max_bullets"), _DEFAULT_MAX_BULLETS)
+    llm_timeout_seconds = _as_positive_int(
+        summary_cfg.get("llm_timeout_seconds"),
+        _DEFAULT_LLM_TIMEOUT_SECONDS,
+    )
+
+    llm_model_raw = summary_cfg.get("llm_model", _DEFAULT_LLM_MODEL)
+    llm_model = str(llm_model_raw).strip() if llm_model_raw is not None else ""
+    if not llm_model:
+        llm_model = _DEFAULT_LLM_MODEL
+
+    llm_fallback_to_extractive = _as_bool(
+        summary_cfg.get("llm_fallback_to_extractive", True),
+        True,
+    )
+
+    return ChapterSummaryConfig(
+        mode=mode,
+        max_bullets=max_bullets,
+        llm_fallback_to_extractive=llm_fallback_to_extractive,
+        llm_model=llm_model,
+        llm_timeout_seconds=llm_timeout_seconds,
+    )
 
 
 def _chapter_key(chapter: dict) -> str:
