@@ -21,12 +21,29 @@ import sys
 
 def merge_entities(all_stage_outputs: dict) -> dict:
     resolve_out = all_stage_outputs.get("resolve-clusters", {})
-    entities = resolve_out.get("entities", [])
-    narrator = resolve_out.get("narrator", None)
+    if resolve_out:
+        entities = resolve_out.get("entities", [])
+        narrator = resolve_out.get("narrator", None)
+        if not isinstance(entities, list):
+            print("Warning: resolve-clusters returned non-list entities", file=sys.stderr)
+            entities = []
+        return {"entities": entities, "narrator": narrator}
 
-    if not isinstance(entities, list):
-        print("Warning: resolve-clusters returned non-list entities", file=sys.stderr)
-        entities = []
+    entities: list[dict] = []
+    split_out = all_stage_outputs.get("split-clusters", {})
+    singles = split_out.get("singles_resolved", [])
+    if isinstance(singles, list):
+        entities.extend(singles)
+
+    narrator = None
+    for stage_name, stage_output in all_stage_outputs.items():
+        if not stage_name.startswith("entity-resolution-"):
+            continue
+        stage_entities = stage_output.get("entities", [])
+        if isinstance(stage_entities, list):
+            entities.extend(stage_entities)
+        if stage_name == "entity-resolution-PERSON":
+            narrator = stage_output.get("narrator", None)
 
     return {"entities": entities, "narrator": narrator}
 

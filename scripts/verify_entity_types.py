@@ -49,11 +49,11 @@ TYPE_TO_KEY = {
 }
 
 
-def _paths_from_payload(payload: dict) -> BookPaths:
+def _paths_from_payload(payload: dict) -> BookPaths | None:
     ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
     file_path = ctx.get("file_path")
     if not file_path:
-        raise ValueError("missing file_path in additional_context")
+        return None
     return book_paths_from_epub(file_path)
 
 
@@ -67,6 +67,7 @@ def load_context_for_cluster(
     entity_ids: list[str],
     original_type: str,
     type_files: dict[str, str] | None = None,
+    search_dirs: list[str] | None = None,
     max_sentences: int = 3,
 ) -> list[str]:
     """
@@ -81,6 +82,11 @@ def load_context_for_cluster(
             "PLACE": "places_full.json",
             "ORG": "orgs_full.json",
         }
+        if search_dirs:
+            type_files = {
+                entity_type: str(Path(search_dirs[0]) / filename)
+                for entity_type, filename in type_files.items()
+            }
 
     json_key = TYPE_TO_KEY.get(original_type)
     file_path = type_files.get(original_type)
@@ -220,10 +226,12 @@ def main() -> None:
         return
 
     paths = _paths_from_payload(payload)
-    type_files = {
-        "PLACE": str(paths.processing / "places_full.json"),
-        "ORG":   str(paths.processing / "orgs_full.json"),
-    }
+    type_files = None
+    if paths is not None:
+        type_files = {
+            "PLACE": str(paths.processing / "places_full.json"),
+            "ORG":   str(paths.processing / "orgs_full.json"),
+        }
 
     model = input_data.get("ollama_model", DEFAULT_MODEL)
     corrections = verify_clusters(clusters, model=model, type_files=type_files)

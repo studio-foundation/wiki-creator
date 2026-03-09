@@ -6,7 +6,7 @@ description: |
 
 file_path: library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.epub
 spacy_model: en_core_web_lg
-coref: true
+coref: false
 workers: 8
 
 # Entity importance classification — 'auto' uses percentile distribution
@@ -32,7 +32,7 @@ thresholds: auto
 
 generation:
   chapter_summary:
-    mode: extractive
+    mode: llm
     max_bullets: 3
     llm_fallback_to_extractive: true
     llm_model: qwen2.5

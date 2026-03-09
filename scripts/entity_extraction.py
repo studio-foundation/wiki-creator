@@ -231,13 +231,17 @@ FRONTMATTER_ID_PATTERNS: frozenset[str] = frozenset({
     "toc",
     "halftitle",
     "dedication",
+    "dedicatoria",
     "index",
     "acknowledg",
     "author",
+    "autor",
     "about-author",
     "about_the_author",
     "notes",
     "credits",
+    "info",
+    "sinopsis",
     "remerciement",
     "remerciements",
     "auteur",
@@ -247,9 +251,13 @@ FRONTMATTER_ID_PATTERNS: frozenset[str] = frozenset({
 FRONTMATTER_TITLE_PATTERNS: frozenset[str] = frozenset({
     "acknowledg",
     "author",
+    "autor",
     "about the author",
     "notes",
     "credits",
+    "info",
+    "sinopsis",
+    "dedicatoria",
     "remerciement",
     "remerciements",
     "auteur",
@@ -550,7 +558,7 @@ def extract_entities(
             raise ValueError(f"chapter missing required fields 'content' or 'id': {list(chapter.keys())}")
         if _is_frontmatter_chapter(chapter):
             continue
-        chapter_label = chapter.get("title") or chapter["id"]
+        chapter_id = chapter["id"]
         doc = nlp(chapter["content"])
         for ent in doc.ents:
             if ent.label_ not in KEPT_LABELS:
@@ -573,7 +581,7 @@ def extract_entities(
                     "id": f"entity_{entity_counter:03d}",
                     "type": LABEL_TO_TYPE.get(ent.label_, "OTHER"),
                     "raw_mentions": [mention_text],
-                    "first_seen": chapter_label,
+                    "first_seen": chapter_id,
                     "mentions_by_chapter": {},
                     "mention_count": 1,
                 }
@@ -582,9 +590,9 @@ def extract_entities(
                     registry[key]["raw_mentions"].append(mention_text)
                 registry[key]["mention_count"] += 1
 
-            registry[key]["mentions_by_chapter"].setdefault(chapter_label, [])
-            if len(registry[key]["mentions_by_chapter"][chapter_label]) < 3:
-                registry[key]["mentions_by_chapter"][chapter_label].append(context)
+            registry[key]["mentions_by_chapter"].setdefault(chapter_id, [])
+            if len(registry[key]["mentions_by_chapter"][chapter_id]) < 3:
+                registry[key]["mentions_by_chapter"][chapter_id].append(context)
 
     entities = {
         "entities": {

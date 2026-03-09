@@ -49,6 +49,26 @@ def test_summarize_chapters_uses_title_as_chapter_key():
     assert "x02" in summaries
 
 
+def test_summarize_chapters_excludes_frontmatter_and_metadata_entries():
+    chapters = [
+        {"id": "sinopsis.xhtml", "title": "sinopsis.xhtml", "content": "Synopsis content."},
+        {"id": "info.xhtml", "title": "info.xhtml", "content": "Metadata content."},
+        {"id": "dedicatoria.xhtml", "title": "dedicatoria.xhtml", "content": "Dedication content."},
+        {"id": "acknowledgements.xhtml", "title": "Acknowledgements", "content": "Thanks to many people."},
+        {"id": "autor.xhtml", "title": "Author", "content": "Author bio."},
+        {"id": "ch01", "title": "Chapter 1", "content": "Celaena enters the castle and meets Dorian."},
+    ]
+
+    summaries = summarize_chapters(chapters)
+
+    assert "sinopsis.xhtml" not in summaries
+    assert "info.xhtml" not in summaries
+    assert "dedicatoria.xhtml" not in summaries
+    assert "Acknowledgements" not in summaries
+    assert "Author" not in summaries
+    assert "Chapter 1" in summaries
+
+
 def test_summarize_chapter_ignores_empty_or_noise_only_content():
     chapter = {
         "id": "ch02",

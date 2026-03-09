@@ -67,11 +67,11 @@ if str(PROJECT_ROOT) not in sys.path:
 from wiki_creator.paths import book_paths_from_epub, book_paths_from_yaml, BookPaths
 
 
-def _paths_from_payload(payload: dict) -> BookPaths:
+def _paths_from_payload(payload: dict) -> BookPaths | None:
     ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
     file_path = ctx.get("file_path")
     if not file_path:
-        raise ValueError("missing file_path in additional_context")
+        return None
     return book_paths_from_epub(file_path)
 
 
@@ -862,7 +862,7 @@ def _load_mentions_from_files(processing_dir: Path) -> dict[str, dict[str, list[
 def run_live_mode(
     window_size: int,
     threshold: int,
-    paths: "BookPaths",
+    paths: "BookPaths | None" = None,
     coref: bool = False,
     workers: int = 1,
     min_cooccurrence: int | None = None,
@@ -871,6 +871,10 @@ def run_live_mode(
     """Live mode: read persons_full.json, cluster entities, then run co-occurrence on real data."""
     import sys as _sys
     import importlib.util
+
+    if paths is None:
+        print("--live requires --book <path/to/book.yaml>", file=sys.stderr)
+        sys.exit(1)
 
     persons_path = paths.processing / "persons_full.json"
     if not persons_path.exists():
@@ -1097,15 +1101,19 @@ def main() -> None:
         if "--book" in args:
             idx = args.index("--book")
             book_yaml = args[idx + 1]
-        if book_yaml is None:
-            print("--live requires --book <path/to/book.yaml>", file=sys.stderr)
-            sys.exit(1)
-        live_paths = book_paths_from_yaml(book_yaml)
-        run_live_mode(
-            window_size, threshold, paths=live_paths, coref=coref, workers=workers,
-            min_cooccurrence=min_cooccurrence,
-            min_chapters_together=min_chapters_together,
-        )
+        live_paths = book_paths_from_yaml(book_yaml) if book_yaml else None
+        if live_paths is None:
+            run_live_mode(
+                window_size, threshold, coref=coref, workers=workers,
+                min_cooccurrence=min_cooccurrence,
+                min_chapters_together=min_chapters_together,
+            )
+        else:
+            run_live_mode(
+                window_size, threshold, live_paths, coref=coref, workers=workers,
+                min_cooccurrence=min_cooccurrence,
+                min_chapters_together=min_chapters_together,
+            )
         return
 
     payload = json.load(sys.stdin)
@@ -1145,9 +1153,9 @@ def main() -> None:
             min_chapters_together = DEFAULT_MIN_CHAPTERS_TOGETHER
 
     paths = _paths_from_payload(payload)
-    mentions_by_entity = _load_mentions_from_files(paths.processing)
+    mentions_by_entity = _load_mentions_from_files(paths.processing) if paths else {}
 
-    if do_coref:
+    if do_coref and paths:
         chapters_path = paths.processing / "chapters.json"
         if chapters_path.exists():
             with open(chapters_path, encoding="utf-8") as f:

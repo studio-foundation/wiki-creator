@@ -34,11 +34,11 @@ if str(PROJECT_ROOT) not in sys.path:
 from wiki_creator.paths import book_paths_from_epub, BookPaths
 
 
-def _paths_from_payload(payload: dict) -> BookPaths:
+def _paths_from_payload(payload: dict) -> BookPaths | None:
     ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
     file_path = ctx.get("file_path")
     if not file_path:
-        raise ValueError("missing file_path in additional_context")
+        return None
     return book_paths_from_epub(file_path)
 
 ENTITY_TYPES = ("PERSON", "PLACE", "ORG", "EVENT", "OTHER")
@@ -97,9 +97,10 @@ def main() -> None:
         result["pov_detection"] = pov_detection
 
     paths = _paths_from_payload(payload)
-    paths.processing.mkdir(parents=True, exist_ok=True)
-    with open(paths.processing / "splits.json", "w", encoding="utf-8") as _f:
-        json.dump(result, _f, ensure_ascii=False)
+    if paths is not None:
+        paths.processing.mkdir(parents=True, exist_ok=True)
+        with open(paths.processing / "splits.json", "w", encoding="utf-8") as _f:
+            json.dump(result, _f, ensure_ascii=False)
 
     json.dump(result, sys.stdout, ensure_ascii=False)
 

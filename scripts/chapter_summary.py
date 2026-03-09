@@ -38,6 +38,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from wiki_creator.paths import BookPaths, book_paths_from_epub
+from scripts.entity_extraction import _is_frontmatter_chapter
 
 _FALLBACK_BULLET = "No reliable summary available for this chapter."
 _MIN_SENTENCE_CHARS = 25
@@ -320,6 +321,8 @@ def summarize_chapter(chapter: dict, config: ChapterSummaryConfig | None = None)
 def summarize_chapters(chapters: list[dict], config: ChapterSummaryConfig | None = None) -> dict[str, dict]:
     result: dict[str, dict] = {}
     for chapter in chapters:
+        if _is_frontmatter_chapter(chapter):
+            continue
         key = _chapter_key(chapter)
         if not key:
             continue

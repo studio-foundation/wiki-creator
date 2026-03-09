@@ -109,6 +109,19 @@ def test_frontmatter_detection_matches_author_or_ack_titles():
     assert _is_frontmatter_chapter({"id": "c01.xhtml", "title": "Chapter 1"}) is False
 
 
+@pytest.mark.parametrize(
+    "chapter",
+    [
+        {"id": "sinopsis.xhtml", "title": "sinopsis.xhtml"},
+        {"id": "info.xhtml", "title": "info.xhtml"},
+        {"id": "dedicatoria.xhtml", "title": "dedicatoria.xhtml"},
+        {"id": "autor.xhtml", "title": "Author"},
+    ],
+)
+def test_frontmatter_detection_matches_localized_metadata_chapters(chapter):
+    assert _is_frontmatter_chapter(chapter) is True
+
+
 def test_entity_ids_are_sequential(nlp):
     """Entity IDs should be entity_001, entity_002, etc."""
     chapters = [
