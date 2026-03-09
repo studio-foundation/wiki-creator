@@ -237,6 +237,20 @@ def test_normalize_entity_type_retags_geopolitical_name_to_place():
     assert new_type == "PLACE"
 
 
+def test_normalize_entity_type_keeps_person_when_context_has_generic_geo_words():
+    entities = {
+        "entity_n": {
+            "mentions_by_chapter": {
+                "ch01": ["Nehemia spoke about the kingdom and the war."],
+                "ch02": ["In the country, Nehemia sought allies."],
+            }
+        }
+    }
+    entity = {"canonical_name": "Nehemia", "type": "PERSON", "source_ids": ["entity_n"], "aliases": []}
+    new_type = _normalize_entity_type(entity, entities, {}, {}, {})
+    assert new_type == "PERSON"
+
+
 def test_canonicalize_role_entities_merges_unambiguous_assassin_alias():
     entities = [
         {"canonical_name": "Celaena", "type": "PERSON", "aliases": [], "source_ids": ["e1"], "relevant": True},

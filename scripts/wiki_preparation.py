@@ -67,21 +67,36 @@ def load_registry(path: str, key: str) -> dict:
     return {}
 
 
-def extract_context(entity: dict, persons: dict, places: dict, orgs: dict, events: dict) -> dict:
-    """Extract context_by_chapter for an entity from the appropriate registry."""
-    type_to_registry = {
+def _registry_chain_for_entity(entity: dict, persons: dict, places: dict, orgs: dict, events: dict) -> list[dict]:
+    """Return registries in lookup order: preferred by current type, then fallbacks."""
+    by_type = {
         "PERSON": persons,
         "PLACE": places,
         "ORG": orgs,
         "EVENT": events,
     }
-    registry = type_to_registry.get(entity.get("type", ""), {})
-    if not registry:
-        return {}
+    primary = by_type.get(entity.get("type", ""), {})
+    ordered = [primary] if primary else []
+    for reg in (persons, places, orgs, events):
+        if reg and reg is not primary:
+            ordered.append(reg)
+    return ordered
 
+
+def _find_entry_for_source_id(entity: dict, source_id: str, persons: dict, places: dict, orgs: dict, events: dict) -> dict:
+    """Find source_id entry, preferring the entity's current type registry."""
+    for registry in _registry_chain_for_entity(entity, persons, places, orgs, events):
+        entry = registry.get(source_id, {})
+        if entry:
+            return entry
+    return {}
+
+
+def extract_context(entity: dict, persons: dict, places: dict, orgs: dict, events: dict) -> dict:
+    """Extract context_by_chapter, with cross-registry fallback for retagged entities."""
     combined: dict[str, list[str]] = {}
     for sid in entity.get("source_ids", []):
-        entry = registry.get(sid, {})
+        entry = _find_entry_for_source_id(entity, sid, persons, places, orgs, events)
         for chapter, mentions in entry.get("mentions_by_chapter", {}).items():
             if chapter not in combined:
                 combined[chapter] = []
@@ -102,17 +117,10 @@ def extract_context(entity: dict, persons: dict, places: dict, orgs: dict, event
 
 
 def get_first_seen(entity: dict, persons: dict, places: dict, orgs: dict, events: dict) -> str:
-    """Return the first chapter where this entity appears."""
-    type_to_registry = {
-        "PERSON": persons,
-        "PLACE": places,
-        "ORG": orgs,
-        "EVENT": events,
-    }
-    registry = type_to_registry.get(entity.get("type", ""), {})
+    """Return the first chapter where this entity appears, with registry fallback."""
     first_seen = ""
     for sid in entity.get("source_ids", []):
-        entry = registry.get(sid, {})
+        entry = _find_entry_for_source_id(entity, sid, persons, places, orgs, events)
         fs = entry.get("first_seen", "")
         if fs and (not first_seen or fs < first_seen):
             first_seen = fs

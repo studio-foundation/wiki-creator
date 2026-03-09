@@ -67,6 +67,10 @@ _ROLE_PATTERNS = (
     r"\b[a-z][a-z'\- ]*champion\b",
     r"\bking'?s champion\b",
 )
+_KNOWN_WORLD_PLACES = frozenset({
+    "adarlan", "eyllwe", "erilea", "terrasen", "endovier", "rifthold",
+    "anielle", "calaculla", "perranth", "oakwald",
+})
 
 
 def _paths_from_payload(payload: dict) -> BookPaths:
@@ -289,6 +293,8 @@ def _normalize_entity_type(
         return entity.get("type", "OTHER")
 
     lowered = name.lower()
+    current_type = str(entity.get("type", "OTHER") or "OTHER").upper()
+
     if lowered in _CONCEPT_KEYWORDS:
         return "OTHER"
     if lowered in {"samhuinn", "yulemas"}:
@@ -303,13 +309,26 @@ def _normalize_entity_type(
     event_hits = sum(1 for kw in _EVENT_KEYWORDS if kw in text)
     concept_hits = sum(1 for kw in _CONCEPT_KEYWORDS if kw in text)
 
+    # Conservative PERSON retag: only with explicit geopolitical evidence.
+    if current_type == "PERSON":
+        if lowered in _KNOWN_WORLD_PLACES:
+            return "PLACE"
+        geo_patterns = (
+            rf"\b(?:kingdom|country|continent|empire)\s+of\s+{re.escape(lowered)}\b",
+            rf"\b(?:royaume|pays|continent|empire)\s+(?:d'|de )?{re.escape(lowered)}\b",
+            rf"\b{re.escape(lowered)}\s+(?:kingdom|country|continent|empire)\b",
+        )
+        if any(re.search(pattern, text) for pattern in geo_patterns):
+            return "PLACE"
+        return current_type
+
     if concept_hits >= 2 and concept_hits >= geo_hits:
         return "OTHER"
-    if event_hits >= 2 and event_hits > geo_hits:
+    if current_type in {"ORG", "PLACE", "OTHER"} and event_hits >= 2 and event_hits > geo_hits:
         return "EVENT"
-    if geo_hits >= 2 and geo_hits >= event_hits:
+    if current_type in {"ORG", "PLACE", "OTHER"} and geo_hits >= 2 and geo_hits >= event_hits:
         return "PLACE"
-    return entity.get("type", "OTHER")
+    return current_type
 
 
 def _is_role_entity_name(name: str) -> bool:

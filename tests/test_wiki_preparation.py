@@ -4,6 +4,7 @@ from pathlib import Path
 
 from scripts.wiki_preparation import (
     build_entity_bundle,
+    extract_context,
     stage_outputs_from_payload,
     write_batches,
 )
@@ -162,6 +163,19 @@ def test_build_entity_bundle_related_context_empty_without_relationships():
     )
 
     assert bundle["related_context"] == []
+
+
+def test_extract_context_falls_back_across_registries_for_retyped_entity():
+    persons, places, orgs, events = _registries()
+    # Source id exists in persons registry, but entity type was retagged to PLACE.
+    entity = {
+        "canonical_name": "Adarlan",
+        "type": "PLACE",
+        "source_ids": ["p1"],
+    }
+    ctx = extract_context(entity, persons, places, orgs, events)
+    assert "ch01" in ctx
+    assert ctx["ch01"][0] == "Dorian parle avec Chaol."
 
 
 def test_write_batches_counts_related_context_chars_for_splitting(tmp_path: Path):
