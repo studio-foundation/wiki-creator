@@ -31,6 +31,12 @@ thresholds: auto
 #     minor: { min_mentions: 3 }
 
 generation:
+  chapter_summary:
+    mode: extractive
+    max_bullets: 3
+    llm_fallback_to_extractive: true
+    llm_model: qwen2.5
+    llm_timeout_seconds: 45
   chapter_summary_max_chapters_per_entity: 8
   principal:
     sections: [infobox, biography, personality, physical, powers, relationships, trivia, references]
