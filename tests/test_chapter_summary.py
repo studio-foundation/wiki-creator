@@ -1,6 +1,7 @@
 """Tests for scripts/chapter_summary.py."""
 
 from scripts.chapter_summary import (
+    ChapterSummaryConfig,
     _chapter_summary_config_from_payload,
     _epub_output_from_payload,
     summarize_chapter,
@@ -185,3 +186,65 @@ def test_summarize_chapter_extractive_spans_chapter_progression() -> None:
     assert any("dawn" in b.lower() or "before noon" in b.lower() for b in bullets)
     assert any("afternoon" in b.lower() or "sunset" in b.lower() for b in bullets)
     assert any("nightfall" in b.lower() for b in bullets)
+
+
+def test_summarize_chapter_llm_mode_uses_llm_when_response_valid(monkeypatch) -> None:
+    chapter = {
+        "id": "ch06",
+        "title": "Chapter 6",
+        "content": "Celaena tracks a suspect through the castle and reports to Chaol.",
+    }
+
+    monkeypatch.setattr(
+        "scripts.chapter_summary._call_llm_summary",
+        lambda **_: ["Celaena tracks a suspect through the castle.", "She reports her findings to Chaol."],
+    )
+    cfg = ChapterSummaryConfig(mode="llm", max_bullets=3, llm_fallback_to_extractive=True)
+
+    result = summarize_chapter(chapter, config=cfg)
+
+    assert result["summary_method"] == "llm"
+    assert result["quality_flags"] == []
+    assert result["summary_bullets"] == [
+        "Celaena tracks a suspect through the castle.",
+        "She reports her findings to Chaol.",
+    ]
+
+
+def test_summarize_chapter_llm_mode_falls_back_to_extractive_on_invalid_response(monkeypatch) -> None:
+    chapter = {
+        "id": "ch07",
+        "title": "Chapter 7",
+        "content": (
+            "At dawn, Celaena studied the map. "
+            "By noon, she found a hidden stair near the council room. "
+            "At night, she warned Nehemia that the chamber was compromised."
+        ),
+    }
+
+    monkeypatch.setattr("scripts.chapter_summary._call_llm_summary", lambda **_: [])
+    cfg = ChapterSummaryConfig(mode="llm", max_bullets=3, llm_fallback_to_extractive=True)
+
+    result = summarize_chapter(chapter, config=cfg)
+
+    assert result["summary_method"] == "extractive_fallback"
+    assert "fallback_used" in result["quality_flags"]
+    assert "llm_invalid_response" in result["quality_flags"]
+    assert len(result["summary_bullets"]) > 0
+
+
+def test_summarize_chapter_llm_mode_without_fallback_returns_default_bullet(monkeypatch) -> None:
+    chapter = {
+        "id": "ch08",
+        "title": "Chapter 8",
+        "content": "Dorian questions Cain about the sabotage while guards watch the hall.",
+    }
+
+    monkeypatch.setattr("scripts.chapter_summary._call_llm_summary", lambda **_: [])
+    cfg = ChapterSummaryConfig(mode="llm", max_bullets=3, llm_fallback_to_extractive=False)
+
+    result = summarize_chapter(chapter, config=cfg)
+
+    assert result["summary_method"] == "llm"
+    assert result["summary_bullets"] == ["No reliable summary available for this chapter."]
+    assert "llm_invalid_response" in result["quality_flags"]

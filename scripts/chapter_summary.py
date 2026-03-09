@@ -25,6 +25,8 @@ Side effects:
 import json
 import re
 import sys
+import urllib.error
+import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -49,6 +51,7 @@ _ACTION_CUES = (
     "attacked", "killed", "escaped", "met", "decided", "realized", "uncovered",
     "arrived", "left", "returned", "asked", "opened", "closed",
 )
+OLLAMA_URL = "http://localhost:11434"
 
 
 @dataclass(frozen=True)
@@ -185,8 +188,68 @@ def _score_sentence(sentence: str, index: int, total: int) -> float:
     return (proper_nouns / token_count) * 2.0 + unique_ratio + position_bonus * 0.25 + action_bonus - dialogue_penalty
 
 
-def summarize_chapter(chapter: dict, config: ChapterSummaryConfig | None = None) -> dict:
-    cfg = config or ChapterSummaryConfig()
+def _sanitize_bullets(raw: object, max_bullets: int) -> list[str]:
+    if not isinstance(raw, list):
+        return []
+    cleaned: list[str] = []
+    for item in raw:
+        if not isinstance(item, str):
+            continue
+        bullet = re.sub(r"\s+", " ", item).strip()
+        if not bullet:
+            continue
+        cleaned.append(bullet)
+        if len(cleaned) >= max_bullets:
+            break
+    return cleaned
+
+
+def _call_llm_summary(*, chapter: dict, model: str, timeout_seconds: int, max_bullets: int) -> list[str]:
+    chapter_title = str(chapter.get("title", "")).strip() or str(chapter.get("id", "")).strip() or "Untitled chapter"
+    chapter_content = str(chapter.get("content", "")).strip()
+    if not chapter_content:
+        return []
+
+    prompt = (
+        "Summarize this novel chapter into concise wiki-context bullets.\n"
+        f"Return ONLY valid JSON as an object: {{\"summary_bullets\": [\"...\"]}}.\n"
+        f"Use at most {max_bullets} bullets. No quotes unless essential. No invented facts.\n"
+        f"Chapter title: {chapter_title}\n"
+        "Chapter text:\n"
+        f"{chapter_content}"
+    )
+    body = json.dumps({
+        "model": model,
+        "prompt": prompt,
+        "stream": False,
+        "options": {"temperature": 0.1},
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        f"{OLLAMA_URL}/api/generate",
+        data=body,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout_seconds) as resp:
+            payload = json.loads(resp.read())
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError):
+        return []
+
+    response_text = str(payload.get("response", "")).strip()
+    if not response_text:
+        return []
+    try:
+        response_json = json.loads(response_text)
+    except json.JSONDecodeError:
+        return []
+
+    if not isinstance(response_json, dict):
+        return []
+    return _sanitize_bullets(response_json.get("summary_bullets"), max_bullets)
+
+
+def _summarize_chapter_extractive(chapter: dict, cfg: ChapterSummaryConfig, method: str = "extractive", seed_flags: list[str] | None = None) -> dict:
     chapter_id = str(chapter.get("id", "")).strip()
     chapter_title = str(chapter.get("title", "")).strip()
     sentences = _split_sentences(chapter.get("content", ""))
@@ -195,7 +258,7 @@ def summarize_chapter(chapter: dict, config: ChapterSummaryConfig | None = None)
         if not _looks_noisy(s)
     ]
 
-    quality_flags: list[str] = []
+    quality_flags: list[str] = list(seed_flags or [])
     if not candidates:
         bullets = [_FALLBACK_BULLET]
         quality_flags.append("low_signal")
@@ -215,9 +278,43 @@ def summarize_chapter(chapter: dict, config: ChapterSummaryConfig | None = None)
         "chapter_id": chapter_id,
         "chapter_title": chapter_title,
         "summary_bullets": bullets,
-        "summary_method": "extractive",
+        "summary_method": method,
         "quality_flags": quality_flags,
     }
+
+
+def summarize_chapter(chapter: dict, config: ChapterSummaryConfig | None = None) -> dict:
+    cfg = config or ChapterSummaryConfig()
+    if cfg.mode == "llm":
+        llm_bullets = _call_llm_summary(
+            chapter=chapter,
+            model=cfg.llm_model,
+            timeout_seconds=cfg.llm_timeout_seconds,
+            max_bullets=cfg.max_bullets,
+        )
+        if llm_bullets:
+            return {
+                "chapter_id": str(chapter.get("id", "")).strip(),
+                "chapter_title": str(chapter.get("title", "")).strip(),
+                "summary_bullets": llm_bullets,
+                "summary_method": "llm",
+                "quality_flags": [],
+            }
+        if cfg.llm_fallback_to_extractive:
+            return _summarize_chapter_extractive(
+                chapter,
+                cfg,
+                method="extractive_fallback",
+                seed_flags=["llm_invalid_response", "fallback_used"],
+            )
+        return {
+            "chapter_id": str(chapter.get("id", "")).strip(),
+            "chapter_title": str(chapter.get("title", "")).strip(),
+            "summary_bullets": [_FALLBACK_BULLET],
+            "summary_method": "llm",
+            "quality_flags": ["llm_invalid_response"],
+        }
+    return _summarize_chapter_extractive(chapter, cfg)
 
 
 def summarize_chapters(chapters: list[dict], config: ChapterSummaryConfig | None = None) -> dict[str, dict]:
