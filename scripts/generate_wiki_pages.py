@@ -48,6 +48,11 @@ _SECTION_TITLES = {
     "trivia": "Anecdotes",
     "references": "Références",
 }
+_PLACEHOLDER_PATTERNS = (
+    re.compile(r"<[^>\n]{1,80}>"),
+    re.compile(r"\bsi connu\b", re.IGNORECASE),
+    re.compile(r"contenu en fran[çc]ais bas[ée] uniquement sur les extraits", re.IGNORECASE),
+)
 
 
 def call_ollama(prompt: str, model: str, timeout: int, num_predict: int = DEFAULT_NUM_PREDICT) -> str:
@@ -75,12 +80,12 @@ def _content_template_for_sections(sections: list[str]) -> str:
         if section == "infobox":
             blocks.append(
                 f"## {title}\\n\\n"
-                "- Nom: <si connu>\\n"
-                "- Rôle: <si connu>\\n"
-                "- Affiliation: <si connu>"
+                "- Nom: Inconnu\\n"
+                "- Rôle: Inconnu\\n"
+                "- Affiliation: Inconnue"
             )
         else:
-            blocks.append(f"## {title}\\n\\n<contenu en français basé uniquement sur les extraits>")
+            blocks.append(f"## {title}\\n\\nInformations non disponibles dans les extraits fournis.")
     return "\\n\\n".join(blocks)
 
 
@@ -261,6 +266,12 @@ def parse_response(raw: str, entity: dict) -> dict:
             return make_stub_page(entity, failed=True)
         if not page["infobox_fields"] and page["content"]:
             page["infobox_fields"] = _extract_infobox_fields_from_content(page["content"])
+        if _contains_template_placeholder(page):
+            print(
+                f"    [WARN] Placeholder/template leak for {entity['canonical_name']}, using failed stub",
+                file=sys.stderr,
+            )
+            return make_stub_page(entity, failed=True)
         return page
     except json.JSONDecodeError:
         print(f"    [WARN] JSON parse failed for {entity['canonical_name']}, using stub", file=sys.stderr)
@@ -432,6 +443,21 @@ def _load_existing(output_file: str) -> list[dict]:
 def _is_page_complete(page: dict) -> bool:
     content = page.get("content", "")
     return isinstance(content, str) and bool(content.strip())
+
+
+def _contains_template_placeholder(page: dict) -> bool:
+    """Reject responses that leak prompt placeholders into final content."""
+    content = str(page.get("content", "") or "")
+    for pattern in _PLACEHOLDER_PATTERNS:
+        if pattern.search(content):
+            return True
+    infobox = page.get("infobox_fields", {}) or {}
+    for value in infobox.values():
+        text = str(value or "")
+        for pattern in _PLACEHOLDER_PATTERNS:
+            if pattern.search(text):
+                return True
+    return False
 
 
 if __name__ == "__main__":

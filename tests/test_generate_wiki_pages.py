@@ -3,6 +3,7 @@
 import json
 
 from scripts.generate_wiki_pages import (
+    _contains_template_placeholder,
     _is_page_complete,
     build_prompt,
     call_ollama,
@@ -246,3 +247,17 @@ def test_is_page_complete_rejects_empty_or_whitespace_content():
     assert _is_page_complete({"title": "A", "content": "## Biographie\n\nTexte."}) is True
     assert _is_page_complete({"title": "A", "content": ""}) is False
     assert _is_page_complete({"title": "A", "content": "   \n\t"}) is False
+
+
+def test_parse_response_rejects_template_placeholder_leak():
+    raw = (
+        '{"title":"Assassin","importance":"secondary","entity_type":"PERSON",'
+        '"infobox_fields":{"nom":"<si connu>"},"content":"## Infobox\\n\\n- Nom: <si connu>\\n\\n## Biographie\\n\\nTexte."}'
+    )
+    page = parse_response(raw, _entity())
+    assert page["_failed"] is True
+
+
+def test_contains_template_placeholder_detects_marker_in_infobox():
+    page = {"content": "## Biographie\n\nTexte.", "infobox_fields": {"nom": "<si connu>"}}
+    assert _contains_template_placeholder(page) is True

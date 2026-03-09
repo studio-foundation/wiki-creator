@@ -11,7 +11,8 @@ from scripts.entity_extraction import (
     _get_min_mentions_absolute, filter_entities_by_min_mentions,
     _retag_entity_type_from_context, _infer_cue_words_language,
     _resolve_cue_words_language, _load_cue_words,
-    _spacy_model_candidates, _load_spacy_model_with_fallback
+    _spacy_model_candidates, _load_spacy_model_with_fallback,
+    _is_frontmatter_chapter,
 )
 
 
@@ -100,6 +101,12 @@ def test_no_raw_chapter_content_in_registry(nlp):
                 assert ctx != content, (
                     f"Context must not be the full chapter text. Got: {ctx!r}"
                 )
+
+
+def test_frontmatter_detection_matches_author_or_ack_titles():
+    assert _is_frontmatter_chapter({"id": "author.xhtml", "title": "Author"}) is True
+    assert _is_frontmatter_chapter({"id": "misc.xhtml", "title": "Acknowledgements"}) is True
+    assert _is_frontmatter_chapter({"id": "c01.xhtml", "title": "Chapter 1"}) is False
 
 
 def test_entity_ids_are_sequential(nlp):

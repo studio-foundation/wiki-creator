@@ -233,7 +233,39 @@ FRONTMATTER_ID_PATTERNS: frozenset[str] = frozenset({
     "halftitle",
     "dedication",
     "index",
+    "acknowledg",
+    "author",
+    "about-author",
+    "about_the_author",
+    "notes",
+    "credits",
+    "remerciement",
+    "remerciements",
+    "auteur",
+    "bio-auteur",
 })
+
+FRONTMATTER_TITLE_PATTERNS: frozenset[str] = frozenset({
+    "acknowledg",
+    "author",
+    "about the author",
+    "notes",
+    "credits",
+    "remerciement",
+    "remerciements",
+    "auteur",
+    "biographie de l'auteur",
+    "biographie auteur",
+})
+
+
+def _is_frontmatter_chapter(chapter: dict) -> bool:
+    """Return True if chapter metadata suggests front/back matter, not narrative."""
+    chapter_id = str(chapter.get("id", "") or "").lower()
+    title = str(chapter.get("title", "") or "").lower()
+    return any(p in chapter_id for p in FRONTMATTER_ID_PATTERNS) or any(
+        p in title for p in FRONTMATTER_TITLE_PATTERNS
+    )
 
 # French-specific words that spaCy misclassifies as named entities.
 # Harmless for English input (no English entity shares these strings).
@@ -517,8 +549,7 @@ def extract_entities(
     for chapter in chapters:
         if "content" not in chapter or "id" not in chapter:
             raise ValueError(f"chapter missing required fields 'content' or 'id': {list(chapter.keys())}")
-        chapter_id_lower = chapter["id"].lower()
-        if any(pattern in chapter_id_lower for pattern in FRONTMATTER_ID_PATTERNS):
+        if _is_frontmatter_chapter(chapter):
             continue
         chapter_label = chapter.get("title") or chapter["id"]
         doc = nlp(chapter["content"])
