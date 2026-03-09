@@ -9,7 +9,7 @@ for child wiki-page pipeline runs.
 Input (Studio stdin):
   previous_outputs["entity-classification"]:
     { "entities": [...with importance field], "relationships": [...], "narrator": ..., "stats": ... }
-  Files on disk: persons_full.json, places_full.json, orgs_full.json
+  Files on disk: persons_full.json, places_full.json, orgs_full.json, events_full.json
 
 Output (stdout):
   {
@@ -25,8 +25,15 @@ Side effects:
 import json
 import os
 import sys
+from pathlib import Path
 
 import yaml
+
+# Ensure project root is importable when running as `python scripts/<file>.py`.
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from wiki_creator.paths import book_paths_from_epub, BookPaths
 
 
@@ -48,6 +55,9 @@ MAX_MENTIONS_PER_CHAPTER = 5
 MAX_CHAPTERS = 25
 # Cap total context chars per entity
 MAX_CONTEXT_CHARS_PER_ENTITY = 8000
+MAX_RELATED_ENTITIES = 5
+MAX_RELATED_SNIPPETS = 2
+DEFAULT_CHAPTER_SUMMARY_MAX = 8
 
 
 def load_registry(path: str, key: str) -> dict:
@@ -57,20 +67,36 @@ def load_registry(path: str, key: str) -> dict:
     return {}
 
 
-def extract_context(entity: dict, persons: dict, places: dict, orgs: dict) -> dict:
-    """Extract context_by_chapter for an entity from the appropriate registry."""
-    type_to_registry = {
+def _registry_chain_for_entity(entity: dict, persons: dict, places: dict, orgs: dict, events: dict) -> list[dict]:
+    """Return registries in lookup order: preferred by current type, then fallbacks."""
+    by_type = {
         "PERSON": persons,
         "PLACE": places,
         "ORG": orgs,
+        "EVENT": events,
     }
-    registry = type_to_registry.get(entity.get("type", ""), {})
-    if not registry:
-        return {}
+    primary = by_type.get(entity.get("type", ""), {})
+    ordered = [primary] if primary else []
+    for reg in (persons, places, orgs, events):
+        if reg and reg is not primary:
+            ordered.append(reg)
+    return ordered
 
+
+def _find_entry_for_source_id(entity: dict, source_id: str, persons: dict, places: dict, orgs: dict, events: dict) -> dict:
+    """Find source_id entry, preferring the entity's current type registry."""
+    for registry in _registry_chain_for_entity(entity, persons, places, orgs, events):
+        entry = registry.get(source_id, {})
+        if entry:
+            return entry
+    return {}
+
+
+def extract_context(entity: dict, persons: dict, places: dict, orgs: dict, events: dict) -> dict:
+    """Extract context_by_chapter, with cross-registry fallback for retagged entities."""
     combined: dict[str, list[str]] = {}
     for sid in entity.get("source_ids", []):
-        entry = registry.get(sid, {})
+        entry = _find_entry_for_source_id(entity, sid, persons, places, orgs, events)
         for chapter, mentions in entry.get("mentions_by_chapter", {}).items():
             if chapter not in combined:
                 combined[chapter] = []
@@ -90,17 +116,11 @@ def extract_context(entity: dict, persons: dict, places: dict, orgs: dict) -> di
     return result
 
 
-def get_first_seen(entity: dict, persons: dict, places: dict, orgs: dict) -> str:
-    """Return the first chapter where this entity appears."""
-    type_to_registry = {
-        "PERSON": persons,
-        "PLACE": places,
-        "ORG": orgs,
-    }
-    registry = type_to_registry.get(entity.get("type", ""), {})
+def get_first_seen(entity: dict, persons: dict, places: dict, orgs: dict, events: dict) -> str:
+    """Return the first chapter where this entity appears, with registry fallback."""
     first_seen = ""
     for sid in entity.get("source_ids", []):
-        entry = registry.get(sid, {})
+        entry = _find_entry_for_source_id(entity, sid, persons, places, orgs, events)
         fs = entry.get("first_seen", "")
         if fs and (not first_seen or fs < first_seen):
             first_seen = fs
@@ -115,14 +135,170 @@ def filter_relationships(canonical_name: str, relationships: list[dict]) -> list
     ]
 
 
+def _entity_context_char_count(entity_bundle: dict) -> int:
+    """Estimate context size for batching from direct + related context."""
+    direct_ctx = sum(
+        sum(len(m) for m in mentions)
+        for mentions in entity_bundle.get("context_by_chapter", {}).values()
+    )
+    related_ctx = 0
+    for rel in entity_bundle.get("related_context", []):
+        related_ctx += len(rel.get("related_name", ""))
+        related_ctx += len(str(rel.get("cooccurrence_count", "")))
+        related_ctx += len(rel.get("related_type", "") or "")
+        related_ctx += len(rel.get("related_importance", "") or "")
+        related_ctx += sum(len(s) for s in rel.get("support_snippets", []))
+    chapter_summary_ctx = 0
+    for chapter in entity_bundle.get("chapter_summary_context", []):
+        chapter_summary_ctx += len(chapter.get("chapter_key", ""))
+        chapter_summary_ctx += sum(len(s) for s in chapter.get("summary_bullets", []))
+    return direct_ctx + related_ctx + chapter_summary_ctx
+
+
+def load_book_config_from_payload(payload: dict) -> dict:
+    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    file_path = ctx.get("file_path")
+    if not file_path:
+        return {}
+    epub_path = Path(file_path)
+    yaml_path = epub_path.with_suffix(".yaml")
+    if not yaml_path.exists():
+        return {}
+    try:
+        with open(yaml_path, encoding="utf-8") as f:
+            return yaml.safe_load(f) or {}
+    except Exception:
+        return {}
+
+
+def chapter_summary_limit_from_config(book_cfg: dict) -> int:
+    generation_cfg = book_cfg.get("generation", {})
+    value = generation_cfg.get("chapter_summary_max_chapters_per_entity", DEFAULT_CHAPTER_SUMMARY_MAX)
+    try:
+        limit = int(value)
+    except (TypeError, ValueError):
+        limit = DEFAULT_CHAPTER_SUMMARY_MAX
+    if limit < 1:
+        return 1
+    return limit
+
+
+def stage_outputs_from_payload(payload: dict) -> tuple[dict, dict]:
+    prev_outputs = payload.get("previous_outputs", {})
+    all_outputs = payload.get("all_stage_outputs", {})
+    prev_stage_output = payload.get("previous_stage_output", {})
+    classification_output = {}
+    chapter_summary_output = {}
+
+    if isinstance(all_outputs, dict):
+        classification_output = all_outputs.get("entity-classification", {}) or {}
+        chapter_summary_output = all_outputs.get("chapter-summary", {}) or {}
+    if not classification_output and isinstance(prev_outputs, dict):
+        classification_output = prev_outputs.get("entity-classification", {}) or {}
+    if not chapter_summary_output and isinstance(prev_outputs, dict):
+        chapter_summary_output = prev_outputs.get("chapter-summary", {}) or {}
+    if not classification_output and isinstance(prev_stage_output, dict) and prev_stage_output.get("entities"):
+        classification_output = prev_stage_output
+    if not chapter_summary_output and isinstance(prev_stage_output, dict) and prev_stage_output.get("chapter_summaries") is not None:
+        chapter_summary_output = prev_stage_output
+
+    return classification_output, chapter_summary_output
+
+
+def _support_snippets_for_entity(
+    entity: dict,
+    persons: dict,
+    places: dict,
+    orgs: dict,
+    events: dict,
+) -> list[str]:
+    ctx = extract_context(entity, persons, places, orgs, events)
+    snippets: list[str] = []
+    for chapter in sorted(ctx.keys()):
+        for mention in ctx[chapter]:
+            snippets.append(mention)
+            if len(snippets) >= MAX_RELATED_SNIPPETS:
+                return snippets
+    return snippets
+
+
+def build_related_context(
+    canonical_name: str,
+    relationships: list[dict],
+    entities_by_name: dict[str, dict],
+    persons: dict,
+    places: dict,
+    orgs: dict,
+    events: dict,
+) -> list[dict]:
+    related_rows = []
+    for rel in filter_relationships(canonical_name, relationships):
+        a = rel.get("entity_a")
+        b = rel.get("entity_b")
+        related_name = b if a == canonical_name else a
+        if not related_name or not isinstance(related_name, str):
+            continue
+        related_name = related_name.strip()
+        if not related_name:
+            continue
+
+        related_entity = entities_by_name.get(related_name, {})
+        support_snippets = []
+        if related_entity:
+            support_snippets = _support_snippets_for_entity(related_entity, persons, places, orgs, events)
+
+        related_rows.append({
+            "related_name": related_name,
+            "cooccurrence_count": int(rel.get("cooccurrence_count", 0) or 0),
+            "related_type": related_entity.get("type") if related_entity else None,
+            "related_importance": related_entity.get("importance") if related_entity else None,
+            "support_snippets": support_snippets,
+        })
+
+    related_rows.sort(key=lambda r: r.get("cooccurrence_count", 0), reverse=True)
+    return related_rows[:MAX_RELATED_ENTITIES]
+
+
+def build_chapter_summary_context(
+    entity: dict,
+    chapter_summaries: dict[str, dict],
+    chapter_summary_max: int,
+    context_by_chapter: dict[str, list[str]],
+) -> list[dict]:
+    if entity.get("type") != "PERSON":
+        return []
+    chapter_keys = sorted(context_by_chapter.keys())[:chapter_summary_max]
+    result = []
+    for chapter_key in chapter_keys:
+        summary = chapter_summaries.get(chapter_key)
+        if not summary:
+            continue
+        bullets = [
+            b for b in summary.get("summary_bullets", [])
+            if isinstance(b, str) and b.strip()
+        ][:3]
+        if not bullets:
+            continue
+        result.append({
+            "chapter_key": chapter_key,
+            "summary_bullets": bullets,
+        })
+    return result
+
+
 def build_entity_bundle(
     entity: dict,
     relationships: list[dict],
     persons: dict,
     places: dict,
     orgs: dict,
+    events: dict,
+    entities_by_name: dict[str, dict],
+    chapter_summaries: dict[str, dict] | None = None,
+    chapter_summary_max: int = DEFAULT_CHAPTER_SUMMARY_MAX,
 ) -> dict:
     canonical_name = entity["canonical_name"]
+    context_by_chapter = extract_context(entity, persons, places, orgs, events)
     return {
         "canonical_name": canonical_name,
         "type": entity.get("type", "OTHER"),
@@ -130,9 +306,24 @@ def build_entity_bundle(
         "aliases": entity.get("aliases", []),
         "total_mentions": entity.get("total_mentions", 0),
         "chapters_present": entity.get("chapters_present", 0),
-        "first_seen": get_first_seen(entity, persons, places, orgs),
-        "context_by_chapter": extract_context(entity, persons, places, orgs),
+        "first_seen": get_first_seen(entity, persons, places, orgs, events),
+        "context_by_chapter": context_by_chapter,
         "relationships": filter_relationships(canonical_name, relationships),
+        "related_context": build_related_context(
+            canonical_name,
+            relationships,
+            entities_by_name,
+            persons,
+            places,
+            orgs,
+            events,
+        ),
+        "chapter_summary_context": build_chapter_summary_context(
+            entity=entity,
+            chapter_summaries=chapter_summaries or {},
+            chapter_summary_max=chapter_summary_max,
+            context_by_chapter=context_by_chapter,
+        ),
     }
 
 
@@ -178,10 +369,7 @@ def write_batches(entity_bundles: list[dict], narrator: object, paths: "BookPath
         current_batch: list[dict] = []
         current_ctx = 0
         for entity in group:
-            entity_ctx = sum(
-                sum(len(m) for m in mentions)
-                for mentions in entity["context_by_chapter"].values()
-            )
+            entity_ctx = _entity_context_char_count(entity)
             if current_batch and (
                 len(current_batch) >= batch_size
                 or current_ctx + entity_ctx > MAX_BATCH_CONTEXT_CHARS
@@ -202,8 +390,7 @@ def write_batches(entity_bundles: list[dict], narrator: object, paths: "BookPath
 
 def main() -> None:
     payload = json.load(sys.stdin)
-    prev_outputs = payload.get("previous_outputs", {})
-    classification_output = prev_outputs.get("entity-classification", {})
+    classification_output, chapter_summary_output = stage_outputs_from_payload(payload)
 
     entities = classification_output.get("entities", [])
     relationships = classification_output.get("relationships", [])
@@ -215,9 +402,12 @@ def main() -> None:
         return
 
     paths = _paths_from_payload(payload)
+    book_cfg = load_book_config_from_payload(payload)
+    chapter_summary_max = chapter_summary_limit_from_config(book_cfg)
     persons = load_registry(str(paths.processing / "persons_full.json"), "persons_full")
     places = load_registry(str(paths.processing / "places_full.json"), "places_full")
     orgs = load_registry(str(paths.processing / "orgs_full.json"), "orgs_full")
+    events = load_registry(str(paths.processing / "events_full.json"), "events_full")
 
     # Only process entities that will have a wiki page
     relevant_entities = [
@@ -229,8 +419,24 @@ def main() -> None:
         file=sys.stderr,
     )
 
+    entities_by_name = {
+        e.get("canonical_name", ""): e
+        for e in relevant_entities
+        if e.get("canonical_name")
+    }
+    chapter_summaries = chapter_summary_output.get("chapter_summaries", {})
     entity_bundles = [
-        build_entity_bundle(e, relationships, persons, places, orgs)
+        build_entity_bundle(
+            e,
+            relationships,
+            persons,
+            places,
+            orgs,
+            events,
+            entities_by_name,
+            chapter_summaries=chapter_summaries,
+            chapter_summary_max=chapter_summary_max,
+        )
         for e in relevant_entities
     ]
 

@@ -25,8 +25,16 @@ Standalone test mode:
 """
 
 import json
+import re
 import sys
+from pathlib import Path
 import yaml
+
+# Ensure project root is importable when running as `python scripts/<file>.py`.
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from wiki_creator.paths import book_paths_from_epub, BookPaths
 
 
@@ -71,6 +79,31 @@ def filter_entities_by_min_mentions(entities_full: dict, min_mentions_absolute: 
         if _entity_total_mentions(entity) >= min_mentions_absolute
     }
 
+
+def _spacy_model_candidates(requested_model: str) -> list[str]:
+    """Return ordered candidate models for robust loading."""
+    candidates = [requested_model]
+    if requested_model.startswith("en_core_web_") and requested_model != "en_core_web_sm":
+        candidates.append("en_core_web_sm")
+    if requested_model.startswith("fr_core_news_"):
+        if requested_model != "fr_core_news_lg":
+            candidates.append("fr_core_news_lg")
+        if requested_model != "fr_core_news_sm":
+            candidates.append("fr_core_news_sm")
+    # De-duplicate while preserving order.
+    return list(dict.fromkeys(candidates))
+
+
+def _load_spacy_model_with_fallback(spacy_load, requested_model: str):
+    """Try requested spaCy model, then language-appropriate fallbacks."""
+    errors = []
+    for model in _spacy_model_candidates(requested_model):
+        try:
+            return spacy_load(model), model
+        except OSError as exc:
+            errors.append(f"{model}: {exc}")
+    raise OSError("Unable to load spaCy model. Tried: " + " | ".join(errors))
+
 # Entity labels to keep. Covers both French and English spaCy models.
 # French (fr_core_news_*): PER, LOC, ORG
 # English (en_core_web_*): PERSON, GPE, LOC, ORG, FAC, NORP
@@ -86,6 +119,109 @@ LABEL_TO_TYPE = {
     "NORP": "ORG",
 }
 
+CUE_WORDS_DIR = PROJECT_ROOT / "wiki_creator" / "cue_words"
+
+_DEFAULT_CUE_WORDS = {
+    "en": {
+        "place_cue_words": [
+            "city", "town", "capital", "kingdom", "continent", "country",
+            "castle", "palace", "camp", "mine", "mines", "forest", "woods",
+            "river", "sea", "port", "harbor", "street", "road", "avenue",
+        ],
+        "person_cue_words": [
+            "prince", "princess", "king", "queen", "duke", "lady", "lord",
+            "captain", "sir", "mr", "mrs", "miss",
+        ],
+        "place_prepositions": [
+            "in", "at", "from", "to", "into", "through", "within", "inside", "outside",
+        ],
+        "event_suffixes": [
+            "ball", "festival", "feast", "ceremony", "celebration",
+            "prayer", "prayers", "blessing", "blessings", "morning", "night", "eve",
+        ],
+    },
+    "fr": {
+        "place_cue_words": [
+            "ville", "royaume", "continent", "pays", "château", "chateau", "palais",
+            "camp", "mine", "forêt", "foret", "rivière", "riviere", "mer",
+            "port", "rue", "route", "avenue",
+        ],
+        "person_cue_words": [
+            "prince", "princesse", "roi", "reine", "duc", "dame", "seigneur",
+            "capitaine", "sir", "monsieur", "madame", "mademoiselle",
+        ],
+        "place_prepositions": [
+            "dans", "à", "a", "de", "depuis", "vers", "au", "aux", "en",
+        ],
+        "event_suffixes": [
+            "bal", "festival", "fête", "fete", "cérémonie", "ceremonie",
+            "célébration", "celebration", "prières", "prieres", "bénédiction",
+            "benediction", "matin", "nuit", "veille",
+        ],
+    },
+}
+
+
+def _infer_cue_words_language(spacy_model: str) -> str:
+    """Infer cue-word language from spaCy model name."""
+    model = (spacy_model or "").strip().lower()
+    if model.startswith("fr_core_news_"):
+        return "fr"
+    return "en"
+
+
+def _resolve_cue_words_language(spacy_model: str, override: str | None) -> str:
+    """
+    Resolve cue-word language.
+    Accepted override values: auto, en, fr, all.
+    """
+    if override is None:
+        return _infer_cue_words_language(spacy_model)
+
+    value = str(override).strip().lower()
+    if value in {"auto", ""}:
+        return _infer_cue_words_language(spacy_model)
+    if value in {"en", "fr", "all"}:
+        return value
+    print(
+        f"[WARN] invalid cue_words_language={override!r}; "
+        f"falling back to auto ({_infer_cue_words_language(spacy_model)})",
+        file=sys.stderr,
+    )
+    return _infer_cue_words_language(spacy_model)
+
+
+def _load_single_cue_words_file(language: str) -> dict[str, frozenset[str]]:
+    """Load one cue-word JSON file with fallback to defaults."""
+    path = CUE_WORDS_DIR / f"{language}.json"
+    data = _DEFAULT_CUE_WORDS.get(language, {})
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
+    return {
+        "place_cue_words": frozenset(data.get("place_cue_words", [])),
+        "person_cue_words": frozenset(data.get("person_cue_words", [])),
+        "place_prepositions": frozenset(data.get("place_prepositions", [])),
+        "event_suffixes": frozenset(data.get("event_suffixes", [])),
+    }
+
+
+def _load_cue_words(language: str) -> dict[str, frozenset[str]]:
+    """Load cue words for 'en', 'fr', or merged 'all'."""
+    if language == "all":
+        en = _load_single_cue_words_file("en")
+        fr = _load_single_cue_words_file("fr")
+        return {
+            key: en[key] | fr[key]
+            for key in ("place_cue_words", "person_cue_words", "place_prepositions", "event_suffixes")
+        }
+    if language in {"en", "fr"}:
+        return _load_single_cue_words_file(language)
+    # Safe fallback
+    return _load_single_cue_words_file("en")
+
 # Chapter IDs (lowercased) matching these substrings are skipped entirely.
 # They contain metadata (author, translator, epub-maker) not story entities.
 FRONTMATTER_ID_PATTERNS: frozenset[str] = frozenset({
@@ -97,7 +233,39 @@ FRONTMATTER_ID_PATTERNS: frozenset[str] = frozenset({
     "halftitle",
     "dedication",
     "index",
+    "acknowledg",
+    "author",
+    "about-author",
+    "about_the_author",
+    "notes",
+    "credits",
+    "remerciement",
+    "remerciements",
+    "auteur",
+    "bio-auteur",
 })
+
+FRONTMATTER_TITLE_PATTERNS: frozenset[str] = frozenset({
+    "acknowledg",
+    "author",
+    "about the author",
+    "notes",
+    "credits",
+    "remerciement",
+    "remerciements",
+    "auteur",
+    "biographie de l'auteur",
+    "biographie auteur",
+})
+
+
+def _is_frontmatter_chapter(chapter: dict) -> bool:
+    """Return True if chapter metadata suggests front/back matter, not narrative."""
+    chapter_id = str(chapter.get("id", "") or "").lower()
+    title = str(chapter.get("title", "") or "").lower()
+    return any(p in chapter_id for p in FRONTMATTER_ID_PATTERNS) or any(
+        p in title for p in FRONTMATTER_TITLE_PATTERNS
+    )
 
 # French-specific words that spaCy misclassifies as named entities.
 # Harmless for English input (no English entity shares these strings).
@@ -112,6 +280,19 @@ FALSE_POSITIVE_WORDS: frozenset[str] = frozenset({
     "excusez", "pardonnez", "intéressant",
     # Greeting and farewell interjections
     "merci", "bonjour", "bonsoir", "adieu",
+})
+
+# Coordinating conjunctions that frequently produce parser artifacts like
+# "Celaena and Chaol" as a single PERSON mention.
+COORDINATION_CONNECTORS: frozenset[str] = frozenset({"and", "et", "&", "y"})
+
+# Common English OCR/parsing artifacts where "I <verb>" is collapsed as one token
+# (e.g. "I would" -> "Iwould"), often mis-tagged as PERSON by NER.
+FIRST_PERSON_ARTIFACT_TAILS_EN: frozenset[str] = frozenset({
+    "am", "have", "had", "would", "will", "win", "can", "could", "do", "did",
+    "know", "knew", "see", "saw", "like", "suppose", "think", "guess",
+    "mean", "want", "need", "tell", "told", "say", "said", "feel", "felt",
+    "look", "looked", "might", "must", "shall", "should",
 })
 
 
@@ -168,9 +349,104 @@ def _is_valid_mention(text: str) -> bool:
         return False
     if not stripped[0].isupper():
         return False
-    if " " not in stripped and stripped.lower() in FALSE_POSITIVE_WORDS:
-        return False
+    # Reject coordinated multi-name artifacts: "X and Y", "X et Y", etc.
+    tokens = stripped.split()
+    if len(tokens) >= 3:
+        for i in range(1, len(tokens) - 1):
+            if tokens[i].lower() not in COORDINATION_CONNECTORS:
+                continue
+            left, right = tokens[i - 1], tokens[i + 1]
+            if left[:1].isupper() and right[:1].isupper():
+                return False
+    if " " not in stripped:
+        lowered = stripped.lower()
+        if lowered in FALSE_POSITIVE_WORDS:
+            return False
+        # Reject collapsed first-person artifacts like "Iwould", "Isuppose", etc.
+        if lowered.startswith("i") and lowered[1:] in FIRST_PERSON_ARTIFACT_TAILS_EN:
+            return False
     return True
+
+
+def _retag_entity_type_from_context(
+    entity: dict,
+    cue_words: dict[str, frozenset[str]] | None = None,
+) -> str:
+    """
+    Conservative type correction for frequent PERSON false positives.
+
+    Uses lexical cues from mention contexts to retag PERSON entities as PLACE
+    or EVENT when evidence is strong.
+    """
+    current = entity.get("type", "OTHER")
+    if current not in {"PERSON", "PLACE", "ORG"}:
+        return current
+    if cue_words is None:
+        cue_words = _load_cue_words("all")
+
+    mentions = [m.strip() for m in entity.get("raw_mentions", []) if m and m.strip()]
+    if not mentions:
+        return current
+    mention = mentions[0]
+    mention_l = mention.lower()
+
+    place_score = 0
+    event_score = 0
+    person_score = 0
+
+    event_cue_hits = 0
+    place_preps = "|".join(
+        re.escape(p) for p in sorted(cue_words["place_prepositions"], key=len, reverse=True)
+    )
+    event_suffixes = "|".join(
+        re.escape(e) for e in sorted(cue_words["event_suffixes"], key=len, reverse=True)
+    )
+
+    for chapter_mentions in entity.get("mentions_by_chapter", {}).values():
+        for sentence in chapter_mentions:
+            s = sentence.lower()
+            if not s:
+                continue
+
+            if mention_l in s:
+                if any(word in s for word in cue_words["place_cue_words"]):
+                    place_score += 2
+                if any(word in s for word in cue_words["person_cue_words"]):
+                    person_score += 2
+
+            if place_preps and re.search(rf"\b({place_preps})\s+{re.escape(mention_l)}\b", s):
+                place_score += 1
+            person_titles = "|".join(
+                re.escape(t) for t in sorted(cue_words["person_cue_words"], key=len, reverse=True)
+            )
+            if person_titles and re.search(rf"\b({person_titles})\s+{re.escape(mention_l)}\b", s):
+                person_score += 2
+            # Narrative verbs strongly associated with persons in prose.
+            if re.search(
+                rf"\b{re.escape(mention_l)}\s+"
+                r"(said|asked|replied|looked|smiled|laughed|nodded|walked|whispered)\b",
+                s,
+            ):
+                person_score += 1
+            if event_suffixes and re.search(
+                rf"\b{re.escape(mention_l)}\s+"
+                rf"({event_suffixes})\b",
+                s,
+            ):
+                event_score += 2
+                event_cue_hits += 1
+            if re.search(rf"\b{re.escape(mention_l)}'s\b", s):
+                person_score += 1
+
+    if current == "PERSON" and place_score >= 2 and place_score > max(event_score, person_score):
+        return "PLACE"
+    if current == "PERSON" and event_cue_hits >= 1 and event_score >= 2 and event_score > max(place_score, person_score):
+        return "EVENT"
+    if current in {"ORG", "PLACE"} and person_score >= 2 and person_score > max(place_score, event_score):
+        return "PERSON"
+    if current in {"ORG", "PLACE"} and person_score >= 1 and place_score == 0 and event_score == 0:
+        return "PERSON"
+    return current
 
 
 def _truncate_mention(span) -> str:
@@ -252,7 +528,11 @@ def extract_context(doc, span) -> str:
     return " ".join(s.text.strip() for s in sentences[start:end])
 
 
-def extract_entities(chapters: list[dict], nlp) -> dict:
+def extract_entities(
+    chapters: list[dict],
+    nlp,
+    cue_words: dict[str, frozenset[str]] | None = None,
+) -> dict:
     """
     Process all chapters in order and build the entity registry.
 
@@ -269,8 +549,7 @@ def extract_entities(chapters: list[dict], nlp) -> dict:
     for chapter in chapters:
         if "content" not in chapter or "id" not in chapter:
             raise ValueError(f"chapter missing required fields 'content' or 'id': {list(chapter.keys())}")
-        chapter_id_lower = chapter["id"].lower()
-        if any(pattern in chapter_id_lower for pattern in FRONTMATTER_ID_PATTERNS):
+        if _is_frontmatter_chapter(chapter):
             continue
         chapter_label = chapter.get("title") or chapter["id"]
         doc = nlp(chapter["content"])
@@ -308,12 +587,15 @@ def extract_entities(chapters: list[dict], nlp) -> dict:
             if len(registry[key]["mentions_by_chapter"][chapter_label]) < 3:
                 registry[key]["mentions_by_chapter"][chapter_label].append(context)
 
-    return {
+    entities = {
         "entities": {
             v["id"]: {k: v[k] for k in v if k != "id"}
             for v in registry.values()
         }
     }
+    for entity in entities["entities"].values():
+        entity["type"] = _retag_entity_type_from_context(entity, cue_words=cue_words)
+    return entities
 
 
 def split_entities(entities: dict) -> tuple[dict, dict]:
@@ -335,10 +617,10 @@ def split_by_type(entities_full: dict) -> dict[str, dict]:
     """
     Partition entities_full by entity type.
 
-    Returns a dict with keys "PERSON", "PLACE", "ORG".
+    Returns a dict with keys "PERSON", "PLACE", "ORG", "EVENT".
     Entities with other types (e.g. "OTHER") are silently dropped.
     """
-    result: dict[str, dict] = {"PERSON": {}, "PLACE": {}, "ORG": {}}
+    result: dict[str, dict] = {"PERSON": {}, "PLACE": {}, "ORG": {}, "EVENT": {}}
     for entity_id, entity in entities_full.items():
         t = entity.get("type", "OTHER")
         if t in result:
@@ -355,7 +637,7 @@ def run_test_mode() -> None:
     import spacy
 
     print("Loading en_core_web_sm...", file=sys.stderr)
-    nlp = spacy.load("en_core_web_sm")
+    nlp, _ = _load_spacy_model_with_fallback(spacy.load, "en_core_web_sm")
 
     print("Extracting entities from 3 hardcoded chapters...", file=sys.stderr)
     try:
@@ -397,6 +679,7 @@ def run_test_mode() -> None:
         ("PERSON", ("persons_full.json", "persons_full")),
         ("PLACE", ("places_full.json", "places_full")),
         ("ORG", ("orgs_full.json", "orgs_full")),
+        ("EVENT", ("events_full.json", "events_full")),
     ]:
         size = len(json.dumps({json_key: by_type[type_key]}, ensure_ascii=False))
         print(f"  {filename}: {size} chars ({len(by_type[type_key])} entities)")
@@ -427,10 +710,21 @@ def main() -> None:
         sys.exit(1)
 
     import spacy
-    nlp = spacy.load(spacy_model)
+    try:
+        nlp, loaded_model = _load_spacy_model_with_fallback(spacy.load, spacy_model)
+    except OSError as e:
+        json.dump({"error": str(e)}, sys.stdout, ensure_ascii=False)
+        sys.exit(1)
+    if loaded_model != spacy_model:
+        print(f"[WARN] spaCy model '{spacy_model}' not available; using '{loaded_model}'", file=sys.stderr)
 
     try:
-        result = extract_entities(chapters, nlp)
+        cue_words_language = _resolve_cue_words_language(
+            loaded_model,
+            input_data.get("cue_words_language", "auto"),
+        )
+        cue_words = _load_cue_words(cue_words_language)
+        result = extract_entities(chapters, nlp, cue_words=cue_words)
     except ValueError as e:
         json.dump({"error": str(e)}, sys.stdout)
         sys.exit(1)
@@ -454,6 +748,7 @@ def main() -> None:
         "PERSON": ("persons_full.json", "persons_full"),
         "PLACE": ("places_full.json", "places_full"),
         "ORG": ("orgs_full.json", "orgs_full"),
+        "EVENT": ("events_full.json", "events_full"),
     }
     for type_key, (filename, json_key) in type_files.items():
         with open(paths.processing / filename, "w", encoding="utf-8") as f:

@@ -398,3 +398,20 @@ def test_build_clusters_logs_warning_for_ambiguous_bare_surname(capsys):
     assert "ambiguous" in captured.err.lower() or "warning" in captured.err.lower(), (
         f"Expected an ambiguity warning in stderr. Got: {captured.err!r}"
     )
+
+
+def test_main_parses_live_book_flag(monkeypatch):
+    """--live --book <yaml> is parsed and forwarded to run_live_mode."""
+    import scripts.entity_clustering as clustering
+
+    captured = {}
+
+    def fake_run_live_mode(*, book_yaml=None):
+        captured["book_yaml"] = book_yaml
+
+    monkeypatch.setattr(clustering, "run_live_mode", fake_run_live_mode)
+    monkeypatch.setattr(sys, "argv", ["entity_clustering.py", "--live", "--book", "library/foo/books/01.yaml"])
+
+    clustering.main()
+
+    assert captured["book_yaml"] == "library/foo/books/01.yaml"

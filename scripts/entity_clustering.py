@@ -46,6 +46,14 @@ import json
 import sys
 import unicodedata
 from collections import defaultdict
+from pathlib import Path
+
+# Ensure project root is importable when running as `python scripts/<file>.py`.
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from wiki_creator.paths import book_paths_from_yaml
 
 # --- Configuration ---
 
@@ -565,16 +573,34 @@ def run_test_mode() -> None:
 
 # --- Studio pipeline interface ---
 
-def run_live_mode() -> None:
-    """Live mode: read the latest extraction-*.jsonl and run clustering on real data."""
+def _find_latest_extraction_file(book_yaml: str | None = None) -> Path | None:
+    """Find the latest extraction JSONL file either in CWD or a book processing dir."""
     import glob
 
-    jsonl_files = sorted(glob.glob("extraction-*.jsonl"), reverse=True)
+    if book_yaml:
+        processing_dir = book_paths_from_yaml(book_yaml).processing
+        pattern = str(processing_dir / "extraction-*.jsonl")
+    else:
+        pattern = "extraction-*.jsonl"
+
+    jsonl_files = sorted(glob.glob(pattern), reverse=True)
     if not jsonl_files:
-        print("No extraction-*.jsonl file found. Run make test-extraction first.", file=sys.stderr)
+        return None
+
+    return Path(jsonl_files[0])
+
+
+def run_live_mode(*, book_yaml: str | None = None) -> None:
+    """Live mode: read the latest extraction-*.jsonl and run clustering on real data."""
+    latest = _find_latest_extraction_file(book_yaml)
+    if latest is None:
+        print(
+            "No extraction-*.jsonl file found. Run make test-extraction first"
+            " (or pass --book <path/to/book.yaml>).",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
-    latest = jsonl_files[0]
     print(f"Reading {latest}...\n", file=sys.stderr)
 
     entities = {}
@@ -627,12 +653,18 @@ def run_live_mode() -> None:
 
 
 def main() -> None:
+    args = sys.argv[1:]
+
     if "--test" in sys.argv:
         run_test_mode()
         return
 
-    if "--live" in sys.argv:
-        run_live_mode()
+    if "--live" in args:
+        book_yaml = None
+        if "--book" in args:
+            idx = args.index("--book")
+            book_yaml = args[idx + 1]
+        run_live_mode(book_yaml=book_yaml)
         return
 
     payload = json.load(sys.stdin)

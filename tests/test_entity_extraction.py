@@ -8,7 +8,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.entity_extraction import (
     extract_entities, extract_context, split_entities, split_by_type,
     KEPT_LABELS, _is_valid_mention, FRONTMATTER_ID_PATTERNS, _truncate_mention,
-    _get_min_mentions_absolute, filter_entities_by_min_mentions
+    _get_min_mentions_absolute, filter_entities_by_min_mentions,
+    _retag_entity_type_from_context, _infer_cue_words_language,
+    _resolve_cue_words_language, _load_cue_words,
+    _spacy_model_candidates, _load_spacy_model_with_fallback,
+    _is_frontmatter_chapter,
 )
 
 
@@ -99,6 +103,12 @@ def test_no_raw_chapter_content_in_registry(nlp):
                 )
 
 
+def test_frontmatter_detection_matches_author_or_ack_titles():
+    assert _is_frontmatter_chapter({"id": "author.xhtml", "title": "Author"}) is True
+    assert _is_frontmatter_chapter({"id": "misc.xhtml", "title": "Acknowledgements"}) is True
+    assert _is_frontmatter_chapter({"id": "c01.xhtml", "title": "Chapter 1"}) is False
+
+
 def test_entity_ids_are_sequential(nlp):
     """Entity IDs should be entity_001, entity_002, etc."""
     chapters = [
@@ -137,7 +147,86 @@ def test_entity_type_is_included(nlp):
     result = extract_entities(chapters, nlp)
     for entry in result["entities"].values():
         assert "type" in entry, f"Missing 'type' field in entry: {entry}"
-        assert entry["type"] in {"PERSON", "PLACE", "ORG", "OTHER"}
+        assert entry["type"] in {"PERSON", "PLACE", "ORG", "EVENT", "OTHER"}
+
+
+def test_retags_place_from_context():
+    entity = {
+        "type": "PERSON",
+        "raw_mentions": ["Endovier"],
+        "mentions_by_chapter": {
+            "ch01": [
+                "Celaena was imprisoned in Endovier for one year.",
+                "Endovier was a brutal labor camp in Adarlan.",
+            ]
+        },
+    }
+    assert _retag_entity_type_from_context(entity) == "PLACE"
+
+
+def test_retags_event_from_context():
+    entity = {
+        "type": "PERSON",
+        "raw_mentions": ["Yulemas"],
+        "mentions_by_chapter": {
+            "ch01": [
+                "The court announced the Yulemas ball at dusk.",
+                "She woke on Yulemas morning to church bells.",
+            ]
+        },
+    }
+    assert _retag_entity_type_from_context(entity) == "EVENT"
+
+
+@pytest.mark.parametrize(
+    ("name", "source_type", "contexts"),
+    [
+        (
+            "Dorian",
+            "ORG",
+            ["Prince Dorian said nothing and looked away."],
+        ),
+        (
+            "Nehemia",
+            "ORG",
+            ["Princess Nehemia asked Celaena to train with her."],
+        ),
+        (
+            "Cain",
+            "ORG",
+            ["Cain said he would win the duel."],
+        ),
+        (
+            "Kaltain",
+            "PLACE",
+            ["Lady Kaltain smiled and walked toward the prince."],
+        ),
+    ],
+)
+def test_retags_org_or_place_to_person_from_context(name, source_type, contexts):
+    entity = {
+        "type": source_type,
+        "raw_mentions": [name],
+        "mentions_by_chapter": {"ch01": contexts},
+    }
+    assert _retag_entity_type_from_context(entity) == "PERSON"
+
+
+def test_infer_cue_words_language_from_spacy_model():
+    assert _infer_cue_words_language("fr_core_news_lg") == "fr"
+    assert _infer_cue_words_language("fr_core_news_sm") == "fr"
+    assert _infer_cue_words_language("en_core_web_sm") == "en"
+
+
+def test_resolve_cue_words_language_auto():
+    assert _resolve_cue_words_language("fr_core_news_lg", "auto") == "fr"
+    assert _resolve_cue_words_language("en_core_web_sm", None) == "en"
+
+
+def test_load_cue_words_all_merges_languages():
+    cues = _load_cue_words("all")
+    assert "in" in cues["place_prepositions"]      # EN
+    assert "dans" in cues["place_prepositions"]    # FR
 
 
 # --- split_entities tests ---
@@ -289,7 +378,7 @@ def test_non_frontmatter_chapter_not_skipped(nlp):
 # --- split_by_type tests ---
 
 def test_split_by_type_separates_by_type(nlp):
-    """split_by_type must return separate dicts for PERSON, PLACE, ORG."""
+    """split_by_type must return separate dicts for PERSON, PLACE, ORG, EVENT."""
     chapters = [
         {"id": "ch01", "title": "Chapter 1", "content": "Alice walked into London and met the Royal Society."}
     ]
@@ -300,6 +389,7 @@ def test_split_by_type_separates_by_type(nlp):
     assert "PERSON" in by_type
     assert "PLACE" in by_type
     assert "ORG" in by_type
+    assert "EVENT" in by_type
 
 
 def test_split_by_type_entities_are_in_correct_bucket(nlp):
@@ -311,7 +401,7 @@ def test_split_by_type_entities_are_in_correct_bucket(nlp):
     _, entities_full = split_entities(result["entities"])
     by_type = split_by_type(entities_full)
 
-    for type_key in ("PERSON", "PLACE", "ORG"):
+    for type_key in ("PERSON", "PLACE", "ORG", "EVENT"):
         for entity_id, entity in by_type[type_key].items():
             assert entity["type"] == type_key, (
                 f"[{entity_id}] is in bucket {type_key!r} but has type={entity['type']!r}"
@@ -333,7 +423,7 @@ def test_split_by_type_covers_all_entities(nlp):
         all_bucket_ids |= set(bucket.keys())
         total_count += len(bucket)
 
-    known_types = {e["type"] for e in entities_full.values()} & {"PERSON", "PLACE", "ORG"}
+    known_types = {e["type"] for e in entities_full.values()} & {"PERSON", "PLACE", "ORG", "EVENT"}
     expected_ids = {
         eid for eid, e in entities_full.items() if e["type"] in known_types
     }
@@ -397,6 +487,20 @@ def test_is_valid_mention_case_insensitive_check():
     from scripts.entity_extraction import FALSE_POSITIVE_WORDS  # noqa: F401 — ensures symbol exists
     assert _is_valid_mention("CHER") is False
     assert _is_valid_mention("bonjour") is False
+
+
+def test_is_valid_mention_rejects_collapsed_first_person_artifacts():
+    assert _is_valid_mention("Isuppose") is False
+    assert _is_valid_mention("Iknew") is False
+    assert _is_valid_mention("Iwin") is False
+    assert _is_valid_mention("Isee") is False
+    assert _is_valid_mention("Iwould") is False
+    assert _is_valid_mention("Ilike") is False
+
+
+def test_is_valid_mention_rejects_coordinated_duo_mentions():
+    assert _is_valid_mention("Celaena and Chaol") is False
+    assert _is_valid_mention("Celaena et Chaol") is False
 
 
 # --- _truncate_mention tests ---
@@ -554,6 +658,27 @@ def test_filter_entities_by_min_mentions_excludes_below_threshold():
     }
     filtered = filter_entities_by_min_mentions(entities_full, min_mentions_absolute=3)
     assert set(filtered.keys()) == {"entity_002", "entity_003"}
+
+
+def test_spacy_model_candidates_for_english_adds_sm_fallback():
+    assert _spacy_model_candidates("en_core_web_lg") == ["en_core_web_lg", "en_core_web_sm"]
+
+
+def test_load_spacy_model_with_fallback_uses_second_candidate():
+    calls = []
+
+    def fake_load(model_name):
+        calls.append(model_name)
+        if model_name == "en_core_web_lg":
+            raise OSError("missing model")
+        if model_name == "en_core_web_sm":
+            return {"model": model_name}
+        raise OSError("unexpected model")
+
+    nlp, loaded = _load_spacy_model_with_fallback(fake_load, "en_core_web_lg")
+    assert loaded == "en_core_web_sm"
+    assert nlp == {"model": "en_core_web_sm"}
+    assert calls == ["en_core_web_lg", "en_core_web_sm"]
 
 
 def test_main_writes_only_entities_meeting_min_mentions_threshold(tmp_path):

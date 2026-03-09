@@ -1,0 +1,369 @@
+#!/usr/bin/env python3
+"""
+Stage: chapter-summary (script executor, no LLM)
+
+Build deterministic, extractive chapter summaries from epub-parse output.
+
+Input (Studio stdin):
+  previous_outputs["epub-parse"]["chapters"]: [{id, title, content}, ...]
+
+Output (stdout):
+  {
+    "chapter_summaries": {
+      "<chapter_key>": {
+        "chapter_id": "...",
+        "chapter_title": "...",
+        "summary_bullets": ["...", "...", "..."]
+      }
+    }
+  }
+
+Side effects:
+  Writes processing_output/chapter_summaries.json.
+"""
+
+import json
+import re
+import sys
+import urllib.error
+import urllib.request
+from dataclasses import dataclass
+from pathlib import Path
+
+import yaml
+
+# Ensure project root is importable when running as `python scripts/<file>.py`.
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from wiki_creator.paths import BookPaths, book_paths_from_epub
+
+_FALLBACK_BULLET = "No reliable summary available for this chapter."
+_MIN_SENTENCE_CHARS = 25
+_MAX_SENTENCE_CHARS = 320
+_DEFAULT_MAX_BULLETS = 3
+_DEFAULT_LLM_MODEL = "qwen2.5"
+_DEFAULT_LLM_TIMEOUT_SECONDS = 45
+_VALID_SUMMARY_MODES = {"extractive", "llm"}
+_ACTION_CUES = (
+    "found", "discovered", "revealed", "warned", "reported", "followed",
+    "attacked", "killed", "escaped", "met", "decided", "realized", "uncovered",
+    "arrived", "left", "returned", "asked", "opened", "closed",
+)
+OLLAMA_URL = "http://localhost:11434"
+
+
+@dataclass(frozen=True)
+class ChapterSummaryConfig:
+    mode: str = "extractive"
+    max_bullets: int = _DEFAULT_MAX_BULLETS
+    llm_fallback_to_extractive: bool = True
+    llm_model: str = _DEFAULT_LLM_MODEL
+    llm_timeout_seconds: int = _DEFAULT_LLM_TIMEOUT_SECONDS
+
+
+def _paths_from_payload(payload: dict) -> BookPaths:
+    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    file_path = ctx.get("file_path")
+    if not file_path:
+        raise ValueError("missing file_path in additional_context")
+    return book_paths_from_epub(file_path)
+
+
+def _as_bool(value: object, default: bool) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"true", "1", "yes", "on"}:
+            return True
+        if normalized in {"false", "0", "no", "off"}:
+            return False
+    return default
+
+
+def _as_positive_int(value: object, default: int) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return default
+    if parsed <= 0:
+        return default
+    return parsed
+
+
+def _chapter_summary_config_from_payload(payload: dict) -> ChapterSummaryConfig:
+    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    generation_cfg = ctx.get("generation", {}) if isinstance(ctx, dict) else {}
+    summary_cfg = generation_cfg.get("chapter_summary", {}) if isinstance(generation_cfg, dict) else {}
+    if not isinstance(summary_cfg, dict):
+        summary_cfg = {}
+
+    mode = str(summary_cfg.get("mode", "extractive")).strip().lower()
+    if mode not in _VALID_SUMMARY_MODES:
+        mode = "extractive"
+
+    max_bullets = _as_positive_int(summary_cfg.get("max_bullets"), _DEFAULT_MAX_BULLETS)
+    llm_timeout_seconds = _as_positive_int(
+        summary_cfg.get("llm_timeout_seconds"),
+        _DEFAULT_LLM_TIMEOUT_SECONDS,
+    )
+
+    llm_model_raw = summary_cfg.get("llm_model", _DEFAULT_LLM_MODEL)
+    llm_model = str(llm_model_raw).strip() if llm_model_raw is not None else ""
+    if not llm_model:
+        llm_model = _DEFAULT_LLM_MODEL
+
+    llm_fallback_to_extractive = _as_bool(
+        summary_cfg.get("llm_fallback_to_extractive", True),
+        True,
+    )
+
+    return ChapterSummaryConfig(
+        mode=mode,
+        max_bullets=max_bullets,
+        llm_fallback_to_extractive=llm_fallback_to_extractive,
+        llm_model=llm_model,
+        llm_timeout_seconds=llm_timeout_seconds,
+    )
+
+
+def _chapter_key(chapter: dict) -> str:
+    title = (chapter.get("title") or "").strip()
+    if title:
+        return title
+    return str(chapter.get("id", "")).strip()
+
+
+def _split_sentences(text: str) -> list[str]:
+    normalized = re.sub(r"\s+", " ", (text or "")).strip()
+    if not normalized:
+        return []
+    parts = re.split(r"(?<=[.!?])\s+", normalized)
+    return [p.strip() for p in parts if p and p.strip()]
+
+
+def _looks_noisy(sentence: str) -> bool:
+    s = sentence.strip()
+    if not s:
+        return True
+    if len(s) < _MIN_SENTENCE_CHARS or len(s) > _MAX_SENTENCE_CHARS:
+        return True
+    alpha_chars = sum(1 for ch in s if ch.isalpha())
+    if alpha_chars < 12:
+        return True
+    return False
+
+
+def _looks_dialogue_heavy(sentence: str) -> bool:
+    stripped = sentence.strip()
+    if not stripped:
+        return False
+    if stripped.startswith(("“", "\"", "'")):
+        return True
+
+    quote_chars = sum(1 for ch in stripped if ch in {'"', "“", "”", "'"})
+    return (quote_chars / max(len(stripped), 1)) > 0.05
+
+
+def _score_sentence(sentence: str, index: int, total: int) -> float:
+    tokens = re.findall(r"[A-Za-zÀ-ÿ']+", sentence)
+    token_count = len(tokens)
+    if token_count == 0:
+        return float("-inf")
+
+    proper_nouns = sum(1 for t in tokens if t and t[0].isupper())
+    unique_ratio = len({t.lower() for t in tokens}) / token_count
+
+    # Light position prior to keep some early context without forcing the first sentence.
+    position_bonus = max(0.0, 1.0 - (index / max(total, 1)))
+    lowered = sentence.lower()
+    action_bonus = 0.0
+    for cue in _ACTION_CUES:
+        if cue in lowered:
+            action_bonus += 0.15
+
+    dialogue_penalty = 0.75 if _looks_dialogue_heavy(sentence) else 0.0
+    return (proper_nouns / token_count) * 2.0 + unique_ratio + position_bonus * 0.25 + action_bonus - dialogue_penalty
+
+
+def _sanitize_bullets(raw: object, max_bullets: int) -> list[str]:
+    if not isinstance(raw, list):
+        return []
+    cleaned: list[str] = []
+    for item in raw:
+        if not isinstance(item, str):
+            continue
+        bullet = re.sub(r"\s+", " ", item).strip()
+        if not bullet:
+            continue
+        cleaned.append(bullet)
+        if len(cleaned) >= max_bullets:
+            break
+    return cleaned
+
+
+def _call_llm_summary(*, chapter: dict, model: str, timeout_seconds: int, max_bullets: int) -> list[str]:
+    chapter_title = str(chapter.get("title", "")).strip() or str(chapter.get("id", "")).strip() or "Untitled chapter"
+    chapter_content = str(chapter.get("content", "")).strip()
+    if not chapter_content:
+        return []
+
+    prompt = (
+        "Summarize this novel chapter into concise wiki-context bullets.\n"
+        f"Return ONLY valid JSON as an object: {{\"summary_bullets\": [\"...\"]}}.\n"
+        f"Use at most {max_bullets} bullets. No quotes unless essential. No invented facts.\n"
+        f"Chapter title: {chapter_title}\n"
+        "Chapter text:\n"
+        f"{chapter_content}"
+    )
+    body = json.dumps({
+        "model": model,
+        "prompt": prompt,
+        "stream": False,
+        "options": {"temperature": 0.1},
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        f"{OLLAMA_URL}/api/generate",
+        data=body,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout_seconds) as resp:
+            payload = json.loads(resp.read())
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError):
+        return []
+
+    response_text = str(payload.get("response", "")).strip()
+    if not response_text:
+        return []
+    try:
+        response_json = json.loads(response_text)
+    except json.JSONDecodeError:
+        return []
+
+    if not isinstance(response_json, dict):
+        return []
+    return _sanitize_bullets(response_json.get("summary_bullets"), max_bullets)
+
+
+def _summarize_chapter_extractive(chapter: dict, cfg: ChapterSummaryConfig, method: str = "extractive", seed_flags: list[str] | None = None) -> dict:
+    chapter_id = str(chapter.get("id", "")).strip()
+    chapter_title = str(chapter.get("title", "")).strip()
+    sentences = _split_sentences(chapter.get("content", ""))
+    candidates = [
+        (i, s) for i, s in enumerate(sentences)
+        if not _looks_noisy(s)
+    ]
+
+    quality_flags: list[str] = list(seed_flags or [])
+    if not candidates:
+        bullets = [_FALLBACK_BULLET]
+        quality_flags.append("low_signal")
+    else:
+        ranked = sorted(
+            candidates,
+            key=lambda item: _score_sentence(item[1], item[0], len(sentences)),
+            reverse=True,
+        )[: cfg.max_bullets]
+        chosen_idxs = {idx for idx, _ in ranked}
+        bullets = [s for i, s in enumerate(sentences) if i in chosen_idxs][: cfg.max_bullets]
+        if not bullets:
+            bullets = [_FALLBACK_BULLET]
+            quality_flags.append("low_signal")
+
+    return {
+        "chapter_id": chapter_id,
+        "chapter_title": chapter_title,
+        "summary_bullets": bullets,
+        "summary_method": method,
+        "quality_flags": quality_flags,
+    }
+
+
+def summarize_chapter(chapter: dict, config: ChapterSummaryConfig | None = None) -> dict:
+    cfg = config or ChapterSummaryConfig()
+    if cfg.mode == "llm":
+        llm_bullets = _call_llm_summary(
+            chapter=chapter,
+            model=cfg.llm_model,
+            timeout_seconds=cfg.llm_timeout_seconds,
+            max_bullets=cfg.max_bullets,
+        )
+        if llm_bullets:
+            return {
+                "chapter_id": str(chapter.get("id", "")).strip(),
+                "chapter_title": str(chapter.get("title", "")).strip(),
+                "summary_bullets": llm_bullets,
+                "summary_method": "llm",
+                "quality_flags": [],
+            }
+        if cfg.llm_fallback_to_extractive:
+            return _summarize_chapter_extractive(
+                chapter,
+                cfg,
+                method="extractive_fallback",
+                seed_flags=["llm_invalid_response", "fallback_used"],
+            )
+        return {
+            "chapter_id": str(chapter.get("id", "")).strip(),
+            "chapter_title": str(chapter.get("title", "")).strip(),
+            "summary_bullets": [_FALLBACK_BULLET],
+            "summary_method": "llm",
+            "quality_flags": ["llm_invalid_response"],
+        }
+    return _summarize_chapter_extractive(chapter, cfg)
+
+
+def summarize_chapters(chapters: list[dict], config: ChapterSummaryConfig | None = None) -> dict[str, dict]:
+    result: dict[str, dict] = {}
+    for chapter in chapters:
+        key = _chapter_key(chapter)
+        if not key:
+            continue
+        result[key] = summarize_chapter(chapter, config=config)
+    return result
+
+
+def _epub_output_from_payload(payload: dict) -> dict:
+    all_outputs = payload.get("all_stage_outputs", {})
+    if isinstance(all_outputs, dict):
+        stage = all_outputs.get("epub-parse")
+        if isinstance(stage, dict) and stage.get("chapters") is not None:
+            return stage
+
+    prev_outputs = payload.get("previous_outputs", {})
+    if isinstance(prev_outputs, dict):
+        stage = prev_outputs.get("epub-parse")
+        if isinstance(stage, dict) and stage.get("chapters") is not None:
+            return stage
+
+    prev_stage = payload.get("previous_stage_output", {})
+    if isinstance(prev_stage, dict) and prev_stage.get("chapters") is not None:
+        return prev_stage
+
+    return {}
+
+
+def main() -> None:
+    payload = json.load(sys.stdin)
+    epub_data = _epub_output_from_payload(payload)
+    chapters = epub_data.get("chapters", [])
+    config = _chapter_summary_config_from_payload(payload)
+
+    chapter_summaries = summarize_chapters(chapters, config=config)
+    out = {"chapter_summaries": chapter_summaries}
+
+    paths = _paths_from_payload(payload)
+    paths.processing.mkdir(parents=True, exist_ok=True)
+    out_file = paths.processing / "chapter_summaries.json"
+    with open(out_file, "w", encoding="utf-8") as f:
+        json.dump(out, f, ensure_ascii=False, indent=2)
+
+    json.dump(out, sys.stdout, ensure_ascii=False)
+
+
+if __name__ == "__main__":
+    main()

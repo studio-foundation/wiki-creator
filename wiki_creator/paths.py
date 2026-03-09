@@ -2,6 +2,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+# Project root = directory containing wiki_creator (repo root)
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+
+def _resolve(path: Path | str) -> Path:
+    """Resolve path relative to project root if not absolute."""
+    p = Path(path)
+    if p.is_absolute():
+        return p
+    return (_PROJECT_ROOT / p).resolve()
+
 
 @dataclass
 class BookPaths:
@@ -15,16 +26,23 @@ def book_paths_from_epub(epub_path: Path | str) -> BookPaths:
     """Derive all book working directories from the epub path.
 
     Expects structure: library/<author>/<series>/books/<slug>.epub
-    Returns paths relative to the project root (CWD).
+    Relative paths are resolved against the project root (repo root).
     """
-    p = Path(epub_path)
+    p = _resolve(epub_path)
     series_dir = p.parent.parent  # up from books/
     slug = p.stem
+    if not slug:
+        raise ValueError("epub path must have a non-empty stem (e.g. book.epub)")
+    try:
+        # Return paths relative to project root so CWD=project root works
+        base = series_dir.relative_to(_PROJECT_ROOT)
+    except ValueError:
+        base = series_dir
     return BookPaths(
-        epub=p,
-        processing=series_dir / "processing_output" / slug,
-        wiki_inputs=series_dir / "wiki_inputs" / slug,
-        output=series_dir / "output" / slug,
+        epub=base / "books" / p.name,
+        processing=base / "processing_output" / slug,
+        wiki_inputs=base / "wiki_inputs" / slug,
+        output=base / "output" / slug,
     )
 
 
@@ -32,8 +50,9 @@ def book_paths_from_yaml(yaml_path: Path | str) -> BookPaths:
     """Derive all book working directories from the yaml config path.
 
     Expects structure: library/<author>/<series>/books/<slug>.yaml
+    Relative paths are resolved against the project root (repo root).
     """
-    p = Path(yaml_path)
+    p = _resolve(yaml_path)
     series_dir = p.parent.parent
     slug = p.stem
     epub = series_dir / "books" / f"{slug}.epub"

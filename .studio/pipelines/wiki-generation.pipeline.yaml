@@ -23,6 +23,18 @@ stages:
       include:
         - input
 
+  - name: chapter-summary
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/chapter_summary.py
+    contract: chapter-summary
+    context:
+      include:
+        - input
+        - previous_stage_output
+        - all_stage_outputs
+
   - name: wiki-preparation
     kind: extraction
     executor: script
@@ -33,6 +45,7 @@ stages:
       include:
         - input
         - previous_stage_output
+        - all_stage_outputs
 
   - name: wiki-generation
     kind: extraction
