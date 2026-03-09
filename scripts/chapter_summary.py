@@ -330,6 +330,55 @@ def summarize_chapters(chapters: list[dict], config: ChapterSummaryConfig | None
     return result
 
 
+def _save_chapter_summaries(chapter_summaries: dict[str, dict], output_file: Path) -> None:
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_file, "w", encoding="utf-8") as f:
+        json.dump({"chapter_summaries": chapter_summaries}, f, ensure_ascii=False, indent=2)
+
+
+def _load_existing_chapter_summaries(output_file: Path) -> dict[str, dict]:
+    if not output_file.exists():
+        return {}
+    try:
+        with open(output_file, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return {}
+    chapter_summaries = data.get("chapter_summaries", {})
+    return chapter_summaries if isinstance(chapter_summaries, dict) else {}
+
+
+def _is_summary_complete(summary: dict) -> bool:
+    bullets = summary.get("summary_bullets")
+    if not isinstance(bullets, list):
+        return False
+    return any(isinstance(bullet, str) and bullet.strip() for bullet in bullets)
+
+
+def summarize_chapters_incrementally(
+    chapters: list[dict],
+    *,
+    output_file: Path,
+    config: ChapterSummaryConfig | None = None,
+) -> dict[str, dict]:
+    result = {
+        key: value
+        for key, value in _load_existing_chapter_summaries(output_file).items()
+        if isinstance(key, str) and isinstance(value, dict) and _is_summary_complete(value)
+    }
+
+    for chapter in chapters:
+        if _is_frontmatter_chapter(chapter):
+            continue
+        key = _chapter_key(chapter)
+        if not key or key in result:
+            continue
+        result[key] = summarize_chapter(chapter, config=config)
+        _save_chapter_summaries(result, output_file)
+
+    return result
+
+
 def _epub_output_from_payload(payload: dict) -> dict:
     all_outputs = payload.get("all_stage_outputs", {})
     if isinstance(all_outputs, dict):
@@ -356,14 +405,10 @@ def main() -> None:
     chapters = epub_data.get("chapters", [])
     config = _chapter_summary_config_from_payload(payload)
 
-    chapter_summaries = summarize_chapters(chapters, config=config)
-    out = {"chapter_summaries": chapter_summaries}
-
     paths = _paths_from_payload(payload)
-    paths.processing.mkdir(parents=True, exist_ok=True)
     out_file = paths.processing / "chapter_summaries.json"
-    with open(out_file, "w", encoding="utf-8") as f:
-        json.dump(out, f, ensure_ascii=False, indent=2)
+    chapter_summaries = summarize_chapters_incrementally(chapters, output_file=out_file, config=config)
+    out = {"chapter_summaries": chapter_summaries}
 
     json.dump(out, sys.stdout, ensure_ascii=False)
 

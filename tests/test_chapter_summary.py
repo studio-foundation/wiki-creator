@@ -1,9 +1,12 @@
 """Tests for scripts/chapter_summary.py."""
 
+import json
+
 from scripts.chapter_summary import (
     ChapterSummaryConfig,
     _chapter_summary_config_from_payload,
     _epub_output_from_payload,
+    summarize_chapters_incrementally,
     summarize_chapter,
     summarize_chapters,
 )
@@ -98,6 +101,54 @@ def test_summarize_chapters_is_deterministic():
     b = summarize_chapters(chapters)
 
     assert a == b
+
+
+def test_summarize_chapters_incrementally_resumes_from_existing_file(tmp_path) -> None:
+    output_file = tmp_path / "chapter_summaries.json"
+    output_file.write_text(
+        json.dumps(
+            {
+                "chapter_summaries": {
+                    "Chapter 1": {
+                        "chapter_id": "ch01",
+                        "chapter_title": "Chapter 1",
+                        "summary_bullets": ["Existing summary."],
+                        "summary_method": "llm",
+                        "quality_flags": [],
+                    }
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    chapters = [
+        {"id": "ch01", "title": "Chapter 1", "content": "Old content should be skipped."},
+        {"id": "ch02", "title": "Chapter 2", "content": "Celaena follows Chaol into the castle vault."},
+    ]
+
+    summaries = summarize_chapters_incrementally(chapters, output_file=output_file)
+
+    assert summaries["Chapter 1"]["summary_bullets"] == ["Existing summary."]
+    assert "Chapter 2" in summaries
+
+
+def test_summarize_chapters_incrementally_saves_after_each_new_chapter(tmp_path, monkeypatch) -> None:
+    output_file = tmp_path / "chapter_summaries.json"
+    chapters = [
+        {"id": "ch01", "title": "Chapter 1", "content": "Celaena enters the hall and meets Dorian."},
+        {"id": "ch02", "title": "Chapter 2", "content": "Chaol warns Celaena that the king is watching her."},
+    ]
+    save_sizes: list[int] = []
+
+    def fake_save(chapter_summaries, path):
+        assert path == output_file
+        save_sizes.append(len(chapter_summaries))
+
+    monkeypatch.setattr("scripts.chapter_summary._save_chapter_summaries", fake_save)
+
+    summarize_chapters_incrementally(chapters, output_file=output_file)
+
+    assert save_sizes == [1, 2]
 
 
 def test_epub_output_from_payload_prefers_all_stage_outputs():
