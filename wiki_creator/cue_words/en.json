@@ -1,0 +1,18 @@
+{
+  "place_cue_words": [
+    "city", "town", "capital", "kingdom", "continent", "country",
+    "castle", "palace", "camp", "mine", "mines", "forest", "woods",
+    "river", "sea", "port", "harbor", "street", "road", "avenue"
+  ],
+  "person_cue_words": [
+    "prince", "princess", "king", "queen", "duke", "lady", "lord",
+    "captain", "sir", "mr", "mrs", "miss"
+  ],
+  "place_prepositions": [
+    "in", "at", "from", "to", "into", "through", "within", "inside", "outside"
+  ],
+  "event_suffixes": [
+    "ball", "festival", "feast", "ceremony", "celebration",
+    "prayer", "prayers", "blessing", "blessings", "morning", "night", "eve"
+  ]
+}

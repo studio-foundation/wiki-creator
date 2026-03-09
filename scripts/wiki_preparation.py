@@ -9,7 +9,7 @@ for child wiki-page pipeline runs.
 Input (Studio stdin):
   previous_outputs["entity-classification"]:
     { "entities": [...with importance field], "relationships": [...], "narrator": ..., "stats": ... }
-  Files on disk: persons_full.json, places_full.json, orgs_full.json
+  Files on disk: persons_full.json, places_full.json, orgs_full.json, events_full.json
 
 Output (stdout):
   {
@@ -64,12 +64,13 @@ def load_registry(path: str, key: str) -> dict:
     return {}
 
 
-def extract_context(entity: dict, persons: dict, places: dict, orgs: dict) -> dict:
+def extract_context(entity: dict, persons: dict, places: dict, orgs: dict, events: dict) -> dict:
     """Extract context_by_chapter for an entity from the appropriate registry."""
     type_to_registry = {
         "PERSON": persons,
         "PLACE": places,
         "ORG": orgs,
+        "EVENT": events,
     }
     registry = type_to_registry.get(entity.get("type", ""), {})
     if not registry:
@@ -97,12 +98,13 @@ def extract_context(entity: dict, persons: dict, places: dict, orgs: dict) -> di
     return result
 
 
-def get_first_seen(entity: dict, persons: dict, places: dict, orgs: dict) -> str:
+def get_first_seen(entity: dict, persons: dict, places: dict, orgs: dict, events: dict) -> str:
     """Return the first chapter where this entity appears."""
     type_to_registry = {
         "PERSON": persons,
         "PLACE": places,
         "ORG": orgs,
+        "EVENT": events,
     }
     registry = type_to_registry.get(entity.get("type", ""), {})
     first_seen = ""
@@ -128,6 +130,7 @@ def build_entity_bundle(
     persons: dict,
     places: dict,
     orgs: dict,
+    events: dict,
 ) -> dict:
     canonical_name = entity["canonical_name"]
     return {
@@ -137,8 +140,8 @@ def build_entity_bundle(
         "aliases": entity.get("aliases", []),
         "total_mentions": entity.get("total_mentions", 0),
         "chapters_present": entity.get("chapters_present", 0),
-        "first_seen": get_first_seen(entity, persons, places, orgs),
-        "context_by_chapter": extract_context(entity, persons, places, orgs),
+        "first_seen": get_first_seen(entity, persons, places, orgs, events),
+        "context_by_chapter": extract_context(entity, persons, places, orgs, events),
         "relationships": filter_relationships(canonical_name, relationships),
     }
 
@@ -225,6 +228,7 @@ def main() -> None:
     persons = load_registry(str(paths.processing / "persons_full.json"), "persons_full")
     places = load_registry(str(paths.processing / "places_full.json"), "places_full")
     orgs = load_registry(str(paths.processing / "orgs_full.json"), "orgs_full")
+    events = load_registry(str(paths.processing / "events_full.json"), "events_full")
 
     # Only process entities that will have a wiki page
     relevant_entities = [
@@ -237,7 +241,7 @@ def main() -> None:
     )
 
     entity_bundles = [
-        build_entity_bundle(e, relationships, persons, places, orgs)
+        build_entity_bundle(e, relationships, persons, places, orgs, events)
         for e in relevant_entities
     ]
 

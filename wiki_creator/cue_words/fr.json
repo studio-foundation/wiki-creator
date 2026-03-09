@@ -1,0 +1,19 @@
+{
+  "place_cue_words": [
+    "ville", "royaume", "continent", "pays", "chateau", "château", "palais",
+    "camp", "mine", "foret", "forêt", "riviere", "rivière", "mer",
+    "port", "rue", "route", "avenue"
+  ],
+  "person_cue_words": [
+    "prince", "princesse", "roi", "reine", "duc", "dame", "seigneur",
+    "capitaine", "sir", "monsieur", "madame", "mademoiselle"
+  ],
+  "place_prepositions": [
+    "dans", "a", "à", "de", "depuis", "vers", "au", "aux", "en"
+  ],
+  "event_suffixes": [
+    "bal", "festival", "fete", "fête", "ceremonie", "cérémonie",
+    "celebration", "célébration", "prieres", "prières", "benediction", "bénédiction",
+    "matin", "nuit", "veille"
+  ]
+}

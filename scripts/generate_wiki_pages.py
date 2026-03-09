@@ -16,9 +16,12 @@ Usage:
 import argparse
 import json
 import os
+import re
 import sys
 import urllib.request
 from pathlib import Path
+
+import yaml
 
 # Ensure project root is importable when running as `python scripts/<file>.py`.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -28,14 +31,31 @@ if str(PROJECT_ROOT) not in sys.path:
 from wiki_creator.paths import book_paths_from_yaml
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
+DEFAULT_NUM_PREDICT = 1024
+
+_DEFAULT_SECTIONS_BY_IMPORTANCE = {
+    "principal": ["infobox", "biography", "personality", "physical", "powers", "relationships", "trivia", "references"],
+    "secondary": ["infobox", "biography", "relationships", "references"],
+    "figurant": ["infobox", "biography"],
+}
+_SECTION_TITLES = {
+    "infobox": "Infobox",
+    "biography": "Biographie",
+    "personality": "Personnalité",
+    "physical": "Description physique",
+    "powers": "Pouvoirs",
+    "relationships": "Relations",
+    "trivia": "Anecdotes",
+    "references": "Références",
+}
 
 
-def call_ollama(prompt: str, model: str, timeout: int) -> str:
+def call_ollama(prompt: str, model: str, timeout: int, num_predict: int = DEFAULT_NUM_PREDICT) -> str:
     body = json.dumps({
         "model": model,
         "prompt": prompt,
         "stream": False,
-        "options": {"temperature": 0.3, "num_predict": 1024},
+        "options": {"temperature": 0.3, "num_predict": num_predict},
     }).encode()
     req = urllib.request.Request(
         f"{OLLAMA_URL}/api/generate",
@@ -48,7 +68,23 @@ def call_ollama(prompt: str, model: str, timeout: int) -> str:
     return data.get("response", "")
 
 
-def build_prompt(entity: dict, book_title: str) -> str:
+def _content_template_for_sections(sections: list[str]) -> str:
+    blocks = []
+    for section in sections:
+        title = _SECTION_TITLES.get(section, section.replace("_", " ").title())
+        if section == "infobox":
+            blocks.append(
+                f"## {title}\\n\\n"
+                "- Nom: <si connu>\\n"
+                "- Rôle: <si connu>\\n"
+                "- Affiliation: <si connu>"
+            )
+        else:
+            blocks.append(f"## {title}\\n\\n<contenu en français basé uniquement sur les extraits>")
+    return "\\n\\n".join(blocks)
+
+
+def build_prompt(entity: dict, book_title: str, sections: list[str]) -> str:
     name = entity["canonical_name"]
     etype = entity["type"]
     importance = entity["importance"]
@@ -67,6 +103,8 @@ def build_prompt(entity: dict, book_title: str) -> str:
         "secondary": "Write 1-2 paragraphs for biography. Keep it short.",
         "figurant": "Write 1 short paragraph only.",
     }.get(importance, "Write 1 short paragraph only.")
+    sections_str = ", ".join(sections)
+    content_template = _content_template_for_sections(sections)
 
     return f"""You are writing a wiki page for a fantasy novel called "{book_title}".
 Output ONLY a valid JSON object. No markdown fences. No explanation.
@@ -84,6 +122,8 @@ RULES:
 - Use ONLY information from the excerpts above. Do NOT use your training knowledge about this book.
 - If excerpts are empty or insufficient, write a minimal page.
 - {length_guide}
+- Use exactly these sections in this order: {sections_str}.
+- The "Infobox" section must contain one bullet per field in the format "- Key: Value".
 - Do NOT invent plot details, relationships, or facts not in the excerpts.
 
 Output this JSON object:
@@ -92,7 +132,7 @@ Output this JSON object:
   "importance": "{importance}",
   "entity_type": "{etype}",
   "infobox_fields": {{}},
-  "content": "## Biographie\\n\\n<write content here in French>"
+  "content": "{content_template}"
 }}
 
 The "content" field must be a Markdown string. Use \\n for newlines inside the string.
@@ -110,6 +150,46 @@ def make_stub_page(entity: dict, failed: bool = False) -> dict:
     if failed:
         page["_failed"] = True
     return page
+
+
+def _normalize_infobox_key(key: str) -> str:
+    key = key.strip().lower()
+    key = re.sub(r"\s+", "_", key)
+    return key
+
+
+def _extract_infobox_fields_from_content(content: str) -> dict[str, str]:
+    lines = content.splitlines()
+    start_idx = None
+    for idx, line in enumerate(lines):
+        if re.match(r"^##\s+infobox\s*$", line.strip(), flags=re.IGNORECASE):
+            start_idx = idx + 1
+            break
+
+    if start_idx is None:
+        return {}
+
+    fields: dict[str, str] = {}
+    for line in lines[start_idx:]:
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if stripped.startswith("#"):
+            break
+
+        if stripped.startswith("- ") or stripped.startswith("* ") or stripped.startswith("+ "):
+            stripped = stripped[2:].strip()
+
+        if ":" not in stripped:
+            continue
+
+        raw_key, raw_value = stripped.split(":", 1)
+        key = _normalize_infobox_key(raw_key)
+        value = raw_value.strip()
+        if key and value:
+            fields[key] = value
+
+    return fields
 
 
 def parse_response(raw: str, entity: dict) -> dict:
@@ -134,6 +214,8 @@ def parse_response(raw: str, entity: dict) -> dict:
         page.setdefault("entity_type", entity["type"])
         page.setdefault("infobox_fields", {})
         page.setdefault("content", "")
+        if not page["infobox_fields"] and page["content"]:
+            page["infobox_fields"] = _extract_infobox_fields_from_content(page["content"])
         return page
     except json.JSONDecodeError:
         print(f"    [WARN] JSON parse failed for {entity['canonical_name']}, using stub", file=sys.stderr)
@@ -169,6 +251,30 @@ def load_book_title(epub_data_path: str) -> str:
         return "the novel"
 
 
+def load_book_config(book_yaml_path: str) -> dict:
+    try:
+        with open(book_yaml_path, encoding="utf-8") as f:
+            return yaml.safe_load(f) or {}
+    except Exception:
+        return {}
+
+
+def generation_profile(config: dict, importance: str) -> tuple[list[str], int]:
+    profile = config.get(importance, {})
+    default_sections = _DEFAULT_SECTIONS_BY_IMPORTANCE.get(importance, _DEFAULT_SECTIONS_BY_IMPORTANCE["figurant"])
+    sections = profile.get("sections", default_sections)
+    if not isinstance(sections, list) or not sections:
+        sections = default_sections
+    max_tokens = profile.get("max_tokens_per_page", DEFAULT_NUM_PREDICT)
+    try:
+        max_tokens = int(max_tokens)
+    except (TypeError, ValueError):
+        max_tokens = DEFAULT_NUM_PREDICT
+    if max_tokens < 64:
+        max_tokens = 64
+    return sections, max_tokens
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -185,6 +291,8 @@ def main() -> None:
     book_paths = book_paths_from_yaml(args.book)
     output_file = str(book_paths.processing / "wiki_pages.json")
     wiki_inputs_dir = str(book_paths.wiki_inputs)
+    book_cfg = load_book_config(args.book)
+    generation_cfg = book_cfg.get("generation", {})
 
     book_title = load_book_title(str(book_paths.processing / "epub_data.json"))
     batches = load_batch_files(wiki_inputs_dir, args.importance)
@@ -236,8 +344,9 @@ def main() -> None:
 
                 print(f"  [GEN]  {name} ({importance})", file=sys.stderr, end="", flush=True)
                 try:
-                    prompt = build_prompt(entity, book_title)
-                    raw = call_ollama(prompt, args.model, args.timeout)
+                    sections, max_tokens = generation_profile(generation_cfg, importance)
+                    prompt = build_prompt(entity, book_title, sections=sections)
+                    raw = call_ollama(prompt, args.model, args.timeout, num_predict=max_tokens)
                     page = parse_response(raw, entity)
                     all_pages.append(page)
                     _save(all_pages, output_file)

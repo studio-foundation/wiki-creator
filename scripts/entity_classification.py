@@ -11,7 +11,7 @@ Input (via Studio context):
     { "entities": [{canonical_name, type, aliases, source_ids, relevant}],
       "relationships": [...], "stats": {...}, "narrator": ... }
   additional_context: YAML string (book.input.yaml) with "thresholds" key
-  Files: persons_full.json, places_full.json, orgs_full.json (project root)
+  Files: persons_full.json, places_full.json, orgs_full.json, events_full.json (project root)
 
 Output (stdout):
   {
@@ -58,6 +58,7 @@ def get_total_mentions(
     persons_full: dict,
     places_full: dict,
     orgs_full: dict,
+    events_full: dict | None = None,
 ) -> tuple[int, int]:
     """Return (total_mentions, chapters_present) for a resolved entity.
 
@@ -67,6 +68,7 @@ def get_total_mentions(
         "PERSON": persons_full,
         "PLACE": places_full,
         "ORG": orgs_full,
+        "EVENT": events_full or {},
     }
     registry = type_to_registry.get(entity.get("type", ""), {})
     if not registry:
@@ -150,12 +152,13 @@ def classify_entities(
     places_full: dict,
     orgs_full: dict,
     thresholds_config: str | dict,
+    events_full: dict | None = None,
 ) -> list[dict]:
     """Enrich entities with total_mentions, chapters_present, and importance.
 
     Args:
         entities: resolved entities from entity-resolution / relationship-extraction
-        persons_full / places_full / orgs_full: raw entity registries
+        persons_full / places_full / orgs_full / events_full: raw entity registries
         thresholds_config: "auto" or explicit dict from book.input.yaml
 
     Returns:
@@ -167,7 +170,7 @@ def classify_entities(
         if not entity.get("relevant", True):
             mention_data.append((entity["canonical_name"], entity.get("type", "OTHER"), 0, 0))
             continue
-        total, chapters = get_total_mentions(entity, persons_full, places_full, orgs_full)
+        total, chapters = get_total_mentions(entity, persons_full, places_full, orgs_full, events_full)
         mention_data.append((entity["canonical_name"], entity.get("type", "OTHER"), total, chapters))
 
     # Step 2: compute thresholds
@@ -222,7 +225,7 @@ def _parse_explicit_thresholds(config: dict) -> dict[str, dict[str, int]]:
 
 # --- Studio entrypoint ---
 
-def _load_entity_files(processing_dir: Path) -> tuple[dict, dict, dict]:
+def _load_entity_files(processing_dir: Path) -> tuple[dict, dict, dict, dict]:
     """Read *_full.json files from the processing directory. Return empty dicts if missing."""
     def load(name: str, key: str) -> dict:
         p = processing_dir / name
@@ -235,6 +238,7 @@ def _load_entity_files(processing_dir: Path) -> tuple[dict, dict, dict]:
         load("persons_full.json", "persons_full"),
         load("places_full.json", "places_full"),
         load("orgs_full.json", "orgs_full"),
+        load("events_full.json", "events_full"),
     )
 
 
@@ -260,9 +264,16 @@ def run_studio_mode() -> None:
     thresholds_config = book_input.get("thresholds", "auto")
 
     paths = _paths_from_payload(payload)
-    persons_full, places_full, orgs_full = _load_entity_files(paths.processing)
+    persons_full, places_full, orgs_full, events_full = _load_entity_files(paths.processing)
 
-    enriched = classify_entities(entities, persons_full, places_full, orgs_full, thresholds_config)
+    enriched = classify_entities(
+        entities,
+        persons_full,
+        places_full,
+        orgs_full,
+        thresholds_config,
+        events_full=events_full,
+    )
 
     from collections import Counter
     importance_counts = Counter(e["importance"] for e in enriched)
@@ -309,7 +320,7 @@ def run_test_mode() -> None:
                        "first_seen": "ch05",
                        "mentions_by_chapter": {"ch05": ["l1"]}},
     }
-    enriched = classify_entities(entities, persons_full, {}, {}, thresholds_config="auto")
+    enriched = classify_entities(entities, persons_full, {}, {}, thresholds_config="auto", events_full={})
     for e in enriched:
         print(f"{e['canonical_name']:30s}  mentions={e['total_mentions']:3d}  chapters={e['chapters_present']}  importance={e['importance']}")
 
