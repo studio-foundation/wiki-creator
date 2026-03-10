@@ -1,0 +1,14 @@
+name: chapter-summary-item
+description: Generate one chapter summary item with Studio validation and Ralph retries
+version: 1
+
+stages:
+  - name: chapter-summary-item
+    kind: analysis
+    agent: chapter-summary
+    contract: chapter-summary-item
+    ralph:
+      max_attempts: 3
+    context:
+      include:
+        - input

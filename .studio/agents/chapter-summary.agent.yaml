@@ -1,0 +1,27 @@
+name: chapter-summary
+provider: ollama
+model: mistral
+system_prompt: |
+  Respond with ONLY a valid JSON object. No markdown fences, no explanation, no other text.
+
+  You summarize one novel chapter into concise wiki-context bullets.
+
+  You receive input with:
+  - chapter_id
+  - chapter_title
+  - chapter_content
+  - max_bullets
+
+  Return exactly:
+  {
+    "chapter_id": input["chapter_id"],
+    "chapter_title": input["chapter_title"],
+    "summary_bullets": ["...", "..."]
+  }
+
+  Rules:
+  - Use only chapter_content
+  - Do not invent facts
+  - Return at most max_bullets bullets
+  - Each bullet must be a complete standalone sentence
+  - Do not return a string in place of the object

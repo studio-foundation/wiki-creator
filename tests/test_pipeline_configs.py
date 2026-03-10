@@ -6,6 +6,8 @@ import yaml
 
 
 PIPELINES_DIR = Path(__file__).resolve().parents[1] / ".studio" / "pipelines"
+CONTRACTS_DIR = Path(__file__).resolve().parents[1] / ".studio" / "contracts"
+AGENTS_DIR = Path(__file__).resolve().parents[1] / ".studio" / "agents"
 
 
 def _load_yaml(path: Path) -> dict:
@@ -45,3 +47,53 @@ def test_chapter_summary_stage_has_explicit_extended_timeout() -> None:
         assert chapter_stage.get("timeout_ms") == 600000, (
             f"{pipeline_name}:chapter-summary must set timeout_ms=600000"
         )
+
+
+def test_chapter_summary_item_contract_exists_with_required_fields() -> None:
+    contract_path = CONTRACTS_DIR / "chapter-summary-item.contract.yaml"
+    assert contract_path.exists(), "chapter-summary-item contract is missing"
+
+    doc = _load_yaml(contract_path)
+    required_fields = doc.get("schema", {}).get("required_fields", [])
+    assert required_fields == ["chapter_id", "chapter_title", "summary_bullets"]
+
+
+def test_chapter_summary_item_pipeline_uses_ralph_and_contract() -> None:
+    pipeline_path = PIPELINES_DIR / "chapter-summary-item.pipeline.yaml"
+    agent_path = AGENTS_DIR / "chapter-summary.agent.yaml"
+
+    assert pipeline_path.exists(), "chapter-summary-item pipeline is missing"
+    assert agent_path.exists(), "chapter-summary agent is missing"
+
+    doc = _load_yaml(pipeline_path)
+    llm_stage = next(
+        stage for stage in doc.get("stages", [])
+        if stage.get("contract") == "chapter-summary-item"
+    )
+    assert llm_stage.get("agent") == "chapter-summary"
+    assert isinstance(llm_stage.get("ralph"), dict), "chapter-summary-item stage must configure ralph"
+
+
+def test_wiki_page_item_contract_exists_with_required_fields() -> None:
+    contract_path = CONTRACTS_DIR / "wiki-page-item.contract.yaml"
+    assert contract_path.exists(), "wiki-page-item contract is missing"
+
+    doc = _load_yaml(contract_path)
+    required_fields = doc.get("schema", {}).get("required_fields", [])
+    assert required_fields == ["title", "importance", "entity_type", "infobox_fields", "content"]
+
+
+def test_wiki_page_item_pipeline_uses_ralph_and_contract() -> None:
+    pipeline_path = PIPELINES_DIR / "wiki-page-item.pipeline.yaml"
+    agent_path = AGENTS_DIR / "wiki-page-item.agent.yaml"
+
+    assert pipeline_path.exists(), "wiki-page-item pipeline is missing"
+    assert agent_path.exists(), "wiki-page-item agent is missing"
+
+    doc = _load_yaml(pipeline_path)
+    llm_stage = next(
+        stage for stage in doc.get("stages", [])
+        if stage.get("contract") == "wiki-page-item"
+    )
+    assert llm_stage.get("agent") == "wiki-page-item"
+    assert isinstance(llm_stage.get("ralph"), dict), "wiki-page-item stage must configure ralph"

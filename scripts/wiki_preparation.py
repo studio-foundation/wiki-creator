@@ -266,10 +266,15 @@ def build_chapter_summary_context(
 ) -> list[dict]:
     if entity.get("type") != "PERSON":
         return []
+    summaries_by_id = {
+        str(summary.get("chapter_id", "")).strip(): summary
+        for summary in chapter_summaries.values()
+        if isinstance(summary, dict) and str(summary.get("chapter_id", "")).strip()
+    }
     chapter_keys = sorted(context_by_chapter.keys())[:chapter_summary_max]
     result = []
     for chapter_key in chapter_keys:
-        summary = chapter_summaries.get(chapter_key)
+        summary = chapter_summaries.get(chapter_key) or summaries_by_id.get(chapter_key)
         if not summary:
             continue
         bullets = [

@@ -17,7 +17,9 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
+import tempfile
 import urllib.request
 from pathlib import Path
 
@@ -88,6 +90,98 @@ def _content_template_for_sections(sections: list[str]) -> str:
     return "\\n\\n".join(blocks)
 
 
+FEW_SHOT_EXAMPLE = {
+    "title": "John Doe",
+    "importance": "principal",
+    "entity_type": "PERSON",
+    "infobox_fields": {
+        "nom": "John Doe",
+        "nom complet": "Jonathan Aldric Doe",
+        "alias": "Le Fantôme, Jay",
+        "rôle": "Espion de la Couronne, ancien soldat",
+        "affiliation": "La Guilde des Ombres (ancienne), Couronne d'Arenell",
+        "statut": "Actif",
+    },
+    "content": (
+        "## Infobox\n\n"
+        "- Nom: John Doe\n"
+        "- Nom complet: Jonathan Aldric Doe\n"
+        "- Alias: Le Fantôme, Jay\n"
+        "- Rôle: Espion de la Couronne, ancien soldat\n"
+        "- Affiliation: La Guilde des Ombres (ancienne), Couronne d'Arenell\n"
+        "- Statut: Actif\n\n"
+        "## Biographie\n\n"
+        "John Doe, né Jonathan Aldric Doe, est un espion au service de la Couronne d'Arenell. "
+        "Ancien soldat reconverti après la chute de la forteresse de Veldrath, il opère sous le pseudonyme "
+        "**Le Fantôme** dans les cercles criminels de la capitale. Sa double identité — homme de cour le jour, "
+        "informateur la nuit — lui permet d'infiltrer des réseaux que les services officiels du roi ne peuvent atteindre.\n\n"
+        "Après la trahison de son ancien commandant lors du siège de Veldrath, Doe a rompu avec l'armée régulière "
+        "et disparu pendant trois ans. Il réapparaît à Arenell sous une fausse identité marchande, avant d'être "
+        "recruté par la conseillère Mira Vayne pour des missions que le Conseil préfère nier.\n\n"
+        "## Personnalité\n\n"
+        "Doe est méthodique et difficile à lire. Il parle peu, observe beaucoup, et donne rarement son opinion "
+        "sans qu'on la lui demande. Ceux qui le côtoient décrivent une loyauté sélective : il honore ses engagements "
+        "à la lettre, mais ne s'investit pas au-delà de ce qui a été convenu. Sous cette froideur calculée affleure "
+        "parfois un humour sec, surtout dans les situations les plus tendues.\n\n"
+        "Son rapport à la violence est pragmatique — ni enthousiaste ni réticent. Il considère les moyens selon "
+        "leur efficacité, ce qui le met régulièrement en friction avec les idéalistes de son entourage.\n\n"
+        "## Description physique\n\n"
+        "Grand, brun, avec une cicatrice linéaire qui part du coin de l'œil gauche jusqu'à la mâchoire — "
+        "séquelle d'un interrogatoire à Veldrath. Il s'habille de façon à ne pas attirer l'attention : teintes "
+        "sombres, coupes fonctionnelles, aucun bijou. Seul détail invariable : une chevalière en argent terne "
+        "à l'annulaire droit, dont l'origine n'est jamais expliquée.\n\n"
+        "## Pouvoirs et compétences\n\n"
+        "Doe ne possède aucune magie. Ses compétences sont entièrement acquises : infiltration, déguisement, "
+        "combat rapproché, et une mémoire quasi photographique des visages et des plans d'architecture. "
+        "Il parle couramment quatre langues, dont le dialecte du Sud qu'il utilise pour ses couvertures marchandes.\n\n"
+        "## Relations\n\n"
+        "**Mira Vayne** — Sa recruteuse et supérieure directe. Leur relation est professionnelle, teintée d'une "
+        "méfiance mutuelle que ni l'un ni l'autre ne cherche vraiment à dissoudre.\n\n"
+        "**Lira** — Une informante de la Guilde des Ombres avec qui Doe a partagé une mission à Veldrath. "
+        "Leur histoire commune est fragmentaire, délibérément non élucidée dans le récit.\n\n"
+        "**Le Commandant Arek** — L'ancien supérieur dont la trahison à Veldrath a redéfini la trajectoire de Doe. "
+        "Arek est mort avant le début du roman ; son ombre sur Doe reste présente tout au long du récit.\n\n"
+        "## Anecdotes\n\n"
+        "- Le surnom \"Le Fantôme\" lui a été donné par les membres de la Guilde, non par ses alliés de la Couronne.\n"
+        "- Sa couverture marchande implique un commerce de tissus importés du Sud — un choix qui justifie "
+        "ses déplacements fréquents entre les provinces."
+    ),
+}
+
+# Définitions des sections par entity_type
+SECTION_DEFINITIONS = {
+    "PERSON": {
+        "Infobox": "Champs factuels clés : nom, alias, rôle, affiliation, statut. Omets les champs inconnus.",
+        "Biographie": "Qui est ce personnage et quel est son rôle dans le monde. Les événements servent de contexte, pas de liste chronologique.",
+        "Personnalité": "Traits observés avec ancrage textuel. Évite les adjectifs génériques sans preuve. Montre les contradictions ou tensions internes si elles existent.",
+        "Description physique": "Détails physiques confirmés par le texte uniquement. Concis.",
+        "Pouvoirs": "Capacités ou compétences distinctives. Si aucun pouvoir magique, décris les compétences pratiques.",
+        "Relations": "Une entrée en gras par relation significative, suivie d'une description de la nature du lien. Format: **Nom** — description.",
+        "Anecdotes": "Faits spécifiques et concrets qui ne rentrent pas dans les autres sections. Pas de re-résumé de la biographie.",
+    },
+    "PLACE": {
+        "Infobox": "Nom, type de lieu, région/pays, statut (actif, ruiné, etc.). Omets les champs inconnus.",
+        "Description": "Ce qu'est ce lieu, où il se trouve, à quoi il ressemble d'après les extraits.",
+        "Histoire": "Événements passés liés à ce lieu mentionnés dans le texte.",
+        "Habitants et factions": "Groupes ou personnages associés à ce lieu.",
+        "Anecdotes": "Détails spécifiques qui ne rentrent pas ailleurs.",
+    },
+    "ORG": {
+        "Infobox": "Nom, type d'organisation, affiliation, statut. Omets les champs inconnus.",
+        "Description": "Ce qu'est cette organisation, son rôle et ses objectifs d'après les extraits.",
+        "Membres notables": "Personnages affiliés mentionnés dans le texte.",
+        "Histoire": "Événements impliquant cette organisation.",
+        "Anecdotes": "Détails spécifiques qui ne rentrent pas ailleurs.",
+    },
+    "EVENT": {
+        "Infobox": "Nom, type d'événement, lieu, période si mentionnée. Omets les champs inconnus.",
+        "Description": "Ce qu'est cet événement et son importance dans le récit.",
+        "Déroulement": "Ce qui se passe lors de cet événement d'après les extraits.",
+        "Participants": "Personnages impliqués.",
+        "Anecdotes": "Détails spécifiques qui ne rentrent pas ailleurs.",
+    },
+}
+
 def build_prompt(entity: dict, book_title: str, sections: list[str]) -> str:
     name = entity["canonical_name"]
     etype = entity["type"]
@@ -97,6 +191,7 @@ def build_prompt(entity: dict, book_title: str, sections: list[str]) -> str:
     related_context = entity.get("related_context", [])
     chapter_summary_context = entity.get("chapter_summary_context", [])
 
+    # --- Blocs de contexte ---
     context_lines = []
     for chapter, mentions in list(context.items())[:15]:
         for mention in mentions[:3]:
@@ -132,45 +227,81 @@ def build_prompt(entity: dict, book_title: str, sections: list[str]) -> str:
         else "  (no chapter summaries available)"
     )
 
+    # --- Paramètres de génération ---
     alias_str = ", ".join(a for a in aliases if a != name) or "none"
+
     length_guide = {
-        "principal": "Write 4-6 paragraphs total across all sections.",
-        "secondary": "Write 1-2 paragraphs for biography. Keep it short.",
-        "figurant": "Write 1 short paragraph only.",
-    }.get(importance, "Write 1 short paragraph only.")
+        "principal": "4 to 6 paragraphs total across all sections.",
+        "secondary": "1 to 2 paragraphs for the main section. Keep all other sections brief.",
+        "figurant": "1 short paragraph only. Use only the most relevant section.",
+    }.get(importance, "1 short paragraph only.")
+
     sections_str = ", ".join(sections)
-    content_template = _content_template_for_sections(sections)
+
+    # Définitions des sections pour ce type d'entité
+    section_defs = SECTION_DEFINITIONS.get(etype, SECTION_DEFINITIONS["PERSON"])
+    section_def_lines = "\n".join(
+        f"  - {sec}: {desc}"
+        for sec, desc in section_defs.items()
+        if sec in sections
+    )
+
+    # Few-shot example serialisé
+    few_shot_json = json.dumps(FEW_SHOT_EXAMPLE, ensure_ascii=False, indent=2)
 
     return f"""You are writing a wiki page for a fantasy novel called "{book_title}".
-Output ONLY a valid JSON object. No markdown fences. No explanation.
+Output ONLY a valid JSON object. No markdown fences. No explanation. No preamble.
 
-Entity:
+---
+
+EXAMPLE OF THE EXPECTED OUTPUT FORMAT AND TONE:
+{few_shot_json}
+
+---
+
+Entity to write:
   Name: {name}
   Type: {etype}
   Known aliases: {alias_str}
 
-Text excerpts from the book that mention this entity:
+Text excerpts from the book (primary source — highest priority):
 {context_block}
 
-Known related entities (disambiguation context):
+Related entities (disambiguation only — do not derive narrative from cooccurrence):
 {related_block}
 
-Chapter summaries for chapters where this entity appears:
+Chapter summaries (orientation context — lower priority than excerpts):
 {chapter_summary_block}
 
-RULES:
-- Write in encyclopedic French.
-- Use ONLY information from the excerpts above. Do NOT use your training knowledge about this book.
-- Use this block only to disambiguate likely related entities.
-- Direct excerpts have priority over chapter summaries.
-- Treat chapter summaries as orientation context, not strong evidence.
-- If excerpts are empty or insufficient, write a minimal page.
-- {length_guide}
+---
+
+WRITING RULES (follow strictly):
+
+Tone and register:
+- Write in encyclopedic French. Neutral, precise, factual.
+- Describe what the entity IS before describing what happens to it.
+- Use specific, concrete language. Avoid generic adjectives without textual evidence.
+- If aliases exist, introduce them naturally in the biography ("also known as X", "born Y").
+
+Content constraints:
+- Use ONLY information present in the excerpts above. Do NOT use your training knowledge about this book or its characters.
+- Chapter summaries serve as orientation only. Direct excerpts take priority.
+- Do NOT invent plot details, relationships, abilities, or physical traits not supported by excerpts.
+- Do NOT turn cooccurrence between entities into narrative causality.
+- If information is insufficient for a section, omit that section entirely.
+- Do NOT write "information not available", "not mentioned in excerpts", or any similar phrase. Omit instead.
+- Omit infobox fields entirely if their value is unknown.
+
+Structure:
 - Use exactly these sections in this order: {sections_str}.
-- The "Infobox" section must contain one bullet per field in the format "- Key: Value".
-- Do NOT invent plot details, relationships, or facts not in the excerpts.
-- If ambiguous, omit rather than infer.
-- Do NOT turn cooccurrence into narrative causality.
+- Target length: {length_guide}
+- The "Infobox" section must use this format: one bullet per field, "- Key: Value".
+- The "Relations" section (if present) must use this format: "**Name** — description of the relationship."
+
+Section definitions for type {etype}:
+{section_def_lines}
+
+---
 
 Output this JSON object:
 {{
@@ -178,12 +309,10 @@ Output this JSON object:
   "importance": "{importance}",
   "entity_type": "{etype}",
   "infobox_fields": {{}},
-  "content": "{content_template}"
+  "content": "<Markdown string with \\\\n for newlines>"
 }}
 
-The "content" field must be a Markdown string. Use \\n for newlines inside the string.
-Output ONLY the JSON object, nothing else."""
-
+Output ONLY the JSON. Nothing before, nothing after."""
 
 def make_stub_page(entity: dict, failed: bool = False) -> dict:
     page = {
@@ -196,6 +325,238 @@ def make_stub_page(entity: dict, failed: bool = False) -> dict:
     if failed:
         page["_failed"] = True
     return page
+
+
+def _slugify_filename(value: str) -> str:
+    slug = re.sub(r"[^A-Za-z0-9._-]+", "_", str(value or "").strip())
+    slug = slug.strip("._")
+    return slug or "untitled"
+
+
+def _save_generation_debug_artifact(debug_dir: Path, entity: dict, item_result: dict) -> None:
+    debug_dir.mkdir(parents=True, exist_ok=True)
+    filename = f"{_slugify_filename(entity.get('canonical_name', 'untitled'))}.json"
+    payload = {
+        "entity_name": entity.get("canonical_name", ""),
+        "error": item_result.get("error"),
+        "raw_response": str(item_result.get("raw_response", "") or ""),
+        "run_metadata": item_result.get("run_metadata"),
+    }
+    with open(debug_dir / filename, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+
+
+def _extract_first_json_object(text: str) -> dict | None:
+    decoder = json.JSONDecoder()
+    for i, ch in enumerate(str(text or "")):
+        if ch != "{":
+            continue
+        try:
+            candidate, _ = decoder.raw_decode(text[i:])
+        except json.JSONDecodeError:
+            continue
+        if isinstance(candidate, dict):
+            return candidate
+    return None
+
+
+def _studio_run_log_path(run_id: str) -> Path | None:
+    runs_dir = PROJECT_ROOT / ".studio" / "runs"
+    run_id = str(run_id or "").strip()
+    matches = sorted(runs_dir.glob(f"*-{run_id}.jsonl"))
+    if not matches and run_id:
+        matches = sorted(runs_dir.glob(f"*-{run_id[:8]}.jsonl"))
+    if not matches:
+        return None
+    return matches[-1]
+
+
+def _extract_stage_output_from_run_payload(run_payload: dict, stage_name: str) -> dict | None:
+    stages = run_payload.get("stages", [])
+    if not isinstance(stages, list):
+        return None
+    for stage in stages:
+        if not isinstance(stage, dict):
+            continue
+        if stage.get("stage_name") != stage_name:
+            continue
+        if stage.get("status") != "success":
+            continue
+        output = stage.get("output")
+        if isinstance(output, dict):
+            return output
+    return None
+
+
+def _load_studio_stage_output(run_id: str, stage_name: str) -> dict | None:
+    log_path = _studio_run_log_path(run_id)
+    if log_path is None or not log_path.exists():
+        return None
+
+    with open(log_path, encoding="utf-8") as f:
+        for line in f:
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if event.get("event") != "stage_complete":
+                continue
+            if event.get("stage") != stage_name:
+                continue
+            if event.get("status") != "success":
+                continue
+            output = event.get("output")
+            if isinstance(output, dict):
+                return output
+    return None
+
+
+def _wiki_page_item_input(*, entity: dict, book_title: str, sections: list[str], max_tokens: int) -> dict:
+    return {
+        "title": entity.get("canonical_name", ""),
+        "importance": entity.get("importance", ""),
+        "entity_type": entity.get("type", ""),
+        "max_tokens": max_tokens,
+        "prompt": build_prompt(entity, book_title, sections=sections),
+    }
+
+
+def _run_wiki_page_item(
+    *,
+    entity: dict,
+    book_title: str,
+    model: str,
+    timeout: int,
+    sections: list[str],
+    max_tokens: int,
+) -> dict:
+    item_input = _wiki_page_item_input(
+        entity=entity,
+        book_title=book_title,
+        sections=sections,
+        max_tokens=max_tokens,
+    )
+    timeout_seconds = max(timeout * 4, 120)
+
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".yaml", delete=False) as tmp:
+        yaml.safe_dump(item_input, tmp, sort_keys=False, allow_unicode=True)
+        input_path = tmp.name
+
+    cmd = [
+        "studio",
+        "run",
+        "wiki-page-item",
+        "--input-file",
+        input_path,
+        "--json",
+    ]
+    try:
+        result = subprocess.run(
+            cmd,
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=timeout_seconds,
+        )
+    except FileNotFoundError:
+        return {
+            "error": "studio_cli_missing",
+            "raw_response": "",
+            "run_metadata": {"command": cmd},
+        }
+    except subprocess.TimeoutExpired as exc:
+        return {
+            "error": "studio_run_timeout",
+            "raw_response": (exc.stdout or "") + ("\n" + exc.stderr if exc.stderr else ""),
+            "run_metadata": {"command": cmd, "timeout_seconds": timeout_seconds},
+        }
+    finally:
+        try:
+            Path(input_path).unlink(missing_ok=True)
+        except OSError:
+            pass
+
+    combined_output = (result.stdout or "") + (("\n" + result.stderr) if result.stderr else "")
+    run_payload = _extract_first_json_object(result.stdout or "")
+    run_id = str((run_payload or {}).get("id") or "").strip()
+    run_metadata = {
+        "command": cmd,
+        "returncode": result.returncode,
+        "run_id": run_id or None,
+        "status": (run_payload or {}).get("status"),
+    }
+    if result.returncode != 0:
+        return {
+            "error": "studio_run_failed",
+            "raw_response": combined_output.strip(),
+            "run_metadata": run_metadata,
+        }
+
+    if run_payload is None:
+        return {
+            "error": "studio_output_json_parse_error",
+            "raw_response": combined_output.strip(),
+            "run_metadata": run_metadata,
+        }
+
+    if not run_id:
+        return {
+            "error": "studio_run_missing_id",
+            "raw_response": combined_output.strip(),
+            "run_metadata": run_metadata,
+        }
+
+    payload = _extract_stage_output_from_run_payload(run_payload, "wiki-page-item")
+    if payload is None:
+        payload = _load_studio_stage_output(run_id, "wiki-page-item")
+    if payload is None:
+        return {
+            "error": "studio_run_output_missing",
+            "raw_response": combined_output.strip(),
+            "run_metadata": run_metadata,
+        }
+
+    page = parse_response(json.dumps(payload, ensure_ascii=False), entity)
+    if page.get("_failed"):
+        return {
+            "error": "studio_invalid_output",
+            "raw_response": combined_output.strip(),
+            "run_metadata": {**run_metadata, "payload": payload},
+        }
+    return {
+        **page,
+        "run_metadata": run_metadata,
+    }
+
+
+def _run_generation_for_entity(
+    *,
+    entity: dict,
+    book_title: str,
+    model: str,
+    timeout: int,
+    sections: list[str],
+    max_tokens: int,
+    dry_run: bool,
+    debug_dir: Path,
+) -> dict:
+    if not entity.get("context_by_chapter", {}):
+        return make_stub_page(entity)
+    if dry_run:
+        return make_stub_page(entity)
+
+    item_result = _run_wiki_page_item(
+        entity=entity,
+        book_title=book_title,
+        model=model,
+        timeout=timeout,
+        sections=sections,
+        max_tokens=max_tokens,
+    )
+    if isinstance(item_result, dict) and item_result.get("error"):
+        _save_generation_debug_artifact(debug_dir, entity, item_result)
+        return make_stub_page(entity, failed=True)
+    return item_result
 
 
 def _normalize_infobox_key(key: str) -> str:
@@ -369,6 +730,7 @@ def main() -> None:
     # Load existing pages to resume interrupted runs
     all_pages = [p for p in _load_existing(output_file) if not p.get("_failed") and _is_page_complete(p)]
     done_titles = {p["title"] for p in all_pages}
+    debug_dir = book_paths.processing / "wiki_page_item_debug"
     if done_titles:
         print(f"[generate-wiki-pages] Resuming — {len(done_titles)} pages already done", file=sys.stderr)
 
@@ -406,13 +768,23 @@ def main() -> None:
                 print(f"  [GEN]  {name} ({importance})", file=sys.stderr, end="", flush=True)
                 try:
                     sections, max_tokens = generation_profile(generation_cfg, importance, entity.get("type"))
-                    prompt = build_prompt(entity, book_title, sections=sections)
-                    raw = call_ollama(prompt, args.model, args.timeout, num_predict=max_tokens)
-                    page = parse_response(raw, entity)
+                    page = _run_generation_for_entity(
+                        entity=entity,
+                        book_title=book_title,
+                        model=args.model,
+                        timeout=args.timeout,
+                        sections=sections,
+                        max_tokens=max_tokens,
+                        dry_run=args.dry_run,
+                        debug_dir=debug_dir,
+                    )
                     all_pages.append(page)
                     _save(all_pages, output_file)
-                    done_titles.add(name)
-                    print(" ✓", file=sys.stderr)
+                    if not page.get("_failed"):
+                        done_titles.add(name)
+                        print(" ✓", file=sys.stderr)
+                    else:
+                        print(" ⚠ fallback stub", file=sys.stderr)
                 except Exception as e:
                     print(f" ✗ {e}", file=sys.stderr)
                     page = make_stub_page(entity, failed=True)

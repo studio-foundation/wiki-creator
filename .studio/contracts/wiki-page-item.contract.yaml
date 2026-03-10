@@ -1,0 +1,9 @@
+name: wiki-page-item
+version: 1
+schema:
+  required_fields:
+    - title
+    - importance
+    - entity_type
+    - infobox_fields
+    - content

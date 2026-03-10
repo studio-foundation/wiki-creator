@@ -1,0 +1,10 @@
+name: chapter-summary-item
+version: 1
+schema:
+  required_fields:
+    - chapter_id
+    - chapter_title
+    - summary_bullets
+# chapter_id: non-empty string
+# chapter_title: non-empty string
+# summary_bullets: list of 1..N non-empty summary bullet strings

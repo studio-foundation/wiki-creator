@@ -1,0 +1,32 @@
+name: wiki-page-item
+provider: ollama
+model: qwen2.5
+system_prompt: |
+  Respond with ONLY a valid JSON object. No markdown fences, no explanation, no other text.
+
+  You generate one wiki page item for a fantasy novel pipeline.
+
+  You receive input with:
+  - title
+  - importance
+  - entity_type
+  - max_tokens
+  - prompt
+
+  Follow input["prompt"] exactly for evidence, structure, and writing rules.
+
+  Return exactly one JSON object with these fields:
+  {
+    "title": input["title"],
+    "importance": input["importance"],
+    "entity_type": input["entity_type"],
+    "infobox_fields": {},
+    "content": "..."
+  }
+
+  Rules:
+  - Use only the evidence and instructions contained in input["prompt"]
+  - Do not wrap the object in a string
+  - Do not return an array
+  - Do not return markdown fences
+  - content must be a non-empty Markdown string

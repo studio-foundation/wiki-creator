@@ -247,6 +247,43 @@ def test_build_entity_bundle_adds_chapter_summary_context_for_person():
     assert [x["chapter_key"] for x in bundle["chapter_summary_context"]] == ["ch01", "ch02"]
 
 
+def test_build_entity_bundle_adds_chapter_summary_context_when_summaries_are_keyed_by_title():
+    persons, places, orgs, events = _registries()
+    entity = {
+        "canonical_name": "Dorian Havilliard",
+        "type": "PERSON",
+        "importance": "principal",
+        "source_ids": ["p1"],
+    }
+    entities_by_name = {"Dorian Havilliard": entity}
+    chapter_summaries = {
+        "Chapter 1": {
+            "chapter_id": "ch01",
+            "chapter_title": "Chapter 1",
+            "summary_bullets": ["Dorian meets Chaol."],
+        },
+        "Chapter 2": {
+            "chapter_id": "ch02",
+            "chapter_title": "Chapter 2",
+            "summary_bullets": ["Dorian discusses strategy."],
+        },
+    }
+
+    bundle = build_entity_bundle(
+        entity,
+        [],
+        persons,
+        places,
+        orgs,
+        events,
+        entities_by_name,
+        chapter_summaries=chapter_summaries,
+        chapter_summary_max=8,
+    )
+
+    assert [x["chapter_key"] for x in bundle["chapter_summary_context"]] == ["ch01", "ch02"]
+
+
 def test_build_entity_bundle_skips_chapter_summary_context_for_non_person():
     persons, places, orgs, events = _registries()
     entity = {

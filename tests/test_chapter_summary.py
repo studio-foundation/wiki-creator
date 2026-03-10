@@ -6,6 +6,8 @@ from scripts.chapter_summary import (
     ChapterSummaryConfig,
     _chapter_summary_config_from_payload,
     _epub_output_from_payload,
+    _extract_stage_output_from_run_payload,
+    _parse_llm_summary_response_text,
     summarize_chapters_incrementally,
     summarize_chapter,
     summarize_chapters,
@@ -151,6 +153,129 @@ def test_summarize_chapters_incrementally_saves_after_each_new_chapter(tmp_path,
     assert save_sizes == [1, 2]
 
 
+def test_summarize_chapters_incrementally_logs_llm_error_details(tmp_path, monkeypatch) -> None:
+    output_file = tmp_path / "chapter_summaries.json"
+    debug_dir = tmp_path / "chapter_summary_llm_debug"
+    chapters = [
+        {"id": "ch07.xhtml", "title": "Chapter 7", "content": "Celaena studies the map and finds nothing."},
+    ]
+
+    monkeypatch.setattr(
+        "scripts.chapter_summary._run_chapter_summary_item",
+        lambda **_: {
+            "summary_bullets": [],
+            "error": "llm_json_parse_error",
+            "raw_response": "not json at all",
+        },
+    )
+
+    summarize_chapters_incrementally(
+        chapters,
+        output_file=output_file,
+        debug_dir=debug_dir,
+        config=ChapterSummaryConfig(mode="llm", max_bullets=3, llm_fallback_to_extractive=True),
+    )
+
+    debug_files = sorted(debug_dir.glob("*.json"))
+    assert len(debug_files) == 1
+    payload = json.loads(debug_files[0].read_text(encoding="utf-8"))
+    assert payload["error"] == "llm_json_parse_error"
+    assert payload["chapter_id"] == "ch07.xhtml"
+    assert payload["chapter_title"] == "Chapter 7"
+    assert payload["raw_response"] == "not json at all"
+
+
+def test_summarize_chapters_incrementally_uses_item_runner_in_llm_mode(tmp_path, monkeypatch) -> None:
+    output_file = tmp_path / "chapter_summaries.json"
+    chapters = [
+        {"id": "ch01", "title": "Chapter 1", "content": "Ignored by fake runner."},
+    ]
+    calls: list[tuple[str, str]] = []
+
+    def fake_runner(*, chapter, config):
+        calls.append((chapter["id"], config.mode))
+        return {
+            "chapter_id": chapter["id"],
+            "chapter_title": chapter["title"],
+            "summary_bullets": ["Studio-generated summary."],
+        }
+
+    monkeypatch.setattr("scripts.chapter_summary._run_chapter_summary_item", fake_runner)
+
+    summaries = summarize_chapters_incrementally(
+        chapters,
+        output_file=output_file,
+        config=ChapterSummaryConfig(mode="llm"),
+    )
+
+    assert calls == [("ch01", "llm")]
+    assert summaries["Chapter 1"]["summary_method"] == "llm"
+    assert summaries["Chapter 1"]["summary_bullets"] == ["Studio-generated summary."]
+
+
+def test_summarize_chapters_incrementally_item_runner_failure_falls_back_and_logs(tmp_path, monkeypatch) -> None:
+    output_file = tmp_path / "chapter_summaries.json"
+    debug_dir = tmp_path / "chapter_summary_llm_debug"
+    chapters = [
+        {
+            "id": "ch07.xhtml",
+            "title": "Chapter 7",
+            "content": "At dawn, Celaena studied the map. By noon, she found the hidden door.",
+        },
+    ]
+
+    monkeypatch.setattr(
+        "scripts.chapter_summary._run_chapter_summary_item",
+        lambda **_: {
+            "error": "studio_run_failed",
+            "raw_response": "plain string response",
+            "run_metadata": {"pipeline": "chapter-summary-item", "attempts": 3},
+        },
+    )
+
+    summaries = summarize_chapters_incrementally(
+        chapters,
+        output_file=output_file,
+        debug_dir=debug_dir,
+        config=ChapterSummaryConfig(mode="llm", llm_fallback_to_extractive=True),
+    )
+
+    assert summaries["Chapter 7"]["summary_method"] == "extractive_fallback"
+    assert "studio_run_failed" in summaries["Chapter 7"]["quality_flags"]
+    debug_files = sorted(debug_dir.glob("*.json"))
+    assert len(debug_files) == 1
+    payload = json.loads(debug_files[0].read_text(encoding="utf-8"))
+    assert payload["error"] == "studio_run_failed"
+    assert payload["run_metadata"] == {"pipeline": "chapter-summary-item", "attempts": 3}
+
+
+def test_extract_stage_output_from_run_payload_reads_successful_stage_output() -> None:
+    run_payload = {
+        "id": "26ea6f7e-274e-4ec8-8b21-d422199982ba",
+        "pipeline_name": "chapter-summary-item",
+        "status": "success",
+        "stages": [
+            {
+                "stage_name": "chapter-summary-item",
+                "status": "success",
+                "output": {
+                    "chapter_id": "C07.xhtml",
+                    "chapter_title": "Chapter 7",
+                    "summary_bullets": ["One bullet."],
+                },
+            }
+        ],
+    }
+
+    output = _extract_stage_output_from_run_payload(run_payload, "chapter-summary-item")
+
+    assert output == {
+        "chapter_id": "C07.xhtml",
+        "chapter_title": "Chapter 7",
+        "summary_bullets": ["One bullet."],
+    }
+
+
 def test_epub_output_from_payload_prefers_all_stage_outputs():
     payload = {
         "all_stage_outputs": {"epub-parse": {"chapters": [{"id": "ch01", "content": "x"}]}},
@@ -282,7 +407,17 @@ def test_summarize_chapter_llm_mode_uses_llm_when_response_valid(monkeypatch) ->
     ]
 
 
-def test_summarize_chapter_llm_mode_falls_back_to_extractive_on_invalid_response(monkeypatch) -> None:
+def test_parse_llm_summary_response_text_accepts_wrapped_json() -> None:
+    bullets, error = _parse_llm_summary_response_text(
+        'Here is the JSON:\n{"summary_bullets":["Celaena finds a hidden door."]}\nDone.',
+        max_bullets=3,
+    )
+
+    assert bullets == ["Celaena finds a hidden door."]
+    assert error is None
+
+
+def test_summarize_chapter_llm_mode_falls_back_to_extractive_with_specific_flag(monkeypatch) -> None:
     chapter = {
         "id": "ch07",
         "title": "Chapter 7",
@@ -293,29 +428,35 @@ def test_summarize_chapter_llm_mode_falls_back_to_extractive_on_invalid_response
         ),
     }
 
-    monkeypatch.setattr("scripts.chapter_summary._call_llm_summary", lambda **_: [])
+    monkeypatch.setattr(
+        "scripts.chapter_summary._call_llm_summary",
+        lambda **_: {"summary_bullets": [], "error": "llm_json_parse_error"},
+    )
     cfg = ChapterSummaryConfig(mode="llm", max_bullets=3, llm_fallback_to_extractive=True)
 
     result = summarize_chapter(chapter, config=cfg)
 
     assert result["summary_method"] == "extractive_fallback"
     assert "fallback_used" in result["quality_flags"]
-    assert "llm_invalid_response" in result["quality_flags"]
+    assert "llm_json_parse_error" in result["quality_flags"]
     assert len(result["summary_bullets"]) > 0
 
 
-def test_summarize_chapter_llm_mode_without_fallback_returns_default_bullet(monkeypatch) -> None:
+def test_summarize_chapter_llm_mode_without_fallback_returns_specific_flag(monkeypatch) -> None:
     chapter = {
         "id": "ch08",
         "title": "Chapter 8",
         "content": "Dorian questions Cain about the sabotage while guards watch the hall.",
     }
 
-    monkeypatch.setattr("scripts.chapter_summary._call_llm_summary", lambda **_: [])
+    monkeypatch.setattr(
+        "scripts.chapter_summary._call_llm_summary",
+        lambda **_: {"summary_bullets": [], "error": "llm_timeout"},
+    )
     cfg = ChapterSummaryConfig(mode="llm", max_bullets=3, llm_fallback_to_extractive=False)
 
     result = summarize_chapter(chapter, config=cfg)
 
     assert result["summary_method"] == "llm"
     assert result["summary_bullets"] == ["No reliable summary available for this chapter."]
-    assert "llm_invalid_response" in result["quality_flags"]
+    assert "llm_timeout" in result["quality_flags"]

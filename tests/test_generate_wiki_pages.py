@@ -4,10 +4,13 @@ import json
 
 from scripts.generate_wiki_pages import (
     _contains_template_placeholder,
+    _extract_stage_output_from_run_payload,
     _is_page_complete,
+    _run_generation_for_entity,
     build_prompt,
     call_ollama,
     generation_profile,
+    make_stub_page,
     parse_response,
 )
 
@@ -107,10 +110,11 @@ def test_build_prompt_includes_requested_sections_in_order():
         sections=["infobox", "biography", "relationships", "references"],
     )
     assert "Use exactly these sections in this order: infobox, biography, relationships, references." in prompt
-    assert '## Infobox\\n\\n' in prompt
+    assert '"title": "John Doe"' in prompt
+    assert '"content": "## Infobox\\n\\n' in prompt
     assert '## Biographie\\n\\n' in prompt
     assert '## Relations\\n\\n' in prompt
-    assert '## Références\\n\\n' in prompt
+    assert '"content": "<Markdown string with \\\\n for newlines>"' in prompt
 
 
 def test_build_prompt_includes_related_context_block_and_strict_rules():
@@ -141,12 +145,10 @@ def test_build_prompt_includes_related_context_block_and_strict_rules():
         sections=["infobox", "biography", "relationships", "references"],
     )
 
-    assert "Known related entities (disambiguation context):" in prompt
+    assert "Related entities (disambiguation only — do not derive narrative from cooccurrence):" in prompt
     assert "Name: Celaena" in prompt
     assert "Cooccurrence count: 175" in prompt
-    assert "Use this block only to disambiguate likely related entities." in prompt
-    assert "If ambiguous, omit rather than infer." in prompt
-    assert "Do NOT turn cooccurrence into narrative causality." in prompt
+    assert "Do NOT turn cooccurrence between entities into narrative causality." in prompt
 
 
 def test_build_prompt_includes_chapter_summary_context_block_and_rules():
@@ -174,11 +176,10 @@ def test_build_prompt_includes_chapter_summary_context_block_and_rules():
         sections=["infobox", "biography", "relationships", "references"],
     )
 
-    assert "Chapter summaries for chapters where this entity appears:" in prompt
+    assert "Chapter summaries (orientation context — lower priority than excerpts):" in prompt
     assert "Chapter: Chapter 1" in prompt
     assert "Dorian meets Chaol at court." in prompt
-    assert "Direct excerpts have priority over chapter summaries." in prompt
-    assert "Treat chapter summaries as orientation context, not strong evidence." in prompt
+    assert "Chapter summaries serve as orientation only. Direct excerpts take priority." in prompt
 
 
 def test_call_ollama_uses_custom_num_predict(monkeypatch):
@@ -261,3 +262,109 @@ def test_parse_response_rejects_template_placeholder_leak():
 def test_contains_template_placeholder_detects_marker_in_infobox():
     page = {"content": "## Biographie\n\nTexte.", "infobox_fields": {"nom": "<si connu>"}}
     assert _contains_template_placeholder(page) is True
+
+
+def test_extract_stage_output_from_run_payload_reads_successful_stage_output() -> None:
+    run_payload = {
+        "id": "run-123",
+        "pipeline_name": "wiki-page-item",
+        "status": "success",
+        "stages": [
+            {
+                "stage_name": "wiki-page-item",
+                "status": "success",
+                "output": {
+                    "title": "Victor Grandes",
+                    "importance": "secondary",
+                    "entity_type": "PERSON",
+                    "infobox_fields": {},
+                    "content": "## Biographie\n\nTexte.",
+                },
+            }
+        ],
+    }
+
+    output = _extract_stage_output_from_run_payload(run_payload, "wiki-page-item")
+
+    assert output == {
+        "title": "Victor Grandes",
+        "importance": "secondary",
+        "entity_type": "PERSON",
+        "infobox_fields": {},
+        "content": "## Biographie\n\nTexte.",
+    }
+
+
+def test_run_generation_for_entity_uses_item_runner_when_not_dry(monkeypatch, tmp_path):
+    entity = {
+        "canonical_name": "Victor Grandes",
+        "importance": "secondary",
+        "type": "PERSON",
+        "context_by_chapter": {"ch01": ["Victor entre dans la pièce."]},
+    }
+    debug_dir = tmp_path / "wiki_page_item_debug"
+    calls = []
+
+    def fake_runner(*, entity, book_title, model, timeout, sections, max_tokens):
+        calls.append((entity["canonical_name"], book_title, model, timeout, sections, max_tokens))
+        return {
+            "title": "Victor Grandes",
+            "importance": "secondary",
+            "entity_type": "PERSON",
+            "infobox_fields": {},
+            "content": "## Biographie\n\nTexte.",
+        }
+
+    monkeypatch.setattr("scripts.generate_wiki_pages._run_wiki_page_item", fake_runner)
+
+    page = _run_generation_for_entity(
+        entity=entity,
+        book_title="Mon Livre",
+        model="qwen2.5",
+        timeout=120,
+        sections=["infobox", "biography"],
+        max_tokens=800,
+        dry_run=False,
+        debug_dir=debug_dir,
+    )
+
+    assert calls == [("Victor Grandes", "Mon Livre", "qwen2.5", 120, ["infobox", "biography"], 800)]
+    assert page["title"] == "Victor Grandes"
+
+
+def test_run_generation_for_entity_returns_retryable_failed_stub_and_logs_on_runner_failure(monkeypatch, tmp_path):
+    entity = {
+        "canonical_name": "Victor Grandes",
+        "importance": "secondary",
+        "type": "PERSON",
+        "context_by_chapter": {"ch01": ["Victor entre dans la pièce."]},
+    }
+    debug_dir = tmp_path / "wiki_page_item_debug"
+
+    monkeypatch.setattr(
+        "scripts.generate_wiki_pages._run_wiki_page_item",
+        lambda **_: {
+            "error": "studio_run_failed",
+            "raw_response": "plain string response",
+            "run_metadata": {"pipeline": "wiki-page-item", "attempts": 3},
+        },
+    )
+
+    page = _run_generation_for_entity(
+        entity=entity,
+        book_title="Mon Livre",
+        model="qwen2.5",
+        timeout=120,
+        sections=["infobox", "biography"],
+        max_tokens=800,
+        dry_run=False,
+        debug_dir=debug_dir,
+    )
+
+    assert page["_failed"] is True
+    assert page["title"] == "Victor Grandes"
+    debug_files = sorted(debug_dir.glob("*.json"))
+    assert len(debug_files) == 1
+    payload = json.loads(debug_files[0].read_text(encoding="utf-8"))
+    assert payload["error"] == "studio_run_failed"
+    assert payload["run_metadata"] == {"pipeline": "wiki-page-item", "attempts": 3}

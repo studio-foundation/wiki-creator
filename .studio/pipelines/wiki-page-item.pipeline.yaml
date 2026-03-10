@@ -1,0 +1,14 @@
+name: wiki-page-item
+description: Generate one wiki page item with Studio validation and Ralph retries
+version: 1
+
+stages:
+  - name: wiki-page-item
+    kind: analysis
+    agent: wiki-page-item
+    contract: wiki-page-item
+    ralph:
+      max_attempts: 3
+    context:
+      include:
+        - input
