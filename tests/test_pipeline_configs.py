@@ -113,3 +113,12 @@ def test_wiki_resolution_pipeline_inserts_alias_resolution_between_resolve_and_m
         if stage.get("name") == "alias-resolution"
     )
     assert alias_stage.get("script") == "scripts/alias_resolution.py"
+
+
+def test_alias_resolution_contract_exists_with_required_fields() -> None:
+    contract_path = CONTRACTS_DIR / "alias-resolution.contract.yaml"
+    assert contract_path.exists(), "alias-resolution contract is missing"
+
+    doc = _load_yaml(contract_path)
+    required_fields = doc.get("schema", {}).get("required_fields", [])
+    assert required_fields == ["entities", "narrator"]

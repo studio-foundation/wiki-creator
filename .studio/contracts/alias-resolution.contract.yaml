@@ -1,0 +1,9 @@
+name: alias-resolution
+version: 1
+schema:
+  required_fields:
+    - entities
+    - narrator
+# entities: resolved entity list after conservative PERSON alias merging
+# narrator: passthrough narrator metadata from resolve-clusters, or null
+# stats may be present for debugging and stage audit metadata

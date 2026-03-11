@@ -211,6 +211,19 @@ def test_clean_apostrophe_typographique():
     assert clean_chapter_text("c\u2019est") == "c'est"
 
 
+def test_clean_extended_apostrophe_variants():
+    """Other apostrophe-like Unicode chars are normalized to ASCII apostrophe."""
+    assert clean_chapter_text("I\u02bbll go") == "I'll go"
+    assert clean_chapter_text("I\u2032ve seen it") == "I've seen it"
+
+
+def test_clean_rejoins_spaced_i_contractions():
+    """Split English I-contractions are repaired before downstream NER."""
+    assert clean_chapter_text("I 'll go now.") == "I'll go now."
+    assert clean_chapter_text("I ’ve seen this.") == "I've seen this."
+    assert clean_chapter_text("I  'd rather wait.") == "I'd rather wait."
+
+
 def test_clean_guillemets_normalisés():
     """French guillemets « » are normalized to double quotes."""
     assert clean_chapter_text("\u00abBonjour\u00bb") == '"Bonjour"'

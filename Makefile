@@ -4,6 +4,7 @@
 
 #BOOK ?= library/carlos-ruiz-zafon/el-cementerio-de-los-libros-olvidados/books/02-le-jeu-de-lange.yaml
 BOOK ?= library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml
+
 # Full run via orchestrator
 run:
 	python run_wiki.py --book $(BOOK)

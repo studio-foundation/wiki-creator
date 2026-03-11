@@ -41,6 +41,15 @@ _LIGATURES: dict[str, str] = {
     '\ufb06': 'st',
 }
 
+_APOSTROPHE_VARIANTS: tuple[str, ...] = (
+    '\u02bb',  # modifier letter turned comma
+    '\u2019',  # right single quotation mark
+    '\u2018',  # left single quotation mark
+    '\u02bc',  # modifier letter apostrophe
+    '\u2032',  # prime
+    '\uff07',  # fullwidth apostrophe
+)
+
 
 def clean_chapter_text(text: str) -> str:
     """Normalize chapter text to remove noise before NLP processing."""
@@ -51,8 +60,9 @@ def clean_chapter_text(text: str) -> str:
     for lig, repl in _LIGATURES.items():
         text = text.replace(lig, repl)
 
-    # 2. Normalize typographic apostrophes and guillemets
-    text = text.replace('\u2019', "'").replace('\u2018', "'")  # ' ' → '
+    # 2. Normalize apostrophe-like Unicode chars and guillemets
+    for apostrophe in _APOSTROPHE_VARIANTS:
+        text = text.replace(apostrophe, "'")
     text = text.replace('\u00ab', '"').replace('\u00bb', '"')  # « » → "
 
     # 3. Unescape HTML entities (&nbsp; → \xa0, &mdash; → —, etc.)
@@ -81,6 +91,10 @@ def clean_chapter_text(text: str) -> str:
 
     # 6. Normalize runs of spaces/tabs to a single space
     text = re.sub(r'[ \t]{2,}', ' ', text)
+
+    # 6b. Repair English I-contractions split by EPUB/tokenization artifacts
+    #     so spaCy sees "I'll"/"I've"/"I'd"/"I'm" instead of stray tokens.
+    text = re.sub(r"\bI\s*'\s*([a-z]{1,6})\b", r"I'\1", text)
 
     # 7. Strip each paragraph
     paragraphs = [p.strip() for p in text.split('\n\n')]
