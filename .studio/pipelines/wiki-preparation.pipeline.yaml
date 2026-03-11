@@ -25,7 +25,7 @@ stages:
 
   - name: chapter-summary
     kind: extraction
-    timeout_ms: 600000
+    timeout_ms: 86400000
     executor: script
     runtime: python
     script: scripts/chapter_summary.py
