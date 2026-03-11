@@ -20,6 +20,15 @@ import sys
 
 
 def merge_entities(all_stage_outputs: dict) -> dict:
+    alias_out = all_stage_outputs.get("alias-resolution", {})
+    if alias_out:
+        entities = alias_out.get("entities", [])
+        narrator = alias_out.get("narrator", None)
+        if not isinstance(entities, list):
+            print("Warning: alias-resolution returned non-list entities", file=sys.stderr)
+            entities = []
+        return {"entities": entities, "narrator": narrator}
+
     resolve_out = all_stage_outputs.get("resolve-clusters", {})
     if resolve_out:
         entities = resolve_out.get("entities", [])

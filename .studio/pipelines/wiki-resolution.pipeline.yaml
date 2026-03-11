@@ -23,6 +23,17 @@ stages:
       include:
         - previous_stage_output
 
+  - name: alias-resolution
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/alias_resolution.py
+    contract: alias-resolution
+    context:
+      include:
+        - input
+        - previous_stage_output
+
   - name: merge-entities
     kind: extraction
     executor: script

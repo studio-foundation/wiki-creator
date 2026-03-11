@@ -60,6 +60,23 @@ def test_output_shape():
     assert "narrator" in result
 
 
+def test_alias_resolution_output_takes_priority_when_present():
+    alias_resolved = {
+        "canonical_name": "Lillian Gordaina",
+        "type": "PERSON",
+        "aliases": ["Celaena", "Lillian Gordaina"],
+        "source_ids": ["e001", "e099"],
+        "relevant": True,
+    }
+    outputs = {
+        "resolve-clusters": {"entities": [RESOLVED_PERSON], "narrator": None},
+        "alias-resolution": {"entities": [alias_resolved], "narrator": NARRATOR},
+    }
+    result = merge_entities(outputs)
+    assert result["entities"] == [alias_resolved]
+    assert result["narrator"] == NARRATOR
+
+
 def test_empty_stage_outputs_returns_empty():
     result = merge_entities({})
     assert result["entities"] == []
