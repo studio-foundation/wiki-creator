@@ -8,7 +8,11 @@ entities when local mention context contains strong alias or reveal evidence.
 
 import json
 import re
+import socket
 import sys
+import urllib.error
+import urllib.request
+import warnings
 from pathlib import Path
 
 import yaml
@@ -73,6 +77,16 @@ def _empty_stats() -> dict:
         "llm_confirmed": 0,
         "llm_failed": 0,
     }
+
+
+def _check_ollama_available(url: str, timeout: int = 2) -> bool:
+    """Return True if Ollama is reachable at url/api/tags."""
+    try:
+        req = urllib.request.Request(f"{url}/api/tags", method="HEAD")
+        with urllib.request.urlopen(req, timeout=timeout):
+            return True
+    except (urllib.error.URLError, socket.timeout, OSError):
+        return False
 
 
 def _load_persons_full(processing_dir: Path) -> dict:

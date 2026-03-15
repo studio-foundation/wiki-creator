@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from scripts.alias_resolution import resolve_aliases, detect_named_aliases, _pick_snippets
+from scripts.alias_resolution import resolve_aliases, detect_named_aliases, _pick_snippets, _check_ollama_available
 
 
 PERSON_A = {
@@ -276,3 +276,25 @@ def test_pick_snippets_falls_back_when_name_not_in_any_snippet():
 def test_pick_snippets_empty_when_no_source_ids():
     entity = {"canonical_name": "Ghost", "aliases": [], "source_ids": []}
     assert _pick_snippets(entity, {}, n=3) == []
+
+
+import unittest.mock as mock
+
+
+def test_check_ollama_available_returns_true_on_success():
+    with mock.patch("urllib.request.urlopen") as m:
+        m.return_value.__enter__ = lambda s: s
+        m.return_value.__exit__ = mock.Mock(return_value=False)
+        assert _check_ollama_available("http://localhost:11434") is True
+
+
+def test_check_ollama_available_returns_false_on_connection_error():
+    import urllib.error
+    with mock.patch("urllib.request.urlopen", side_effect=urllib.error.URLError("refused")):
+        assert _check_ollama_available("http://localhost:11434") is False
+
+
+def test_check_ollama_available_returns_false_on_timeout():
+    import socket
+    with mock.patch("urllib.request.urlopen", side_effect=socket.timeout()):
+        assert _check_ollama_available("http://localhost:11434") is False
