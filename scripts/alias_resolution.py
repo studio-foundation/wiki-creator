@@ -473,6 +473,7 @@ def resolve_aliases(
                     "entity_a": entity,
                     "entity_b": candidate,
                     "evidence": reveal,
+                    "persons_full": persons_full,
                 }) or {}
             except Exception:
                 stats["llm_failed"] += 1
