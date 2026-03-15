@@ -12,11 +12,7 @@ import sys
 from pathlib import Path
 
 import yaml
-from typing import Literal
-try:
-    from typing import TypedDict
-except ImportError:
-    from typing_extensions import TypedDict
+from typing import Literal, TypedDict
 
 # Ensure project root is importable when running as `python scripts/<file>.py`.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -223,21 +219,16 @@ def detect_named_aliases(mentions: dict[str, list[str]], text: str) -> list[Alia
     """
     names = list(mentions.keys())
     pairs: list[AliasPair] = []
-    seen: set[tuple[str, str]] = set()
 
     for i in range(len(names)):
         for j in range(i + 1, len(names)):
             name_a = names[i]
             name_b = names[j]
-            key = (name_a, name_b)
-            if key in seen:
-                continue
 
             # Strategy 1: pattern matching
             all_snippets = mentions[name_a] + mentions[name_b]
             evidence = _detect_pattern_for_names(name_a, name_b, all_snippets)
             if evidence:
-                seen.add(key)
                 pairs.append(AliasPair(
                     entity_a=name_a,
                     entity_b=name_b,
