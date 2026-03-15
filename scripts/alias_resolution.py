@@ -189,7 +189,7 @@ def _detect_cooccurrence_window(
     threshold: int = 2,
 ) -> str | None:
     """
-    Return a snippet if name_a and name_b co-appear in 2+ distinct 300-token windows.
+    Returns a ~200-character snippet from the first co-occurrence zone, or None.
 
     Tokenizes by whitespace. A name matches if its lowercased tokens appear
     consecutively in the token list.
@@ -216,19 +216,20 @@ def _detect_cooccurrence_window(
     if not pos_a or not pos_b:
         return None
 
-    hit_windows: list[int] = []
+    # Collect all positions of name_a that have name_b within _WINDOW_SIZE tokens
+    # (symmetric: either name can precede the other).
+    cooccurrence_centers: list[int] = []
     for pa in pos_a:
-        window_start = max(0, pa - _WINDOW_SIZE // 2)
-        window_end = window_start + _WINDOW_SIZE
         for pb in pos_b:
-            if window_start <= pb < window_end:
-                hit_windows.append(window_start)
+            if abs(pa - pb) < _WINDOW_SIZE:
+                center = min(pa, pb)
+                cooccurrence_centers.append(center)
                 break
 
-    if len(hit_windows) < threshold:
+    if len(cooccurrence_centers) < threshold:
         return None
 
-    ws = hit_windows[0]
+    ws = max(0, cooccurrence_centers[0])
     snippet_tokens = tokens[ws: ws + _WINDOW_SIZE]
     snippet = " ".join(snippet_tokens)
     return snippet[:200]
