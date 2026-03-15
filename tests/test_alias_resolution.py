@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from scripts.alias_resolution import resolve_aliases, detect_named_aliases
+from scripts.alias_resolution import resolve_aliases, detect_named_aliases, _pick_snippets
 
 
 PERSON_A = {
@@ -233,3 +233,46 @@ def test_detect_named_aliases_uses_custom_reveal_words():
     )
     # With a custom reveal word matching the context, we should get pairs or at least no crash
     assert isinstance(pairs, list)
+
+
+def test_pick_snippets_prioritises_canonical_name():
+    entity = {
+        "canonical_name": "Celaena",
+        "aliases": ["Celaena"],
+        "source_ids": ["e1"],
+    }
+    persons_full = {
+        "e1": {
+            "mentions_by_chapter": {
+                "ch01": ["Someone entered.", "Celaena smiled.", "A guard stood."],
+                "ch02": ["Celaena ran.", "Another person spoke."],
+            }
+        }
+    }
+    snippets = _pick_snippets(entity, persons_full, n=3)
+    assert len(snippets) == 3
+    # Snippets containing the name come first
+    assert snippets[0] in ("Celaena smiled.", "Celaena ran.")
+    assert snippets[1] in ("Celaena smiled.", "Celaena ran.")
+
+
+def test_pick_snippets_falls_back_when_name_not_in_any_snippet():
+    entity = {
+        "canonical_name": "The Stranger",
+        "aliases": [],
+        "source_ids": ["e2"],
+    }
+    persons_full = {
+        "e2": {
+            "mentions_by_chapter": {
+                "ch01": ["Someone appeared.", "A figure moved."],
+            }
+        }
+    }
+    snippets = _pick_snippets(entity, persons_full, n=3)
+    assert len(snippets) == 2  # only 2 available
+
+
+def test_pick_snippets_empty_when_no_source_ids():
+    entity = {"canonical_name": "Ghost", "aliases": [], "source_ids": []}
+    assert _pick_snippets(entity, {}, n=3) == []

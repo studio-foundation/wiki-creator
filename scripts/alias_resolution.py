@@ -112,6 +112,16 @@ def _gather_contexts(entity: dict, persons_full: dict) -> list[str]:
     return snippets
 
 
+def _pick_snippets(entity: dict, persons_full: dict, n: int = 3) -> list[str]:
+    """Return up to n snippets for entity, prioritising those containing the canonical name."""
+    all_snippets = _gather_contexts(entity, persons_full)
+    name = (entity.get("canonical_name") or "").lower()
+    with_name = [s for s in all_snippets if name and name in s.lower()]
+    without_name = [s for s in all_snippets if s not in with_name]
+    ordered = with_name + without_name
+    return ordered[:n]
+
+
 def _pick_canonical_name(entity_a: dict, entity_b: dict, persons_full: dict) -> str:
     counts: dict[str, int] = {}
     for entity in (entity_a, entity_b):
