@@ -41,6 +41,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 from wiki_creator.paths import book_paths_from_epub, BookPaths
+from wiki_creator.lang import load_lang_config, infer_language
 
 _VALID_TYPES = {"PERSON", "PLACE", "ORG", "EVENT", "OTHER"}
 _GEO_KEYWORDS = frozenset({
@@ -185,6 +186,11 @@ def classify_entities(
     orgs_full: dict,
     thresholds_config: str | dict,
     events_full: dict | None = None,
+    geo_keywords=None,
+    event_keywords=None,
+    concept_keywords=None,
+    role_words=None,
+    role_patterns=None,
 ) -> list[dict]:
     """Enrich entities with total_mentions, chapters_present, and importance.
 
@@ -285,8 +291,15 @@ def _normalize_entity_type(
     places_full: dict,
     orgs_full: dict,
     events_full: dict,
+    geo_keywords=None,
+    event_keywords=None,
+    concept_keywords=None,
 ) -> str:
     """Deterministic type normalization for common extraction confusions."""
+    _geo = geo_keywords if geo_keywords is not None else _GEO_KEYWORDS
+    _evt = event_keywords if event_keywords is not None else _EVENT_KEYWORDS
+    _concept = concept_keywords if concept_keywords is not None else _CONCEPT_KEYWORDS
+
     name = str(entity.get("canonical_name", "") or "").strip()
     if not name:
         return entity.get("type", "OTHER")
@@ -294,7 +307,7 @@ def _normalize_entity_type(
     lowered = name.lower()
     current_type = str(entity.get("type", "OTHER") or "OTHER").upper()
 
-    if lowered in _CONCEPT_KEYWORDS:
+    if lowered in _concept:
         return "OTHER"
     if lowered in {"samhuinn", "yulemas"}:
         return "EVENT"
@@ -304,9 +317,9 @@ def _normalize_entity_type(
     ).lower()
     text = f"{lowered} {context}"
 
-    geo_hits = sum(1 for kw in _GEO_KEYWORDS if kw in text)
-    event_hits = sum(1 for kw in _EVENT_KEYWORDS if kw in text)
-    concept_hits = sum(1 for kw in _CONCEPT_KEYWORDS if kw in text)
+    geo_hits = sum(1 for kw in _geo if kw in text)
+    event_hits = sum(1 for kw in _evt if kw in text)
+    concept_hits = sum(1 for kw in _concept if kw in text)
 
     # Conservative PERSON retag: only with explicit geopolitical evidence.
     if current_type == "PERSON":
@@ -330,13 +343,15 @@ def _normalize_entity_type(
     return current_type
 
 
-def _is_role_entity_name(name: str) -> bool:
+def _is_role_entity_name(name: str, role_words=None, role_patterns=None) -> bool:
+    _roles = role_words if role_words is not None else _ROLE_WORDS
+    _patterns = role_patterns if role_patterns is not None else _ROLE_PATTERNS
     lowered = (name or "").strip().lower()
     if not lowered:
         return False
-    if lowered in _ROLE_WORDS:
+    if lowered in _roles:
         return True
-    return any(re.search(pattern, lowered) for pattern in _ROLE_PATTERNS)
+    return any(re.search(pattern, lowered) for pattern in _patterns)
 
 
 def _rewrite_relationships(relationships: list[dict], merge_map: dict[str, str]) -> list[dict]:
@@ -385,6 +400,8 @@ def _canonicalize_role_entities(
     places_full: dict,
     orgs_full: dict,
     events_full: dict,
+    role_words=None,
+    role_patterns=None,
 ) -> tuple[list[dict], list[dict], dict[str, str]]:
     """
     Merge unambiguous role entities into PERSON entities; otherwise mark role entities ignored.
@@ -395,7 +412,7 @@ def _canonicalize_role_entities(
 
     for entity in entities:
         name = entity.get("canonical_name", "")
-        if not name or not _is_role_entity_name(name):
+        if not name or not _is_role_entity_name(name, role_words=role_words, role_patterns=role_patterns):
             continue
         if name in person_names and len((name or "").split()) > 1:
             # Proper names that happen to contain a role token should not be treated as role-only entities.
@@ -523,13 +540,32 @@ def run_studio_mode() -> None:
     thresholds_config = book_input.get("thresholds", "auto")
     entity_overrides = book_input.get("entity_overrides", {})
 
+    # Language-specific keyword sets from cue_words JSON
+    spacy_model = book_input.get("spacy_model", "en_core_web_lg")
+    language = (
+        book_input.get("export", {}).get("categories", {}).get("language")
+        or infer_language(spacy_model)
+    )
+    lang_cfg = load_lang_config(language)
+    geo_keywords = frozenset(lang_cfg.get("geo_keywords", []))
+    event_keywords = frozenset(lang_cfg.get("event_keywords", []))
+
+    # Book-specific classification hints from book YAML
+    classification = book_input.get("classification", {})
+    concept_keywords = frozenset(classification.get("concept_keywords", [])) or _CONCEPT_KEYWORDS
+    role_words = frozenset(classification.get("role_words", [])) or _ROLE_WORDS
+    role_patterns = tuple(classification.get("role_patterns", [])) or _ROLE_PATTERNS
+
     paths = _paths_from_payload(payload)
     persons_full, places_full, orgs_full, events_full = _load_entity_files(paths.processing)
 
     # Deterministic type normalization before scoring.
     for entity in entities:
         entity["type"] = _normalize_entity_type(
-            entity, persons_full, places_full, orgs_full, events_full
+            entity, persons_full, places_full, orgs_full, events_full,
+            geo_keywords=geo_keywords,
+            event_keywords=event_keywords,
+            concept_keywords=concept_keywords,
         )
 
     # Role/title entities should not become autonomous pages; merge unambiguous aliases.
@@ -540,6 +576,8 @@ def run_studio_mode() -> None:
         places_full,
         orgs_full,
         events_full,
+        role_words=role_words,
+        role_patterns=role_patterns,
     )
 
     # Optional per-book explicit overrides (highest priority).
@@ -556,6 +594,11 @@ def run_studio_mode() -> None:
         orgs_full,
         thresholds_config,
         events_full=events_full,
+        geo_keywords=geo_keywords,
+        event_keywords=event_keywords,
+        concept_keywords=concept_keywords,
+        role_words=role_words,
+        role_patterns=role_patterns,
     )
 
     from collections import Counter
