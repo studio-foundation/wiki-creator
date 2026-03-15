@@ -12,6 +12,11 @@ import sys
 from pathlib import Path
 
 import yaml
+from typing import Literal
+try:
+    from typing import TypedDict
+except ImportError:
+    from typing_extensions import TypedDict
 
 # Ensure project root is importable when running as `python scripts/<file>.py`.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -19,11 +24,23 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 from wiki_creator.paths import book_paths_from_epub, BookPaths
 
+
+class AliasPair(TypedDict):
+    entity_a: str
+    entity_b: str
+    confidence: Literal["high", "medium"]
+    source: Literal["pattern", "cooccurrence"]
+    snippet: str
+
+
 _PATTERN_TEMPLATES = (
     r"\byou may call me {b}\b",
     r"\balso known as {b}\b",
     r"\bformerly known as {b}\b",
+    r"\bformerly {b}\b",
     r"\bcalled (?:him|her|them) {b}\b",
+    r"\bknown as {b}\b",
+    r"\bnée {b}\b",
     r"\b{a}[^.]{{0,80}}\banother name[^.]{{0,80}}\b{b}\b",
     r"\b{a}[^.]{{0,80}}\bunder another name[^.]{{0,80}}\b{b}\b",
 )
@@ -135,24 +152,35 @@ def _merge_entities(entity_a: dict, entity_b: dict, evidence: dict, persons_full
     }
 
 
+def _detect_pattern_for_names(name_a: str, name_b: str, snippets: list[str]) -> str | None:
+    """Return the first snippet matching an alias pattern for name_a/name_b, or None."""
+    if name_a.lower() == name_b.lower():
+        return None
+    pattern_a_b = [
+        t.format(a=re.escape(name_a.lower()), b=re.escape(name_b.lower()))
+        for t in _PATTERN_TEMPLATES
+    ]
+    pattern_b_a = [
+        t.format(a=re.escape(name_b.lower()), b=re.escape(name_a.lower()))
+        for t in _PATTERN_TEMPLATES
+    ]
+    for snippet in snippets:
+        lowered = snippet.lower()
+        for pattern in pattern_a_b + pattern_b_a:
+            if re.search(pattern, lowered):
+                return snippet
+    return None
+
+
 def _detect_pattern_match(entity_a: dict, entity_b: dict, persons_full: dict) -> dict | None:
     contexts = _gather_contexts(entity_a, persons_full) + _gather_contexts(entity_b, persons_full)
     names_a = _entity_names(entity_a)
     names_b = _entity_names(entity_b)
-    for snippet in contexts:
-        lowered = snippet.lower()
-        for name_a in names_a:
-            for name_b in names_b:
-                if name_a.lower() == name_b.lower():
-                    continue
-                for template in _PATTERN_TEMPLATES:
-                    pattern = template.format(a=re.escape(name_a.lower()), b=re.escape(name_b.lower()))
-                    if re.search(pattern, lowered):
-                        return {
-                            "method": "pattern",
-                            "confidence": "high",
-                            "snippet": snippet,
-                        }
+    for name_a in names_a:
+        for name_b in names_b:
+            snippet = _detect_pattern_for_names(name_a, name_b, contexts)
+            if snippet:
+                return {"method": "pattern", "confidence": "high", "snippet": snippet}
     return None
 
 
@@ -180,6 +208,49 @@ def _detect_reveal_signal(entity_a: dict, entity_b: dict, persons_full: dict) ->
             "snippet": matches[0],
         }
     return None
+
+
+def detect_named_aliases(mentions: dict[str, list[str]], text: str) -> list[AliasPair]:
+    """
+    Detect alias pairs using two deterministic heuristics (zero LLM).
+
+    Args:
+        mentions: mapping of entity canonical_name -> list of context snippets
+        text: raw concatenated book text, used for token-window co-occurrence
+
+    Returns:
+        list of AliasPair, each with entity_a, entity_b, confidence, source, snippet
+    """
+    names = list(mentions.keys())
+    pairs: list[AliasPair] = []
+    seen: set[tuple[str, str]] = set()
+
+    for i in range(len(names)):
+        for j in range(i + 1, len(names)):
+            name_a = names[i]
+            name_b = names[j]
+            key = (name_a, name_b)
+            if key in seen:
+                continue
+
+            # Strategy 1: pattern matching
+            all_snippets = mentions[name_a] + mentions[name_b]
+            evidence = _detect_pattern_for_names(name_a, name_b, all_snippets)
+            if evidence:
+                seen.add(key)
+                pairs.append(AliasPair(
+                    entity_a=name_a,
+                    entity_b=name_b,
+                    confidence="high",
+                    source="pattern",
+                    snippet=evidence,
+                ))
+                continue
+
+            # Strategy 2: token-window co-occurrence (implemented in Task 3)
+            # Placeholder: skipped for now
+
+    return pairs
 
 
 def resolve_aliases(
