@@ -35,6 +35,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 from wiki_creator.paths import book_paths_from_epub, BookPaths
+from wiki_creator.lang import infer_language as _infer_lang, load_lang_config as _load_lang_config
 
 
 def _paths_from_payload(payload: dict) -> BookPaths:
@@ -120,6 +121,21 @@ LABEL_TO_TYPE = {
 
 CUE_WORDS_DIR = PROJECT_ROOT / "wiki_creator" / "cue_words"
 
+# Load language-specific word lists from cue_words JSON files.
+# FALSE_POSITIVE_WORDS: French-only; loaded from fr.json at import time.
+# COORDINATION_CONNECTORS: merged EN+FR (both languages use coordinating conjunctions).
+# FIRST_PERSON_ARTIFACT_TAILS_EN: English-only OCR artifact patterns.
+_en_lang_cfg = _load_lang_config("en")
+_fr_lang_cfg = _load_lang_config("fr")
+
+FALSE_POSITIVE_WORDS: frozenset[str] = frozenset(_fr_lang_cfg.get("false_positive_words", []))
+COORDINATION_CONNECTORS: frozenset[str] = frozenset(
+    _en_lang_cfg.get("coordination_connectors", [])
+) | frozenset(_fr_lang_cfg.get("coordination_connectors", []))
+FIRST_PERSON_ARTIFACT_TAILS_EN: frozenset[str] = frozenset(
+    _en_lang_cfg.get("first_person_artifact_tails", [])
+)
+
 _DEFAULT_CUE_WORDS = {
     "en": {
         "place_cue_words": [
@@ -162,11 +178,8 @@ _DEFAULT_CUE_WORDS = {
 
 
 def _infer_cue_words_language(spacy_model: str) -> str:
-    """Infer cue-word language from spaCy model name."""
-    model = (spacy_model or "").strip().lower()
-    if model.startswith("fr_core_news_"):
-        return "fr"
-    return "en"
+    """Infer cue-word language from spaCy model name. Delegates to wiki_creator.lang."""
+    return _infer_lang(spacy_model)
 
 
 def _resolve_cue_words_language(spacy_model: str, override: str | None) -> str:
@@ -274,33 +287,6 @@ def _is_frontmatter_chapter(chapter: dict) -> bool:
         p in title for p in FRONTMATTER_TITLE_PATTERNS
     )
 
-# French-specific words that spaCy misclassifies as named entities.
-# Harmless for English input (no English entity shares these strings).
-# Only single-word entity texts are checked; multi-word entities like
-# "Le Cher" or "Monsieur Lefebvre" pass through unconditionally.
-FALSE_POSITIVE_WORDS: frozenset[str] = frozenset({
-    # Epistolary salutations (spaCy classifies "Cher" as PLACE — dept. du Cher)
-    "cher", "chère", "chers", "chères",
-    # Titles used alone without a proper name
-    "monsieur", "madame", "mademoiselle",
-    # Verb forms and adjectives captured via sentence-initial uppercase
-    "excusez", "pardonnez", "intéressant",
-    # Greeting and farewell interjections
-    "merci", "bonjour", "bonsoir", "adieu",
-})
-
-# Coordinating conjunctions that frequently produce parser artifacts like
-# "Celaena and Chaol" as a single PERSON mention.
-COORDINATION_CONNECTORS: frozenset[str] = frozenset({"and", "et", "&", "y"})
-
-# Common English OCR/parsing artifacts where "I <verb>" is collapsed as one token
-# (e.g. "I would" -> "Iwould"), often mis-tagged as PERSON by NER.
-FIRST_PERSON_ARTIFACT_TAILS_EN: frozenset[str] = frozenset({
-    "am", "have", "had", "would", "will", "win", "can", "could", "do", "did",
-    "know", "knew", "see", "saw", "like", "suppose", "think", "guess",
-    "mean", "want", "need", "tell", "told", "say", "said", "feel", "felt",
-    "look", "looked", "might", "must", "shall", "should",
-})
 
 
 # POS tags that disqualify a span from being a named entity.
