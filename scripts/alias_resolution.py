@@ -16,6 +16,7 @@ import warnings
 from pathlib import Path
 
 import yaml
+from collections.abc import Callable
 from typing import Literal, TypedDict
 
 # Ensure project root is importable when running as `python scripts/<file>.py`.
@@ -113,10 +114,16 @@ def _parse_llm_response(text: str) -> dict | None:
     return None
 
 
-def make_ollama_confirmer(model: str, url: str, timeout: int):
+def _fmt_snippets(snippets: list[str]) -> str:
+    if not snippets:
+        return "- (no context available)"
+    return "\n".join(f"- {s[:200]}" for s in snippets)
+
+
+def make_ollama_confirmer(model: str, url: str, timeout: int) -> Callable:
     """Return an llm_confirmer callable backed by Ollama."""
 
-    def confirmer(candidate: dict):
+    def confirmer(candidate: dict) -> dict | None:
         entity_a = candidate["entity_a"]
         entity_b = candidate["entity_b"]
         evidence = candidate["evidence"]
@@ -125,16 +132,11 @@ def make_ollama_confirmer(model: str, url: str, timeout: int):
         snippets_a = _pick_snippets(entity_a, persons_full)
         snippets_b = _pick_snippets(entity_b, persons_full)
 
-        def fmt_snippets(snippets: list[str]) -> str:
-            if not snippets:
-                return "- (no context available)"
-            return "\n".join(f"- {s[:200]}" for s in snippets)
-
         prompt = _LLM_PROMPT_TEMPLATE.format(
             name_a=entity_a.get("canonical_name", ""),
             name_b=entity_b.get("canonical_name", ""),
-            snippets_a=fmt_snippets(snippets_a),
-            snippets_b=fmt_snippets(snippets_b),
+            snippets_a=_fmt_snippets(snippets_a),
+            snippets_b=_fmt_snippets(snippets_b),
             signal=evidence.get("snippet", "")[:300],
         )
 
@@ -150,8 +152,11 @@ def make_ollama_confirmer(model: str, url: str, timeout: int):
             headers={"Content-Type": "application/json"},
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            data = json.loads(resp.read())
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                data = json.loads(resp.read())
+        except (urllib.error.URLError, socket.timeout, OSError):
+            return None
         raw = data.get("response", "")
         return _parse_llm_response(raw)
 
