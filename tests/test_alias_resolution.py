@@ -1,8 +1,11 @@
 """Tests for scripts/alias_resolution.py."""
 import json
 import os
+import socket
 import subprocess
 import sys
+import unittest.mock as mock
+import urllib.error
 from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -277,10 +280,6 @@ def test_pick_snippets_empty_when_no_source_ids():
     entity = {"canonical_name": "Ghost", "aliases": [], "source_ids": []}
     assert _pick_snippets(entity, {}, n=3) == []
 
-
-import socket
-import unittest.mock as mock
-import urllib.error
 
 
 def test_check_ollama_available_returns_true_on_success():
