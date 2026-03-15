@@ -51,6 +51,8 @@ _REVEAL_WORDS = (
     "alias",
 )
 
+_WINDOW_SIZE = 300  # tokens
+
 
 def _paths_from_payload(payload: dict) -> BookPaths:
     ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
@@ -180,6 +182,58 @@ def _detect_pattern_match(entity_a: dict, entity_b: dict, persons_full: dict) ->
     return None
 
 
+def _detect_cooccurrence_window(
+    name_a: str,
+    name_b: str,
+    text: str,
+    threshold: int = 2,
+) -> str | None:
+    """
+    Return a snippet if name_a and name_b co-appear in 2+ distinct 300-token windows.
+
+    Tokenizes by whitespace. A name matches if its lowercased tokens appear
+    consecutively in the token list.
+    """
+    tokens = text.split()
+    if not tokens:
+        return None
+
+    na = name_a.lower()
+    nb = name_b.lower()
+
+    def find_positions(name: str) -> list[int]:
+        name_tokens = name.split()
+        n = len(name_tokens)
+        positions = []
+        for idx in range(len(tokens) - n + 1):
+            if " ".join(tokens[idx: idx + n]).lower() == name:
+                positions.append(idx)
+        return positions
+
+    pos_a = find_positions(na)
+    pos_b = find_positions(nb)
+
+    if not pos_a or not pos_b:
+        return None
+
+    hit_windows: list[int] = []
+    for pa in pos_a:
+        window_start = max(0, pa - _WINDOW_SIZE // 2)
+        window_end = window_start + _WINDOW_SIZE
+        for pb in pos_b:
+            if window_start <= pb < window_end:
+                hit_windows.append(window_start)
+                break
+
+    if len(hit_windows) < threshold:
+        return None
+
+    ws = hit_windows[0]
+    snippet_tokens = tokens[ws: ws + _WINDOW_SIZE]
+    snippet = " ".join(snippet_tokens)
+    return snippet[:200]
+
+
 def _detect_reveal_signal(entity_a: dict, entity_b: dict, persons_full: dict) -> dict | None:
     contexts = _gather_contexts(entity_a, persons_full) + _gather_contexts(entity_b, persons_full)
     names_a = [name.lower() for name in _entity_names(entity_a)]
@@ -238,8 +292,17 @@ def detect_named_aliases(mentions: dict[str, list[str]], text: str) -> list[Alia
                 ))
                 continue
 
-            # Strategy 2: token-window co-occurrence (implemented in Task 3)
-            # Placeholder: skipped for now
+            # Strategy 2: token-window co-occurrence
+            if text:
+                window_evidence = _detect_cooccurrence_window(name_a, name_b, text)
+                if window_evidence:
+                    pairs.append(AliasPair(
+                        entity_a=name_a,
+                        entity_b=name_b,
+                        confidence="medium",
+                        source="cooccurrence",
+                        snippet=window_evidence,
+                    ))
 
     return pairs
 
