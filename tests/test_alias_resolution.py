@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from scripts.alias_resolution import resolve_aliases
+from scripts.alias_resolution import resolve_aliases, detect_named_aliases
 
 
 PERSON_A = {
@@ -150,3 +150,70 @@ def test_script_stdin_contract_reads_registry_from_processing_dir(tmp_path: Path
     output = json.loads(result.stdout)
     assert len(output["entities"]) == 1
     assert output["stats"]["merges_applied"] == 1
+
+
+def test_detect_named_aliases_pattern_high_confidence():
+    mentions = {
+        "Celaena": ["Celaena smiled. You may call me Lillian, she said."],
+        "Lillian": ["You may call me Lillian, she said."],
+    }
+    pairs = detect_named_aliases(mentions, text="")
+    assert len(pairs) == 1
+    assert pairs[0]["entity_a"] == "Celaena"
+    assert pairs[0]["entity_b"] == "Lillian"
+    assert pairs[0]["confidence"] == "high"
+    assert pairs[0]["source"] == "pattern"
+
+
+def test_detect_named_aliases_no_evidence_returns_empty():
+    mentions = {
+        "Celaena": ["Celaena entered the room."],
+        "Dorian": ["Dorian watched the door."],
+    }
+    pairs = detect_named_aliases(mentions, text="Celaena entered the room. Dorian watched the door.")
+    assert pairs == []
+
+
+def test_detect_named_aliases_window_cooccurrence():
+    # Build a text where Celaena and Aelin appear within 300 tokens, twice
+    window = "Celaena " + "word " * 50 + "Aelin "
+    text = (window * 3).strip()
+    mentions = {
+        "Celaena": [window],
+        "Aelin": [window],
+    }
+    pairs = detect_named_aliases(mentions, text=text)
+    assert len(pairs) == 1
+    assert pairs[0]["source"] == "cooccurrence"
+    assert pairs[0]["confidence"] == "medium"
+
+
+def test_detect_named_aliases_window_below_threshold_returns_empty():
+    # Only one shared window — below threshold of 2
+    window = "Celaena " + "word " * 50 + "Aelin "
+    mentions = {
+        "Celaena": [window],
+        "Aelin": [window],
+    }
+    pairs = detect_named_aliases(mentions, text=window)
+    assert pairs == []
+
+
+def test_detect_named_aliases_née_pattern():
+    mentions = {
+        "Jane Smith": ["Jane Smith, née Austen, entered."],
+        "Austen": ["née Austen"],
+    }
+    pairs = detect_named_aliases(mentions, text="")
+    assert len(pairs) == 1
+    assert pairs[0]["confidence"] == "high"
+
+
+def test_detect_named_aliases_known_as_pattern():
+    mentions = {
+        "David": ["David, known as El Príncipe, walked in."],
+        "El Príncipe": ["known as El Príncipe"],
+    }
+    pairs = detect_named_aliases(mentions, text="")
+    assert len(pairs) == 1
+    assert pairs[0]["confidence"] == "high"
