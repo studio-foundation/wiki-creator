@@ -1,7 +1,7 @@
 {
   "place_cue_words": [
-    "ville", "royaume", "continent", "pays", "chateau", "château", "palais",
-    "camp", "mine", "foret", "forêt", "riviere", "rivière", "mer",
+    "ville", "royaume", "continent", "pays", "château", "chateau", "palais",
+    "camp", "mine", "forêt", "foret", "rivière", "riviere", "mer",
     "port", "rue", "route", "avenue"
   ],
   "person_cue_words": [
@@ -9,11 +9,43 @@
     "capitaine", "sir", "monsieur", "madame", "mademoiselle"
   ],
   "place_prepositions": [
-    "dans", "a", "à", "de", "depuis", "vers", "au", "aux", "en"
+    "dans", "à", "a", "de", "depuis", "vers", "au", "aux", "en"
   ],
   "event_suffixes": [
-    "bal", "festival", "fete", "fête", "ceremonie", "cérémonie",
-    "celebration", "célébration", "prieres", "prières", "benediction", "bénédiction",
-    "matin", "nuit", "veille"
+    "bal", "festival", "fête", "fete", "cérémonie", "ceremonie",
+    "célébration", "celebration", "prières", "prieres", "bénédiction",
+    "benediction", "matin", "nuit", "veille"
+  ],
+  "pronouns": [
+    "il", "elle", "ils", "elles", "lui", "leur",
+    "le", "la", "les", "l'", "l\u2019", "y", "en",
+    "se", "s'", "s\u2019"
+  ],
+  "determiners": ["le", "la", "les", "un", "une", "des", "du", "de"],
+  "noise_words": [
+    "oui", "non", "ah", "oh", "eh", "ok",
+    "le", "la", "les", "un", "une", "des",
+    "et", "ou", "mais", "donc", "or", "ni", "car",
+    "ici", "là", "que", "qui", "quoi",
+    "ça", "ce", "cet", "cette", "ces"
+  ],
+  "false_positive_words": [
+    "cher", "chère", "chers", "chères",
+    "monsieur", "madame", "mademoiselle",
+    "excusez", "pardonnez", "intéressant",
+    "merci", "bonjour", "bonsoir", "adieu"
+  ],
+  "coordination_connectors": ["et", "y"],
+  "reveal_words": [
+    "sous un autre nom", "vrai nom", "nom réel",
+    "identité cachée", "alias", "également connu sous"
+  ],
+  "geo_keywords": [
+    "royaume", "pays", "ville", "capitale", "empire", "continent",
+    "côte", "mer", "montagne", "forêt"
+  ],
+  "event_keywords": [
+    "fête", "fete", "cérémonie", "ceremonie",
+    "célébration", "celebration", "rite", "rituel"
   ]
 }

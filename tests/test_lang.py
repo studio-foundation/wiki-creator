@@ -20,3 +20,29 @@ def test_load_lang_config_en_has_existing_keys():
 def test_load_lang_config_unknown_falls_back_to_en():
     cfg = load_lang_config("xx")
     assert "place_cue_words" in cfg  # falls back to en.json
+
+
+def test_load_lang_config_en_has_new_keys():
+    cfg = load_lang_config("en")
+    for key in ("pronouns", "noise_words", "reveal_words", "geo_keywords",
+                "event_keywords", "coordination_connectors",
+                "first_person_artifact_tails", "false_positive_words"):
+        assert key in cfg, f"missing key: {key}"
+
+
+def test_load_lang_config_fr_has_new_keys():
+    cfg = load_lang_config("fr")
+    for key in ("pronouns", "noise_words", "reveal_words", "geo_keywords",
+                "event_keywords", "coordination_connectors",
+                "false_positive_words"):
+        assert key in cfg, f"missing key: {key}"
+
+
+def test_load_lang_config_fr_pronouns_contains_elle():
+    cfg = load_lang_config("fr")
+    assert "elle" in cfg["pronouns"]
+
+
+def test_load_lang_config_en_reveal_words_contains_alias():
+    cfg = load_lang_config("en")
+    assert "alias" in cfg["reveal_words"]
