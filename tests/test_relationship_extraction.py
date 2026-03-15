@@ -154,7 +154,7 @@ def test_narrator_passthrough_null_when_absent():
 def test_coref_worker_returns_list():
     """_coref_worker returns a list (empty when fastcoref not available)."""
     from scripts.relationship_extraction import _coref_worker
-    result = _coref_worker(("ch01", "Il travaillait.", {"david martín": "David Martín"}))
+    result = _coref_worker(("ch01", "Il travaillait.", {"david martín": "David Martín"}, "fr_core_news_lg"))
     assert isinstance(result, list)
     # Each item is (canonical, chapter_id, sentence)
     for item in result:
@@ -318,6 +318,30 @@ def test_true_relation_survives_filter():
     )
     pairs = {(r["entity_a"], r["entity_b"]) for r in rels}
     assert ("David Martín", "Pedro Vidal") in pairs or ("Pedro Vidal", "David Martín") in pairs
+
+
+def test_coref_worker_accepts_4_tuple():
+    """_coref_worker must unpack (chapter_id, text, name_to_canonical, spacy_model)."""
+    from scripts.relationship_extraction import _coref_worker
+    # Empty text → empty result, no crash
+    result = _coref_worker(("ch01", "", {}, "en_core_web_sm"))
+    assert result == []
+
+
+def test_enrich_heuristic_accepts_pronouns_param():
+    """enrich_mentions_with_heuristic should accept custom pronouns without error."""
+    from scripts.relationship_extraction import enrich_mentions_with_heuristic
+    chapters = {"ch01": "Alice walked in. She smiled."}
+    entities = [{"canonical_name": "Alice", "type": "PERSON", "relevant": True, "aliases": []}]
+    mentions = {"Alice": {"ch01": ["Alice walked in."]}}
+    # spaCy blank model (no NER, no senter) — use a real EN model if available
+    import spacy
+    nlp = spacy.blank("en")
+    nlp.add_pipe("sentencizer")
+    result = enrich_mentions_with_heuristic(
+        chapters, entities, mentions, nlp=nlp, pronouns=frozenset({"she"})
+    )
+    assert isinstance(result, dict)
 
 
 def test_stats_include_new_fields():

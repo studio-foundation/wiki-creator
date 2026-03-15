@@ -14,5 +14,33 @@
   "event_suffixes": [
     "ball", "festival", "feast", "ceremony", "celebration",
     "prayer", "prayers", "blessing", "blessings", "morning", "night", "eve"
+  ],
+  "pronouns": [
+    "he", "she", "they", "him", "her", "them", "his", "hers", "their",
+    "it", "its", "himself", "herself", "themselves", "itself"
+  ],
+  "determiners": ["the", "a", "an", "this", "that", "these", "those"],
+  "noise_words": [
+    "yes", "no", "ok", "the", "a", "an", "and", "or", "but",
+    "here", "there", "it", "he", "she", "they", "we"
+  ],
+  "false_positive_words": [],
+  "first_person_artifact_tails": [
+    "am", "have", "had", "would", "will", "win", "can", "could", "do", "did",
+    "know", "knew", "see", "saw", "like", "suppose", "think", "guess",
+    "mean", "want", "need", "tell", "told", "say", "said", "feel", "felt",
+    "look", "looked", "might", "must", "shall", "should"
+  ],
+  "coordination_connectors": ["and", "&"],
+  "reveal_words": [
+    "another name", "other name", "under another name",
+    "true name", "real name", "hidden identity", "alias"
+  ],
+  "geo_keywords": [
+    "kingdom", "country", "continent", "city", "town", "capital", "empire",
+    "land", "lands", "coast", "sea", "mountains", "forest"
+  ],
+  "event_keywords": [
+    "festival", "feast", "ceremony", "celebration", "ritual", "holiday", "eve"
   ]
 }

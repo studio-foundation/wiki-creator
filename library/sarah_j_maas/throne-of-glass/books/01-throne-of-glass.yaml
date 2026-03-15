@@ -61,3 +61,37 @@ export:
       secondary: Secondary Characters
       locations: Locations
       organizations: Organizations
+
+classification:
+  concept_keywords:
+    - wyrdmark
+    - wyrdmarks
+    - magic
+    - marque
+    - marques
+    - spell
+    - spells
+    - sigil
+    - sigils
+    - symbol
+    - symbols
+    - système
+    - systeme
+    - system
+  role_words:
+    - assassin
+    - champion
+    - "king's champion"
+    - "adarlan's assassin"
+    - queen
+    - king
+    - prince
+    - princess
+    - lady
+    - lord
+    - captain
+    - guard
+  role_patterns:
+    - '\b[a-z][a-z''\- ]*assassin\b'
+    - '\b[a-z][a-z''\- ]*champion\b'
+    - '\bking''?s champion\b'

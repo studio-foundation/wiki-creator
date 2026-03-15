@@ -303,3 +303,19 @@ def test_apply_entity_overrides_force_type_exclude_and_merge():
     assert role_entity["relevant"] is False
     assert role_entity["type"] == "OTHER"
     assert all(rel["entity_a"] != "Arobynn" and rel["entity_b"] != "Arobynn" for rel in out_relationships)
+
+
+def test_classify_entities_accepts_geo_keywords_param():
+    """classify_entities should accept optional geo_keywords without error."""
+    from scripts.entity_classification import classify_entities
+    entities = [{"canonical_name": "Arendelle", "type": "PLACE", "relevant": True, "aliases": [], "source_ids": []}]
+    result = classify_entities(entities, {}, {}, {}, "auto", geo_keywords=frozenset({"glacier"}))
+    assert isinstance(result, list)
+
+
+def test_classify_entities_accepts_concept_keywords_param():
+    """classify_entities should return OTHER for entities matching concept_keywords."""
+    from scripts.entity_classification import classify_entities
+    entities = [{"canonical_name": "wyrdmark", "type": "OTHER", "relevant": True, "aliases": [], "source_ids": []}]
+    result = classify_entities(entities, {}, {}, {}, "auto", concept_keywords=frozenset({"wyrdmark"}))
+    assert result[0]["type"] == "OTHER"

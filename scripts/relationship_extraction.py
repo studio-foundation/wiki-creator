@@ -65,6 +65,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 from wiki_creator.paths import book_paths_from_epub, book_paths_from_yaml, BookPaths
+from wiki_creator.lang import load_lang_config, infer_language
 
 
 def _paths_from_payload(payload: dict) -> BookPaths | None:
@@ -206,19 +207,13 @@ def build_cooccurrence_graph(
     return relationships, stats
 
 
-# French pronouns that might resolve to an entity when no NE is present
-_FR_PRONOUNS = frozenset({
-    "il", "elle", "ils", "elles", "lui", "leur",
-    "le", "la", "les", "l'", "l\u2019", "y", "en",
-    "se", "s'", "s\u2019",
-})
-
-
 def enrich_mentions_with_coref(
     chapters: dict[str, str],
     entities: list[dict],
     mentions_by_entity: dict[str, dict[str, list[str]]],
     silence_window: int = 5,
+    nlp=None,
+    pronouns=None,
 ) -> dict[str, dict[str, list[str]]]:
     """
     Enrich mentions_by_entity with pronoun sentences via a spaCy-only heuristic.
@@ -233,11 +228,16 @@ def enrich_mentions_with_coref(
         entities: resolved entities list (canonical_name, aliases, type, relevant)
         mentions_by_entity: existing {canonical → {chapter_id → [sentences]}}
         silence_window: reset active entity after this many sentences with no PERSON
+        nlp: optional pre-loaded spaCy model; if None, loads fr_core_news_lg
+        pronouns: optional frozenset of pronoun strings; if None, loads from fr lang config
 
     Returns:
         mentions_by_entity enriched in-place (also returned for convenience)
     """
     import spacy
+
+    if pronouns is None:
+        pronouns = frozenset(load_lang_config("fr").get("pronouns", []))
 
     if not chapters:
         return mentions_by_entity
@@ -255,11 +255,12 @@ def enrich_mentions_with_coref(
     if not name_to_canonical:
         return mentions_by_entity
 
-    try:
-        nlp = spacy.load("fr_core_news_lg")
-    except Exception as e:
-        print(f"[WARN] spaCy load failed: {e}", file=sys.stderr)
-        return mentions_by_entity
+    if nlp is None:
+        try:
+            nlp = spacy.load("fr_core_news_lg")
+        except Exception as e:
+            print(f"[WARN] spaCy load failed: {e}", file=sys.stderr)
+            return mentions_by_entity
 
     total_added = 0
 
@@ -299,9 +300,9 @@ def enrich_mentions_with_coref(
             if active_entity is None:
                 continue
 
-            # Check for French pronouns
+            # Check for pronouns
             has_pronoun = any(
-                token.pos_ == "PRON" and token.text.lower() in _FR_PRONOUNS
+                token.pos_ == "PRON" and token.text.lower() in pronouns
                 for token in sent
             )
             if not has_pronoun:
@@ -323,6 +324,10 @@ def enrich_mentions_with_coref(
 
     print(f"[coref] Pronoun sentences added: {total_added}", file=sys.stderr)
     return mentions_by_entity
+
+
+# Alias for public API used in tests and main()
+enrich_mentions_with_heuristic = enrich_mentions_with_coref
 
 
 # ---------------------------------------------------------------------------
@@ -384,11 +389,15 @@ def _process_chapter_clusters(
     chunk: str,
     chapter_id: str,
     name_to_canonical: dict[str, str],
+    pronouns: frozenset | None = None,
 ) -> list[tuple[str, str, str]]:
     """Process fastcoref clusters for one chapter chunk.
 
     Returns a deduplicated list of (canonical_name, chapter_id, sentence) tuples.
     """
+    if pronouns is None:
+        pronouns = frozenset(load_lang_config("fr").get("pronouns", []))
+
     results: list[tuple[str, str, str]] = []
     seen: set[tuple[str, str, str]] = set()
 
@@ -422,9 +431,9 @@ def _process_chapter_clusters(
 
         for m_text, start, _ in decoded:
             tokens = m_text.lower().split()
-            is_pronoun = (len(tokens) == 1 and tokens[0] in _FR_PRONOUNS) or (
+            is_pronoun = (len(tokens) == 1 and tokens[0] in pronouns) or (
                 len(tokens) <= 2
-                and any(t in _FR_PRONOUNS for t in tokens)
+                and any(t in pronouns for t in tokens)
                 and m_text.lower() not in name_to_canonical
             )
             if not is_pronoun:
@@ -447,14 +456,15 @@ def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
     Must be a top-level function (picklable by multiprocessing).
 
     Args:
-        args: (chapter_id, text, name_to_canonical)
+        args: (chapter_id, text, name_to_canonical, spacy_model)
             name_to_canonical: {lowercased_name: canonical_name}
+            spacy_model: spaCy model name to load (e.g. "fr_core_news_lg")
 
     Returns:
         List of (canonical_name, chapter_id, sentence) tuples to be merged
         by the parent process. Returns [] on any error (graceful degradation).
     """
-    chapter_id, text, name_to_canonical = args
+    chapter_id, text, name_to_canonical, spacy_model = args
     if not text or not text.strip():
         return []
 
@@ -466,7 +476,7 @@ def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
 
         _patch_attn_eager()
         nlp = spacy.load(
-            "fr_core_news_lg",
+            spacy_model,
             exclude=["parser", "lemmatizer", "ner", "textcat"],
         )
         nlp.add_pipe(
@@ -496,6 +506,7 @@ def enrich_mentions_with_fastcoref(
     entities: list[dict],
     mentions_by_entity: dict[str, dict[str, list[str]]],
     workers: int = 1,
+    spacy_model: str = "fr_core_news_lg",
 ) -> dict[str, dict[str, list[str]]]:
     """Enrich mentions using fastcoref + LingMessCoref for accurate coreference.
 
@@ -513,6 +524,7 @@ def enrich_mentions_with_fastcoref(
         workers: number of parallel processes (default 1 = sequential).
                  Each worker loads its own model (~590 MB RAM per worker).
                  RAM budget: 1 worker=~3 GB, 4 workers=~10 GB, 8 workers=~20 GB.
+        spacy_model: spaCy model name to load (default "fr_core_news_lg").
 
     Returns:
         mentions_by_entity enriched in-place (also returned for convenience)
@@ -543,7 +555,7 @@ def enrich_mentions_with_fastcoref(
 
             _patch_attn_eager()
             nlp = spacy.load(
-                "fr_core_news_lg",
+                spacy_model,
                 exclude=["parser", "lemmatizer", "ner", "textcat"],
             )
             nlp.add_pipe(
@@ -588,7 +600,7 @@ def enrich_mentions_with_fastcoref(
         import multiprocessing
 
         chapter_items = [
-            (cid, text, name_to_canonical)
+            (cid, text, name_to_canonical, spacy_model)
             for cid, text in chapters.items()
             if text and text.strip()
         ]
@@ -607,7 +619,7 @@ def enrich_mentions_with_fastcoref(
                 f"[WARN] Parallel coref failed ({type(e).__name__}: {e}) — falling back to sequential (workers=1)",
                 file=sys.stderr,
             )
-            return enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=1)
+            return enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=1, spacy_model=spacy_model)
 
         # Merge results from all workers
         for worker_results in all_results:
@@ -1135,6 +1147,8 @@ def main() -> None:
     do_coref = False
     min_cooccurrence_val = None
     min_chapters_together = DEFAULT_MIN_CHAPTERS_TOGETHER
+    spacy_model = "fr_core_news_lg"
+    pronouns: frozenset = frozenset(load_lang_config("fr").get("pronouns", []))
     raw_context = payload.get("additional_context", "")
     if raw_context:
         try:
@@ -1148,9 +1162,18 @@ def main() -> None:
             if min_cooccurrence_val is not None:
                 min_cooccurrence_val = int(min_cooccurrence_val)
             min_chapters_together = int(additional.get("min_chapters_together", DEFAULT_MIN_CHAPTERS_TOGETHER))
+            spacy_model = additional.get("spacy_model", "fr_core_news_lg")
+            language = (
+                additional.get("export", {}).get("categories", {}).get("language")
+                or infer_language(spacy_model)
+            )
+            lang_cfg = load_lang_config(language)
+            pronouns = frozenset(lang_cfg.get("pronouns", []))
         except Exception:
             min_cooccurrence_val = None
             min_chapters_together = DEFAULT_MIN_CHAPTERS_TOGETHER
+            spacy_model = "fr_core_news_lg"
+            pronouns = frozenset(load_lang_config("fr").get("pronouns", []))
 
     paths = _paths_from_payload(payload)
     mentions_by_entity = _load_mentions_from_files(paths.processing) if paths else {}
@@ -1161,7 +1184,9 @@ def main() -> None:
             with open(chapters_path, encoding="utf-8") as f:
                 chapters_data = json.load(f)
             chapters = chapters_data.get("chapters", {})
-            mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=workers)
+            mentions_by_entity = enrich_mentions_with_fastcoref(
+                chapters, entities, mentions_by_entity, workers=workers, spacy_model=spacy_model
+            )
 
     relationships, stats = build_cooccurrence_graph(
         entities, mentions_by_entity, window_size, threshold,

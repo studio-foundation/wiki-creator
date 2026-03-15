@@ -19,6 +19,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 from wiki_creator.paths import book_paths_from_epub, BookPaths
+from wiki_creator.lang import load_lang_config, infer_language
 
 
 class AliasPair(TypedDict):
@@ -235,7 +236,7 @@ def _detect_cooccurrence_window(
     return snippet[:200]
 
 
-def _detect_reveal_signal(entity_a: dict, entity_b: dict, persons_full: dict) -> dict | None:
+def _detect_reveal_signal(entity_a: dict, entity_b: dict, persons_full: dict, reveal_words=_REVEAL_WORDS) -> dict | None:
     contexts = _gather_contexts(entity_a, persons_full) + _gather_contexts(entity_b, persons_full)
     names_a = [name.lower() for name in _entity_names(entity_a)]
     names_b = [name.lower() for name in _entity_names(entity_b)]
@@ -248,7 +249,7 @@ def _detect_reveal_signal(entity_a: dict, entity_b: dict, persons_full: dict) ->
         has_b = any(name in lowered for name in names_b)
         if not (has_a or has_b):
             continue
-        if any(word in lowered for word in _REVEAL_WORDS):
+        if any(word in lowered for word in reveal_words):
             matches.append(snippet)
             seen_a = seen_a or has_a
             seen_b = seen_b or has_b
@@ -261,17 +262,24 @@ def _detect_reveal_signal(entity_a: dict, entity_b: dict, persons_full: dict) ->
     return None
 
 
-def detect_named_aliases(mentions: dict[str, list[str]], text: str) -> list[AliasPair]:
+def detect_named_aliases(
+    mentions: dict[str, list[str]],
+    text: str,
+    reveal_words: tuple[str, ...] | None = None,
+) -> list[AliasPair]:
     """
     Detect alias pairs using two deterministic heuristics (zero LLM).
 
     Args:
         mentions: mapping of entity canonical_name -> list of context snippets
         text: raw concatenated book text, used for token-window co-occurrence
+        reveal_words: optional override for the module-level _REVEAL_WORDS constant
 
     Returns:
         list of AliasPair, each with entity_a, entity_b, confidence, source, snippet
     """
+    if reveal_words is None:
+        reveal_words = _REVEAL_WORDS
     names = list(mentions.keys())
     pairs: list[AliasPair] = []
 
@@ -313,6 +321,7 @@ def resolve_aliases(
     persons_full: dict,
     narrator=None,
     llm_confirmer=None,
+    reveal_words=_REVEAL_WORDS,
 ) -> dict:
     stats = _empty_stats()
     resolved: list[dict] = []
@@ -342,7 +351,7 @@ def resolve_aliases(
                 consumed.add(candidate_index)
                 break
 
-            reveal = _detect_reveal_signal(entity, candidate, persons_full)
+            reveal = _detect_reveal_signal(entity, candidate, persons_full, reveal_words=reveal_words)
             if not reveal:
                 continue
 
@@ -389,6 +398,12 @@ def main() -> None:
     entities = resolve_output.get("entities", [])
     narrator = resolve_output.get("narrator")
 
+    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    spacy_model = ctx.get("spacy_model", "en_core_web_lg")
+    export_categories = ctx.get("export", {}).get("categories", {})
+    language = export_categories.get("language") or infer_language(spacy_model)
+    reveal_words = tuple(load_lang_config(language).get("reveal_words", _REVEAL_WORDS))
+
     persons_full = {}
     try:
         paths = _paths_from_payload(payload)
@@ -396,7 +411,7 @@ def main() -> None:
     except ValueError:
         persons_full = {}
 
-    result = resolve_aliases(entities, persons_full=persons_full, narrator=narrator)
+    result = resolve_aliases(entities, persons_full=persons_full, narrator=narrator, reveal_words=reveal_words)
     json.dump(result, sys.stdout, ensure_ascii=False)
 
 
