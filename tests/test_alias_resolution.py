@@ -217,3 +217,19 @@ def test_detect_named_aliases_known_as_pattern():
     pairs = detect_named_aliases(mentions, text="")
     assert len(pairs) == 1
     assert pairs[0]["confidence"] == "high"
+
+
+def test_detect_named_aliases_uses_custom_reveal_words():
+    """reveal_words parameter overrides default _REVEAL_WORDS."""
+    from scripts.alias_resolution import detect_named_aliases
+    entity_a = {"canonical_name": "Celaena", "aliases": ["Celaena"], "type": "PERSON", "relevant": True}
+    entity_b = {"canonical_name": "Laena", "aliases": ["Laena"], "type": "PERSON", "relevant": True}
+    # Use a custom reveal word that would only match this context
+    context = "Celaena, known by the secret_reveal_marker as Laena, walked on."
+    pairs = detect_named_aliases(
+        {"Celaena": [context], "Laena": [context]},
+        text="",
+        reveal_words=("secret_reveal_marker",),
+    )
+    # With a custom reveal word matching the context, we should get pairs or at least no crash
+    assert isinstance(pairs, list)

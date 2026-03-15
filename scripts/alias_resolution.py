@@ -19,6 +19,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 from wiki_creator.paths import book_paths_from_epub, BookPaths
+from wiki_creator.lang import load_lang_config, infer_language
 
 
 class AliasPair(TypedDict):
@@ -261,17 +262,24 @@ def _detect_reveal_signal(entity_a: dict, entity_b: dict, persons_full: dict) ->
     return None
 
 
-def detect_named_aliases(mentions: dict[str, list[str]], text: str) -> list[AliasPair]:
+def detect_named_aliases(
+    mentions: dict[str, list[str]],
+    text: str,
+    reveal_words: tuple[str, ...] | None = None,
+) -> list[AliasPair]:
     """
     Detect alias pairs using two deterministic heuristics (zero LLM).
 
     Args:
         mentions: mapping of entity canonical_name -> list of context snippets
         text: raw concatenated book text, used for token-window co-occurrence
+        reveal_words: optional override for the module-level _REVEAL_WORDS constant
 
     Returns:
         list of AliasPair, each with entity_a, entity_b, confidence, source, snippet
     """
+    if reveal_words is None:
+        reveal_words = _REVEAL_WORDS
     names = list(mentions.keys())
     pairs: list[AliasPair] = []
 
@@ -388,6 +396,12 @@ def main() -> None:
     resolve_output = previous_outputs.get("resolve-clusters", {})
     entities = resolve_output.get("entities", [])
     narrator = resolve_output.get("narrator")
+
+    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    spacy_model = ctx.get("spacy_model", "en_core_web_lg")
+    export_categories = ctx.get("export", {}).get("categories", {})
+    language = export_categories.get("language") or infer_language(spacy_model)
+    reveal_words = tuple(load_lang_config(language).get("reveal_words", _REVEAL_WORDS))
 
     persons_full = {}
     try:
