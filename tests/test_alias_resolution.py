@@ -391,3 +391,53 @@ def test_make_ollama_confirmer_returns_none_on_unparseable_response():
             "persons_full": _PERSONS_FULL_LLM,
         })
     assert result is None
+
+
+def test_script_use_llm_false_by_default(tmp_path):
+    """use_llm defaults to false — no llm_confirmer instantiated, no Ollama call."""
+    book_yaml = tmp_path / "library" / "a" / "s" / "books" / "book.yaml"
+    book_yaml.parent.mkdir(parents=True)
+    book_yaml.write_text("title: Test\n")
+    processing = tmp_path / "library" / "a" / "s" / "processing_output" / "book"
+    processing.mkdir(parents=True)
+    (processing / "persons_full.json").write_text(json.dumps({"persons_full": {}}))
+
+    payload = {
+        "previous_outputs": {"resolve-clusters": {"entities": [], "narrator": None}},
+        "additional_context": f"file_path: {book_yaml}\n",
+    }
+    result = subprocess.run(
+        [sys.executable, "scripts/alias_resolution.py"],
+        input=json.dumps(payload),
+        capture_output=True, text=True,
+        cwd=os.path.join(os.path.dirname(__file__), ".."),
+    )
+    assert result.returncode == 0, result.stderr
+    # No Ollama warning when use_llm is false
+    assert "ollama" not in result.stderr.lower()
+
+
+def test_script_use_llm_true_warns_when_ollama_unavailable(tmp_path):
+    """use_llm=true but Ollama unreachable → warn + graceful skip."""
+    book_yaml = tmp_path / "library" / "a" / "s" / "books" / "book.yaml"
+    book_yaml.parent.mkdir(parents=True)
+    book_yaml.write_text("title: Test\n")
+    processing = tmp_path / "library" / "a" / "s" / "processing_output" / "book"
+    processing.mkdir(parents=True)
+    (processing / "persons_full.json").write_text(json.dumps({"persons_full": {}}))
+
+    payload = {
+        "previous_outputs": {"resolve-clusters": {"entities": [], "narrator": None}},
+        "additional_context": f"file_path: {book_yaml}\nuse_llm: true\nllm_model: mistral\n",
+    }
+    # Point to a port that's definitely not listening
+    env = {**os.environ, "OLLAMA_URL": "http://127.0.0.1:19999"}
+    result = subprocess.run(
+        [sys.executable, "scripts/alias_resolution.py"],
+        input=json.dumps(payload),
+        capture_output=True, text=True,
+        cwd=os.path.join(os.path.dirname(__file__), ".."),
+        env=env,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "ollama" in result.stderr.lower()

@@ -7,6 +7,7 @@ entities when local mention context contains strong alias or reveal evidence.
 """
 
 import json
+import os
 import re
 import socket
 import sys
@@ -520,7 +521,23 @@ def main() -> None:
     except ValueError:
         persons_full = {}
 
-    result = resolve_aliases(entities, persons_full=persons_full, narrator=narrator, reveal_words=reveal_words)
+    llm_confirmer = None
+    use_llm = ctx.get("use_llm", False)
+    if use_llm:
+        ollama_url = os.environ.get("OLLAMA_URL", _OLLAMA_URL)
+        llm_model = ctx.get("llm_model", "mistral")
+        if _check_ollama_available(ollama_url):
+            llm_confirmer = make_ollama_confirmer(llm_model, ollama_url, timeout=30)
+        else:
+            warnings.warn(
+                f"Ollama not available at {ollama_url} — LLM alias confirmation skipped.",
+                stacklevel=1,
+            )
+
+    result = resolve_aliases(
+        entities, persons_full=persons_full, narrator=narrator,
+        llm_confirmer=llm_confirmer, reveal_words=reveal_words,
+    )
     json.dump(result, sys.stdout, ensure_ascii=False)
 
 
