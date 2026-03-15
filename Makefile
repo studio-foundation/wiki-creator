@@ -3,9 +3,9 @@
         clean
 
 #BOOK ?= library/carlos-ruiz-zafon/el-cementerio-de-los-libros-olvidados/books/02-le-jeu-de-lange.yaml
-#BOOK ?= library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml
+BOOK ?= library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml
 #BOOK ?= library/brandon_sanderson/the_stormlight_archives/books/01-the_way_of_kings.yaml
-BOOK ?= library/c_w_lewis/narnia/books/01-the_lion_the_witch_and_the_wardrobe.yaml
+#BOOK ?= library/c_w_lewis/narnia/books/01-the_lion_the_witch_and_the_wardrobe.yaml
 #BOOK ?= library/j_r_r_tolkien/lord_of_the_rings/books/00-the_hobbit.yaml
 # Full run via orchestrator
 run:
