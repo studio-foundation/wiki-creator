@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from scripts.alias_resolution import resolve_aliases, detect_named_aliases, _pick_snippets, _check_ollama_available
+from scripts.alias_resolution import resolve_aliases, detect_named_aliases, _pick_snippets, _check_ollama_available, make_ollama_confirmer
 
 
 PERSON_A = {
@@ -278,7 +278,9 @@ def test_pick_snippets_empty_when_no_source_ids():
     assert _pick_snippets(entity, {}, n=3) == []
 
 
+import socket
 import unittest.mock as mock
+import urllib.error
 
 
 def test_check_ollama_available_returns_true_on_success():
@@ -289,12 +291,104 @@ def test_check_ollama_available_returns_true_on_success():
 
 
 def test_check_ollama_available_returns_false_on_connection_error():
-    import urllib.error
     with mock.patch("urllib.request.urlopen", side_effect=urllib.error.URLError("refused")):
         assert _check_ollama_available("http://localhost:11434") is False
 
 
 def test_check_ollama_available_returns_false_on_timeout():
-    import socket
     with mock.patch("urllib.request.urlopen", side_effect=socket.timeout()):
         assert _check_ollama_available("http://localhost:11434") is False
+
+
+_ENTITY_A = {
+    "canonical_name": "Celaena",
+    "aliases": ["Celaena"],
+    "source_ids": ["e1"],
+    "type": "PERSON",
+    "relevant": True,
+}
+_ENTITY_B = {
+    "canonical_name": "Lillian",
+    "aliases": ["Lillian"],
+    "source_ids": ["e2"],
+    "type": "PERSON",
+    "relevant": True,
+}
+_PERSONS_FULL_LLM = {
+    "e1": {"mentions_by_chapter": {"ch01": ["Celaena walked in."]}},
+    "e2": {"mentions_by_chapter": {"ch01": ["Lillian watched her."]}},
+}
+
+
+def _mock_ollama_response(payload: dict) -> mock.MagicMock:
+    body = json.dumps({"response": json.dumps(payload)}).encode()
+    cm = mock.MagicMock()
+    cm.__enter__ = lambda s: s
+    cm.__exit__ = mock.Mock(return_value=False)
+    cm.read.return_value = body
+    return cm
+
+
+def test_make_ollama_confirmer_returns_same_person_true():
+    with mock.patch("urllib.request.urlopen", return_value=_mock_ollama_response(
+        {"same_person": True, "confidence": "high", "evidence": "same person confirmed"}
+    )):
+        confirmer = make_ollama_confirmer("mistral", "http://localhost:11434", timeout=10)
+        result = confirmer({
+            "entity_a": _ENTITY_A,
+            "entity_b": _ENTITY_B,
+            "evidence": {"snippet": "her real name was Lillian"},
+            "persons_full": _PERSONS_FULL_LLM,
+        })
+    assert result["same_person"] is True
+    assert result["confidence"] == "high"
+
+
+def test_make_ollama_confirmer_returns_same_person_false():
+    with mock.patch("urllib.request.urlopen", return_value=_mock_ollama_response(
+        {"same_person": False, "confidence": "low", "evidence": "different people"}
+    )):
+        confirmer = make_ollama_confirmer("mistral", "http://localhost:11434", timeout=10)
+        result = confirmer({
+            "entity_a": _ENTITY_A,
+            "entity_b": _ENTITY_B,
+            "evidence": {"snippet": "another name was mentioned"},
+            "persons_full": _PERSONS_FULL_LLM,
+        })
+    assert result["same_person"] is False
+
+
+def test_make_ollama_confirmer_handles_json_wrapped_in_prose():
+    prose = 'Sure! Here is my answer: {"same_person": true, "confidence": "medium", "evidence": "yes"} Hope that helps.'
+    body = json.dumps({"response": prose}).encode()
+    cm = mock.MagicMock()
+    cm.__enter__ = lambda s: s
+    cm.__exit__ = mock.Mock(return_value=False)
+    cm.read.return_value = body
+    with mock.patch("urllib.request.urlopen", return_value=cm):
+        confirmer = make_ollama_confirmer("mistral", "http://localhost:11434", timeout=10)
+        result = confirmer({
+            "entity_a": _ENTITY_A,
+            "entity_b": _ENTITY_B,
+            "evidence": {"snippet": "alias"},
+            "persons_full": _PERSONS_FULL_LLM,
+        })
+    assert result is not None
+    assert result["same_person"] is True
+
+
+def test_make_ollama_confirmer_returns_none_on_unparseable_response():
+    body = json.dumps({"response": "I cannot determine that."}).encode()
+    cm = mock.MagicMock()
+    cm.__enter__ = lambda s: s
+    cm.__exit__ = mock.Mock(return_value=False)
+    cm.read.return_value = body
+    with mock.patch("urllib.request.urlopen", return_value=cm):
+        confirmer = make_ollama_confirmer("mistral", "http://localhost:11434", timeout=10)
+        result = confirmer({
+            "entity_a": _ENTITY_A,
+            "entity_b": _ENTITY_B,
+            "evidence": {"snippet": "alias"},
+            "persons_full": _PERSONS_FULL_LLM,
+        })
+    assert result is None

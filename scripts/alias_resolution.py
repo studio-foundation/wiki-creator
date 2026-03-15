@@ -79,6 +79,85 @@ def _empty_stats() -> dict:
     }
 
 
+_OLLAMA_URL = "http://localhost:11434"
+
+_LLM_PROMPT_TEMPLATE = """\
+Given two character entities from a novel, determine if they refer to the same person.
+
+Entity A: "{name_a}"
+Snippets:
+{snippets_a}
+
+Entity B: "{name_b}"
+Snippets:
+{snippets_b}
+
+Signal: "{signal}"
+
+Reply ONLY with valid JSON:
+{{"same_person": true/false, "confidence": "high"/"medium"/"low", "evidence": "<one sentence>"}}"""
+
+
+def _parse_llm_response(text: str) -> dict | None:
+    """Try json.loads, then regex extraction, then return None."""
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+    match = re.search(r'\{[^{}]+\}', text, re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group())
+        except json.JSONDecodeError:
+            pass
+    return None
+
+
+def make_ollama_confirmer(model: str, url: str, timeout: int):
+    """Return an llm_confirmer callable backed by Ollama."""
+
+    def confirmer(candidate: dict):
+        entity_a = candidate["entity_a"]
+        entity_b = candidate["entity_b"]
+        evidence = candidate["evidence"]
+        persons_full = candidate.get("persons_full", {})
+
+        snippets_a = _pick_snippets(entity_a, persons_full)
+        snippets_b = _pick_snippets(entity_b, persons_full)
+
+        def fmt_snippets(snippets: list[str]) -> str:
+            if not snippets:
+                return "- (no context available)"
+            return "\n".join(f"- {s[:200]}" for s in snippets)
+
+        prompt = _LLM_PROMPT_TEMPLATE.format(
+            name_a=entity_a.get("canonical_name", ""),
+            name_b=entity_b.get("canonical_name", ""),
+            snippets_a=fmt_snippets(snippets_a),
+            snippets_b=fmt_snippets(snippets_b),
+            signal=evidence.get("snippet", "")[:300],
+        )
+
+        body = json.dumps({
+            "model": model,
+            "prompt": prompt,
+            "stream": False,
+            "options": {"temperature": 0.0, "num_predict": 128},
+        }).encode()
+        req = urllib.request.Request(
+            f"{url}/api/generate",
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = json.loads(resp.read())
+        raw = data.get("response", "")
+        return _parse_llm_response(raw)
+
+    return confirmer
+
+
 def _check_ollama_available(url: str, timeout: int = 2) -> bool:
     """Return True if Ollama is reachable at url/api/tags."""
     try:
