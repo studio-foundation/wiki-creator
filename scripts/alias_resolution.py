@@ -236,7 +236,7 @@ def _detect_cooccurrence_window(
     return snippet[:200]
 
 
-def _detect_reveal_signal(entity_a: dict, entity_b: dict, persons_full: dict) -> dict | None:
+def _detect_reveal_signal(entity_a: dict, entity_b: dict, persons_full: dict, reveal_words=_REVEAL_WORDS) -> dict | None:
     contexts = _gather_contexts(entity_a, persons_full) + _gather_contexts(entity_b, persons_full)
     names_a = [name.lower() for name in _entity_names(entity_a)]
     names_b = [name.lower() for name in _entity_names(entity_b)]
@@ -249,7 +249,7 @@ def _detect_reveal_signal(entity_a: dict, entity_b: dict, persons_full: dict) ->
         has_b = any(name in lowered for name in names_b)
         if not (has_a or has_b):
             continue
-        if any(word in lowered for word in _REVEAL_WORDS):
+        if any(word in lowered for word in reveal_words):
             matches.append(snippet)
             seen_a = seen_a or has_a
             seen_b = seen_b or has_b
@@ -321,6 +321,7 @@ def resolve_aliases(
     persons_full: dict,
     narrator=None,
     llm_confirmer=None,
+    reveal_words=_REVEAL_WORDS,
 ) -> dict:
     stats = _empty_stats()
     resolved: list[dict] = []
@@ -350,7 +351,7 @@ def resolve_aliases(
                 consumed.add(candidate_index)
                 break
 
-            reveal = _detect_reveal_signal(entity, candidate, persons_full)
+            reveal = _detect_reveal_signal(entity, candidate, persons_full, reveal_words=reveal_words)
             if not reveal:
                 continue
 
@@ -410,7 +411,7 @@ def main() -> None:
     except ValueError:
         persons_full = {}
 
-    result = resolve_aliases(entities, persons_full=persons_full, narrator=narrator)
+    result = resolve_aliases(entities, persons_full=persons_full, narrator=narrator, reveal_words=reveal_words)
     json.dump(result, sys.stdout, ensure_ascii=False)
 
 
