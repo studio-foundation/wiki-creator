@@ -141,10 +141,11 @@ def test_build_clusters_different_types_dont_merge():
         "e099": {"type": "PERSON", "raw_mentions": ["Barcelona"], "first_seen": "ch01"},
     }
     clusters, unclustered = build_clusters(entities)
-    # e040 and e041 cluster together (PLACE), e099 stays alone (PERSON)
+    # All three merge because the names resolve to one cluster; dominant type stays PLACE.
     place_cluster = next((c for c in clusters if "e040" in c["entity_ids"]), None)
     assert place_cluster is not None
-    assert "e099" not in place_cluster["entity_ids"]
+    assert "e099" in place_cluster["entity_ids"]
+    assert place_cluster["type"] == "PLACE"
 
 
 def test_build_clusters_unclustered_stays_alone():
@@ -179,6 +180,41 @@ def test_build_clusters_canonical_picks_most_complete():
     }
     clusters, _ = build_clusters(entities)
     assert clusters[0]["canonical_candidate"] == "Pedro Vidal"
+
+
+def test_build_clusters_mixed_types_merge_when_names_match():
+    entities = {
+        "e001": {"type": "PERSON", "raw_mentions": ["Arobynn"], "first_seen": "ch01", "mention_count": 2},
+        "e002": {"type": "PLACE", "raw_mentions": ["Arobynn Hamel"], "first_seen": "ch01", "mention_count": 1},
+    }
+
+    clusters, unclustered = build_clusters(entities)
+
+    assert not unclustered
+    assert len(clusters) == 1
+    assert set(clusters[0]["entity_ids"]) == {"e001", "e002"}
+
+
+def test_build_clusters_mixed_type_uses_dominant_mention_weight():
+    entities = {
+        "e001": {"type": "PERSON", "raw_mentions": ["Arobynn"], "first_seen": "ch01", "mention_count": 5},
+        "e002": {"type": "PLACE", "raw_mentions": ["Arobynn Hamel"], "first_seen": "ch01", "mention_count": 1},
+    }
+
+    clusters, _ = build_clusters(entities)
+
+    assert clusters[0]["type"] == "PERSON"
+
+
+def test_build_clusters_mixed_type_tie_uses_fixed_precedence():
+    entities = {
+        "e001": {"type": "PLACE", "raw_mentions": ["Arobynn"], "first_seen": "ch01", "mention_count": 2},
+        "e002": {"type": "PERSON", "raw_mentions": ["Arobynn Hamel"], "first_seen": "ch01", "mention_count": 2},
+    }
+
+    clusters, _ = build_clusters(entities)
+
+    assert clusters[0]["type"] == "PERSON"
 
 
 # --- extract_leading_titles ---

@@ -71,6 +71,7 @@ TITLE_PREFIXES = frozenset({
 })
 
 JW_THRESHOLD = 0.92  # Jaro-Winkler threshold for orthographic variant matching
+TYPE_PRECEDENCE = ("PERSON", "PLACE", "ORG", "EVENT", "OTHER")
 
 # Gender-discriminating title sets (subset of TITLE_PREFIXES)
 MASCULINE_TITLES = frozenset({"m.", "mr.", "monsieur", "señor", "don"})
@@ -243,6 +244,33 @@ def should_cluster(name1: str, name2: str) -> bool:
     return should_cluster_tokens(name1, name2) or should_cluster_jw(name1, name2)
 
 
+def _entity_weight(entity: dict) -> int:
+    """Weight entity evidence by mention_count, falling back to raw mention volume."""
+    mention_count = entity.get("mention_count")
+    if isinstance(mention_count, int) and mention_count > 0:
+        return mention_count
+    return len(entity.get("raw_mentions", []))
+
+
+def _resolve_cluster_type(member_ids: list[str], entities: dict) -> str:
+    """Pick one deterministic type for a cluster from member evidence."""
+    weights: dict[str, int] = defaultdict(int)
+    for eid in member_ids:
+        entity = entities[eid]
+        entity_type = entity.get("type", "OTHER")
+        weights[entity_type] += _entity_weight(entity)
+
+    def sort_key(item: tuple[str, int]) -> tuple[int, int]:
+        entity_type, weight = item
+        try:
+            precedence = -TYPE_PRECEDENCE.index(entity_type)
+        except ValueError:
+            precedence = -len(TYPE_PRECEDENCE)
+        return (weight, precedence)
+
+    return max(weights.items(), key=sort_key)[0] if weights else "OTHER"
+
+
 # --- Union-Find clustering ---
 
 def build_clusters(entities: dict) -> tuple[list[dict], dict]:
@@ -270,9 +298,6 @@ def build_clusters(entities: dict) -> tuple[list[dict], dict]:
     for i in range(len(entity_ids)):
         for j in range(i + 1, len(entity_ids)):
             ei, ej = entity_ids[i], entity_ids[j]
-            # Only cluster same-type entities (PERSON with PERSON, PLACE with PLACE)
-            if entities[ei].get("type") != entities[ej].get("type"):
-                continue
             matched = False
             for mi in entities[ei]["raw_mentions"]:
                 if matched:
@@ -303,7 +328,7 @@ def build_clusters(entities: dict) -> tuple[list[dict], dict]:
             # Collect all mentions and find earliest first_seen
             all_mentions = []
             first_seen_chapters = []
-            entity_type = entities[members[0]].get("type", "OTHER")
+            entity_type = _resolve_cluster_type(members, entities)
             total_mentions = 0
 
             for eid in members:
@@ -312,9 +337,7 @@ def build_clusters(entities: dict) -> tuple[list[dict], dict]:
                 if fs:
                     first_seen_chapters.append(fs)
                 entity = entities[eid]
-                total_mentions += entity.get(
-                    "mention_count", len(entity.get("raw_mentions", []))
-                )
+                total_mentions += _entity_weight(entity)
 
             # Pick the mention with the most substantive tokens (after title stripping)
             # "David Martín" > "Monsieur Martín" (2 real tokens vs 1)
@@ -348,7 +371,7 @@ def _make_cluster(cluster_id: str, eids: list[str], entities: dict) -> dict:
     all_mentions = []
     first_seen_chapters = []
     total_mentions = 0
-    entity_type = entities[eids[0]].get("type", "OTHER") if eids else "OTHER"
+    entity_type = _resolve_cluster_type(eids, entities) if eids else "OTHER"
 
     for eid in eids:
         entity = entities[eid]
@@ -356,7 +379,7 @@ def _make_cluster(cluster_id: str, eids: list[str], entities: dict) -> dict:
         fs = entity.get("first_seen", "")
         if fs:
             first_seen_chapters.append(fs)
-        total_mentions += entity.get("mention_count", len(entity.get("raw_mentions", [])))
+        total_mentions += _entity_weight(entity)
 
     def canonical_score(mention):
         tokens = tokenize_name(mention)

@@ -1,0 +1,63 @@
+description: |
+  Build a wiki for "The Lion, the Witch and the Wardrobe" by C.W. Lewis,
+  book 1 of the Chronicles of Narnia series.
+  Parse the book, extract all named entities (characters, locations, organizations, events),
+  resolve aliases, and generate Markdown wiki pages for each entity.
+
+file_path: library/c_w_lewis/narnia/books/01-the_lion_the_witch_and_the_wardrobe.epub
+spacy_model: en_core_web_lg
+coref: false
+workers: 8
+
+# Entity importance classification — 'auto' uses percentile distribution
+# Override with explicit values if the auto-detected tiers are wrong for your book
+#
+# Absolute pre-filter applied before clustering/classification:
+# entities with total mentions below this value are dropped early.
+min_mentions_absolute: 3
+thresholds: auto
+# Example explicit config (uncomment to use):
+# thresholds:
+#   characters:
+#     principal: { min_mentions: 50, min_chapters: 15 }
+#     secondary: { min_mentions: 10, min_chapters: 3 }
+#     figurant: { min_mentions: 3 }
+#     ignored_below: 3
+#   locations:
+#     major: { min_mentions: 20, min_chapters: 5 }
+#     minor: { min_mentions: 3 }
+#   organizations:
+#     major: { min_mentions: 10 }
+#     minor: { min_mentions: 3 }
+
+generation:
+  chapter_summary:
+    mode: llm
+    max_bullets: 8
+    llm_fallback_to_extractive: true
+    llm_model: qwen2.5
+    llm_timeout_seconds: 45
+  chapter_summary_max_chapters_per_entity: 20
+  principal:
+    sections: [infobox, biography, personality, physical, powers, relationships, trivia, references]
+    sections_by_type:
+      PLACE: [infobox, biography, physical, relationships, trivia, references]
+      ORG: [infobox, biography, relationships, references]
+      EVENT: [infobox, biography, relationships, references]
+    max_tokens_per_page: 2000
+  secondary:
+    sections: [infobox, biography, relationships, references]
+    max_tokens_per_page: 800
+  figurant:
+    sections: [infobox, biography]
+    max_tokens_per_page: 200
+
+export:
+  categories:
+    language: en
+    labels:
+      persons: Characters
+      principal: Main Characters
+      secondary: Secondary Characters
+      locations: Locations
+      organizations: Organizations
