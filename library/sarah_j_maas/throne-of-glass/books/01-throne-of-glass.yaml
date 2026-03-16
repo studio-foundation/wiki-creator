@@ -7,6 +7,8 @@ description: |
 file_path: library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.epub
 spacy_model: models/wiki-ner-en/model-best
 coref: false
+use_llm: true
+llm_model: qwen2.5
 workers: 8
 
 # Entity importance classification — 'auto' uses percentile distribution
