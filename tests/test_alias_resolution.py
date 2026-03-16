@@ -417,6 +417,29 @@ def test_script_use_llm_false_by_default(tmp_path):
     assert "ollama" not in result.stderr.lower()
 
 
+def test_script_use_llm_false_emits_warning(tmp_path):
+    """use_llm absent → warning printed to stderr."""
+    book_yaml = tmp_path / "library" / "a" / "s" / "books" / "book.yaml"
+    book_yaml.parent.mkdir(parents=True)
+    book_yaml.write_text("title: Test\n")
+    processing = tmp_path / "library" / "a" / "s" / "processing_output" / "book"
+    processing.mkdir(parents=True)
+    (processing / "persons_full.json").write_text(json.dumps({"persons_full": {}}))
+
+    payload = {
+        "previous_outputs": {"resolve-clusters": {"entities": [], "narrator": None}},
+        "additional_context": f"file_path: {book_yaml}\n",
+    }
+    result = subprocess.run(
+        [sys.executable, "scripts/alias_resolution.py"],
+        input=json.dumps(payload),
+        capture_output=True, text=True,
+        cwd=os.path.join(os.path.dirname(__file__), ".."),
+    )
+    assert result.returncode == 0, result.stderr
+    assert "use_llm" in result.stderr.lower() or "llm alias" in result.stderr.lower()
+
+
 def test_script_use_llm_true_warns_when_ollama_unavailable(tmp_path):
     """use_llm=true but Ollama unreachable → warn + graceful skip."""
     book_yaml = tmp_path / "library" / "a" / "s" / "books" / "book.yaml"
