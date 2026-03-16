@@ -524,11 +524,11 @@ def main() -> None:
     llm_confirmer = None
     use_llm = ctx.get("use_llm", False)
     if not use_llm:
-        warnings.warn(
-            "LLM alias confirmation is disabled (use_llm not set in book config). "
+        print(
+            "UserWarning: LLM alias confirmation is disabled (use_llm not set in book config). "
             "Title-based aliases (e.g. 'Captain Westfall', 'Crown Prince') will NOT be resolved. "
             "Set use_llm: true in your book YAML to enable.",
-            stacklevel=1,
+            file=sys.stderr,
         )
     if use_llm:
         ollama_url = os.environ.get("OLLAMA_URL", _OLLAMA_URL)

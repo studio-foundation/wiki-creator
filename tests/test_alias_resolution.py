@@ -437,7 +437,7 @@ def test_script_use_llm_false_emits_warning(tmp_path):
         cwd=os.path.join(os.path.dirname(__file__), ".."),
     )
     assert result.returncode == 0, result.stderr
-    assert "use_llm" in result.stderr.lower() or "llm alias" in result.stderr.lower()
+    assert "use_llm" in result.stderr.lower()
 
 
 def test_script_use_llm_true_warns_when_ollama_unavailable(tmp_path):
