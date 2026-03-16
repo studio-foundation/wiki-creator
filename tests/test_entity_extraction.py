@@ -12,7 +12,7 @@ from scripts.entity_extraction import (
     _retag_entity_type_from_context, _infer_cue_words_language,
     _resolve_cue_words_language, _load_cue_words,
     _spacy_model_candidates, _load_spacy_model_with_fallback,
-    _is_frontmatter_chapter,
+    _is_frontmatter_chapter, _ensure_sentencizer,
 )
 
 
@@ -692,6 +692,32 @@ def test_load_spacy_model_with_fallback_uses_second_candidate():
     assert loaded == "en_core_web_sm"
     assert nlp == {"model": "en_core_web_sm"}
     assert calls == ["en_core_web_lg", "en_core_web_sm"]
+
+
+def test_ensure_sentencizer_adds_sentencizer_when_missing():
+    """A model with no sentence segmenter should get a sentencizer added."""
+    nlp = spacy.blank("en")
+    assert "sentencizer" not in nlp.pipe_names
+    assert "parser" not in nlp.pipe_names
+    _ensure_sentencizer(nlp)
+    assert "sentencizer" in nlp.pipe_names
+
+
+def test_ensure_sentencizer_skips_when_parser_present():
+    """A model with a parser already sets sentence boundaries — don't add sentencizer."""
+    nlp = spacy.load("en_core_web_sm")
+    assert "parser" in nlp.pipe_names
+    _ensure_sentencizer(nlp)
+    assert "sentencizer" not in nlp.pipe_names
+
+
+def test_ensure_sentencizer_allows_doc_sents(nlp):
+    """After _ensure_sentencizer, doc.sents must not raise E030."""
+    nlp_blank = spacy.blank("en")
+    _ensure_sentencizer(nlp_blank)
+    doc = nlp_blank("Bilbo walked. Frodo ran.")
+    sents = list(doc.sents)  # must not raise
+    assert len(sents) >= 1
 
 
 def test_main_writes_only_entities_meeting_min_mentions_threshold(tmp_path):

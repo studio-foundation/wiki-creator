@@ -94,6 +94,17 @@ def _spacy_model_candidates(requested_model: str) -> list[str]:
     return list(dict.fromkeys(candidates))
 
 
+def _ensure_sentencizer(nlp) -> None:
+    """Add a sentencizer to *nlp* if no sentence-boundary component is present.
+
+    Fine-tuned models trained with only tok2vec+ner don't include a parser or
+    senter, so doc.sents raises E030.  Adding a sentencizer fixes this without
+    altering NER behaviour.
+    """
+    if not any(p in nlp.pipe_names for p in ("parser", "senter", "sentencizer")):
+        nlp.add_pipe("sentencizer", first=True)
+
+
 def _load_spacy_model_with_fallback(spacy_load, requested_model: str):
     """Try requested spaCy model, then language-appropriate fallbacks."""
     errors = []
@@ -710,6 +721,7 @@ def main() -> None:
         sys.exit(1)
     if loaded_model != spacy_model:
         print(f"[WARN] spaCy model '{spacy_model}' not available; using '{loaded_model}'", file=sys.stderr)
+    _ensure_sentencizer(nlp)
 
     try:
         cue_words_language = _resolve_cue_words_language(
