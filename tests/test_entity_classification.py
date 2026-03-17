@@ -433,9 +433,9 @@ def test_normalize_geo_suffix_retags_person_to_place():
 
 
 def test_normalize_geo_suffix_single_word_place():
-    """Name ending in a geo-suffix token even without context → PLACE."""
+    """Name containing geo-suffix token 'sea' → PERSON retags to PLACE."""
     entity = {
-        "canonical_name": "Oakwald Sea",
+        "canonical_name": "Frostmere Sea",
         "type": "PERSON",
         "source_ids": [],
         "aliases": [],
