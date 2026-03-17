@@ -5,5 +5,9 @@ schema:
     - entities
     - relationships
   # Each entity must include:
-  #   total_mentions (int), chapters_present (int), importance (str)
+  #   canonical_name (str), type (str), aliases (list), source_ids (list),
+  #   relevant (bool), total_mentions (int), chapters_present (int), importance (str)
   # importance values: "principal" | "secondary" | "figurant" | "ignored"
+  # type values: "PERSON" | "PLACE" | "ORG" | "EVENT" | "OTHER"
+  # NOTE: the entity-level field is "type" (not "entity_type").
+  #   "entity_type" is only used in page objects produced by generate_wiki_pages.py.
