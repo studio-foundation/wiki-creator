@@ -99,3 +99,8 @@ classification:
     - '\b[a-z][a-z''\- ]*assassin\b'
     - '\b[a-z][a-z''\- ]*champion\b'
     - '\bking''?s champion\b'
+
+entity_overrides:
+  Nothung:
+    force_type: OTHER
+    exclude: true
