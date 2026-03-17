@@ -732,6 +732,45 @@ def test_main_reads_entities_from_merge_entities_when_available(tmp_path):
     assert output["entities"][0]["canonical_name"] == "Brullo"
 
 
+def test_pick_canonical_name_prefers_proper_name_over_pure_title():
+    """'Brullo' must win over 'Master' when 'master' is a role_word."""
+    from scripts.alias_resolution import _pick_canonical_name
+    brullo = {
+        "canonical_name": "Brullo",
+        "aliases": ["Brullo"],
+        "source_ids": [],
+    }
+    master = {
+        "canonical_name": "Master",
+        "aliases": ["Master"],
+        "source_ids": [],
+    }
+    # Frequency is equal (no persons_full context); proper name must still win.
+    canonical = _pick_canonical_name(brullo, master, persons_full={}, role_words=["master"])
+    assert canonical == "Brullo"
+
+
+def test_pick_canonical_name_keeps_frequency_when_no_pure_title():
+    """With no pure title involved, frequency still wins."""
+    from scripts.alias_resolution import _pick_canonical_name
+    celaena = {
+        "canonical_name": "Celaena",
+        "aliases": ["Celaena"],
+        "source_ids": ["e1"],
+    }
+    aelin = {
+        "canonical_name": "Aelin",
+        "aliases": ["Aelin"],
+        "source_ids": ["e2"],
+    }
+    persons_full = {
+        "e1": {"mentions_by_chapter": {"ch01": ["Celaena Celaena Celaena walked in."]}},
+        "e2": {"mentions_by_chapter": {"ch01": ["Aelin smiled."]}},
+    }
+    canonical = _pick_canonical_name(celaena, aelin, persons_full=persons_full, role_words=["captain"])
+    assert canonical == "Celaena"  # higher frequency
+
+
 def test_resolve_aliases_title_alias_auto_merges_regardless_of_llm():
     """Title alias pair is auto-merged; LLM rejection is not consulted."""
     from scripts.alias_resolution import resolve_aliases

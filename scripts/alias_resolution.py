@@ -199,7 +199,22 @@ def _pick_snippets(entity: dict, persons_full: dict, n: int = 3) -> list[str]:
     return ordered[:n]
 
 
-def _pick_canonical_name(entity_a: dict, entity_b: dict, persons_full: dict) -> str:
+def _is_pure_title(name: str, role_words: list[str]) -> bool:
+    """Return True if name consists entirely of role_words (e.g. 'Master', 'Captain')."""
+    tokens = name.lower().split()
+    if not tokens:
+        return False
+    role_set = {r.lower() for r in role_words}
+    return all(t in role_set for t in tokens)
+
+
+def _pick_canonical_name(
+    entity_a: dict,
+    entity_b: dict,
+    persons_full: dict,
+    role_words: list[str] | None = None,
+) -> str:
+    role_words = role_words or []
     counts: dict[str, int] = {}
     for entity in (entity_a, entity_b):
         for name in _entity_names(entity):
@@ -210,12 +225,24 @@ def _pick_canonical_name(entity_a: dict, entity_b: dict, persons_full: dict) -> 
             counts[name] += contexts.count(name.lower())
     return sorted(
         counts,
-        key=lambda name: (-counts[name], -len(name.split()), -len(name), name.lower()),
+        key=lambda name: (
+            _is_pure_title(name, role_words),   # False (0) sorts before True (1) — proper names first
+            -counts[name],
+            -len(name.split()),
+            -len(name),
+            name.lower(),
+        ),
     )[0]
 
 
-def _merge_entities(entity_a: dict, entity_b: dict, evidence: dict, persons_full: dict) -> dict:
-    canonical = _pick_canonical_name(entity_a, entity_b, persons_full)
+def _merge_entities(
+    entity_a: dict,
+    entity_b: dict,
+    evidence: dict,
+    persons_full: dict,
+    role_words: list[str] | None = None,
+) -> dict:
+    canonical = _pick_canonical_name(entity_a, entity_b, persons_full, role_words=role_words)
     alias_names = sorted({name for entity in (entity_a, entity_b) for name in _entity_names(entity)}, key=str.lower)
     source_ids = sorted({sid for entity in (entity_a, entity_b) for sid in entity.get("source_ids", [])})
     merged_from = [
@@ -483,7 +510,7 @@ def resolve_aliases(
             stats["candidates_considered"] += 1
             evidence = _detect_pattern_match(entity, candidate, persons_full, pattern_templates)
             if evidence:
-                merged = _merge_entities(entity, candidate, evidence, persons_full)
+                merged = _merge_entities(entity, candidate, evidence, persons_full, role_words=role_words)
                 stats["merges_applied"] += 1
                 stats["merges_by_method"]["pattern"] += 1
                 consumed.add(candidate_index)
@@ -491,7 +518,7 @@ def resolve_aliases(
 
             title = _detect_title_alias(entity, candidate, role_words)
             if title:
-                merged = _merge_entities(entity, candidate, title, persons_full)
+                merged = _merge_entities(entity, candidate, title, persons_full, role_words=role_words)
                 stats["merges_applied"] += 1
                 stats["merges_by_method"]["title_alias"] += 1
                 consumed.add(candidate_index)
@@ -524,7 +551,7 @@ def resolve_aliases(
                     "confidence": decision.get("confidence", "medium"),
                     "snippet": decision.get("evidence", reveal["snippet"]),
                 }
-                merged = _merge_entities(entity, candidate, merged_evidence, persons_full)
+                merged = _merge_entities(entity, candidate, merged_evidence, persons_full, role_words=role_words)
                 stats["merges_applied"] += 1
                 stats["merges_by_method"]["llm"] += 1
                 stats["llm_confirmed"] += 1
