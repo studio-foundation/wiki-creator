@@ -8,3 +8,5 @@ schema:
 # chapter_id: non-empty string
 # chapter_title: non-empty string
 # summary_bullets: list of 1..N non-empty summary bullet strings
+# temporal_context: "present" | "flashback" | "mixed" | "unknown"  (optional, default "unknown")
+# flashback_anchor: str | null  — e.g. "5 ans avant les événements du ch.01"

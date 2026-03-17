@@ -10,6 +10,8 @@ schema:
 #       "chapter_title": "Chapter 1",
 #       "summary_bullets": ["...", "...", "..."],
 #       "summary_method": "extractive|llm|extractive_fallback",
-#       "quality_flags": ["llm_invalid_response", "fallback_used", "low_signal"]
+#       "quality_flags": ["llm_invalid_response", "fallback_used", "low_signal"],
+#       "temporal_context": "present"|"flashback"|"mixed"|"unknown",
+#       "flashback_anchor": "..." | null
 #     }
 #   }
