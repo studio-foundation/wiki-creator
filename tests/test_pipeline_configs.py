@@ -105,8 +105,9 @@ def test_wiki_resolution_pipeline_inserts_alias_resolution_between_resolve_and_m
     stage_names = [stage.get("name") for stage in doc.get("stages", [])]
 
     assert "alias-resolution" in stage_names
-    assert stage_names.index("resolve-clusters") < stage_names.index("alias-resolution")
-    assert stage_names.index("alias-resolution") < stage_names.index("merge-entities")
+    assert stage_names.index("merge-entities") < stage_names.index("alias-resolution")
+    assert stage_names.index("relationship-extraction") < stage_names.index("alias-resolution")
+    assert stage_names.index("alias-resolution") < stage_names.index("entity-classification")
 
     alias_stage = next(
         stage for stage in doc.get("stages", [])
