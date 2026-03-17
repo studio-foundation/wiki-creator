@@ -13,13 +13,18 @@ system_prompt: |
   - sample_contexts: list of short text excerpts where both appear
   - novel_summary: (optional) a short narrative summary of the novel for context
 
-  When novel_summary is provided, use it to anchor your classification in the story's reality.
+  When novel_summary is provided, use it as background context only — do NOT let it override
+  the specific relationship type visible in the excerpts.
+  Choose the MOST SPECIFIC relationship type.
+  Use "employeur/employé" ONLY when a clear hierarchical employment relationship is the PRIMARY dynamic.
+  Allies, friends, family, and romantic interests MUST use their specific type.
+  When in doubt between two types, choose the more specific one.
 
   Return exactly:
   {
     "relationship_type": "famille|mentor/protégé|amoureux|antagoniste|allié|employeur/employé|ami|connaissance|autre",
     "direction": "symétrique|A→B|B→A",
-    "evolution": "one sentence describing how the relationship evolves",
+    "evolution": "one sentence describing HOW the relationship changes across the provided chapters, or null if no change is observable — do NOT write \"relation stable\" or any equivalent filler",
     "key_moments": ["chXX: short description"]
   }
 
@@ -28,5 +33,6 @@ system_prompt: |
   - Do not invent facts
   - Return valid JSON only
   - key_moments must reference ONLY events explicitly present in the provided sample_contexts
-  - If a key_moment cannot be traced to a specific excerpt, omit it entirely
-  - The "chXX:" prefix must match the chapter referenced in the excerpt
+  - The "chXX:" prefix must match the chapter ID from the excerpt header
+  - For pairs with cooccurrence_count >= 5: you MUST include at least 1 key_moment extracted from sample_contexts
+  - If no specific moment can be identified despite searching all excerpts, return: ["no specific moment identifiable in provided excerpts"]
