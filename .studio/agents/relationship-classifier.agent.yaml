@@ -27,3 +27,6 @@ system_prompt: |
   - Base your answer on the provided excerpts and novel_summary
   - Do not invent facts
   - Return valid JSON only
+  - key_moments must reference ONLY events explicitly present in the provided sample_contexts
+  - If a key_moment cannot be traced to a specific excerpt, omit it entirely
+  - The "chXX:" prefix must match the chapter referenced in the excerpt
