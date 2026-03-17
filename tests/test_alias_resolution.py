@@ -520,3 +520,10 @@ def test_detect_title_alias_via_aliases_list():
     result = _detect_title_alias(entity_a, entity_b, role_words=["captain"])
     assert result is not None
     assert result["method"] == "title_alias"
+
+
+def test_empty_stats_has_title_alias_key():
+    from scripts.alias_resolution import _empty_stats
+    stats = _empty_stats()
+    assert "title_alias" in stats["merges_by_method"]
+    assert stats["merges_by_method"]["title_alias"] == 0

@@ -73,7 +73,7 @@ def _empty_stats() -> dict:
     return {
         "candidates_considered": 0,
         "merges_applied": 0,
-        "merges_by_method": {"pattern": 0, "cooccurrence": 0, "llm": 0},
+        "merges_by_method": {"pattern": 0, "cooccurrence": 0, "llm": 0, "title_alias": 0},
         "ambiguous_pairs": 0,
         "llm_attempts": 0,
         "llm_confirmed": 0,
