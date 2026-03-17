@@ -111,3 +111,23 @@ entity_overrides:
   Nothung:
     force_type: OTHER
     exclude: true
+  Adarlan:
+    force_type: PLACE
+  Eyllwe:
+    force_type: PLACE
+  Erilea:
+    force_type: PLACE
+  Terrasen:
+    force_type: PLACE
+  Endovier:
+    force_type: PLACE
+  Rifthold:
+    force_type: PLACE
+  Anielle:
+    force_type: PLACE
+  Calaculla:
+    force_type: PLACE
+  Perranth:
+    force_type: PLACE
+  Oakwald:
+    force_type: PLACE
