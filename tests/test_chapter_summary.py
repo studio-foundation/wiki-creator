@@ -8,10 +8,38 @@ from scripts.chapter_summary import (
     _epub_output_from_payload,
     _extract_stage_output_from_run_payload,
     _parse_llm_summary_response_text,
+    _score_sentence,
     summarize_chapters_incrementally,
     summarize_chapter,
     summarize_chapters,
 )
+
+
+def test_score_sentence_accepts_action_cues_kwarg():
+    score = _score_sentence("Dorian found the letter.", 0, 5, action_cues=("found",))
+    assert isinstance(score, float)
+
+
+def test_score_sentence_action_cue_increases_score():
+    base = _score_sentence("Dorian walked into the room.", 0, 5, action_cues=())
+    boosted = _score_sentence("Dorian found the letter.", 0, 5, action_cues=("found",))
+    assert boosted > base
+
+
+def test_summarize_chapter_accepts_action_cues_kwarg():
+    chapter = {
+        "id": "ch01",
+        "title": "Chapter 1",
+        "content": "Celaena arrived at the castle. She found the hidden door.",
+    }
+    result = summarize_chapter(chapter, action_cues=("arrived", "found"))
+    assert len(result["summary_bullets"]) > 0
+
+
+def test_summarize_chapters_accepts_action_cues_kwarg():
+    chapters = [{"id": "ch01", "title": "Chapter 1", "content": "Dorian met Chaol."}]
+    result = summarize_chapters(chapters, action_cues=("met",))
+    assert "Chapter 1" in result
 
 
 def test_summarize_chapter_returns_max_three_bullets():

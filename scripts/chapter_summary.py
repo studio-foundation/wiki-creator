@@ -41,6 +41,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from wiki_creator.paths import BookPaths, book_paths_from_epub
+from wiki_creator.lang import load_lang_config, infer_language
 from scripts.entity_extraction import _is_frontmatter_chapter
 
 _FALLBACK_BULLET = "No reliable summary available for this chapter."
@@ -50,11 +51,6 @@ _DEFAULT_MAX_BULLETS = 3
 _DEFAULT_LLM_MODEL = "qwen2.5"
 _DEFAULT_LLM_TIMEOUT_SECONDS = 45
 _VALID_SUMMARY_MODES = {"extractive", "llm"}
-_ACTION_CUES = (
-    "found", "discovered", "revealed", "warned", "reported", "followed",
-    "attacked", "killed", "escaped", "met", "decided", "realized", "uncovered",
-    "arrived", "left", "returned", "asked", "opened", "closed",
-)
 OLLAMA_URL = "http://localhost:11434"
 _LLM_DEBUGGABLE_ERRORS = {
     "llm_timeout",
@@ -179,7 +175,7 @@ def _looks_dialogue_heavy(sentence: str) -> bool:
     return (quote_chars / max(len(stripped), 1)) > 0.05
 
 
-def _score_sentence(sentence: str, index: int, total: int) -> float:
+def _score_sentence(sentence: str, index: int, total: int, action_cues: tuple[str, ...] = ()) -> float:
     tokens = re.findall(r"[A-Za-zÀ-ÿ']+", sentence)
     token_count = len(tokens)
     if token_count == 0:
@@ -192,7 +188,7 @@ def _score_sentence(sentence: str, index: int, total: int) -> float:
     position_bonus = max(0.0, 1.0 - (index / max(total, 1)))
     lowered = sentence.lower()
     action_bonus = 0.0
-    for cue in _ACTION_CUES:
+    for cue in action_cues:
         if cue in lowered:
             action_bonus += 0.15
 
@@ -286,7 +282,7 @@ def _call_llm_summary(*, chapter: dict, model: str, timeout_seconds: int, max_bu
     return {"summary_bullets": bullets, "error": error, "raw_response": response_text}
 
 
-def _summarize_chapter_extractive(chapter: dict, cfg: ChapterSummaryConfig, method: str = "extractive", seed_flags: list[str] | None = None) -> dict:
+def _summarize_chapter_extractive(chapter: dict, cfg: ChapterSummaryConfig, method: str = "extractive", seed_flags: list[str] | None = None, action_cues: tuple[str, ...] = ()) -> dict:
     chapter_id = str(chapter.get("id", "")).strip()
     chapter_title = str(chapter.get("title", "")).strip()
     sentences = _split_sentences(chapter.get("content", ""))
@@ -302,7 +298,7 @@ def _summarize_chapter_extractive(chapter: dict, cfg: ChapterSummaryConfig, meth
     else:
         ranked = sorted(
             candidates,
-            key=lambda item: _score_sentence(item[1], item[0], len(sentences)),
+            key=lambda item: _score_sentence(item[1], item[0], len(sentences), action_cues),
             reverse=True,
         )[: cfg.max_bullets]
         chosen_idxs = {idx for idx, _ in ranked}
@@ -320,7 +316,7 @@ def _summarize_chapter_extractive(chapter: dict, cfg: ChapterSummaryConfig, meth
     }
 
 
-def summarize_chapter(chapter: dict, config: ChapterSummaryConfig | None = None) -> dict:
+def summarize_chapter(chapter: dict, config: ChapterSummaryConfig | None = None, action_cues: tuple[str, ...] = ()) -> dict:
     cfg = config or ChapterSummaryConfig()
     if cfg.mode == "llm":
         llm_result = _call_llm_summary(
@@ -329,8 +325,8 @@ def summarize_chapter(chapter: dict, config: ChapterSummaryConfig | None = None)
             timeout_seconds=cfg.llm_timeout_seconds,
             max_bullets=cfg.max_bullets,
         )
-        return summarize_chapter_from_item_result(chapter, llm_result, config=cfg)
-    return _summarize_chapter_extractive(chapter, cfg)
+        return summarize_chapter_from_item_result(chapter, llm_result, config=cfg, action_cues=action_cues)
+    return _summarize_chapter_extractive(chapter, cfg, action_cues=action_cues)
 
 
 def _run_chapter_summary_item(*, chapter: dict, config: ChapterSummaryConfig) -> dict:
@@ -535,7 +531,7 @@ def _save_llm_debug_artifact(debug_dir: Path, chapter: dict, llm_result: dict) -
         json.dump(payload, f, ensure_ascii=False, indent=2)
 
 
-def summarize_chapters(chapters: list[dict], config: ChapterSummaryConfig | None = None) -> dict[str, dict]:
+def summarize_chapters(chapters: list[dict], config: ChapterSummaryConfig | None = None, action_cues: tuple[str, ...] = ()) -> dict[str, dict]:
     result: dict[str, dict] = {}
     for chapter in chapters:
         if _is_frontmatter_chapter(chapter):
@@ -543,7 +539,7 @@ def summarize_chapters(chapters: list[dict], config: ChapterSummaryConfig | None
         key = _chapter_key(chapter)
         if not key:
             continue
-        result[key] = summarize_chapter(chapter, config=config)
+        result[key] = summarize_chapter(chapter, config=config, action_cues=action_cues)
     return result
 
 
@@ -578,6 +574,7 @@ def summarize_chapters_incrementally(
     output_file: Path,
     debug_dir: Path | None = None,
     config: ChapterSummaryConfig | None = None,
+    action_cues: tuple[str, ...] = (),
 ) -> dict[str, dict]:
     result = {
         key: value
@@ -595,9 +592,9 @@ def summarize_chapters_incrementally(
             item_result = _run_chapter_summary_item(chapter=chapter, config=(config or ChapterSummaryConfig()))
             if debug_dir is not None and isinstance(item_result, dict) and item_result.get("error"):
                 _save_llm_debug_artifact(debug_dir, chapter, item_result)
-            result[key] = summarize_chapter_from_item_result(chapter, item_result, config=config)
+            result[key] = summarize_chapter_from_item_result(chapter, item_result, config=config, action_cues=action_cues)
         else:
-            result[key] = summarize_chapter(chapter, config=config)
+            result[key] = summarize_chapter(chapter, config=config, action_cues=action_cues)
         _save_chapter_summaries(result, output_file)
 
     return result
@@ -607,6 +604,7 @@ def summarize_chapter_from_item_result(
     chapter: dict,
     item_result: dict | list[str],
     config: ChapterSummaryConfig | None = None,
+    action_cues: tuple[str, ...] = (),
 ) -> dict:
     cfg = config or ChapterSummaryConfig()
     if isinstance(item_result, list):
@@ -629,6 +627,7 @@ def summarize_chapter_from_item_result(
             cfg,
             method="extractive_fallback",
             seed_flags=([llm_error] if llm_error else []) + ["fallback_used"],
+            action_cues=action_cues,
         )
     return {
         "chapter_id": str(chapter.get("id", "")).strip(),
@@ -665,6 +664,12 @@ def main() -> None:
     chapters = epub_data.get("chapters", [])
     config = _chapter_summary_config_from_payload(payload)
 
+    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    spacy_model = ctx.get("spacy_model", "en_core_web_lg")
+    export_categories = ctx.get("export", {}).get("categories", {})
+    language = export_categories.get("language") or infer_language(spacy_model)
+    action_cues = tuple(load_lang_config(language).get("action_cues", ()))
+
     paths = _paths_from_payload(payload)
     out_file = paths.processing / "chapter_summaries.json"
     debug_dir = paths.processing / "chapter_summary_llm_debug"
@@ -673,6 +678,7 @@ def main() -> None:
         output_file=out_file,
         debug_dir=debug_dir,
         config=config,
+        action_cues=action_cues,
     )
     out = {"chapter_summaries": chapter_summaries}
 
