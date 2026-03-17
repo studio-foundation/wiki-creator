@@ -39,8 +39,14 @@ pages-export:
 run-generation: run-preparation generate-pages pages-export
 
 # Orchestrator shortcuts
+run-from-extraction:
+	python run_wiki.py --book $(BOOK) --restart wiki-extraction
+
 run-from-resolution:
 	python run_wiki.py --book $(BOOK) --restart wiki-resolution
+
+run-from-preparation:
+	python run_wiki.py --book $(BOOK) --restart wiki-preparation
 
 run-from-generation:
 	python run_wiki.py --book $(BOOK) --restart wiki-generation
