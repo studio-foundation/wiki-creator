@@ -12,6 +12,7 @@ from scripts.chapter_summary import (
     _score_sentence,
     summarize_chapters_incrementally,
     summarize_chapter,
+    summarize_chapter_from_item_result,
     summarize_chapters,
 )
 
@@ -542,3 +543,41 @@ def test_summarize_chapter_no_cues_gives_unknown():
     }
     result = summarize_chapter(chapter, flashback_cues=())
     assert result["temporal_context"] == "unknown"
+
+
+def test_summarize_chapter_from_item_result_passes_through_temporal_context():
+    chapter = {"id": "ch01", "title": "Chapter 1", "content": "..."}
+    item_result = {
+        "chapter_id": "ch01",
+        "chapter_title": "Chapter 1",
+        "summary_bullets": ["Celaena found a clue."],
+        "temporal_context": "flashback",
+        "flashback_anchor": "5 ans avant les événements du ch.01",
+    }
+    result = summarize_chapter_from_item_result(chapter, item_result)
+    assert result["temporal_context"] == "flashback"
+    assert result["flashback_anchor"] == "5 ans avant les événements du ch.01"
+
+
+def test_summarize_chapter_from_item_result_defaults_unknown_when_missing():
+    chapter = {"id": "ch01", "title": "Chapter 1", "content": "..."}
+    item_result = {
+        "summary_bullets": ["Celaena found a clue."],
+    }
+    result = summarize_chapter_from_item_result(chapter, item_result)
+    assert result["temporal_context"] == "unknown"
+    assert result["flashback_anchor"] is None
+
+
+def test_summarize_chapter_from_item_result_fallback_uses_heuristic():
+    chapter = {
+        "id": "ch02", "title": "Chapter 2",
+        "content": "Years before, Celaena had trained in the Keep.",
+    }
+    item_result = {"summary_bullets": [], "error": "llm_timeout"}
+    cfg = ChapterSummaryConfig(mode="llm", llm_fallback_to_extractive=True)
+    result = summarize_chapter_from_item_result(
+        chapter, item_result, config=cfg, flashback_cues=("years before",)
+    )
+    assert result["summary_method"] == "extractive_fallback"
+    assert result["temporal_context"] == "flashback"

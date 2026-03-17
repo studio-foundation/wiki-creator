@@ -624,9 +624,14 @@ def summarize_chapter_from_item_result(
     if isinstance(item_result, list):
         llm_bullets = item_result
         llm_error = None if llm_bullets else "llm_invalid_response"
+        temporal_context = "unknown"
+        flashback_anchor = None
     else:
         llm_bullets = _sanitize_bullets(item_result.get("summary_bullets"), cfg.max_bullets)
         llm_error = item_result.get("error") or None
+        temporal_context = item_result.get("temporal_context") or "unknown"
+        flashback_anchor = item_result.get("flashback_anchor") or None
+
     if llm_bullets:
         return {
             "chapter_id": str(chapter.get("id", "")).strip(),
@@ -634,6 +639,8 @@ def summarize_chapter_from_item_result(
             "summary_bullets": llm_bullets,
             "summary_method": "llm",
             "quality_flags": [],
+            "temporal_context": temporal_context,
+            "flashback_anchor": flashback_anchor,
         }
     if cfg.llm_fallback_to_extractive:
         return _summarize_chapter_extractive(
@@ -650,6 +657,8 @@ def summarize_chapter_from_item_result(
         "summary_bullets": [_FALLBACK_BULLET],
         "summary_method": "llm",
         "quality_flags": [llm_error] if llm_error else [],
+        "temporal_context": "unknown",
+        "flashback_anchor": None,
     }
 
 
