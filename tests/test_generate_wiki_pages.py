@@ -546,3 +546,16 @@ def test_build_prompt_warns_against_citing_chapter_labels():
     }
     prompt = build_prompt(entity, "Throne of Glass", ["biography"])
     assert "never mention" in prompt.lower() and "internal reference" in prompt.lower()
+
+
+@pytest.mark.parametrize("key,expected", [
+    ("C25.xhtml", "Chapter 25"),
+    ("C03.xhtml", "Chapter 3"),
+    ("c1.xhtml", "Chapter 1"),
+    ("sinopsis.xhtml", "sinopsis.xhtml"),
+    ("Chapter 5", "Chapter 5"),
+    ("", ""),
+])
+def test_label_chapter_key(key, expected):
+    from scripts.generate_wiki_pages import _label_chapter_key
+    assert _label_chapter_key(key) == expected
