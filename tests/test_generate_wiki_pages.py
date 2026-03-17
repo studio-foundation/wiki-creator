@@ -545,4 +545,4 @@ def test_build_prompt_warns_against_citing_chapter_labels():
         "relationships": [],
     }
     prompt = build_prompt(entity, "Throne of Glass", ["biography"])
-    assert "never mention" in prompt.lower() or "internal reference" in prompt.lower()
+    assert "never mention" in prompt.lower() and "internal reference" in prompt.lower()

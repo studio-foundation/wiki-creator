@@ -13,6 +13,7 @@ Usage:
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -108,6 +109,7 @@ def main() -> None:
     parser.add_argument("--book", required=True, help="Path to book YAML config")
     parser.add_argument("--restart", choices=PIPELINES + ["wiki-generation"], help="Restart from this pipeline")
     parser.add_argument("--retries", type=int, default=3, help="Max attempts per pipeline")
+    parser.add_argument("--clean", action="store_true", help="Delete outputs of restarted stages before running")
     parser.add_argument("--status", action="store_true", help="Show run status and exit")
     args = parser.parse_args()
 
@@ -134,6 +136,18 @@ def main() -> None:
         for pipeline in PIPELINES[start_idx:]:
             state.setdefault("stages", {}).pop(pipeline, None)
         save_state(args.book, state)
+
+    if args.clean:
+        outputs = required_files(args.book)
+        for pipeline in PIPELINES[start_idx:]:
+            for path_str in outputs.get(pipeline, []):
+                p = Path(path_str)
+                if p.is_dir():
+                    print(f"  [clean] removing dir {p}")
+                    shutil.rmtree(p)
+                elif p.exists():
+                    print(f"  [clean] removing {p}")
+                    p.unlink()
 
     for pipeline in PIPELINES[start_idx:]:
         stage_state = state.setdefault("stages", {}).get(pipeline, {})

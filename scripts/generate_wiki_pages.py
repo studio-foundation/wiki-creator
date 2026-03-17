@@ -228,7 +228,11 @@ def build_prompt(entity: dict, book_title: str, sections: list[str]) -> str:
             related_lines.append(f"    - Snippet: {snippet}")
     related_block = "\n".join(related_lines) if related_lines else "  (no related entities available)"
 
-    relationships = entity.get("relationships", [])
+    relationships = sorted(
+        entity.get("relationships", []),
+        key=lambda r: int(r.get("cooccurrence_count", 0) or 0),
+        reverse=True,
+    )
     rel_lines = []
     for r in relationships[:10]:
         other = (r.get("entity_b") or "").strip()
@@ -822,6 +826,13 @@ def main() -> None:
                 print(f"  [GEN]  {name} ({importance})", file=sys.stderr, end="", flush=True)
                 try:
                     sections, max_tokens = generation_profile(generation_cfg, importance, entity.get("type"))
+                    typed_rels = entity.get("relationships", [])
+                    if (
+                        entity.get("type") == "PERSON"
+                        and len(typed_rels) >= 3
+                        and "relationships" not in sections
+                    ):
+                        sections = list(sections) + ["relationships"]
                     page = _run_generation_for_entity(
                         entity=entity,
                         book_title=book_title,
