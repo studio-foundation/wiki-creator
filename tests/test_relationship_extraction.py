@@ -533,7 +533,7 @@ def test_pipeline_passes_llm_model_to_classify(monkeypatch):
     import scripts.relationship_extraction as rel_mod
     captured = {}
 
-    def fake_classify(rels, *, model, ollama_url):
+    def fake_classify(rels, *, model, ollama_url, novel_summary=None):
         captured["model"] = model
         captured["ollama_url"] = ollama_url
         return rels
@@ -564,3 +564,26 @@ def test_pipeline_skips_classify_when_no_llm_model(monkeypatch, capsys):
     captured = capsys.readouterr()
     assert "[ERROR]" in captured.err
     assert "llm_model" in captured.err
+
+
+def test_pipeline_passes_novel_summary_to_classify(monkeypatch):
+    """novel_summary from additional_context reaches classify_relationships."""
+    import scripts.relationship_extraction as rel_mod
+
+    captured = {}
+
+    def fake_classify(rels, *, model, ollama_url, novel_summary=None):
+        captured["novel_summary"] = novel_summary
+        return rels
+
+    monkeypatch.setattr(rel_mod, "classify_relationships", fake_classify)
+    monkeypatch.setattr(rel_mod, "_load_mentions_from_files", lambda p: {})
+    monkeypatch.setattr(rel_mod, "_paths_from_payload", lambda p: None)
+
+    payload = _make_pipeline_payload(classify=True, llm_model=_TEST_MODEL)
+    payload["additional_context"] += "\nnovel_summary: Celaena is an assassin."
+    monkeypatch.setattr("sys.stdin", _io.StringIO(_json.dumps(payload)))
+    monkeypatch.setattr("sys.stdout", _io.StringIO())
+
+    rel_mod.main()
+    assert captured.get("novel_summary") == "Celaena is an assassin."
