@@ -2,6 +2,8 @@
 
 import json
 
+import pytest
+
 from scripts.generate_wiki_pages import (
     _contains_template_placeholder,
     _extract_stage_output_from_run_payload,
