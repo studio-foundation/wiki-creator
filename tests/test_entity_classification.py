@@ -418,3 +418,39 @@ def test_canonicalize_role_entities_marks_compound_role_noun_as_other():
     royal_guard = next(e for e in out_entities if e["canonical_name"] == "Royal Guard")
     assert royal_guard["relevant"] is False
     assert royal_guard["type"] == "OTHER"
+
+
+def test_normalize_geo_suffix_retags_person_to_place():
+    """Name token 'mountains' is a geo-suffix → PERSON retags to PLACE."""
+    entity = {
+        "canonical_name": "White Fang Mountains",
+        "type": "PERSON",
+        "source_ids": [],
+        "aliases": [],
+    }
+    new_type = _normalize_entity_type(entity, {}, {}, {}, {})
+    assert new_type == "PLACE"
+
+
+def test_normalize_geo_suffix_single_word_place():
+    """Name ending in a geo-suffix token even without context → PLACE."""
+    entity = {
+        "canonical_name": "Oakwald Sea",
+        "type": "PERSON",
+        "source_ids": [],
+        "aliases": [],
+    }
+    new_type = _normalize_entity_type(entity, {}, {}, {}, {})
+    assert new_type == "PLACE"
+
+
+def test_normalize_no_false_positive_on_plain_person_name():
+    """Name with no geo-suffix tokens stays PERSON."""
+    entity = {
+        "canonical_name": "Blade",
+        "type": "PERSON",
+        "source_ids": [],
+        "aliases": [],
+    }
+    new_type = _normalize_entity_type(entity, {}, {}, {}, {})
+    assert new_type == "PERSON"
