@@ -535,15 +535,27 @@ def _load_entity_files(processing_dir: Path) -> tuple[dict, dict, dict, dict]:
 def run_studio_mode() -> None:
     payload = json.load(sys.stdin)
     prev_outputs = payload.get("previous_outputs", {})
-    rel_output = prev_outputs.get("relationship-extraction", {})
-    entities = rel_output.get("entities", [])
+    all_stage_outputs = payload.get("all_stage_outputs", {})
+    rel_output = (
+        prev_outputs.get("relationship-extraction")
+        or all_stage_outputs.get("relationship-extraction")
+        or {}
+    )
+    # Entities: prefer alias-resolution output (post-merge) when available, fall back to
+    # relationship-extraction (original pipeline order) for backward compatibility.
+    alias_output = (
+        prev_outputs.get("alias-resolution")
+        or all_stage_outputs.get("alias-resolution")
+        or {}
+    )
+    entities = alias_output.get("entities") or rel_output.get("entities", [])
+    narrator = alias_output.get("narrator") or rel_output.get("narrator", None)
     # Strip sample_contexts and chapters from relationships — not needed by wiki-generation
     # (reduces context size from ~800k to manageable for the writer LLM)
     relationships = [
         {k: v for k, v in r.items() if k not in ("sample_contexts", "chapters")}
         for r in rel_output.get("relationships", [])
     ]
-    narrator = rel_output.get("narrator", None)
 
     if not entities:
         json.dump({"error": "missing relationship-extraction output"}, sys.stdout, ensure_ascii=False)
