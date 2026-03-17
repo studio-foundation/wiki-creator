@@ -478,6 +478,110 @@ def detect_named_aliases(
     return pairs
 
 
+def _build_role_index(relationships: list[dict]) -> dict[tuple[str, str], list[str]]:
+    """
+    Build an inverted index: (third_party_canonical, relationship_type) → [entity names with this role].
+
+    For each relationship (A ↔ B, rel_type), B is a third party for A and vice versa.
+    Skips relationships with null relationship_type.
+    """
+    index: dict[tuple[str, str], list[str]] = {}
+    for rel in relationships:
+        rel_type = rel.get("relationship_type")
+        if not rel_type:
+            continue
+        entity_a: str = rel.get("entity_a", "")
+        entity_b: str = rel.get("entity_b", "")
+        if not entity_a or not entity_b:
+            continue
+        # A plays a role toward B
+        key_a = (entity_b, rel_type)
+        index.setdefault(key_a, [])
+        if entity_a not in index[key_a]:
+            index[key_a].append(entity_a)
+        # B plays a role toward A
+        key_b = (entity_a, rel_type)
+        index.setdefault(key_b, [])
+        if entity_b not in index[key_b]:
+            index[key_b].append(entity_b)
+    return index
+
+
+def _direct_cooccurrence(name_a: str, name_b: str, relationships: list[dict]) -> int:
+    """Return the cooccurrence_count for the direct A↔B relationship, or 0."""
+    na, nb = name_a.lower(), name_b.lower()
+    for rel in relationships:
+        ea = rel.get("entity_a", "").lower()
+        eb = rel.get("entity_b", "").lower()
+        if (ea == na and eb == nb) or (ea == nb and eb == na):
+            return rel.get("cooccurrence_count", 0)
+    return 0
+
+
+def _detect_role_symmetric_pairs(
+    entities: list[dict],
+    relationships: list[dict],
+    min_shared: int = 2,
+    direct_cooc_max: int = 3,
+) -> list[tuple[dict, dict, dict]]:
+    """
+    Return (entity_a, entity_b, evidence) triples where A and B share ≥ min_shared
+    (third_party, relationship_type) buckets AND their direct cooccurrence is ≤ direct_cooc_max.
+
+    Evidence dict has keys: method, confidence, snippet, shared_roles.
+    """
+    role_index = _build_role_index(relationships)
+    persons = [e for e in entities if e.get("type") == "PERSON" and e.get("relevant", True)]
+
+    # Pre-compute which buckets are "clean": no two co-inhabitants have high direct cooccurrence.
+    # A contaminated bucket contains multiple entities that are already clearly distinct (high cooc),
+    # so it cannot be used as evidence that two entities sharing it are aliases.
+    def bucket_is_clean(names_in_bucket: list[str]) -> bool:
+        for ii in range(len(names_in_bucket)):
+            for jj in range(ii + 1, len(names_in_bucket)):
+                if _direct_cooccurrence(names_in_bucket[ii], names_in_bucket[jj], relationships) > direct_cooc_max:
+                    return False
+        return True
+
+    clean_buckets: set[tuple[str, str]] = {
+        key for key, names in role_index.items() if bucket_is_clean(names)
+    }
+
+    # For each entity, collect its set of (third_party, rel_type) buckets (clean only).
+    def signature(entity: dict) -> set[tuple[str, str]]:
+        name = entity.get("canonical_name", "")
+        result: set[tuple[str, str]] = set()
+        for (third_party, rel_type), names in role_index.items():
+            if name in names and (third_party, rel_type) in clean_buckets:
+                result.add((third_party, rel_type))
+        return result
+
+    pairs: list[tuple[dict, dict, dict]] = []
+    for i in range(len(persons)):
+        for j in range(i + 1, len(persons)):
+            a, b = persons[i], persons[j]
+            name_a = a.get("canonical_name", "")
+            name_b = b.get("canonical_name", "")
+            if _direct_cooccurrence(name_a, name_b, relationships) > direct_cooc_max:
+                continue
+            shared = signature(a) & signature(b)
+            if len(shared) < min_shared:
+                continue
+            shared_list = sorted(shared)
+            snippet = "; ".join(
+                f"{name_a} and {name_b} both have '{rel}' relation toward '{third}'"
+                for third, rel in shared_list[:2]
+            )
+            evidence = {
+                "method": "role_symmetric",
+                "confidence": "medium",
+                "snippet": snippet,
+                "shared_roles": [{"third_party": t, "relationship_type": r} for t, r in shared_list],
+            }
+            pairs.append((a, b, evidence))
+    return pairs
+
+
 def resolve_aliases(
     entities: list[dict],
     persons_full: dict,

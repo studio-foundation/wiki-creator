@@ -801,3 +801,117 @@ def test_resolve_aliases_title_alias_auto_merges_regardless_of_llm():
     assert len(result["entities"]) == 1
     assert result["stats"]["merges_applied"] == 1
     assert result["stats"]["merges_by_method"]["title_alias"] == 1
+
+
+def test_build_role_index_groups_by_third_party_and_rel_type():
+    from scripts.alias_resolution import _build_role_index
+    relationships = [
+        {"entity_a": "Celaena", "entity_b": "Master", "relationship_type": "mentor/protégé", "cooccurrence_count": 12},
+        {"entity_a": "Brullo",  "entity_b": "Celaena", "relationship_type": "mentor/protégé", "cooccurrence_count": 8},
+        {"entity_a": "Dorian",  "entity_b": "Celaena", "relationship_type": "ami",            "cooccurrence_count": 5},
+    ]
+    index = _build_role_index(relationships)
+    # ("Celaena", "mentor/protégé") should have both Master and Brullo
+    key = ("Celaena", "mentor/protégé")
+    assert key in index
+    assert set(index[key]) == {"Master", "Brullo"}
+
+
+def test_build_role_index_skips_unclassified():
+    from scripts.alias_resolution import _build_role_index
+    relationships = [
+        {"entity_a": "A", "entity_b": "C", "relationship_type": None, "cooccurrence_count": 3},
+    ]
+    index = _build_role_index(relationships)
+    assert index == {}
+
+
+def test_detect_role_symmetric_finds_brullo_master():
+    from scripts.alias_resolution import _detect_role_symmetric_pairs
+    brullo = {
+        "canonical_name": "Brullo",
+        "type": "PERSON",
+        "aliases": ["Brullo"],
+        "source_ids": [],
+        "relevant": True,
+    }
+    master = {
+        "canonical_name": "Master",
+        "type": "PERSON",
+        "aliases": ["Master"],
+        "source_ids": [],
+        "relevant": True,
+    }
+    celaena = {
+        "canonical_name": "Celaena Sardothien",
+        "type": "PERSON",
+        "aliases": ["Celaena Sardothien", "Celaena"],
+        "source_ids": [],
+        "relevant": True,
+    }
+    dorian = {
+        "canonical_name": "Dorian",
+        "type": "PERSON",
+        "aliases": ["Dorian"],
+        "source_ids": [],
+        "relevant": True,
+    }
+    relationships = [
+        # Both Brullo and Master share: Celaena as mentor/protégé AND Dorian as connaissance
+        {"entity_a": "Celaena Sardothien", "entity_b": "Master", "relationship_type": "mentor/protégé", "cooccurrence_count": 12},
+        {"entity_a": "Brullo", "entity_b": "Celaena Sardothien", "relationship_type": "mentor/protégé", "cooccurrence_count": 8},
+        {"entity_a": "Dorian",  "entity_b": "Master",  "relationship_type": "connaissance", "cooccurrence_count": 3},
+        {"entity_a": "Dorian",  "entity_b": "Brullo",  "relationship_type": "connaissance", "cooccurrence_count": 2},
+    ]
+    pairs = _detect_role_symmetric_pairs(
+        [brullo, master, celaena, dorian],
+        relationships,
+        min_shared=2,
+        direct_cooc_max=3,
+    )
+    assert len(pairs) == 1
+    names = {pairs[0][0]["canonical_name"], pairs[0][1]["canonical_name"]}
+    assert names == {"Brullo", "Master"}
+
+
+def test_detect_role_symmetric_no_false_positive_with_one_shared_third_party():
+    """Two guards sharing only one common (third_party, rel_type) bucket do not trigger."""
+    from scripts.alias_resolution import _detect_role_symmetric_pairs
+    guard_a = {"canonical_name": "Guard A", "type": "PERSON", "aliases": ["Guard A"], "source_ids": [], "relevant": True}
+    guard_b = {"canonical_name": "Guard B", "type": "PERSON", "aliases": ["Guard B"], "source_ids": [], "relevant": True}
+    lord = {"canonical_name": "Lord X", "type": "PERSON", "aliases": ["Lord X"], "source_ids": [], "relevant": True}
+    relationships = [
+        {"entity_a": "Lord X", "entity_b": "Guard A", "relationship_type": "employeur/employé", "cooccurrence_count": 5},
+        {"entity_a": "Lord X", "entity_b": "Guard B", "relationship_type": "employeur/employé", "cooccurrence_count": 3},
+    ]
+    pairs = _detect_role_symmetric_pairs(
+        [guard_a, guard_b, lord],
+        relationships,
+        min_shared=2,  # only 1 shared bucket → no merge
+        direct_cooc_max=3,
+    )
+    assert pairs == []
+
+
+def test_detect_role_symmetric_skips_high_direct_cooccurrence():
+    """If A and B already co-occur heavily, they are likely already handled."""
+    from scripts.alias_resolution import _detect_role_symmetric_pairs
+    a = {"canonical_name": "A", "type": "PERSON", "aliases": ["A"], "source_ids": [], "relevant": True}
+    b = {"canonical_name": "B", "type": "PERSON", "aliases": ["B"], "source_ids": [], "relevant": True}
+    c = {"canonical_name": "C", "type": "PERSON", "aliases": ["C"], "source_ids": [], "relevant": True}
+    d = {"canonical_name": "D", "type": "PERSON", "aliases": ["D"], "source_ids": [], "relevant": True}
+    relationships = [
+        {"entity_a": "A", "entity_b": "C", "relationship_type": "ami", "cooccurrence_count": 5},
+        {"entity_a": "B", "entity_b": "C", "relationship_type": "ami", "cooccurrence_count": 5},
+        {"entity_a": "A", "entity_b": "D", "relationship_type": "ami", "cooccurrence_count": 5},
+        {"entity_a": "B", "entity_b": "D", "relationship_type": "ami", "cooccurrence_count": 5},
+        # A and B also appear directly together with high cooccurrence
+        {"entity_a": "A", "entity_b": "B", "relationship_type": "ami", "cooccurrence_count": 20},
+    ]
+    pairs = _detect_role_symmetric_pairs(
+        [a, b, c, d],
+        relationships,
+        min_shared=2,
+        direct_cooc_max=3,  # 20 > 3 → skip
+    )
+    assert pairs == []
