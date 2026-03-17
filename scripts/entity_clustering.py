@@ -70,6 +70,19 @@ TITLE_PREFIXES = frozenset({
     "dr.", "dr", "le", "la", "les", "el", "los", "las",
 })
 
+def load_title_prefixes(language: str | None = None) -> frozenset[str]:
+    """Return TITLE_PREFIXES extended with person_cue_words from cue_words/{lang}.json."""
+    if not language:
+        return TITLE_PREFIXES
+    try:
+        from wiki_creator.lang import load_lang_config
+        lang_cfg = load_lang_config(language)
+        extra = frozenset(w.lower() for w in lang_cfg.get("person_cue_words", []))
+        return TITLE_PREFIXES | extra
+    except Exception:
+        return TITLE_PREFIXES
+
+
 JW_THRESHOLD = 0.92  # Jaro-Winkler threshold for orthographic variant matching
 TYPE_PRECEDENCE = ("PERSON", "PLACE", "ORG", "EVENT", "OTHER")
 
@@ -87,30 +100,30 @@ def normalize_for_comparison(text: str) -> str:
     return "".join(c for c in nfkd if not unicodedata.combining(c))
 
 
-def tokenize_name(name: str) -> list[str]:
+def tokenize_name(name: str, title_prefixes: frozenset[str] = TITLE_PREFIXES) -> list[str]:
     """Strip title prefixes and tokenize a name."""
     tokens = name.lower().strip().split()
-    while tokens and tokens[0] in TITLE_PREFIXES:
+    while tokens and tokens[0] in title_prefixes:
         tokens = tokens[1:]
     return [t for t in tokens if t]
 
 
-def extract_leading_titles(name: str) -> frozenset[str]:
+def extract_leading_titles(name: str, title_prefixes: frozenset[str] = TITLE_PREFIXES) -> frozenset[str]:
     """Return the set of title prefixes at the START of a name (stops at first non-title)."""
     tokens = name.lower().strip().split()
     result = set()
     for t in tokens:
-        if t in TITLE_PREFIXES:
+        if t in title_prefixes:
             result.add(t)
         else:
             break
     return frozenset(result)
 
 
-def has_conflicting_gender_title(name1: str, name2: str) -> bool:
+def has_conflicting_gender_title(name1: str, name2: str, title_prefixes: frozenset[str] = TITLE_PREFIXES) -> bool:
     """Rule 1: block merge if one name has a feminine title and the other a masculine title."""
-    t1 = extract_leading_titles(name1)
-    t2 = extract_leading_titles(name2)
+    t1 = extract_leading_titles(name1, title_prefixes)
+    t2 = extract_leading_titles(name2, title_prefixes)
     masc1, fem1 = bool(t1 & MASCULINE_TITLES), bool(t1 & FEMININE_TITLES)
     masc2, fem2 = bool(t2 & MASCULINE_TITLES), bool(t2 & FEMININE_TITLES)
     return (masc1 and fem2) or (fem1 and masc2)
@@ -121,13 +134,13 @@ def is_single_given_name(tokens: list[str]) -> bool:
     return len(tokens) == 1 and len(tokens[0]) <= 8
 
 
-def extract_surname_and_firstname(name: str) -> tuple[str, list[str]]:
+def extract_surname_and_firstname(name: str, title_prefixes: frozenset[str] = TITLE_PREFIXES) -> tuple[str, list[str]]:
     """
     Extract (surname, first_names) from a name after title stripping.
     Convention: last token = surname, all preceding tokens = first names.
     Returns normalized (lowercase, accent-stripped) tokens.
     """
-    tokens = tokenize_name(name)
+    tokens = tokenize_name(name, title_prefixes)
     if not tokens:
         return "", []
     normalized = [normalize_for_comparison(t) for t in tokens]
@@ -190,10 +203,10 @@ def jaro_winkler(s1: str, s2: str, p: float = 0.1) -> float:
 
 # --- Matching rules ---
 
-def should_cluster_tokens(name1: str, name2: str) -> bool:
+def should_cluster_tokens(name1: str, name2: str, title_prefixes: frozenset[str] = TITLE_PREFIXES) -> bool:
     """Token-based matching: subset detection with title stripping."""
-    t1 = tokenize_name(name1)
-    t2 = tokenize_name(name2)
+    t1 = tokenize_name(name1, title_prefixes)
+    t2 = tokenize_name(name2, title_prefixes)
     if not t1 or not t2:
         return False
 
@@ -219,10 +232,10 @@ def should_cluster_tokens(name1: str, name2: str) -> bool:
     return False
 
 
-def should_cluster_jw(name1: str, name2: str) -> bool:
+def should_cluster_jw(name1: str, name2: str, title_prefixes: frozenset[str] = TITLE_PREFIXES) -> bool:
     """Jaro-Winkler on normalized full names (orthographic variants)."""
-    t1 = tokenize_name(name1)
-    t2 = tokenize_name(name2)
+    t1 = tokenize_name(name1, title_prefixes)
+    t2 = tokenize_name(name2, title_prefixes)
     # Same safety as token path: single given names don't match each other
     if is_single_given_name(t1) and is_single_given_name(t2):
         return False
@@ -236,12 +249,12 @@ def should_cluster_jw(name1: str, name2: str) -> bool:
     return jaro_winkler(n1, n2) >= JW_THRESHOLD
 
 
-def should_cluster(name1: str, name2: str) -> bool:
+def should_cluster(name1: str, name2: str, title_prefixes: frozenset[str] = TITLE_PREFIXES) -> bool:
     """Combined matching with pre-filter rules for obvious wrong merges."""
     # Rule 1: conflicting gender titles → definitely different people
-    if has_conflicting_gender_title(name1, name2):
+    if has_conflicting_gender_title(name1, name2, title_prefixes):
         return False
-    return should_cluster_tokens(name1, name2) or should_cluster_jw(name1, name2)
+    return should_cluster_tokens(name1, name2, title_prefixes) or should_cluster_jw(name1, name2, title_prefixes)
 
 
 def _entity_weight(entity: dict) -> int:
@@ -273,13 +286,14 @@ def _resolve_cluster_type(member_ids: list[str], entities: dict) -> str:
 
 # --- Union-Find clustering ---
 
-def build_clusters(entities: dict) -> tuple[list[dict], dict]:
+def build_clusters(entities: dict, language: str | None = None) -> tuple[list[dict], dict]:
     """
     Cluster entities by name similarity using Union-Find.
     Transitive closure: if A~B and B~C, then {A,B,C} are one cluster.
 
     Returns: (clusters_list, unclustered_entities)
     """
+    title_prefixes = load_title_prefixes(language)
     parent = {eid: eid for eid in entities}
 
     def find(x):
@@ -303,7 +317,7 @@ def build_clusters(entities: dict) -> tuple[list[dict], dict]:
                 if matched:
                     break
                 for mj in entities[ej]["raw_mentions"]:
-                    if should_cluster(mi, mj):
+                    if should_cluster(mi, mj, title_prefixes=title_prefixes):
                         union(ei, ej)
                         matched = True
                         break
@@ -359,7 +373,7 @@ def build_clusters(entities: dict) -> tuple[list[dict], dict]:
             })
 
     # Rule 2 post-processing: split clusters with conflicting first names
-    clusters_list, unclustered = split_conflicting_first_names(clusters_list, unclustered, entities)
+    clusters_list, unclustered = split_conflicting_first_names(clusters_list, unclustered, entities, title_prefixes)
     clusters_list.sort(key=lambda c: c["total_mentions"], reverse=True)
     return clusters_list, unclustered
 
@@ -403,6 +417,7 @@ def split_conflicting_first_names(
     clusters: list[dict],
     unclustered: dict,
     entities: dict,
+    title_prefixes: frozenset[str] = TITLE_PREFIXES,
 ) -> tuple[list[dict], dict]:
     """
     Rule 2 post-processing: split clusters where multiple full-name entities
@@ -442,10 +457,10 @@ def split_conflicting_first_names(
 
         for eid in cluster["entity_ids"]:
             mention = entities[eid]["raw_mentions"][0] if entities[eid].get("raw_mentions") else eid
-            surname, firsts = extract_surname_and_firstname(mention)
+            surname, firsts = extract_surname_and_firstname(mention, title_prefixes)
             if not surname or not firsts:
                 # Determine gender from title prefix
-                titles = extract_leading_titles(mention)
+                titles = extract_leading_titles(mention, title_prefixes)
                 if titles & MASCULINE_TITLES:
                     gender = "masc"
                 elif titles & FEMININE_TITLES:
