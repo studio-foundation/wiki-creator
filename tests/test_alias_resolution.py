@@ -591,6 +591,42 @@ def test_resolve_aliases_title_alias_without_llm_increments_ambiguous():
     assert result["stats"]["ambiguous_pairs"] == 1
 
 
+def test_title_alias_merges_without_llm_confirmer():
+    """STU-275: _detect_title_alias must auto-confirm without requiring llm_confirmer."""
+    from scripts.alias_resolution import resolve_aliases
+
+    entities = [
+        {
+            "canonical_name": "Chaol Westfall",
+            "type": "PERSON",
+            "relevant": True,
+            "aliases": ["Chaol Westfall", "Westfall"],
+            "source_ids": ["e1"],
+        },
+        {
+            "canonical_name": "Captain Westfall",
+            "type": "PERSON",
+            "relevant": True,
+            "aliases": ["Captain Westfall"],
+            "source_ids": ["e2"],
+        },
+    ]
+    result = resolve_aliases(
+        entities,
+        persons_full={},
+        narrator=None,
+        llm_confirmer=None,  # no LLM — must still merge
+        role_words=["captain"],
+    )
+    resolved = result["entities"]
+    assert len(resolved) == 1, f"Expected 1 merged entity, got {len(resolved)}: {resolved}"
+    names = {e["canonical_name"] for e in resolved}
+    aliases = {a for e in resolved for a in e.get("aliases", [])}
+    assert "Chaol Westfall" in names | aliases
+    assert "Captain Westfall" in names | aliases
+    assert result["stats"]["merges_by_method"]["title_alias"] == 1
+
+
 def test_script_role_words_propagated_from_ctx(tmp_path):
     """main() passes role_words from book YAML ctx to resolve_aliases."""
     import subprocess, json, textwrap
