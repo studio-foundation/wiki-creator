@@ -36,28 +36,6 @@ class AliasPair(TypedDict):
     snippet: str
 
 
-_PATTERN_TEMPLATES = (
-    r"\byou may call me {b}\b",
-    r"\balso known as {b}\b",
-    r"\bformerly known as {b}\b",
-    r"\bformerly {b}\b",
-    r"\bcalled (?:him|her|them) {b}\b",
-    r"\bknown as {b}\b",
-    r"\bnée {b}\b",
-    r"\b{a}[^.]{{0,80}}\banother name[^.]{{0,80}}\b{b}\b",
-    r"\b{a}[^.]{{0,80}}\bunder another name[^.]{{0,80}}\b{b}\b",
-)
-
-_REVEAL_WORDS = (
-    "another name",
-    "other name",
-    "under another name",
-    "true name",
-    "real name",
-    "hidden identity",
-    "alias",
-)
-
 _WINDOW_SIZE = 300  # tokens
 
 
@@ -260,17 +238,22 @@ def _merge_entities(entity_a: dict, entity_b: dict, evidence: dict, persons_full
     }
 
 
-def _detect_pattern_for_names(name_a: str, name_b: str, snippets: list[str]) -> str | None:
+def _detect_pattern_for_names(
+    name_a: str,
+    name_b: str,
+    snippets: list[str],
+    pattern_templates: tuple[str, ...] = (),
+) -> str | None:
     """Return the first snippet matching an alias pattern for name_a/name_b, or None."""
     if name_a.lower() == name_b.lower():
         return None
     pattern_a_b = [
         t.format(a=re.escape(name_a.lower()), b=re.escape(name_b.lower()))
-        for t in _PATTERN_TEMPLATES
+        for t in pattern_templates
     ]
     pattern_b_a = [
         t.format(a=re.escape(name_b.lower()), b=re.escape(name_a.lower()))
-        for t in _PATTERN_TEMPLATES
+        for t in pattern_templates
     ]
     for snippet in snippets:
         lowered = snippet.lower()
@@ -280,13 +263,18 @@ def _detect_pattern_for_names(name_a: str, name_b: str, snippets: list[str]) -> 
     return None
 
 
-def _detect_pattern_match(entity_a: dict, entity_b: dict, persons_full: dict) -> dict | None:
+def _detect_pattern_match(
+    entity_a: dict,
+    entity_b: dict,
+    persons_full: dict,
+    pattern_templates: tuple[str, ...] = (),
+) -> dict | None:
     contexts = _gather_contexts(entity_a, persons_full) + _gather_contexts(entity_b, persons_full)
     names_a = _entity_names(entity_a)
     names_b = _entity_names(entity_b)
     for name_a in names_a:
         for name_b in names_b:
-            snippet = _detect_pattern_for_names(name_a, name_b, contexts)
+            snippet = _detect_pattern_for_names(name_a, name_b, contexts, pattern_templates)
             if snippet:
                 return {"method": "pattern", "confidence": "high", "snippet": snippet}
     return None
@@ -345,7 +333,7 @@ def _detect_cooccurrence_window(
     return snippet[:200]
 
 
-def _detect_reveal_signal(entity_a: dict, entity_b: dict, persons_full: dict, reveal_words=_REVEAL_WORDS) -> dict | None:
+def _detect_reveal_signal(entity_a: dict, entity_b: dict, persons_full: dict, reveal_words: tuple[str, ...] = ()) -> dict | None:
     contexts = _gather_contexts(entity_a, persons_full) + _gather_contexts(entity_b, persons_full)
     names_a = [name.lower() for name in _entity_names(entity_a)]
     names_b = [name.lower() for name in _entity_names(entity_b)]
@@ -411,6 +399,7 @@ def detect_named_aliases(
     mentions: dict[str, list[str]],
     text: str,
     reveal_words: tuple[str, ...] | None = None,
+    pattern_templates: tuple[str, ...] = (),
 ) -> list[AliasPair]:
     """
     Detect alias pairs using two deterministic heuristics (zero LLM).
@@ -418,13 +407,14 @@ def detect_named_aliases(
     Args:
         mentions: mapping of entity canonical_name -> list of context snippets
         text: raw concatenated book text, used for token-window co-occurrence
-        reveal_words: optional override for the module-level _REVEAL_WORDS constant
+        reveal_words: optional override for reveal signal words
+        pattern_templates: regex templates for alias pattern detection
 
     Returns:
         list of AliasPair, each with entity_a, entity_b, confidence, source, snippet
     """
     if reveal_words is None:
-        reveal_words = _REVEAL_WORDS
+        reveal_words = ()
     names = list(mentions.keys())
     pairs: list[AliasPair] = []
 
@@ -435,7 +425,7 @@ def detect_named_aliases(
 
             # Strategy 1: pattern matching
             all_snippets = mentions[name_a] + mentions[name_b]
-            evidence = _detect_pattern_for_names(name_a, name_b, all_snippets)
+            evidence = _detect_pattern_for_names(name_a, name_b, all_snippets, pattern_templates)
             if evidence:
                 pairs.append(AliasPair(
                     entity_a=name_a,
@@ -466,8 +456,9 @@ def resolve_aliases(
     persons_full: dict,
     narrator=None,
     llm_confirmer=None,
-    reveal_words=_REVEAL_WORDS,
+    reveal_words: tuple[str, ...] = (),
     role_words: list[str] | None = None,
+    pattern_templates: tuple[str, ...] = (),
 ) -> dict:
     stats = _empty_stats()
     role_words = role_words or []
@@ -490,7 +481,7 @@ def resolve_aliases(
                 continue
 
             stats["candidates_considered"] += 1
-            evidence = _detect_pattern_match(entity, candidate, persons_full)
+            evidence = _detect_pattern_match(entity, candidate, persons_full, pattern_templates)
             if evidence:
                 merged = _merge_entities(entity, candidate, evidence, persons_full)
                 stats["merges_applied"] += 1
@@ -558,9 +549,10 @@ def main() -> None:
     spacy_model = ctx.get("spacy_model", "en_core_web_lg")
     export_categories = ctx.get("export", {}).get("categories", {})
     language = export_categories.get("language") or infer_language(spacy_model)
-    reveal_words = tuple(load_lang_config(language).get("reveal_words", _REVEAL_WORDS))
-    role_words: list[str] = list(ctx.get("role_words", []))
     lang_cfg = load_lang_config(language)
+    reveal_words = tuple(lang_cfg.get("reveal_words", ()))
+    pattern_templates = tuple(lang_cfg.get("alias_pattern_templates", ()))
+    role_words: list[str] = list(ctx.get("role_words", []))
     cue_role_words = [w.lower() for w in lang_cfg.get("person_cue_words", [])]
     role_words = list(dict.fromkeys(role_words + cue_role_words))  # dedup, preserve order
 
@@ -594,7 +586,7 @@ def main() -> None:
     result = resolve_aliases(
         entities, persons_full=persons_full, narrator=narrator,
         llm_confirmer=llm_confirmer, reveal_words=reveal_words,
-        role_words=role_words,
+        role_words=role_words, pattern_templates=pattern_templates,
     )
     json.dump(result, sys.stdout, ensure_ascii=False)
 

@@ -10,6 +10,11 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.alias_resolution import resolve_aliases, detect_named_aliases, _pick_snippets, _check_ollama_available, make_ollama_confirmer
+from wiki_creator.lang import load_lang_config
+
+_EN_CFG = load_lang_config("en")
+_EN_PATTERN_TEMPLATES = tuple(_EN_CFG.get("alias_pattern_templates", ()))
+_EN_REVEAL_WORDS = tuple(_EN_CFG.get("reveal_words", ()))
 
 
 PERSON_A = {
@@ -66,7 +71,7 @@ def test_explicit_alias_pattern_merges_person_entities():
             }
         },
     }
-    result = resolve_aliases([PERSON_A, PERSON_B], persons_full=persons_full)
+    result = resolve_aliases([PERSON_A, PERSON_B], persons_full=persons_full, pattern_templates=_EN_PATTERN_TEMPLATES)
     assert len(result["entities"]) == 1
     merged = result["entities"][0]
     assert merged["canonical_name"] == "Lillian Gordaina"
@@ -89,7 +94,7 @@ def test_medium_confidence_pair_requires_llm_confirmation():
             }
         },
     }
-    no_llm = resolve_aliases([PERSON_A, PERSON_B], persons_full=persons_full)
+    no_llm = resolve_aliases([PERSON_A, PERSON_B], persons_full=persons_full, reveal_words=_EN_REVEAL_WORDS)
     assert len(no_llm["entities"]) == 2
     assert no_llm["stats"]["llm_attempts"] == 0
 
@@ -98,7 +103,7 @@ def test_medium_confidence_pair_requires_llm_confirmation():
         assert candidate["entity_b"]["canonical_name"] == "Lillian Gordaina"
         return {"same_person": True, "confidence": "medium", "evidence": "reveal confirmed"}
 
-    with_llm = resolve_aliases([PERSON_A, PERSON_B], persons_full=persons_full, llm_confirmer=confirm)
+    with_llm = resolve_aliases([PERSON_A, PERSON_B], persons_full=persons_full, llm_confirmer=confirm, reveal_words=_EN_REVEAL_WORDS)
     assert len(with_llm["entities"]) == 1
     assert with_llm["stats"]["llm_attempts"] == 1
     assert with_llm["stats"]["llm_confirmed"] == 1
@@ -113,7 +118,7 @@ def test_llm_errors_degrade_gracefully():
     def boom(_candidate):
         raise RuntimeError("llm unavailable")
 
-    result = resolve_aliases([PERSON_A, PERSON_B], persons_full=persons_full, llm_confirmer=boom)
+    result = resolve_aliases([PERSON_A, PERSON_B], persons_full=persons_full, llm_confirmer=boom, reveal_words=_EN_REVEAL_WORDS)
     assert len(result["entities"]) == 2
     assert result["stats"]["llm_attempts"] == 1
     assert result["stats"]["llm_failed"] == 1
@@ -160,7 +165,7 @@ def test_detect_named_aliases_pattern_high_confidence():
         "Celaena": ["Celaena smiled. You may call me Lillian, she said."],
         "Lillian": ["You may call me Lillian, she said."],
     }
-    pairs = detect_named_aliases(mentions, text="")
+    pairs = detect_named_aliases(mentions, text="", pattern_templates=_EN_PATTERN_TEMPLATES)
     assert len(pairs) == 1
     assert pairs[0]["entity_a"] == "Celaena"
     assert pairs[0]["entity_b"] == "Lillian"
@@ -207,7 +212,7 @@ def test_detect_named_aliases_née_pattern():
         "Jane Smith": ["Jane Smith, née Austen, entered."],
         "Austen": ["née Austen"],
     }
-    pairs = detect_named_aliases(mentions, text="")
+    pairs = detect_named_aliases(mentions, text="", pattern_templates=_EN_PATTERN_TEMPLATES)
     assert len(pairs) == 1
     assert pairs[0]["confidence"] == "high"
 
@@ -217,7 +222,7 @@ def test_detect_named_aliases_known_as_pattern():
         "David": ["David, known as El Príncipe, walked in."],
         "El Príncipe": ["known as El Príncipe"],
     }
-    pairs = detect_named_aliases(mentions, text="")
+    pairs = detect_named_aliases(mentions, text="", pattern_templates=_EN_PATTERN_TEMPLATES)
     assert len(pairs) == 1
     assert pairs[0]["confidence"] == "high"
 
@@ -662,6 +667,29 @@ def test_script_role_words_propagated_from_ctx(tmp_path):
     output = json.loads(result.stdout)
     # Title aliases are auto-confirmed without LLM; expect a merge, not an ambiguous pair
     assert output["stats"]["merges_by_method"]["title_alias"] >= 1
+
+
+def test_resolve_aliases_accepts_pattern_templates_kwarg():
+    """pattern_templates kwarg must be accepted (not crash)."""
+    result = resolve_aliases(
+        [PERSON_A, PERSON_B],
+        persons_full={},
+        pattern_templates=("\\byou may call me {b}\\b",),
+    )
+    assert "entities" in result
+
+
+def test_pattern_templates_empty_means_no_pattern_merges():
+    persons_full = {
+        "entity_001": {"mentions_by_chapter": {"ch01": ["You may call me Lillian Gordaina."]}},
+        "entity_002": {"mentions_by_chapter": {}},
+    }
+    result = resolve_aliases(
+        [PERSON_A, PERSON_B],
+        persons_full=persons_full,
+        pattern_templates=(),   # empty → no pattern detection
+    )
+    assert result["stats"]["merges_applied"] == 0
 
 
 def test_resolve_aliases_title_alias_auto_merges_regardless_of_llm():
