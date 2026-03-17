@@ -404,3 +404,55 @@ def test_call_ollama_classify_json_returns_none_on_bad_json():
     with patch("urllib.request.urlopen", return_value=mock_resp):
         result = _call_ollama_classify_json("prompt", "qwen2.5", "http://localhost:11434", timeout=10)
     assert result is None
+
+
+# ---------------------------------------------------------------------------
+# STU-262 Task 3: classify_relationships with Ollama
+# ---------------------------------------------------------------------------
+
+from scripts.relationship_extraction import classify_relationships, _OLLAMA_URL
+
+
+_SAMPLE_RELS = [
+    {
+        "entity_a": "Celaena",
+        "entity_b": "Chaol",
+        "cooccurrence_count": 30,
+        "chapters": ["ch01", "ch02"],
+        "sample_contexts": ["Chaol escorted Celaena to the castle.", "Celaena sparred with Chaol."],
+        "relationship_type": None,
+        "direction": None,
+        "evolution": None,
+        "key_moments": [],
+    }
+]
+
+
+def test_classify_relationships_populates_type_on_success():
+    ollama_response = {
+        "relationship_type": "antagoniste",
+        "direction": "symétrique",
+        "evolution": "ils apprennent à se respecter",
+        "key_moments": ["ch01: première rencontre"],
+    }
+    with patch("scripts.relationship_extraction._check_ollama_available", return_value=True), \
+         patch("scripts.relationship_extraction._call_ollama_classify_json", return_value=ollama_response):
+        result = classify_relationships(_SAMPLE_RELS, model="qwen2.5", ollama_url=_OLLAMA_URL)
+    assert result[0]["relationship_type"] == "antagoniste"
+    assert result[0]["direction"] == "symétrique"
+    assert result[0]["key_moments"] == ["ch01: première rencontre"]
+
+
+def test_classify_relationships_returns_unchanged_when_ollama_unavailable():
+    with patch("scripts.relationship_extraction._check_ollama_available", return_value=False):
+        result = classify_relationships(_SAMPLE_RELS, model="qwen2.5", ollama_url=_OLLAMA_URL)
+    assert result[0]["relationship_type"] is None
+    assert len(result) == 1
+
+
+def test_classify_relationships_keeps_null_on_per_pair_failure():
+    with patch("scripts.relationship_extraction._check_ollama_available", return_value=True), \
+         patch("scripts.relationship_extraction._call_ollama_classify_json", return_value=None):
+        result = classify_relationships(_SAMPLE_RELS, model="qwen2.5", ollama_url=_OLLAMA_URL)
+    assert result[0]["relationship_type"] is None
+    assert len(result) == 1  # pair still included, not dropped
