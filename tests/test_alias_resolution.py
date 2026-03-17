@@ -692,6 +692,46 @@ def test_pattern_templates_empty_means_no_pattern_merges():
     assert result["stats"]["merges_applied"] == 0
 
 
+def test_main_reads_entities_from_merge_entities_when_available(tmp_path):
+    """After pipeline reorder, alias-resolution receives merge-entities output in all_stage_outputs."""
+    import subprocess, json
+    from pathlib import Path
+    book_yaml = tmp_path / "library" / "a" / "s" / "books" / "book.yaml"
+    book_yaml.parent.mkdir(parents=True)
+    book_yaml.write_text("title: Test\n")
+    processing = tmp_path / "library" / "a" / "s" / "processing_output" / "book"
+    processing.mkdir(parents=True)
+    (processing / "persons_full.json").write_text(json.dumps({"persons_full": {}}))
+
+    merged_entity = {
+        "canonical_name": "Brullo",
+        "type": "PERSON",
+        "aliases": ["Brullo"],
+        "source_ids": [],
+        "relevant": True,
+    }
+    payload = {
+        "additional_context": f"file_path: {book_yaml}\n",
+        "previous_outputs": {
+            "merge-entities": {"entities": [merged_entity], "narrator": None},
+        },
+        "all_stage_outputs": {
+            "merge-entities": {"entities": [merged_entity], "narrator": None},
+            "relationship-extraction": {"relationships": []},
+        },
+    }
+    result = subprocess.run(
+        ["python", "scripts/alias_resolution.py"],
+        input=json.dumps(payload),
+        capture_output=True, text=True,
+        cwd=str(Path(__file__).parents[1]),
+    )
+    assert result.returncode == 0, result.stderr
+    output = json.loads(result.stdout)
+    assert len(output["entities"]) == 1
+    assert output["entities"][0]["canonical_name"] == "Brullo"
+
+
 def test_resolve_aliases_title_alias_auto_merges_regardless_of_llm():
     """Title alias pair is auto-merged; LLM rejection is not consulted."""
     from scripts.alias_resolution import resolve_aliases

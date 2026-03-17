@@ -541,9 +541,20 @@ def resolve_aliases(
 def main() -> None:
     payload = json.load(sys.stdin)
     previous_outputs = payload.get("previous_outputs", {})
-    resolve_output = previous_outputs.get("resolve-clusters", {})
-    entities = resolve_output.get("entities", [])
-    narrator = resolve_output.get("narrator")
+    all_stage_outputs = payload.get("all_stage_outputs", {})
+    # New pipeline: entities come from merge-entities; fall back to resolve-clusters for compat.
+    entity_source = (
+        all_stage_outputs.get("merge-entities")
+        or previous_outputs.get("merge-entities")
+        or previous_outputs.get("resolve-clusters")
+        or {}
+    )
+    entities = entity_source.get("entities", [])
+    narrator = entity_source.get("narrator")
+    # Relationships from relationship-extraction (empty list if stage not run yet).
+    relationships: list[dict] = (
+        all_stage_outputs.get("relationship-extraction", {}).get("relationships", [])
+    )
 
     ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
     spacy_model = ctx.get("spacy_model", "en_core_web_lg")
