@@ -105,3 +105,7 @@ Key: canonical name (case-insensitive lookup). Value: any valid type in `_VALID_
 - Full `_ARTIFACT_SUFFIXES` list (sword, blade, etc.) — too brittle for fantasy names;
   the YAML override is the correct mechanism.
 - Any changes to `merge_entities.py`, `wiki_preparation.py`, or downstream scripts.
+
+## Implementation Notes
+
+Section 3 (new `entity_type_overrides` parameter on `_normalize_entity_type`) was superseded during implementation: `_apply_entity_overrides` with `force_type` already existed and runs after `_normalize_entity_type`. Use `entity_overrides.Nothung.force_type: OTHER` in the book YAML — no code change needed.
