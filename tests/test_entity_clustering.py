@@ -436,6 +436,23 @@ def test_build_clusters_logs_warning_for_ambiguous_bare_surname(capsys):
     )
 
 
+def test_captain_westfall_clusters_with_chaol_westfall():
+    """STU-275: title-prefixed 'Captain Westfall' must cluster with 'Chaol Westfall'."""
+    from scripts.entity_clustering import build_clusters
+
+    entities = {
+        "e1": {"type": "PERSON", "raw_mentions": ["Chaol Westfall"], "first_seen": "ch01"},
+        "e2": {"type": "PERSON", "raw_mentions": ["Captain Westfall"], "first_seen": "ch02"},
+        "e3": {"type": "PERSON", "raw_mentions": ["Westfall"], "first_seen": "ch03"},
+    }
+    clusters, unclustered = build_clusters(entities, language="en")
+    assert len(clusters) == 1, f"Expected 1 cluster, got {len(clusters)}: {clusters}"
+    assert len(unclustered) == 0
+    mentions = set(clusters[0]["all_mentions"])
+    assert "Captain Westfall" in mentions
+    assert "Chaol Westfall" in mentions
+
+
 def test_main_parses_live_book_flag(monkeypatch):
     """--live --book <yaml> is parsed and forwarded to run_live_mode."""
     import scripts.entity_clustering as clustering
