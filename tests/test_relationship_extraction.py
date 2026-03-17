@@ -460,6 +460,53 @@ def test_classify_relationships_keeps_null_on_per_pair_failure():
     assert len(result) == 1  # pair still included, not dropped
 
 
+def test_classify_relationships_includes_novel_summary_in_prompt():
+    """novel_summary is injected into each pair's prompt when provided."""
+    captured_prompts = []
+
+    def fake_call(prompt, model, url):
+        captured_prompts.append(prompt)
+        return {
+            "relationship_type": "ami",
+            "direction": "symétrique",
+            "evolution": "ils deviennent amis",
+            "key_moments": [],
+        }
+
+    with patch("scripts.relationship_extraction._check_ollama_available", return_value=True), \
+         patch("scripts.relationship_extraction._call_ollama_classify_json", side_effect=fake_call):
+        classify_relationships(
+            _SAMPLE_RELS,
+            model=_TEST_MODEL,
+            ollama_url=_OLLAMA_URL,
+            novel_summary="Celaena is an assassin. Chaol is her guard and friend.",
+        )
+
+    assert len(captured_prompts) == 1
+    assert "Celaena is an assassin" in captured_prompts[0]
+    assert "Contexte du roman" in captured_prompts[0]
+
+
+def test_classify_relationships_omits_summary_block_when_none():
+    """When novel_summary is None, no 'Contexte du roman' block appears."""
+    captured_prompts = []
+
+    def fake_call(prompt, model, url):
+        captured_prompts.append(prompt)
+        return {
+            "relationship_type": "ami",
+            "direction": "symétrique",
+            "evolution": "ils deviennent amis",
+            "key_moments": [],
+        }
+
+    with patch("scripts.relationship_extraction._check_ollama_available", return_value=True), \
+         patch("scripts.relationship_extraction._call_ollama_classify_json", side_effect=fake_call):
+        classify_relationships(_SAMPLE_RELS, model=_TEST_MODEL, ollama_url=_OLLAMA_URL)
+
+    assert "Contexte du roman" not in captured_prompts[0]
+
+
 import io as _io
 import json as _json
 
