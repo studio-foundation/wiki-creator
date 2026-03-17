@@ -871,7 +871,7 @@ def classify_relationships(
         )
         summary_block = (
             f"Contexte du roman :\n{novel_summary}\n\n"
-            if novel_summary
+            if novel_summary and novel_summary.strip()
             else ""
         )
         prompt = f"""{summary_block}Voici des extraits d'un roman où deux personnages apparaissent ensemble.
@@ -1223,7 +1223,7 @@ def main() -> None:
             additional = yaml.safe_load(raw_context) or {}
             do_classify = bool(additional.get("classify", False))
             llm_model = additional.get("llm_model") or additional.get("model")
-            novel_summary = additional.get("novel_summary") or None
+            novel_summary = (additional.get("novel_summary") or "").strip() or None
             ollama_url = additional.get("ollama_url", os.environ.get("OLLAMA_URL", _OLLAMA_URL))
             do_coref = bool(additional.get("coref", False))
             window_size = int(additional.get("window", window_size))

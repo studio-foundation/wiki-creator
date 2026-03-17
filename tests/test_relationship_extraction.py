@@ -504,6 +504,33 @@ def test_classify_relationships_omits_summary_block_when_none():
          patch("scripts.relationship_extraction._call_ollama_classify_json", side_effect=fake_call):
         classify_relationships(_SAMPLE_RELS, model=_TEST_MODEL, ollama_url=_OLLAMA_URL)
 
+    assert len(captured_prompts) >= 1
+    assert "Contexte du roman" not in captured_prompts[0]
+
+
+def test_classify_relationships_omits_summary_block_when_whitespace_only():
+    """A whitespace-only novel_summary must not produce a 'Contexte du roman' block."""
+    captured_prompts = []
+
+    def fake_call(prompt, model, url):
+        captured_prompts.append(prompt)
+        return {
+            "relationship_type": "ami",
+            "direction": "symétrique",
+            "evolution": "ils deviennent amis",
+            "key_moments": [],
+        }
+
+    with patch("scripts.relationship_extraction._check_ollama_available", return_value=True), \
+         patch("scripts.relationship_extraction._call_ollama_classify_json", side_effect=fake_call):
+        classify_relationships(
+            _SAMPLE_RELS,
+            model=_TEST_MODEL,
+            ollama_url=_OLLAMA_URL,
+            novel_summary="   ",
+        )
+
+    assert len(captured_prompts) >= 1
     assert "Contexte du roman" not in captured_prompts[0]
 
 
