@@ -530,7 +530,7 @@ def test_empty_stats_has_title_alias_key():
 
 
 def test_resolve_aliases_title_alias_with_llm_merges():
-    """Title alias pair is merged when LLM confirms same_person."""
+    """Title alias pair is auto-merged (structural evidence is unambiguous; LLM is not consulted)."""
     from scripts.alias_resolution import resolve_aliases
     captain = {
         "canonical_name": "Captain Westfall",
@@ -560,11 +560,10 @@ def test_resolve_aliases_title_alias_with_llm_merges():
     entity = result["entities"][0]
     assert "Captain Westfall" in entity["aliases"] or "Chaol Westfall" in entity["aliases"]
     assert result["stats"]["merges_applied"] == 1
-    assert result["stats"]["llm_confirmed"] == 1
 
 
-def test_resolve_aliases_title_alias_without_llm_increments_ambiguous():
-    """Title alias pair is not merged when no LLM confirmer available."""
+def test_resolve_aliases_title_alias_without_llm_merges():
+    """Title alias pair is auto-merged even without an LLM confirmer."""
     from scripts.alias_resolution import resolve_aliases
     captain = {
         "canonical_name": "Captain Westfall",
@@ -586,9 +585,9 @@ def test_resolve_aliases_title_alias_without_llm_increments_ambiguous():
         llm_confirmer=None,
         role_words=["captain"],
     )
-    assert len(result["entities"]) == 2
-    assert result["stats"]["merges_applied"] == 0
-    assert result["stats"]["ambiguous_pairs"] == 1
+    assert len(result["entities"]) == 1
+    assert result["stats"]["merges_applied"] == 1
+    assert result["stats"]["merges_by_method"]["title_alias"] == 1
 
 
 def test_title_alias_merges_without_llm_confirmer():
@@ -661,12 +660,12 @@ def test_script_role_words_propagated_from_ctx(tmp_path):
     )
     assert result.returncode == 0, result.stderr
     output = json.loads(result.stdout)
-    # With use_llm=false and a title-alias pair, ambiguous_pairs should be >= 1
-    assert output["stats"]["ambiguous_pairs"] >= 1
+    # Title aliases are auto-confirmed without LLM; expect a merge, not an ambiguous pair
+    assert output["stats"]["merges_by_method"]["title_alias"] >= 1
 
 
-def test_resolve_aliases_title_alias_llm_rejects_no_merge():
-    """Title alias pair is not merged when LLM says same_person=False."""
+def test_resolve_aliases_title_alias_auto_merges_regardless_of_llm():
+    """Title alias pair is auto-merged; LLM rejection is not consulted."""
     from scripts.alias_resolution import resolve_aliases
     captain = {
         "canonical_name": "Captain Flint",
@@ -692,5 +691,6 @@ def test_resolve_aliases_title_alias_llm_rejects_no_merge():
         llm_confirmer=confirm_no,
         role_words=["captain"],
     )
-    assert len(result["entities"]) == 2
-    assert result["stats"]["merges_applied"] == 0
+    assert len(result["entities"]) == 1
+    assert result["stats"]["merges_applied"] == 1
+    assert result["stats"]["merges_by_method"]["title_alias"] == 1
