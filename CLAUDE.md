@@ -98,6 +98,7 @@ Typical payload shape:
 - `generate_wiki_pages.py` must run after `wiki-preparation`; it consumes `wiki_inputs/<slug>/batch_*.json`.
 - `workers` in relationship/coref config directly impact RAM usage.
 - `.studio/config.yaml` and `.studio/runs/` must not be committed.
+- Never add hardcoded word lists to scripts. All vocabulary belongs in `wiki_creator/cue_words/<lang>.json` (language-wide) or the book YAML `classification` section (book-specific). No script may define a fallback vocabulary constant — if a key is absent from cue_words, degrade gracefully to an empty collection.
 
 ## Working Norms
 
