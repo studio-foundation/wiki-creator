@@ -59,7 +59,6 @@ def test_extracted_relationship_fields():
     assert rel.sample_contexts == ["Vidal tendit le manuscrit à Martín..."]
 
 
-def test_relationship_entry_has_evidence_field():
-    from wiki_creator.types import RelationshipEntry
-    r = RelationshipEntry(entity_a="A", entity_b="B")
+def test_extracted_relationship_has_evidence_field():
+    r = ExtractedRelationship(entity_a="A", entity_b="B", cooccurrence_count=1)
     assert r.evidence is None

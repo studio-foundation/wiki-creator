@@ -61,13 +61,5 @@ class ExtractedRelationship:
     relationship_type: str | None = None
     direction: str | None = None
     evolution: str | None = None
-    key_moments: list[str] = field(default_factory=list)
-
-
-@dataclass
-class RelationshipEntry:
-    entity_a: str
-    entity_b: str
-    relationship_type: str | None = None
-    direction: str | None = None
     evidence: str | None = None
+    key_moments: list[str] = field(default_factory=list)
