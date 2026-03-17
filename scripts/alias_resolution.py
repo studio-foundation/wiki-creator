@@ -613,20 +613,18 @@ def resolve_aliases(
     consumed: set[int] = set()
 
     # Pre-compute role-symmetric candidate pairs.
-    # sym_candidates is always initialized so the inner loop reference is safe.
-    sym_candidates: list[tuple[dict, dict, dict]] = []
-    role_sym_pairs: set[tuple[int, int]] = set()
+    role_sym_map: dict[tuple[int, int], dict] = {}
     if relationships:
         sym_candidates = _detect_role_symmetric_pairs(
             entities, relationships,
             min_shared=role_symmetric_min_shared,
         )
         name_to_idx = {e.get("canonical_name", ""): i for i, e in enumerate(entities)}
-        for ea, eb, _ev in sym_candidates:
+        for ea, eb, ev in sym_candidates:
             ia = name_to_idx.get(ea.get("canonical_name", ""))
             ib = name_to_idx.get(eb.get("canonical_name", ""))
             if ia is not None and ib is not None:
-                role_sym_pairs.add((min(ia, ib), max(ia, ib)))
+                role_sym_map[(min(ia, ib), max(ia, ib))] = ev
 
     for index, entity in enumerate(entities):
         if index in consumed:
@@ -667,12 +665,7 @@ def resolve_aliases(
             role_sym = None
             if not reveal:
                 pair_key = (min(index, candidate_index), max(index, candidate_index))
-                if pair_key in role_sym_pairs:
-                    for ea, eb, ev in sym_candidates:
-                        curr_names = {entity.get("canonical_name", ""), candidate.get("canonical_name", "")}
-                        if {ea.get("canonical_name", ""), eb.get("canonical_name", "")} == curr_names:
-                            role_sym = ev
-                            break
+                role_sym = role_sym_map.get(pair_key)
 
             signal = reveal or role_sym
             if not signal:
