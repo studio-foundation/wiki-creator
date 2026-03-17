@@ -5,6 +5,7 @@ import json
 from scripts.chapter_summary import (
     ChapterSummaryConfig,
     _chapter_summary_config_from_payload,
+    _detect_temporal_context,
     _epub_output_from_payload,
     _extract_stage_output_from_run_payload,
     _parse_llm_summary_response_text,
@@ -488,3 +489,27 @@ def test_summarize_chapter_llm_mode_without_fallback_returns_specific_flag(monke
     assert result["summary_method"] == "llm"
     assert result["summary_bullets"] == ["No reliable summary available for this chapter."]
     assert "llm_timeout" in result["quality_flags"]
+
+
+def test_detect_temporal_context_flashback_when_cue_matches():
+    content = "Des années plus tôt, Celaena vivait encore à Rifthold."
+    result = _detect_temporal_context(content, flashback_cues=("des années plus tôt",))
+    assert result == "flashback"
+
+
+def test_detect_temporal_context_present_when_no_cue():
+    content = "Celaena entered the castle and met Dorian."
+    result = _detect_temporal_context(content, flashback_cues=("years before", "she remembered"))
+    assert result == "present"
+
+
+def test_detect_temporal_context_unknown_when_no_cues_provided():
+    content = "Celaena entered the castle and met Dorian."
+    result = _detect_temporal_context(content, flashback_cues=())
+    assert result == "unknown"
+
+
+def test_detect_temporal_context_case_insensitive():
+    content = "YEARS BEFORE she had trained under Arobynn."
+    result = _detect_temporal_context(content, flashback_cues=("years before",))
+    assert result == "flashback"

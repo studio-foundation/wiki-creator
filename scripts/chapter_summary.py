@@ -175,6 +175,16 @@ def _looks_dialogue_heavy(sentence: str) -> bool:
     return (quote_chars / max(len(stripped), 1)) > 0.05
 
 
+def _detect_temporal_context(content: str, flashback_cues: tuple[str, ...] = ()) -> str:
+    if not flashback_cues:
+        return "unknown"
+    lowered = (content or "").lower()
+    for cue in flashback_cues:
+        if cue.lower() in lowered:
+            return "flashback"
+    return "present"
+
+
 def _score_sentence(sentence: str, index: int, total: int, action_cues: tuple[str, ...] = ()) -> float:
     tokens = re.findall(r"[A-Za-zÀ-ÿ']+", sentence)
     token_count = len(tokens)
