@@ -292,7 +292,7 @@ def _call_llm_summary(*, chapter: dict, model: str, timeout_seconds: int, max_bu
     return {"summary_bullets": bullets, "error": error, "raw_response": response_text}
 
 
-def _summarize_chapter_extractive(chapter: dict, cfg: ChapterSummaryConfig, method: str = "extractive", seed_flags: list[str] | None = None, action_cues: tuple[str, ...] = ()) -> dict:
+def _summarize_chapter_extractive(chapter: dict, cfg: ChapterSummaryConfig, method: str = "extractive", seed_flags: list[str] | None = None, action_cues: tuple[str, ...] = (), flashback_cues: tuple[str, ...] = ()) -> dict:
     chapter_id = str(chapter.get("id", "")).strip()
     chapter_title = str(chapter.get("title", "")).strip()
     sentences = _split_sentences(chapter.get("content", ""))
@@ -323,10 +323,12 @@ def _summarize_chapter_extractive(chapter: dict, cfg: ChapterSummaryConfig, meth
         "summary_bullets": bullets,
         "summary_method": method,
         "quality_flags": quality_flags,
+        "temporal_context": _detect_temporal_context(chapter.get("content", ""), flashback_cues),
+        "flashback_anchor": None,
     }
 
 
-def summarize_chapter(chapter: dict, config: ChapterSummaryConfig | None = None, action_cues: tuple[str, ...] = ()) -> dict:
+def summarize_chapter(chapter: dict, config: ChapterSummaryConfig | None = None, action_cues: tuple[str, ...] = (), flashback_cues: tuple[str, ...] = ()) -> dict:
     cfg = config or ChapterSummaryConfig()
     if cfg.mode == "llm":
         llm_result = _call_llm_summary(
@@ -335,8 +337,8 @@ def summarize_chapter(chapter: dict, config: ChapterSummaryConfig | None = None,
             timeout_seconds=cfg.llm_timeout_seconds,
             max_bullets=cfg.max_bullets,
         )
-        return summarize_chapter_from_item_result(chapter, llm_result, config=cfg, action_cues=action_cues)
-    return _summarize_chapter_extractive(chapter, cfg, action_cues=action_cues)
+        return summarize_chapter_from_item_result(chapter, llm_result, config=cfg, action_cues=action_cues, flashback_cues=flashback_cues)
+    return _summarize_chapter_extractive(chapter, cfg, action_cues=action_cues, flashback_cues=flashback_cues)
 
 
 def _run_chapter_summary_item(*, chapter: dict, config: ChapterSummaryConfig) -> dict:
@@ -541,7 +543,7 @@ def _save_llm_debug_artifact(debug_dir: Path, chapter: dict, llm_result: dict) -
         json.dump(payload, f, ensure_ascii=False, indent=2)
 
 
-def summarize_chapters(chapters: list[dict], config: ChapterSummaryConfig | None = None, action_cues: tuple[str, ...] = ()) -> dict[str, dict]:
+def summarize_chapters(chapters: list[dict], config: ChapterSummaryConfig | None = None, action_cues: tuple[str, ...] = (), flashback_cues: tuple[str, ...] = ()) -> dict[str, dict]:
     result: dict[str, dict] = {}
     for chapter in chapters:
         if _is_frontmatter_chapter(chapter):
@@ -549,7 +551,7 @@ def summarize_chapters(chapters: list[dict], config: ChapterSummaryConfig | None
         key = _chapter_key(chapter)
         if not key:
             continue
-        result[key] = summarize_chapter(chapter, config=config, action_cues=action_cues)
+        result[key] = summarize_chapter(chapter, config=config, action_cues=action_cues, flashback_cues=flashback_cues)
     return result
 
 
@@ -585,6 +587,7 @@ def summarize_chapters_incrementally(
     debug_dir: Path | None = None,
     config: ChapterSummaryConfig | None = None,
     action_cues: tuple[str, ...] = (),
+    flashback_cues: tuple[str, ...] = (),
 ) -> dict[str, dict]:
     result = {
         key: value
@@ -602,9 +605,9 @@ def summarize_chapters_incrementally(
             item_result = _run_chapter_summary_item(chapter=chapter, config=(config or ChapterSummaryConfig()))
             if debug_dir is not None and isinstance(item_result, dict) and item_result.get("error"):
                 _save_llm_debug_artifact(debug_dir, chapter, item_result)
-            result[key] = summarize_chapter_from_item_result(chapter, item_result, config=config, action_cues=action_cues)
+            result[key] = summarize_chapter_from_item_result(chapter, item_result, config=config, action_cues=action_cues, flashback_cues=flashback_cues)
         else:
-            result[key] = summarize_chapter(chapter, config=config, action_cues=action_cues)
+            result[key] = summarize_chapter(chapter, config=config, action_cues=action_cues, flashback_cues=flashback_cues)
         _save_chapter_summaries(result, output_file)
 
     return result
@@ -615,6 +618,7 @@ def summarize_chapter_from_item_result(
     item_result: dict | list[str],
     config: ChapterSummaryConfig | None = None,
     action_cues: tuple[str, ...] = (),
+    flashback_cues: tuple[str, ...] = (),
 ) -> dict:
     cfg = config or ChapterSummaryConfig()
     if isinstance(item_result, list):
@@ -638,6 +642,7 @@ def summarize_chapter_from_item_result(
             method="extractive_fallback",
             seed_flags=([llm_error] if llm_error else []) + ["fallback_used"],
             action_cues=action_cues,
+            flashback_cues=flashback_cues,
         )
     return {
         "chapter_id": str(chapter.get("id", "")).strip(),
@@ -678,7 +683,9 @@ def main() -> None:
     spacy_model = ctx.get("spacy_model", "en_core_web_lg")
     export_categories = ctx.get("export", {}).get("categories", {})
     language = export_categories.get("language") or infer_language(spacy_model)
-    action_cues = tuple(load_lang_config(language).get("action_cues", ()))
+    lang_config = load_lang_config(language)
+    action_cues = tuple(lang_config.get("action_cues", ()))
+    flashback_cues = tuple(lang_config.get("flashback_cues", ()))
 
     paths = _paths_from_payload(payload)
     out_file = paths.processing / "chapter_summaries.json"
@@ -689,6 +696,7 @@ def main() -> None:
         debug_dir=debug_dir,
         config=config,
         action_cues=action_cues,
+        flashback_cues=flashback_cues,
     )
     out = {"chapter_summaries": chapter_summaries}
 

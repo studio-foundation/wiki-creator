@@ -513,3 +513,32 @@ def test_detect_temporal_context_case_insensitive():
     content = "YEARS BEFORE she had trained under Arobynn."
     result = _detect_temporal_context(content, flashback_cues=("years before",))
     assert result == "flashback"
+
+
+def test_summarize_chapter_extractive_sets_temporal_context_present():
+    chapter = {
+        "id": "ch01", "title": "Chapter 1",
+        "content": "Celaena entered the castle and met Dorian.",
+    }
+    result = summarize_chapter(chapter, flashback_cues=("years before",))
+    assert result["temporal_context"] == "present"
+    assert result["flashback_anchor"] is None
+
+
+def test_summarize_chapter_extractive_detects_flashback():
+    chapter = {
+        "id": "ch02", "title": "Chapter 2",
+        "content": "Years before, she had trained under Arobynn in the Assassins Keep.",
+    }
+    result = summarize_chapter(chapter, flashback_cues=("years before",))
+    assert result["temporal_context"] == "flashback"
+    assert result["flashback_anchor"] is None
+
+
+def test_summarize_chapter_no_cues_gives_unknown():
+    chapter = {
+        "id": "ch03", "title": "Chapter 3",
+        "content": "Celaena studied the map and found nothing.",
+    }
+    result = summarize_chapter(chapter, flashback_cues=())
+    assert result["temporal_context"] == "unknown"
