@@ -784,8 +784,11 @@ def run_test_mode(
     print(f"\n{'All expected pairs found.' if all_ok else 'SOME PAIRS MISSING — check algorithm.'}")
 
     if "--classify" in sys.argv:
-        model_idx = sys.argv.index("--model") if "--model" in sys.argv else -1
-        cli_model = sys.argv[model_idx + 1] if model_idx >= 0 else None
+        try:
+            model_idx = sys.argv.index("--model")
+            cli_model = sys.argv[model_idx + 1] if model_idx + 1 < len(sys.argv) else None
+        except ValueError:
+            cli_model = None
         if not cli_model:
             print(
                 "[ERROR] --classify requires --model <model_name> (e.g. --model qwen2.5)",

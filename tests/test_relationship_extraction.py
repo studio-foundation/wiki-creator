@@ -5,6 +5,8 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.relationship_extraction import enrich_mentions_with_coref
 
+_TEST_MODEL = "qwen2.5"
+
 
 def test_enrich_mentions_adds_pronoun_sentence():
     """Pronoun sentence after a named entity must be added to its mentions."""
@@ -386,13 +388,13 @@ def test_call_ollama_classify_json_parses_response():
     mock_resp.__exit__ = MagicMock(return_value=False)
     mock_resp.read.return_value = b'{"response": "{\\"relationship_type\\": \\"ami\\", \\"direction\\": \\"sym\\\\u00e9trique\\", \\"evolution\\": \\"ils deviennent amis\\", \\"key_moments\\": [\\"ch01: rencontre\\"]}"}'
     with patch("urllib.request.urlopen", return_value=mock_resp):
-        result = _call_ollama_classify_json("some prompt", "qwen2.5", "http://localhost:11434", timeout=10)
+        result = _call_ollama_classify_json("some prompt", _TEST_MODEL, "http://localhost:11434", timeout=10)
     assert result["relationship_type"] == "ami"
 
 
 def test_call_ollama_classify_json_returns_none_on_network_error():
     with patch("urllib.request.urlopen", side_effect=urllib.error.URLError("refused")):
-        result = _call_ollama_classify_json("prompt", "qwen2.5", "http://localhost:11434", timeout=10)
+        result = _call_ollama_classify_json("prompt", _TEST_MODEL, "http://localhost:11434", timeout=10)
     assert result is None
 
 
@@ -402,7 +404,7 @@ def test_call_ollama_classify_json_returns_none_on_bad_json():
     mock_resp.__exit__ = MagicMock(return_value=False)
     mock_resp.read.return_value = b'{"response": "not json at all"}'
     with patch("urllib.request.urlopen", return_value=mock_resp):
-        result = _call_ollama_classify_json("prompt", "qwen2.5", "http://localhost:11434", timeout=10)
+        result = _call_ollama_classify_json("prompt", _TEST_MODEL, "http://localhost:11434", timeout=10)
     assert result is None
 
 
@@ -437,7 +439,7 @@ def test_classify_relationships_populates_type_on_success():
     }
     with patch("scripts.relationship_extraction._check_ollama_available", return_value=True), \
          patch("scripts.relationship_extraction._call_ollama_classify_json", return_value=ollama_response):
-        result = classify_relationships(_SAMPLE_RELS, model="qwen2.5", ollama_url=_OLLAMA_URL)
+        result = classify_relationships(_SAMPLE_RELS, model=_TEST_MODEL, ollama_url=_OLLAMA_URL)
     assert result[0]["relationship_type"] == "antagoniste"
     assert result[0]["direction"] == "symétrique"
     assert result[0]["key_moments"] == ["ch01: première rencontre"]
@@ -445,7 +447,7 @@ def test_classify_relationships_populates_type_on_success():
 
 def test_classify_relationships_returns_unchanged_when_ollama_unavailable():
     with patch("scripts.relationship_extraction._check_ollama_available", return_value=False):
-        result = classify_relationships(_SAMPLE_RELS, model="qwen2.5", ollama_url=_OLLAMA_URL)
+        result = classify_relationships(_SAMPLE_RELS, model=_TEST_MODEL, ollama_url=_OLLAMA_URL)
     assert result[0]["relationship_type"] is None
     assert len(result) == 1
 
@@ -453,7 +455,7 @@ def test_classify_relationships_returns_unchanged_when_ollama_unavailable():
 def test_classify_relationships_keeps_null_on_per_pair_failure():
     with patch("scripts.relationship_extraction._check_ollama_available", return_value=True), \
          patch("scripts.relationship_extraction._call_ollama_classify_json", return_value=None):
-        result = classify_relationships(_SAMPLE_RELS, model="qwen2.5", ollama_url=_OLLAMA_URL)
+        result = classify_relationships(_SAMPLE_RELS, model=_TEST_MODEL, ollama_url=_OLLAMA_URL)
     assert result[0]["relationship_type"] is None
     assert len(result) == 1  # pair still included, not dropped
 
@@ -462,7 +464,7 @@ import io as _io
 import json as _json
 
 
-def _make_pipeline_payload(classify=True, llm_model="qwen2.5", include_llm_model=True):
+def _make_pipeline_payload(classify=True, llm_model=_TEST_MODEL, include_llm_model=True):
     additional_lines = [f"classify: {str(classify).lower()}"]
     if include_llm_model:
         additional_lines.append(f"llm_model: {llm_model}")
@@ -493,12 +495,12 @@ def test_pipeline_passes_llm_model_to_classify(monkeypatch):
     monkeypatch.setattr(rel_mod, "_load_mentions_from_files", lambda p: {})
     monkeypatch.setattr(rel_mod, "_paths_from_payload", lambda p: None)
 
-    payload = _make_pipeline_payload(classify=True, llm_model="qwen2.5")
+    payload = _make_pipeline_payload(classify=True, llm_model=_TEST_MODEL)
     monkeypatch.setattr("sys.stdin", _io.StringIO(_json.dumps(payload)))
     monkeypatch.setattr("sys.stdout", _io.StringIO())
 
     rel_mod.main()
-    assert captured.get("model") == "qwen2.5"
+    assert captured.get("model") == _TEST_MODEL
 
 
 def test_pipeline_skips_classify_when_no_llm_model(monkeypatch, capsys):
