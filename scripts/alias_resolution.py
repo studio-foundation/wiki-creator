@@ -51,7 +51,7 @@ def _empty_stats() -> dict:
     return {
         "candidates_considered": 0,
         "merges_applied": 0,
-        "merges_by_method": {"pattern": 0, "cooccurrence": 0, "llm": 0, "title_alias": 0},
+        "merges_by_method": {"pattern": 0, "cooccurrence": 0, "llm": 0, "title_alias": 0, "role_symmetric": 0},
         "ambiguous_pairs": 0,
         "llm_attempts": 0,
         "llm_confirmed": 0,
@@ -603,11 +603,30 @@ def resolve_aliases(
     reveal_words: tuple[str, ...] = (),
     role_words: list[str] | None = None,
     pattern_templates: tuple[str, ...] = (),
+    relationships: list[dict] | None = None,
+    role_symmetric_min_shared: int = 2,
 ) -> dict:
     stats = _empty_stats()
     role_words = role_words or []
+    relationships = relationships or []
     resolved: list[dict] = []
     consumed: set[int] = set()
+
+    # Pre-compute role-symmetric candidate pairs.
+    # sym_candidates is always initialized so the inner loop reference is safe.
+    sym_candidates: list[tuple[dict, dict, dict]] = []
+    role_sym_pairs: set[tuple[int, int]] = set()
+    if relationships:
+        sym_candidates = _detect_role_symmetric_pairs(
+            entities, relationships,
+            min_shared=role_symmetric_min_shared,
+        )
+        name_to_idx = {e.get("canonical_name", ""): i for i, e in enumerate(entities)}
+        for ea, eb, _ev in sym_candidates:
+            ia = name_to_idx.get(ea.get("canonical_name", ""))
+            ib = name_to_idx.get(eb.get("canonical_name", ""))
+            if ia is not None and ib is not None:
+                role_sym_pairs.add((min(ia, ib), max(ia, ib)))
 
     for index, entity in enumerate(entities):
         if index in consumed:
@@ -625,6 +644,7 @@ def resolve_aliases(
                 continue
 
             stats["candidates_considered"] += 1
+
             evidence = _detect_pattern_match(entity, candidate, persons_full, pattern_templates)
             if evidence:
                 merged = _merge_entities(entity, candidate, evidence, persons_full, role_words=role_words)
@@ -642,7 +662,20 @@ def resolve_aliases(
                 break
 
             reveal = _detect_reveal_signal(entity, candidate, persons_full, reveal_words=reveal_words)
+
+            # Check role-symmetric signal only when reveal is absent
+            role_sym = None
             if not reveal:
+                pair_key = (min(index, candidate_index), max(index, candidate_index))
+                if pair_key in role_sym_pairs:
+                    for ea, eb, ev in sym_candidates:
+                        curr_names = {entity.get("canonical_name", ""), candidate.get("canonical_name", "")}
+                        if {ea.get("canonical_name", ""), eb.get("canonical_name", "")} == curr_names:
+                            role_sym = ev
+                            break
+
+            signal = reveal or role_sym
+            if not signal:
                 continue
 
             if llm_confirmer is None:
@@ -654,7 +687,7 @@ def resolve_aliases(
                 decision = llm_confirmer({
                     "entity_a": entity,
                     "entity_b": candidate,
-                    "evidence": reveal,
+                    "evidence": signal,
                     "persons_full": persons_full,
                 }) or {}
             except Exception:
@@ -663,14 +696,16 @@ def resolve_aliases(
                 continue
 
             if decision.get("same_person"):
+                method = signal.get("method", "llm")
                 merged_evidence = {
-                    "method": "llm",
+                    "method": method if method == "role_symmetric" else "llm",
                     "confidence": decision.get("confidence", "medium"),
-                    "snippet": decision.get("evidence", reveal["snippet"]),
+                    "snippet": decision.get("evidence", signal["snippet"]),
                 }
                 merged = _merge_entities(entity, candidate, merged_evidence, persons_full, role_words=role_words)
                 stats["merges_applied"] += 1
-                stats["merges_by_method"]["llm"] += 1
+                stat_key = "role_symmetric" if method == "role_symmetric" else "llm"
+                stats["merges_by_method"][stat_key] += 1
                 stats["llm_confirmed"] += 1
                 consumed.add(candidate_index)
                 break
@@ -742,6 +777,8 @@ def main() -> None:
         entities, persons_full=persons_full, narrator=narrator,
         llm_confirmer=llm_confirmer, reveal_words=reveal_words,
         role_words=role_words, pattern_templates=pattern_templates,
+        relationships=relationships,
+        role_symmetric_min_shared=ctx.get("role_symmetric_min_shared", 2),
     )
     json.dump(result, sys.stdout, ensure_ascii=False)
 

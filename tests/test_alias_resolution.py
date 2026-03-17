@@ -893,6 +893,69 @@ def test_detect_role_symmetric_no_false_positive_with_one_shared_third_party():
     assert pairs == []
 
 
+def test_resolve_aliases_role_symmetric_with_llm_merges():
+    """Role-symmetric pairs go to LLM; confirmed pairs are merged with Brullo winning over Master."""
+    from scripts.alias_resolution import resolve_aliases
+    brullo = {
+        "canonical_name": "Brullo",
+        "type": "PERSON",
+        "aliases": ["Brullo"],
+        "source_ids": [],
+        "relevant": True,
+    }
+    master = {
+        "canonical_name": "Master",
+        "type": "PERSON",
+        "aliases": ["Master"],
+        "source_ids": [],
+        "relevant": True,
+    }
+    relationships = [
+        {"entity_a": "Celaena", "entity_b": "Master",  "relationship_type": "mentor/protégé", "cooccurrence_count": 12},
+        {"entity_a": "Brullo",  "entity_b": "Celaena", "relationship_type": "mentor/protégé", "cooccurrence_count": 8},
+        {"entity_a": "Dorian",  "entity_b": "Master",  "relationship_type": "connaissance",   "cooccurrence_count": 3},
+        {"entity_a": "Dorian",  "entity_b": "Brullo",  "relationship_type": "connaissance",   "cooccurrence_count": 2},
+    ]
+
+    def confirm_yes(candidate):
+        return {"same_person": True, "confidence": "medium", "evidence": "same role toward Celaena"}
+
+    result = resolve_aliases(
+        [brullo, master],
+        persons_full={},
+        llm_confirmer=confirm_yes,
+        relationships=relationships,
+        role_words=["master"],
+        role_symmetric_min_shared=2,
+    )
+    assert len(result["entities"]) == 1
+    assert result["entities"][0]["canonical_name"] == "Brullo"
+    assert result["stats"]["merges_by_method"].get("role_symmetric", 0) >= 1
+
+
+def test_resolve_aliases_role_symmetric_no_llm_stays_ambiguous():
+    """Without LLM confirmer, role-symmetric candidates stay as ambiguous_pairs."""
+    from scripts.alias_resolution import resolve_aliases
+    brullo = {"canonical_name": "Brullo", "type": "PERSON", "aliases": ["Brullo"], "source_ids": [], "relevant": True}
+    master = {"canonical_name": "Master", "type": "PERSON", "aliases": ["Master"], "source_ids": [], "relevant": True}
+    relationships = [
+        {"entity_a": "Celaena", "entity_b": "Master",  "relationship_type": "mentor/protégé", "cooccurrence_count": 12},
+        {"entity_a": "Brullo",  "entity_b": "Celaena", "relationship_type": "mentor/protégé", "cooccurrence_count": 8},
+        {"entity_a": "Dorian",  "entity_b": "Master",  "relationship_type": "connaissance",   "cooccurrence_count": 3},
+        {"entity_a": "Dorian",  "entity_b": "Brullo",  "relationship_type": "connaissance",   "cooccurrence_count": 2},
+    ]
+    result = resolve_aliases(
+        [brullo, master],
+        persons_full={},
+        llm_confirmer=None,
+        relationships=relationships,
+        role_words=["master"],
+        role_symmetric_min_shared=2,
+    )
+    assert len(result["entities"]) == 2  # not merged
+    assert result["stats"]["ambiguous_pairs"] >= 1
+
+
 def test_detect_role_symmetric_skips_high_direct_cooccurrence():
     """If A and B already co-occur heavily, they are likely already handled."""
     from scripts.alias_resolution import _detect_role_symmetric_pairs
