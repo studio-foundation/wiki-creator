@@ -10,6 +10,13 @@ coref: false
 use_llm: true
 classify: true
 llm_model: qwen2.5
+novel_summary: |
+  Celaena Sardothien is a legendary assassin serving as a slave in the salt mines of Endovier.
+  Prince Dorian offers her freedom if she competes in a tournament to become the king's Champion.
+  Captain Chaol Westfall escorts and trains her; he and Dorian are close friends.
+  Duke Perrington serves as the king's enforcer and acts as an antagonist to Celaena.
+  The king rules with an iron fist and is the primary antagonistic force of the story.
+  The tournament pits competitors against each other in a series of deadly trials.
 workers: 8
 
 # Entity importance classification — 'auto' uses percentile distribution
