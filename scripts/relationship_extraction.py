@@ -37,7 +37,7 @@ Output (stdout):
 
 Standalone test:
   python scripts/relationship_extraction.py --test
-  python scripts/relationship_extraction.py --test --classify
+  python scripts/relationship_extraction.py --test --classify --model qwen2.5
   python scripts/relationship_extraction.py --test --window 3 --threshold 2
   python scripts/relationship_extraction.py --test --coref
   python scripts/relationship_extraction.py --live --coref
@@ -55,7 +55,10 @@ Workers / RAM budget (LingMessCoref ~590M params per worker):
 import json
 import os
 import re
+import socket
 import sys
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 import yaml
@@ -80,6 +83,7 @@ DEFAULT_WINDOW = 5
 DEFAULT_THRESHOLD = 5
 DEFAULT_MIN_COOCCURRENCE = 3
 DEFAULT_MIN_CHAPTERS_TOGETHER = 2
+_OLLAMA_URL = "http://localhost:11434"
 
 
 def build_cooccurrence_graph(
@@ -780,14 +784,25 @@ def run_test_mode(
     print(f"\n{'All expected pairs found.' if all_ok else 'SOME PAIRS MISSING — check algorithm.'}")
 
     if "--classify" in sys.argv:
+        try:
+            model_idx = sys.argv.index("--model")
+            cli_model = sys.argv[model_idx + 1] if model_idx + 1 < len(sys.argv) else None
+        except ValueError:
+            cli_model = None
+        if not cli_model:
+            print(
+                "[ERROR] --classify requires --model <model_name> (e.g. --model qwen2.5)",
+                file=sys.stderr,
+            )
+            sys.exit(1)
         print("\n=== CLASSIFY MODE ===")
-        relationships = classify_relationships(relationships)
+        relationships = classify_relationships(relationships, model=cli_model)
         classified_count = sum(1 for r in relationships if r.get("relationship_type"))
         print(f"Classified {classified_count}/{len(relationships)} relationships")
         for r in relationships[:5]:
             print(f"  {r['entity_a']} ↔ {r['entity_b']}: {r['relationship_type']} ({r['direction']})")
             if r.get("evolution"):
-                print(f"    Evolution: {r['evolution']}")
+                print(f"    evolution: {r['evolution']}")
         stats["classified"] = classified_count
 
     print(f"\n=== STATS ===")
@@ -795,13 +810,60 @@ def run_test_mode(
         print(f"  {k}: {v}")
 
 
-def classify_relationships(relationships: list[dict]) -> list[dict]:
-    """Classify relationships using Haiku. Fails gracefully per pair."""
-    import anthropic
+def _check_ollama_available(url: str, timeout: int = 2) -> bool:
+    """Return True if Ollama is reachable at url/api/tags."""
+    try:
+        req = urllib.request.Request(f"{url}/api/tags", method="HEAD")
+        with urllib.request.urlopen(req, timeout=timeout):
+            return True
+    except (urllib.error.URLError, socket.timeout, OSError):
+        return False
 
-    client = anthropic.Anthropic()
+
+def _call_ollama_classify_json(
+    prompt: str, model: str, ollama_url: str, timeout: int = 30
+) -> dict | None:
+    """Call Ollama /api/generate and parse JSON response. Returns None on any failure."""
+    body = json.dumps({
+        "model": model,
+        "prompt": prompt,
+        "stream": False,
+        "options": {"temperature": 0.0, "num_predict": 300},
+    }).encode()
+    req = urllib.request.Request(
+        f"{ollama_url}/api/generate",
+        data=body,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = json.loads(resp.read())
+        raw = data.get("response", "")
+        return json.loads(raw)
+    except (urllib.error.URLError, socket.timeout, OSError, json.JSONDecodeError):
+        return None
+
+
+def classify_relationships(
+    relationships: list[dict],
+    *,
+    model: str,
+    ollama_url: str = _OLLAMA_URL,
+) -> list[dict]:
+    """Classify relationships using Ollama. Fails gracefully per pair.
+
+    ``model`` is required — read it from the book YAML (llm_model) or the
+    relationship-classifier agent YAML. Never hardcode it at the call site.
+    """
+    if not _check_ollama_available(ollama_url):
+        print(
+            f"  [ERROR] Ollama not available at {ollama_url} — classification skipped.",
+            file=sys.stderr,
+        )
+        return relationships
+
     result = []
-
     for rel in relationships:
         contexts_text = "\n".join(
             f'{i+1}. "{ctx}"' for i, ctx in enumerate(rel["sample_contexts"][:3])
@@ -822,13 +884,8 @@ Classifie leur relation. Réponds en JSON uniquement, sans markdown :
   "key_moments": ["chXX: description courte"]
 }}"""
 
-        try:
-            response = client.messages.create(
-                model="claude-haiku-4-5-20251001",
-                max_tokens=300,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            classification = json.loads(response.content[0].text)
+        classification = _call_ollama_classify_json(prompt, model, ollama_url)
+        if classification:
             rel = {
                 **rel,
                 "relationship_type": classification.get("relationship_type"),
@@ -836,9 +893,11 @@ Classifie leur relation. Réponds en JSON uniquement, sans markdown :
                 "evolution": classification.get("evolution"),
                 "key_moments": classification.get("key_moments", []),
             }
-        except Exception as e:
-            print(f"  [WARN] classification failed for {rel['entity_a']}↔{rel['entity_b']}: {e}", file=sys.stderr)
-
+        else:
+            print(
+                f"  [WARN] classification failed for {rel['entity_a']}↔{rel['entity_b']}",
+                file=sys.stderr,
+            )
         result.append(rel)
 
     return result
@@ -1148,12 +1207,16 @@ def main() -> None:
     min_cooccurrence_val = None
     min_chapters_together = DEFAULT_MIN_CHAPTERS_TOGETHER
     spacy_model = "fr_core_news_lg"
+    llm_model: str | None = None
+    ollama_url = os.environ.get("OLLAMA_URL", _OLLAMA_URL)
     pronouns: frozenset = frozenset(load_lang_config("fr").get("pronouns", []))
     raw_context = payload.get("additional_context", "")
     if raw_context:
         try:
             additional = yaml.safe_load(raw_context) or {}
             do_classify = bool(additional.get("classify", False))
+            llm_model = additional.get("llm_model") or additional.get("model")
+            ollama_url = additional.get("ollama_url", os.environ.get("OLLAMA_URL", _OLLAMA_URL))
             do_coref = bool(additional.get("coref", False))
             window_size = int(additional.get("window", window_size))
             threshold = int(additional.get("threshold", threshold))
@@ -1195,8 +1258,14 @@ def main() -> None:
     )
 
     if do_classify:
-        relationships = classify_relationships(relationships)
-        stats["classified"] = sum(1 for r in relationships if r.get("relationship_type"))
+        if not llm_model:
+            print(
+                "  [ERROR] classify=true but no llm_model/model in additional_context — classification skipped.",
+                file=sys.stderr,
+            )
+        else:
+            relationships = classify_relationships(relationships, model=llm_model, ollama_url=ollama_url)
+            stats["classified"] = sum(1 for r in relationships if r.get("relationship_type"))
 
     narrator = resolution_output.get("narrator", None)
 
