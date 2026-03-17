@@ -527,3 +527,96 @@ def test_empty_stats_has_title_alias_key():
     stats = _empty_stats()
     assert "title_alias" in stats["merges_by_method"]
     assert stats["merges_by_method"]["title_alias"] == 0
+
+
+def test_resolve_aliases_title_alias_with_llm_merges():
+    """Title alias pair is merged when LLM confirms same_person."""
+    from scripts.alias_resolution import resolve_aliases
+    captain = {
+        "canonical_name": "Captain Westfall",
+        "type": "PERSON",
+        "aliases": ["Captain Westfall"],
+        "source_ids": [],
+        "relevant": True,
+    }
+    chaol = {
+        "canonical_name": "Chaol Westfall",
+        "type": "PERSON",
+        "aliases": ["Chaol Westfall", "Chaol"],
+        "source_ids": [],
+        "relevant": True,
+    }
+
+    def confirm_yes(candidate):
+        return {"same_person": True, "confidence": "high", "evidence": "same person"}
+
+    result = resolve_aliases(
+        [captain, chaol],
+        persons_full={},
+        llm_confirmer=confirm_yes,
+        role_words=["captain"],
+    )
+    assert len(result["entities"]) == 1
+    entity = result["entities"][0]
+    assert "Captain Westfall" in entity["aliases"] or "Chaol Westfall" in entity["aliases"]
+    assert result["stats"]["merges_applied"] == 1
+    assert result["stats"]["llm_confirmed"] == 1
+
+
+def test_resolve_aliases_title_alias_without_llm_increments_ambiguous():
+    """Title alias pair is not merged when no LLM confirmer available."""
+    from scripts.alias_resolution import resolve_aliases
+    captain = {
+        "canonical_name": "Captain Westfall",
+        "type": "PERSON",
+        "aliases": ["Captain Westfall"],
+        "source_ids": [],
+        "relevant": True,
+    }
+    chaol = {
+        "canonical_name": "Chaol Westfall",
+        "type": "PERSON",
+        "aliases": ["Chaol Westfall"],
+        "source_ids": [],
+        "relevant": True,
+    }
+    result = resolve_aliases(
+        [captain, chaol],
+        persons_full={},
+        llm_confirmer=None,
+        role_words=["captain"],
+    )
+    assert len(result["entities"]) == 2
+    assert result["stats"]["merges_applied"] == 0
+    assert result["stats"]["ambiguous_pairs"] == 1
+
+
+def test_resolve_aliases_title_alias_llm_rejects_no_merge():
+    """Title alias pair is not merged when LLM says same_person=False."""
+    from scripts.alias_resolution import resolve_aliases
+    captain = {
+        "canonical_name": "Captain Flint",
+        "type": "PERSON",
+        "aliases": ["Captain Flint"],
+        "source_ids": [],
+        "relevant": True,
+    }
+    flint = {
+        "canonical_name": "Flint",
+        "type": "PERSON",
+        "aliases": ["Flint"],
+        "source_ids": [],
+        "relevant": True,
+    }
+
+    def confirm_no(candidate):
+        return {"same_person": False, "confidence": "high", "evidence": "different people"}
+
+    result = resolve_aliases(
+        [captain, flint],
+        persons_full={},
+        llm_confirmer=confirm_no,
+        role_words=["captain"],
+    )
+    assert len(result["entities"]) == 2
+    assert result["stats"]["merges_applied"] == 0

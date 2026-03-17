@@ -467,8 +467,10 @@ def resolve_aliases(
     narrator=None,
     llm_confirmer=None,
     reveal_words=_REVEAL_WORDS,
+    role_words: list[str] | None = None,
 ) -> dict:
     stats = _empty_stats()
+    role_words = role_words or []
     resolved: list[dict] = []
     consumed: set[int] = set()
 
@@ -495,6 +497,38 @@ def resolve_aliases(
                 stats["merges_by_method"]["pattern"] += 1
                 consumed.add(candidate_index)
                 break
+
+            title = _detect_title_alias(entity, candidate, role_words)
+            if title:
+                if llm_confirmer is None:
+                    stats["ambiguous_pairs"] += 1
+                    continue
+                stats["llm_attempts"] += 1
+                try:
+                    decision = llm_confirmer({
+                        "entity_a": entity,
+                        "entity_b": candidate,
+                        "evidence": title,
+                        "persons_full": persons_full,
+                    }) or {}
+                except Exception:
+                    stats["llm_failed"] += 1
+                    stats["ambiguous_pairs"] += 1
+                    continue
+                if decision.get("same_person"):
+                    merged_evidence = {
+                        "method": "title_alias",
+                        "confidence": decision.get("confidence", "medium"),
+                        "snippet": decision.get("evidence", title["snippet"]),
+                    }
+                    merged = _merge_entities(entity, candidate, merged_evidence, persons_full)
+                    stats["merges_applied"] += 1
+                    stats["merges_by_method"]["title_alias"] += 1
+                    stats["llm_confirmed"] += 1
+                    consumed.add(candidate_index)
+                    break
+                stats["ambiguous_pairs"] += 1
+                continue
 
             reveal = _detect_reveal_signal(entity, candidate, persons_full, reveal_words=reveal_words)
             if not reveal:
