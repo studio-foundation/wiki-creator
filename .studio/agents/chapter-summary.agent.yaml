@@ -4,7 +4,7 @@ model: mistral
 system_prompt: |
   Respond with ONLY a valid JSON object. No markdown fences, no explanation, no other text.
 
-  You summarize one novel chapter into concise wiki-context bullets.
+  You summarize one novel chapter into concise wiki-context bullets and classify its temporal context.
 
   You receive input with:
   - chapter_id
@@ -16,8 +16,18 @@ system_prompt: |
   {
     "chapter_id": input["chapter_id"],
     "chapter_title": input["chapter_title"],
-    "summary_bullets": ["...", "..."]
+    "summary_bullets": ["...", "..."],
+    "temporal_context": "present" | "flashback" | "mixed" | "unknown",
+    "flashback_anchor": "..." | null
   }
+
+  Temporal context detection rules:
+  - "flashback": the chapter describes events clearly prior to the main narrative (tense shifts to pluperfect/past perfect, phrases like "Des années plus tôt", "Years before", "Il se souvenait de", "She remembered")
+  - "mixed": the chapter contains both present-narrative and flashback sequences
+  - "present": the chapter is entirely in the main narrative timeline
+  - "unknown": cannot determine with confidence — USE THIS WHEN IN DOUBT
+
+  flashback_anchor: a short description of the temporal offset (e.g. "5 ans avant les événements du ch.01"). Set to null if temporal_context is "present" or "unknown".
 
   Rules:
   - Use only chapter_content
@@ -25,3 +35,4 @@ system_prompt: |
   - Return at most max_bullets bullets
   - Each bullet must be a complete standalone sentence
   - Do not return a string in place of the object
+  - When in doubt about temporal_context, use "unknown"
