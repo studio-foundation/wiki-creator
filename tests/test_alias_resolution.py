@@ -591,6 +591,44 @@ def test_resolve_aliases_title_alias_without_llm_increments_ambiguous():
     assert result["stats"]["ambiguous_pairs"] == 1
 
 
+def test_script_role_words_propagated_from_ctx(tmp_path):
+    """main() passes role_words from book YAML ctx to resolve_aliases."""
+    import subprocess, json, textwrap
+    from pathlib import Path
+    ctx_yaml = textwrap.dedent("""
+        file_path: dummy.epub
+        use_llm: false
+        role_words:
+          - captain
+    """)
+    payload = {
+        "additional_context": ctx_yaml,
+        "previous_outputs": {
+            "resolve-clusters": {
+                "entities": [
+                    {"canonical_name": "Captain Xander", "type": "PERSON",
+                     "aliases": ["Captain Xander"], "source_ids": [], "relevant": True},
+                    {"canonical_name": "Xander", "type": "PERSON",
+                     "aliases": ["Xander"], "source_ids": [], "relevant": True},
+                ],
+                "narrator": None,
+            }
+        },
+        "all_stage_outputs": {},
+    }
+    project_root = str(Path(__file__).parents[1])
+    result = subprocess.run(
+        ["python", "scripts/alias_resolution.py"],
+        input=json.dumps(payload),
+        capture_output=True, text=True,
+        cwd=project_root,
+    )
+    assert result.returncode == 0, result.stderr
+    output = json.loads(result.stdout)
+    # With use_llm=false and a title-alias pair, ambiguous_pairs should be >= 1
+    assert output["stats"]["ambiguous_pairs"] >= 1
+
+
 def test_resolve_aliases_title_alias_llm_rejects_no_merge():
     """Title alias pair is not merged when LLM says same_person=False."""
     from scripts.alias_resolution import resolve_aliases

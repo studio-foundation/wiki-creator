@@ -583,6 +583,7 @@ def main() -> None:
     export_categories = ctx.get("export", {}).get("categories", {})
     language = export_categories.get("language") or infer_language(spacy_model)
     reveal_words = tuple(load_lang_config(language).get("reveal_words", _REVEAL_WORDS))
+    role_words: list[str] = list(ctx.get("role_words", []))
 
     persons_full = {}
     try:
@@ -614,6 +615,7 @@ def main() -> None:
     result = resolve_aliases(
         entities, persons_full=persons_full, narrator=narrator,
         llm_confirmer=llm_confirmer, reveal_words=reveal_words,
+        role_words=role_words,
     )
     json.dump(result, sys.stdout, ensure_ascii=False)
 
