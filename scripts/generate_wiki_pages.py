@@ -250,19 +250,33 @@ def build_prompt(entity: dict, book_title: str, sections: list[str]) -> str:
         rel_lines.append(line)
     relationships_block = "\n".join(rel_lines) if rel_lines else ""
 
-    chapter_summary_lines = []
+    present_lines = []
+    backstory_lines = []
     for chapter in chapter_summary_context[:8]:
         chapter_key = chapter.get("chapter_key", "").strip()
         if not chapter_key:
             continue
-        chapter_summary_lines.append(f"  - Chapter: {chapter_key}")
+        temporal = chapter.get("temporal_context", "unknown")
+        entry_lines = [f"  - Chapter: {chapter_key}"]
         for bullet in chapter.get("summary_bullets", [])[:3]:
-            chapter_summary_lines.append(f"    - {bullet}")
-    chapter_summary_block = (
-        "\n".join(chapter_summary_lines)
-        if chapter_summary_lines
-        else "  (no chapter summaries available)"
+            entry_lines.append(f"    - {bullet}")
+        if temporal == "flashback":
+            backstory_lines.extend(entry_lines)
+        else:
+            present_lines.extend(entry_lines)
+
+    present_block = (
+        "## Chapter summary context\n" + "\n".join(present_lines)
+        if present_lines
+        else "## Chapter summary context\n  (no chapter summaries available)"
     )
+    backstory_block = (
+        "## Backstory context (flashback chapters — events before the main narrative)\n"
+        + "\n".join(backstory_lines)
+        if backstory_lines
+        else ""
+    )
+    chapter_summary_block = present_block + ("\n\n" + backstory_block if backstory_block else "")
 
     # --- Paramètres de génération ---
     alias_str = ", ".join(a for a in aliases if a != name) or "none"
