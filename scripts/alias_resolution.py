@@ -613,7 +613,9 @@ def resolve_aliases(
     consumed: set[int] = set()
 
     # Pre-compute role-symmetric candidate pairs.
-    role_sym_map: dict[tuple[int, int], dict] = {}
+    # sym_candidates is always initialized so the inner loop reference is safe.
+    sym_candidates: list[tuple[dict, dict, dict]] = []
+    role_sym_pairs: set[tuple[int, int]] = set()
     if relationships:
         sym_candidates = _detect_role_symmetric_pairs(
             entities, relationships,
@@ -665,7 +667,12 @@ def resolve_aliases(
             role_sym = None
             if not reveal:
                 pair_key = (min(index, candidate_index), max(index, candidate_index))
-                role_sym = role_sym_map.get(pair_key)
+                if pair_key in role_sym_pairs:
+                    for ea, eb, ev in sym_candidates:
+                        curr_names = {entity.get("canonical_name", ""), candidate.get("canonical_name", "")}
+                        if {ea.get("canonical_name", ""), eb.get("canonical_name", "")} == curr_names:
+                            role_sym = ev
+                            break
 
             signal = reveal or role_sym
             if not signal:
