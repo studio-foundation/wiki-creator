@@ -24,6 +24,7 @@ Side effects:
 
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -258,6 +259,12 @@ def build_related_context(
     return related_rows[:MAX_RELATED_ENTITIES]
 
 
+def _epub_key_to_chapter_label(key: str) -> str | None:
+    """Convert 'C25.xhtml' -> 'Chapter 25'. Returns None if key doesn't match pattern."""
+    m = re.match(r'^[Cc](\d+)\.xhtml$', key)
+    return f"Chapter {int(m.group(1))}" if m else None
+
+
 def build_chapter_summary_context(
     entity: dict,
     chapter_summaries: dict[str, dict],
@@ -274,7 +281,12 @@ def build_chapter_summary_context(
     chapter_keys = sorted(context_by_chapter.keys())[:chapter_summary_max]
     result = []
     for chapter_key in chapter_keys:
-        summary = chapter_summaries.get(chapter_key) or summaries_by_id.get(chapter_key)
+        label = _epub_key_to_chapter_label(chapter_key)
+        summary = (
+            chapter_summaries.get(chapter_key)
+            or summaries_by_id.get(chapter_key)
+            or (chapter_summaries.get(label) if label else None)
+        )
         if not summary:
             continue
         bullets = [

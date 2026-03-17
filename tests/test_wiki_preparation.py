@@ -284,6 +284,36 @@ def test_build_entity_bundle_adds_chapter_summary_context_when_summaries_are_key
     assert [x["chapter_key"] for x in bundle["chapter_summary_context"]] == ["ch01", "ch02"]
 
 
+def test_build_chapter_summary_context_matches_xhtml_keys_to_chapter_title_keys():
+    """context_by_chapter uses 'C{N}.xhtml' keys; chapter_summaries uses 'Chapter N' — must match."""
+    persons, places, orgs, events = _registries()
+    entity = {
+        "canonical_name": "Celaena",
+        "type": "PERSON",
+        "importance": "principal",
+        "source_ids": ["p1"],
+    }
+    chapter_summaries = {
+        "Chapter 25": {
+            "chapter_id": None,
+            "chapter_title": "Chapter 25",
+            "summary_bullets": ["Celaena faces the champion trials."],
+        },
+    }
+    context_by_chapter = {"C25.xhtml": ["She drew her blade."]}
+
+    from scripts.wiki_preparation import build_chapter_summary_context
+    result = build_chapter_summary_context(
+        entity=entity,
+        chapter_summaries=chapter_summaries,
+        chapter_summary_max=8,
+        context_by_chapter=context_by_chapter,
+    )
+    assert len(result) == 1
+    assert result[0]["chapter_key"] == "C25.xhtml"
+    assert result[0]["summary_bullets"] == ["Celaena faces the champion trials."]
+
+
 def test_build_entity_bundle_skips_chapter_summary_context_for_non_person():
     persons, places, orgs, events = _registries()
     entity = {
