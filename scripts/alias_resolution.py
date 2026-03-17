@@ -497,13 +497,14 @@ def _build_role_index(relationships: list[dict]) -> dict[tuple[str, str], list[s
         # A plays a role toward B
         key_a = (entity_b, rel_type)
         index.setdefault(key_a, [])
-        if entity_a not in index[key_a]:
-            index[key_a].append(entity_a)
+        # Normalize to lowercase for case-insensitive matching
+        if entity_a.lower() not in index[key_a]:
+            index[key_a].append(entity_a.lower())
         # B plays a role toward A
         key_b = (entity_a, rel_type)
         index.setdefault(key_b, [])
-        if entity_b not in index[key_b]:
-            index[key_b].append(entity_b)
+        if entity_b.lower() not in index[key_b]:
+            index[key_b].append(entity_b.lower())
     return index
 
 
@@ -516,6 +517,21 @@ def _direct_cooccurrence(name_a: str, name_b: str, relationships: list[dict]) ->
         if (ea == na and eb == nb) or (ea == nb and eb == na):
             return rel.get("cooccurrence_count", 0)
     return 0
+
+
+def _bucket_is_clean(
+    bucket: tuple[str, str],
+    role_index: dict[tuple[str, str], list[str]],
+    relationships: list[dict],
+    direct_cooc_max: int,
+) -> bool:
+    """Return True if no two co-inhabitants of the bucket have high direct cooccurrence."""
+    names_in_bucket = role_index.get(bucket, [])
+    for ii in range(len(names_in_bucket)):
+        for jj in range(ii + 1, len(names_in_bucket)):
+            if _direct_cooccurrence(names_in_bucket[ii], names_in_bucket[jj], relationships) > direct_cooc_max:
+                return False
+    return True
 
 
 def _detect_role_symmetric_pairs(
@@ -533,43 +549,40 @@ def _detect_role_symmetric_pairs(
     role_index = _build_role_index(relationships)
     persons = [e for e in entities if e.get("type") == "PERSON" and e.get("relevant", True)]
 
-    # Pre-compute which buckets are "clean": no two co-inhabitants have high direct cooccurrence.
-    # A contaminated bucket contains multiple entities that are already clearly distinct (high cooc),
-    # so it cannot be used as evidence that two entities sharing it are aliases.
-    def bucket_is_clean(names_in_bucket: list[str]) -> bool:
-        for ii in range(len(names_in_bucket)):
-            for jj in range(ii + 1, len(names_in_bucket)):
-                if _direct_cooccurrence(names_in_bucket[ii], names_in_bucket[jj], relationships) > direct_cooc_max:
-                    return False
-        return True
-
-    clean_buckets: set[tuple[str, str]] = {
-        key for key, names in role_index.items() if bucket_is_clean(names)
-    }
-
-    # For each entity, collect its set of (third_party, rel_type) buckets (clean only).
-    def signature(entity: dict) -> set[tuple[str, str]]:
-        name = entity.get("canonical_name", "")
-        result: set[tuple[str, str]] = set()
+    # Pre-compute signatures for all PERSON entities (once, not per-pair)
+    entity_signatures: dict[str, set[tuple[str, str]]] = {}
+    for entity in persons:
+        name = entity.get("canonical_name", "").lower()
+        sig: set[tuple[str, str]] = set()
         for (third_party, rel_type), names in role_index.items():
-            if name in names and (third_party, rel_type) in clean_buckets:
-                result.add((third_party, rel_type))
-        return result
+            if name in names:
+                sig.add((third_party, rel_type))
+        entity_signatures[name] = sig
 
     pairs: list[tuple[dict, dict, dict]] = []
     for i in range(len(persons)):
         for j in range(i + 1, len(persons)):
             a, b = persons[i], persons[j]
-            name_a = a.get("canonical_name", "")
-            name_b = b.get("canonical_name", "")
+            name_a = a.get("canonical_name", "").lower()
+            name_b = b.get("canonical_name", "").lower()
             if _direct_cooccurrence(name_a, name_b, relationships) > direct_cooc_max:
                 continue
-            shared = signature(a) & signature(b)
+            shared = entity_signatures.get(name_a, set()) & entity_signatures.get(name_b, set())
             if len(shared) < min_shared:
                 continue
-            shared_list = sorted(shared)
+            # Check for contaminated buckets (shared via confirmed-distinct characters)
+            clean_shared = {
+                bucket for bucket in shared
+                if _bucket_is_clean(bucket, role_index, relationships, direct_cooc_max)
+            }
+            if len(clean_shared) < min_shared:
+                continue
+            shared_list = sorted(clean_shared)
+            # Use original (non-lowercased) names for the snippet
+            orig_name_a = a.get("canonical_name", "")
+            orig_name_b = b.get("canonical_name", "")
             snippet = "; ".join(
-                f"{name_a} and {name_b} both have '{rel}' relation toward '{third}'"
+                f"{orig_name_a} and {orig_name_b} both have '{rel}' relation toward '{third}'"
                 for third, rel in shared_list[:2]
             )
             evidence = {

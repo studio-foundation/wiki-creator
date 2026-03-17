@@ -814,7 +814,7 @@ def test_build_role_index_groups_by_third_party_and_rel_type():
     # ("Celaena", "mentor/protégé") should have both Master and Brullo
     key = ("Celaena", "mentor/protégé")
     assert key in index
-    assert set(index[key]) == {"Master", "Brullo"}
+    assert set(index[key]) == {"master", "brullo"}
 
 
 def test_build_role_index_skips_unclassified():
