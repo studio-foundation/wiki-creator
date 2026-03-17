@@ -44,40 +44,6 @@ from wiki_creator.paths import book_paths_from_epub, BookPaths
 from wiki_creator.lang import load_lang_config, infer_language
 
 _VALID_TYPES = {"PERSON", "PLACE", "ORG", "EVENT", "OTHER"}
-_GEO_KEYWORDS = frozenset({
-    "kingdom", "country", "continent", "city", "town", "capital", "empire",
-    "royaume", "pays", "continent", "ville", "capitale", "empire",
-    "land", "lands", "coast", "sea", "mountains", "forest",
-})
-_EVENT_KEYWORDS = frozenset({
-    "festival", "feast", "ceremony", "celebration", "ritual", "holiday", "eve",
-    "fête", "fete", "cérémonie", "ceremonie", "célébration", "celebration",
-    "rite", "rituel",
-})
-_CONCEPT_KEYWORDS = frozenset({
-    "wyrdmark", "wyrdmarks", "magic", "marque", "marques", "spell", "spells",
-    "sigil", "sigils", "symbol", "symbols", "système", "systeme", "system",
-})
-_ROLE_WORDS = frozenset({
-    "assassin", "champion", "king's champion", "captain", "guard",
-    "adarlan's assassin", "queen", "king", "prince", "princess", "lady", "lord",
-})
-_ROLE_PATTERNS = (
-    r"\b[a-z][a-z'\- ]*assassin\b",
-    r"\b[a-z][a-z'\- ]*champion\b",
-    r"\bking'?s champion\b",
-)
-_KNOWN_WORLD_PLACES = frozenset({
-    "adarlan", "eyllwe", "erilea", "terrasen", "endovier", "rifthold",
-    "anielle", "calaculla", "perranth", "oakwald",
-})
-# Structural tokens that appear as part of proper geographic names.
-# Distinct from _GEO_KEYWORDS (contextual words like "kingdom", "capital").
-_GEO_SUFFIXES = frozenset({
-    "mountains", "mountain", "sea", "ocean", "river", "lake", "forest",
-    "coast", "bay", "gulf", "isle", "island", "valley", "desert",
-    "plains", "peak", "pass", "strait", "fjord", "cape",
-})
 
 
 def _paths_from_payload(payload: dict) -> BookPaths:
@@ -218,6 +184,7 @@ def classify_entities(
     concept_keywords=None,
     role_words=None,
     role_patterns=None,
+    geo_suffixes=None,
 ) -> list[dict]:
     """Enrich entities with total_mentions, chapters_present, and importance.
 
@@ -321,11 +288,13 @@ def _normalize_entity_type(
     geo_keywords=None,
     event_keywords=None,
     concept_keywords=None,
+    geo_suffixes=None,
 ) -> str:
     """Deterministic type normalization for common extraction confusions."""
-    _geo = geo_keywords if geo_keywords is not None else _GEO_KEYWORDS
-    _evt = event_keywords if event_keywords is not None else _EVENT_KEYWORDS
-    _concept = concept_keywords if concept_keywords is not None else _CONCEPT_KEYWORDS
+    _geo = geo_keywords if geo_keywords is not None else frozenset()
+    _evt = event_keywords if event_keywords is not None else frozenset()
+    _concept = concept_keywords if concept_keywords is not None else frozenset()
+    _geo_sfx = geo_suffixes if geo_suffixes is not None else frozenset()
 
     name = str(entity.get("canonical_name", "") or "").strip()
     if not name:
@@ -350,10 +319,8 @@ def _normalize_entity_type(
 
     # Conservative PERSON retag: only with explicit geopolitical evidence.
     if current_type == "PERSON":
-        if lowered in _KNOWN_WORLD_PLACES:
-            return "PLACE"
         name_tokens = set(re.split(r"[\s'\-]+", lowered))
-        if name_tokens & _GEO_SUFFIXES:
+        if name_tokens & _geo_sfx:
             return "PLACE"
         geo_patterns = (
             rf"\b(?:kingdom|country|continent|empire)\s+of\s+{re.escape(lowered)}\b",
@@ -370,12 +337,27 @@ def _normalize_entity_type(
         return "EVENT"
     if current_type in {"ORG", "PLACE", "OTHER"} and geo_hits >= 2 and geo_hits >= event_hits:
         return "PLACE"
+
+    # Cross-registry retag: PLACE entity whose source_ids include a persons_full entry
+    # with ≥3 mentions was likely merged from a bare-name PLACE extraction error.
+    if current_type == "PLACE":
+        persons_mention_count = sum(
+            sum(
+                len(v) if isinstance(v, list) else 1
+                for v in persons_full.get(sid, {}).get("mentions_by_chapter", {}).values()
+            )
+            for sid in entity.get("source_ids", [])
+            if sid in persons_full
+        )
+        if persons_mention_count >= 3:
+            return "PERSON"
+
     return current_type
 
 
 def _is_role_entity_name(name: str, role_words=None, role_patterns=None) -> bool:
-    _roles = role_words if role_words is not None else _ROLE_WORDS
-    _patterns = role_patterns if role_patterns is not None else _ROLE_PATTERNS
+    _roles = role_words if role_words is not None else frozenset()
+    _patterns = role_patterns if role_patterns is not None else ()
     lowered = (name or "").strip().lower()
     if not lowered:
         return False
@@ -581,12 +563,13 @@ def run_studio_mode() -> None:
     lang_cfg = load_lang_config(language)
     geo_keywords = frozenset(lang_cfg.get("geo_keywords", []))
     event_keywords = frozenset(lang_cfg.get("event_keywords", []))
+    geo_suffixes = frozenset(lang_cfg.get("geo_suffixes", []))
 
     # Book-specific classification hints from book YAML
     classification = book_input.get("classification", {})
-    concept_keywords = frozenset(classification.get("concept_keywords", [])) or _CONCEPT_KEYWORDS
-    role_words = frozenset(classification.get("role_words", [])) or _ROLE_WORDS
-    role_patterns = tuple(classification.get("role_patterns", [])) or _ROLE_PATTERNS
+    concept_keywords = frozenset(classification.get("concept_keywords", []))
+    role_words = frozenset(classification.get("role_words", [])) or frozenset(lang_cfg.get("role_words", []))
+    role_patterns = tuple(classification.get("role_patterns", [])) or tuple(lang_cfg.get("role_patterns", []))
 
     paths = _paths_from_payload(payload)
     persons_full, places_full, orgs_full, events_full = _load_entity_files(paths.processing)
@@ -598,6 +581,7 @@ def run_studio_mode() -> None:
             geo_keywords=geo_keywords,
             event_keywords=event_keywords,
             concept_keywords=concept_keywords,
+            geo_suffixes=geo_suffixes,
         )
 
     # Role/title entities should not become autonomous pages; merge unambiguous aliases.
@@ -631,6 +615,7 @@ def run_studio_mode() -> None:
         concept_keywords=concept_keywords,
         role_words=role_words,
         role_patterns=role_patterns,
+        geo_suffixes=geo_suffixes,
     )
 
     from collections import Counter

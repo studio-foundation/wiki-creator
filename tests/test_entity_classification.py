@@ -13,6 +13,12 @@ from scripts.entity_classification import (
     assign_importance,
     classify_entities,
 )
+from wiki_creator.lang import load_lang_config
+
+_EN = load_lang_config("en")
+_GEO_SUFFIXES = frozenset(_EN.get("geo_suffixes", []))
+_ROLE_WORDS = frozenset(_EN.get("role_words", []))
+_ROLE_PATTERNS = tuple(_EN.get("role_patterns", []))
 
 
 # --- Fixtures ---
@@ -309,7 +315,8 @@ def test_canonicalize_role_entities_merges_unambiguous_assassin_alias():
     }
 
     out_entities, out_relationships, merge_map = _canonicalize_role_entities(
-        entities, relationships, persons_full, {}, {}, {}
+        entities, relationships, persons_full, {}, {}, {},
+        role_words=_ROLE_WORDS, role_patterns=_ROLE_PATTERNS,
     )
     assert merge_map == {"Assassin": "Celaena"}
     assert all(e["canonical_name"] != "Assassin" for e in out_entities)
@@ -366,15 +373,15 @@ def test_classify_entities_accepts_concept_keywords_param():
 
 def test_is_role_entity_name_recognizes_compound_role_noun():
     """'Royal Guard' and 'Head Guard' should be recognized via token membership."""
-    assert _is_role_entity_name("Royal Guard") is True
-    assert _is_role_entity_name("Head Guard") is True
-    assert _is_role_entity_name("royal assassin") is True  # already covered by pattern, but token should work too
+    assert _is_role_entity_name("Royal Guard", role_words=_ROLE_WORDS, role_patterns=_ROLE_PATTERNS) is True
+    assert _is_role_entity_name("Head Guard", role_words=_ROLE_WORDS, role_patterns=_ROLE_PATTERNS) is True
+    assert _is_role_entity_name("royal assassin", role_words=_ROLE_WORDS, role_patterns=_ROLE_PATTERNS) is True
 
 
 def test_is_role_entity_name_does_not_flag_proper_compound_without_role_token():
     """Compound names with no role word token should not be recognized as role entities."""
-    assert _is_role_entity_name("Roland Havilliard") is False
-    assert _is_role_entity_name("Nehemia Ytger") is False
+    assert _is_role_entity_name("Roland Havilliard", role_words=_ROLE_WORDS, role_patterns=_ROLE_PATTERNS) is False
+    assert _is_role_entity_name("Nehemia Ytger", role_words=_ROLE_WORDS, role_patterns=_ROLE_PATTERNS) is False
 
 
 def test_canonicalize_role_entities_merges_role_surname_into_full_name():
@@ -395,7 +402,8 @@ def test_canonicalize_role_entities_merges_role_surname_into_full_name():
     }
 
     out_entities, out_relationships, merge_map = _canonicalize_role_entities(
-        entities, relationships, persons_full, {}, {}, {}
+        entities, relationships, persons_full, {}, {}, {},
+        role_words=_ROLE_WORDS, role_patterns=_ROLE_PATTERNS,
     )
     assert merge_map == {"Captain Westfall": "Chaol Westfall"}
     assert all(e["canonical_name"] != "Captain Westfall" for e in out_entities)
@@ -412,7 +420,8 @@ def test_canonicalize_role_entities_marks_compound_role_noun_as_other():
     relationships = []  # no relational support
 
     out_entities, _, merge_map = _canonicalize_role_entities(
-        entities, relationships, {}, {}, {}, {}
+        entities, relationships, {}, {}, {}, {},
+        role_words=_ROLE_WORDS, role_patterns=_ROLE_PATTERNS,
     )
     assert "Royal Guard" not in merge_map
     royal_guard = next(e for e in out_entities if e["canonical_name"] == "Royal Guard")
@@ -428,7 +437,7 @@ def test_normalize_geo_suffix_retags_person_to_place():
         "source_ids": [],
         "aliases": [],
     }
-    new_type = _normalize_entity_type(entity, {}, {}, {}, {})
+    new_type = _normalize_entity_type(entity, {}, {}, {}, {}, geo_suffixes=_GEO_SUFFIXES)
     assert new_type == "PLACE"
 
 
@@ -440,7 +449,7 @@ def test_normalize_geo_suffix_single_word_place():
         "source_ids": [],
         "aliases": [],
     }
-    new_type = _normalize_entity_type(entity, {}, {}, {}, {})
+    new_type = _normalize_entity_type(entity, {}, {}, {}, {}, geo_suffixes=_GEO_SUFFIXES)
     assert new_type == "PLACE"
 
 
@@ -454,3 +463,83 @@ def test_normalize_no_false_positive_on_plain_person_name():
     }
     new_type = _normalize_entity_type(entity, {}, {}, {}, {})
     assert new_type == "PERSON"
+
+
+def test_normalize_entity_type_retags_place_to_person_when_source_ids_in_persons_full():
+    """PLACE entity whose source_ids include a persons_full entry (≥3 mentions) → PERSON.
+
+    Covers the Arobynn Hamel case: merge creates type=PLACE because a bare first-name
+    was extracted as PLACE, but the canonical entity has a persons_full source_id with
+    many mentions.
+    """
+    persons_full = {
+        "entity_017": {
+            "mentions_by_chapter": {
+                "ch01": ["Arobynn Hamel trained her.", "Arobynn watched from the shadows."],
+                "ch02": ["She had not seen Arobynn since the river."],
+            }
+        }
+    }
+    places_full = {
+        "entity_018": {
+            "mentions_by_chapter": {
+                "ch05": ["found her half-submerged on the banks of a frozen river near Arobynn"],
+            }
+        }
+    }
+    entity = {
+        "canonical_name": "Arobynn Hamel",
+        "type": "PLACE",
+        "source_ids": ["entity_017", "entity_018"],
+        "aliases": [],
+    }
+    new_type = _normalize_entity_type(entity, persons_full, places_full, {}, {})
+    assert new_type == "PERSON"
+
+
+def test_normalize_entity_type_no_false_retag_when_persons_full_mentions_are_sparse():
+    """PLACE entity with only 1 persons_full mention stays PLACE (noise, not a real person)."""
+    persons_full = {
+        "entity_noise": {
+            "mentions_by_chapter": {
+                "ch01": ["A figure called Arobynn passed by."],
+            }
+        }
+    }
+    entity = {
+        "canonical_name": "Arobynn",
+        "type": "PLACE",
+        "source_ids": ["entity_noise"],
+        "aliases": [],
+    }
+    new_type = _normalize_entity_type(entity, persons_full, {}, {}, {})
+    assert new_type == "PLACE"
+
+
+def test_normalize_entity_type_accepts_geo_suffixes_kwarg():
+    entity = {"canonical_name": "Iron Mountains", "type": "PERSON", "source_ids": []}
+    result = _normalize_entity_type(
+        entity, {}, {}, {}, {},
+        geo_suffixes=frozenset({"mountains"}),
+    )
+    assert result == "PLACE"
+
+
+def test_normalize_entity_type_geo_suffixes_empty_does_not_retag():
+    entity = {"canonical_name": "Iron Mountains", "type": "PERSON", "source_ids": []}
+    result = _normalize_entity_type(
+        entity, {}, {}, {}, {},
+        geo_suffixes=frozenset(),
+    )
+    # Without geo_suffixes hint, the PERSON entity should NOT be retagged
+    assert result == "PERSON"
+
+
+def test_is_role_entity_name_empty_role_words_returns_false():
+    assert _is_role_entity_name("captain", role_words=frozenset(), role_patterns=()) is False
+
+
+def test_classify_entities_empty_concept_keywords_does_not_crash():
+    entities = [{"canonical_name": "Magic", "type": "OTHER", "source_ids": [], "relevant": True}]
+    result = classify_entities(entities, {}, {}, {}, "auto", concept_keywords=frozenset())
+    assert result[0]["importance"] in ("principal", "secondary", "figurant", "ignored")
