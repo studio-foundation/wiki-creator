@@ -464,3 +464,48 @@ def test_script_use_llm_true_warns_when_ollama_unavailable(tmp_path):
     )
     assert result.returncode == 0, result.stderr
     assert "ollama" in result.stderr.lower()
+
+
+# ---------------------------------------------------------------------------
+# _detect_title_alias
+# ---------------------------------------------------------------------------
+
+def test_detect_title_alias_captain_westfall():
+    from scripts.alias_resolution import _detect_title_alias
+    entity_title = {"canonical_name": "Captain Westfall", "aliases": ["Captain Westfall"]}
+    entity_full  = {"canonical_name": "Chaol Westfall",   "aliases": ["Chaol Westfall", "Chaol"]}
+    result = _detect_title_alias(entity_title, entity_full, role_words=["captain"])
+    assert result is not None
+    assert result["method"] == "title_alias"
+    assert result["confidence"] == "medium"
+
+
+def test_detect_title_alias_no_match_remainder_absent():
+    from scripts.alias_resolution import _detect_title_alias
+    # "Princess Nehemia" — remainder "nehemia" not in "Dorian Havilliard"
+    entity_title = {"canonical_name": "Princess Nehemia", "aliases": ["Princess Nehemia"]}
+    entity_full  = {"canonical_name": "Dorian Havilliard", "aliases": ["Dorian Havilliard"]}
+    assert _detect_title_alias(entity_title, entity_full, role_words=["princess"]) is None
+
+
+def test_detect_title_alias_no_match_empty_remainder():
+    from scripts.alias_resolution import _detect_title_alias
+    # "Captain" alone — no remainder after role_word
+    entity_a = {"canonical_name": "Captain", "aliases": ["Captain"]}
+    entity_b = {"canonical_name": "Chaol Westfall", "aliases": ["Chaol Westfall"]}
+    assert _detect_title_alias(entity_a, entity_b, role_words=["captain"]) is None
+
+
+def test_detect_title_alias_empty_role_words():
+    from scripts.alias_resolution import _detect_title_alias
+    entity_a = {"canonical_name": "Captain Westfall", "aliases": ["Captain Westfall"]}
+    entity_b = {"canonical_name": "Chaol Westfall", "aliases": ["Chaol Westfall"]}
+    assert _detect_title_alias(entity_a, entity_b, role_words=[]) is None
+
+
+def test_detect_title_alias_symmetric():
+    from scripts.alias_resolution import _detect_title_alias
+    # Order of arguments should not matter
+    entity_title = {"canonical_name": "Captain Westfall", "aliases": ["Captain Westfall"]}
+    entity_full  = {"canonical_name": "Chaol Westfall",   "aliases": ["Chaol Westfall"]}
+    assert _detect_title_alias(entity_full, entity_title, role_words=["captain"]) is not None

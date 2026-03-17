@@ -371,6 +371,42 @@ def _detect_reveal_signal(entity_a: dict, entity_b: dict, persons_full: dict, re
     return None
 
 
+def _detect_title_alias(
+    entity_a: dict,
+    entity_b: dict,
+    role_words: list[str],
+) -> dict | None:
+    """
+    Return evidence dict if one entity's name starts with a role_word and the
+    remainder appears in the other entity's canonical name.
+
+    Example: "Captain Westfall" + role_word "captain"
+             → remainder "westfall" in "Chaol Westfall" → match.
+    """
+    if not role_words:
+        return None
+    names_a = _entity_names(entity_a)
+    names_b = _entity_names(entity_b)
+    for names_title, names_full in ((names_a, names_b), (names_b, names_a)):
+        for name in names_title:
+            name_lower = name.lower()
+            for role in role_words:
+                role_lower = role.lower()
+                if not name_lower.startswith(role_lower + " "):
+                    continue
+                remainder = name_lower[len(role_lower) + 1:].strip()
+                if not remainder:
+                    continue
+                for full_name in names_full:
+                    if remainder in full_name.lower():
+                        return {
+                            "method": "title_alias",
+                            "confidence": "medium",
+                            "snippet": f"{name} / {full_name}",
+                        }
+    return None
+
+
 def detect_named_aliases(
     mentions: dict[str, list[str]],
     text: str,
