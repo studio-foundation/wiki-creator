@@ -118,6 +118,17 @@ def get_total_mentions(
     return total, len(chapters)
 
 
+MIN_ENTITIES_FOR_AUTO = 4
+# Conservative absolute thresholds used when a type has too few entities for
+# percentiles to be meaningful (n < MIN_ENTITIES_FOR_AUTO).  Better to
+# under-score a rare entity than to award "principal" to a 3-mention place.
+_ABSOLUTE_FALLBACK_THRESHOLDS: dict[str, int] = {
+    "principal": 20,
+    "secondary": 10,
+    "figurant": 3,
+}
+
+
 def compute_auto_thresholds(
     mention_counts: list[tuple[str, str, int]],
 ) -> dict[str, dict[str, int]]:
@@ -129,6 +140,11 @@ def compute_auto_thresholds(
     Returns:
         { "PERSON": { "principal": N, "secondary": M, "figurant": K }, ... }
         An entity is "principal" if mentions >= principal threshold, etc.
+
+    When a type has fewer than MIN_ENTITIES_FOR_AUTO entities, percentiles are
+    statistically meaningless (e.g. p90 on 2 values == the maximum).  In that
+    case _ABSOLUTE_FALLBACK_THRESHOLDS are used instead so a 3-mention entity
+    can never be promoted to "principal" purely by being alone in its type.
     """
     by_type: dict[str, list[int]] = defaultdict(list)
     for _, etype, count in mention_counts:
@@ -138,6 +154,10 @@ def compute_auto_thresholds(
     for etype, counts in by_type.items():
         sorted_counts = sorted(counts)
         n = len(sorted_counts)
+
+        if n < MIN_ENTITIES_FOR_AUTO:
+            thresholds[etype] = dict(_ABSOLUTE_FALLBACK_THRESHOLDS)
+            continue
 
         def percentile(p: float, _sorted=sorted_counts, _n=n) -> int:
             if _n == 0:
@@ -351,7 +371,12 @@ def _is_role_entity_name(name: str, role_words=None, role_patterns=None) -> bool
         return False
     if lowered in _roles:
         return True
-    return any(re.search(pattern, lowered) for pattern in _patterns)
+    if any(re.search(pattern, lowered) for pattern in _patterns):
+        return True
+    # Token membership: compound nouns like "Royal Guard" or "Captain Westfall"
+    # qualify if at least one token is a role word.
+    tokens = re.split(r"[\s'\-]+", lowered)
+    return any(token in _roles for token in tokens if token)
 
 
 def _rewrite_relationships(relationships: list[dict], merge_map: dict[str, str]) -> list[dict]:
@@ -413,9 +438,6 @@ def _canonicalize_role_entities(
     for entity in entities:
         name = entity.get("canonical_name", "")
         if not name or not _is_role_entity_name(name, role_words=role_words, role_patterns=role_patterns):
-            continue
-        if name in person_names and len((name or "").split()) > 1:
-            # Proper names that happen to contain a role token should not be treated as role-only entities.
             continue
 
         candidates: list[tuple[int, str]] = []

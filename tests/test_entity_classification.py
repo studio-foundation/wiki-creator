@@ -6,6 +6,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.entity_classification import (
     _apply_entity_overrides,
     _canonicalize_role_entities,
+    _is_role_entity_name,
     _normalize_entity_type,
     get_total_mentions,
     compute_auto_thresholds,
@@ -131,6 +132,46 @@ def test_compute_auto_thresholds_single_entity():
     thresholds = compute_auto_thresholds(mention_counts)
     # Should not crash with a single entity
     assert "PERSON" in thresholds
+
+
+def test_compute_auto_thresholds_few_entities_uses_absolute_floor():
+    # n=2 PLACEs: percentiles collapse → Calaculla (3 mentions) must NOT be "principal"
+    mention_counts = [
+        ("White Fang Mountains", "PLACE", 4),
+        ("Calaculla", "PLACE", 3),
+    ]
+    thresholds = compute_auto_thresholds(mention_counts)
+    t = thresholds["PLACE"]
+    # With only 2 entities, principal threshold must require substantially more than 3 mentions
+    assert t["principal"] > 3, (
+        f"principal threshold {t['principal']} too low: Calaculla (3 mentions) "
+        "would be assigned 'principal'"
+    )
+
+
+def test_compute_auto_thresholds_single_entity_not_principal_with_few_mentions():
+    # A single entity with few mentions should not become "principal"
+    mention_counts = [("Calaculla", "PLACE", 3)]
+    thresholds = compute_auto_thresholds(mention_counts)
+    importance = assign_importance("PLACE", 3, 1, thresholds)
+    assert importance != "principal", (
+        f"3-mention entity should not be 'principal', got {importance!r}"
+    )
+
+
+def test_compute_auto_thresholds_three_entities_conservative():
+    # n=3: still below MIN_ENTITIES_FOR_AUTO — principal must not be trivially reachable
+    mention_counts = [
+        ("A", "PLACE", 5),
+        ("B", "PLACE", 4),
+        ("C", "PLACE", 3),
+    ]
+    thresholds = compute_auto_thresholds(mention_counts)
+    t = thresholds["PLACE"]
+    assert t["principal"] > 5, (
+        f"principal threshold {t['principal']} is ≤ 5: an entity with only 5 mentions "
+        "should not reach 'principal' when n < MIN_ENTITIES_FOR_AUTO"
+    )
 
 
 def test_compute_auto_thresholds_separate_types():
@@ -319,3 +360,61 @@ def test_classify_entities_accepts_concept_keywords_param():
     entities = [{"canonical_name": "wyrdmark", "type": "OTHER", "relevant": True, "aliases": [], "source_ids": []}]
     result = classify_entities(entities, {}, {}, {}, "auto", concept_keywords=frozenset({"wyrdmark"}))
     assert result[0]["type"] == "OTHER"
+
+
+# --- STU-267: compound role nouns and role+surname ---
+
+def test_is_role_entity_name_recognizes_compound_role_noun():
+    """'Royal Guard' and 'Head Guard' should be recognized via token membership."""
+    assert _is_role_entity_name("Royal Guard") is True
+    assert _is_role_entity_name("Head Guard") is True
+    assert _is_role_entity_name("royal assassin") is True  # already covered by pattern, but token should work too
+
+
+def test_is_role_entity_name_does_not_flag_proper_compound_without_role_token():
+    """Compound names with no role word token should not be recognized as role entities."""
+    assert _is_role_entity_name("Roland Havilliard") is False
+    assert _is_role_entity_name("Nehemia Ytger") is False
+
+
+def test_canonicalize_role_entities_merges_role_surname_into_full_name():
+    """'Captain Westfall' should merge into 'Chaol Westfall' via surname match + relational support."""
+    entities = [
+        {"canonical_name": "Chaol Westfall", "type": "PERSON", "aliases": [], "source_ids": ["e1"], "relevant": True},
+        {"canonical_name": "Captain Westfall", "type": "PERSON", "aliases": [], "source_ids": ["e2"], "relevant": True},
+    ]
+    relationships = [
+        {"entity_a": "Captain Westfall", "entity_b": "Chaol Westfall", "cooccurrence_count": 10},
+    ]
+    persons_full = {
+        "e2": {
+            "mentions_by_chapter": {
+                "ch01": ["Captain Westfall arrived. Chaol Westfall was loyal."],
+            }
+        }
+    }
+
+    out_entities, out_relationships, merge_map = _canonicalize_role_entities(
+        entities, relationships, persons_full, {}, {}, {}
+    )
+    assert merge_map == {"Captain Westfall": "Chaol Westfall"}
+    assert all(e["canonical_name"] != "Captain Westfall" for e in out_entities)
+    chaol = next(e for e in out_entities if e["canonical_name"] == "Chaol Westfall")
+    assert "Captain Westfall" in chaol["aliases"]
+
+
+def test_canonicalize_role_entities_marks_compound_role_noun_as_other():
+    """'Royal Guard' with no matching PERSON should be marked OTHER/irrelevant."""
+    entities = [
+        {"canonical_name": "Celaena", "type": "PERSON", "aliases": [], "source_ids": ["e1"], "relevant": True},
+        {"canonical_name": "Royal Guard", "type": "PERSON", "aliases": [], "source_ids": ["e2"], "relevant": True},
+    ]
+    relationships = []  # no relational support
+
+    out_entities, _, merge_map = _canonicalize_role_entities(
+        entities, relationships, {}, {}, {}, {}
+    )
+    assert "Royal Guard" not in merge_map
+    royal_guard = next(e for e in out_entities if e["canonical_name"] == "Royal Guard")
+    assert royal_guard["relevant"] is False
+    assert royal_guard["type"] == "OTHER"
