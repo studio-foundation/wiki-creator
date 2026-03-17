@@ -11,6 +11,9 @@ system_prompt: |
   - entity_b: name of character B
   - cooccurrence_count: number of times they appear together
   - sample_contexts: list of short text excerpts where both appear
+  - novel_summary: (optional) a short narrative summary of the novel for context
+
+  When novel_summary is provided, use it to anchor your classification in the story's reality.
 
   Return exactly:
   {
@@ -21,6 +24,6 @@ system_prompt: |
   }
 
   Rules:
-  - Base your answer only on the provided excerpts
+  - Base your answer on the provided excerpts and novel_summary
   - Do not invent facts
   - Return valid JSON only
