@@ -55,7 +55,10 @@ Workers / RAM budget (LingMessCoref ~590M params per worker):
 import json
 import os
 import re
+import socket
 import sys
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 import yaml
@@ -80,6 +83,7 @@ DEFAULT_WINDOW = 5
 DEFAULT_THRESHOLD = 5
 DEFAULT_MIN_COOCCURRENCE = 3
 DEFAULT_MIN_CHAPTERS_TOGETHER = 2
+_OLLAMA_URL = "http://localhost:11434"
 
 
 def build_cooccurrence_graph(
@@ -793,6 +797,41 @@ def run_test_mode(
     print(f"\n=== STATS ===")
     for k, v in stats.items():
         print(f"  {k}: {v}")
+
+
+def _check_ollama_available(url: str, timeout: int = 2) -> bool:
+    """Return True if Ollama is reachable at url/api/tags."""
+    try:
+        req = urllib.request.Request(f"{url}/api/tags", method="HEAD")
+        with urllib.request.urlopen(req, timeout=timeout):
+            return True
+    except (urllib.error.URLError, socket.timeout, OSError):
+        return False
+
+
+def _call_ollama_classify_json(
+    prompt: str, model: str, ollama_url: str, timeout: int = 30
+) -> dict | None:
+    """Call Ollama /api/generate and parse JSON response. Returns None on any failure."""
+    body = json.dumps({
+        "model": model,
+        "prompt": prompt,
+        "stream": False,
+        "options": {"temperature": 0.0, "num_predict": 300},
+    }).encode()
+    req = urllib.request.Request(
+        f"{ollama_url}/api/generate",
+        data=body,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = json.loads(resp.read())
+        raw = data.get("response", "")
+        return json.loads(raw)
+    except (urllib.error.URLError, socket.timeout, OSError, json.JSONDecodeError):
+        return None
 
 
 def classify_relationships(relationships: list[dict]) -> list[dict]:

@@ -356,3 +356,51 @@ def test_stats_include_new_fields():
     )
     assert stats["min_cooccurrence"] == 3
     assert stats["min_chapters_together"] == 2
+
+
+# ---------------------------------------------------------------------------
+# STU-262: Ollama helpers
+# ---------------------------------------------------------------------------
+
+import urllib.error
+from unittest.mock import patch, MagicMock
+from scripts.relationship_extraction import _check_ollama_available, _call_ollama_classify_json
+
+
+def test_check_ollama_available_returns_true_on_success():
+    mock_resp = MagicMock()
+    mock_resp.__enter__ = lambda s: s
+    mock_resp.__exit__ = MagicMock(return_value=False)
+    with patch("urllib.request.urlopen", return_value=mock_resp):
+        assert _check_ollama_available("http://localhost:11434") is True
+
+
+def test_check_ollama_available_returns_false_on_error():
+    with patch("urllib.request.urlopen", side_effect=urllib.error.URLError("refused")):
+        assert _check_ollama_available("http://localhost:11434") is False
+
+
+def test_call_ollama_classify_json_parses_response():
+    mock_resp = MagicMock()
+    mock_resp.__enter__ = lambda s: s
+    mock_resp.__exit__ = MagicMock(return_value=False)
+    mock_resp.read.return_value = b'{"response": "{\\"relationship_type\\": \\"ami\\", \\"direction\\": \\"sym\\\\u00e9trique\\", \\"evolution\\": \\"ils deviennent amis\\", \\"key_moments\\": [\\"ch01: rencontre\\"]}"}'
+    with patch("urllib.request.urlopen", return_value=mock_resp):
+        result = _call_ollama_classify_json("some prompt", "qwen2.5", "http://localhost:11434", timeout=10)
+    assert result["relationship_type"] == "ami"
+
+
+def test_call_ollama_classify_json_returns_none_on_network_error():
+    with patch("urllib.request.urlopen", side_effect=urllib.error.URLError("refused")):
+        result = _call_ollama_classify_json("prompt", "qwen2.5", "http://localhost:11434", timeout=10)
+    assert result is None
+
+
+def test_call_ollama_classify_json_returns_none_on_bad_json():
+    mock_resp = MagicMock()
+    mock_resp.__enter__ = lambda s: s
+    mock_resp.__exit__ = MagicMock(return_value=False)
+    mock_resp.read.return_value = b'{"response": "not json at all"}'
+    with patch("urllib.request.urlopen", return_value=mock_resp):
+        result = _call_ollama_classify_json("prompt", "qwen2.5", "http://localhost:11434", timeout=10)
+    assert result is None
