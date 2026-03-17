@@ -71,6 +71,13 @@ _KNOWN_WORLD_PLACES = frozenset({
     "adarlan", "eyllwe", "erilea", "terrasen", "endovier", "rifthold",
     "anielle", "calaculla", "perranth", "oakwald",
 })
+# Structural tokens that appear as part of proper geographic names.
+# Distinct from _GEO_KEYWORDS (contextual words like "kingdom", "capital").
+_GEO_SUFFIXES = frozenset({
+    "mountains", "mountain", "sea", "ocean", "river", "lake", "forest",
+    "coast", "bay", "gulf", "isle", "island", "valley", "desert",
+    "plains", "peak", "pass", "strait", "fjord", "cape",
+})
 
 
 def _paths_from_payload(payload: dict) -> BookPaths:
@@ -344,6 +351,9 @@ def _normalize_entity_type(
     # Conservative PERSON retag: only with explicit geopolitical evidence.
     if current_type == "PERSON":
         if lowered in _KNOWN_WORLD_PLACES:
+            return "PLACE"
+        name_tokens = set(re.split(r"[\s'\-]+", lowered))
+        if name_tokens & _GEO_SUFFIXES:
             return "PLACE"
         geo_patterns = (
             rf"\b(?:kingdom|country|continent|empire)\s+of\s+{re.escape(lowered)}\b",
