@@ -298,6 +298,7 @@ def build_chapter_summary_context(
         result.append({
             "chapter_key": chapter_key,
             "summary_bullets": bullets,
+            "temporal_context": summary.get("temporal_context", "unknown"),
         })
     return result
 
