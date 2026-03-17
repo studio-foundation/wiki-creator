@@ -49,6 +49,16 @@ _SECTION_TITLES = {
     "trivia": "Anecdotes",
     "references": "Références",
 }
+_INTERNAL_INFOBOX_KEYS = frozenset({
+    "cooccurrence_count",
+    "entity_type",
+    "importance",
+    "file_path",
+    "type",
+    "id",
+    "canonical_name",
+})
+
 _PLACEHOLDER_PATTERNS = (
     re.compile(r"<[^>\n]{1,80}>"),
     re.compile(r"\bsi connu\b", re.IGNORECASE),
@@ -297,6 +307,8 @@ Structure:
 - Target length: {length_guide}
 - The "Infobox" section must use this format: one bullet per field, "- Key: Value".
 - The "Relations" section (if present) must use this format: "**Name** — description of the relationship."
+- infobox_fields keys must be plain strings — no leading "- " or "* ". Correct: {{"nom": "X"}}, Wrong: {{"- nom": "X"}}.
+- infobox_fields must contain ONLY wiki-relevant fields (name, role, affiliation, etc.). Do NOT include internal data fields such as cooccurrence_count, entity_type, importance, or any metadata.
 
 Section definitions for type {etype}:
 {section_def_lines}
@@ -559,6 +571,18 @@ def _run_generation_for_entity(
     return item_result
 
 
+def _clean_infobox_fields(fields: dict) -> dict:
+    """Strip Markdown list prefixes from keys and remove internal artifact keys."""
+    cleaned: dict[str, str] = {}
+    for raw_key, value in fields.items():
+        key = str(raw_key).lstrip("- *").strip()
+        key = _normalize_infobox_key(key)
+        if not key or key in _INTERNAL_INFOBOX_KEYS:
+            continue
+        cleaned[key] = value
+    return cleaned
+
+
 def _normalize_infobox_key(key: str) -> str:
     key = key.strip().lower()
     key = re.sub(r"\s+", "_", key)
@@ -626,6 +650,7 @@ def parse_response(raw: str, entity: dict) -> dict:
             return make_stub_page(entity, failed=True)
         if not page["infobox_fields"] and page["content"]:
             page["infobox_fields"] = _extract_infobox_fields_from_content(page["content"])
+        page["infobox_fields"] = _clean_infobox_fields(page["infobox_fields"])
         if _contains_template_placeholder(page):
             print(
                 f"    [WARN] Placeholder/template leak for {entity['canonical_name']}, using failed stub",

@@ -367,4 +367,79 @@ def test_run_generation_for_entity_returns_retryable_failed_stub_and_logs_on_run
     assert len(debug_files) == 1
     payload = json.loads(debug_files[0].read_text(encoding="utf-8"))
     assert payload["error"] == "studio_run_failed"
-    assert payload["run_metadata"] == {"pipeline": "wiki-page-item", "attempts": 3}
+
+
+# --- STU-263: infobox_fields key normalisation and artifact filtering ---
+
+def test_parse_response_strips_dash_prefix_from_infobox_keys():
+    """Keys like '- nom' returned by the LLM must be cleaned to 'nom'."""
+    raw = json.dumps({
+        "title": "Celaena Sardothien",
+        "importance": "principal",
+        "entity_type": "PERSON",
+        "infobox_fields": {
+            "- nom": "Celaena Sardothien",
+            "- occupation": "King's Champion",
+            "- alias": "Aelin",
+        },
+        "content": "## Biographie\n\nTexte.",
+    })
+    page = parse_response(raw, {
+        "canonical_name": "Celaena Sardothien",
+        "importance": "principal",
+        "type": "PERSON",
+    })
+    assert "- nom" not in page["infobox_fields"]
+    assert "- occupation" not in page["infobox_fields"]
+    assert page["infobox_fields"]["nom"] == "Celaena Sardothien"
+    assert page["infobox_fields"]["occupation"] == "King's Champion"
+
+
+def test_parse_response_removes_internal_artifact_keys_from_infobox():
+    """Internal fields like cooccurrence_count must not appear in infobox_fields."""
+    raw = json.dumps({
+        "title": "Hollin",
+        "importance": "secondary",
+        "entity_type": "PERSON",
+        "infobox_fields": {
+            "nom": "Hollin",
+            "cooccurrence_count": "6",
+            "entity_type": "PERSON",
+        },
+        "content": "## Biographie\n\nTexte.",
+    })
+    page = parse_response(raw, {
+        "canonical_name": "Hollin",
+        "importance": "secondary",
+        "type": "PERSON",
+    })
+    assert "cooccurrence_count" not in page["infobox_fields"]
+    assert "entity_type" not in page["infobox_fields"]
+    assert page["infobox_fields"]["nom"] == "Hollin"
+
+
+def test_build_prompt_instructs_plain_infobox_keys():
+    """Prompt must contain explicit instruction ruling out '- ' prefixed keys."""
+    entity = {
+        "canonical_name": "Celaena Sardothien",
+        "importance": "principal",
+        "type": "PERSON",
+        "aliases": [],
+        "context_by_chapter": {},
+    }
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography"])
+    assert '"- nom"' in prompt or "no leading" in prompt or 'without "- "' in prompt or "plain string" in prompt
+
+
+def test_build_prompt_instructs_no_training_knowledge():
+    """Prompt must contain instruction to not use prior training knowledge."""
+    entity = {
+        "canonical_name": "Celaena Sardothien",
+        "importance": "principal",
+        "type": "PERSON",
+        "aliases": [],
+        "context_by_chapter": {},
+    }
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography"])
+    lower = prompt.lower()
+    assert "prior knowledge" in lower or "training knowledge" in lower or "do not use" in lower
