@@ -32,7 +32,7 @@ class AliasPair(TypedDict):
     entity_a: str
     entity_b: str
     confidence: Literal["high", "medium"]
-    source: Literal["pattern", "cooccurrence"]
+    source: Literal["pattern", "cooccurrence", "title_alias"]
     snippet: str
 
 

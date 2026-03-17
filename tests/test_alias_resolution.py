@@ -509,3 +509,14 @@ def test_detect_title_alias_symmetric():
     entity_title = {"canonical_name": "Captain Westfall", "aliases": ["Captain Westfall"]}
     entity_full  = {"canonical_name": "Chaol Westfall",   "aliases": ["Chaol Westfall"]}
     assert _detect_title_alias(entity_full, entity_title, role_words=["captain"]) is not None
+
+
+def test_detect_title_alias_via_aliases_list():
+    from scripts.alias_resolution import _detect_title_alias
+    # Title is in entity's aliases list, not canonical_name
+    entity_a = {"canonical_name": "Chaol Westfall", "aliases": ["Chaol Westfall", "Captain Westfall"]}
+    entity_b = {"canonical_name": "Chaol Westfall (guard)", "aliases": ["Chaol Westfall (guard)"]}
+    # "Captain Westfall" in aliases → remainder "westfall" in "Chaol Westfall (guard)"
+    result = _detect_title_alias(entity_a, entity_b, role_words=["captain"])
+    assert result is not None
+    assert result["method"] == "title_alias"
