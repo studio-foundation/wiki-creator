@@ -47,5 +47,32 @@
   "event_keywords": [
     "fête", "fete", "cérémonie", "ceremonie",
     "célébration", "celebration", "rite", "rituel"
+  ],
+  "alias_pattern_templates": [
+    "\\bvous pouvez m'appeler {b}\\b",
+    "\\bégalement connu sous le nom de {b}\\b",
+    "\\bautrefois connu sous le nom de {b}\\b",
+    "\\bappelé {b}\\b",
+    "\\bconnu sous le nom de {b}\\b",
+    "\\bnée {b}\\b",
+    "\\b{a}[^.]{{0,80}}\\bsous un autre nom[^.]{{0,80}}\\b{b}\\b"
+  ],
+  "action_cues": [
+    "trouva", "découvrit", "révéla", "avertit", "signala", "suivit",
+    "attaqua", "tua", "s'échappa", "rencontra", "décida", "réalisa",
+    "arriva", "partir", "repartit", "demanda", "ouvrit", "ferma"
+  ],
+  "geo_suffixes": [
+    "montagnes", "montagne", "mer", "océan", "rivière", "lac", "forêt",
+    "côte", "baie", "golfe", "île", "vallée", "désert",
+    "plaines", "pic", "col", "détroit", "fjord", "cap"
+  ],
+  "role_words": [
+    "capitaine", "garde", "reine", "roi", "prince", "princesse", "dame", "seigneur",
+    "duc", "sir", "assassin", "champion"
+  ],
+  "role_patterns": [
+    "\\b[a-z][a-zàâéèêëîïôùûüç'\\- ]*assassin\\b",
+    "\\b[a-z][a-zàâéèêëîïôùûüç'\\- ]*champion\\b"
   ]
 }
