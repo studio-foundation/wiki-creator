@@ -79,7 +79,9 @@ def load_title_prefixes(language: str | None = None) -> frozenset[str]:
         lang_cfg = load_lang_config(language)
         extra = frozenset(w.lower() for w in lang_cfg.get("person_cue_words", []))
         return TITLE_PREFIXES | extra
-    except Exception:
+    except Exception as exc:
+        import logging
+        logging.warning("load_title_prefixes: could not load cue_words for language %r: %s", language, exc)
         return TITLE_PREFIXES
 
 
@@ -716,7 +718,13 @@ def main() -> None:
         json.dump({"error": "missing entities_for_resolution in previous stage output"}, sys.stdout)
         sys.exit(1)
 
-    clusters, unclustered = build_clusters(entities)
+    import yaml as _yaml
+    from wiki_creator.lang import infer_language
+    ctx = _yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    spacy_model = ctx.get("spacy_model", "")
+    language = ctx.get("language") or (infer_language(spacy_model) if spacy_model else None)
+
+    clusters, unclustered = build_clusters(entities, language=language)
 
     total = len(entities)
 
