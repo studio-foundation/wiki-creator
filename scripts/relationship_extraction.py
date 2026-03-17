@@ -850,6 +850,7 @@ def classify_relationships(
     *,
     model: str,
     ollama_url: str = _OLLAMA_URL,
+    novel_summary: str | None = None,
 ) -> list[dict]:
     """Classify relationships using Ollama. Fails gracefully per pair.
 
@@ -868,7 +869,12 @@ def classify_relationships(
         contexts_text = "\n".join(
             f'{i+1}. "{ctx}"' for i, ctx in enumerate(rel["sample_contexts"][:3])
         )
-        prompt = f"""Voici des extraits d'un roman où deux personnages apparaissent ensemble.
+        summary_block = (
+            f"Contexte du roman :\n{novel_summary}\n\n"
+            if novel_summary
+            else ""
+        )
+        prompt = f"""{summary_block}Voici des extraits d'un roman où deux personnages apparaissent ensemble.
 Personnage A : {rel['entity_a']}
 Personnage B : {rel['entity_b']}
 Cooccurrences : {rel['cooccurrence_count']}
