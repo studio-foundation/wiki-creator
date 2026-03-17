@@ -30,3 +30,14 @@ system_prompt: |
   - Do not return an array
   - Do not return markdown fences
   - content must be a non-empty Markdown string
+
+  Relations section rules (PERSON entities only):
+  - For PERSON entities: ALWAYS include a "## Relations" section if relationships[] is non-empty in input["prompt"].
+  - Sort relations by cooccurrence_count descending. Include top 5 maximum.
+  - Format each relation as: **[[entity_b]]** — [relationship_type] ([cooccurrence_count] mentions communes)
+  - Example:
+    ## Relations
+    **[[Elena]]** — allié (61 mentions communes)
+    **[[Dorian Havilliard]]** — employeur/employé (48 mentions communes)
+    **[[Chaol Westfall]]** — garde (45 mentions communes)
+  - If relationships[] is empty or entity is not PERSON, omit the "## Relations" section entirely.
