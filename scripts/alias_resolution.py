@@ -51,7 +51,7 @@ def _empty_stats() -> dict:
     return {
         "candidates_considered": 0,
         "merges_applied": 0,
-        "merges_by_method": {"pattern": 0, "cooccurrence": 0, "llm": 0, "title_alias": 0},
+        "merges_by_method": {"pattern": 0, "cooccurrence": 0, "llm": 0, "title_alias": 0, "role_symmetric": 0},
         "ambiguous_pairs": 0,
         "llm_attempts": 0,
         "llm_confirmed": 0,
@@ -199,7 +199,22 @@ def _pick_snippets(entity: dict, persons_full: dict, n: int = 3) -> list[str]:
     return ordered[:n]
 
 
-def _pick_canonical_name(entity_a: dict, entity_b: dict, persons_full: dict) -> str:
+def _is_pure_title(name: str, role_words: list[str]) -> bool:
+    """Return True if name consists entirely of role_words (e.g. 'Master', 'Captain')."""
+    tokens = name.lower().split()
+    if not tokens:
+        return False
+    role_set = {r.lower() for r in role_words}
+    return all(t in role_set for t in tokens)
+
+
+def _pick_canonical_name(
+    entity_a: dict,
+    entity_b: dict,
+    persons_full: dict,
+    role_words: list[str] | None = None,
+) -> str:
+    role_words = role_words or []
     counts: dict[str, int] = {}
     for entity in (entity_a, entity_b):
         for name in _entity_names(entity):
@@ -210,12 +225,24 @@ def _pick_canonical_name(entity_a: dict, entity_b: dict, persons_full: dict) -> 
             counts[name] += contexts.count(name.lower())
     return sorted(
         counts,
-        key=lambda name: (-counts[name], -len(name.split()), -len(name), name.lower()),
+        key=lambda name: (
+            _is_pure_title(name, role_words),   # False (0) sorts before True (1) — proper names first
+            -counts[name],
+            -len(name.split()),
+            -len(name),
+            name.lower(),
+        ),
     )[0]
 
 
-def _merge_entities(entity_a: dict, entity_b: dict, evidence: dict, persons_full: dict) -> dict:
-    canonical = _pick_canonical_name(entity_a, entity_b, persons_full)
+def _merge_entities(
+    entity_a: dict,
+    entity_b: dict,
+    evidence: dict,
+    persons_full: dict,
+    role_words: list[str] | None = None,
+) -> dict:
+    canonical = _pick_canonical_name(entity_a, entity_b, persons_full, role_words=role_words)
     alias_names = sorted({name for entity in (entity_a, entity_b) for name in _entity_names(entity)}, key=str.lower)
     source_ids = sorted({sid for entity in (entity_a, entity_b) for sid in entity.get("source_ids", [])})
     merged_from = [
@@ -451,6 +478,123 @@ def detect_named_aliases(
     return pairs
 
 
+def _build_role_index(relationships: list[dict]) -> dict[tuple[str, str], list[str]]:
+    """
+    Build an inverted index: (third_party_canonical, relationship_type) → [entity names with this role].
+
+    For each relationship (A ↔ B, rel_type), B is a third party for A and vice versa.
+    Skips relationships with null relationship_type.
+    """
+    index: dict[tuple[str, str], list[str]] = {}
+    for rel in relationships:
+        rel_type = rel.get("relationship_type")
+        if not rel_type:
+            continue
+        entity_a: str = rel.get("entity_a", "")
+        entity_b: str = rel.get("entity_b", "")
+        if not entity_a or not entity_b:
+            continue
+        # A plays a role toward B
+        key_a = (entity_b, rel_type)
+        index.setdefault(key_a, [])
+        # Normalize to lowercase for case-insensitive matching
+        if entity_a.lower() not in index[key_a]:
+            index[key_a].append(entity_a.lower())
+        # B plays a role toward A
+        key_b = (entity_a, rel_type)
+        index.setdefault(key_b, [])
+        if entity_b.lower() not in index[key_b]:
+            index[key_b].append(entity_b.lower())
+    return index
+
+
+def _direct_cooccurrence(name_a: str, name_b: str, relationships: list[dict]) -> int:
+    """Return the cooccurrence_count for the direct A↔B relationship, or 0."""
+    na, nb = name_a.lower(), name_b.lower()
+    for rel in relationships:
+        ea = rel.get("entity_a", "").lower()
+        eb = rel.get("entity_b", "").lower()
+        if (ea == na and eb == nb) or (ea == nb and eb == na):
+            return rel.get("cooccurrence_count", 0)
+    return 0
+
+
+def _bucket_is_clean(
+    bucket: tuple[str, str],
+    role_index: dict[tuple[str, str], list[str]],
+    relationships: list[dict],
+    direct_cooc_max: int,
+) -> bool:
+    """Return True if no two co-inhabitants of the bucket have high direct cooccurrence."""
+    names_in_bucket = role_index.get(bucket, [])
+    for ii in range(len(names_in_bucket)):
+        for jj in range(ii + 1, len(names_in_bucket)):
+            if _direct_cooccurrence(names_in_bucket[ii], names_in_bucket[jj], relationships) > direct_cooc_max:
+                return False
+    return True
+
+
+def _detect_role_symmetric_pairs(
+    entities: list[dict],
+    relationships: list[dict],
+    min_shared: int = 2,
+    direct_cooc_max: int = 3,
+) -> list[tuple[dict, dict, dict]]:
+    """
+    Return (entity_a, entity_b, evidence) triples where A and B share ≥ min_shared
+    (third_party, relationship_type) buckets AND their direct cooccurrence is ≤ direct_cooc_max.
+
+    Evidence dict has keys: method, confidence, snippet, shared_roles.
+    """
+    role_index = _build_role_index(relationships)
+    persons = [e for e in entities if e.get("type") == "PERSON" and e.get("relevant", True)]
+
+    # Pre-compute signatures for all PERSON entities (once, not per-pair)
+    entity_signatures: dict[str, set[tuple[str, str]]] = {}
+    for entity in persons:
+        name = entity.get("canonical_name", "").lower()
+        sig: set[tuple[str, str]] = set()
+        for (third_party, rel_type), names in role_index.items():
+            if name in names:
+                sig.add((third_party, rel_type))
+        entity_signatures[name] = sig
+
+    pairs: list[tuple[dict, dict, dict]] = []
+    for i in range(len(persons)):
+        for j in range(i + 1, len(persons)):
+            a, b = persons[i], persons[j]
+            name_a = a.get("canonical_name", "").lower()
+            name_b = b.get("canonical_name", "").lower()
+            if _direct_cooccurrence(name_a, name_b, relationships) > direct_cooc_max:
+                continue
+            shared = entity_signatures.get(name_a, set()) & entity_signatures.get(name_b, set())
+            if len(shared) < min_shared:
+                continue
+            # Check for contaminated buckets (shared via confirmed-distinct characters)
+            clean_shared = {
+                bucket for bucket in shared
+                if _bucket_is_clean(bucket, role_index, relationships, direct_cooc_max)
+            }
+            if len(clean_shared) < min_shared:
+                continue
+            shared_list = sorted(clean_shared)
+            # Use original (non-lowercased) names for the snippet
+            orig_name_a = a.get("canonical_name", "")
+            orig_name_b = b.get("canonical_name", "")
+            snippet = "; ".join(
+                f"{orig_name_a} and {orig_name_b} both have '{rel}' relation toward '{third}'"
+                for third, rel in shared_list[:2]
+            )
+            evidence = {
+                "method": "role_symmetric",
+                "confidence": "medium",
+                "snippet": snippet,
+                "shared_roles": [{"third_party": t, "relationship_type": r} for t, r in shared_list],
+            }
+            pairs.append((a, b, evidence))
+    return pairs
+
+
 def resolve_aliases(
     entities: list[dict],
     persons_full: dict,
@@ -459,11 +603,28 @@ def resolve_aliases(
     reveal_words: tuple[str, ...] = (),
     role_words: list[str] | None = None,
     pattern_templates: tuple[str, ...] = (),
+    relationships: list[dict] | None = None,
+    role_symmetric_min_shared: int = 2,
 ) -> dict:
     stats = _empty_stats()
     role_words = role_words or []
+    relationships = relationships or []
     resolved: list[dict] = []
     consumed: set[int] = set()
+
+    # Pre-compute role-symmetric candidate pairs.
+    role_sym_map: dict[tuple[int, int], dict] = {}
+    if relationships:
+        sym_candidates = _detect_role_symmetric_pairs(
+            entities, relationships,
+            min_shared=role_symmetric_min_shared,
+        )
+        name_to_idx = {e.get("canonical_name", ""): i for i, e in enumerate(entities)}
+        for ea, eb, ev in sym_candidates:
+            ia = name_to_idx.get(ea.get("canonical_name", ""))
+            ib = name_to_idx.get(eb.get("canonical_name", ""))
+            if ia is not None and ib is not None:
+                role_sym_map[(min(ia, ib), max(ia, ib))] = ev
 
     for index, entity in enumerate(entities):
         if index in consumed:
@@ -481,9 +642,10 @@ def resolve_aliases(
                 continue
 
             stats["candidates_considered"] += 1
+
             evidence = _detect_pattern_match(entity, candidate, persons_full, pattern_templates)
             if evidence:
-                merged = _merge_entities(entity, candidate, evidence, persons_full)
+                merged = _merge_entities(entity, candidate, evidence, persons_full, role_words=role_words)
                 stats["merges_applied"] += 1
                 stats["merges_by_method"]["pattern"] += 1
                 consumed.add(candidate_index)
@@ -491,14 +653,22 @@ def resolve_aliases(
 
             title = _detect_title_alias(entity, candidate, role_words)
             if title:
-                merged = _merge_entities(entity, candidate, title, persons_full)
+                merged = _merge_entities(entity, candidate, title, persons_full, role_words=role_words)
                 stats["merges_applied"] += 1
                 stats["merges_by_method"]["title_alias"] += 1
                 consumed.add(candidate_index)
                 break
 
             reveal = _detect_reveal_signal(entity, candidate, persons_full, reveal_words=reveal_words)
+
+            # Check role-symmetric signal only when reveal is absent
+            role_sym = None
             if not reveal:
+                pair_key = (min(index, candidate_index), max(index, candidate_index))
+                role_sym = role_sym_map.get(pair_key)
+
+            signal = reveal or role_sym
+            if not signal:
                 continue
 
             if llm_confirmer is None:
@@ -510,7 +680,7 @@ def resolve_aliases(
                 decision = llm_confirmer({
                     "entity_a": entity,
                     "entity_b": candidate,
-                    "evidence": reveal,
+                    "evidence": signal,
                     "persons_full": persons_full,
                 }) or {}
             except Exception:
@@ -519,14 +689,16 @@ def resolve_aliases(
                 continue
 
             if decision.get("same_person"):
+                method = signal.get("method", "llm")
                 merged_evidence = {
-                    "method": "llm",
+                    "method": method if method == "role_symmetric" else "llm",
                     "confidence": decision.get("confidence", "medium"),
-                    "snippet": decision.get("evidence", reveal["snippet"]),
+                    "snippet": decision.get("evidence", signal["snippet"]),
                 }
-                merged = _merge_entities(entity, candidate, merged_evidence, persons_full)
+                merged = _merge_entities(entity, candidate, merged_evidence, persons_full, role_words=role_words)
                 stats["merges_applied"] += 1
-                stats["merges_by_method"]["llm"] += 1
+                stat_key = "role_symmetric" if method == "role_symmetric" else "llm"
+                stats["merges_by_method"][stat_key] += 1
                 stats["llm_confirmed"] += 1
                 consumed.add(candidate_index)
                 break
@@ -541,9 +713,20 @@ def resolve_aliases(
 def main() -> None:
     payload = json.load(sys.stdin)
     previous_outputs = payload.get("previous_outputs", {})
-    resolve_output = previous_outputs.get("resolve-clusters", {})
-    entities = resolve_output.get("entities", [])
-    narrator = resolve_output.get("narrator")
+    all_stage_outputs = payload.get("all_stage_outputs", {})
+    # New pipeline: entities come from merge-entities; fall back to resolve-clusters for compat.
+    entity_source = (
+        all_stage_outputs.get("merge-entities")
+        or previous_outputs.get("merge-entities")
+        or previous_outputs.get("resolve-clusters")
+        or {}
+    )
+    entities = entity_source.get("entities", [])
+    narrator = entity_source.get("narrator")
+    # Relationships from relationship-extraction (empty list if stage not run yet).
+    relationships: list[dict] = (
+        all_stage_outputs.get("relationship-extraction", {}).get("relationships", [])
+    )
 
     ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
     spacy_model = ctx.get("spacy_model", "en_core_web_lg")
@@ -587,6 +770,8 @@ def main() -> None:
         entities, persons_full=persons_full, narrator=narrator,
         llm_confirmer=llm_confirmer, reveal_words=reveal_words,
         role_words=role_words, pattern_templates=pattern_templates,
+        relationships=relationships,
+        role_symmetric_min_shared=ctx.get("role_symmetric_min_shared", 2),
     )
     json.dump(result, sys.stdout, ensure_ascii=False)
 

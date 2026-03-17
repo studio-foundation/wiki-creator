@@ -74,5 +74,18 @@
   "role_patterns": [
     "\\b[a-z][a-zàâéèêëîïôùûüç'\\- ]*assassin\\b",
     "\\b[a-z][a-zàâéèêëîïôùûüç'\\- ]*champion\\b"
+  ],
+  "flashback_cues": [
+    "des années plus tôt",
+    "des années auparavant",
+    "des mois plus tôt",
+    "bien avant",
+    "il se souvenait",
+    "elle se souvenait",
+    "il se rappelait",
+    "elle se rappelait",
+    "dans un autre temps",
+    "autrefois",
+    "jadis"
   ]
 }

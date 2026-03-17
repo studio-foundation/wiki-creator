@@ -99,14 +99,15 @@ def test_wiki_page_item_pipeline_uses_ralph_and_contract() -> None:
     assert isinstance(llm_stage.get("ralph"), dict), "wiki-page-item stage must configure ralph"
 
 
-def test_wiki_resolution_pipeline_inserts_alias_resolution_between_resolve_and_merge() -> None:
+def test_wiki_resolution_pipeline_alias_resolution_runs_after_merge_and_relationship() -> None:
     pipeline_path = PIPELINES_DIR / "wiki-resolution.pipeline.yaml"
     doc = _load_yaml(pipeline_path)
     stage_names = [stage.get("name") for stage in doc.get("stages", [])]
 
     assert "alias-resolution" in stage_names
-    assert stage_names.index("resolve-clusters") < stage_names.index("alias-resolution")
-    assert stage_names.index("alias-resolution") < stage_names.index("merge-entities")
+    assert stage_names.index("merge-entities") < stage_names.index("alias-resolution")
+    assert stage_names.index("relationship-extraction") < stage_names.index("alias-resolution")
+    assert stage_names.index("alias-resolution") < stage_names.index("entity-classification")
 
     alias_stage = next(
         stage for stage in doc.get("stages", [])

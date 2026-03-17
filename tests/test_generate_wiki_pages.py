@@ -561,3 +561,58 @@ def test_build_prompt_warns_against_citing_chapter_labels():
 def test_label_chapter_key(key, expected):
     from scripts.generate_wiki_pages import _label_chapter_key
     assert _label_chapter_key(key) == expected
+
+
+def test_build_prompt_puts_flashback_chapters_in_backstory_block():
+    entity = {
+        "canonical_name": "Celaena",
+        "type": "PERSON",
+        "importance": "principal",
+        "aliases": [],
+        "context_by_chapter": {},
+        "related_context": [],
+        "relationships": [],
+        "chapter_summary_context": [
+            {
+                "chapter_key": "ch01",
+                "summary_bullets": ["She arrived at the castle."],
+                "temporal_context": "present",
+            },
+            {
+                "chapter_key": "ch02",
+                "summary_bullets": ["Five years earlier, she trained under Arobynn."],
+                "temporal_context": "flashback",
+            },
+        ],
+    }
+    prompt = build_prompt(entity, "Throne of Glass", ["## Biographie", "## Relations"])
+    assert "## Chapter summary context" in prompt
+    assert "She arrived at the castle." in prompt
+    assert "## Backstory context" in prompt
+    assert "Five years earlier" in prompt
+    backstory_start = prompt.index("## Backstory context")
+    present_start = prompt.index("## Chapter summary context")
+    assert present_start < backstory_start
+    assert prompt.index("She arrived at the castle.") < backstory_start
+
+
+def test_build_prompt_omits_backstory_block_when_no_flashbacks():
+    entity = {
+        "canonical_name": "Dorian",
+        "type": "PERSON",
+        "importance": "secondary",
+        "aliases": [],
+        "context_by_chapter": {},
+        "related_context": [],
+        "relationships": [],
+        "chapter_summary_context": [
+            {
+                "chapter_key": "ch01",
+                "summary_bullets": ["Dorian met Chaol in the hall."],
+                "temporal_context": "present",
+            },
+        ],
+    }
+    prompt = build_prompt(entity, "Throne of Glass", ["## Biographie"])
+    assert "## Backstory context" not in prompt
+    assert "Dorian met Chaol" in prompt

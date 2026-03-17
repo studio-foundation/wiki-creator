@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from scripts.wiki_preparation import (
+    build_chapter_summary_context,
     build_entity_bundle,
     extract_context,
     stage_outputs_from_payload,
@@ -312,6 +313,36 @@ def test_build_chapter_summary_context_matches_xhtml_keys_to_chapter_title_keys(
     assert len(result) == 1
     assert result[0]["chapter_key"] == "C25.xhtml"
     assert result[0]["summary_bullets"] == ["Celaena faces the champion trials."]
+
+
+def test_build_chapter_summary_context_includes_temporal_context():
+    entity = {"type": "PERSON", "canonical_name": "Celaena", "chapter_mentions": {}}
+    chapter_summaries = {
+        "Chapter 1": {
+            "chapter_id": "ch01",
+            "chapter_title": "Chapter 1",
+            "summary_bullets": ["Celaena arrived at the castle."],
+            "temporal_context": "flashback",
+        }
+    }
+    context_by_chapter = {"Chapter 1": ["some mention"]}
+    result = build_chapter_summary_context(entity, chapter_summaries, 10, context_by_chapter)
+    assert len(result) == 1
+    assert result[0]["temporal_context"] == "flashback"
+
+
+def test_build_chapter_summary_context_defaults_unknown_when_missing():
+    entity = {"type": "PERSON", "canonical_name": "Celaena", "chapter_mentions": {}}
+    chapter_summaries = {
+        "Chapter 1": {
+            "chapter_id": "ch01",
+            "chapter_title": "Chapter 1",
+            "summary_bullets": ["Celaena arrived."],
+        }
+    }
+    context_by_chapter = {"Chapter 1": ["some mention"]}
+    result = build_chapter_summary_context(entity, chapter_summaries, 10, context_by_chapter)
+    assert result[0]["temporal_context"] == "unknown"
 
 
 def test_build_entity_bundle_skips_chapter_summary_context_for_non_person():

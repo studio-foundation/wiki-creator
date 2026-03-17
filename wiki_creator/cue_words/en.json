@@ -72,5 +72,17 @@
     "\\b[a-z][a-z'\\- ]*assassin\\b",
     "\\b[a-z][a-z'\\- ]*champion\\b",
     "\\bking'?s champion\\b"
+  ],
+  "flashback_cues": [
+    "years before",
+    "years earlier",
+    "months before",
+    "long before",
+    "she remembered",
+    "he remembered",
+    "she recalled",
+    "he recalled",
+    "in another time",
+    "once upon a time"
   ]
 }

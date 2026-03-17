@@ -5,12 +5,14 @@ import json
 from scripts.chapter_summary import (
     ChapterSummaryConfig,
     _chapter_summary_config_from_payload,
+    _detect_temporal_context,
     _epub_output_from_payload,
     _extract_stage_output_from_run_payload,
     _parse_llm_summary_response_text,
     _score_sentence,
     summarize_chapters_incrementally,
     summarize_chapter,
+    summarize_chapter_from_item_result,
     summarize_chapters,
 )
 
@@ -488,3 +490,94 @@ def test_summarize_chapter_llm_mode_without_fallback_returns_specific_flag(monke
     assert result["summary_method"] == "llm"
     assert result["summary_bullets"] == ["No reliable summary available for this chapter."]
     assert "llm_timeout" in result["quality_flags"]
+
+
+def test_detect_temporal_context_flashback_when_cue_matches():
+    content = "Des années plus tôt, Celaena vivait encore à Rifthold."
+    result = _detect_temporal_context(content, flashback_cues=("des années plus tôt",))
+    assert result == "flashback"
+
+
+def test_detect_temporal_context_present_when_no_cue():
+    content = "Celaena entered the castle and met Dorian."
+    result = _detect_temporal_context(content, flashback_cues=("years before", "she remembered"))
+    assert result == "present"
+
+
+def test_detect_temporal_context_unknown_when_no_cues_provided():
+    content = "Celaena entered the castle and met Dorian."
+    result = _detect_temporal_context(content, flashback_cues=())
+    assert result == "unknown"
+
+
+def test_detect_temporal_context_case_insensitive():
+    content = "YEARS BEFORE she had trained under Arobynn."
+    result = _detect_temporal_context(content, flashback_cues=("years before",))
+    assert result == "flashback"
+
+
+def test_summarize_chapter_extractive_sets_temporal_context_present():
+    chapter = {
+        "id": "ch01", "title": "Chapter 1",
+        "content": "Celaena entered the castle and met Dorian.",
+    }
+    result = summarize_chapter(chapter, flashback_cues=("years before",))
+    assert result["temporal_context"] == "present"
+    assert result["flashback_anchor"] is None
+
+
+def test_summarize_chapter_extractive_detects_flashback():
+    chapter = {
+        "id": "ch02", "title": "Chapter 2",
+        "content": "Years before, she had trained under Arobynn in the Assassins Keep.",
+    }
+    result = summarize_chapter(chapter, flashback_cues=("years before",))
+    assert result["temporal_context"] == "flashback"
+    assert result["flashback_anchor"] is None
+
+
+def test_summarize_chapter_no_cues_gives_unknown():
+    chapter = {
+        "id": "ch03", "title": "Chapter 3",
+        "content": "Celaena studied the map and found nothing.",
+    }
+    result = summarize_chapter(chapter, flashback_cues=())
+    assert result["temporal_context"] == "unknown"
+
+
+def test_summarize_chapter_from_item_result_passes_through_temporal_context():
+    chapter = {"id": "ch01", "title": "Chapter 1", "content": "..."}
+    item_result = {
+        "chapter_id": "ch01",
+        "chapter_title": "Chapter 1",
+        "summary_bullets": ["Celaena found a clue."],
+        "temporal_context": "flashback",
+        "flashback_anchor": "5 ans avant les événements du ch.01",
+    }
+    result = summarize_chapter_from_item_result(chapter, item_result)
+    assert result["temporal_context"] == "flashback"
+    assert result["flashback_anchor"] == "5 ans avant les événements du ch.01"
+
+
+def test_summarize_chapter_from_item_result_defaults_unknown_when_missing():
+    chapter = {"id": "ch01", "title": "Chapter 1", "content": "..."}
+    item_result = {
+        "summary_bullets": ["Celaena found a clue."],
+    }
+    result = summarize_chapter_from_item_result(chapter, item_result)
+    assert result["temporal_context"] == "unknown"
+    assert result["flashback_anchor"] is None
+
+
+def test_summarize_chapter_from_item_result_fallback_uses_heuristic():
+    chapter = {
+        "id": "ch02", "title": "Chapter 2",
+        "content": "Years before, Celaena had trained in the Keep.",
+    }
+    item_result = {"summary_bullets": [], "error": "llm_timeout"}
+    cfg = ChapterSummaryConfig(mode="llm", llm_fallback_to_extractive=True)
+    result = summarize_chapter_from_item_result(
+        chapter, item_result, config=cfg, flashback_cues=("years before",)
+    )
+    assert result["summary_method"] == "extractive_fallback"
+    assert result["temporal_context"] == "flashback"
