@@ -560,6 +560,9 @@ def main() -> None:
     language = export_categories.get("language") or infer_language(spacy_model)
     reveal_words = tuple(load_lang_config(language).get("reveal_words", _REVEAL_WORDS))
     role_words: list[str] = list(ctx.get("role_words", []))
+    lang_cfg = load_lang_config(language)
+    cue_role_words = [w.lower() for w in lang_cfg.get("person_cue_words", [])]
+    role_words = list(dict.fromkeys(role_words + cue_role_words))  # dedup, preserve order
 
     persons_full = {}
     try:
