@@ -1205,6 +1205,7 @@ def main() -> None:
     min_chapters_together = DEFAULT_MIN_CHAPTERS_TOGETHER
     spacy_model = "fr_core_news_lg"
     llm_model: str | None = None
+    ollama_url = os.environ.get("OLLAMA_URL", _OLLAMA_URL)
     pronouns: frozenset = frozenset(load_lang_config("fr").get("pronouns", []))
     raw_context = payload.get("additional_context", "")
     if raw_context:
@@ -1212,6 +1213,7 @@ def main() -> None:
             additional = yaml.safe_load(raw_context) or {}
             do_classify = bool(additional.get("classify", False))
             llm_model = additional.get("llm_model") or additional.get("model")
+            ollama_url = additional.get("ollama_url", os.environ.get("OLLAMA_URL", _OLLAMA_URL))
             do_coref = bool(additional.get("coref", False))
             window_size = int(additional.get("window", window_size))
             threshold = int(additional.get("threshold", threshold))
@@ -1259,7 +1261,7 @@ def main() -> None:
                 file=sys.stderr,
             )
         else:
-            relationships = classify_relationships(relationships, model=llm_model)
+            relationships = classify_relationships(relationships, model=llm_model, ollama_url=ollama_url)
             stats["classified"] = sum(1 for r in relationships if r.get("relationship_type"))
 
     narrator = resolution_output.get("narrator", None)

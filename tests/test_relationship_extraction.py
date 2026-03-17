@@ -456,3 +456,62 @@ def test_classify_relationships_keeps_null_on_per_pair_failure():
         result = classify_relationships(_SAMPLE_RELS, model="qwen2.5", ollama_url=_OLLAMA_URL)
     assert result[0]["relationship_type"] is None
     assert len(result) == 1  # pair still included, not dropped
+
+
+import io as _io
+import json as _json
+
+
+def _make_pipeline_payload(classify=True, llm_model="qwen2.5", include_llm_model=True):
+    additional_lines = [f"classify: {str(classify).lower()}"]
+    if include_llm_model:
+        additional_lines.append(f"llm_model: {llm_model}")
+    return {
+        "additional_context": "\n".join(additional_lines),
+        "previous_outputs": {
+            "merge-entities": {
+                "entities": [
+                    {"canonical_name": "Celaena", "type": "PERSON", "relevant": True, "aliases": [], "source_ids": []},
+                    {"canonical_name": "Chaol", "type": "PERSON", "relevant": True, "aliases": [], "source_ids": []},
+                ]
+            }
+        },
+        "all_stage_outputs": {}
+    }
+
+
+def test_pipeline_passes_llm_model_to_classify(monkeypatch):
+    import scripts.relationship_extraction as rel_mod
+    captured = {}
+
+    def fake_classify(rels, *, model, ollama_url):
+        captured["model"] = model
+        captured["ollama_url"] = ollama_url
+        return rels
+
+    monkeypatch.setattr(rel_mod, "classify_relationships", fake_classify)
+    monkeypatch.setattr(rel_mod, "_load_mentions_from_files", lambda p: {})
+    monkeypatch.setattr(rel_mod, "_paths_from_payload", lambda p: None)
+
+    payload = _make_pipeline_payload(classify=True, llm_model="qwen2.5")
+    monkeypatch.setattr("sys.stdin", _io.StringIO(_json.dumps(payload)))
+    monkeypatch.setattr("sys.stdout", _io.StringIO())
+
+    rel_mod.main()
+    assert captured.get("model") == "qwen2.5"
+
+
+def test_pipeline_skips_classify_when_no_llm_model(monkeypatch, capsys):
+    import scripts.relationship_extraction as rel_mod
+
+    monkeypatch.setattr(rel_mod, "_load_mentions_from_files", lambda p: {})
+    monkeypatch.setattr(rel_mod, "_paths_from_payload", lambda p: None)
+
+    payload = _make_pipeline_payload(classify=True, include_llm_model=False)
+    monkeypatch.setattr("sys.stdin", _io.StringIO(_json.dumps(payload)))
+    monkeypatch.setattr("sys.stdout", _io.StringIO())
+
+    rel_mod.main()
+    captured = capsys.readouterr()
+    assert "[ERROR]" in captured.err
+    assert "llm_model" in captured.err
