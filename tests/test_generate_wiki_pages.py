@@ -431,6 +431,56 @@ def test_build_prompt_instructs_plain_infobox_keys():
     assert '"- nom"' in prompt or "no leading" in prompt or 'without "- "' in prompt or "plain string" in prompt
 
 
+def test_build_prompt_includes_typed_relationships_block():
+    """Typed relationships[] must appear in the prompt with entity_b and relationship_type."""
+    entity = {
+        "canonical_name": "Celaena Sardothien",
+        "importance": "principal",
+        "type": "PERSON",
+        "aliases": [],
+        "context_by_chapter": {},
+        "relationships": [
+            {
+                "entity_a": "Celaena Sardothien",
+                "entity_b": "Elena",
+                "cooccurrence_count": 61,
+                "relationship_type": "allié",
+                "direction": "B→A",
+                "evolution": "Elena aide Celaena.",
+            },
+            {
+                "entity_a": "Celaena Sardothien",
+                "entity_b": "Dorian Havilliard",
+                "cooccurrence_count": 48,
+                "relationship_type": "employeur/employé",
+                "direction": "B→A",
+                "evolution": None,
+            },
+        ],
+    }
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"])
+    assert "entity_b: Elena" in prompt
+    assert "relationship_type: allié" in prompt
+    assert "entity_b: Dorian Havilliard" in prompt
+    assert "relationship_type: employeur/employé" in prompt
+    assert "Elena aide Celaena." in prompt
+    assert "ALWAYS include" in prompt
+
+
+def test_build_prompt_no_relationships_omits_section_rule():
+    """When no relationships[], the prompt must not mandate the Relations section."""
+    entity = {
+        "canonical_name": "Celaena Sardothien",
+        "importance": "principal",
+        "type": "PERSON",
+        "aliases": [],
+        "context_by_chapter": {},
+        "relationships": [],
+    }
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"])
+    assert "no typed relationships available" in prompt
+
+
 def test_build_prompt_instructs_no_training_knowledge():
     """Prompt must contain instruction to not use prior training knowledge."""
     entity = {
@@ -443,3 +493,56 @@ def test_build_prompt_instructs_no_training_knowledge():
     prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography"])
     lower = prompt.lower()
     assert "prior knowledge" in lower or "training knowledge" in lower or "do not use" in lower
+
+
+def test_build_prompt_normalizes_xhtml_chapter_keys():
+    entity = {
+        "canonical_name": "Celaena",
+        "importance": "principal",
+        "type": "PERSON",
+        "aliases": [],
+        "context_by_chapter": {
+            "C25.xhtml": ["She crossed the hall."],
+            "C03.xhtml": ["She entered the palace."],
+        },
+        "chapter_summary_context": [],
+        "related_context": [],
+        "relationships": [],
+    }
+    prompt = build_prompt(entity, "Throne of Glass", ["biography"])
+    assert "C25.xhtml" not in prompt
+    assert "C03.xhtml" not in prompt
+    assert "Chapter 25" in prompt
+    assert "Chapter 3" in prompt
+
+
+def test_build_prompt_keeps_non_xhtml_chapter_keys_unchanged():
+    entity = {
+        "canonical_name": "Celaena",
+        "importance": "principal",
+        "type": "PERSON",
+        "aliases": [],
+        "context_by_chapter": {
+            "Chapter 5": ["She crossed the hall."],
+        },
+        "chapter_summary_context": [],
+        "related_context": [],
+        "relationships": [],
+    }
+    prompt = build_prompt(entity, "Throne of Glass", ["biography"])
+    assert "Chapter 5" in prompt
+
+
+def test_build_prompt_warns_against_citing_chapter_labels():
+    entity = {
+        "canonical_name": "Celaena",
+        "importance": "principal",
+        "type": "PERSON",
+        "aliases": [],
+        "context_by_chapter": {"C01.xhtml": ["mention"]},
+        "chapter_summary_context": [],
+        "related_context": [],
+        "relationships": [],
+    }
+    prompt = build_prompt(entity, "Throne of Glass", ["biography"])
+    assert "never mention" in prompt.lower() or "internal reference" in prompt.lower()

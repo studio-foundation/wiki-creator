@@ -145,12 +145,10 @@ FEW_SHOT_EXAMPLE = {
         "combat rapproché, et une mémoire quasi photographique des visages et des plans d'architecture. "
         "Il parle couramment quatre langues, dont le dialecte du Sud qu'il utilise pour ses couvertures marchandes.\n\n"
         "## Relations\n\n"
-        "**Mira Vayne** — Sa recruteuse et supérieure directe. Leur relation est professionnelle, teintée d'une "
-        "méfiance mutuelle que ni l'un ni l'autre ne cherche vraiment à dissoudre.\n\n"
-        "**Lira** — Une informante de la Guilde des Ombres avec qui Doe a partagé une mission à Veldrath. "
-        "Leur histoire commune est fragmentaire, délibérément non élucidée dans le récit.\n\n"
-        "**Le Commandant Arek** — L'ancien supérieur dont la trahison à Veldrath a redéfini la trajectoire de Doe. "
-        "Arek est mort avant le début du roman ; son ombre sur Doe reste présente tout au long du récit.\n\n"
+        "**[[Mira Vayne]]** — mentor/protégé (42 mentions communes). Sa recruteuse et supérieure directe ; "
+        "leur relation est professionnelle, teintée d'une méfiance mutuelle que ni l'un ni l'autre ne cherche vraiment à dissoudre.\n\n"
+        "**[[Lira]]** — allié (18 mentions communes). Une informante de la Guilde des Ombres avec qui Doe a partagé une mission à Veldrath.\n\n"
+        "**[[Le Commandant Arek]]** — antagoniste (9 mentions communes). L'ancien supérieur dont la trahison à Veldrath a redéfini la trajectoire de Doe.\n\n"
         "## Anecdotes\n\n"
         "- Le surnom \"Le Fantôme\" lui a été donné par les membres de la Guilde, non par ses alliés de la Couronne.\n"
         "- Sa couverture marchande implique un commerce de tissus importés du Sud — un choix qui justifie "
@@ -192,6 +190,12 @@ SECTION_DEFINITIONS = {
     },
 }
 
+def _label_chapter_key(key: str) -> str:
+    """Convert EPUB file IDs like C25.xhtml to readable labels like Chapter 25."""
+    m = re.match(r'^[Cc](\d+)\.xhtml$', key)
+    return f"Chapter {int(m.group(1))}" if m else key
+
+
 def build_prompt(entity: dict, book_title: str, sections: list[str]) -> str:
     name = entity["canonical_name"]
     etype = entity["type"]
@@ -204,8 +208,9 @@ def build_prompt(entity: dict, book_title: str, sections: list[str]) -> str:
     # --- Blocs de contexte ---
     context_lines = []
     for chapter, mentions in list(context.items())[:15]:
+        label = _label_chapter_key(chapter)
         for mention in mentions[:3]:
-            context_lines.append(f"  [{chapter}] {mention}")
+            context_lines.append(f"  [{label}] {mention}")
     context_block = "\n".join(context_lines) if context_lines else "  (no excerpts available)"
 
     related_lines = []
@@ -222,6 +227,24 @@ def build_prompt(entity: dict, book_title: str, sections: list[str]) -> str:
         for snippet in rel.get("support_snippets", [])[:2]:
             related_lines.append(f"    - Snippet: {snippet}")
     related_block = "\n".join(related_lines) if related_lines else "  (no related entities available)"
+
+    relationships = entity.get("relationships", [])
+    rel_lines = []
+    for r in relationships[:10]:
+        other = (r.get("entity_b") or "").strip()
+        if not other:
+            continue
+        rtype = r.get("relationship_type") or "co-occurrence fréquente"
+        direction = r.get("direction") or ""
+        evolution = r.get("evolution") or ""
+        count = r.get("cooccurrence_count", 0)
+        line = f"  - entity_b: {other} | relationship_type: {rtype} | cooccurrence_count: {count}"
+        if direction:
+            line += f" | direction: {direction}"
+        if evolution:
+            line += f"\n    evolution: {evolution}"
+        rel_lines.append(line)
+    relationships_block = "\n".join(rel_lines) if rel_lines else ""
 
     chapter_summary_lines = []
     for chapter in chapter_summary_context[:8]:
@@ -280,6 +303,9 @@ Text excerpts from the book (primary source — highest priority):
 Related entities (disambiguation only — do not derive narrative from cooccurrence):
 {related_block}
 
+Typed relationships (use these directly for the ## Relations section):
+{relationships_block if relationships_block else "  (no typed relationships available)"}
+
 Chapter summaries (orientation context — lower priority than excerpts):
 {chapter_summary_block}
 
@@ -306,8 +332,11 @@ Structure:
 - Use exactly these sections in this order: {sections_str}.
 - Target length: {length_guide}
 - The "Infobox" section must use this format: one bullet per field, "- Key: Value".
-- The "Relations" section (if present) must use this format: "**Name** — description of the relationship."
+- For PERSON entities: ALWAYS include a "## Relations" section when "relationships" is in the sections list AND typed relationships are provided above. Do not skip it.
+- Each "## Relations" entry must use this format: "**[[entity_b]]** — [relationship_type] ([cooccurrence_count] mentions communes). [evolution if available]"
+- If no typed relationships are available, omit the "## Relations" section entirely.
 - infobox_fields keys must be plain strings — no leading "- " or "* ". Correct: {{"nom": "X"}}, Wrong: {{"- nom": "X"}}.
+- Context labels like [Chapter N] are internal references — never mention them in your output.
 - infobox_fields must contain ONLY wiki-relevant fields (name, role, affiliation, etc.). Do NOT include internal data fields such as cooccurrence_count, entity_type, importance, or any metadata.
 
 Section definitions for type {etype}:
