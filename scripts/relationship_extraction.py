@@ -884,16 +884,23 @@ Extraits :
 
 Classifie leur relation. Réponds en JSON uniquement, sans markdown :
 {{
+  "evidence": "une phrase : ce que dans les extraits justifie directement le relationship_type",
   "relationship_type": "famille|mentor/protégé|amoureux|antagoniste|allié|employeur/employé|ami|connaissance|autre",
   "direction": "symétrique|A→B|B→A",
   "evolution": "en une phrase, comment la relation évolue",
   "key_moments": ["chXX: description courte"]
-}}"""
+}}
+
+Règles :
+- evolution doit être directement inférable des extraits fournis, non inventée
+- Si aucune évolution n'est observable, écris "relation stable dans les extraits fournis"
+"""
 
         classification = _call_ollama_classify_json(prompt, model, ollama_url)
         if classification:
             rel = {
                 **rel,
+                "evidence": classification.get("evidence"),
                 "relationship_type": classification.get("relationship_type"),
                 "direction": classification.get("direction"),
                 "evolution": classification.get("evolution"),

@@ -432,6 +432,7 @@ _SAMPLE_RELS = [
 
 def test_classify_relationships_populates_type_on_success():
     ollama_response = {
+        "evidence": "Chaol escorts Celaena and they spar together.",
         "relationship_type": "antagoniste",
         "direction": "symétrique",
         "evolution": "ils apprennent à se respecter",
@@ -443,6 +444,7 @@ def test_classify_relationships_populates_type_on_success():
     assert result[0]["relationship_type"] == "antagoniste"
     assert result[0]["direction"] == "symétrique"
     assert result[0]["key_moments"] == ["ch01: première rencontre"]
+    assert result[0]["evidence"] == "Chaol escorts Celaena and they spar together."
 
 
 def test_classify_relationships_returns_unchanged_when_ollama_unavailable():
