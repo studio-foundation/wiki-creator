@@ -49,6 +49,15 @@ def _load_epub_data(paths: BookPaths) -> dict:
     return {}
 
 
+def _filter_exportable_pages(pages: list[dict]) -> list[dict]:
+    """Exclude pages that failed generation — they have no usable content."""
+    exportable = [p for p in pages if not p.get("_failed")]
+    skipped = len(pages) - len(exportable)
+    if skipped:
+        print(f"[wiki-export] Skipping {skipped} _failed page(s)", file=sys.stderr)
+    return exportable
+
+
 def main() -> None:
     payload = json.load(sys.stdin)
     input_cfg = yaml.safe_load(payload["additional_context"])
@@ -61,6 +70,7 @@ def main() -> None:
         or prev.get("wiki-generation", {}).get("pages")
         or []
     )
+    pages = _filter_exportable_pages(pages)
     epub = prev.get("epub-parse") or _load_epub_data(paths)
     book_title = epub.get("title", "Wiki")
     author = epub.get("author", "")
