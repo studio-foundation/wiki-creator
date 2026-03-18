@@ -616,3 +616,50 @@ def test_pipeline_passes_novel_summary_to_classify(monkeypatch):
 
     rel_mod.main()
     assert captured.get("novel_summary") == "Celaena is an assassin."
+
+# ---------------------------------------------------------------------------
+# STU-283: _tightest_span returns minimal span containing both names
+# ---------------------------------------------------------------------------
+
+def test_tightest_span_returns_sentence_with_both_names():
+    """When both names are in the same sentence, return just that sentence."""
+    from scripts.relationship_extraction import _tightest_span
+    window = [
+        "The snow fell hard.",
+        "Dorian and Hollin argued bitterly.",
+        "The king watched from afar.",
+    ]
+    result = _tightest_span(window, "dorian", "hollin")
+    assert "Dorian" in result
+    assert "Hollin" in result
+    assert "snow" not in result
+
+
+def test_tightest_span_spans_two_sentences_when_names_separated():
+    """When names are in different sentences, return the span between them."""
+    from scripts.relationship_extraction import _tightest_span
+    window = [
+        "Dorian entered the hall.",
+        "The fireplace crackled.",
+        "Hollin ran toward him.",
+    ]
+    result = _tightest_span(window, "dorian", "hollin")
+    assert "Dorian" in result
+    assert "Hollin" in result
+
+
+def test_tightest_span_fallback_when_name_not_found():
+    """If a name is not found at all, return window[0] as a safe fallback."""
+    from scripts.relationship_extraction import _tightest_span
+    window = ["Some unrelated sentence.", "Another sentence."]
+    result = _tightest_span(window, "dorian", "hollin")
+    assert result == "Some unrelated sentence."
+
+
+def test_tightest_span_name_matching_is_case_insensitive():
+    """Name lookup must be case-insensitive (matching the detection regex)."""
+    from scripts.relationship_extraction import _tightest_span
+    window = ["DORIAN met hollin at the gate."]
+    result = _tightest_span(window, "dorian", "hollin")
+    assert "DORIAN" in result
+    assert "hollin" in result

@@ -86,6 +86,26 @@ DEFAULT_MIN_CHAPTERS_TOGETHER = 2
 _OLLAMA_URL = "http://localhost:11434"
 
 
+def _tightest_span(window: list[str], name_a: str, name_b: str) -> str:
+    """Return the minimal contiguous sub-sequence of ``window`` that contains
+    both ``name_a`` and ``name_b`` (case-insensitive, word-boundary match).
+
+    Falls back to ``window[0]`` if either name is not found in any sentence.
+    """
+    idx_a: int | None = None
+    idx_b: int | None = None
+    for i, sent in enumerate(window):
+        sent_lower = sent.lower()
+        if idx_a is None and re.search(r'\b' + re.escape(name_a.lower()) + r'\b', sent_lower):
+            idx_a = i
+        if idx_b is None and re.search(r'\b' + re.escape(name_b.lower()) + r'\b', sent_lower):
+            idx_b = i
+    if idx_a is None or idx_b is None:
+        return window[0]
+    lo, hi = min(idx_a, idx_b), max(idx_a, idx_b)
+    return " ".join(window[lo : hi + 1])
+
+
 def build_cooccurrence_graph(
     entities: list[dict],
     mentions_by_entity: dict[str, dict[str, list[str]]],
