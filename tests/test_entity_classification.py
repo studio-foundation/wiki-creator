@@ -645,7 +645,7 @@ def test_alias_canonicalization_deduplicates_relationships():
 
     entities = [
         {"canonical_name": "Chaol Westfall", "aliases": ["Chaol", "Captain Westfall"]},
-        {"canonical_name": "Celaena Sardothien", "aliases": ["Laena"]},
+        {"canonical_name": "Celaena Sardothien", "aliases": ["Laena", "Celaena"]},
     ]
     relationships = [
         {"entity_a": "Captain Westfall", "entity_b": "Celaena", "cooccurrence_count": 3},
