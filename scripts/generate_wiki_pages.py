@@ -302,7 +302,9 @@ def build_prompt(entity: dict, book_title: str, sections: list[str]) -> str:
     # Few-shot example serialisé
     few_shot_json = json.dumps(FEW_SHOT_EXAMPLE, ensure_ascii=False, indent=2)
 
-    return f"""You are writing a wiki page for a fantasy novel called "{book_title}".
+    return f"""This is a fictional world. The following excerpts are the ONLY authoritative source of truth. Ignore any prior knowledge you have of this book, series, or author.
+
+You are writing a wiki page for a fictional novel called "{book_title}".
 Output ONLY a valid JSON object. No markdown fences. No explanation. No preamble.
 
 ---
@@ -317,7 +319,7 @@ Entity to write:
   Type: {etype}
   Known aliases: {alias_str}
 
-Text excerpts from the book (primary source — highest priority):
+GROUNDING EXCERPTS — these are the ONLY facts you may use:
 {context_block}
 
 Related entities (disambiguation only — do not derive narrative from cooccurrence):
@@ -340,7 +342,8 @@ Tone and register:
 - If aliases exist, introduce them naturally in the biography ("also known as X", "born Y").
 
 Content constraints:
-- Use ONLY information present in the excerpts above. Do NOT use your training knowledge about this book or its characters.
+- Every factual claim in your output must be directly supported by one of the GROUNDING EXCERPTS provided above. If you cannot point to a supporting excerpt, do not write the claim.
+- Real-world publication dates and author information are strictly forbidden.
 - Chapter summaries serve as orientation only. Direct excerpts take priority.
 - Do NOT invent plot details, relationships, abilities, or physical traits not supported by excerpts.
 - Do NOT turn cooccurrence between entities into narrative causality.
