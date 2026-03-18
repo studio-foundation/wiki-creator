@@ -134,3 +134,12 @@ entity_overrides:
     force_type: PLACE
   Oakwald:
     force_type: PLACE
+
+validation:
+  series: Throne of Glass
+  forbidden_series:
+    - Kingkiller Chronicle
+    - A Court of Thorns and Roses
+    - An Ember in the Ashes
+    - The Selection
+    - Daughter of Smoke and Bone
