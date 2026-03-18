@@ -51,7 +51,7 @@ def _empty_stats() -> dict:
     return {
         "candidates_considered": 0,
         "merges_applied": 0,
-        "merges_by_method": {"pattern": 0, "cooccurrence": 0, "llm": 0, "title_alias": 0, "role_symmetric": 0},
+        "merges_by_method": {"pattern": 0, "cooccurrence": 0, "llm": 0, "title_alias": 0, "role_symmetric": 0, "pure_title": 0},
         "ambiguous_pairs": 0,
         "llm_attempts": 0,
         "llm_confirmed": 0,
@@ -358,6 +358,41 @@ def _detect_cooccurrence_window(
     snippet_tokens = tokens[ws: ws + _WINDOW_SIZE]
     snippet = " ".join(snippet_tokens)
     return snippet[:200]
+
+
+def _detect_pure_title_in_context(
+    entity_a: dict,
+    entity_b: dict,
+    persons_full: dict,
+    role_words: list[str] | None = None,
+) -> dict | None:
+    """
+    Return evidence if one entity's canonical name is a pure role title (e.g. "Master")
+    AND the other entity's name appears in that title entity's context snippets.
+
+    This handles the case where NER produces a bare title entity ("Master") that refers
+    to a named character ("Brullo") — a case _detect_title_alias cannot cover because the
+    title entity has no surname remainder.
+    """
+    role_words = role_words or []
+    if not role_words:
+        return None
+    for title_entity, proper_entity in ((entity_a, entity_b), (entity_b, entity_a)):
+        title_name = title_entity.get("canonical_name", "")
+        if not _is_pure_title(title_name, role_words):
+            continue
+        proper_names = [n.lower() for n in _entity_names(proper_entity) if n]
+        if not proper_names:
+            continue
+        for snippet in _gather_contexts(title_entity, persons_full):
+            lowered = snippet.lower()
+            if any(pn in lowered for pn in proper_names):
+                return {
+                    "method": "pure_title",
+                    "confidence": "medium",
+                    "snippet": snippet,
+                }
+    return None
 
 
 def _detect_reveal_signal(entity_a: dict, entity_b: dict, persons_full: dict, reveal_words: tuple[str, ...] = ()) -> dict | None:
@@ -670,6 +705,14 @@ def resolve_aliases(
                 merged = _merge_entities(entity, candidate, title, persons_full, role_words=role_words)
                 stats["merges_applied"] += 1
                 stats["merges_by_method"]["title_alias"] += 1
+                consumed.add(candidate_index)
+                break
+
+            pure_title = _detect_pure_title_in_context(entity, candidate, persons_full, role_words=role_words)
+            if pure_title:
+                merged = _merge_entities(entity, candidate, pure_title, persons_full, role_words=role_words)
+                stats["merges_applied"] += 1
+                stats["merges_by_method"]["pure_title"] = stats["merges_by_method"].get("pure_title", 0) + 1
                 consumed.add(candidate_index)
                 break
 

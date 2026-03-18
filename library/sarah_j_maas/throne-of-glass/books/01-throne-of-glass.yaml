@@ -102,6 +102,7 @@ classification:
     - lord
     - captain
     - guard
+    - master
   role_patterns:
     - '\b[a-z][a-z''\- ]*assassin\b'
     - '\b[a-z][a-z''\- ]*champion\b'

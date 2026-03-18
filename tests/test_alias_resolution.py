@@ -983,6 +983,114 @@ def test_detect_role_symmetric_skips_high_direct_cooccurrence():
     assert pairs == []
 
 
+# ---------------------------------------------------------------------------
+# _detect_pure_title_in_context  (STU-281)
+# ---------------------------------------------------------------------------
+
+def test_detect_pure_title_in_context_master_brullo():
+    """'Master' (pure role title) whose context mentions 'Brullo' must be detected as alias."""
+    from scripts.alias_resolution import _detect_pure_title_in_context
+    brullo = {
+        "canonical_name": "Brullo",
+        "aliases": ["Brullo"],
+        "source_ids": ["e_brullo"],
+    }
+    master = {
+        "canonical_name": "Master",
+        "aliases": ["Master"],
+        "source_ids": ["e_master"],
+    }
+    persons_full = {
+        "e_master": {
+            "mentions_by_chapter": {
+                "ch05": [
+                    "Master Brullo corrected her stance.",
+                    "Brullo — the Master — nodded at Celaena.",
+                ]
+            }
+        },
+        "e_brullo": {
+            "mentions_by_chapter": {
+                "ch05": ["Brullo watched the competitors."]
+            }
+        },
+    }
+    result = _detect_pure_title_in_context(brullo, master, persons_full, role_words=["master"])
+    assert result is not None
+    assert result["method"] == "pure_title"
+    assert result["confidence"] == "medium"
+
+
+def test_detect_pure_title_in_context_no_match_when_name_absent_from_context():
+    """No match when the proper-name entity does not appear in the title entity's context."""
+    from scripts.alias_resolution import _detect_pure_title_in_context
+    brullo = {"canonical_name": "Brullo", "aliases": ["Brullo"], "source_ids": ["e_brullo"]}
+    master = {"canonical_name": "Master", "aliases": ["Master"], "source_ids": ["e_master"]}
+    persons_full = {
+        "e_master": {
+            "mentions_by_chapter": {"ch05": ["The Master stood silently."]}
+        },
+        "e_brullo": {
+            "mentions_by_chapter": {"ch05": ["Brullo watched the competitors."]}
+        },
+    }
+    result = _detect_pure_title_in_context(brullo, master, persons_full, role_words=["master"])
+    assert result is None
+
+
+def test_detect_pure_title_in_context_not_triggered_for_title_with_surname():
+    """'Captain Westfall' is NOT a pure title — function must not fire."""
+    from scripts.alias_resolution import _detect_pure_title_in_context
+    captain = {"canonical_name": "Captain Westfall", "aliases": ["Captain Westfall"], "source_ids": []}
+    chaol = {"canonical_name": "Chaol Westfall", "aliases": ["Chaol Westfall"], "source_ids": []}
+    result = _detect_pure_title_in_context(captain, chaol, {}, role_words=["captain"])
+    assert result is None
+
+
+def test_resolve_aliases_pure_title_auto_merges_without_llm():
+    """STU-281: 'Master' entity merged into 'Brullo' when its context contains 'Brullo'."""
+    from scripts.alias_resolution import resolve_aliases
+    brullo = {
+        "canonical_name": "Brullo",
+        "type": "PERSON",
+        "aliases": ["Brullo"],
+        "source_ids": ["e_brullo"],
+        "relevant": True,
+    }
+    master = {
+        "canonical_name": "Master",
+        "type": "PERSON",
+        "aliases": ["Master"],
+        "source_ids": ["e_master"],
+        "relevant": True,
+    }
+    persons_full = {
+        "e_master": {
+            "mentions_by_chapter": {
+                "ch05": [
+                    "Master Brullo corrected her stance.",
+                    "Brullo — the Master — nodded.",
+                ]
+            }
+        },
+        "e_brullo": {
+            "mentions_by_chapter": {"ch05": ["Brullo watched the competitors."]}
+        },
+    }
+    result = resolve_aliases(
+        [brullo, master],
+        persons_full=persons_full,
+        llm_confirmer=None,
+        role_words=["master"],
+    )
+    assert len(result["entities"]) == 1
+    entity = result["entities"][0]
+    assert entity["canonical_name"] == "Brullo"
+    assert "Master" in entity["aliases"]
+    assert result["stats"]["merges_applied"] == 1
+    assert result["stats"]["merges_by_method"].get("pure_title", 0) == 1
+
+
 def test_detect_role_symmetric_no_false_positive_zero_token_overlap():
     """
     Hollin and Queen Georgina share ≥2 family-relation buckets (via Dorian and the King)
