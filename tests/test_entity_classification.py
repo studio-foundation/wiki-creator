@@ -6,6 +6,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.entity_classification import (
     _apply_entity_overrides,
     _canonicalize_role_entities,
+    _filter_intra_entity_relationships,
     _is_role_entity_name,
     _normalize_entity_type,
     get_total_mentions,
@@ -548,7 +549,7 @@ def test_classify_entities_empty_concept_keywords_does_not_crash():
 # ---------------------------------------------------------------------------
 # STU-282 — _filter_intra_entity_relationships
 # ---------------------------------------------------------------------------
-from scripts.entity_classification import _filter_intra_entity_relationships
+
 
 
 def test_filter_intra_entity_drops_canonical_alias_pair():
