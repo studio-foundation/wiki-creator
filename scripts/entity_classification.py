@@ -401,6 +401,24 @@ def _filter_intra_entity_relationships(
     return result
 
 
+def _build_alias_merge_map(entities: list[dict]) -> dict[str, str]:
+    """Map every alias (and canonical_name) to its canonical_name.
+
+    Used to canonicalize relationship names after alias-resolution so that
+    'Chaol', 'Captain Westfall', and 'Chaol Westfall' all rewrite to the
+    canonical, and duplicate pairs are aggregated by _rewrite_relationships.
+    """
+    m: dict[str, str] = {}
+    for e in entities:
+        canonical = e.get("canonical_name", "")
+        if not canonical:
+            continue
+        for name in [canonical] + list(e.get("aliases", [])):
+            if name:
+                m[name] = canonical
+    return m
+
+
 def _rewrite_relationships(relationships: list[dict], merge_map: dict[str, str]) -> list[dict]:
     """Rewrite relationships after merges and aggregate duplicate pairs."""
     aggregated: dict[tuple[str, str], dict] = {}

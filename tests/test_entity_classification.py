@@ -5,6 +5,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.entity_classification import (
     _apply_entity_overrides,
+    _build_alias_merge_map,
     _canonicalize_role_entities,
     _filter_intra_entity_relationships,
     _is_role_entity_name,
@@ -594,3 +595,43 @@ def test_filter_intra_entity_keeps_unknown_name():
     rel = {"entity_a": "Chaol Westfall", "entity_b": "UnknownEntity", "cooccurrence_count": 5}
     result = _filter_intra_entity_relationships(entities, [rel])
     assert result == [rel]
+
+
+# STU-285 — _build_alias_merge_map
+
+def test_build_alias_merge_map_maps_canonical_to_itself():
+    entities = [{"canonical_name": "Chaol Westfall", "aliases": []}]
+    result = _build_alias_merge_map(entities)
+    assert result["Chaol Westfall"] == "Chaol Westfall"
+
+
+def test_build_alias_merge_map_maps_aliases_to_canonical():
+    entities = [{"canonical_name": "Chaol Westfall", "aliases": ["Chaol", "Captain Westfall"]}]
+    result = _build_alias_merge_map(entities)
+    assert result["Chaol"] == "Chaol Westfall"
+    assert result["Captain Westfall"] == "Chaol Westfall"
+
+
+def test_build_alias_merge_map_multiple_entities():
+    entities = [
+        {"canonical_name": "Celaena Sardothien", "aliases": ["Laena"]},
+        {"canonical_name": "Chaol Westfall", "aliases": ["Chaol"]},
+    ]
+    result = _build_alias_merge_map(entities)
+    assert result["Laena"] == "Celaena Sardothien"
+    assert result["Chaol"] == "Chaol Westfall"
+    assert len(result) == 4  # 2 canonicals + 2 aliases
+
+
+def test_build_alias_merge_map_skips_empty_canonical():
+    entities = [{"canonical_name": "", "aliases": ["Ghost"]}]
+    result = _build_alias_merge_map(entities)
+    assert result == {}
+
+
+def test_build_alias_merge_map_skips_empty_aliases():
+    entities = [{"canonical_name": "Dorian", "aliases": ["", None]}]
+    result = _build_alias_merge_map(entities)
+    assert "Dorian" in result
+    assert "" not in result
+    assert None not in result
