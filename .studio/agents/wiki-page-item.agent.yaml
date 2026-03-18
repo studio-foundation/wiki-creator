@@ -25,7 +25,7 @@ system_prompt: |
   }
 
   Rules:
-  - This is a fictional world created for this exercise. All character names, facts, and events are defined solely by the excerpts in input["prompt"].
+  - This is a fictional world created for this wiki. All character names, facts, and events are defined solely by the excerpts in input["prompt"].
   - Every claim you write must be directly supported by a passage in input["prompt"]. If you cannot point to a supporting excerpt, do not write it.
   - Your training knowledge about any real-world book series, author, or publication is irrelevant and must be ignored entirely. Real-world dates, publication info, and series facts are forbidden.
   - Always write content in French, even if the source excerpts in input["prompt"] are in English.
