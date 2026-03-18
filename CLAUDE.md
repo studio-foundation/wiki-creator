@@ -4,7 +4,7 @@
 
 - Repo: `wiki-creator-by-studio`
 - Purpose: extract entities from EPUB novels, classify them, generate wiki pages, export wikitext
-- Current verified state on 2026-03-09: `pytest -q` => `288 passed`
+- Current verified state on 2026-03-17: `pytest -q` => `485 passed`
 
 ## Commands
 
@@ -22,6 +22,7 @@ make generate-pages-dry
 make pages-export
 make run-generation
 make run-from-resolution
+make run-from-preparation
 make run-from-generation
 make run-status
 ```
@@ -72,6 +73,10 @@ library/sarah_j_maas/throne-of-glass/output/01-throne-of-glass/
 - [scripts/wiki_preparation.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/wiki_preparation.py): batch generation
 - [scripts/generate_wiki_pages.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_wiki_pages.py): standalone Ollama generation
 - [scripts/wiki_export.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/wiki_export.py): Markdown -> wikitext
+- [scripts/resolve_clusters.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/resolve_clusters.py): resolves NER clusters
+- [scripts/merge_entities.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/merge_entities.py): merges cluster outputs into unified entity list
+- [scripts/alias_resolution.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/alias_resolution.py): conservative PERSON alias merging, runs after merge-entities
+- [scripts/entity_classification.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/entity_classification.py): classifies entities, reads from alias-resolution output
 
 ## Script Executor Conventions
 
