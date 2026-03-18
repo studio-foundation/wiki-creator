@@ -534,6 +534,18 @@ def _bucket_is_clean(
     return True
 
 
+def _names_share_token(entity_a: dict, entity_b: dict) -> bool:
+    """Return True if any name token of entity_a appears in any name of entity_b."""
+    tokens_a: set[str] = set()
+    for name in _entity_names(entity_a):
+        tokens_a.update(t.lower() for t in name.split() if len(t) > 1)
+    for name in _entity_names(entity_b):
+        for token in name.split():
+            if len(token) > 1 and token.lower() in tokens_a:
+                return True
+    return False
+
+
 def _detect_role_symmetric_pairs(
     entities: list[dict],
     relationships: list[dict],
@@ -566,6 +578,8 @@ def _detect_role_symmetric_pairs(
             name_a = a.get("canonical_name", "").lower()
             name_b = b.get("canonical_name", "").lower()
             if _direct_cooccurrence(name_a, name_b, relationships) > direct_cooc_max:
+                continue
+            if not _names_share_token(a, b):
                 continue
             shared = entity_signatures.get(name_a, set()) & entity_signatures.get(name_b, set())
             if len(shared) < min_shared:

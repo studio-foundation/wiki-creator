@@ -826,7 +826,8 @@ def test_build_role_index_skips_unclassified():
     assert index == {}
 
 
-def test_detect_role_symmetric_finds_brullo_master():
+def test_detect_role_symmetric_finds_brullo_old_brullo():
+    """'Brullo' and 'Old Brullo' share a name token and identical role buckets → valid candidate."""
     from scripts.alias_resolution import _detect_role_symmetric_pairs
     brullo = {
         "canonical_name": "Brullo",
@@ -835,10 +836,10 @@ def test_detect_role_symmetric_finds_brullo_master():
         "source_ids": [],
         "relevant": True,
     }
-    master = {
-        "canonical_name": "Master",
+    old_brullo = {
+        "canonical_name": "Old Brullo",
         "type": "PERSON",
-        "aliases": ["Master"],
+        "aliases": ["Old Brullo"],
         "source_ids": [],
         "relevant": True,
     }
@@ -857,21 +858,21 @@ def test_detect_role_symmetric_finds_brullo_master():
         "relevant": True,
     }
     relationships = [
-        # Both Brullo and Master share: Celaena as mentor/protégé AND Dorian as connaissance
-        {"entity_a": "Celaena Sardothien", "entity_b": "Master", "relationship_type": "mentor/protégé", "cooccurrence_count": 12},
+        # Both Brullo and Old Brullo share: Celaena as mentor/protégé AND Dorian as connaissance
+        {"entity_a": "Celaena Sardothien", "entity_b": "Old Brullo", "relationship_type": "mentor/protégé", "cooccurrence_count": 12},
         {"entity_a": "Brullo", "entity_b": "Celaena Sardothien", "relationship_type": "mentor/protégé", "cooccurrence_count": 8},
-        {"entity_a": "Dorian",  "entity_b": "Master",  "relationship_type": "connaissance", "cooccurrence_count": 3},
+        {"entity_a": "Dorian",  "entity_b": "Old Brullo",  "relationship_type": "connaissance", "cooccurrence_count": 3},
         {"entity_a": "Dorian",  "entity_b": "Brullo",  "relationship_type": "connaissance", "cooccurrence_count": 2},
     ]
     pairs = _detect_role_symmetric_pairs(
-        [brullo, master, celaena, dorian],
+        [brullo, old_brullo, celaena, dorian],
         relationships,
         min_shared=2,
         direct_cooc_max=3,
     )
     assert len(pairs) == 1
     names = {pairs[0][0]["canonical_name"], pairs[0][1]["canonical_name"]}
-    assert names == {"Brullo", "Master"}
+    assert names == {"Brullo", "Old Brullo"}
 
 
 def test_detect_role_symmetric_no_false_positive_with_one_shared_third_party():
@@ -894,7 +895,7 @@ def test_detect_role_symmetric_no_false_positive_with_one_shared_third_party():
 
 
 def test_resolve_aliases_role_symmetric_with_llm_merges():
-    """Role-symmetric pairs go to LLM; confirmed pairs are merged with Brullo winning over Master."""
+    """Role-symmetric pairs with shared token go to LLM; confirmed pairs are merged."""
     from scripts.alias_resolution import resolve_aliases
     brullo = {
         "canonical_name": "Brullo",
@@ -903,53 +904,55 @@ def test_resolve_aliases_role_symmetric_with_llm_merges():
         "source_ids": [],
         "relevant": True,
     }
-    master = {
-        "canonical_name": "Master",
+    old_brullo = {
+        "canonical_name": "Old Brullo",
         "type": "PERSON",
-        "aliases": ["Master"],
+        "aliases": ["Old Brullo"],
         "source_ids": [],
         "relevant": True,
     }
     relationships = [
-        {"entity_a": "Celaena", "entity_b": "Master",  "relationship_type": "mentor/protégé", "cooccurrence_count": 12},
-        {"entity_a": "Brullo",  "entity_b": "Celaena", "relationship_type": "mentor/protégé", "cooccurrence_count": 8},
-        {"entity_a": "Dorian",  "entity_b": "Master",  "relationship_type": "connaissance",   "cooccurrence_count": 3},
-        {"entity_a": "Dorian",  "entity_b": "Brullo",  "relationship_type": "connaissance",   "cooccurrence_count": 2},
+        {"entity_a": "Celaena", "entity_b": "Old Brullo", "relationship_type": "mentor/protégé", "cooccurrence_count": 12},
+        {"entity_a": "Brullo",  "entity_b": "Celaena",    "relationship_type": "mentor/protégé", "cooccurrence_count": 8},
+        {"entity_a": "Dorian",  "entity_b": "Old Brullo", "relationship_type": "connaissance",   "cooccurrence_count": 3},
+        {"entity_a": "Dorian",  "entity_b": "Brullo",     "relationship_type": "connaissance",   "cooccurrence_count": 2},
     ]
 
     def confirm_yes(candidate):
         return {"same_person": True, "confidence": "medium", "evidence": "same role toward Celaena"}
 
     result = resolve_aliases(
-        [brullo, master],
+        [brullo, old_brullo],
         persons_full={},
         llm_confirmer=confirm_yes,
         relationships=relationships,
-        role_words=["master"],
+        role_words=[],
         role_symmetric_min_shared=2,
     )
     assert len(result["entities"]) == 1
-    assert result["entities"][0]["canonical_name"] == "Brullo"
+    # With no persons_full context both names have count=0; _pick_canonical_name prefers
+    # longer multi-token names, so "Old Brullo" wins over "Brullo" in this unit test.
+    assert "Brullo" in result["entities"][0]["canonical_name"]
     assert result["stats"]["merges_by_method"].get("role_symmetric", 0) >= 1
 
 
 def test_resolve_aliases_role_symmetric_no_llm_stays_ambiguous():
-    """Without LLM confirmer, role-symmetric candidates stay as ambiguous_pairs."""
+    """Without LLM confirmer, role-symmetric candidates with shared token stay as ambiguous_pairs."""
     from scripts.alias_resolution import resolve_aliases
     brullo = {"canonical_name": "Brullo", "type": "PERSON", "aliases": ["Brullo"], "source_ids": [], "relevant": True}
-    master = {"canonical_name": "Master", "type": "PERSON", "aliases": ["Master"], "source_ids": [], "relevant": True}
+    old_brullo = {"canonical_name": "Old Brullo", "type": "PERSON", "aliases": ["Old Brullo"], "source_ids": [], "relevant": True}
     relationships = [
-        {"entity_a": "Celaena", "entity_b": "Master",  "relationship_type": "mentor/protégé", "cooccurrence_count": 12},
-        {"entity_a": "Brullo",  "entity_b": "Celaena", "relationship_type": "mentor/protégé", "cooccurrence_count": 8},
-        {"entity_a": "Dorian",  "entity_b": "Master",  "relationship_type": "connaissance",   "cooccurrence_count": 3},
-        {"entity_a": "Dorian",  "entity_b": "Brullo",  "relationship_type": "connaissance",   "cooccurrence_count": 2},
+        {"entity_a": "Celaena", "entity_b": "Old Brullo", "relationship_type": "mentor/protégé", "cooccurrence_count": 12},
+        {"entity_a": "Brullo",  "entity_b": "Celaena",    "relationship_type": "mentor/protégé", "cooccurrence_count": 8},
+        {"entity_a": "Dorian",  "entity_b": "Old Brullo", "relationship_type": "connaissance",   "cooccurrence_count": 3},
+        {"entity_a": "Dorian",  "entity_b": "Brullo",     "relationship_type": "connaissance",   "cooccurrence_count": 2},
     ]
     result = resolve_aliases(
-        [brullo, master],
+        [brullo, old_brullo],
         persons_full={},
         llm_confirmer=None,
         relationships=relationships,
-        role_words=["master"],
+        role_words=[],
         role_symmetric_min_shared=2,
     )
     assert len(result["entities"]) == 2  # not merged
@@ -978,3 +981,60 @@ def test_detect_role_symmetric_skips_high_direct_cooccurrence():
         direct_cooc_max=3,  # 20 > 3 → skip
     )
     assert pairs == []
+
+
+def test_detect_role_symmetric_no_false_positive_zero_token_overlap():
+    """
+    Hollin and Queen Georgina share ≥2 family-relation buckets (via Dorian and the King)
+    and have low direct cooccurrence, but share ZERO name tokens.
+    They must NOT be flagged as a role-symmetric alias candidate.
+    """
+    from scripts.alias_resolution import _detect_role_symmetric_pairs
+
+    hollin = {
+        "canonical_name": "Hollin",
+        "type": "PERSON",
+        "aliases": ["Hollin"],
+        "source_ids": [],
+        "relevant": True,
+    }
+    queen_georgina = {
+        "canonical_name": "Queen Georgina",
+        "type": "PERSON",
+        "aliases": ["Queen Georgina", "Georgina"],
+        "source_ids": [],
+        "relevant": True,
+    }
+    dorian = {
+        "canonical_name": "Dorian",
+        "type": "PERSON",
+        "aliases": ["Dorian"],
+        "source_ids": [],
+        "relevant": True,
+    }
+    king = {
+        "canonical_name": "King",
+        "type": "PERSON",
+        "aliases": ["King"],
+        "source_ids": [],
+        "relevant": True,
+    }
+    relationships = [
+        # Both Hollin and Queen Georgina have a family relation toward Dorian and the King
+        {"entity_a": "Hollin", "entity_b": "Dorian", "relationship_type": "family", "cooccurrence_count": 3},
+        {"entity_a": "Queen Georgina", "entity_b": "Dorian", "relationship_type": "family", "cooccurrence_count": 5},
+        {"entity_a": "Hollin", "entity_b": "King", "relationship_type": "family", "cooccurrence_count": 2},
+        {"entity_a": "Queen Georgina", "entity_b": "King", "relationship_type": "family", "cooccurrence_count": 4},
+        # Hollin and Queen Georgina rarely appear together
+        {"entity_a": "Hollin", "entity_b": "Queen Georgina", "relationship_type": "family", "cooccurrence_count": 1},
+    ]
+    pairs = _detect_role_symmetric_pairs(
+        [hollin, queen_georgina, dorian, king],
+        relationships,
+        min_shared=2,
+        direct_cooc_max=3,
+    )
+    assert pairs == [], (
+        f"Expected no candidates but got: "
+        f"{[(p[0]['canonical_name'], p[1]['canonical_name']) for p in pairs]}"
+    )
