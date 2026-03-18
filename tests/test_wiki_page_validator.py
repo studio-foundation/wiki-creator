@@ -1,6 +1,12 @@
 import json
 import pytest
-from scripts.wiki_page_validator import parse_payload, check_language_fr
+from scripts.wiki_page_validator import (
+    parse_payload,
+    check_language_fr,
+    check_epub_ids,
+    check_infobox_keys,
+    check_series_anchor,
+)
 
 
 def test_parse_payload_extracts_page_and_input():
@@ -37,3 +43,36 @@ def test_check_language_fr_passes_mixed_names():
     page = {"content": "Celaena Sardothien est une assassine du royaume d'Adarlan."}
     errors = check_language_fr(page)
     assert errors == []
+
+
+def test_check_epub_ids_detects_xhtml():
+    page = {"content": "mentionné dans C07.xhtml pour la première fois."}
+    assert check_epub_ids(page) != []
+
+
+def test_check_epub_ids_passes_clean():
+    page = {"content": "Celaena est introduite au chapitre 7."}
+    assert check_epub_ids(page) == []
+
+
+def test_check_infobox_keys_detects_prefixed():
+    page = {"infobox_fields": {"- Statut": "Assassine", "Titre": "Champion"}}
+    assert check_infobox_keys(page) != []
+
+
+def test_check_infobox_keys_passes_clean():
+    page = {"infobox_fields": {"Statut": "Assassine"}}
+    assert check_infobox_keys(page) == []
+
+
+def test_check_series_anchor_detects_missing():
+    page = {"content": "Celaena est une assassine redoutable."}
+    meta = {"series": "Throne of Glass"}
+    errors = check_series_anchor(page, meta)
+    assert any("série" in e.lower() for e in errors)
+
+
+def test_check_series_anchor_passes_present():
+    page = {"content": "Celaena Sardothien est un personnage principal de Throne of Glass."}
+    meta = {"series": "Throne of Glass"}
+    assert check_series_anchor(page, meta) == []

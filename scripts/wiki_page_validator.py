@@ -36,6 +36,31 @@ def check_language_fr(page: dict) -> list[str]:
     return []
 
 
+def check_epub_ids(page: dict) -> list[str]:
+    content = page.get("content", "")
+    if ".xhtml" in content:
+        return ["❌ ID EPUB dans le contenu (ex: C07.xhtml)"]
+    return []
+
+
+def check_infobox_keys(page: dict) -> list[str]:
+    ib = page.get("infobox_fields", {})
+    bad = [k for k in ib if k.startswith("- ")]
+    if bad:
+        return [f"❌ Clé infobox préfixée par '- ' : {bad[0]}"]
+    return []
+
+
+def check_series_anchor(page: dict, meta: dict) -> list[str]:
+    series = meta.get("series", "")
+    if not series:
+        return []
+    first_para = (page.get("content", "") + "\n").split("\n")[0]
+    if series.lower() not in first_para.lower():
+        return [f"❌ Le titre de série '{series}' est absent du premier paragraphe"]
+    return []
+
+
 def parse_payload(payload: dict) -> tuple[dict, dict]:
     """Extract (page, meta) from Studio payload."""
     prev = payload.get("previous_outputs", {})
