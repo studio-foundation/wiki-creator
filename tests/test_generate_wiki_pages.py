@@ -521,6 +521,52 @@ def test_build_prompt_instructs_no_training_knowledge():
     assert "prior knowledge" in lower or "training knowledge" in lower or "do not use" in lower
 
 
+def test_build_prompt_opens_with_fictional_world_framing():
+    """Prompt must start with a positive fictional-world framing before any context."""
+    entity = {
+        "canonical_name": "Celaena Sardothien",
+        "importance": "principal",
+        "type": "PERSON",
+        "aliases": [],
+        "context_by_chapter": {},
+    }
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography"])
+    # The fictional world framing must appear early (before the entity block)
+    framing_pos = prompt.lower().find("fictional world")
+    entity_pos = prompt.find("Entity to write:")
+    assert framing_pos != -1, "Prompt must contain 'fictional world' framing"
+    assert entity_pos != -1, "Prompt must contain 'Entity to write:' marker"
+    assert framing_pos < entity_pos, "Fictional world framing must appear before entity block"
+
+
+def test_build_prompt_uses_positive_grounding_constraint():
+    """Prompt must use a positive grounding constraint anchored to excerpts."""
+    entity = {
+        "canonical_name": "Celaena Sardothien",
+        "importance": "principal",
+        "type": "PERSON",
+        "aliases": [],
+        "context_by_chapter": {},
+    }
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography"])
+    lower = prompt.lower()
+    assert "every factual claim" in lower, "Prompt must contain 'every factual claim' positive grounding"
+    assert "grounding excerpts" in lower, "Positive grounding constraint must reference 'GROUNDING EXCERPTS'"
+
+
+def test_build_prompt_grounding_excerpts_header_is_prominent():
+    """Excerpt block header must use 'GROUNDING EXCERPTS' to reinforce salience."""
+    entity = {
+        "canonical_name": "Celaena Sardothien",
+        "importance": "principal",
+        "type": "PERSON",
+        "aliases": [],
+        "context_by_chapter": {"C01.xhtml": ["She crossed the hall."]},
+    }
+    prompt = build_prompt(entity, "Throne of Glass", ["biography"])
+    assert "GROUNDING EXCERPTS" in prompt
+
+
 def test_build_prompt_normalizes_xhtml_chapter_keys():
     entity = {
         "canonical_name": "Celaena",
