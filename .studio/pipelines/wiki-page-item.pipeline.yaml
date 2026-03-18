@@ -1,14 +1,29 @@
 name: wiki-page-item
-description: Generate one wiki page item with Studio validation and Ralph retries
-version: 1
+description: Generate one wiki page item with validation loop
+version: 2
 
 stages:
-  - name: wiki-page-item
-    kind: analysis
-    agent: wiki-page-item
-    contract: wiki-page-item
-    ralph:
-      max_attempts: 3
-    context:
-      include:
-        - input
+  - group: generation-validation
+    max_iterations: 3
+    stages:
+      - name: wiki-page-item
+        kind: analysis
+        agent: wiki-page-item
+        contract: wiki-page-item
+        ralph:
+          max_attempts: 3
+        context:
+          include:
+            - input
+            - group_feedback
+
+      - name: wiki-page-validator
+        kind: validation
+        executor: script
+        runtime: python
+        script: scripts/wiki_page_validator.py
+        contract: wiki-page-validator
+        context:
+          include:
+            - input
+            - previous_stage_output

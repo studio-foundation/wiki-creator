@@ -19,7 +19,8 @@ def test_script_stages_use_script_paths_only() -> None:
     """`script` must be a file path, not a command with inline flags."""
     for pipeline_path in PIPELINES_DIR.glob("*.pipeline.yaml"):
         doc = _load_yaml(pipeline_path)
-        for stage in doc.get("stages", []):
+        all_stages = _iter_stages(doc.get("stages", []))
+        for stage in all_stages:
             if stage.get("executor") != "script":
                 continue
             script = stage.get("script", "")
@@ -83,6 +84,17 @@ def test_wiki_page_item_contract_exists_with_required_fields() -> None:
     assert required_fields == ["title", "importance", "entity_type", "infobox_fields", "content"]
 
 
+def _iter_stages(stages: list) -> list:
+    """Flatten top-level and group-nested stages into a single iterable."""
+    result = []
+    for stage in stages:
+        if "group" in stage:
+            result.extend(stage.get("stages", []))
+        else:
+            result.append(stage)
+    return result
+
+
 def test_wiki_page_item_pipeline_uses_ralph_and_contract() -> None:
     pipeline_path = PIPELINES_DIR / "wiki-page-item.pipeline.yaml"
     agent_path = AGENTS_DIR / "wiki-page-item.agent.yaml"
@@ -91,8 +103,9 @@ def test_wiki_page_item_pipeline_uses_ralph_and_contract() -> None:
     assert agent_path.exists(), "wiki-page-item agent is missing"
 
     doc = _load_yaml(pipeline_path)
+    all_stages = _iter_stages(doc.get("stages", []))
     llm_stage = next(
-        stage for stage in doc.get("stages", [])
+        stage for stage in all_stages
         if stage.get("contract") == "wiki-page-item"
     )
     assert llm_stage.get("agent") == "wiki-page-item"
