@@ -543,3 +543,53 @@ def test_classify_entities_empty_concept_keywords_does_not_crash():
     entities = [{"canonical_name": "Magic", "type": "OTHER", "source_ids": [], "relevant": True}]
     result = classify_entities(entities, {}, {}, {}, "auto", concept_keywords=frozenset())
     assert result[0]["importance"] in ("principal", "secondary", "figurant", "ignored")
+
+
+# ---------------------------------------------------------------------------
+# STU-282 — _filter_intra_entity_relationships
+# ---------------------------------------------------------------------------
+from scripts.entity_classification import _filter_intra_entity_relationships
+
+
+def test_filter_intra_entity_drops_canonical_alias_pair():
+    """canonical ↔ alias of the same entity must be dropped."""
+    entities = [
+        {"canonical_name": "Chaol Westfall", "aliases": ["Captain Westfall", "Chaol"], "type": "PERSON"},
+        {"canonical_name": "Celaena Sardothien", "aliases": ["Laena"], "type": "PERSON"},
+    ]
+    relationships = [
+        {"entity_a": "Chaol Westfall", "entity_b": "Captain Westfall", "cooccurrence_count": 12},
+    ]
+    assert _filter_intra_entity_relationships(entities, relationships) == []
+
+
+def test_filter_intra_entity_drops_alias_alias_pair():
+    """Two aliases of the same entity must be dropped."""
+    entities = [
+        {"canonical_name": "Dorian Havilliard", "aliases": ["Crown Prince", "Dorian"], "type": "PERSON"},
+    ]
+    relationships = [
+        {"entity_a": "Crown Prince", "entity_b": "Dorian", "cooccurrence_count": 8},
+    ]
+    assert _filter_intra_entity_relationships(entities, relationships) == []
+
+
+def test_filter_intra_entity_keeps_cross_entity_pair():
+    """Relationship between two different entities must be kept."""
+    entities = [
+        {"canonical_name": "Chaol Westfall", "aliases": ["Captain Westfall"], "type": "PERSON"},
+        {"canonical_name": "Celaena Sardothien", "aliases": ["Laena"], "type": "PERSON"},
+    ]
+    rel = {"entity_a": "Chaol Westfall", "entity_b": "Celaena Sardothien", "cooccurrence_count": 30}
+    result = _filter_intra_entity_relationships(entities, [rel])
+    assert result == [rel]
+
+
+def test_filter_intra_entity_keeps_unknown_name():
+    """If one name is not in the entity list, the relationship passes through."""
+    entities = [
+        {"canonical_name": "Chaol Westfall", "aliases": ["Captain Westfall"], "type": "PERSON"},
+    ]
+    rel = {"entity_a": "Chaol Westfall", "entity_b": "UnknownEntity", "cooccurrence_count": 5}
+    result = _filter_intra_entity_relationships(entities, [rel])
+    assert result == [rel]
