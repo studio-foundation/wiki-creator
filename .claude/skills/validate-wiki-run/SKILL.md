@@ -5,12 +5,12 @@ description: Audit de run de génération Wiki Creator. Use this skill whenever 
 
 # validate-wiki-run
 
-Skill d'audit qualité pour Wiki Creator. L'utilisatrice dépose des fichiers d'une run de génération et attend un bilan structuré avec delta vs run précédente, validation des issues actives, et identification des nouveaux problèmes.
+Skill d'audit qualité pour Wiki Creator. L'utilisatrice dépose des fichiers d'une run de génération et attend un bilan structuré avec delta vs run précédente, validation des critères qualité, et identification des nouveaux problèmes.
 
 ## Inputs attendus
 
 - `wiki_pages.json` — output de génération (obligatoire)
-- `batch_000.json` — premier batch d'entrée (optionnel mais recommandé)
+- `batch_*.json` — batches d'entrée (optionnel mais recommandé, itérer sur tous)
 - Tout autre batch ou fichier intermédiaire fourni
 
 ## Workflow
@@ -61,25 +61,50 @@ for d in ['Captain Westfall','Crown Prince','Chaol Westfall']:
     print(f"Doublon {d}: {'PRÉSENT' if d in titles else 'absent'}")
 ```
 
-Si `batch_000.json` est disponible, ajoute :
+Si des fichiers `batch_*.json` sont disponibles, itère sur tous :
 
 ```python
-with open('/mnt/user-data/uploads/batch_000.json') as f:
-    batch = json.load(f)
+import glob, json
+from collections import Counter
 
-for e in batch.get('entities', []):
-    rels = e.get('relationships', [])
-    typed = [r for r in rels if r.get('relationship_type')]
-    null_evol = [r for r in rels if r.get('evolution') in (None, 'relation stable dans les extraits fournis', '')]
-    empty_moments = [r for r in rels if not r.get('key_moments')]
-    print(f"\n{e['canonical_name']}: {len(typed)}/{len(rels)} relations typées")
-    print(f"  evolution générique/null: {len(null_evol)}/{len(rels)}")
-    print(f"  key_moments vides: {len(empty_moments)}/{len(rels)}")
-    print(f"  aliases: {e.get('aliases', [])}")
-    if typed:
-        from collections import Counter
-        type_dist = Counter(r.get('relationship_type') for r in typed)
-        print(f"  types: {dict(type_dist)}")
+batch_files = sorted(glob.glob('/mnt/user-data/uploads/batch_*.json'))
+all_rels = []
+for bf in batch_files:
+    with open(bf) as f:
+        batch = json.load(f)
+    entities = batch.get('entities', [])
+    print(f"\n=== {bf.split('/')[-1]} — {len(entities)} entités ===")
+    for e in entities:
+        rels = e.get('relationships', [])
+        typed = [r for r in rels if r.get('relationship_type')]
+        null_evol = [r for r in rels if r.get('evolution') in (None, 'relation stable dans les extraits fournis', '')]
+        empty_moments = [r for r in rels if not r.get('key_moments')]
+        no_evidence = [r for r in rels if not r.get('evidence')]
+        tc = e.get('chapter_summaries', [])
+        tc_values = [s.get('temporal_context', '?') for s in tc] if isinstance(tc, list) else []
+        print(f"\n{e['canonical_name']}: {len(typed)}/{len(rels)} relations typées")
+        print(f"  evolution générique/null: {len(null_evol)}/{len(rels)}")
+        print(f"  key_moments vides: {len(empty_moments)}/{len(rels)}")
+        print(f"  evidence absent: {len(no_evidence)}/{len(rels)}")
+        print(f"  aliases: {e.get('aliases', [])}")
+        if typed:
+            type_dist = Counter(r.get('relationship_type') for r in typed)
+            print(f"  types: {dict(type_dist)}")
+        if tc_values:
+            tc_dist = Counter(tc_values)
+            print(f"  temporal_context chapitres: {dict(tc_dist)}")
+        all_rels.extend(rels)
+
+# Sommaire global
+print(f"\n=== GLOBAL ===")
+total = len(all_rels)
+print(f"Relations totales: {total}")
+print(f"Typées: {sum(1 for r in all_rels if r.get('relationship_type'))}/{total}")
+print(f"evolution générique: {sum(1 for r in all_rels if r.get('evolution') in (None,'relation stable dans les extraits fournis',''))}/{total}")
+print(f"key_moments vides: {sum(1 for r in all_rels if not r.get('key_moments'))}/{total}")
+print(f"evidence absent: {sum(1 for r in all_rels if not r.get('evidence'))}/{total}")
+all_types = Counter(r.get('relationship_type') for r in all_rels if r.get('relationship_type'))
+print(f"Distribution types: {dict(all_types)}")
 ```
 
 ### Étape 2 — Validation des critères qualité
