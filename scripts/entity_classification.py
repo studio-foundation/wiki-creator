@@ -371,6 +371,36 @@ def _is_role_entity_name(name: str, role_words=None, role_patterns=None) -> bool
     return any(token in _roles for token in tokens if token)
 
 
+def _filter_intra_entity_relationships(
+    entities: list[dict],
+    relationships: list[dict],
+) -> list[dict]:
+    """Drop relationships where both names resolve to the same canonical entity.
+
+    After alias-resolution, two names that were separate pre-merge entities may
+    now be the canonical_name and an alias of the same entity.  Keeping such
+    pairs would produce absurd self-relations in the wiki output (STU-282).
+    """
+    name_to_canonical: dict[str, str] = {}
+    for entity in entities:
+        canonical = entity.get("canonical_name", "")
+        if not canonical:
+            continue
+        name_to_canonical[canonical.lower()] = canonical
+        for alias in entity.get("aliases", []):
+            if alias:
+                name_to_canonical[alias.lower()] = canonical
+
+    result = []
+    for rel in relationships:
+        a = name_to_canonical.get((rel.get("entity_a") or "").lower())
+        b = name_to_canonical.get((rel.get("entity_b") or "").lower())
+        if a and b and a == b:
+            continue
+        result.append(rel)
+    return result
+
+
 def _rewrite_relationships(relationships: list[dict], merge_map: dict[str, str]) -> list[dict]:
     """Rewrite relationships after merges and aggregate duplicate pairs."""
     aggregated: dict[tuple[str, str], dict] = {}
