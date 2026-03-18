@@ -663,3 +663,39 @@ def test_tightest_span_name_matching_is_case_insensitive():
     result = _tightest_span(window, "dorian", "hollin")
     assert "DORIAN" in result
     assert "hollin" in result
+
+
+def test_build_cooccurrence_graph_sample_contexts_contain_both_names():
+    """sample_contexts must contain both entity names (STU-283)."""
+    from scripts.relationship_extraction import build_cooccurrence_graph
+
+    entities = [
+        {"canonical_name": "Dorian", "type": "PERSON", "aliases": [], "relevant": True},
+        {"canonical_name": "Hollin", "type": "PERSON", "aliases": [], "relevant": True},
+    ]
+    mentions = {
+        "Dorian": {
+            "ch01": [
+                "The snow fell hard.",
+                "Dorian entered the hall.",
+                "Hollin ran toward him.",
+                "They spoke quietly.",
+                "The king watched.",
+            ]
+        },
+        "Hollin": {
+            "ch01": [
+                "The snow fell hard.",
+                "Dorian entered the hall.",
+                "Hollin ran toward him.",
+                "They spoke quietly.",
+                "The king watched.",
+            ]
+        },
+    }
+    rels, _ = build_cooccurrence_graph(entities, mentions, window_size=5, min_cooccurrence=1, min_chapters_together=1)
+    assert rels, "Expected at least one relationship"
+    for rel in rels:
+        for ctx in rel["sample_contexts"]:
+            assert "Dorian" in ctx or "dorian" in ctx.lower(), f"Missing Dorian in: {ctx}"
+            assert "Hollin" in ctx or "hollin" in ctx.lower(), f"Missing Hollin in: {ctx}"

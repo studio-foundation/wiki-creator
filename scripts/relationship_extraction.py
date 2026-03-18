@@ -197,7 +197,7 @@ def build_cooccurrence_graph(
                     cooc[key]["count"] += 1
                     cooc[key]["chapters"].add(chapter_id)
                     if len(cooc[key]["contexts"]) < 3:
-                        cooc[key]["contexts"].append(window[0])
+                        cooc[key]["contexts"].append(_tightest_span(window, a, b))
 
     # Build output: filter by min_cooccurrence and min_chapters_together
     relationships = []
