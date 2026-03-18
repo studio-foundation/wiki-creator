@@ -635,3 +635,42 @@ def test_build_alias_merge_map_skips_empty_aliases():
     assert "Dorian" in result
     assert "" not in result
     assert None not in result
+
+
+# STU-285 — alias canonicalization + dedup integration
+
+def test_alias_canonicalization_deduplicates_relationships():
+    """Three alias spellings of the same character-pair collapse to one entry."""
+    from scripts.entity_classification import _rewrite_relationships
+
+    entities = [
+        {"canonical_name": "Chaol Westfall", "aliases": ["Chaol", "Captain Westfall"]},
+        {"canonical_name": "Celaena Sardothien", "aliases": ["Laena"]},
+    ]
+    relationships = [
+        {"entity_a": "Captain Westfall", "entity_b": "Celaena", "cooccurrence_count": 3},
+        {"entity_a": "Chaol", "entity_b": "Laena", "cooccurrence_count": 7},
+        {"entity_a": "Chaol Westfall", "entity_b": "Celaena Sardothien", "cooccurrence_count": 10},
+    ]
+    alias_map = _build_alias_merge_map(entities)
+    result = _rewrite_relationships(relationships, alias_map)
+
+    assert len(result) == 1
+    assert result[0]["entity_a"] == "Celaena Sardothien"
+    assert result[0]["entity_b"] == "Chaol Westfall"
+    assert result[0]["cooccurrence_count"] == 20  # 3 + 7 + 10
+
+
+def test_alias_canonicalization_drops_self_relations():
+    """A relationship where both sides are aliases of the same entity is dropped."""
+    from scripts.entity_classification import _rewrite_relationships
+
+    entities = [
+        {"canonical_name": "Dorian Havilliard", "aliases": ["Crown Prince", "Prince Dorian"]},
+    ]
+    relationships = [
+        {"entity_a": "Crown Prince", "entity_b": "Dorian Havilliard", "cooccurrence_count": 5},
+    ]
+    alias_map = _build_alias_merge_map(entities)
+    result = _rewrite_relationships(relationships, alias_map)
+    assert result == []

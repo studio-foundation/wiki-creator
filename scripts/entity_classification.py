@@ -420,11 +420,35 @@ def _build_alias_merge_map(entities: list[dict]) -> dict[str, str]:
 
 
 def _rewrite_relationships(relationships: list[dict], merge_map: dict[str, str]) -> list[dict]:
-    """Rewrite relationships after merges and aggregate duplicate pairs."""
+    """Rewrite relationships after merges and aggregate duplicate pairs.
+
+    Names are resolved via merge_map (exact match first).  As a fallback,
+    a name that is the first token of exactly one canonical is also resolved
+    to that canonical so that bare first-names like "Celaena" collapse with
+    "Celaena Sardothien".
+    """
+    # Build a first-token → canonical fallback (only when unambiguous)
+    first_token_map: dict[str, str] = {}
+    _seen_first: set[str] = set()
+    for key, canonical in merge_map.items():
+        if key == canonical:  # only process canonical names
+            first = canonical.split()[0] if canonical else ""
+            if first and first not in merge_map:
+                if first in _seen_first:
+                    first_token_map.pop(first, None)  # ambiguous — remove
+                else:
+                    _seen_first.add(first)
+                    first_token_map[first] = canonical
+
+    def _resolve(name: str) -> str:
+        if name in merge_map:
+            return merge_map[name]
+        return first_token_map.get(name, name)
+
     aggregated: dict[tuple[str, str], dict] = {}
     for rel in relationships:
-        a = merge_map.get(rel.get("entity_a", ""), rel.get("entity_a", ""))
-        b = merge_map.get(rel.get("entity_b", ""), rel.get("entity_b", ""))
+        a = _resolve(rel.get("entity_a", ""))
+        b = _resolve(rel.get("entity_b", ""))
         if not a or not b or a == b:
             continue
         key = tuple(sorted((a, b)))
@@ -604,6 +628,9 @@ def run_studio_mode() -> None:
         {k: v for k, v in r.items() if k not in ("sample_contexts", "chapters")}
         for r in rel_output.get("relationships", [])
     ]
+    # STU-285: canonicalize alias names → canonical_name, then deduplicate and aggregate
+    alias_map = _build_alias_merge_map(entities)
+    relationships = _rewrite_relationships(relationships, alias_map)
     relationships = _filter_intra_entity_relationships(entities, relationships)
 
     if not entities:
