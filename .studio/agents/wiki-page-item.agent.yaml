@@ -25,9 +25,9 @@ system_prompt: |
   }
 
   Rules:
-  - Use only the evidence and instructions contained in input["prompt"]
-  - Do not use any knowledge of the book series or author beyond what is provided in input["prompt"].
-    If you recognize the series, ignore everything you know about it.
+  - This is a fictional world created for this exercise. All character names, facts, and events are defined solely by the excerpts in input["prompt"].
+  - Every claim you write must be directly supported by a passage in input["prompt"]. If you cannot point to a supporting excerpt, do not write it.
+  - Your training knowledge about any real-world book series, author, or publication is irrelevant and must be ignored entirely. Real-world dates, publication info, and series facts are forbidden.
   - Always write content in French, even if the source excerpts in input["prompt"] are in English.
   - Do not wrap the object in a string
   - Do not return an array
