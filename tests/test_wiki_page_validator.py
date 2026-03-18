@@ -6,6 +6,7 @@ from scripts.wiki_page_validator import (
     check_epub_ids,
     check_infobox_keys,
     check_series_anchor,
+    check_forbidden_series,
 )
 
 
@@ -76,3 +77,29 @@ def test_check_series_anchor_passes_present():
     page = {"content": "Celaena Sardothien est un personnage principal de Throne of Glass."}
     meta = {"series": "Throne of Glass"}
     assert check_series_anchor(page, meta) == []
+
+
+def test_check_forbidden_series_detects_keyword():
+    page = {"content": "Celaena est un personnage de Kingkiller Chronicle.", "infobox_fields": {}}
+    meta = {"forbidden_series": ["Kingkiller Chronicle", "The Selection"]}
+    errors = check_forbidden_series(page, meta)
+    assert any("Kingkiller" in e for e in errors)
+
+
+def test_check_forbidden_series_checks_infobox_too():
+    page = {"content": "Texte propre.", "infobox_fields": {"Série": "The Selection"}}
+    meta = {"forbidden_series": ["The Selection"]}
+    errors = check_forbidden_series(page, meta)
+    assert errors != []
+
+
+def test_check_forbidden_series_passes_clean():
+    page = {"content": "Celaena est une assassine de Throne of Glass.", "infobox_fields": {}}
+    meta = {"forbidden_series": ["Kingkiller Chronicle"]}
+    assert check_forbidden_series(page, meta) == []
+
+
+def test_check_forbidden_series_empty_list():
+    page = {"content": "N'importe quel contenu.", "infobox_fields": {}}
+    meta = {}
+    assert check_forbidden_series(page, meta) == []

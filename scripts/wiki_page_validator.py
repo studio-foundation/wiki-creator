@@ -61,6 +61,17 @@ def check_series_anchor(page: dict, meta: dict) -> list[str]:
     return []
 
 
+def check_forbidden_series(page: dict, meta: dict) -> list[str]:
+    forbidden = meta.get("forbidden_series", [])
+    if not forbidden:
+        return []
+    haystack = page.get("content", "") + str(page.get("infobox_fields", {}))
+    hits = [kw for kw in forbidden if kw.lower() in haystack.lower()]
+    if hits:
+        return [f"❌ Hallucination cross-série détectée : {hits[0]}"]
+    return []
+
+
 def parse_payload(payload: dict) -> tuple[dict, dict]:
     """Extract (page, meta) from Studio payload."""
     prev = payload.get("previous_outputs", {})
