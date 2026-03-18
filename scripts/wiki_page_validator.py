@@ -22,6 +22,20 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 
+_EN_MARKERS = [
+    "is the", "was a", "was the", "known as", "also known",
+    "she was", "he is", "he was", "they are", "is an", "is a",
+]
+
+
+def check_language_fr(page: dict) -> list[str]:
+    content = page.get("content", "").lower()
+    hits = [m for m in _EN_MARKERS if m in content]
+    if hits:
+        return [f"❌ Contenu en anglais détecté (marqueurs : {', '.join(hits[:3])})"]
+    return []
+
+
 def parse_payload(payload: dict) -> tuple[dict, dict]:
     """Extract (page, meta) from Studio payload."""
     prev = payload.get("previous_outputs", {})
