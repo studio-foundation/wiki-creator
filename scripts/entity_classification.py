@@ -586,6 +586,7 @@ def run_studio_mode() -> None:
         {k: v for k, v in r.items() if k not in ("sample_contexts", "chapters")}
         for r in rel_output.get("relationships", [])
     ]
+    relationships = _filter_intra_entity_relationships(entities, relationships)
 
     if not entities:
         json.dump({"error": "missing relationship-extraction output"}, sys.stdout, ensure_ascii=False)
