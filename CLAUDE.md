@@ -90,6 +90,20 @@ Typical payload shape:
 }
 ```
 
+## wiki-resolution Stage Order (as of STU-276)
+
+Inside `wiki-resolution`, order matters:
+1. `merge-entities` + `relationship-extraction` run first
+2. `alias-resolution` runs after — reads entities from merge-entities output
+3. `entity-classification` reads entities from alias-resolution, relationships from relationship-extraction
+
+## Chapter Summary: temporal_context (as of STU-271)
+
+- Each chapter summary carries `temporal_context: present | flashback`
+- Detected by `_detect_temporal_context` using flashback cues from `cue_words/<lang>.json`
+- Prompt is split into two blocks (present vs backstory) depending on this value
+- `build_chapter_summary_context` propagates `temporal_context` to the context dict
+
 ## Gotchas
 
 - `entity_extraction.py` keys chapter mentions by chapter ID, not chapter title.
