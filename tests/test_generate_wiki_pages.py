@@ -434,7 +434,7 @@ def test_build_prompt_instructs_plain_infobox_keys():
 
 
 def test_build_prompt_includes_typed_relationships_block():
-    """Typed relationships[] must appear in the prompt with entity_b and relationship_type."""
+    """Typed relationships[] must appear in the prompt with related_entity and relationship_type."""
     entity = {
         "canonical_name": "Celaena Sardothien",
         "importance": "principal",
@@ -461,12 +461,36 @@ def test_build_prompt_includes_typed_relationships_block():
         ],
     }
     prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"])
-    assert "entity_b: Elena" in prompt
+    assert "related_entity: Elena" in prompt
     assert "relationship_type: allié" in prompt
-    assert "entity_b: Dorian Havilliard" in prompt
+    assert "related_entity: Dorian Havilliard" in prompt
     assert "relationship_type: employeur/employé" in prompt
     assert "Elena aide Celaena." in prompt
     assert "ALWAYS include" in prompt
+
+
+def test_build_prompt_relationships_normalizes_subject_as_entity_b():
+    """When the subject is entity_b, the prompt should show entity_a as the related entity."""
+    entity = {
+        "canonical_name": "Chaol Westfall",
+        "importance": "principal",
+        "type": "PERSON",
+        "aliases": [],
+        "context_by_chapter": {},
+        "relationships": [
+            {
+                "entity_a": "Celaena Sardothien",
+                "entity_b": "Chaol Westfall",
+                "cooccurrence_count": 45,
+                "relationship_type": "garde",
+                "direction": "A→B",
+                "evolution": None,
+            },
+        ],
+    }
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"])
+    assert "related_entity: Celaena Sardothien" in prompt
+    assert "related_entity: Chaol Westfall" not in prompt
 
 
 def test_build_prompt_no_relationships_omits_section_rule():

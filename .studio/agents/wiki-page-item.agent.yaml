@@ -26,6 +26,9 @@ system_prompt: |
 
   Rules:
   - Use only the evidence and instructions contained in input["prompt"]
+  - Do not use any knowledge of the book series or author beyond what is provided in input["prompt"].
+    If you recognize the series, ignore everything you know about it.
+  - Always write content in French, even if the source excerpts in input["prompt"] are in English.
   - Do not wrap the object in a string
   - Do not return an array
   - Do not return markdown fences
@@ -37,7 +40,7 @@ system_prompt: |
   - Format each relation as: **[[entity_b]]** — [relationship_type] ([cooccurrence_count] mentions communes)
   - Example:
     ## Relations
-    **[[Elena]]** — allié (61 mentions communes)
-    **[[Dorian Havilliard]]** — employeur/employé (48 mentions communes)
-    **[[Chaol Westfall]]** — garde (45 mentions communes)
+    **[[entity_b]]** — [relationship_type] ([cooccurrence_count] mentions communes)
+    **[[entity_c]]** — [relationship_type2] ([cooccurrence_count2] mentions communes)
+    **[[entity_d]]** — [relationship_type3] ([cooccurrence_count3] mentions communes)
   - If relationships[] is empty or entity is not PERSON, omit the "## Relations" section entirely.

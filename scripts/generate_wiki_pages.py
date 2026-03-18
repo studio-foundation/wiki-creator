@@ -235,14 +235,16 @@ def build_prompt(entity: dict, book_title: str, sections: list[str]) -> str:
     )
     rel_lines = []
     for r in relationships[:10]:
-        other = (r.get("entity_b") or "").strip()
+        a = (r.get("entity_a") or "").strip()
+        b = (r.get("entity_b") or "").strip()
+        other = b if a == name else a
         if not other:
             continue
         rtype = r.get("relationship_type") or "co-occurrence fréquente"
         direction = r.get("direction") or ""
         evolution = r.get("evolution") or ""
         count = r.get("cooccurrence_count", 0)
-        line = f"  - entity_b: {other} | relationship_type: {rtype} | cooccurrence_count: {count}"
+        line = f"  - related_entity: {other} | relationship_type: {rtype} | cooccurrence_count: {count}"
         if direction:
             line += f" | direction: {direction}"
         if evolution:
@@ -351,7 +353,7 @@ Structure:
 - Target length: {length_guide}
 - The "Infobox" section must use this format: one bullet per field, "- Key: Value".
 - For PERSON entities: ALWAYS include a "## Relations" section when "relationships" is in the sections list AND typed relationships are provided above. Do not skip it.
-- Each "## Relations" entry must use this format: "**[[entity_b]]** — [relationship_type] ([cooccurrence_count] mentions communes). [evolution if available]"
+- Each "## Relations" entry must use this format: "**[[related_entity]]** — [relationship_type] ([cooccurrence_count] mentions communes). [evolution if available]"
 - If no typed relationships are available, omit the "## Relations" section entirely.
 - infobox_fields keys must be plain strings — no leading "- " or "* ". Correct: {{"nom": "X"}}, Wrong: {{"- nom": "X"}}.
 - Context labels like [Chapter N] are internal references — never mention them in your output.
