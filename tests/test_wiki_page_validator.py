@@ -7,6 +7,8 @@ from scripts.wiki_page_validator import (
     check_infobox_keys,
     check_series_anchor,
     check_forbidden_series,
+    validate_page,
+    build_feedback,
 )
 
 
@@ -103,3 +105,38 @@ def test_check_forbidden_series_empty_list():
     page = {"content": "N'importe quel contenu.", "infobox_fields": {}}
     meta = {}
     assert check_forbidden_series(page, meta) == []
+
+
+def test_validate_page_returns_valid_when_clean():
+    page = {
+        "title": "Celaena",
+        "importance": "principal",
+        "entity_type": "PERSON",
+        "infobox_fields": {"Statut": "Assassine"},
+        "content": "Celaena Sardothien est l'héroïne de Throne of Glass.",
+    }
+    meta = {"series": "Throne of Glass", "forbidden_series": []}
+    result = validate_page(page, meta)
+    assert result["valid"] is True
+    assert result["errors"] == []
+
+
+def test_validate_page_aggregates_all_errors():
+    page = {
+        "title": "Elena",
+        "importance": "secondary",
+        "entity_type": "PERSON",
+        "infobox_fields": {},
+        "content": "Elena was the queen. She is also known as Philippa. C07.xhtml.",
+    }
+    meta = {"series": "Throne of Glass", "forbidden_series": ["Kingkiller"]}
+    result = validate_page(page, meta)
+    assert result["valid"] is False
+    assert len(result["errors"]) >= 2
+
+
+def test_build_feedback_formats_instructions():
+    errors = ["❌ Langue anglaise", "❌ ID EPUB"]
+    feedback = build_feedback(errors)
+    assert "Langue anglaise" in feedback
+    assert "corrige" in feedback.lower() or "régénère" in feedback.lower()

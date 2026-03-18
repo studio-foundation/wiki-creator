@@ -72,6 +72,31 @@ def check_forbidden_series(page: dict, meta: dict) -> list[str]:
     return []
 
 
+def validate_page(page: dict, meta: dict) -> dict:
+    errors: list[str] = []
+    errors += check_language_fr(page)
+    errors += check_epub_ids(page)
+    errors += check_infobox_keys(page)
+    errors += check_series_anchor(page, meta)
+    errors += check_forbidden_series(page, meta)
+    return {
+        "valid": len(errors) == 0,
+        "errors": errors,
+        "feedback": build_feedback(errors) if errors else "",
+    }
+
+
+def build_feedback(errors: list[str]) -> str:
+    lines = "\n".join(f"- {e}" for e in errors)
+    return (
+        "La page précédente contient les erreurs suivantes. "
+        "Régénère-la en les corrigeant toutes :\n"
+        f"{lines}\n\n"
+        "Rappels : écris entièrement en français, appuie chaque affirmation "
+        "sur les extraits fournis, ne mentionne aucune série sauf celle du livre."
+    )
+
+
 def parse_payload(payload: dict) -> tuple[dict, dict]:
     """Extract (page, meta) from Studio payload."""
     prev = payload.get("previous_outputs", {})
@@ -83,5 +108,5 @@ def parse_payload(payload: dict) -> tuple[dict, dict]:
 if __name__ == "__main__":
     payload = json.load(sys.stdin)
     page, meta = parse_payload(payload)
-    result = {"valid": True, "errors": [], "feedback": ""}
+    result = validate_page(page, meta)
     print(json.dumps(result))
