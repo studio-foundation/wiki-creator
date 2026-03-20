@@ -921,6 +921,18 @@ def _run_studio_classifier_item(
     return {"error": "studio_run_output_missing"}
 
 
+_NON_INTERPERSONAL_TYPES = frozenset({"PLACE", "OTHER"})
+
+
+def _should_classify_pair(rel: dict, entity_types: dict[str, str]) -> bool:
+    """Return False if either entity has a non-interpersonal type (PLACE, OTHER)."""
+    for key in ("entity_a", "entity_b"):
+        etype = entity_types.get(rel.get(key, ""), "")
+        if etype in _NON_INTERPERSONAL_TYPES:
+            return False
+    return True
+
+
 def classify_relationships(
     relationships: list[dict],
     *,
@@ -928,14 +940,19 @@ def classify_relationships(
     ollama_url: str = _OLLAMA_URL,
     novel_summary: str | None = None,
     additional_context: str = "",
+    entity_types: dict[str, str] | None = None,
 ) -> list[dict]:
     """Classify relationships using Studio relationship-classifier-item pipeline.
 
     ``model`` and ``ollama_url`` are kept for API compatibility but unused —
     the model is now configured in the relationship-classifier agent YAML.
     """
+    _etypes = entity_types or {}
     result = []
     for rel in relationships:
+        if not _should_classify_pair(rel, _etypes):
+            result.append(rel)
+            continue
         classification = _run_studio_classifier_item(
             rel,
             novel_summary=novel_summary or "",

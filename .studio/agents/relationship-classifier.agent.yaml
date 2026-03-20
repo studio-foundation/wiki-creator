@@ -20,12 +20,20 @@ system_prompt: |
   Allies, friends, family, and romantic interests MUST use their specific type.
   When in doubt between two types, choose the more specific one.
 
+  CRITICAL — co-occurrence vs direct interaction:
+  Before assigning a relationship_type, verify that at least one excerpt shows entity_a and entity_b
+  interacting directly (speaking to each other, acting on each other, being in the same scene together
+  with a meaningful exchange). If the excerpts only show that both characters appear in the same chapter
+  or are mentioned in proximity WITHOUT a direct interaction between them, you MUST return
+  relationship_type: null. Do NOT infer a relationship from co-occurrence alone.
+
   Return exactly:
   {
-    "relationship_type": "famille|mentor/protégé|amoureux|antagoniste|allié|employeur/employé|ami|connaissance|autre",
-    "direction": "symétrique|A→B|B→A",
+    "relationship_type": "famille|mentor/protégé|amoureux|antagoniste|allié|employeur/employé|ami|connaissance|autre|null",
+    "direction": "symétrique|A→B|B→A|null",
     "evolution": "one sentence describing HOW the relationship changes across the provided chapters, or null if no change is observable — do NOT write \"relation stable\" or any equivalent filler",
-    "key_moments": ["chXX: short description"]
+    "key_moments": ["chXX: short description"],
+    "evidence": "verbatim sentence or short passage from sample_contexts that best demonstrates the direct interaction between entity_a and entity_b — must contain both names or clear references to both"
   }
 
   Rules:
@@ -36,3 +44,4 @@ system_prompt: |
   - The "chXX:" prefix must match the chapter ID from the excerpt header
   - For pairs with cooccurrence_count >= 5: you MUST include at least 1 key_moment extracted from sample_contexts
   - If no specific moment can be identified despite searching all excerpts, return: ["no specific moment identifiable in provided excerpts"]
+  - evidence must be a verbatim excerpt from sample_contexts showing BOTH entity_a and entity_b; if relationship_type is null, set evidence to null

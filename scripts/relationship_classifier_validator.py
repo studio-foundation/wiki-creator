@@ -38,13 +38,53 @@ def parse_payload(payload: dict) -> tuple[dict, dict]:
 
 
 def check_relationship_type_valid(clf: dict) -> list[str]:
-    rt = clf.get("relationship_type", "")
+    rt = clf.get("relationship_type")
+    if rt is None:
+        return []  # null = co-occurrence sans interaction directe attestée, réponse valide
     if rt not in _VALID_TYPES:
         return [f"❌ relationship_type invalide ou hors taxonomie : '{rt}'"]
     return []
 
 
+def check_evidence_contains_both_names(clf: dict, meta: dict) -> list[str]:
+    """Vérifie que le champ evidence mentionne les deux entités de la paire.
+
+    Skippé si relationship_type est null (pas d'interaction directe).
+    """
+    rt = clf.get("relationship_type")
+    if rt is None:
+        return []  # null type → pas d'evidence requise
+
+    evidence = clf.get("evidence") or ""
+    evidence_lower = evidence.lower()
+
+    entity_a = meta.get("entity_a", "")
+    entity_b = meta.get("entity_b", "")
+
+    if not evidence_lower:
+        if not entity_a or not entity_b:
+            return []  # pas d'info sur les entités, impossible de vérifier
+        return [
+            f"❌ evidence absent — fournis un extrait verbatim montrant l'interaction directe entre "
+            f"'{entity_a}' et '{entity_b}'"
+        ]
+
+    missing = []
+    for name in (entity_a, entity_b):
+        if name and name.lower() not in evidence_lower:
+            missing.append(name)
+
+    if missing:
+        return [
+            f"❌ evidence ne mentionne pas : {', '.join(missing)} — "
+            f"l'extrait doit montrer une interaction directe entre '{entity_a}' et '{entity_b}'"
+        ]
+    return []
+
+
 def check_evolution_not_generic(clf: dict) -> list[str]:
+    if clf.get("relationship_type") is None:
+        return []  # null type → evolution non requise
     evol = (clf.get("evolution") or "").strip().lower()
     if not evol or evol in _GENERIC_EVOLUTIONS:
         return ["❌ evolution générique ou nulle — décris comment la relation évolue concrètement"]
@@ -55,6 +95,7 @@ def validate_classification(clf: dict, meta: dict) -> dict:
     errors: list[str] = []
     errors += check_relationship_type_valid(clf)
     errors += check_evolution_not_generic(clf)
+    errors += check_evidence_contains_both_names(clf, meta)
     return {
         "valid": len(errors) == 0,
         "errors": errors,

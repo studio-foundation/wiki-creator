@@ -340,6 +340,7 @@ Tone and register:
 - Describe what the entity IS before describing what happens to it.
 - Use specific, concrete language. Avoid generic adjectives without textual evidence.
 - If aliases exist, introduce them naturally in the biography ("also known as X", "born Y").
+- Use ONLY aliases listed in "Known aliases" above. Do NOT infer or invent aliases from context.
 
 Content constraints:
 - Every factual claim in your output must be directly supported by one of the GROUNDING EXCERPTS provided above. If you cannot point to a supporting excerpt, do not write the claim.
@@ -347,6 +348,7 @@ Content constraints:
 - Chapter summaries serve as orientation only. Direct excerpts take priority.
 - Do NOT invent plot details, relationships, abilities, or physical traits not supported by excerpts.
 - Do NOT turn cooccurrence between entities into narrative causality.
+- When referring to related entities or characters, use their name EXACTLY as written in the excerpts or relationships list — do not paraphrase, alter, or approximate names.
 - If information is insufficient for a section, omit that section entirely.
 - Do NOT write "information not available", "not mentioned in excerpts", or any similar phrase. Omit instead.
 - Omit infobox fields entirely if their value is unknown.
@@ -366,6 +368,8 @@ Section definitions for type {etype}:
 {section_def_lines}
 
 ---
+
+REMINDER: Write ALL content in French. Source excerpts may be in English — your output must always be in French regardless.
 
 Output this JSON object:
 {{

@@ -1,0 +1,102 @@
+{
+  "entity": "Celaena Sardothien",
+  "canonical_aliases_book1": [
+    "Celaena Sardothien",
+    "Lillian Gordaina",
+    "Lady Lillian",
+    "Adarlan's Assassin",
+    "the King's Champion"
+  ],
+  "true_identity_book1": {
+    "note": "Son identité réelle comme Aelin Ashryver Galathynius n'est PAS révélée au lecteur dans Throne of Glass. Elle est révélée dans Crown of Midnight.",
+    "forbidden": true
+  },
+  "known_facts_book1": [
+    "Emprisonnée dans les mines de sel d'Endovier pendant un an avant les événements du livre",
+    "Libérée par le prince Dorian Havilliard pour participer au tournoi du Champion du Roi",
+    "Présente sous l'alias Lady Lillian Gordaina, prétendue voleuse de bijoux de Bellhaven",
+    "Entraînée et gardée par Chaol Westfall, capitaine de la garde royale",
+    "Participe à un tournoi contre d'autres criminels et assassins sponsorisés par des lords",
+    "Reçoit l'Œil d'Elena (Eye of Elena) dans un rêve — un talisman de la reine Elena",
+    "Se lie d'amitié avec la princesse Nehemia Ytger d'Eyllwe",
+    "Apprend les wyrdmarks de Nehemia en échange de leçons de langue",
+    "Développe des sentiments pour Dorian Havilliard, échangent un baiser après le bal de Yulemas",
+    "Met fin à sa relation nascente avec Dorian après avoir gagné le tournoi",
+    "Bat Cain lors de l'épreuve finale malgré avoir été empoisonnée au bloodbane par Kaltain Rompier",
+    "Couronnée Champion du Roi à la fin du livre",
+    "Signe un contrat de 4 ans de service au roi en échange de sa liberté future",
+    "Possède un chien nommé Fleetfoot, cadeau de Dorian",
+    "Joue du pianoforte",
+    "Aime les livres, les sucreries, les robes et le chocolat",
+    "A des cicatrices dans le dos dues aux fouets à Endovier",
+    "Chaol lui offre une bague en améthyste récupérée à la fête de Samhuinn",
+    "Enquête sur les morts mystérieuses des autres compétiteurs dans le château",
+    "Elena lui apparaît en rêve et la guide via une porte cachée derrière une tapisserie"
+  ],
+  "known_relations_book1": {
+    "Dorian Havilliard": "intérêt romantique, baiser échangé après le bal de Yulemas, relation terminée après le tournoi, reste ami",
+    "Chaol Westfall": "entraîneur et garde assigné, tension et respect mutuels, début d'une proximité émotionnelle, pas encore romantique dans ce livre",
+    "Nehemia Ytger": "amie proche, échangent des leçons de langue et de wyrdmarks",
+    "Kaltain Rompier": "antagoniste, l'empoisonne au bloodbane lors de l'épreuve finale",
+    "Cain": "rival principal du tournoi, possédé par une entité valg, vaincu lors de l'épreuve finale",
+    "Elena Galathynius": "reine ancienne qui lui apparaît en rêve et la guide",
+    "Nox Owen": "ami rencontré pendant le tournoi, elle l'aide à survivre"
+  },
+  "physical_description_book1": [
+    "Cheveux dorés",
+    "Yeux turquoise cerclés d'or (caractéristique Ashryver — mais l'identité Ashryver n'est pas révélée)",
+    "Grande, mince et musclée",
+    "Amaigrie et marquée après un an à Endovier au début du livre",
+    "Trois cicatrices proéminentes dans le dos (fouets à Endovier)"
+  ],
+  "forbidden_book1": {
+    "note": "Ces éléments appartiennent aux livres suivants. Les mentionner dans une page scopée livre 1 = hallucination.",
+    "identity": [
+      "Aelin Ashryver Galathynius",
+      "princesse de Terrasen",
+      "héritière de Terrasen",
+      "Queen of Terrasen",
+      "demi-Fae",
+      "Fae",
+      "pouvoirs de feu",
+      "magie de feu",
+      "Fire-Bringer",
+      "Fireheart"
+    ],
+    "relationships": [
+      "Sam Cortland (mort avant le livre 1 — peut être mentionné comme passé mais pas développé)",
+      "Rowan Whitethorn (n'apparaît pas avant Heir of Fire)",
+      "Aedion Ashryver (n'apparaît pas dans ce livre)",
+      "Lysandra (n'apparaît pas dans ce livre)",
+      "Arobynn Hamel (mentionné dans le passé seulement, n'apparaît pas en personne dans ToG)"
+    ],
+    "events": [
+      "Révélation de son identité comme Aelin",
+      "Mort de Nehemia (Crown of Midnight)",
+      "Relation romantique avec Chaol (Crown of Midnight)",
+      "Envoi à Wendlyn (Crown of Midnight)",
+      "Entraînement avec Rowan (Heir of Fire)",
+      "Destruction du château de verre (Queen of Shadows)",
+      "Mariage avec Rowan (Empire of Storms)"
+    ],
+    "titles_and_powers": [
+      "Queen of Terrasen",
+      "Heir of Fire",
+      "pouvoirs Fae",
+      "transformation Fae",
+      "magie de feu ou d'eau",
+      "wyrdmarks utilisés activement (elle les apprend seulement dans ce livre)"
+    ]
+  },
+  "hallucination_signals": [
+    "Toute mention de 'Aelin' comme identité révélée",
+    "Toute mention de pouvoirs magiques actifs (feu, eau, Fae)",
+    "Toute mention de Rowan Whitethorn",
+    "Toute mention de Terrasen comme identité revendiquée par elle",
+    "Toute mention de la mort de Nehemia",
+    "Toute mention d'une relation romantique consommée avec Chaol",
+    "Toute mention de Sam Cortland comme présent dans l'intrigue (il est mort avant le livre 1)",
+    "Toute mention de livres ultérieurs (Crown of Midnight, Heir of Fire, etc.)",
+    "Toute mention de Lysandra, Aedion, Manon, Elide"
+  ]
+}

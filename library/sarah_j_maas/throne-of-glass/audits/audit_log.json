@@ -1,0 +1,40 @@
+[
+  {
+    "run": 7,
+    "date": "2026-03-20",
+    "pages_generated": 13,
+    "infobox_pct": 85,
+    "lang_fr_pct": 100,
+    "alias_duplicates": 0,
+    "hallucinations": 0,
+    "gt_violations": [
+      {
+        "page": "Chaol",
+        "signal": "La Colonne de feu",
+        "cause": "contamination_cross_serie"
+      },
+      {
+        "page": "Montagnes des Glacials",
+        "signal": "La Fugitive du Roi",
+        "cause": "contamination_cross_serie"
+      }
+    ],
+    "regression": {
+      "prefixed_keys": "✅",
+      "epub_ids": "✅",
+      "entity_type_null": "✅",
+      "alias_duplicates": "✅",
+      "cross_serie": "⚠️",
+      "evolution_quality": "⚠️",
+      "temporal_context": "❌",
+      "ground_truth": "⚠️"
+    },
+    "verdict": "Run 7 : 100% FR, 0 doublon, 0 ID EPUB, key_moments 97%. Problèmes : 1 page _failed (Arobynn Hamel), titres de série erronés dans les références (2 pages), temporal_context absent des batches malgré STU-271.",
+    "new_issues": [
+      "Page _failed Arobynn Hamel exportée comme stub vide",
+      "Titres de série erronés dans champ Références (contamination cross-série)",
+      "temporal_context absent des chapter_summaries dans les batches (régression STU-271)",
+      "Validateur GT trop bruité — faux positifs keyword (16/19 matches)"
+    ]
+  }
+]

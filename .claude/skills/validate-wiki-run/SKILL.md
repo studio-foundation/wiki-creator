@@ -13,6 +13,23 @@ Skill d'audit qualité pour Wiki Creator. L'utilisatrice dépose des fichiers d'
 - `batch_*.json` — batches d'entrée (optionnel mais recommandé, itérer sur tous)
 - Tout autre batch ou fichier intermédiaire fourni
 
+## Ground-Truth (Throne of Glass)
+
+Quand le livre audité est dans la série Throne of Glass, des fichiers de vérité terrain sont disponibles sous :
+```
+library/sarah_j_maas/throne-of-glass/books/ground-truth/
+```
+Fichiers : `celeana.json`, `chaol.json`, `dorian.json`, `king-of-adarlan.json`, `nehemia.json`, `perrington.json`
+
+Chaque fichier contient :
+- `canonical_aliases_book1` — noms valides pour ce livre
+- `known_facts_book1` — faits vrais dans le livre 1
+- `known_relations_book1` — relations réelles dans le livre 1
+- `forbidden_book1` — éléments qui n'existent pas encore dans ce livre
+- `hallucination_signals` — phrases/termes qui signalent une invention du LLM
+
+**Intégrer ces fichiers dans l'étape 1b ci-dessous lorsque disponibles.**
+
 ## Workflow
 
 ### Étape 1 — Analyse des fichiers
@@ -60,6 +77,90 @@ print(f"Pages FR: {sum(1 for p in pages if not any(w in p.get('content','') for 
 for d in ['Captain Westfall','Crown Prince','Chaol Westfall']:
     print(f"Doublon {d}: {'PRÉSENT' if d in titles else 'absent'}")
 ```
+
+### Étape 1b — Validation ground-truth (Throne of Glass uniquement)
+
+Si le livre audité est dans la série Throne of Glass, exécute ce bloc **avant** l'analyse des batches :
+
+```python
+import json, glob, os
+
+GT_DIR = 'library/sarah_j_maas/throne-of-glass/books/ground-truth'
+gt_files = glob.glob(f'{GT_DIR}/*.json')
+
+# Charge toutes les ground-truths
+gt_by_entity = {}
+all_signals = []   # (signal_text, entity_name)
+all_forbidden = [] # (term, entity_name)
+
+for gf in gt_files:
+    with open(gf) as f:
+        gt = json.load(f)
+    name = gt['entity']
+    gt_by_entity[name] = gt
+    for sig in gt.get('hallucination_signals', []):
+        all_signals.append((sig, name))
+    forbidden = gt.get('forbidden_book1', {})
+    for cat, items in forbidden.items():
+        if isinstance(items, list):
+            for item in items:
+                all_forbidden.append((item, name, cat))
+
+# Charge les pages générées
+with open('/mnt/user-data/uploads/wiki_pages.json') as f:
+    data = json.load(f)
+pages = data.get('pages', data) if isinstance(data, dict) else data
+
+print("=== VALIDATION GROUND-TRUTH ===\n")
+violations_found = 0
+
+for p in pages:
+    title = p['title']
+    content = p.get('content', '')
+    ib_str = str(p.get('infobox_fields', {}))
+    full_text = content + ' ' + ib_str
+    page_violations = []
+
+    # 1. Cherche les signaux d'hallucination
+    for sig, entity in all_signals:
+        # Extraire le mot-clé principal du signal (après "Toute mention de ")
+        keyword = sig.replace("Toute mention de ", "").replace("'", "").split(" ")[0]
+        if keyword and keyword.lower() in full_text.lower():
+            page_violations.append(f"HALLUC_SIGNAL [{entity}]: {sig}")
+
+    # 2. Cherche les termes interdits
+    for term, entity, cat in all_forbidden:
+        if len(term) > 4 and term.lower() in full_text.lower():
+            page_violations.append(f"FORBIDDEN [{entity}/{cat}]: '{term}'")
+
+    # 3. Vérifie les relations contre known_relations_book1
+    # Cherche des noms de personnages liés à cet entity qui ne devraient pas apparaître
+    for gt_name, gt in gt_by_entity.items():
+        if gt_name.lower() in title.lower() or any(a.lower() in title.lower() for a in gt.get('canonical_aliases_book1', [])):
+            # C'est la page de cette entité — vérifie les relations déclarées
+            known_rels = set(gt.get('known_relations_book1', {}).keys())
+            forbidden_rels = gt.get('forbidden_book1', {}).get('relationships', [])
+            for fr in forbidden_rels:
+                rel_name = fr.split("(")[0].strip()
+                if rel_name and rel_name.lower() in full_text.lower():
+                    page_violations.append(f"FORBIDDEN_REL [{gt_name}]: '{rel_name}' — {fr}")
+
+    if page_violations:
+        violations_found += len(page_violations)
+        print(f"❌ {title}")
+        for v in page_violations:
+            print(f"   {v}")
+    else:
+        print(f"✅ {title}")
+
+print(f"\nTotal violations ground-truth: {violations_found}")
+print(f"Pages propres: {sum(1 for p in pages if True)}/{len(pages)}")
+```
+
+**Pour chaque violation trouvée, dans l'Étape 4 (Nouveaux problèmes) :**
+- Préciser le terme/signal exact trouvé dans la page
+- Identifier la cause probable : contamination cross-série (LLM entraîné sur tous les tomes), extrapolation biographique (LLM complète ce qu'il "sait"), ou confusion d'alias
+- Préciser quel composant pipeline a laissé passer (génération, prompt système, contexte batch)
 
 Si des fichiers `batch_*.json` sont disponibles, itère sur tous :
 
@@ -122,6 +223,7 @@ Produis un tableau de régression sur les critères clés. Tous les bugs listés
 | evolution non-générique, key_moments ≥50%, types diversifiés | STU-279 | ✅/⚠️/❌ | stats batch |
 | temporal_context présent/flashback propagé dans chapter-summary | STU-271 | ✅/❌ | |
 | Zéro hallucination cross-série connue | STU-278 | ✅/❌ | |
+| Zéro violation ground-truth (termes interdits, relations futures, signaux) | GT | ✅/⚠️/❌ | pages + terme exact |
 
 Utilise ✅ (ok), ⚠️ (partiel — préciser), ❌ (régression présente), ➕ (nouveau problème).
 
@@ -139,6 +241,7 @@ Maintiens ce tableau en l'alimentant avec les nouvelles métriques. Remplace les
 | Langue FR | 0% | ~50% | ~60% | 85% | 85% | 73% | ? | ? |
 | Doublons alias | 5 | 5 | 5 | 3 | 3 | 2 | ? | ? |
 | Hallucinations | 2 | 0 | 3 | 2 | 2 | 2 | ? | ? |
+| Violations ground-truth | - | - | - | - | - | - | ? | ? |
 | Relations typées (batch) | 0% | 0% | 100% | 100% | 100% | 100% | ? | ? |
 | key_moments peuplés | - | - | - | - | 14% | 14% | ? | ? |
 | evolution non-générique | - | - | - | - | 0% | 0% | ? | ? |
@@ -155,6 +258,47 @@ Identifie tout problème absent des runs précédentes. Pour chaque nouveau prob
 ### Étape 5 — Verdict et prochaine action
 
 En 3-4 phrases : état du pipeline, ce qui est validé, ce qui bloque encore, **une seule** action prioritaire pour la prochaine run.
+
+### Étape 6 — Sauvegarde de l'audit
+
+Après avoir produit le verdict, sauvegarder les résultats dans le log d'audit du livre.
+
+**Chemin pour Throne of Glass :**
+```
+library/sarah_j_maas/throne-of-glass/audits/audit_log.json
+```
+
+Le fichier est un tableau JSON. S'il n'existe pas, le créer avec `[]`. Sinon, charger le contenu existant et **ajouter** une nouvelle entrée à la fin — ne jamais écraser les entrées précédentes.
+
+Structure d'une entrée :
+```json
+{
+  "run": <numéro déduit du tableau cross-runs>,
+  "date": "<date du jour YYYY-MM-DD>",
+  "pages_generated": <N>,
+  "infobox_pct": <0-100>,
+  "lang_fr_pct": <0-100>,
+  "alias_duplicates": <N>,
+  "hallucinations": <N>,
+  "gt_violations": [
+    {"page": "<titre>", "signal": "<terme exact>", "cause": "<contamination_cross_serie|extrapolation|confusion_alias>"}
+  ],
+  "regression": {
+    "prefixed_keys": "✅|⚠️|❌",
+    "epub_ids": "✅|⚠️|❌",
+    "entity_type_null": "✅|⚠️|❌",
+    "alias_duplicates": "✅|⚠️|❌",
+    "cross_serie": "✅|⚠️|❌",
+    "evolution_quality": "✅|⚠️|❌",
+    "temporal_context": "✅|⚠️|❌",
+    "ground_truth": "✅|⚠️|❌"
+  },
+  "verdict": "<phrase de verdict concise>",
+  "new_issues": ["<STU-XXX: description>"]
+}
+```
+
+Utilise l'outil `Read` pour charger le fichier existant (s'il existe), ajoute l'entrée, puis `Write` pour sauvegarder le fichier complet.
 
 ## Format de sortie
 

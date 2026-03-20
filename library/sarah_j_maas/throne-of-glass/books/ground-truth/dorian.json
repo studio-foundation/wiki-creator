@@ -1,0 +1,83 @@
+{
+    "entity": "Dorian Havilliard",
+    "canonical_aliases_book1": [
+      "Dorian Havilliard",
+      "Dorian Havilliard II",
+      "Crown Prince",
+      "Prince Dorian"
+    ],
+    "known_facts_book1": [
+      "Prince héritier d'Adarlan, fils aîné du roi",
+      "A 19 ans dans Throne of Glass",
+      "Cheveux noir de jais, yeux bleu saphir, 6 pieds (1m83)",
+      "Va lui-même chercher Celaena à Endovier avec Chaol",
+      "Propose à Celaena de concourir au tournoi du Champion du Roi — offre de négocier un contrat de 4 ans au lieu de 6",
+      "Sponsorise Celaena au tournoi sous l'alias Lady Lillian Gordaina",
+      "Développe une amitié puis un intérêt romantique pour Celaena pendant le tournoi",
+      "Offre plusieurs cadeaux à Celaena : livres, sucreries, le chiot Fleetfoot",
+      "Partage plusieurs baisers avec Celaena, dont un après le bal de Yulemas",
+      "Accepte la rupture initiée par Celaena après le tournoi, reste ami",
+      "Meilleur ami de Chaol Westfall depuis l'enfance",
+      "A un frère cadet nommé Hollin, qu'il cherche à protéger en restant héritier",
+      "Relation tendue avec son père le roi, en désaccord avec sa brutalité mais reste silencieux",
+      "Aime lire et partage cette passion avec Celaena",
+      "Élève des chiens — Fleetfoot est issue d'une de ses chiennes",
+      "Assiste Celaena lors de l'épreuve finale en la trouvant après la victoire",
+      "N'a pas encore manifesté de pouvoirs magiques visibles dans ce livre",
+      "Mère : reine Georgina Havilliard"
+    ],
+    "known_relations_book1": {
+      "Celaena Sardothien": "intérêt romantique, baisers échangés, relation terminée après le tournoi à l'initiative de Celaena, reste ami",
+      "Chaol Westfall": "meilleur ami depuis l'enfance, confiance totale",
+      "Nehemia Ytger": "croisements dans le château, relations cordiales",
+      "Roi d'Adarlan": "relation père-fils tendue, Dorian désapprouve sa brutalité en silence",
+      "Hollin Havilliard": "frère cadet, Dorian veut rester héritier pour le protéger d'un mauvais règne",
+      "Georgina Havilliard": "mère, pression pour trouver une femme, relation distante"
+    },
+    "physical_description_book1": [
+      "Cheveux noir de jais",
+      "Yeux bleu saphir",
+      "Grand et mince, 6 pieds",
+      "Très beau, décrit comme tel par Celaena"
+    ],
+    "forbidden_book1": {
+      "note": "Ces éléments appartiennent aux livres suivants. Les mentionner dans une page scopée livre 1 = hallucination.",
+      "magic": [
+        "Pouvoirs magiques révélés ou actifs (la magie de Dorian n'est pas visible dans ToG)",
+        "Glace, feu, vent, mains magiques invisibles",
+        "Magie brute (raw magic) — révélé dans Crown of Midnight",
+        "Collier de Wyrdstone / possession Valg",
+        "Shapeshifting"
+      ],
+      "relationships": [
+        "Sorscha (apparaît dans Heir of Fire)",
+        "Manon Blackbeak (apparaît dans Heir of Fire)",
+        "Aedion Ashryver (pas dans ce livre)",
+        "Roland Havilliard (apparaît dans Crown of Midnight)",
+        "Rowan Whitethorn (pas dans ce livre)"
+      ],
+      "events": [
+        "Mort de Sorscha (Heir of Fire)",
+        "Possession par un prince Valg (Heir of Fire / Queen of Shadows)",
+        "Destruction du château de verre (Queen of Shadows)",
+        "Couronnement comme roi d'Adarlan (Queen of Shadows)",
+        "Romance avec Manon (Empire of Storms et suivants)",
+        "Forge du verrou avec Aelin (Kingdom of Ash)",
+        "Mort de son père tué par lui-même (Queen of Shadows)"
+      ],
+      "titles": [
+        "Roi d'Adarlan (il est prince dans ToG)",
+        "King Dorian"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention de pouvoirs magiques actifs dans le livre 1",
+      "Toute mention de Sorscha",
+      "Toute mention de Manon Blackbeak",
+      "Toute mention de Roland Havilliard",
+      "Toute mention du collier de Wyrdstone ou de possession Valg",
+      "Toute mention de 'roi d'Adarlan' comme titre actuel",
+      "Toute mention de la destruction du château de verre",
+      "Toute mention de Rowan Whitethorn"
+    ]
+  }

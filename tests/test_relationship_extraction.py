@@ -734,6 +734,116 @@ def test_run_studio_classifier_item_degrades_on_studio_missing():
     assert result.get("error") == "studio_cli_missing"
 
 
+# ---------------------------------------------------------------------------
+# STU-286: filter PLACE/OTHER entities before classification
+# ---------------------------------------------------------------------------
+
+from scripts.relationship_extraction import _should_classify_pair
+
+
+def test_should_classify_pair_allows_person_person():
+    rel = {"entity_a": "Celaena", "entity_b": "Chaol"}
+    entity_types = {"Celaena": "PERSON", "Chaol": "PERSON"}
+    assert _should_classify_pair(rel, entity_types) is True
+
+
+def test_should_classify_pair_skips_when_entity_b_is_place():
+    rel = {"entity_a": "Chaol Westfall", "entity_b": "White Fang Mountains"}
+    entity_types = {"Chaol Westfall": "PERSON", "White Fang Mountains": "PLACE"}
+    assert _should_classify_pair(rel, entity_types) is False
+
+
+def test_should_classify_pair_skips_when_entity_b_is_other():
+    rel = {"entity_a": "King of Adarlan", "entity_b": "Nothung"}
+    entity_types = {"King of Adarlan": "PERSON", "Nothung": "OTHER"}
+    assert _should_classify_pair(rel, entity_types) is False
+
+
+def test_should_classify_pair_skips_when_entity_a_is_place():
+    rel = {"entity_a": "White Fang Mountains", "entity_b": "Celaena"}
+    entity_types = {"White Fang Mountains": "PLACE", "Celaena": "PERSON"}
+    assert _should_classify_pair(rel, entity_types) is False
+
+
+def test_should_classify_pair_allows_unknown_type_entity():
+    """If an entity is not in entity_types, default to allowing classification."""
+    rel = {"entity_a": "Celaena", "entity_b": "Chaol"}
+    assert _should_classify_pair(rel, {}) is True
+
+
+def test_classify_relationships_skips_place_entity_without_calling_studio():
+    """Studio must NOT be called for PLACE entities — not just result left null."""
+    studio_calls = []
+
+    def fake_studio(rel, *, novel_summary, additional_context):
+        studio_calls.append(rel)
+        return {"relationship_type": "ami", "direction": "symétrique", "evolution": "x", "key_moments": []}
+
+    rels = [
+        {
+            "entity_a": "Chaol Westfall", "entity_b": "White Fang Mountains",
+            "cooccurrence_count": 10, "chapters": ["ch01"],
+            "sample_contexts": [], "relationship_type": None,
+            "direction": None, "evolution": None, "key_moments": [],
+        }
+    ]
+    entity_types = {"Chaol Westfall": "PERSON", "White Fang Mountains": "PLACE"}
+
+    with patch("scripts.relationship_extraction._run_studio_classifier_item", side_effect=fake_studio):
+        result = classify_relationships(
+            rels, model=_TEST_MODEL, ollama_url=_OLLAMA_URL, entity_types=entity_types
+        )
+
+    assert studio_calls == [], "Studio must not be called for PLACE entities"
+    assert result[0]["relationship_type"] is None
+
+
+def test_classify_relationships_skips_other_entity_without_calling_studio():
+    """Studio must NOT be called for OTHER (object) entities."""
+    studio_calls = []
+
+    def fake_studio(rel, *, novel_summary, additional_context):
+        studio_calls.append(rel)
+        return {"relationship_type": "allié", "direction": "symétrique", "evolution": "x", "key_moments": []}
+
+    rels = [
+        {
+            "entity_a": "Chaol Westfall", "entity_b": "Nothung",
+            "cooccurrence_count": 5, "chapters": ["ch02"],
+            "sample_contexts": [], "relationship_type": None,
+            "direction": None, "evolution": None, "key_moments": [],
+        }
+    ]
+    entity_types = {"Chaol Westfall": "PERSON", "Nothung": "OTHER"}
+
+    with patch("scripts.relationship_extraction._run_studio_classifier_item", side_effect=fake_studio):
+        result = classify_relationships(
+            rels, model=_TEST_MODEL, ollama_url=_OLLAMA_URL, entity_types=entity_types
+        )
+
+    assert studio_calls == [], "Studio must not be called for OTHER entities"
+    assert result[0]["relationship_type"] is None
+
+
+def test_classify_relationships_still_classifies_person_pairs_with_entity_types():
+    """Person↔person pairs must still be classified when entity_types is provided."""
+    studio_calls = []
+
+    def fake_studio(rel, *, novel_summary, additional_context):
+        studio_calls.append(rel)
+        return {"relationship_type": "ami", "direction": "symétrique", "evolution": "x", "key_moments": []}
+
+    entity_types = {"Celaena": "PERSON", "Chaol": "PERSON"}
+
+    with patch("scripts.relationship_extraction._run_studio_classifier_item", side_effect=fake_studio):
+        result = classify_relationships(
+            _SAMPLE_RELS, model=_TEST_MODEL, ollama_url=_OLLAMA_URL, entity_types=entity_types
+        )
+
+    assert len(studio_calls) == 1
+    assert result[0]["relationship_type"] == "ami"
+
+
 def test_run_studio_classifier_item_degrades_on_timeout():
     with patch("subprocess.run", side_effect=subprocess.TimeoutExpired(cmd=["studio"], timeout=30)):
         rel = {"entity_a": "A", "entity_b": "B", "sample_contexts": [], "cooccurrence_count": 1}

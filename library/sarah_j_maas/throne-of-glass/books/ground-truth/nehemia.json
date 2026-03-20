@@ -1,0 +1,67 @@
+{
+    "entity": "Nehemia Ytger",
+    "canonical_aliases_book1": [
+      "Nehemia Ytger",
+      "Princess Nehemia",
+      "Princess of Eyllwe",
+      "The Light of Eyllwe"
+    ],
+    "known_facts_book1": [
+      "Princesse d'Eyllwe, 19 ans, envoyée à Rifthold officiellement pour apprendre les coutumes du nord",
+      "Raisons réelles de sa présence au château floues dans ce livre — liens supposés avec le mouvement rebelle",
+      "Comprend et utilise les wyrdmarks, mais dissimule cette connaissance",
+      "Feint de ne pas parler couramment le commun (langue du nord) — en réalité parfaitement bilingue, pour entendre ce que les gens disent librement",
+      "Se lie d'amitié rapidement avec Celaena",
+      "Enseigne les wyrdmarks à Celaena en échange de leçons de langue",
+      "Celaena la soupçonne d'abord d'être l'assassin des compétiteurs — révélé innocent",
+      "Découvre la vraie identité de Celaena (assassin de renom), lui pardonne et la nomme Elentiya",
+      "Lors de l'épreuve finale contre Cain, intervient discrètement pour sauver Celaena deux fois : convoque Elena pour neutraliser le poison du bloodbane, et soigne ses blessures",
+      "Décrite comme d'une beauté frappante : grande et mince, longs cheveux noirs souvent en fines tresses, yeux bruns, peau brun clair, accessoires dorés",
+      "Très franche sur ses opinions, tempérament affirmé",
+      "Considérée bizarre et inhabituelle par la cour de Rifthold",
+      "Père : roi d'Eyllwe. Mère : reine d'Eyllwe. Frères : Kharis et Deji Ytger"
+    ],
+    "known_relations_book1": {
+      "Celaena Sardothien": "amie proche, confiance mutuelle progressive, lui enseigne les wyrdmarks, la nomme Elentiya",
+      "Chaol Westfall": "interactions cordiales, le croise dans le château",
+      "Dorian Havilliard": "interactions de cour, aucune relation développée dans ce livre",
+      "Elena Galathynius": "révélé plus tard qu'Elena lui a dit de venir à Adarlan — cette information n'est PAS dans le livre 1"
+    },
+    "physical_description_book1": [
+      "Grande et mince",
+      "Longs cheveux noirs, souvent portés en fines tresses",
+      "Yeux bruns",
+      "Peau brun clair (décrite comme crémeuse)",
+      "Porte souvent des accessoires dorés",
+      "Décrite comme d'une beauté frappante"
+    ],
+    "forbidden_book1": {
+      "note": "Ces éléments appartiennent aux livres suivants ou sont des révélations rétroactives. Les mentionner dans une page scopée livre 1 = hallucination.",
+      "revelations": [
+        "Elle savait depuis le début la vraie identité d'Aelin comme princesse de Terrasen (révélé dans Crown of Midnight)",
+        "Elena lui a donné pour mission de venir à Adarlan (révélé dans Empire of Storms)",
+        "Elle manipulait Celaena pour la pousser vers sa destinée (révélé rétroactivement)",
+        "Ses connexions explicites au mouvement rebelle (confirmé dans Crown of Midnight)"
+      ],
+      "events": [
+        "Mort de Nehemia assassinée par Grave sur ordre d'Archer Finn (Crown of Midnight)",
+        "Nehemia essayant de convaincre Celaena de rejoindre les rebelles (Crown of Midnight)",
+        "Vision d'Aelin dans le miroir des sorcières (Empire of Storms)",
+        "Enterrement à Rifthold (Crown of Midnight)"
+      ],
+      "context": [
+        "Toute mention de sa mort dans une page scopée livre 1",
+        "Toute mention d'Archer Finn comme son assassin",
+        "Toute mention de Grave comme son assassin",
+        "Toute mention explicite qu'elle connaissait l'identité d'Aelin Galathynius"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention de sa mort ou assassinat dans le livre 1",
+      "Toute mention d'Archer Finn en lien avec elle dans ce livre",
+      "Toute mention qu'elle savait que Celaena était Aelin Galathynius / princesse de Terrasen",
+      "Toute mention explicite qu'Elena lui a donné sa mission",
+      "Toute mention de Grave comme personnage actif dans ToG",
+      "Toute mention de sa manipulation délibérée de Celaena comme stratégie consciente"
+    ]
+  }

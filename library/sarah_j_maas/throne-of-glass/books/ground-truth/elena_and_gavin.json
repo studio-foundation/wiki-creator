@@ -1,0 +1,76 @@
+{
+    "entities": ["Elena Galathynius", "Gavin Havilliard"],
+    "note": "Elena et Gavin sont des personnages historiques — morts depuis ~1000 ans. Dans ToG, Elena apparaît uniquement en rêve / vision / présence fantomatique. Le risque d'hallucination n'est pas cross-livres mais cross-révélations : beaucoup de leur histoire n'est révélée que dans Empire of Storms et Kingdom of Ash.",
+  
+    "elena": {
+      "canonical_aliases_book1": [
+        "Elena Galathynius",
+        "Elena Galathynius Havilliard",
+        "la reine Elena",
+        "première reine d'Adarlan"
+      ],
+      "known_facts_book1": [
+        "Fille de Brannon Galathynius, roi Fae de Terrasen — demi-Fae",
+        "Première reine d'Adarlan, épouse de Gavin Havilliard premier roi d'Adarlan",
+        "Morte depuis environ 1000 ans, enterrée dans les cryptes sous le château de verre avec Gavin",
+        "Apparaît à Celaena en rêve / vision — ni fantôme ni humaine",
+        "Remet à Celaena l'Œil d'Elena (Eye of Elena) — un talisman / amulette dans un rêve",
+        "Avertit Celaena qu'un mal rôde dans le château et qu'elle doit devenir Champion du Roi",
+        "Guide Celaena lors des Tests : lui dit de regarder à droite deux fois, l'aidant à identifier un poison et à trouver la salle contenant l'épée Damaris",
+        "Dans la crypte : sa tapisserie et son tombeau sont dans les tunnels secrets sous le château",
+        "Intervient lors du duel final contre Cain pour neutraliser le poison du bloodbane dans le corps de Celaena",
+        "Cheveux argentés, oreilles pointues (demi-Fae), belle, peau claire",
+        "Son épée était Damaris — transmise à travers les âges"
+      ],
+      "forbidden_book1": {
+        "note": "Révélations sur Elena appartenant aux livres suivants.",
+        "revelations": [
+          "Elle a utilisé le Verrou (Lock) pour sceller temporairement Erawan — révélé dans Empire of Storms",
+          "Elle a sacrifié son âme pour guider Arobynn vers Aelin enfant dans la rivière — révélé dans EoS",
+          "Sa mère est Mala Fire-Bringer — révélé dans Empire of Storms",
+          "Elle préparait délibérément Celaena comme sacrifice pour recréer le Verrou — révélé dans EoS",
+          "Les dieux lui ont imposé de 'préparer l'agneau pour l'abattoir' — révélé dans EoS",
+          "Son âme détruite par Deanna — Kingdom of Ash",
+          "Elle connaissait la vraie identité d'Aelin comme descendante de Brannon — implicite mais non confirmé dans ToG"
+        ]
+      },
+      "hallucination_signals": [
+        "Toute mention d'Erawan en lien avec Elena dans le livre 1",
+        "Toute mention du Verrou (Lock) ou de son utilisation par Elena",
+        "Toute mention de Mala Fire-Bringer comme mère d'Elena dans le livre 1",
+        "Toute mention qu'Elena préparait Celaena comme sacrifice",
+        "Toute mention que l'Eye of Elena contient un Wyrdkey (révélé plus tard)",
+        "Toute mention de la destruction de son âme"
+      ]
+    },
+  
+    "gavin": {
+      "canonical_aliases_book1": [
+        "Gavin Havilliard",
+        "le premier roi d'Adarlan"
+      ],
+      "known_facts_book1": [
+        "Premier roi d'Adarlan, fondateur de la Maison Havilliard",
+        "Époux d'Elena Galathynius",
+        "Mentionné par Elena dans le livre 1 comme ancien propriétaire de Damaris",
+        "Grand et mince, cheveux sombres, yeux bleu saphir — comme tous les Havilliard",
+        "Enterré sous le château de verre avec Elena",
+        "Mort depuis environ 1000 ans",
+        "Son épée Damaris est dans la crypte sous le château — Celaena la trouve dans ToG"
+      ],
+      "forbidden_book1": {
+        "note": "Gavin n'apparaît quasiment pas dans ToG — uniquement mentionné. Toute scène ou psychologie le concernant vient d'EoS ou KoA.",
+        "revelations": [
+          "Sa participation active à la guerre contre Erawan dans les montagnes de Ruhnn — Empire of Storms",
+          "Sa réaction à l'utilisation du Verrou par Elena — Empire of Storms",
+          "Son apparition depuis l'Afterworld dans Kingdom of Ash",
+          "Qu'il 'ne pense pas grand-chose d'Hollin' — trivia non sourcé dans ToG"
+        ]
+      },
+      "hallucination_signals": [
+        "Toute scène ou dialogue de Gavin dans le livre 1 (il n'apparaît pas en personne dans ToG)",
+        "Toute mention de son rôle dans la guerre contre Erawan dans une page scopée ToG",
+        "Toute mention de son apparition depuis l'Afterworld"
+      ]
+    }
+  }

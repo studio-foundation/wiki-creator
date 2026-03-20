@@ -1,0 +1,83 @@
+{
+    "entity": "Chaol Westfall",
+    "canonical_aliases_book1": [
+      "Chaol Westfall",
+      "Captain Westfall",
+      "Captain of the Guard",
+      "Captain of the Royal Guard"
+    ],
+    "known_facts_book1": [
+      "Capitaine de la garde royale d'Adarlan, 24 ans dans Throne of Glass",
+      "Accompagne le prince Dorian à Endovier pour récupérer Celaena",
+      "Entraîne Celaena pour le tournoi du Champion du Roi",
+      "Enquête sur les morts mystérieuses des compétiteurs en parallèle",
+      "Cheveux châtains, yeux bronze-cuivrés, 6 pieds 1 (1m85), musclé",
+      "Épéiste expert, formé par le maître d'armes Brullo depuis l'enfance",
+      "Meilleur ami de Dorian Havilliard depuis l'enfance au château de verre",
+      "A renoncé à son titre de lord d'Anielle pour rester à Rifthold avec Dorian",
+      "Relation tendue avec son père Lord Westfall qui l'a physiquement chassé",
+      "Porte une épée avec un pommeau en aigle doré",
+      "Offre à Celaena une bague en améthyste récupérée à la fête de Samhuinn",
+      "Développe une proximité émotionnelle croissante avec Celaena — pas encore romantique dans ce livre",
+      "Interdit à Celaena d'assister à Samhuinn, mais lui rapporte un cadeau",
+      "La reconnaît immédiatement déguisée au bal de Yulemas, accepte de la laisser rester",
+      "La soutient moralement lors de l'épreuve finale contre Cain",
+      "Tue Cain avec son épée quand celui-ci tente d'attaquer Celaena après sa défaite",
+      "Frère cadet : Terrin Westfall (qui a hérité du titre d'Anielle)",
+      "A eu une ancienne liaison avec Lithaen, qui l'a trahi avec Roland Havilliard — mentionné dans Crown of Midnight, pas dans ToG"
+    ],
+    "known_relations_book1": {
+      "Celaena Sardothien": "entraîneur et garde assigné, méfiance initiale qui évolue vers respect et proximité — pas encore romantique dans ce livre",
+      "Dorian Havilliard": "meilleur ami depuis l'enfance, loyauté totale",
+      "Theodus Brullo": "maître d'armes qui l'a formé et aidé à devenir capitaine",
+      "Lord Westfall": "père avec qui la relation est brisée — l'a physiquement expulsé de la maison familiale",
+      "Terrin Westfall": "frère cadet, héritier d'Anielle à la place de Chaol"
+    },
+    "physical_description_book1": [
+      "Cheveux châtains",
+      "Yeux bronze-cuivrés",
+      "Grand et musclé, 6 pieds 1",
+      "Décrit comme beau d'une façon rustique",
+      "Cicatrice à la tempe (chute dans l'escalier causée par son père)"
+    ],
+    "forbidden_book1": {
+      "note": "Ces éléments appartiennent aux livres suivants. Les mentionner dans une page scopée livre 1 = hallucination.",
+      "relationships": [
+        "Relation romantique avec Celaena (Crown of Midnight)",
+        "Nesryn Faliq (apparaît dans Queen of Shadows)",
+        "Yrene Westfall / Yrene Towers (apparaît dans Tower of Dawn)",
+        "Mariage avec Yrene (Tower of Dawn)",
+        "Aedion Ashryver (apparaît dans Heir of Fire)",
+        "Roland Havilliard (mentionné dans le passé de Chaol mais n'apparaît pas dans ToG)",
+        "Manon Blackbeak (apparaît dans Heir of Fire)"
+      ],
+      "events": [
+        "Baiser ou relation amoureuse avec Celaena (Crown of Midnight)",
+        "Mort de Nehemia et attaque de Celaena contre Chaol (Crown of Midnight)",
+        "Cicatrice sur la joue infligée par Celaena (Crown of Midnight)",
+        "Envoi de Celaena à Wendlyn (Crown of Midnight)",
+        "Révélation de l'identité d'Aelin (Crown of Midnight)",
+        "Chaol rejoint la rébellion (Heir of Fire)",
+        "Paralysie de Chaol (Queen of Shadows)",
+        "Voyage à Antica / Torre Cesme (Tower of Dawn)",
+        "Nomination comme Main du Roi (Queen of Shadows)",
+        "Dorian possédé par un Valg (Heir of Fire / Queen of Shadows)"
+      ],
+      "titles": [
+        "Hand of the King (Main du Roi — Queen of Shadows)",
+        "Lord d'Anielle (il a renoncé à ce titre)"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention d'une relation romantique ou d'un baiser avec Celaena dans le livre 1",
+      "Toute mention de Nesryn Faliq",
+      "Toute mention de Yrene Westfall ou Yrene Towers",
+      "Toute mention d'Aedion Ashryver comme personnage actif",
+      "Toute mention de la paralysie de Chaol",
+      "Toute mention de la cicatrice sur la joue infligée par Celaena",
+      "Toute mention de Roland Havilliard comme personnage actif dans ToG",
+      "Toute mention de 'Main du Roi' comme titre de Chaol",
+      "Toute mention de la mort de Nehemia dans ce livre",
+      "Toute mention de Manon Blackbeak"
+    ]
+  }

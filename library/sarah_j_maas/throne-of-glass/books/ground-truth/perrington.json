@@ -1,0 +1,61 @@
+{
+    "entity": "Duke Perrington",
+    "canonical_aliases_book1": [
+      "Duke Perrington",
+      "Perrington",
+      "le duc"
+    ],
+    "known_facts_book1": [
+      "Duc de Morath, cousin du roi d'Adarlan",
+      "Accompagne Dorian et Chaol à Endovier pour récupérer Celaena",
+      "Plaque Celaena au sol quand elle ne s'incline pas devant Dorian — réprimandé par Dorian",
+      "Grand homme, yeux obsidienne, cheveux roux clairsemés, moustache sablée, mains épaisses",
+      "En couple avec Kaltain Rompier, qui a attiré son attention pour qu'il l'emmène à Rifthold",
+      "Rôle secondaire dans le livre 1 — présence limitée, principalement associé à Kaltain",
+      "Sponsorise Cain au tournoi du Champion du Roi",
+      "Kaltain empoisonne Celaena au bloodbane lors de l'épreuve finale à la demande de Perrington"
+    ],
+    "known_relations_book1": {
+      "Kaltain Rompier": "compagnon significatif, elle manœuvre à travers lui pour accéder à la cour",
+      "Roi d'Adarlan": "cousin",
+      "Dorian Havilliard": "second cousin, lui obéit à contrecœur",
+      "Cain": "sponsorise Cain au tournoi"
+    },
+    "physical_description_book1": [
+      "Grand et corpulent",
+      "Yeux obsidienne",
+      "Cheveux roux clairsemés",
+      "Moustache sablée",
+      "Mains épaisses et charnues"
+    ],
+    "forbidden_book1": {
+      "note": "Ces éléments appartiennent aux livres suivants. Les mentionner dans une page scopée livre 1 = hallucination.",
+      "identity": [
+        "Possession par le roi Valg Erawan — révélé dans Queen of Shadows",
+        "Erawan comme entité distincte habitant Perrington",
+        "Lien avec le Wyrdkey et la crypte de Morath (backstory révélée dans QoS)",
+        "Perrington comme hôte Valg"
+      ],
+      "events": [
+        "Scènes à Morath avec Manon Blackbeak (Queen of Shadows)",
+        "Expériences sur les sorcières Ironteeth (Queen of Shadows)",
+        "Kaltain utilisant le shadowfire (Queen of Shadows)",
+        "Décret contre Dorian après la mort du roi (Queen of Shadows)",
+        "Apparition d'Erawan comme jeune homme aux cheveux dorés (Empire of Storms)"
+      ],
+      "relationships": [
+        "Manon Blackbeak (pas dans ToG)",
+        "Les Treize / Ironteeth witches (pas dans ToG)",
+        "Kaltain comme épouse — dans ToG elle est sa compagne, le mariage n'est pas établi dans ce livre"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention d'Erawan comme identité de Perrington dans le livre 1",
+      "Toute mention de possession Valg dans le livre 1",
+      "Toute mention de Morath comme lieu actif dans le livre 1 (il est duc de Morath mais n'y est pas présent dans ToG)",
+      "Toute mention de Manon Blackbeak en lien avec Perrington",
+      "Toute mention des expériences sur les sorcières",
+      "Toute mention du shadowfire de Kaltain",
+      "Toute mention d'Erawan par nom dans le livre 1"
+    ]
+  }

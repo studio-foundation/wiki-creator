@@ -1,0 +1,66 @@
+{
+    "entity": "King of Adarlan",
+    "canonical_aliases_book1": [
+      "King of Adarlan",
+      "le roi",
+      "Dorian Havilliard I",
+      "le roi d'Adarlan"
+    ],
+    "known_facts_book1": [
+      "Roi d'Adarlan, père de Dorian et Hollin Havilliard, époux de Georgina Havilliard",
+      "Organise le tournoi du Champion du Roi — convoque 23 membres du conseil, chacun sponsorisant un candidat",
+      "A banni la magie de tout Erilea et mené la purge des utilisateurs de magie",
+      "Physiquement: corpulent, visage rond, traits creusés, yeux perçants, un sourcil cicatrisé — ne ressemble pas à son fils Dorian",
+      "Présence menaçante et autoritaire dans le château",
+      "Cousin du duc Perrington",
+      "Signe le contrat de 4 ans avec Celaena après sa victoire au tournoi",
+      "Menace explicitement Chaol et la famille de Nehemia si Celaena le trahit ou ne revient pas d'une mission"
+    ],
+    "known_relations_book1": {
+      "Dorian Havilliard": "fils aîné, relation distante et tendue",
+      "Hollin Havilliard": "fils cadet",
+      "Georgina Havilliard": "épouse",
+      "Duke Perrington": "cousin",
+      "Celaena Sardothien": "Champion du Roi après le tournoi, sous contrat de 4 ans"
+    },
+    "physical_description_book1": [
+      "Corpulent, large carrure",
+      "Visage rond aux traits creusés",
+      "Yeux perçants",
+      "Un sourcil cicatrisé",
+      "Ne ressemble pas du tout à son fils Dorian"
+    ],
+    "forbidden_book1": {
+      "note": "Ces éléments appartiennent aux livres suivants. Les mentionner dans une page scopée livre 1 = hallucination.",
+      "identity": [
+        "Possession par un minion Valg — révélé dans Queen of Shadows",
+        "Le fait que la purge de la magie était pour priver les Valg d'hôtes (révélé dans QoS)",
+        "Son nom effacé par Erawan / 'Nameless' (révélé dans Kingdom of Ash)",
+        "Le roi humain à l'intérieur résistant partiellement à la possession (révélé dans QoS)"
+      ],
+      "events": [
+        "Exécution de Sorscha (Heir of Fire)",
+        "Mise en esclavage de Dorian avec un collier de Wyrdstone (Heir of Fire)",
+        "Révélation de sa possession à Aelin et Dorian (Queen of Shadows)",
+        "Sa mort aux mains de Dorian (Queen of Shadows)",
+        "Réapparition depuis l'Afterworld pour aider à forger le verrou (Kingdom of Ash)",
+        "Révélation qu'Erawan a effacé son nom (Kingdom of Ash)"
+      ],
+      "backstory": [
+        "Découverte du Wyrdkey dans la tombe d'Elena et voyage à Morath (révélé dans QoS)",
+        "Libération d'Erawan de la crypte sous Morath (révélé dans QoS)",
+        "Visite à Terrasen et tentative de provoquer Aelin enfant (révélé dans QoS)",
+        "Construction des tours de Wyrdstone pour supprimer la magie (révélé progressivement)"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention de sa possession par un Valg dans le livre 1",
+      "Toute mention d'Erawan en lien direct avec le roi dans le livre 1",
+      "Toute mention que la purge de la magie avait un but 'protecteur' caché",
+      "Toute mention de Sorscha en lien avec le roi",
+      "Toute mention de sa mort ou de sa fin dans le livre 1",
+      "Toute mention du collier de Wyrdstone imposé à Dorian",
+      "Toute mention de 'Nameless' comme alias du roi dans le livre 1",
+      "Toute mention de la crypte de Morath ou du Wyrdkey trouvé dans la tombe d'Elena"
+    ]
+  }
