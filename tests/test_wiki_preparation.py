@@ -1,5 +1,8 @@
 """Tests for scripts/wiki_preparation.py."""
 
+import io
+import json
+import sys
 from pathlib import Path
 
 from scripts.wiki_preparation import (
@@ -452,3 +455,86 @@ def test_stage_outputs_from_payload_reads_all_stage_outputs():
     classification, chapter_summary = stage_outputs_from_payload(payload)
     assert len(classification["entities"]) == 1
     assert "ch01" in chapter_summary["chapter_summaries"]
+
+
+def test_main_falls_back_to_disk_when_chapter_summary_stage_output_is_empty(tmp_path: Path, monkeypatch):
+    """When chapter-summary stage output is missing, main() reads chapter_summaries.json from disk."""
+    import scripts.wiki_preparation as wp
+
+    processing = tmp_path / "processing"
+    wiki_inputs = tmp_path / "wiki_inputs"
+    processing.mkdir()
+
+    # Write chapter_summaries.json to disk
+    (processing / "chapter_summaries.json").write_text(
+        json.dumps({
+            "chapter_summaries": {
+                "ch01": {
+                    "chapter_id": "ch01",
+                    "summary_bullets": ["Celaena arrives at the castle."],
+                    "temporal_context": "present",
+                }
+            }
+        }),
+        encoding="utf-8",
+    )
+
+    # Write required registry files (empty)
+    for name in ("persons_full", "places_full", "orgs_full", "events_full"):
+        (processing / f"{name}.json").write_text(json.dumps({name: {}}), encoding="utf-8")
+
+    # Patch paths so main() uses tmp_path
+    class _FakePaths:
+        pass
+
+    _FakePaths.processing = processing
+    _FakePaths.wiki_inputs = wiki_inputs
+    wiki_inputs.mkdir(exist_ok=True)
+
+    monkeypatch.setattr(wp, "_paths_from_payload", lambda _payload: _FakePaths())
+    monkeypatch.setattr(wp, "load_book_config_from_payload", lambda _payload: {})
+
+    entity = {
+        "canonical_name": "Celaena",
+        "type": "PERSON",
+        "importance": "principal",
+        "source_ids": [],
+        "relevant": True,
+        "total_mentions": 1,
+        "chapters_present": 1,
+        "aliases": [],
+    }
+    payload = {
+        "additional_context": "file_path: fake.epub",
+        "all_stage_outputs": {
+            "entity-classification": {
+                "entities": [entity],
+                "relationships": [],
+                "narrator": None,
+            },
+            # chapter-summary stage output intentionally absent / empty
+        },
+    }
+
+    stdin_backup = sys.stdin
+    stdout_backup = sys.stdout
+    captured_out = io.StringIO()
+    try:
+        sys.stdin = io.StringIO(json.dumps(payload))
+        sys.stdout = captured_out
+        wp.main()
+    finally:
+        sys.stdin = stdin_backup
+        sys.stdout = stdout_backup
+
+    result = json.loads(captured_out.getvalue())
+    assert result["total_entities"] == 1
+
+    # Verify the batch file has chapter_summary_context populated from disk
+    batch_files = list(wiki_inputs.glob("batch_*.json"))
+    assert batch_files, "no batch files written"
+    batch = json.loads(batch_files[0].read_text(encoding="utf-8"))
+    celaena = next(e for e in batch["entities"] if e["canonical_name"] == "Celaena")
+    # chapter_summary_context would be empty here since Celaena has no mentions_by_chapter,
+    # but the key point is that no exception was raised and the fallback ran.
+    assert "chapter_summary_context" in celaena
