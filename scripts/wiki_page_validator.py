@@ -89,6 +89,22 @@ def check_references_book_title(page: dict, allowed_book_titles: list[str]) -> l
     return errors
 
 
+def _load_allowed_book_titles(meta: dict) -> list[str]:
+    file_path = meta.get("file_path", "")
+    if not file_path:
+        return []
+    try:
+        from wiki_creator.paths import book_paths_from_epub
+        paths = book_paths_from_epub(file_path)
+        epub_data = paths.processing / "epub_data.json"
+        with open(epub_data, encoding="utf-8") as f:
+            data = json.load(f)
+        title = data.get("title", "")
+        return [title] if title else []
+    except Exception:
+        return []
+
+
 def validate_page(page: dict, meta: dict) -> dict:
     errors: list[str] = []
     errors += check_language_fr(page)
@@ -96,6 +112,9 @@ def validate_page(page: dict, meta: dict) -> dict:
     errors += check_infobox_keys(page)
     errors += check_series_anchor(page, meta)
     errors += check_forbidden_series(page, meta)
+    allowed_book_titles = _load_allowed_book_titles(meta)
+    if allowed_book_titles:
+        errors += check_references_book_title(page, allowed_book_titles)
     return {
         "valid": len(errors) == 0,
         "errors": errors,

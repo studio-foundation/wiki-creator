@@ -173,3 +173,46 @@ def test_check_references_book_title_underscore_italics():
     page = {"content": "## Références\n- _Mauvais Titre_\n"}
     errors = check_references_book_title(page, ["Throne of Glass"])
     assert any("Mauvais Titre" in e for e in errors)
+
+
+def test_validate_page_catches_wrong_references_title(tmp_path):
+    """validate_page catches unauthorized title in Références when file_path resolves."""
+    # Fake epub_data.json at the right path
+    processing_dir = tmp_path / "processing_output" / "01-mybook"
+    processing_dir.mkdir(parents=True)
+    (processing_dir / "epub_data.json").write_text('{"title": "My Book"}', encoding="utf-8")
+
+    # Fake epub path that book_paths_from_epub can derive a slug from
+    epub_path = tmp_path / "books" / "01-mybook.epub"
+    epub_path.parent.mkdir(parents=True)
+    epub_path.touch()
+
+    page = {
+        "title": "Hero",
+        "importance": "principal",
+        "entity_type": "PERSON",
+        "infobox_fields": {},
+        "content": "Hero est un personnage de My Book.\n\n## Références\n- *Wrong Title*\n",
+    }
+    meta = {
+        "file_path": str(epub_path),
+        "series": "My Book",
+        "forbidden_series": [],
+    }
+    result = validate_page(page, meta)
+    assert result["valid"] is False
+    assert any("Wrong Title" in e for e in result["errors"])
+
+
+def test_validate_page_skips_references_check_when_no_file_path():
+    """validate_page does not crash and skips the check when file_path is missing."""
+    page = {
+        "title": "Hero",
+        "importance": "principal",
+        "entity_type": "PERSON",
+        "infobox_fields": {},
+        "content": "Hero est un personnage de My Book.\n\n## Références\n- *Any Title*\n",
+    }
+    meta = {"series": "My Book", "forbidden_series": []}
+    result = validate_page(page, meta)
+    assert "valid" in result  # no crash, check was skipped
