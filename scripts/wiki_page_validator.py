@@ -12,6 +12,7 @@ Output (stdout):
   { "valid": bool, "errors": [...], "feedback": str }
 """
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -70,6 +71,23 @@ def check_forbidden_series(page: dict, meta: dict) -> list[str]:
     if hits:
         return [f"❌ Hallucination cross-série détectée : {hits[0]}"]
     return []
+
+
+def check_references_book_title(page: dict, allowed_book_titles: list[str]) -> list[str]:
+    """Verify that all italicized titles in ## Références are in allowed_book_titles."""
+    content = page.get("content", "")
+    match = re.search(r"##\s*Références(.*?)(?=\n##|\Z)", content, re.IGNORECASE | re.DOTALL)
+    if not match:
+        return []
+    block = match.group(1)
+    titles = re.findall(r"\*([^*\n]+)\*|_([^_\n]+)_", block)
+    found = [t[0] or t[1] for t in titles]
+    allowed_lower = [a.lower() for a in allowed_book_titles]
+    errors = []
+    for title in found:
+        if title.lower() not in allowed_lower:
+            errors.append(f"❌ Titre non autorisé dans Références : '{title}'")
+    return errors
 
 
 def validate_page(page: dict, meta: dict) -> dict:

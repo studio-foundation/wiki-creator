@@ -7,6 +7,7 @@ from scripts.wiki_page_validator import (
     check_infobox_keys,
     check_series_anchor,
     check_forbidden_series,
+    check_references_book_title,
     validate_page,
     build_feedback,
 )
@@ -140,3 +141,35 @@ def test_build_feedback_formats_instructions():
     feedback = build_feedback(errors)
     assert "Langue anglaise" in feedback
     assert "corrige" in feedback.lower() or "régénère" in feedback.lower()
+
+
+def test_check_references_book_title_passes_correct_title():
+    page = {"content": "## Biographie\nTexte.\n\n## Références\n- *Throne of Glass* de Sarah J. Maas\n"}
+    assert check_references_book_title(page, ["Throne of Glass"]) == []
+
+
+def test_check_references_book_title_detects_wrong_title():
+    page = {"content": "## Biographie\nTexte.\n\n## Références\n- *La Colonne de feu* de Sarah J. Maas\n"}
+    errors = check_references_book_title(page, ["Throne of Glass"])
+    assert any("La Colonne de feu" in e for e in errors)
+
+
+def test_check_references_book_title_no_section_passes():
+    page = {"content": "## Biographie\nTexte sans références.\n"}
+    assert check_references_book_title(page, ["Throne of Glass"]) == []
+
+
+def test_check_references_book_title_no_italics_passes():
+    page = {"content": "## Références\nVoir le livre source.\n"}
+    assert check_references_book_title(page, ["Throne of Glass"]) == []
+
+
+def test_check_references_book_title_multi_book_passes():
+    page = {"content": "## Références\n- *Tome 1* et *Tome 2*\n"}
+    assert check_references_book_title(page, ["Tome 1", "Tome 2"]) == []
+
+
+def test_check_references_book_title_underscore_italics():
+    page = {"content": "## Références\n- _Mauvais Titre_\n"}
+    errors = check_references_book_title(page, ["Throne of Glass"])
+    assert any("Mauvais Titre" in e for e in errors)
