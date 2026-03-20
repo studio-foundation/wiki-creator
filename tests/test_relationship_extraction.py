@@ -707,14 +707,18 @@ from scripts.relationship_extraction import _run_studio_classifier_item
 
 def test_run_studio_classifier_item_returns_classification_on_success():
     fake_output = json.dumps({
-        "stages": {
-            "relationship-classifier": {
-                "relationship_type": "ami",
-                "direction": "symétrique",
-                "evolution": "Leur complicité grandit.",
-                "key_moments": ["ch03: entraînement commun"],
+        "stages": [
+            {
+                "stage_name": "relationship-classifier",
+                "status": "success",
+                "output": {
+                    "relationship_type": "ami",
+                    "direction": "symétrique",
+                    "evolution": "Leur complicité grandit.",
+                    "key_moments": ["ch03: entraînement commun"],
+                },
             }
-        }
+        ]
     })
     mock_result = MagicMock(returncode=0, stdout=fake_output, stderr="")
     with patch("subprocess.run", return_value=mock_result):

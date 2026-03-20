@@ -907,11 +907,18 @@ def _run_studio_classifier_item(
     except json.JSONDecodeError:
         return {"error": "studio_output_json_parse_error"}
 
-    stages = run_payload.get("stages", {})
-    clf = stages.get("relationship-classifier") or stages.get("relationship-classifier-item")
-    if not clf:
+    stages = run_payload.get("stages", [])
+    if not isinstance(stages, list):
         return {"error": "studio_run_output_missing"}
-    return clf
+    for stage in stages:
+        if not isinstance(stage, dict):
+            continue
+        if stage.get("stage_name") in ("relationship-classifier", "relationship-classifier-item"):
+            if stage.get("status") == "success":
+                output = stage.get("output")
+                if isinstance(output, dict):
+                    return output
+    return {"error": "studio_run_output_missing"}
 
 
 def classify_relationships(
