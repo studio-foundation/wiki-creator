@@ -19,7 +19,7 @@ Quand le livre audité est dans la série Throne of Glass, des fichiers de véri
 ```
 library/sarah_j_maas/throne-of-glass/books/ground-truth/
 ```
-Fichiers : `celeana.json`, `chaol.json`, `dorian.json`, `king-of-adarlan.json`, `nehemia.json`, `perrington.json`
+Fichiers : `celeana.json`, `chaol.json`, `dorian.json`, `elena_and_gavin.json`, `king-of-adarlan.json`, `nehemia.json`, `perrington.json`
 
 Chaque fichier contient :
 - `canonical_aliases_book1` — noms valides pour ce livre
@@ -198,7 +198,7 @@ for bf in batch_files:
         null_evol = [r for r in rels if r.get('evolution') in (None, 'relation stable dans les extraits fournis', '')]
         empty_moments = [r for r in rels if not r.get('key_moments')]
         no_evidence = [r for r in rels if not r.get('evidence')]
-        tc = e.get('chapter_summaries', [])
+        tc = e.get('chapter_summary_context', [])
         tc_values = [s.get('temporal_context', '?') for s in tc] if isinstance(tc, list) else []
         print(f"\n{e['canonical_name']}: {len(typed)}/{len(rels)} relations typées")
         print(f"  evolution générique/null: {len(null_evol)}/{len(rels)}")
