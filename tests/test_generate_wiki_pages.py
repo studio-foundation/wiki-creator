@@ -702,4 +702,4 @@ def test_build_prompt_references_constraint_present():
     }
     prompt = build_prompt(entity, book_title="Throne of Glass", sections=["infobox", "biography", "references"])
     assert "Throne of Glass" in prompt
-    assert "must list ONLY" in prompt
+    assert 'must list ONLY "Throne of Glass"' in prompt
