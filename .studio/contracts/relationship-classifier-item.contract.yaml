@@ -1,0 +1,8 @@
+name: relationship-classifier-item
+version: 1
+schema:
+  required_fields:
+    - relationship_type
+    - direction
+    - evolution
+    - key_moments

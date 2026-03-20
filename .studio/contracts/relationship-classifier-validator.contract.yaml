@@ -1,0 +1,7 @@
+name: relationship-classifier-validator
+version: 1
+schema:
+  required_fields:
+    - valid
+    - errors
+    - feedback

@@ -1,0 +1,29 @@
+name: relationship-classifier-item
+description: Classify one relationship pair with validation loop
+version: 1
+
+stages:
+  - group: classification-validation
+    max_iterations: 3
+    stages:
+      - name: relationship-classifier
+        kind: analysis
+        agent: relationship-classifier
+        contract: relationship-classifier-item
+        ralph:
+          max_attempts: 3
+        context:
+          include:
+            - input
+            - group_feedback
+
+      - name: relationship-classifier-validator
+        kind: validation
+        executor: script
+        runtime: python
+        script: scripts/relationship_classifier_validator.py
+        contract: relationship-classifier-validator
+        context:
+          include:
+            - input
+            - previous_stage_output
