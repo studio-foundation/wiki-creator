@@ -686,3 +686,20 @@ def test_build_prompt_omits_backstory_block_when_no_flashbacks():
     prompt = build_prompt(entity, "Throne of Glass", ["## Biographie"])
     assert "## Backstory context" not in prompt
     assert "Dorian met Chaol" in prompt
+
+
+def test_build_prompt_references_constraint_present():
+    """build_prompt must include an explicit rule constraining the Références section."""
+    entity = {
+        "canonical_name": "Celaena",
+        "type": "PERSON",
+        "importance": "principal",
+        "aliases": [],
+        "context_by_chapter": {},
+        "related_context": [],
+        "relationships": [],
+        "chapter_summary_context": [],
+    }
+    prompt = build_prompt(entity, book_title="Throne of Glass", sections=["infobox", "biography", "references"])
+    assert "Throne of Glass" in prompt
+    assert 'must list ONLY "Throne of Glass"' in prompt

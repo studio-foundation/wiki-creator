@@ -362,6 +362,7 @@ Structure:
 - If no typed relationships are available, omit the "## Relations" section entirely.
 - infobox_fields keys must be plain strings — no leading "- " or "* ". Correct: {{"nom": "X"}}, Wrong: {{"- nom": "X"}}.
 - Context labels like [Chapter N] are internal references — never mention them in your output.
+- The ## Références section must list ONLY "{book_title}". Do not add any other book, volume, or series title.
 - infobox_fields must contain ONLY wiki-relevant fields (name, role, affiliation, etc.). Do NOT include internal data fields such as cooccurrence_count, entity_type, importance, or any metadata.
 
 Section definitions for type {etype}:
