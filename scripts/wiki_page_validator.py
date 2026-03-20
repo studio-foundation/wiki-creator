@@ -101,7 +101,8 @@ def _load_allowed_book_titles(meta: dict) -> list[str]:
             data = json.load(f)
         title = data.get("title", "")
         return [title] if title else []
-    except Exception:
+    except Exception as exc:
+        print(f"[wiki-page-validator] could not load book title for references check: {exc}", file=sys.stderr)
         return []
 
 

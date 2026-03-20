@@ -216,3 +216,30 @@ def test_validate_page_skips_references_check_when_no_file_path():
     meta = {"series": "My Book", "forbidden_series": []}
     result = validate_page(page, meta)
     assert "valid" in result  # no crash, check was skipped
+
+
+def test_validate_page_skips_references_check_when_title_empty(tmp_path):
+    """validate_page skips the references check when epub_data.json has no title."""
+    processing_dir = tmp_path / "processing_output" / "01-mybook"
+    processing_dir.mkdir(parents=True)
+    (processing_dir / "epub_data.json").write_text('{"title": ""}', encoding="utf-8")
+
+    epub_path = tmp_path / "books" / "01-mybook.epub"
+    epub_path.parent.mkdir(parents=True)
+    epub_path.touch()
+
+    page = {
+        "title": "Hero",
+        "importance": "principal",
+        "entity_type": "PERSON",
+        "infobox_fields": {},
+        "content": "Hero est un personnage de My Book.\n\n## Références\n- *Any Title*\n",
+    }
+    meta = {
+        "file_path": str(epub_path),
+        "series": "My Book",
+        "forbidden_series": [],
+    }
+    # Empty title → check skipped → no references error
+    result = validate_page(page, meta)
+    assert not any("Titre non autorisé" in e for e in result.get("errors", []))
