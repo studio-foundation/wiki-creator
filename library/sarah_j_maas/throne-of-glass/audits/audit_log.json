@@ -36,5 +36,100 @@
       "temporal_context absent des chapter_summaries dans les batches (régression STU-271)",
       "Validateur GT trop bruité — faux positifs keyword (16/19 matches)"
     ]
+  },
+  {
+    "run": 8,
+    "date": "2026-03-20",
+    "pages_generated": 13,
+    "infobox_pct": 62,
+    "lang_fr_pct": 100,
+    "alias_duplicates": 0,
+    "hallucinations": 0,
+    "gt_violations": [
+      {
+        "page": "Chaol",
+        "signal": "Terrasen comme identité revendiquée par Celaena",
+        "cause": "extrapolation"
+      },
+      {
+        "page": "Celaena Sardothien",
+        "signal": "Terrasen comme identité revendiquée / roi d'Adarlan comme titre actuel Dorian / Gavin scène en personne / Arobynn Hamel en personne",
+        "cause": "extrapolation"
+      },
+      {
+        "page": "Gavin",
+        "signal": "Erawan x5 / Terrasen / Gavin dialogue en personne / princesse de Terrasen",
+        "cause": "contamination_cross_serie"
+      }
+    ],
+    "regression": {
+      "prefixed_keys": "✅",
+      "epub_ids": "❌",
+      "entity_type_null": "✅",
+      "alias_duplicates": "✅",
+      "cross_serie": "❌",
+      "evolution_quality": "⚠️",
+      "temporal_context": "✅",
+      "ground_truth": "❌"
+    },
+    "verdict": "Run 8 : 100% FR, 0 doublon alias, key_moments 100%, evolution non-générique 62% (nette progression). Régressions : 14 violations GT sur 3 pages (Erawan/Terrasen/Gavin spoilers), 1 ID EPUB sur Celaena, 2 pages _failed (Hollin, Brullo), evidence absent 37%.",
+    "new_issues": [
+      "Spoiler identitaire Aelin/Terrasen injecté dans pages Chaol et Celaena — prompt bornage insuffisant",
+      "Page Gavin : 7 violations GT sur Erawan/arcs tardifs — figurants sans contexte riche vulnérables à cross-série",
+      "Hollin et Brullo _failed dans batch_006 multi-entités (6 entités) — gestion silencieuse des échecs",
+      "evidence absent dans 37% des relations — continuité STU-279"
+    ]
+  },
+  {
+    "run": 9,
+    "date": "2026-03-20",
+    "pages_generated": 13,
+    "infobox_pct": 62,
+    "lang_fr_pct": 100,
+    "alias_duplicates": 0,
+    "hallucinations": 1,
+    "gt_violations": [
+      {
+        "page": "Chaol",
+        "signal": "Aelin Galathynius comme identité participante au concours",
+        "cause": "contamination_cross_serie"
+      },
+      {
+        "page": "Celaena Sardothien",
+        "signal": "révoluée du Royaume de Terrasen / fille de la cour royale de Terrasen",
+        "cause": "extrapolation"
+      },
+      {
+        "page": "Celaena Sardothien",
+        "signal": "[C03.xhtml][C04.xhtml][C05.xhtml][C06.xhtml] dans content",
+        "cause": "scraping_non_nettoyé"
+      },
+      {
+        "page": "Celaena Sardothien",
+        "signal": "FORBIDDEN_REL Arobynn Hamel (n'apparaît pas en personne dans ToG)",
+        "cause": "extrapolation"
+      },
+      {
+        "page": "Gavin",
+        "signal": "faux positifs GT — Elena/Terrasen correct, Erawan dans contexte légendaire ToG",
+        "cause": "gt_validator_trop_large"
+      }
+    ],
+    "regression": {
+      "prefixed_keys": "✅",
+      "epub_ids": "❌",
+      "entity_type_null": "✅",
+      "alias_duplicates": "✅",
+      "cross_serie": "⚠️",
+      "evolution_quality": "⚠️",
+      "temporal_context": "✅",
+      "ground_truth": "⚠️"
+    },
+    "verdict": "Run 9 : 100% FR, 0 doublon, key_moments 100%, evolution 62% non-générique. Violations GT stables (mêmes 4 réelles qu'en run 8). temporal_context ✅ — faux positif STU-296 (diagnostic utilisait clé 'chapter_summaries' au lieu de 'chapter_summary_context').",
+    "new_issues": [
+      "IDs EPUB Celaena non corrigés depuis run 8",
+      "## Relations réapparu (Dorian) — bruit prompt",
+      "Faux positifs GT validator Gavin (6/11 violations non réelles) — filtre page-entité manquant"
+    ]
   }
 ]
