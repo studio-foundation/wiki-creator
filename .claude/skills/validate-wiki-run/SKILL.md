@@ -146,7 +146,6 @@ for p in pages:
     full_text = content + ' ' + ib_str
     page_violations = []
 
-    # 1. Cherche les signaux d'hallucination
     import re as _re
     def _extract_match_phrases(signal):
         """Extrait des phrases de correspondance depuis un signal d'hallucination.
@@ -162,8 +161,8 @@ for p in pages:
         phrase = _re.split(r"\s*[\(—]|\s+dans (?:le|la|une|l')\b|\s+en lien\b|\s+comme \w|\s+par nom\b|\s+scopée\b", phrase)[0]
         phrase = phrase.strip(" '\"")
         # Gère les listes séparées par des virgules (ex: "Lysandra, Aedion, Manon, Elide")
-        parts = [p.strip(" '\"") for p in phrase.split(",")]
-        return [p for p in parts if len(p) >= 5]
+        parts = [part.strip(" '\"") for part in phrase.split(",")]
+        return [part for part in parts if len(part) >= 5]
 
     # 1. Cherche les signaux d'hallucination — scopés à la page de l'entité concernée
     for entry in gt_entries:
