@@ -8,6 +8,7 @@ from scripts.generate_wiki_pages import (
     _contains_template_placeholder,
     _extract_stage_output_from_run_payload,
     _is_page_complete,
+    _print_generation_summary,
     _run_generation_for_entity,
     build_prompt,
     call_ollama,
@@ -703,3 +704,32 @@ def test_build_prompt_references_constraint_present():
     prompt = build_prompt(entity, book_title="Throne of Glass", sections=["infobox", "biography", "references"])
     assert "Throne of Glass" in prompt
     assert 'must list ONLY "Throne of Glass"' in prompt
+
+
+# --- STU-291: generation summary log ---
+
+def test_print_generation_summary_reports_counts(capsys):
+    """_print_generation_summary prints total, succeeded, and failed counts."""
+    pages = [
+        {"title": "Celaena", "content": "## Bio\n\nHero.", "_failed": False},
+        {"title": "Arobynn Hamel", "content": "", "_failed": True},
+        {"title": "Dorian", "content": "## Bio\n\nPrince."},
+    ]
+    _print_generation_summary(pages)
+    captured = capsys.readouterr()
+    assert "3" in captured.err   # total
+    assert "2" in captured.err   # succeeded
+    assert "1" in captured.err   # failed
+    assert "Arobynn Hamel" in captured.err
+
+
+def test_print_generation_summary_no_failures(capsys):
+    """When no pages failed, summary should report 0 failures."""
+    pages = [
+        {"title": "Celaena", "content": "## Bio\n\nHero."},
+        {"title": "Dorian", "content": "## Bio\n\nPrince."},
+    ]
+    _print_generation_summary(pages)
+    captured = capsys.readouterr()
+    assert "0" in captured.err   # zero failures
+    assert "2" in captured.err   # total / succeeded

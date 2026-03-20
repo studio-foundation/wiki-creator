@@ -882,6 +882,21 @@ def main() -> None:
                     # Do NOT add to done_titles — will be retried on next run
     except KeyboardInterrupt:
         print(f"\n[generate-wiki-pages] Interrupted — {len(all_pages)} pages saved", file=sys.stderr)
+    _print_generation_summary(all_pages)
+
+
+def _print_generation_summary(pages: list[dict], file=None) -> None:
+    """Print a final summary of generation results to stderr."""
+    if file is None:
+        file = sys.stderr
+    failed = [p for p in pages if p.get("_failed")]
+    succeeded = len(pages) - len(failed)
+    print(
+        f"\n[generate-wiki-pages] Done — {len(pages)} total, {succeeded} succeeded, {len(failed)} failed",
+        file=file,
+    )
+    for p in failed:
+        print(f"  [FAILED] {p.get('title', '?')}", file=file)
 
 
 def _save(pages: list[dict], output_file: str) -> None:

@@ -629,7 +629,7 @@ def summarize_chapter_from_item_result(
     else:
         llm_bullets = _sanitize_bullets(item_result.get("summary_bullets"), cfg.max_bullets)
         llm_error = item_result.get("error") or None
-        temporal_context = item_result.get("temporal_context") or "unknown"
+        temporal_context = item_result.get("temporal_context") or _detect_temporal_context(chapter.get("content", ""), flashback_cues)
         flashback_anchor = item_result.get("flashback_anchor") or None
 
     if llm_bullets:

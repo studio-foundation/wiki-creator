@@ -122,10 +122,27 @@ for p in pages:
     page_violations = []
 
     # 1. Cherche les signaux d'hallucination
+    import re as _re
+    def _extract_match_phrases(signal):
+        """Extrait des phrases de correspondance depuis un signal d'hallucination.
+        Utilise la phrase complète plutôt que le premier token pour éviter les faux positifs
+        sur des mots génériques comme 'livres', 'pouvoirs', 'possession'. (STU-294)
+        """
+        phrase = signal
+        for prefix in ["Toute mention de ", "Toute scène ou dialogue de ", "Toute mention d'"]:
+            if phrase.startswith(prefix):
+                phrase = phrase[len(prefix):]
+                break
+        # Supprime le contexte trailing : parenthèses, tirets cadratins, clauses "dans le livre N"...
+        phrase = _re.split(r"\s*[\(—]|\s+dans (?:le|la|une|l')\b|\s+en lien\b|\s+comme \w|\s+par nom\b|\s+scopée\b", phrase)[0]
+        phrase = phrase.strip(" '\"")
+        # Gère les listes séparées par des virgules (ex: "Lysandra, Aedion, Manon, Elide")
+        parts = [p.strip(" '\"") for p in phrase.split(",")]
+        return [p for p in parts if len(p) >= 5]
+
     for sig, entity in all_signals:
-        # Extraire le mot-clé principal du signal (après "Toute mention de ")
-        keyword = sig.replace("Toute mention de ", "").replace("'", "").split(" ")[0]
-        if keyword and keyword.lower() in full_text.lower():
+        phrases = _extract_match_phrases(sig)
+        if any(ph.lower() in full_text.lower() for ph in phrases):
             page_violations.append(f"HALLUC_SIGNAL [{entity}]: {sig}")
 
     # 2. Cherche les termes interdits
@@ -308,8 +325,8 @@ Si des nouvelles issues Linear sont justifiées, les créer via l'outil Linear a
 
 ## Historique des issues connues
 
-Issues Done (ne pas re-créer) : STU-260, STU-261, STU-262, STU-263, STU-264, STU-265, STU-266, STU-267, STU-268, STU-269, STU-270, STU-271, STU-272, STU-273, STU-274, STU-275, STU-276, STU-277, STU-278, STU-279
+Issues Done (ne pas re-créer) : STU-260, STU-261, STU-262, STU-263, STU-264, STU-265, STU-266, STU-267, STU-268, STU-269, STU-270, STU-271, STU-272, STU-273, STU-274, STU-275, STU-276, STU-277, STU-278, STU-279, STU-280, STU-281, STU-282, STU-283, STU-284, STU-285, STU-286, STU-287, STU-288, STU-289, STU-290, STU-294
 
-Issues Backlog actives : aucune issue qualité ouverte au 2026-03-17. Les prochaines issues seront identifiées à partir de la Run 7.
+Issues Backlog actives : aucune issue qualité ouverte au 2026-03-20.
 
 Avant de créer une nouvelle issue, vérifier qu'elle ne doublon pas une issue existante via `Linear:list_issues` sur le projet Wiki Creator.

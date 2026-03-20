@@ -569,6 +569,23 @@ def test_summarize_chapter_from_item_result_defaults_unknown_when_missing():
     assert result["flashback_anchor"] is None
 
 
+def test_summarize_chapter_from_item_result_detects_temporal_context_from_chapter_when_absent():
+    """Studio pipeline doesn't return temporal_context — it should be inferred from chapter content."""
+    chapter = {
+        "id": "ch03",
+        "title": "Chapter 3",
+        "content": "Years before, she had trained in the Keep.",
+    }
+    item_result = {
+        "summary_bullets": ["She trained hard."],
+        # no temporal_context key — simulates Studio pipeline output
+    }
+    result = summarize_chapter_from_item_result(
+        chapter, item_result, flashback_cues=("years before",)
+    )
+    assert result["temporal_context"] == "flashback"
+
+
 def test_summarize_chapter_from_item_result_fallback_uses_heuristic():
     chapter = {
         "id": "ch02", "title": "Chapter 2",

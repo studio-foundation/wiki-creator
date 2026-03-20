@@ -22,6 +22,19 @@ if str(PROJECT_ROOT) not in sys.path:
 from wiki_creator.paths import book_paths_from_epub, BookPaths
 
 
+def _filter_failed_pages(pages: list[dict]) -> list[dict]:
+    """Exclude pages that failed generation before they enter the export pipeline."""
+    exportable = [p for p in pages if not p.get("_failed")]
+    skipped = len(pages) - len(exportable)
+    if skipped:
+        failed_titles = [p.get("title", "?") for p in pages if p.get("_failed")]
+        print(
+            f"[load-wiki-pages] Skipping {skipped} _failed page(s): {', '.join(failed_titles)}",
+            file=sys.stderr,
+        )
+    return exportable
+
+
 def _paths_from_payload(payload: dict) -> BookPaths:
     ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
     file_path = ctx.get("file_path")
@@ -47,6 +60,7 @@ def main() -> None:
         data = json.load(f)
 
     pages = data.get("pages", [])
+    pages = _filter_failed_pages(pages)
     print(f"[load-wiki-pages] Loaded {len(pages)} pages from {output_file}", file=sys.stderr)
     json.dump({"pages": pages}, sys.stdout, ensure_ascii=False)
 
