@@ -74,7 +74,6 @@ def check_forbidden_series(page: dict, meta: dict) -> list[str]:
 
 
 def check_references_book_title(page: dict, allowed_book_titles: list[str]) -> list[str]:
-    """Verify that all italicized titles in ## Références are in allowed_book_titles."""
     content = page.get("content", "")
     match = re.search(r"##\s*Références(.*?)(?=\n##|\Z)", content, re.IGNORECASE | re.DOTALL)
     if not match:
