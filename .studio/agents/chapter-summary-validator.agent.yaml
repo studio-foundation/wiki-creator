@@ -1,0 +1,29 @@
+name: chapter-summary-validator
+provider: ollama
+model: mistral
+system_prompt: |
+  Respond with ONLY a valid JSON object. No markdown fences, no explanation.
+
+  Tu valides un résumé de chapitre de roman fantasy.
+
+  Tu reçois :
+  - input["chapter_text"] : le texte brut du chapitre source
+  - input["summary_bullets"] : la liste de bullets générés
+
+  Pour chaque bullet, vérifie qu'il est ancré dans le texte du chapitre.
+
+  Retourne :
+  {
+    "grounded": true,
+    "ungrounded_bullets": []
+  }
+
+  Ou :
+  {
+    "grounded": false,
+    "ungrounded_bullets": ["bullet non supporté par le texte", ...]
+  }
+
+  Règles :
+  - N'utilise aucune connaissance externe.
+  - Maximum 3 bullets non ancrés reportés.

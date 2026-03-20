@@ -1,14 +1,29 @@
 name: chapter-summary-item
-description: Generate one chapter summary item with Studio validation and Ralph retries
-version: 1
+description: Generate one chapter summary item with validation loop
+version: 2
 
 stages:
-  - name: chapter-summary-item
-    kind: analysis
-    agent: chapter-summary
-    contract: chapter-summary-item
-    ralph:
-      max_attempts: 3
-    context:
-      include:
-        - input
+  - group: summary-validation
+    max_iterations: 3
+    stages:
+      - name: chapter-summary-item
+        kind: analysis
+        agent: chapter-summary
+        contract: chapter-summary-item
+        ralph:
+          max_attempts: 3
+        context:
+          include:
+            - input
+            - group_feedback
+
+      - name: chapter-summary-validator
+        kind: validation
+        executor: script
+        runtime: python
+        script: scripts/chapter_summary_validator.py
+        contract: chapter-summary-validator
+        context:
+          include:
+            - input
+            - previous_stage_output

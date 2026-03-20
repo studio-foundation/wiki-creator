@@ -68,7 +68,7 @@ def test_chapter_summary_item_pipeline_uses_ralph_and_contract() -> None:
 
     doc = _load_yaml(pipeline_path)
     llm_stage = next(
-        stage for stage in doc.get("stages", [])
+        stage for stage in _iter_stages(doc.get("stages", []))
         if stage.get("contract") == "chapter-summary-item"
     )
     assert llm_stage.get("agent") == "chapter-summary"
