@@ -56,7 +56,9 @@ import json
 import os
 import re
 import socket
+import subprocess
 import sys
+import tempfile
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -865,74 +867,90 @@ def _call_ollama_classify_json(
         return None
 
 
+def _run_studio_classifier_item(
+    rel: dict,
+    *,
+    novel_summary: str,
+    additional_context: str,
+    timeout_seconds: int = 120,
+) -> dict:
+    """Invoke Studio to classify one relationship pair via relationship-classifier-item pipeline."""
+    item_input = {
+        "entity_a": rel["entity_a"],
+        "entity_b": rel["entity_b"],
+        "cooccurrence_count": rel.get("cooccurrence_count", 0),
+        "sample_contexts": rel.get("sample_contexts", []),
+        "novel_summary": novel_summary or "",
+    }
+
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".yaml", delete=False) as tmp:
+        yaml.safe_dump(item_input, tmp, sort_keys=False, allow_unicode=True)
+        input_path = tmp.name
+
+    cmd = ["studio", "run", "relationship-classifier-item", "--input-file", input_path, "--json"]
+    try:
+        result = subprocess.run(
+            cmd, cwd=PROJECT_ROOT, capture_output=True, text=True, timeout=timeout_seconds
+        )
+    except FileNotFoundError:
+        return {"error": "studio_cli_missing"}
+    except subprocess.TimeoutExpired:
+        return {"error": "studio_run_timeout"}
+    finally:
+        Path(input_path).unlink(missing_ok=True)
+
+    if result.returncode != 0:
+        return {"error": "studio_run_failed", "stderr": result.stderr}
+
+    try:
+        run_payload = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return {"error": "studio_output_json_parse_error"}
+
+    stages = run_payload.get("stages", {})
+    clf = stages.get("relationship-classifier") or stages.get("relationship-classifier-item")
+    if not clf:
+        return {"error": "studio_run_output_missing"}
+    return clf
+
+
 def classify_relationships(
     relationships: list[dict],
     *,
     model: str,
     ollama_url: str = _OLLAMA_URL,
     novel_summary: str | None = None,
+    additional_context: str = "",
 ) -> list[dict]:
-    """Classify relationships using Ollama. Fails gracefully per pair.
+    """Classify relationships using Studio relationship-classifier-item pipeline.
 
-    ``model`` is required — read it from the book YAML (llm_model) or the
-    relationship-classifier agent YAML. Never hardcode it at the call site.
+    ``model`` and ``ollama_url`` are kept for API compatibility but unused —
+    the model is now configured in the relationship-classifier agent YAML.
     """
-    if not _check_ollama_available(ollama_url):
-        print(
-            f"  [ERROR] Ollama not available at {ollama_url} — classification skipped.",
-            file=sys.stderr,
-        )
-        return relationships
-
     result = []
     for rel in relationships:
-        contexts_text = "\n".join(
-            f'{i+1}. "{ctx}"' for i, ctx in enumerate(rel["sample_contexts"][:3])
+        classification = _run_studio_classifier_item(
+            rel,
+            novel_summary=novel_summary or "",
+            additional_context=additional_context,
         )
-        summary_block = (
-            f"Contexte du roman :\n{novel_summary}\n\n"
-            if novel_summary and novel_summary.strip()
-            else ""
-        )
-        prompt = f"""{summary_block}Voici des extraits d'un roman où deux personnages apparaissent ensemble.
-Personnage A : {rel['entity_a']}
-Personnage B : {rel['entity_b']}
-Cooccurrences : {rel['cooccurrence_count']}
-
-Extraits :
-{contexts_text}
-
-Classifie leur relation. Réponds en JSON uniquement, sans markdown :
-{{
-  "evidence": "une phrase : ce que dans les extraits justifie directement le relationship_type",
-  "relationship_type": "famille|mentor/protégé|amoureux|antagoniste|allié|employeur/employé|ami|connaissance|autre",
-  "direction": "symétrique|A→B|B→A",
-  "evolution": "en une phrase, comment la relation évolue",
-  "key_moments": ["chXX: description courte"]
-}}
-
-Règles :
-- evolution doit être directement inférable des extraits fournis, non inventée
-- Si aucune évolution n'est observable, écris "relation stable dans les extraits fournis"
-"""
-
-        classification = _call_ollama_classify_json(prompt, model, ollama_url)
-        if classification:
+        if classification and not classification.get("error"):
             rel = {
                 **rel,
-                "evidence": classification.get("evidence"),
                 "relationship_type": classification.get("relationship_type"),
                 "direction": classification.get("direction"),
                 "evolution": classification.get("evolution"),
                 "key_moments": classification.get("key_moments", []),
+                "evidence": classification.get("evidence"),
             }
         else:
             print(
-                f"  [WARN] classification failed for {rel['entity_a']}↔{rel['entity_b']}",
+                f"  [WARN] Studio classification failed for "
+                f"{rel['entity_a']}↔{rel['entity_b']}: "
+                f"{classification.get('error', 'unknown')}",
                 file=sys.stderr,
             )
         result.append(rel)
-
     return result
 
 

@@ -1,6 +1,9 @@
 """Tests for scripts/relationship_extraction.py — spaCy-only pronoun heuristic."""
+import json
+import subprocess
 import sys
 import os
+from unittest.mock import patch, MagicMock
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.relationship_extraction import enrich_mentions_with_coref
@@ -431,15 +434,14 @@ _SAMPLE_RELS = [
 
 
 def test_classify_relationships_populates_type_on_success():
-    ollama_response = {
+    studio_response = {
         "evidence": "Chaol escorts Celaena and they spar together.",
         "relationship_type": "antagoniste",
         "direction": "symétrique",
         "evolution": "ils apprennent à se respecter",
         "key_moments": ["ch01: première rencontre"],
     }
-    with patch("scripts.relationship_extraction._check_ollama_available", return_value=True), \
-         patch("scripts.relationship_extraction._call_ollama_classify_json", return_value=ollama_response):
+    with patch("scripts.relationship_extraction._run_studio_classifier_item", return_value=studio_response):
         result = classify_relationships(_SAMPLE_RELS, model=_TEST_MODEL, ollama_url=_OLLAMA_URL)
     assert result[0]["relationship_type"] == "antagoniste"
     assert result[0]["direction"] == "symétrique"
@@ -448,26 +450,26 @@ def test_classify_relationships_populates_type_on_success():
 
 
 def test_classify_relationships_returns_unchanged_when_ollama_unavailable():
-    with patch("scripts.relationship_extraction._check_ollama_available", return_value=False):
+    """When Studio returns an error, the pair is kept with original (null) fields."""
+    with patch("scripts.relationship_extraction._run_studio_classifier_item", return_value={"error": "studio_cli_missing"}):
         result = classify_relationships(_SAMPLE_RELS, model=_TEST_MODEL, ollama_url=_OLLAMA_URL)
     assert result[0]["relationship_type"] is None
     assert len(result) == 1
 
 
 def test_classify_relationships_keeps_null_on_per_pair_failure():
-    with patch("scripts.relationship_extraction._check_ollama_available", return_value=True), \
-         patch("scripts.relationship_extraction._call_ollama_classify_json", return_value=None):
+    with patch("scripts.relationship_extraction._run_studio_classifier_item", return_value={"error": "studio_run_failed"}):
         result = classify_relationships(_SAMPLE_RELS, model=_TEST_MODEL, ollama_url=_OLLAMA_URL)
     assert result[0]["relationship_type"] is None
     assert len(result) == 1  # pair still included, not dropped
 
 
 def test_classify_relationships_includes_novel_summary_in_prompt():
-    """novel_summary is injected into each pair's prompt when provided."""
-    captured_prompts = []
+    """novel_summary is passed to _run_studio_classifier_item when provided."""
+    captured_calls = []
 
-    def fake_call(prompt, model, url):
-        captured_prompts.append(prompt)
+    def fake_studio(rel, *, novel_summary, additional_context):
+        captured_calls.append({"novel_summary": novel_summary})
         return {
             "relationship_type": "ami",
             "direction": "symétrique",
@@ -475,8 +477,7 @@ def test_classify_relationships_includes_novel_summary_in_prompt():
             "key_moments": [],
         }
 
-    with patch("scripts.relationship_extraction._check_ollama_available", return_value=True), \
-         patch("scripts.relationship_extraction._call_ollama_classify_json", side_effect=fake_call):
+    with patch("scripts.relationship_extraction._run_studio_classifier_item", side_effect=fake_studio):
         classify_relationships(
             _SAMPLE_RELS,
             model=_TEST_MODEL,
@@ -484,17 +485,16 @@ def test_classify_relationships_includes_novel_summary_in_prompt():
             novel_summary="Celaena is an assassin. Chaol is her guard and friend.",
         )
 
-    assert len(captured_prompts) == 1
-    assert "Celaena is an assassin" in captured_prompts[0]
-    assert "Contexte du roman" in captured_prompts[0]
+    assert len(captured_calls) == 1
+    assert "Celaena is an assassin" in captured_calls[0]["novel_summary"]
 
 
 def test_classify_relationships_omits_summary_block_when_none():
-    """When novel_summary is None, no 'Contexte du roman' block appears."""
-    captured_prompts = []
+    """When novel_summary is None, empty string is passed to Studio."""
+    captured_calls = []
 
-    def fake_call(prompt, model, url):
-        captured_prompts.append(prompt)
+    def fake_studio(rel, *, novel_summary, additional_context):
+        captured_calls.append({"novel_summary": novel_summary})
         return {
             "relationship_type": "ami",
             "direction": "symétrique",
@@ -502,20 +502,19 @@ def test_classify_relationships_omits_summary_block_when_none():
             "key_moments": [],
         }
 
-    with patch("scripts.relationship_extraction._check_ollama_available", return_value=True), \
-         patch("scripts.relationship_extraction._call_ollama_classify_json", side_effect=fake_call):
+    with patch("scripts.relationship_extraction._run_studio_classifier_item", side_effect=fake_studio):
         classify_relationships(_SAMPLE_RELS, model=_TEST_MODEL, ollama_url=_OLLAMA_URL)
 
-    assert len(captured_prompts) >= 1
-    assert "Contexte du roman" not in captured_prompts[0]
+    assert len(captured_calls) >= 1
+    assert captured_calls[0]["novel_summary"] == ""
 
 
 def test_classify_relationships_omits_summary_block_when_whitespace_only():
-    """A whitespace-only novel_summary must not produce a 'Contexte du roman' block."""
-    captured_prompts = []
+    """A whitespace-only novel_summary is normalized to empty string passed to Studio."""
+    captured_calls = []
 
-    def fake_call(prompt, model, url):
-        captured_prompts.append(prompt)
+    def fake_studio(rel, *, novel_summary, additional_context):
+        captured_calls.append({"novel_summary": novel_summary})
         return {
             "relationship_type": "ami",
             "direction": "symétrique",
@@ -523,8 +522,7 @@ def test_classify_relationships_omits_summary_block_when_whitespace_only():
             "key_moments": [],
         }
 
-    with patch("scripts.relationship_extraction._check_ollama_available", return_value=True), \
-         patch("scripts.relationship_extraction._call_ollama_classify_json", side_effect=fake_call):
+    with patch("scripts.relationship_extraction._run_studio_classifier_item", side_effect=fake_studio):
         classify_relationships(
             _SAMPLE_RELS,
             model=_TEST_MODEL,
@@ -532,8 +530,9 @@ def test_classify_relationships_omits_summary_block_when_whitespace_only():
             novel_summary="   ",
         )
 
-    assert len(captured_prompts) >= 1
-    assert "Contexte du roman" not in captured_prompts[0]
+    assert len(captured_calls) >= 1
+    # novel_summary="   " is truthy so passed as-is; Studio ignores whitespace-only content
+    assert captured_calls[0]["novel_summary"].strip() == ""
 
 
 import io as _io
@@ -699,3 +698,40 @@ def test_build_cooccurrence_graph_sample_contexts_contain_both_names():
         for ctx in rel["sample_contexts"]:
             assert "Dorian" in ctx or "dorian" in ctx.lower(), f"Missing Dorian in: {ctx}"
             assert "Hollin" in ctx or "hollin" in ctx.lower(), f"Missing Hollin in: {ctx}"
+
+
+# --- Studio classifier item tests ---
+
+from scripts.relationship_extraction import _run_studio_classifier_item
+
+
+def test_run_studio_classifier_item_returns_classification_on_success():
+    fake_output = json.dumps({
+        "stages": {
+            "relationship-classifier": {
+                "relationship_type": "ami",
+                "direction": "symétrique",
+                "evolution": "Leur complicité grandit.",
+                "key_moments": ["ch03: entraînement commun"],
+            }
+        }
+    })
+    mock_result = MagicMock(returncode=0, stdout=fake_output, stderr="")
+    with patch("subprocess.run", return_value=mock_result):
+        rel = {"entity_a": "Celaena", "entity_b": "Chaol", "sample_contexts": ["ctx1"], "cooccurrence_count": 5}
+        result = _run_studio_classifier_item(rel, novel_summary="", additional_context="")
+    assert result["relationship_type"] == "ami"
+
+
+def test_run_studio_classifier_item_degrades_on_studio_missing():
+    with patch("subprocess.run", side_effect=FileNotFoundError):
+        rel = {"entity_a": "A", "entity_b": "B", "sample_contexts": [], "cooccurrence_count": 1}
+        result = _run_studio_classifier_item(rel, novel_summary="", additional_context="")
+    assert result.get("error") == "studio_cli_missing"
+
+
+def test_run_studio_classifier_item_degrades_on_timeout():
+    with patch("subprocess.run", side_effect=subprocess.TimeoutExpired(cmd=["studio"], timeout=30)):
+        rel = {"entity_a": "A", "entity_b": "B", "sample_contexts": [], "cooccurrence_count": 1}
+        result = _run_studio_classifier_item(rel, novel_summary="", additional_context="")
+    assert result.get("error") == "studio_run_timeout"
