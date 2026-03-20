@@ -88,23 +88,48 @@ import json, glob, os
 GT_DIR = 'library/sarah_j_maas/throne-of-glass/books/ground-truth'
 gt_files = glob.glob(f'{GT_DIR}/*.json')
 
-# Charge toutes les ground-truths
-gt_by_entity = {}
-all_signals = []   # (signal_text, entity_name)
-all_forbidden = [] # (term, entity_name)
+def _load_gt_entries(gt_files):
+    """Normalise les fichiers GT en une liste d'entrées uniformes.
+    Gère deux formats :
+    - Flat  : { "entity": "...", "canonical_aliases_book1": [...], ... }
+    - Imbriqué : { "entities": [...], "elena": {...}, "gavin": {...}, ... }
+    """
+    entries = []
+    by_entity = {}  # entity_name -> raw sub-object, pour le check de relations (section 3)
+    for gf in gt_files:
+        with open(gf) as f:
+            gt = json.load(f)
+        if 'entity' in gt:
+            # Format flat
+            sub_objects = [(gt['entity'], gt)]
+        else:
+            # Format imbriqué : clés dont la valeur est un dict
+            sub_objects = [(k, v) for k, v in gt.items() if isinstance(v, dict)]
+        for name, obj in sub_objects:
+            canonical = obj.get('canonical_aliases_book1', [])
+            aliases = canonical if canonical else [name]
+            forbidden = []
+            for cat, items in obj.get('forbidden_book1', {}).items():
+                if isinstance(items, list):
+                    for item in items:
+                        forbidden.append((item, cat))
+            entity_name = canonical[0] if canonical else name
+            entries.append({
+                'entity': entity_name,
+                'canonical_aliases': aliases,
+                'hallucination_signals': obj.get('hallucination_signals', []),
+                'forbidden': forbidden,
+            })
+            by_entity[entity_name] = obj
+    return entries, by_entity
 
-for gf in gt_files:
-    with open(gf) as f:
-        gt = json.load(f)
-    name = gt['entity']
-    gt_by_entity[name] = gt
-    for sig in gt.get('hallucination_signals', []):
-        all_signals.append((sig, name))
-    forbidden = gt.get('forbidden_book1', {})
-    for cat, items in forbidden.items():
-        if isinstance(items, list):
-            for item in items:
-                all_forbidden.append((item, name, cat))
+gt_entries, gt_by_entity = _load_gt_entries(gt_files)
+
+# all_forbidden reste global (termes interdits s'appliquent à toutes les pages)
+all_forbidden = []  # (term, entity_name, category)
+for entry in gt_entries:
+    for term, cat in entry['forbidden']:
+        all_forbidden.append((term, entry['entity'], cat))
 
 # Charge les pages générées
 with open('/mnt/user-data/uploads/wiki_pages.json') as f:
@@ -140,10 +165,15 @@ for p in pages:
         parts = [p.strip(" '\"") for p in phrase.split(",")]
         return [p for p in parts if len(p) >= 5]
 
-    for sig, entity in all_signals:
-        phrases = _extract_match_phrases(sig)
-        if any(ph.lower() in full_text.lower() for ph in phrases):
-            page_violations.append(f"HALLUC_SIGNAL [{entity}]: {sig}")
+    # 1. Cherche les signaux d'hallucination — scopés à la page de l'entité concernée
+    for entry in gt_entries:
+        is_entity_page = any(a.lower() in title.lower() for a in entry['canonical_aliases'])
+        if not is_entity_page:
+            continue
+        for sig in entry['hallucination_signals']:
+            phrases = _extract_match_phrases(sig)
+            if any(ph.lower() in full_text.lower() for ph in phrases):
+                page_violations.append(f"HALLUC_SIGNAL [{entry['entity']}]: {sig}")
 
     # 2. Cherche les termes interdits
     for term, entity, cat in all_forbidden:
