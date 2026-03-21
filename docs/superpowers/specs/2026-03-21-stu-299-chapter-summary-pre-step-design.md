@@ -80,9 +80,11 @@ The `--clean` block replaces `required_files(args.book)` with `clean_files(args.
 
 `test_chapter_summary_stage_has_effectively_unbounded_outer_timeout` checks that `wiki-preparation.pipeline.yaml` contains the `chapter-summary` stage with `timeout_ms=86400000`. Since the stage is removed from that pipeline, drop `wiki-preparation.pipeline.yaml` from `target_pipelines`, keeping only `wiki-generation.pipeline.yaml`.
 
+Note: `wiki-generation.pipeline.yaml` is a legacy/deprecated pipeline (see CLAUDE.md) and is **not** modified as part of this ticket. Its `chapter-summary` stage remains, so the timeout test still passes for it.
+
 ## Acceptance Criteria
 
-- Interrupt at chapter 30/55 → `--restart wiki-resolution` → skips chapters 1–30, resumes at 31
+- Interrupt at chapter 30/55 → `--restart wiki-resolution` → skips chapters 1–30, resumes at 31. This relies on `chapter_summary.py`'s own incremental resume logic (`_load_existing_chapter_summaries` / `_is_summary_complete`), not on the orchestrator skipping the pre-step. The orchestrator always re-runs the pre-step; the script itself skips already-complete chapters.
 - `--restart wiki-preparation` → `chapter_summaries.json` untouched
 - `--clean --restart wiki-extraction` → `chapter_summaries.json` deleted and recalculated
 - `wiki-preparation.pipeline.yaml` no longer contains `chapter-summary` stage
