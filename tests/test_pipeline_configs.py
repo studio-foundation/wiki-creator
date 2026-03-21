@@ -35,7 +35,6 @@ def test_script_stages_use_script_paths_only() -> None:
 def test_chapter_summary_stage_has_effectively_unbounded_outer_timeout() -> None:
     """Studio script stages default to 30s, so long-running incremental summaries need an explicit large timeout."""
     target_pipelines = {
-        "wiki-preparation.pipeline.yaml",
         "wiki-generation.pipeline.yaml",
     }
 

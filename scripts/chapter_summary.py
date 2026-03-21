@@ -22,6 +22,7 @@ Side effects:
   Writes processing_output/chapter_summaries.json.
 """
 
+import argparse
 import json
 import re
 import socket
@@ -40,7 +41,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from wiki_creator.paths import BookPaths, book_paths_from_epub
+from wiki_creator.paths import BookPaths, book_paths_from_epub, book_paths_from_yaml
 from wiki_creator.lang import load_lang_config, infer_language
 from scripts.entity_extraction import _is_frontmatter_chapter
 
@@ -682,7 +683,54 @@ def _epub_output_from_payload(payload: dict) -> dict:
     return {}
 
 
+def _main_from_book(book_path: str) -> None:
+    """Standalone entry point: reads chapters.json from disk, runs summarization."""
+    paths = book_paths_from_yaml(book_path)
+
+    chapters_file = paths.processing / "chapters.json"
+    if not chapters_file.exists():
+        print(f"[ERROR] chapters.json not found: {chapters_file}", file=sys.stderr)
+        sys.exit(1)
+    chapters = json.loads(chapters_file.read_text(encoding="utf-8"))
+
+    with open(book_path, encoding="utf-8") as f:
+        book_cfg = yaml.safe_load(f) or {}
+
+    spacy_model = book_cfg.get("spacy_model", "en_core_web_lg")
+    export_categories = book_cfg.get("export", {}).get("categories", {})
+    language = export_categories.get("language") or infer_language(spacy_model)
+    lang_config = load_lang_config(language)
+    action_cues = tuple(lang_config.get("action_cues", ()))
+    flashback_cues = tuple(lang_config.get("flashback_cues", ()))
+
+    generation_cfg = book_cfg.get("generation", {})
+    summary_cfg = generation_cfg.get("chapter_summary", {}) if isinstance(generation_cfg, dict) else {}
+    config = ChapterSummaryConfig(
+        max_bullets=int(summary_cfg.get("max_bullets", 8)),
+    )
+
+    out_file = paths.processing / "chapter_summaries.json"
+    debug_dir = paths.processing / "chapter_summary_llm_debug"
+    summarize_chapters_incrementally(
+        chapters,
+        output_file=out_file,
+        debug_dir=debug_dir,
+        config=config,
+        action_cues=action_cues,
+        flashback_cues=flashback_cues,
+    )
+
+
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Generate chapter summaries.")
+    parser.add_argument("--book", help="Path to book YAML (standalone mode, reads chapters.json from disk)")
+    args, _ = parser.parse_known_args()
+
+    if args.book:
+        _main_from_book(args.book)
+        return
+
+    # Studio stdin mode (legacy — called from wiki-preparation pipeline)
     payload = json.load(sys.stdin)
     epub_data = _epub_output_from_payload(payload)
     chapters = epub_data.get("chapters", [])
@@ -708,7 +756,6 @@ def main() -> None:
         flashback_cues=flashback_cues,
     )
     out = {"chapter_summaries": chapter_summaries}
-
     json.dump(out, sys.stdout, ensure_ascii=False)
 
 

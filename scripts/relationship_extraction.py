@@ -1266,14 +1266,15 @@ def main() -> None:
 
     prev_outputs = payload.get("previous_outputs", {})
     resolution_output = (
-        prev_outputs.get("merge-entities")
+        prev_outputs.get("alias-resolution")
+        or prev_outputs.get("merge-entities")
         or prev_outputs.get("entity-resolution")
         or {}
     )
     entities = resolution_output.get("entities", [])
 
     if not entities:
-        json.dump({"error": "missing merge-entities output"}, sys.stdout, ensure_ascii=False)
+        json.dump({"error": "missing alias-resolution or merge-entities output"}, sys.stdout, ensure_ascii=False)
         sys.exit(1)
 
     # Parse classify flag from additional_context (YAML string)
