@@ -168,3 +168,92 @@ def classify_pair(
         file=sys.stderr,
     )
     return pair
+
+
+def _load_done_keys(output_path: Path) -> tuple[set[tuple[str, str]], list[dict]]:
+    """Load already-classified pairs from output file. Returns (done_keys, pairs)."""
+    if not output_path.exists():
+        return set(), []
+    try:
+        data = json.loads(output_path.read_text(encoding="utf-8"))
+        pairs = data.get("relationships", [])
+        keys = {(p["entity_a"], p["entity_b"]) for p in pairs}
+        return keys, pairs
+    except (json.JSONDecodeError, KeyError):
+        return set(), []
+
+
+def _save(output_path: Path, base: dict, classified: list[dict]) -> None:
+    out = {**base, "relationships": classified}
+    output_path.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Classify relationships via direct Ollama calls."
+    )
+    parser.add_argument(
+        "--book", required=True,
+        help="Path to book YAML, e.g. library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml",
+    )
+    parser.add_argument("--model", default=os.environ.get("WIKI_MODEL", "qwen2.5"))
+    parser.add_argument("--dry-run", action="store_true", help="Skip Ollama calls, pass pairs through unchanged")
+    args = parser.parse_args()
+
+    book_paths = book_paths_from_yaml(args.book)
+    input_path = book_paths.processing / "relationships.json"
+    output_path = book_paths.processing / "relationships_classified.json"
+
+    if not input_path.exists():
+        print(f"[ERROR] Input not found: {input_path}", file=sys.stderr)
+        sys.exit(1)
+
+    data = json.loads(input_path.read_text(encoding="utf-8"))
+    relationships = data.get("relationships", [])
+    entity_types = {e["canonical_name"]: e.get("type", "") for e in data.get("entities", [])}
+    base = {k: v for k, v in data.items() if k != "relationships"}
+
+    with open(args.book, encoding="utf-8") as f:
+        book_cfg = yaml.safe_load(f) or {}
+    novel_summary = book_cfg.get("novel_summary") or None
+
+    done_keys, classified = _load_done_keys(output_path)
+    if done_keys:
+        print(f"[classify-relationships] Resuming — {len(done_keys)} pairs already done", file=sys.stderr)
+
+    to_classify = [r for r in relationships if (r["entity_a"], r["entity_b"]) not in done_keys]
+    skip_count = len(relationships) - len(to_classify)
+    classifiable = sum(1 for r in to_classify if _should_classify(r, entity_types))
+
+    print(
+        f"[classify-relationships] {len(relationships)} pairs total | "
+        f"{skip_count} skipped (already done) | "
+        f"{classifiable} to classify | model={args.model}",
+        file=sys.stderr,
+    )
+
+    try:
+        for i, pair in enumerate(to_classify, 1):
+            label = f"{pair.get('entity_a', '?')}↔{pair.get('entity_b', '?')}"
+            if not _should_classify(pair, entity_types):
+                print(f"  [SKIP] {label} (non-interpersonal type)", file=sys.stderr)
+                classified.append(pair)
+            else:
+                print(f"  [CLF]  {label} ({i}/{len(to_classify)})", file=sys.stderr, end="", flush=True)
+                result = classify_pair(pair, model=args.model, novel_summary=novel_summary, dry_run=args.dry_run)
+                classified.append(result)
+                status = result.get("relationship_type") or "null"
+                print(f" → {status}", file=sys.stderr)
+            _save(output_path, base, classified)
+    except KeyboardInterrupt:
+        print(f"\n[classify-relationships] Interrupted — {len(classified)} pairs saved", file=sys.stderr)
+
+    succeeded = sum(1 for r in classified if r.get("relationship_type") is not None)
+    print(
+        f"\n[classify-relationships] Done — {len(classified)} total, {succeeded} classified",
+        file=sys.stderr,
+    )
+
+
+if __name__ == "__main__":
+    main()
