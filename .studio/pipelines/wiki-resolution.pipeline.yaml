@@ -45,17 +45,6 @@ stages:
         - input
         - previous_stage_output
 
-  - name: save-relationships
-    kind: extraction
-    executor: script
-    runtime: python
-    script: scripts/save_relationships.py
-    contract: save-relationships
-    context:
-      include:
-        - input
-        - all_stage_outputs
-
   - name: alias-resolution
     kind: extraction
     executor: script
@@ -73,6 +62,17 @@ stages:
     runtime: python
     script: scripts/entity_classification.py
     contract: entity-classification
+    context:
+      include:
+        - input
+        - all_stage_outputs
+
+  - name: save-relationships
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/save_relationships.py
+    contract: save-relationships
     context:
       include:
         - input
