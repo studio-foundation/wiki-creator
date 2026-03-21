@@ -2,31 +2,34 @@
 
 ## Goal
 
-Replace the Studio-based relationship classification pipeline with a standalone Python script
-that calls Ollama directly — same pattern as `generate_wiki_pages.py`.
+Move relationship classification out of the `wiki-resolution` pipeline timeout into a
+standalone Python script that calls `studio run relationship-classifier-item` for each pair,
+saves incrementally, and supports resume.
 
 ## Context
 
-The `wiki-resolution` pipeline's `relationship-extraction` stage has a `classify: true` option
-that calls Ollama through Studio (`relationship-classifier-item.pipeline.yaml`) one pair at a
-time. Each call spawns a Studio subprocess with JSONL logging and DB overhead, adding ~90s per
-pair. With ~57 pairs, total time exceeds the 600s pipeline timeout.
+The `wiki-resolution` pipeline's `relationship-extraction` stage times out (600s) when
+`classify: true` because classification runs synchronously inside the pipeline stage.
+With ~57 pairs at ~90s each via Studio, the total exceeds the timeout.
 
-`generate_wiki_pages.py` bypasses Studio entirely by calling `POST /api/generate` via
-`urllib.request` directly. This design applies the same approach to relationship classification.
+The fix is NOT to bypass Studio — Studio's ralph retry loop and validator give quality
+guarantees we want to keep. The fix is to move the classification loop into a standalone
+script that runs outside the pipeline timeout, saves after each pair, and can be resumed.
+
+`_run_studio_classifier_item` already exists in `scripts/relationship_extraction.py` and
+does exactly one Studio call per pair. The new script reuses it directly.
 
 ## Architecture
 
 ### New file: `scripts/classify_relationships.py`
 
 Standalone script. Reads `relationships.json` (output of `relationship-extraction` with
-`classify: false`), classifies each pair via direct Ollama calls, writes
+`classify: false`), calls Studio for each eligible pair, writes
 `relationships_classified.json`.
 
 **CLI:**
 ```
 python scripts/classify_relationships.py --book library/.../book.yaml
-python scripts/classify_relationships.py --book library/.../book.yaml --model qwen2.5
 python scripts/classify_relationships.py --book library/.../book.yaml --dry-run
 ```
 
@@ -52,127 +55,90 @@ Shape:
 
 **Output:** `processing_output/<slug>/relationships_classified.json`
 
-Same structure as input but each relationship enriched with:
+Same structure. Each classified relationship is enriched with:
 `relationship_type`, `direction`, `evolution`, `key_moments`, `evidence`.
-Pairs that fail all 3 attempts are written as-is (original fields only, no classification
-fields added, no crash). Downstream consumers should treat absent `relationship_type` as unclassified.
+Pairs that fail Studio classification are written as-is (original fields only).
+Downstream consumers treat absent `relationship_type` as unclassified.
+
+### Studio call (per pair)
+
+Reuse `_run_studio_classifier_item` and `_should_classify_pair` imported directly from
+`scripts/relationship_extraction.py`. No new LLM logic in this script.
+
+```python
+from scripts.relationship_extraction import (
+    _run_studio_classifier_item,
+    _should_classify_pair,
+)
+
+classification = _run_studio_classifier_item(
+    pair,
+    novel_summary=novel_summary or "",
+    additional_context="",
+)
+if classification and not classification.get("error"):
+    pair = {**pair, **classification}
+```
+
+Studio handles: model selection, ralph retries, validation loop, JSONL logging.
+
+### Filtering
+
+`_should_classify_pair(pair, entity_types)` from `relationship_extraction.py`:
+skips pairs where either entity has type `PLACE` or `OTHER`.
+
+Entity types built from the `entities` list in `relationships.json`:
+```python
+entity_types = {e["canonical_name"]: e.get("type", "") for e in data["entities"]}
+```
+
+### novel_summary
+
+Read from the book YAML field `novel_summary`. If absent, `None`, or empty string,
+passed as empty string `""` to `_run_studio_classifier_item` (which expects a string).
 
 ### Resume / incremental save
 
 Same pattern as `generate_wiki_pages.py`:
-- On startup, if `relationships_classified.json` already exists, load it and skip pairs whose
-  `(entity_a, entity_b)` key is already present (regardless of whether they were classified or not).
-- After each pair is processed (success or fallback), write the full output file immediately.
+- On startup, if `relationships_classified.json` already exists, load it and skip pairs
+  whose `(entity_a, entity_b)` key is already present.
+- After each pair is processed (success or fallback), write the full output file.
 - On `KeyboardInterrupt`, catch and write final state before exiting.
+- Malformed pairs in the resume file (missing `entity_a`/`entity_b`) are skipped
+  individually, not cause a full reset.
 
-Identity key for deduplication: `(rel["entity_a"], rel["entity_b"])` tuple.
-
-### novel_summary
-
-Read from the book YAML field `novel_summary` (same YAML loaded via `--book`). Passed as-is
-in the per-pair prompt. If the field is absent, `None`, or empty string, it is omitted from
-the prompt entirely.
-
-### Prompt
-
-`SYSTEM_PROMPT` = verbatim content from `.studio/agents/relationship-classifier.agent.yaml`
-`system_prompt` field (hardcoded as a module-level constant).
-
-Per-pair user message: JSON object with `entity_a`, `entity_b`, `cooccurrence_count`,
-`sample_contexts`, `novel_summary`.
-
-### Ollama call
-
-```python
-OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
-MAX_ATTEMPTS = 3
-
-def call_ollama(prompt: str, model: str, timeout: int = 120) -> str | None:
-    body = json.dumps({
-        "model": model,
-        "prompt": prompt,
-        "stream": False,
-        "options": {"temperature": 0.0, "num_predict": 300},
-    }).encode()
-    req = urllib.request.Request(
-        f"{OLLAMA_URL}/api/generate", data=body,
-        headers={"Content-Type": "application/json"}, method="POST",
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return json.loads(resp.read()).get("response", "")
-    except (urllib.error.URLError, OSError, json.JSONDecodeError):
-        return None  # OSError covers socket.timeout; URLError covers connection errors
-```
-
-### Retry loop (per pair, max 3 attempts)
-
-```python
-for attempt in range(MAX_ATTEMPTS):
-    raw = call_ollama(prompt, model)
-    if raw is None:
-        continue
-    try:
-        result = json.loads(raw)
-    except json.JSONDecodeError:
-        continue
-    errors = validate_classification(result, pair)
-    if not errors:
-        rel = {**rel, **result}
-        break
-else:
-    print(f"[WARN] classification failed for {pair['entity_a']}↔{pair['entity_b']}", file=sys.stderr)
-    # pair kept as-is (unclassified)
-```
-
-### Validation
-
-Import check functions directly from `scripts/relationship_classifier_validator.py` (no
-subprocess, bypass `parse_payload`). Functions that exist and will be used:
-- `check_relationship_type_valid(clf)`
-- `check_evidence_contains_both_names(clf, meta)`
-- `check_evolution_not_generic(clf)`
-
-A local `validate_classification(result, pair)` function calls each, collects errors, returns list.
-
-### Filtering (`_should_classify_pair`)
-
-Skip pairs where either entity has type `PLACE` or `OTHER`. Entity types built from the
-`entities` list in `relationships.json`:
-```python
-entity_types = {e["canonical_name"]: e["type"] for e in data["entities"]}
-```
-Logic copied from `_should_classify_pair` in `relationship_extraction.py`.
+Identity key: `(rel["entity_a"], rel["entity_b"])` tuple.
 
 ### Dry-run mode
 
-With `--dry-run`, skip all Ollama calls. Each relationship is output as-is (no classification
-fields added). Useful for verifying paths and input parsing without a running model.
+With `--dry-run`, skip all Studio calls. Each relationship is output as-is.
 
-## Makefile target
+## Makefile targets
 
 ```makefile
 classify-relationships:
     python scripts/classify_relationships.py --book $(BOOK)
+
+classify-relationships-dry:
+    python scripts/classify_relationships.py --book $(BOOK) --dry-run
 ```
 
 Added to the `.PHONY` list.
 
 ## What does NOT change
 
-- `relationship_extraction.py`: `classify_relationships()` and `_run_studio_classifier_item`
-  remain intact (used by `--classify` CLI flag and existing tests)
-- `relationship-classifier-item.pipeline.yaml`: not touched
-- `relationship_classifier_validator.py`: imported, not duplicated
-- Book YAML `classify` flag: keep `classify: false` in `wiki-resolution`; the new script is
-  the explicit classification step. The `classify: true` path in `relationship_extraction.py`
-  remains available for CLI use but is no longer the recommended flow.
+- `relationship_extraction.py`: unchanged — `_run_studio_classifier_item`,
+  `_should_classify_pair`, `classify_relationships()` all remain
+- `relationship-classifier-item.pipeline.yaml`: unchanged
+- Book YAML: `classify: false` stays during `wiki-resolution`; classification is now a
+  separate explicit step via `make classify-relationships`
 
 ## Testing
 
 - Unit tests in `tests/test_classify_relationships.py`
-- Test: dry-run writes output without classification fields, no Ollama calls
-- Test: `validate_classification` rejects invalid `relationship_type`
-- Test: retry loop keeps pair unclassified after 3 consecutive `None` returns from Ollama
-- Test: `_should_classify_pair` skips PLACE/OTHER entities
+- Test: `_load_done_keys` returns empty on missing file
+- Test: `_load_done_keys` returns existing pairs and keys
+- Test: `_load_done_keys` returns empty on corrupt file (not full reset on single bad pair)
+- Test: `_save` writes valid JSON with correct structure
+- Test: dry-run produces output without classification fields, no Studio calls
 - Integration: `pytest -q` must stay green
