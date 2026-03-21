@@ -33,7 +33,10 @@ def required_files(book_path: str) -> dict[str, list[str]]:
         "wiki-resolution": [
             str(p.processing / "entities_classified.json"),
         ],
-        "wiki-preparation": [str(p.wiki_inputs)],
+        "wiki-preparation": [
+            str(p.processing / "relationships_classified.json"),
+            str(p.wiki_inputs),
+        ],
         "pages-export": [
             str(p.processing / "wiki_pages.json"),
         ],
@@ -42,6 +45,7 @@ def required_files(book_path: str) -> dict[str, list[str]]:
 
 # Scripts to run before a pipeline (pre-steps)
 PRE_STEPS = {
+    "wiki-preparation": ["python", "scripts/classify_relationships.py", "--book"],
     "pages-export": ["python", "scripts/generate_wiki_pages.py", "--book"],
 }
 

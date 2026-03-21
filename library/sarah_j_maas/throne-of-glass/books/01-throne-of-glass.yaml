@@ -8,7 +8,7 @@ file_path: library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.epub
 spacy_model: models/wiki-ner-en/model-best
 coref: false
 use_llm: true
-classify: true
+classify: false  # classification handled by scripts/classify_relationships.py (pre-step in run_wiki.py)
 llm_model: qwen2.5
 novel_summary: |
   After serving out a year of hard labor in the salt mines of Endovier for her crimes, 18-year-old assassin Celaena Sardothien is dragged before the Crown Prince.
