@@ -1,4 +1,5 @@
 import json
+import subprocess
 import sys
 from pathlib import Path
 import pytest
@@ -55,3 +56,13 @@ def test_save_writes_valid_json(tmp_path):
     written = json.loads(output.read_text())
     assert written["relationships"] == pairs
     assert written["entities"] == []
+
+
+def test_dry_run_with_missing_book_exits_nonzero():
+    result = subprocess.run(
+        [sys.executable, "scripts/classify_relationships.py",
+         "--book", "nonexistent.yaml", "--dry-run"],
+        capture_output=True, text=True,
+        cwd=str(Path(__file__).resolve().parents[1]),
+    )
+    assert result.returncode != 0
