@@ -54,7 +54,6 @@ stages:
     context:
       include:
         - input
-        - previous_stage_output
         - all_stage_outputs
 
   - name: alias-resolution

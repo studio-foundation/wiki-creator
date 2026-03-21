@@ -26,13 +26,9 @@ def main() -> None:
     payload = json.load(sys.stdin)
 
     # Récupère le output de relationship-extraction
-    # previous_stage_output = relationship-extraction (stage immédiatement précédent)
-    # all_stage_outputs comme fallback pour compatibilité
-    all_stage_outputs = payload.get("all_stage_outputs", {})
-    rel_output = (
-        payload.get("previous_stage_output")
-        or all_stage_outputs.get("relationship-extraction", {})
-    )
+    # Studio expose les outputs précédents sous "previous_outputs" (dict stage_name → output)
+    previous_outputs = payload.get("previous_outputs", payload.get("all_stage_outputs", {}))
+    rel_output = previous_outputs.get("relationship-extraction", {})
 
     # Détermine le chemin du book depuis additional_context
     ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
