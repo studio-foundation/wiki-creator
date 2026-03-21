@@ -20,7 +20,6 @@ import re
 import subprocess
 import sys
 import tempfile
-import urllib.request
 from pathlib import Path
 
 import yaml
@@ -31,7 +30,6 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 from wiki_creator.paths import book_paths_from_yaml
 
-OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 DEFAULT_NUM_PREDICT = 1024
 
 _DEFAULT_SECTIONS_BY_IMPORTANCE = {
@@ -64,24 +62,6 @@ _PLACEHOLDER_PATTERNS = (
     re.compile(r"\bsi connu\b", re.IGNORECASE),
     re.compile(r"contenu en fran[çc]ais bas[ée] uniquement sur les extraits", re.IGNORECASE),
 )
-
-
-def call_ollama(prompt: str, model: str, timeout: int, num_predict: int = DEFAULT_NUM_PREDICT) -> str:
-    body = json.dumps({
-        "model": model,
-        "prompt": prompt,
-        "stream": False,
-        "options": {"temperature": 0.3, "num_predict": num_predict},
-    }).encode()
-    req = urllib.request.Request(
-        f"{OLLAMA_URL}/api/generate",
-        data=body,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        data = json.loads(resp.read())
-    return data.get("response", "")
 
 
 def _content_template_for_sections(sections: list[str]) -> str:

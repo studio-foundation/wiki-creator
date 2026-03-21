@@ -11,7 +11,6 @@ from scripts.generate_wiki_pages import (
     _print_generation_summary,
     _run_generation_for_entity,
     build_prompt,
-    call_ollama,
     generation_profile,
     make_stub_page,
     parse_response,
@@ -184,32 +183,6 @@ def test_build_prompt_includes_chapter_summary_context_block_and_rules():
     assert "Dorian meets Chaol at court." in prompt
     assert "Chapter summaries serve as orientation only. Direct excerpts take priority." in prompt
 
-
-def test_call_ollama_uses_custom_num_predict(monkeypatch):
-    captured = {}
-
-    class DummyResponse:
-        def __enter__(self):
-            return self
-
-        def __exit__(self, exc_type, exc, tb):
-            return None
-
-        def read(self):
-            return b'{"response":"ok"}'
-
-    def fake_urlopen(req, timeout):
-        captured["timeout"] = timeout
-        captured["body"] = json.loads(req.data.decode())
-        return DummyResponse()
-
-    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
-
-    response = call_ollama("prompt", "qwen2.5", timeout=30, num_predict=2222)
-
-    assert response == "ok"
-    assert captured["timeout"] == 30
-    assert captured["body"]["options"]["num_predict"] == 2222
 
 
 def test_generation_profile_prefers_sections_by_type_override():
