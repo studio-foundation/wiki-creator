@@ -131,5 +131,50 @@
       "## Relations réapparu (Dorian) — bruit prompt",
       "Faux positifs GT validator Gavin (6/11 violations non réelles) — filtre page-entité manquant"
     ]
+  },
+  {
+    "run": 10,
+    "date": "2026-03-21",
+    "pages_generated": 13,
+    "infobox_pct": 77,
+    "lang_fr_pct": 100,
+    "alias_duplicates": 0,
+    "hallucinations": 1,
+    "gt_violations": [
+      {
+        "page": "Celaena Sardothien",
+        "signal": "prenom: Aelin dans infobox + 'Aelin Gallery' dans content — identité révélée du livre 2+",
+        "cause": "contamination_cross_serie"
+      },
+      {
+        "page": "Celaena Sardothien",
+        "signal": "Terrasen comme identité revendiquée dans content",
+        "cause": "extrapolation"
+      },
+      {
+        "page": "Dorian Havilliard",
+        "signal": "'futur roi d'Adarlan' — borderline, vraisemblablement acceptable (titre héritier)",
+        "cause": "gt_validator_trop_large"
+      },
+      {
+        "page": "Gavin",
+        "signal": "'princesse de Terrasen' désigne Elena (correct) — faux positif GT scopé Celaena",
+        "cause": "gt_validator_trop_large"
+      }
+    ],
+    "regression": {
+      "prefixed_keys": "✅",
+      "epub_ids": "✅",
+      "entity_type_null": "✅",
+      "alias_duplicates": "✅",
+      "cross_serie": "⚠️",
+      "evolution_quality": "❌",
+      "temporal_context": "✅",
+      "ground_truth": "⚠️"
+    },
+    "verdict": "Run 10 : 100% FR, 0 doublon, IDs EPUB corrigés. Régression critique : 0/71 relations typées (0% vs 100% en runs 8-9) — classify-relationships n'a pas enrichi les batches. Violation Celaena/Aelin infobox persistante. Priorité : diagnostiquer la chaîne classify-relationships → wiki-preparation.",
+    "new_issues": [
+      "RÉGRESSION : 0/71 relations typées dans batches wiki_inputs — classify-relationships non propagé (run_wiki.py ou wiki-preparation)"
+    ]
   }
 ]
