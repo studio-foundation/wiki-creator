@@ -57,6 +57,16 @@ Same structure as input but each relationship enriched with:
 Pairs that fail all 3 attempts are written as-is (original fields only, no classification
 fields added, no crash). Downstream consumers should treat absent `relationship_type` as unclassified.
 
+### Resume / incremental save
+
+Same pattern as `generate_wiki_pages.py`:
+- On startup, if `relationships_classified.json` already exists, load it and skip pairs whose
+  `(entity_a, entity_b)` key is already present (regardless of whether they were classified or not).
+- After each pair is processed (success or fallback), write the full output file immediately.
+- On `KeyboardInterrupt`, catch and write final state before exiting.
+
+Identity key for deduplication: `(rel["entity_a"], rel["entity_b"])` tuple.
+
 ### novel_summary
 
 Read from the book YAML field `novel_summary` (same YAML loaded via `--book`). Passed as-is
