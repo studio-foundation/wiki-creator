@@ -127,13 +127,16 @@ def classify_pair(
     novel_summary: str | None,
     dry_run: bool = False,
 ) -> dict:
-    """Classify one pair. Returns enriched pair on success, original pair on failure/dry-run."""
+    """Classify one pair. Returns enriched pair on success, original pair on failure/dry-run.
+
+    Note: Caller is responsible for filtering non-interpersonal pairs via _should_classify.
+    """
     if dry_run:
         return pair
 
     user_msg: dict = {
-        "entity_a": pair["entity_a"],
-        "entity_b": pair["entity_b"],
+        "entity_a": pair.get("entity_a", ""),
+        "entity_b": pair.get("entity_b", ""),
         "cooccurrence_count": pair.get("cooccurrence_count", 0),
         "sample_contexts": pair.get("sample_contexts", []),
     }
@@ -155,13 +158,13 @@ def classify_pair(
             return {**pair, **clf}
         if attempt < MAX_ATTEMPTS - 1:
             print(
-                f"  [RETRY {attempt + 1}] {pair['entity_a']}↔{pair['entity_b']}: {errors[0]}",
+                f"  [RETRY {attempt + 1}] {pair.get('entity_a', '')}↔{pair.get('entity_b', '')}: {errors[0]}",
                 file=sys.stderr,
             )
 
     print(
         f"  [WARN] classification failed after {MAX_ATTEMPTS} attempts: "
-        f"{pair['entity_a']}↔{pair['entity_b']}",
+        f"{pair.get('entity_a', '')}↔{pair.get('entity_b', '')}",
         file=sys.stderr,
     )
     return pair
