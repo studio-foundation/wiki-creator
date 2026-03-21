@@ -39,11 +39,22 @@ stages:
     runtime: python
     script: scripts/relationship_extraction.py
     contract: relationship-extraction
-    timeout_ms: 600000
+    timeout_ms: 1800000
     context:
       include:
         - input
         - previous_stage_output
+
+  - name: save-relationships
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/save_relationships.py
+    contract: save-relationships
+    context:
+      include:
+        - input
+        - all_stage_outputs
 
   - name: alias-resolution
     kind: extraction
