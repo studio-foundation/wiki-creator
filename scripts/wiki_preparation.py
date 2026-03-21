@@ -270,6 +270,7 @@ def build_chapter_summary_context(
     chapter_summaries: dict[str, dict],
     chapter_summary_max: int,
     context_by_chapter: dict[str, list[str]],
+    chapter_id_to_title: dict[str, str] | None = None,
 ) -> list[dict]:
     if entity.get("type") != "PERSON":
         return []
@@ -282,10 +283,12 @@ def build_chapter_summary_context(
     result = []
     for chapter_key in chapter_keys:
         label = _epub_key_to_chapter_label(chapter_key)
+        title_from_map = (chapter_id_to_title or {}).get(chapter_key)
         summary = (
             chapter_summaries.get(chapter_key)
             or summaries_by_id.get(chapter_key)
             or (chapter_summaries.get(label) if label else None)
+            or (chapter_summaries.get(title_from_map) if title_from_map else None)
         )
         if not summary:
             continue
@@ -313,6 +316,7 @@ def build_entity_bundle(
     entities_by_name: dict[str, dict],
     chapter_summaries: dict[str, dict] | None = None,
     chapter_summary_max: int = DEFAULT_CHAPTER_SUMMARY_MAX,
+    chapter_id_to_title: dict[str, str] | None = None,
 ) -> dict:
     canonical_name = entity["canonical_name"]
     context_by_chapter = extract_context(entity, persons, places, orgs, events)
@@ -340,6 +344,7 @@ def build_entity_bundle(
             chapter_summaries=chapter_summaries or {},
             chapter_summary_max=chapter_summary_max,
             context_by_chapter=context_by_chapter,
+            chapter_id_to_title=chapter_id_to_title,
         ),
     }
 
@@ -453,6 +458,21 @@ def main() -> None:
             )
         else:
             print("wiki-preparation: chapter_summaries.json not found — chapter_summary_context will be empty", file=sys.stderr)
+
+    chapter_id_to_title: dict[str, str] = {}
+    _epub_data_file = paths.processing / "epub_data.json"
+    if _epub_data_file.exists():
+        try:
+            with open(_epub_data_file, encoding="utf-8") as _f:
+                _epub_data = json.load(_f)
+            chapter_id_to_title = {
+                ch["id"]: ch["title"]
+                for ch in _epub_data.get("chapters", [])
+                if ch.get("id") and ch.get("title")
+            }
+        except (OSError, json.JSONDecodeError, KeyError):
+            pass
+
     entity_bundles = [
         build_entity_bundle(
             e,
@@ -464,6 +484,7 @@ def main() -> None:
             entities_by_name,
             chapter_summaries=chapter_summaries,
             chapter_summary_max=chapter_summary_max,
+            chapter_id_to_title=chapter_id_to_title,
         )
         for e in relevant_entities
     ]

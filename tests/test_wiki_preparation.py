@@ -457,6 +457,133 @@ def test_stage_outputs_from_payload_reads_all_stage_outputs():
     assert "ch01" in chapter_summary["chapter_summaries"]
 
 
+def test_build_chapter_summary_context_uses_chapter_id_to_title_when_heuristic_fails():
+    """When EPUB ID doesn't match C{N}.xhtml pattern, chapter_id_to_title map must resolve the summary."""
+    entity = {"type": "PERSON", "canonical_name": "Celaena"}
+    chapter_summaries = {
+        "The Glass Castle": {
+            "chapter_id": None,
+            "chapter_title": "The Glass Castle",
+            "summary_bullets": ["Celaena enters the castle."],
+            "temporal_context": "present",
+        }
+    }
+    # EPUB ID is "chapter_01.xhtml" — _epub_key_to_chapter_label returns None for this pattern.
+    context_by_chapter = {"chapter_01.xhtml": ["She stepped inside."]}
+    chapter_id_to_title = {"chapter_01.xhtml": "The Glass Castle"}
+
+    result = build_chapter_summary_context(
+        entity=entity,
+        chapter_summaries=chapter_summaries,
+        chapter_summary_max=8,
+        context_by_chapter=context_by_chapter,
+        chapter_id_to_title=chapter_id_to_title,
+    )
+    assert len(result) == 1
+    assert result[0]["chapter_key"] == "chapter_01.xhtml"
+    assert result[0]["summary_bullets"] == ["Celaena enters the castle."]
+    assert result[0]["temporal_context"] == "present"
+
+
+def test_main_injects_chapter_id_to_title_from_epub_data(tmp_path: Path, monkeypatch):
+    """main() builds chapter_id_to_title from epub_data.json and passes it for reconciliation."""
+    import scripts.wiki_preparation as wp
+
+    processing = tmp_path / "processing"
+    wiki_inputs = tmp_path / "wiki_inputs"
+    processing.mkdir()
+    wiki_inputs.mkdir()
+
+    # epub_data.json with a non-standard EPUB ID
+    (processing / "epub_data.json").write_text(
+        json.dumps({
+            "chapters": [
+                {"id": "chapter_01.xhtml", "title": "The Glass Castle", "content": "x" * 500}
+            ]
+        }),
+        encoding="utf-8",
+    )
+
+    # chapter_summaries.json keyed by title (what chapter_summary.py writes)
+    (processing / "chapter_summaries.json").write_text(
+        json.dumps({
+            "chapter_summaries": {
+                "The Glass Castle": {
+                    "chapter_id": None,
+                    "chapter_title": "The Glass Castle",
+                    "summary_bullets": ["Celaena enters the castle."],
+                    "temporal_context": "present",
+                }
+            }
+        }),
+        encoding="utf-8",
+    )
+
+    for name in ("persons_full", "places_full", "orgs_full", "events_full"):
+        (processing / f"{name}.json").write_text(json.dumps({name: {}}), encoding="utf-8")
+
+    class _FakePaths:
+        pass
+    _FakePaths.processing = processing
+    _FakePaths.wiki_inputs = wiki_inputs
+
+    monkeypatch.setattr(wp, "_paths_from_payload", lambda _payload: _FakePaths())
+    monkeypatch.setattr(wp, "load_book_config_from_payload", lambda _payload: {})
+
+    entity = {
+        "canonical_name": "Celaena",
+        "type": "PERSON",
+        "importance": "principal",
+        "source_ids": ["p1"],
+        "relevant": True,
+        "total_mentions": 1,
+        "chapters_present": 1,
+        "aliases": [],
+    }
+    # Inject a persons_full entry so context_by_chapter has the non-standard key
+    persons_data = {
+        "persons_full": {
+            "p1": {
+                "canonical_name": "Celaena",
+                "mentions_by_chapter": {"chapter_01.xhtml": ["She stepped inside."]},
+                "first_seen": "chapter_01.xhtml",
+                "source_ids": ["p1"],
+            }
+        }
+    }
+    (processing / "persons_full.json").write_text(json.dumps(persons_data), encoding="utf-8")
+
+    payload = {
+        "additional_context": "file_path: fake.epub",
+        "all_stage_outputs": {
+            "entity-classification": {
+                "entities": [entity],
+                "relationships": [],
+                "narrator": None,
+            },
+        },
+    }
+
+    stdin_backup = sys.stdin
+    stdout_backup = sys.stdout
+    captured_out = io.StringIO()
+    try:
+        sys.stdin = io.StringIO(json.dumps(payload))
+        sys.stdout = captured_out
+        wp.main()
+    finally:
+        sys.stdin = stdin_backup
+        sys.stdout = stdout_backup
+
+    batch_files = list(wiki_inputs.glob("batch_*.json"))
+    assert batch_files, "no batch files written"
+    batch = json.loads(batch_files[0].read_text(encoding="utf-8"))
+    celaena = next(e for e in batch["entities"] if e["canonical_name"] == "Celaena")
+    ctx = celaena.get("chapter_summary_context", [])
+    assert len(ctx) == 1, f"expected 1 chapter_summary_context entry, got {ctx}"
+    assert ctx[0]["temporal_context"] == "present"
+
+
 def test_main_falls_back_to_disk_when_chapter_summary_stage_output_is_empty(tmp_path: Path, monkeypatch):
     """When chapter-summary stage output is missing, main() reads chapter_summaries.json from disk."""
     import scripts.wiki_preparation as wp
