@@ -32,6 +32,35 @@ def required_files(book_path: str) -> dict[str, list[str]]:
         ],
         "wiki-resolution": [
             str(p.processing / "entities_classified.json"),
+            str(p.processing / "chapter_summaries.json"),
+        ],
+        "wiki-preparation": [
+            str(p.processing / "relationships_classified.json"),
+            str(p.wiki_inputs),
+        ],
+        "pages-export": [
+            str(p.processing / "wiki_pages.json"),
+        ],
+    }
+
+
+def clean_files(book_path: str) -> dict[str, list[str]]:
+    """Files to delete per pipeline when --clean is used.
+
+    Intentionally differs from required_files(): chapter_summaries.json is
+    owned by wiki-extraction (only depends on its output) so it is cleaned
+    when restarting from wiki-extraction, but NOT when restarting from
+    wiki-resolution or later.
+    """
+    p = book_paths_from_yaml(book_path)
+    return {
+        "wiki-extraction": [
+            str(p.processing / "splits.json"),
+            str(p.processing / "epub_data.json"),
+            str(p.processing / "chapter_summaries.json"),
+        ],
+        "wiki-resolution": [
+            str(p.processing / "entities_classified.json"),
         ],
         "wiki-preparation": [
             str(p.processing / "relationships_classified.json"),
@@ -45,8 +74,9 @@ def required_files(book_path: str) -> dict[str, list[str]]:
 
 # Scripts to run before a pipeline (pre-steps)
 PRE_STEPS = {
+    "wiki-resolution":  ["python", "scripts/chapter_summary.py", "--book"],
     "wiki-preparation": ["python", "scripts/classify_relationships.py", "--book"],
-    "pages-export": ["python", "scripts/generate_wiki_pages.py", "--book"],
+    "pages-export":     ["python", "scripts/generate_wiki_pages.py", "--book"],
 }
 
 
@@ -142,7 +172,7 @@ def main() -> None:
         save_state(args.book, state)
 
     if args.clean:
-        outputs = required_files(args.book)
+        outputs = clean_files(args.book)
         for pipeline in PIPELINES[start_idx:]:
             for path_str in outputs.get(pipeline, []):
                 p = Path(path_str)
