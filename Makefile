@@ -1,5 +1,6 @@
 .PHONY: run run-extraction run-resolution run-preparation run-generation pages-export run-all \
-        test-extraction test-clustering test-relationships test test-coref test-coref-parallel \
+        test-extraction test-clustering test-relationships classify-relationships classify-relationships-dry \
+        test test-coref test-coref-parallel \
         clean
 
 #BOOK ?= library/carlos-ruiz-zafon/el-cementerio-de-los-libros-olvidados/books/02-le-jeu-de-lange.yaml
@@ -63,6 +64,12 @@ test-clustering:
 
 test-relationships:
 	python scripts/relationship_extraction.py --test
+
+classify-relationships:
+	python scripts/classify_relationships.py --book $(BOOK)
+
+classify-relationships-dry:
+	python scripts/classify_relationships.py --book $(BOOK) --dry-run
 
 test: test-extraction
 	python scripts/entity_clustering.py --live --book $(BOOK)
