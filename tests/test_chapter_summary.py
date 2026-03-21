@@ -598,3 +598,37 @@ def test_summarize_chapter_from_item_result_fallback_uses_heuristic():
     )
     assert result["summary_method"] == "extractive_fallback"
     assert result["temporal_context"] == "flashback"
+
+
+def test_main_from_book_reads_chapters_json(tmp_path, monkeypatch):
+    """--book mode must read chapters from chapters.json, not stdin."""
+    import json
+    from unittest.mock import patch, MagicMock
+
+    # Minimal book YAML
+    book_yaml = tmp_path / "book.yaml"
+    book_yaml.write_text("title: Test\nspacy_model: en_core_web_sm\n")
+
+    # Fake processing dir with chapters.json
+    processing = tmp_path / "processing_output" / "test"
+    processing.mkdir(parents=True)
+    chapters = [{"id": "ch01", "title": "Chapter 1", "content": "Celaena ran."}]
+    (processing / "chapters.json").write_text(json.dumps(chapters))
+
+    # Patch book_paths_from_yaml to return a fake BookPaths
+    from wiki_creator.paths import BookPaths
+    fake_paths = BookPaths(
+        epub=tmp_path / "book.epub",
+        processing=processing,
+        wiki_inputs=tmp_path / "wiki_inputs",
+        output=tmp_path / "output",
+    )
+
+    with patch("scripts.chapter_summary.book_paths_from_yaml", return_value=fake_paths), \
+         patch("scripts.chapter_summary.summarize_chapters_incrementally", return_value={}) as mock_sum:
+        from scripts.chapter_summary import _main_from_book
+        _main_from_book(str(book_yaml))
+
+    mock_sum.assert_called_once()
+    call_chapters = mock_sum.call_args[0][0]
+    assert call_chapters == chapters
