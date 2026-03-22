@@ -237,6 +237,13 @@ def main() -> None:
     corrections = verify_clusters(clusters, model=model, type_files=type_files)
     corrected_clusters = apply_corrections(clusters, corrections)
 
+    # Persist corrections for wiki-resolution restarts (STU-302)
+    if paths is not None:
+        paths.processing.mkdir(parents=True, exist_ok=True)
+        corrections_path = paths.processing / "entity_type_corrections.json"
+        with open(corrections_path, "w", encoding="utf-8") as _f:
+            json.dump(corrections, _f, ensure_ascii=False)
+
     json.dump(
         {
             "clusters": corrected_clusters,
