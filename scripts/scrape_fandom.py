@@ -113,7 +113,6 @@ def fetch_wikitext(api_url: str, title: str) -> str | None:
         "action": "query",
         "prop": "revisions",
         "rvprop": "content",
-        "redirects": "0",
         "titles": title,
         "format": "json",
     }
