@@ -1,14 +1,18 @@
 """Tests for scripts/entity_classification.py — importance classification."""
+import json
 import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+import pytest
 from scripts.entity_classification import (
     _apply_entity_overrides,
+    _apply_llm_type_corrections,
     _build_alias_merge_map,
     _canonicalize_role_entities,
     _filter_intra_entity_relationships,
     _is_role_entity_name,
+    _load_type_corrections,
     _normalize_entity_type,
     get_total_mentions,
     compute_auto_thresholds,
@@ -674,3 +678,158 @@ def test_alias_canonicalization_drops_self_relations():
     alias_map = _build_alias_merge_map(entities)
     result = _rewrite_relationships(relationships, alias_map)
     assert result == []
+
+
+# --- _load_type_corrections ---
+
+def test_load_type_corrections_returns_empty_when_no_file(tmp_path):
+    result = _load_type_corrections(tmp_path)
+    assert result == {}
+
+
+def test_load_type_corrections_reads_file(tmp_path):
+    data = [
+        {"cluster_id": "c1", "name": "Arobynn", "from": "PLACE", "to": "PERSON"},
+        {"cluster_id": "c2", "name": "Sam Hamel", "from": "ORG", "to": "PERSON"},
+    ]
+    (tmp_path / "entity_type_corrections.json").write_text(json.dumps(data))
+    result = _load_type_corrections(tmp_path)
+    assert result == {"arobynn": "PERSON", "sam hamel": "PERSON"}
+
+
+# --- _apply_llm_type_corrections ---
+
+def test_apply_llm_corrections_by_canonical_name():
+    entities = [{"canonical_name": "Arobynn", "type": "PLACE", "aliases": []}]
+    corrections_map = {"arobynn": "PERSON"}
+    _apply_llm_type_corrections(entities, corrections_map)
+    assert entities[0]["type"] == "PERSON"
+
+
+def test_apply_llm_corrections_by_alias():
+    # canonical_name does NOT match, but alias does
+    entities = [{"canonical_name": "Arobynn Hamel", "type": "PLACE", "aliases": ["Arobynn"]}]
+    corrections_map = {"arobynn": "PERSON"}
+    _apply_llm_type_corrections(entities, corrections_map)
+    assert entities[0]["type"] == "PERSON"
+
+
+def test_apply_llm_corrections_no_match():
+    entities = [{"canonical_name": "Dorian", "type": "PERSON", "aliases": []}]
+    corrections_map = {"arobynn": "PERSON"}
+    _apply_llm_type_corrections(entities, corrections_map)
+    assert entities[0]["type"] == "PERSON"  # unchanged
+
+
+def test_apply_llm_corrections_no_op_when_type_already_matches():
+    entities = [{"canonical_name": "Arobynn", "type": "PERSON", "aliases": []}]
+    corrections_map = {"arobynn": "PERSON"}  # type already PERSON
+    _apply_llm_type_corrections(entities, corrections_map)
+    assert entities[0]["type"] == "PERSON"  # unchanged, not re-set
+
+
+@pytest.fixture
+def classification_tmp_env(tmp_path):
+    """Set up a minimal processing environment for run_studio_mode integration tests.
+
+    Returns (tmp_path, processing_dir) with empty entity files and
+    entity_type_corrections.json containing Arobynn PLACE→PERSON.
+    """
+    import json as _json
+    processing_dir = tmp_path / "processing_output" / "testbook"
+    processing_dir.mkdir(parents=True)
+    (processing_dir / "entity_type_corrections.json").write_text(
+        _json.dumps([{"name": "Arobynn", "from": "PLACE", "to": "PERSON"}])
+    )
+    for fname, key in [("persons_full.json", "persons_full"),
+                       ("places_full.json", "places_full"),
+                       ("orgs_full.json", "orgs_full"),
+                       ("events_full.json", "events_full")]:
+        (processing_dir / fname).write_text(_json.dumps({key: {}}))
+    book_file = tmp_path / "books" / "testbook.epub"
+    book_file.parent.mkdir(parents=True)
+    book_file.touch()
+    return tmp_path, processing_dir
+
+
+def test_corrections_lower_priority_than_entity_overrides(monkeypatch, classification_tmp_env):
+    """LLM correction says PERSON; manual override force_type=PLACE wins."""
+    import io
+    import json
+    import yaml
+    from scripts.entity_classification import run_studio_mode
+
+    tmp_path, processing_dir = classification_tmp_env
+    book_file = tmp_path / "books" / "testbook.epub"
+
+    book_yaml = yaml.dump({
+        "file_path": str(book_file),
+        "thresholds": "auto",
+        "entity_overrides": {"Arobynn": {"force_type": "PLACE"}},
+    })
+    entities = [
+        {"canonical_name": "Arobynn", "type": "PLACE", "aliases": [], "source_ids": [], "relevant": True}
+    ]
+    payload = {
+        "additional_context": book_yaml,
+        "previous_outputs": {
+            "alias-resolution": {"entities": entities, "narrator": None},
+            "relationship-extraction": {
+                "entities": entities, "relationships": [], "stats": {}, "narrator": None,
+            },
+        },
+        "all_stage_outputs": {},
+    }
+    monkeypatch.setattr(
+        "sys.stdin",
+        io.TextIOWrapper(io.BytesIO(json.dumps(payload).encode()), encoding="utf-8"),
+    )
+    captured = io.StringIO()
+    monkeypatch.setattr("sys.stdout", captured)
+    run_studio_mode()
+
+    result = json.loads(captured.getvalue())
+    arobynn = next(e for e in result["entities"] if e["canonical_name"] == "Arobynn")
+    assert arobynn["type"] == "PLACE", f"Expected PLACE (manual override wins), got {arobynn['type']}"
+
+
+def test_run_studio_mode_applies_corrections_file(monkeypatch, classification_tmp_env):
+    """Integration: entity_type_corrections.json present → type corrected in output."""
+    import io
+    import json
+    import yaml
+    from scripts.entity_classification import run_studio_mode
+
+    tmp_path, processing_dir = classification_tmp_env
+    book_file = tmp_path / "books" / "testbook.epub"
+
+    book_yaml = yaml.dump({"file_path": str(book_file), "thresholds": "auto"})
+    entities = [
+        {"canonical_name": "Arobynn", "type": "PLACE", "aliases": [], "source_ids": [], "relevant": True}
+    ]
+    payload = {
+        "additional_context": book_yaml,
+        "previous_outputs": {
+            "alias-resolution": {"entities": entities, "narrator": None},
+            "relationship-extraction": {
+                "entities": entities,
+                "relationships": [],
+                "stats": {},
+                "narrator": None,
+            },
+        },
+        "all_stage_outputs": {},
+    }
+
+    monkeypatch.setattr(
+        "sys.stdin",
+        io.TextIOWrapper(io.BytesIO(json.dumps(payload).encode()), encoding="utf-8"),
+    )
+    captured = io.StringIO()
+    monkeypatch.setattr("sys.stdout", captured)
+
+    run_studio_mode()
+
+    result = json.loads(captured.getvalue())
+    arobynn = next(e for e in result["entities"] if e["canonical_name"] == "Arobynn")
+    assert arobynn["type"] == "PERSON", f"Expected PERSON, got {arobynn['type']}"
