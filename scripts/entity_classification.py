@@ -561,6 +561,47 @@ def _apply_entity_overrides(
     return filtered, rewritten, merge_map
 
 
+def _load_type_corrections(processing_dir: Path) -> dict[str, str]:
+    """Load persisted LLM type corrections from entity_type_corrections.json.
+
+    Returns a dict of { lowercase_name: target_type } for matching against
+    entity canonical_name and aliases. Returns {} if file is absent.
+    """
+    p = processing_dir / "entity_type_corrections.json"
+    if not p.exists():
+        return {}
+    with open(p, encoding="utf-8") as f:
+        corrections = json.load(f)
+    return {c["name"].lower(): c["to"] for c in corrections if "name" in c and "to" in c}
+
+
+def _apply_llm_type_corrections(
+    entities: list[dict],
+    corrections_map: dict[str, str],
+) -> None:
+    """Apply persisted LLM type corrections to entities (in-place).
+
+    Matches by canonical_name first, then aliases (all lowercase).
+    Corrections have lower priority than _apply_entity_overrides —
+    call this BEFORE entity_overrides in run_studio_mode().
+    """
+    for entity in entities:
+        name = (entity.get("canonical_name") or "").lower()
+        match = corrections_map.get(name)
+        if match is None:
+            for alias in entity.get("aliases", []):
+                match = corrections_map.get((alias or "").lower())
+                if match is not None:
+                    break
+        if match is not None and entity.get("type") != match:
+            print(
+                f"[CORRECTIONS] {entity['canonical_name']}: {entity['type']} → {match}"
+                " (from entity_type_corrections.json)",
+                file=sys.stderr,
+            )
+            entity["type"] = match
+
+
 # --- Studio entrypoint ---
 
 def _load_entity_files(processing_dir: Path) -> tuple[dict, dict, dict, dict]:
@@ -647,6 +688,12 @@ def run_studio_mode() -> None:
             concept_keywords=concept_keywords,
             geo_suffixes=geo_suffixes,
         )
+
+    # Apply persisted LLM type corrections (STU-302).
+    # Priority: after heuristic normalization, before role canonicalization and manual overrides.
+    llm_corrections = _load_type_corrections(paths.processing)
+    if llm_corrections:
+        _apply_llm_type_corrections(entities, llm_corrections)
 
     # Role/title entities should not become autonomous pages; merge unambiguous aliases.
     entities, relationships, _ = _canonicalize_role_entities(
