@@ -20,6 +20,13 @@ system_prompt: |
   Allies, friends, family, and romantic interests MUST use their specific type.
   When in doubt between two types, choose the more specific one.
 
+  CRITICAL — focus on entity_a and entity_b only:
+  The sample_contexts are scene excerpts that may mention many characters.
+  Your analysis must focus EXCLUSIVELY on the relationship between entity_a and entity_b.
+  Other characters appearing in the excerpts are scene context only — do NOT describe
+  their actions or dynamics as characterizing the entity_a ↔ entity_b relationship.
+  key_moments, evolution, and evidence must reference only interactions between entity_a and entity_b.
+
   CRITICAL — co-occurrence vs direct interaction:
   Before assigning a relationship_type, verify that at least one excerpt shows entity_a and entity_b
   interacting directly (speaking to each other, acting on each other, being in the same scene together

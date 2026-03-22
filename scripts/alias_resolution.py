@@ -200,11 +200,19 @@ def _pick_snippets(entity: dict, persons_full: dict, n: int = 3) -> list[str]:
 
 
 def _is_pure_title(name: str, role_words: list[str]) -> bool:
-    """Return True if name consists entirely of role_words (e.g. 'Master', 'Captain')."""
-    tokens = name.lower().split()
-    if not tokens:
+    """Return True if name consists entirely of role_words (e.g. 'Master', 'Crown Prince').
+
+    Handles both single-word roles ('Master') and multi-word role phrases ('Crown Prince').
+    """
+    name_lower = name.lower()
+    if not name_lower:
         return False
     role_set = {r.lower() for r in role_words}
+    # Match the full name as a role phrase (e.g. "Crown Prince" in {"crown prince", ...})
+    if name_lower in role_set:
+        return True
+    # Match token-by-token (e.g. "Master" where "master" in role_set)
+    tokens = name_lower.split()
     return all(t in role_set for t in tokens)
 
 
@@ -384,14 +392,21 @@ def _detect_pure_title_in_context(
         proper_names = [n.lower() for n in _entity_names(proper_entity) if n]
         if not proper_names:
             continue
+        title_lower = title_name.lower()
         for snippet in _gather_contexts(title_entity, persons_full):
-            lowered = snippet.lower()
-            if any(pn in lowered for pn in proper_names):
-                return {
-                    "method": "pure_title",
-                    "confidence": "medium",
-                    "snippet": snippet,
-                }
+            # Split into sentences so that names in adjacent sentences don't create false matches.
+            # Both the title AND the proper name must appear in the same sentence.
+            sentences = re.split(r'(?<=[.!?])\s+', snippet)
+            for sentence in sentences:
+                sent_lower = sentence.lower()
+                if title_lower not in sent_lower:
+                    continue
+                if any(pn in sent_lower for pn in proper_names):
+                    return {
+                        "method": "pure_title",
+                        "confidence": "medium",
+                        "snippet": sentence,
+                    }
     return None
 
 
@@ -792,7 +807,8 @@ def main() -> None:
     lang_cfg = load_lang_config(language)
     reveal_words = tuple(lang_cfg.get("reveal_words", ()))
     pattern_templates = tuple(lang_cfg.get("alias_pattern_templates", ()))
-    role_words: list[str] = list(ctx.get("role_words", []))
+    classification_cfg = ctx.get("classification", {}) or {}
+    role_words: list[str] = list(classification_cfg.get("role_words", []))
     cue_role_words = [w.lower() for w in lang_cfg.get("person_cue_words", [])]
     role_words = list(dict.fromkeys(role_words + cue_role_words))  # dedup, preserve order
 

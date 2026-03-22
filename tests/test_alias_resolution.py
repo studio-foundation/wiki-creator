@@ -638,8 +638,9 @@ def test_script_role_words_propagated_from_ctx(tmp_path):
     ctx_yaml = textwrap.dedent("""
         file_path: dummy.epub
         use_llm: false
-        role_words:
-          - captain
+        classification:
+          role_words:
+            - captain
     """)
     payload = {
         "additional_context": ctx_yaml,
@@ -1044,6 +1045,75 @@ def test_detect_pure_title_in_context_not_triggered_for_title_with_surname():
     captain = {"canonical_name": "Captain Westfall", "aliases": ["Captain Westfall"], "source_ids": []}
     chaol = {"canonical_name": "Chaol Westfall", "aliases": ["Chaol Westfall"], "source_ids": []}
     result = _detect_pure_title_in_context(captain, chaol, {}, role_words=["captain"])
+    assert result is None
+
+
+def test_detect_pure_title_in_context_multi_word_phrase_title():
+    """'Crown Prince' is a pure multi-word role phrase and must be detected as alias of Dorian."""
+    from scripts.alias_resolution import _detect_pure_title_in_context
+    dorian = {
+        "canonical_name": "Dorian Havilliard",
+        "aliases": ["Dorian Havilliard", "Dorian"],
+        "source_ids": ["e_dorian"],
+    }
+    crown_prince = {
+        "canonical_name": "Crown Prince",
+        "aliases": ["Crown Prince"],
+        "source_ids": ["e_crown_prince"],
+    }
+    persons_full = {
+        "e_crown_prince": {
+            "mentions_by_chapter": {
+                "ch01": [
+                    "The Crown Prince Dorian Havilliard smiled.",
+                    "Crown Prince Dorian watched from the dais.",
+                ]
+            }
+        },
+        "e_dorian": {
+            "mentions_by_chapter": {"ch01": ["Dorian Havilliard offered her a deal."]}
+        },
+    }
+    result = _detect_pure_title_in_context(
+        dorian, crown_prince, persons_full, role_words=["crown prince", "prince", "king"]
+    )
+    assert result is not None
+    assert result["method"] == "pure_title"
+
+
+def test_detect_pure_title_in_context_no_match_when_names_in_different_sentences():
+    """
+    'Crown Prince' and 'Cain' in the same multi-sentence snippet but different sentences
+    must NOT be matched — they are distinct characters, not aliases.
+    """
+    from scripts.alias_resolution import _detect_pure_title_in_context
+    cain = {
+        "canonical_name": "Cain",
+        "aliases": ["Cain"],
+        "source_ids": ["e_cain"],
+    }
+    crown_prince = {
+        "canonical_name": "Crown Prince",
+        "aliases": ["Crown Prince"],
+        "source_ids": ["e_crown_prince"],
+    }
+    persons_full = {
+        "e_crown_prince": {
+            "mentions_by_chapter": {
+                "ch07": [
+                    # Cain and Crown Prince appear in different sentences — NOT the same person
+                    "She managed to keep from killing Cain when he taunted her at training. "
+                    "The Crown Prince didn't bother to show his face in her rooms again.",
+                ]
+            }
+        },
+        "e_cain": {
+            "mentions_by_chapter": {"ch07": ["Cain flexed his muscles."]}
+        },
+    }
+    result = _detect_pure_title_in_context(
+        cain, crown_prince, persons_full, role_words=["crown prince", "prince"]
+    )
     assert result is None
 
 

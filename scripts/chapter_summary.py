@@ -596,12 +596,21 @@ def summarize_chapters_incrementally(
         if isinstance(key, str) and isinstance(value, dict) and _is_summary_complete(value)
     }
 
-    for chapter in chapters:
-        if _is_frontmatter_chapter(chapter):
-            continue
+    pending = [
+        chapter for chapter in chapters
+        if not _is_frontmatter_chapter(chapter) and _chapter_key(chapter) and _chapter_key(chapter) not in result
+    ]
+    total = len(result) + len(pending)
+    done = len(result)
+
+    try:
+        from tqdm import tqdm
+        bar = tqdm(pending, total=total, initial=done, unit="ch", desc="chapter-summary", file=sys.stderr)
+    except ImportError:
+        bar = None
+
+    for chapter in pending:
         key = _chapter_key(chapter)
-        if not key or key in result:
-            continue
         if (config or ChapterSummaryConfig()).mode == "llm":
             item_result = _run_chapter_summary_item(chapter=chapter, config=(config or ChapterSummaryConfig()))
             if debug_dir is not None and isinstance(item_result, dict) and item_result.get("error"):
@@ -610,6 +619,12 @@ def summarize_chapters_incrementally(
         else:
             result[key] = summarize_chapter(chapter, config=config, action_cues=action_cues, flashback_cues=flashback_cues)
         _save_chapter_summaries(result, output_file)
+        if bar is not None:
+            bar.set_postfix(chapter=key[:40])
+            bar.update(1)
+
+    if bar is not None:
+        bar.close()
 
     return result
 
@@ -706,8 +721,17 @@ def _main_from_book(book_path: str) -> None:
 
     generation_cfg = book_cfg.get("generation", {})
     summary_cfg = generation_cfg.get("chapter_summary", {}) if isinstance(generation_cfg, dict) else {}
+    mode = str(summary_cfg.get("mode", "extractive")).strip().lower()
+    if mode not in _VALID_SUMMARY_MODES:
+        mode = "extractive"
+    llm_model_raw = summary_cfg.get("llm_model", _DEFAULT_LLM_MODEL)
+    llm_model = str(llm_model_raw).strip() if llm_model_raw is not None else _DEFAULT_LLM_MODEL
     config = ChapterSummaryConfig(
+        mode=mode,
         max_bullets=int(summary_cfg.get("max_bullets", 8)),
+        llm_model=llm_model or _DEFAULT_LLM_MODEL,
+        llm_timeout_seconds=_as_positive_int(summary_cfg.get("llm_timeout_seconds"), _DEFAULT_LLM_TIMEOUT_SECONDS),
+        llm_fallback_to_extractive=_as_bool(summary_cfg.get("llm_fallback_to_extractive", True), True),
     )
 
     out_file = paths.processing / "chapter_summaries.json"

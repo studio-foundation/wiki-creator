@@ -176,5 +176,45 @@
     "new_issues": [
       "RÉGRESSION : 0/71 relations typées dans batches wiki_inputs — classify-relationships non propagé (run_wiki.py ou wiki-preparation)"
     ]
+  },
+  {
+    "run": 11,
+    "date": "2026-03-22",
+    "pages_generated": 13,
+    "infobox_pct": 77,
+    "lang_fr_pct": 100,
+    "alias_duplicates": 0,
+    "hallucinations": 0,
+    "gt_violations": [
+      {
+        "page": "Celaena Sardothien",
+        "signal": "Aelin comme identité révélée (HALLUC_SIGNAL)",
+        "cause": "contamination_cross_serie"
+      },
+      {
+        "page": "Celaena Sardothien",
+        "signal": "Terrasen comme identité revendiquée (HALLUC_SIGNAL)",
+        "cause": "extrapolation"
+      },
+      {
+        "page": "Elena",
+        "signal": "princesse de Terrasen (FORBIDDEN scopé Celaena — faux positif probable, Elena est une princesse de Terrasen)",
+        "cause": "gt_validator_trop_large"
+      }
+    ],
+    "regression": {
+      "prefixed_keys": "✅",
+      "epub_ids": "✅",
+      "entity_type_null": "✅",
+      "alias_duplicates": "✅",
+      "cross_serie": "✅",
+      "evolution_quality": "❌",
+      "temporal_context": "✅",
+      "ground_truth": "⚠️"
+    },
+    "verdict": "Run 11 : 100% FR, 0 doublon, 0 ID EPUB, temporal_context ✅. Régression critique run 10 persistante : 0/99 relations typées, 0% key_moments, 0% evidence. Nouvelle régression secondaire : ## Relations réapparu sur 3 pages (Celaena, Dorian, Hollin). Priorité : diagnostiquer classify-relationships → wiki-preparation.",
+    "new_issues": [
+      "## Relations réapparu sur 3 pages (Celaena, Dorian, Hollin) — instabilité prompt, 3e occurrence (runs 6/9/11)"
+    ]
   }
 ]

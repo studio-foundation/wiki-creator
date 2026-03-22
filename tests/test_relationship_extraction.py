@@ -647,6 +647,36 @@ def test_tightest_span_spans_two_sentences_when_names_separated():
     assert "Hollin" in result
 
 
+def test_tightest_span_excludes_sentences_with_neither_name():
+    """Intermediate sentences containing neither name should be filtered out."""
+    from scripts.relationship_extraction import _tightest_span
+    window = [
+        "Dorian entered the hall.",
+        "The fireplace crackled.",  # neither name — should be excluded
+        "The prince watched from afar.",  # third character — should be excluded
+        "Hollin ran toward him.",
+    ]
+    result = _tightest_span(window, "dorian", "hollin")
+    assert "Dorian" in result
+    assert "Hollin" in result
+    assert "fireplace" not in result
+    assert "prince" not in result
+
+
+def test_tightest_span_keeps_sentences_with_one_name():
+    """Sentences containing only one of the two names should be kept (they provide relevant context)."""
+    from scripts.relationship_extraction import _tightest_span
+    window = [
+        "Dorian entered the hall.",
+        "Dorian looked at Hollin carefully.",  # both names
+        "Hollin did not answer.",  # only one name — keep it
+    ]
+    result = _tightest_span(window, "dorian", "hollin")
+    assert "Dorian" in result
+    assert "Hollin" in result
+    assert "did not answer" in result
+
+
 def test_tightest_span_fallback_when_name_not_found():
     """If a name is not found at all, return window[0] as a safe fallback."""
     from scripts.relationship_extraction import _tightest_span
