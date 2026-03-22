@@ -3,7 +3,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from scripts.scrape_fandom import parse_infobox, parse_body
+from scripts.scrape_fandom import parse_infobox, parse_body, is_redirect, is_stub
 
 
 WIKITEXT_WITH_INFOBOX = """\
@@ -93,3 +93,23 @@ def test_parse_body_keeps_plain_text():
 def test_parse_body_is_stub_when_short():
     result = parse_body("== Section ==\nShort.")
     assert len(result) < 200
+
+
+def test_is_redirect_detects_uppercase():
+    assert is_redirect("#REDIRECT [[Celaena Sardothien]]") is True
+
+
+def test_is_redirect_detects_lowercase():
+    assert is_redirect("#redirect [[Celaena Sardothien]]") is True
+
+
+def test_is_redirect_returns_false_for_normal_page():
+    assert is_redirect("== Biography ==\nSome content.") is False
+
+
+def test_is_stub_when_body_short():
+    assert is_stub("Too short.") is True
+
+
+def test_is_stub_when_body_long_enough():
+    assert is_stub("x" * 200) is False

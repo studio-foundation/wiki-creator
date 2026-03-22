@@ -72,3 +72,13 @@ def parse_body(wikitext: str) -> str:
             lines.append(node_str)
 
     return "".join(lines).strip()
+
+
+def is_redirect(wikitext: str) -> bool:
+    """Return True if the wikitext is a redirect page."""
+    return wikitext.strip().lower().startswith("#redirect")
+
+
+def is_stub(body: str) -> bool:
+    """Return True if the cleaned body text is too short (< 200 chars)."""
+    return len(body) < 200
