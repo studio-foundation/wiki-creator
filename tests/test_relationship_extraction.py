@@ -635,54 +635,55 @@ def test_tightest_span_returns_sentence_with_both_names():
 
 
 def test_tightest_span_spans_two_sentences_when_names_separated():
-    """When names are in different sentences, return the span between them."""
+    """Names in adjacent sentences (gap=1) must be returned as a 2-sentence span, excluding non-adjacent name occurrences."""
+    from scripts.relationship_extraction import _tightest_span
+    window = [
+        "Dorian entered the hall.",    # Dorian @ 0
+        "Hollin ran toward him.",      # Hollin @ 1 — gap=1, best pair
+        "Dorian watched from afar.",   # Dorian @ 2 — farther, should NOT expand span
+    ]
+    result = _tightest_span(window, "dorian", "hollin")
+    assert result is not None
+    assert "Dorian" in result
+    assert "Hollin" in result
+    assert "watched from afar" not in result   # sent 2 not part of closest pair span
+
+
+def test_tightest_span_excludes_sentences_with_neither_name():
+    """Names more than 1 sentence apart must return None — no direct interaction evidence."""
     from scripts.relationship_extraction import _tightest_span
     window = [
         "Dorian entered the hall.",
         "The fireplace crackled.",
-        "Hollin ran toward him.",
+        "The prince watched from afar.",
+        "Hollin ran toward him.",          # gap=3 from Dorian
     ]
     result = _tightest_span(window, "dorian", "hollin")
-    assert "Dorian" in result
-    assert "Hollin" in result
+    assert result is None
 
 
-def test_tightest_span_excludes_sentences_with_neither_name():
-    """Intermediate sentences containing neither name should be filtered out."""
+def test_tightest_span_returns_closest_pair_span():
+    """When names appear multiple times, return the span around the closest pair."""
     from scripts.relationship_extraction import _tightest_span
     window = [
-        "Dorian entered the hall.",
-        "The fireplace crackled.",  # neither name — should be excluded
-        "The prince watched from afar.",  # third character — should be excluded
-        "Hollin ran toward him.",
+        "Dorian entered the hall.",        # Dorian @ 0
+        "Dorian looked at Hollin.",        # both @ 1 — gap=0, best pair
+        "Hollin did not answer.",          # Hollin @ 2
     ]
     result = _tightest_span(window, "dorian", "hollin")
+    assert result is not None
+    # Best pair is sentence 1 (gap=0), so only that sentence is returned
     assert "Dorian" in result
     assert "Hollin" in result
-    assert "fireplace" not in result
-    assert "prince" not in result
+    assert "did not answer" not in result   # sent 2 not included (best gap is 0, not 1)
 
 
-def test_tightest_span_keeps_sentences_with_one_name():
-    """Sentences containing only one of the two names should be kept (they provide relevant context)."""
-    from scripts.relationship_extraction import _tightest_span
-    window = [
-        "Dorian entered the hall.",
-        "Dorian looked at Hollin carefully.",  # both names
-        "Hollin did not answer.",  # only one name — keep it
-    ]
-    result = _tightest_span(window, "dorian", "hollin")
-    assert "Dorian" in result
-    assert "Hollin" in result
-    assert "did not answer" in result
-
-
-def test_tightest_span_fallback_when_name_not_found():
-    """If a name is not found at all, return window[0] as a safe fallback."""
+def test_tightest_span_returns_none_when_name_not_found():
+    """If either name is absent from the window, return None — no evidence possible."""
     from scripts.relationship_extraction import _tightest_span
     window = ["Some unrelated sentence.", "Another sentence."]
     result = _tightest_span(window, "dorian", "hollin")
-    assert result == "Some unrelated sentence."
+    assert result is None
 
 
 def test_tightest_span_name_matching_is_case_insensitive():
@@ -728,6 +729,64 @@ def test_build_cooccurrence_graph_sample_contexts_contain_both_names():
         for ctx in rel["sample_contexts"]:
             assert "Dorian" in ctx or "dorian" in ctx.lower(), f"Missing Dorian in: {ctx}"
             assert "Hollin" in ctx or "hollin" in ctx.lower(), f"Missing Hollin in: {ctx}"
+
+
+def test_tightest_span_returns_none_when_names_too_far_apart():
+    """Names separated by more than 1 sentence (gap=2) must return None."""
+    from scripts.relationship_extraction import _tightest_span
+    window = [
+        "Nehemia entered the hall.",
+        "The crowd murmured.",          # neither name
+        "Cain flexed his arms.",        # gap=2 from Nehemia
+    ]
+    result = _tightest_span(window, "cain", "nehemia")
+    assert result is None
+
+
+def test_tightest_span_uses_closest_pair_when_multiple_occurrences():
+    """When a name appears multiple times, use the pair with minimum gap."""
+    from scripts.relationship_extraction import _tightest_span
+    window = [
+        "Cain entered first.",          # Cain @ 0 — gap=3 from Nehemia @ 3
+        "The hall was silent.",
+        "Cain looked up.",              # Cain @ 2 — gap=1 from Nehemia @ 3
+        "Nehemia stepped forward.",     # Nehemia @ 3
+    ]
+    result = _tightest_span(window, "cain", "nehemia")
+    assert result is not None
+    # Should use the closest pair: Cain@2 + Nehemia@3 (gap=1)
+    assert "Cain looked up" in result
+    assert "Nehemia stepped forward" in result
+    assert "Cain entered first" not in result   # farther pair not included
+
+
+def test_build_cooccurrence_graph_excludes_pairs_without_proximity_context():
+    """Pairs whose names never appear within 1 sentence of each other must be excluded."""
+    from scripts.relationship_extraction import build_cooccurrence_graph
+
+    entities = [
+        {"canonical_name": "Cain", "type": "PERSON", "aliases": [], "relevant": True},
+        {"canonical_name": "Nehemia", "type": "PERSON", "aliases": [], "relevant": True},
+    ]
+    # Names appear in same window but always gap>=2 apart
+    mentions = {
+        "Cain": {"ch01": [
+            "Nehemia watched the competition.",   # Nehemia @ 0
+            "The crowd cheered loudly.",          # gap filler @ 1
+            "Cain flexed his arms.",              # Cain @ 2 — gap=2 from Nehemia
+        ]},
+        "Nehemia": {"ch01": [
+            "Nehemia watched the competition.",
+            "The crowd cheered loudly.",
+            "Cain flexed his arms.",
+        ]},
+    }
+    rels, _ = build_cooccurrence_graph(
+        entities, mentions, window_size=5, min_cooccurrence=1, min_chapters_together=1
+    )
+    names_in_output = {(r["entity_a"], r["entity_b"]) for r in rels}
+    assert ("Cain", "Nehemia") not in names_in_output
+    assert ("Nehemia", "Cain") not in names_in_output
 
 
 # --- Studio classifier item tests ---

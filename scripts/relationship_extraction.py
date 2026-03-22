@@ -85,26 +85,41 @@ DEFAULT_WINDOW = 5
 DEFAULT_THRESHOLD = 5
 DEFAULT_MIN_COOCCURRENCE = 3
 DEFAULT_MIN_CHAPTERS_TOGETHER = 2
+_MAX_DIRECT_INTERACTION_GAP = 1  # max sentence distance to qualify as direct interaction
 _OLLAMA_URL = "http://localhost:11434"
 
 
-def _tightest_span(window: list[str], name_a: str, name_b: str) -> str:
-    """Return sentences from ``window`` that contain at least one of the two names.
+def _tightest_span(window: list[str], name_a: str, name_b: str) -> str | None:
+    """Return the minimal sentence span around the closest co-occurrence of name_a
+    and name_b, if they appear within _MAX_DIRECT_INTERACTION_GAP sentences of each other.
 
-    Only sentences that mention name_a or name_b are kept, filtering out
-    third-party noise between their occurrences. Falls back to ``window[0]``
-    if neither name is found in any sentence.
+    Returns None if either name is absent from the window, or if the closest pair
+    is farther apart than _MAX_DIRECT_INTERACTION_GAP — indicating co-presence without
+    direct interaction.
     """
     pat_a = re.compile(r'\b' + re.escape(name_a.lower()) + r'\b')
     pat_b = re.compile(r'\b' + re.escape(name_b.lower()) + r'\b')
 
-    has_a = any(pat_a.search(s.lower()) for s in window)
-    has_b = any(pat_b.search(s.lower()) for s in window)
-    if not has_a or not has_b:
-        return window[0]
+    indices_a = [i for i, s in enumerate(window) if pat_a.search(s.lower())]
+    indices_b = [i for i, s in enumerate(window) if pat_b.search(s.lower())]
 
-    kept = [s for s in window if pat_a.search(s.lower()) or pat_b.search(s.lower())]
-    return " ".join(kept)
+    if not indices_a or not indices_b:
+        return None
+
+    best_gap: int | None = None
+    best_lo, best_hi = 0, 0
+    for ia in indices_a:
+        for ib in indices_b:
+            gap = abs(ia - ib)
+            if best_gap is None or gap < best_gap:
+                best_gap = gap
+                best_lo = min(ia, ib)
+                best_hi = max(ia, ib)
+
+    if best_gap > _MAX_DIRECT_INTERACTION_GAP:
+        return None
+
+    return " ".join(window[best_lo : best_hi + 1])
 
 
 def build_cooccurrence_graph(
@@ -152,6 +167,23 @@ def build_cooccurrence_graph(
                 else:
                     name_to_canonical[alias_key] = canonical
 
+    # Reverse lookup: canonical name → all name forms (original case preserved)
+    _canonical_to_names: dict[str, list[str]] = {}
+    for entity in persons:
+        canonical = entity["canonical_name"]
+        _canonical_to_names.setdefault(canonical, []).append(canonical)
+        for alias in entity.get("aliases", []):
+            if len(alias) >= 4:
+                _canonical_to_names.setdefault(canonical, []).append(alias)
+
+    def _find_name_in_window(canonical: str, window: list[str]) -> str:
+        """Return the alias form of canonical that appears in this window, or canonical itself."""
+        window_lower = " ".join(window).lower()
+        for name in _canonical_to_names.get(canonical, [canonical]):
+            if re.search(r'\b' + re.escape(name.lower()) + r'\b', window_lower):
+                return name
+        return canonical
+
     # Co-occurrence matrix: {(canonical_a, canonical_b): {"count": int, "chapters": set, "contexts": list}}
     cooc: dict[tuple[str, str], dict] = {}
 
@@ -197,13 +229,18 @@ def build_cooccurrence_graph(
                         cooc[key] = {"count": 0, "chapters": set(), "contexts": []}
                     cooc[key]["count"] += 1
                     cooc[key]["chapters"].add(chapter_id)
-                    if len(cooc[key]["contexts"]) < 3:
-                        cooc[key]["contexts"].append(_tightest_span(window, a, b))
+                    name_a_in_window = _find_name_in_window(a, window)
+                    name_b_in_window = _find_name_in_window(b, window)
+                    span = _tightest_span(window, name_a_in_window, name_b_in_window)
+                    if span is not None and len(cooc[key]["contexts"]) < 3:
+                        cooc[key]["contexts"].append(span)
 
     # Build output: filter by min_cooccurrence and min_chapters_together
     relationships = []
     for (a, b), data in cooc.items():
-        if data["count"] >= effective_min_cooc and len(data["chapters"]) >= min_chapters_together:
+        if (data["count"] >= effective_min_cooc
+                and len(data["chapters"]) >= min_chapters_together
+                and len(data["contexts"]) > 0):
             relationships.append({
                 "entity_a": a,
                 "entity_b": b,
