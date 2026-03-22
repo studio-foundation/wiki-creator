@@ -595,8 +595,7 @@ def _apply_llm_type_corrections(
                     break
         if match is not None and entity.get("type") != match:
             print(
-                f"[CORRECTIONS] {entity['canonical_name']}: {entity['type']} → {match}"
-                " (from entity_type_corrections.json)",
+                f"[CORRECTIONS] {entity['canonical_name']}: {entity['type']} → {match} (from entity_type_corrections.json)",
                 file=sys.stderr,
             )
             entity["type"] = match
@@ -692,8 +691,7 @@ def run_studio_mode() -> None:
     # Apply persisted LLM type corrections (STU-302).
     # Priority: after heuristic normalization, before role canonicalization and manual overrides.
     llm_corrections = _load_type_corrections(paths.processing)
-    if llm_corrections:
-        _apply_llm_type_corrections(entities, llm_corrections)
+    _apply_llm_type_corrections(entities, llm_corrections)
 
     # Role/title entities should not become autonomous pages; merge unambiguous aliases.
     entities, relationships, _ = _canonicalize_role_entities(
