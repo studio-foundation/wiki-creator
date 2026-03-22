@@ -128,3 +128,9 @@ def fetch_wikitext(api_url: str, title: str) -> str | None:
             return None
         return revisions[0].get("*")
     return None
+
+
+def derive_wiki_slug(wiki_url: str) -> str:
+    """Derive wiki slug from fandom URL. e.g. https://throneofglass.fandom.com → throneofglass"""
+    host = urlparse(wiki_url).hostname or ""
+    return host.replace(".fandom.com", "")

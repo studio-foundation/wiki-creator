@@ -4,7 +4,7 @@ import sys
 from unittest.mock import patch, MagicMock
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from scripts.scrape_fandom import parse_infobox, parse_body, is_redirect, is_stub, fetch_category_members, fetch_wikitext
+from scripts.scrape_fandom import parse_infobox, parse_body, is_redirect, is_stub, fetch_category_members, fetch_wikitext, derive_wiki_slug
 
 
 WIKITEXT_WITH_INFOBOX = """\
@@ -178,3 +178,11 @@ def test_fetch_wikitext_returns_none_for_missing_page():
         with patch("scripts.scrape_fandom.time.sleep"):
             result = fetch_wikitext(API_URL, "Nonexistent Page")
     assert result is None
+
+
+def test_derive_wiki_slug_strips_fandom_suffix():
+    assert derive_wiki_slug("https://throneofglass.fandom.com") == "throneofglass"
+
+
+def test_derive_wiki_slug_with_trailing_slash():
+    assert derive_wiki_slug("https://throneofglass.fandom.com/") == "throneofglass"
