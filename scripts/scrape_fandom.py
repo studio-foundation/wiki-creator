@@ -10,6 +10,7 @@ Usage:
 """
 import argparse
 import json
+import re
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -38,3 +39,36 @@ def parse_infobox(wikitext: str) -> dict:
                 for param in template.params
             }
     return {}
+
+
+def parse_body(wikitext: str) -> str:
+    """Convert wikitext body to cleaned Markdown-like text."""
+    # Remove <ref>...</ref> and self-closing <ref ... />
+    text = re.sub(r"<ref[^>]*>.*?</ref>", "", wikitext, flags=re.DOTALL)
+    text = re.sub(r"<ref[^>]*/?>", "", text)
+
+    parsed = mwparserfromhell.parse(text)
+
+    # Remove File/Image links before stripping wikitext
+    for link in parsed.filter_wikilinks():
+        if str(link.title).strip().startswith(("File:", "Image:")):
+            parsed.remove(link)
+
+    # Remove all templates (infoboxes, navboxes, etc.)
+    for template in parsed.filter_templates():
+        parsed.remove(template)
+
+    # Get plain text with section headings preserved
+    lines = []
+    for node in parsed.nodes:
+        node_str = str(node)
+        # Convert MediaWiki headings to Markdown
+        heading_match = re.match(r"^(={2,6})\s*(.+?)\s*\1\s*$", node_str.strip())
+        if heading_match:
+            level = len(heading_match.group(1))
+            title = heading_match.group(2)
+            lines.append("#" * level + " " + title)
+        else:
+            lines.append(node_str)
+
+    return "".join(lines).strip()
