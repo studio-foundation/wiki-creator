@@ -82,3 +82,49 @@ def is_redirect(wikitext: str) -> bool:
 def is_stub(body: str) -> bool:
     """Return True if the cleaned body text is too short (< 200 chars)."""
     return len(body) < 200
+
+
+def fetch_category_members(api_url: str, category: str) -> list[str]:
+    """Fetch all page titles in a MediaWiki category. Returns list of titles."""
+    titles = []
+    params: dict = {
+        "action": "query",
+        "list": "categorymembers",
+        "cmtitle": f"Category:{category}",
+        "cmlimit": "500",
+        "format": "json",
+    }
+    while True:
+        resp = requests.get(api_url, params=params)
+        resp.raise_for_status()
+        time.sleep(RATE_LIMIT_SECONDS)
+        data = resp.json()
+        members = data.get("query", {}).get("categorymembers", [])
+        titles.extend(m["title"] for m in members)
+        if "continue" not in data:
+            break
+        params["cmcontinue"] = data["continue"]["cmcontinue"]
+    return titles
+
+
+def fetch_wikitext(api_url: str, title: str) -> str | None:
+    """Fetch raw wikitext for a page. Returns None if page not found."""
+    params = {
+        "action": "query",
+        "prop": "revisions",
+        "rvprop": "content",
+        "redirects": "0",
+        "titles": title,
+        "format": "json",
+    }
+    resp = requests.get(api_url, params=params)
+    resp.raise_for_status()
+    time.sleep(RATE_LIMIT_SECONDS)
+    data = resp.json()
+    pages = data.get("query", {}).get("pages", {})
+    for page in pages.values():
+        revisions = page.get("revisions")
+        if not revisions:
+            return None
+        return revisions[0].get("*")
+    return None

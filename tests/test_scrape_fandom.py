@@ -1,9 +1,10 @@
 """Tests for scripts/scrape_fandom.py."""
 import os
 import sys
+from unittest.mock import patch, MagicMock
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from scripts.scrape_fandom import parse_infobox, parse_body, is_redirect, is_stub
+from scripts.scrape_fandom import parse_infobox, parse_body, is_redirect, is_stub, fetch_category_members, fetch_wikitext
 
 
 WIKITEXT_WITH_INFOBOX = """\
@@ -113,3 +114,67 @@ def test_is_stub_when_body_short():
 
 def test_is_stub_when_body_long_enough():
     assert is_stub("x" * 200) is False
+
+
+API_URL = "https://throneofglass.fandom.com/api.php"
+
+
+def _mock_response(data: dict) -> MagicMock:
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = data
+    mock_resp.raise_for_status.return_value = None
+    return mock_resp
+
+
+def test_fetch_category_members_returns_titles():
+    page_data = {
+        "query": {
+            "categorymembers": [
+                {"title": "Celaena Sardothien"},
+                {"title": "Dorian Havilliard"},
+            ]
+        }
+    }
+    with patch("scripts.scrape_fandom.requests.get", return_value=_mock_response(page_data)) as mock_get:
+        with patch("scripts.scrape_fandom.time.sleep"):
+            titles = fetch_category_members(API_URL, "Characters")
+    assert titles == ["Celaena Sardothien", "Dorian Havilliard"]
+
+
+def test_fetch_category_members_paginates():
+    page1 = {
+        "query": {"categorymembers": [{"title": "Page A"}]},
+        "continue": {"cmcontinue": "token_abc", "continue": "-||"},
+    }
+    page2 = {
+        "query": {"categorymembers": [{"title": "Page B"}]},
+    }
+    responses = [_mock_response(page1), _mock_response(page2)]
+    with patch("scripts.scrape_fandom.requests.get", side_effect=responses):
+        with patch("scripts.scrape_fandom.time.sleep"):
+            titles = fetch_category_members(API_URL, "Characters")
+    assert titles == ["Page A", "Page B"]
+
+
+def test_fetch_wikitext_returns_content():
+    response_data = {
+        "query": {
+            "pages": {
+                "123": {
+                    "revisions": [{"*": "{{Infobox character}}\n== Bio ==\nContent here."}]
+                }
+            }
+        }
+    }
+    with patch("scripts.scrape_fandom.requests.get", return_value=_mock_response(response_data)):
+        with patch("scripts.scrape_fandom.time.sleep"):
+            result = fetch_wikitext(API_URL, "Celaena Sardothien")
+    assert "Infobox character" in result
+
+
+def test_fetch_wikitext_returns_none_for_missing_page():
+    response_data = {"query": {"pages": {"-1": {}}}}
+    with patch("scripts.scrape_fandom.requests.get", return_value=_mock_response(response_data)):
+        with patch("scripts.scrape_fandom.time.sleep"):
+            result = fetch_wikitext(API_URL, "Nonexistent Page")
+    assert result is None
