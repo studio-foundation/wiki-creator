@@ -684,14 +684,15 @@ def _epub_output_from_payload(payload: dict) -> dict:
 
 
 def _main_from_book(book_path: str) -> None:
-    """Standalone entry point: reads chapters.json from disk, runs summarization."""
+    """Standalone entry point: reads epub_data.json from disk, runs summarization."""
     paths = book_paths_from_yaml(book_path)
 
-    chapters_file = paths.processing / "chapters.json"
-    if not chapters_file.exists():
-        print(f"[ERROR] chapters.json not found: {chapters_file}", file=sys.stderr)
+    epub_data_file = paths.processing / "epub_data.json"
+    if not epub_data_file.exists():
+        print(f"[ERROR] epub_data.json not found: {epub_data_file}", file=sys.stderr)
         sys.exit(1)
-    chapters = json.loads(chapters_file.read_text(encoding="utf-8"))
+    epub_data = json.loads(epub_data_file.read_text(encoding="utf-8"))
+    chapters = epub_data.get("chapters", [])
 
     with open(book_path, encoding="utf-8") as f:
         book_cfg = yaml.safe_load(f) or {}

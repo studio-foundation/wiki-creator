@@ -601,7 +601,7 @@ def test_summarize_chapter_from_item_result_fallback_uses_heuristic():
 
 
 def test_main_from_book_reads_chapters_json(tmp_path, monkeypatch):
-    """--book mode must read chapters from chapters.json, not stdin."""
+    """--book mode must read chapters from epub_data.json, not stdin."""
     import json
     from unittest.mock import patch, MagicMock
 
@@ -609,11 +609,11 @@ def test_main_from_book_reads_chapters_json(tmp_path, monkeypatch):
     book_yaml = tmp_path / "book.yaml"
     book_yaml.write_text("title: Test\nspacy_model: en_core_web_sm\n")
 
-    # Fake processing dir with chapters.json
+    # Fake processing dir with epub_data.json
     processing = tmp_path / "processing_output" / "test"
     processing.mkdir(parents=True)
     chapters = [{"id": "ch01", "title": "Chapter 1", "content": "Celaena ran."}]
-    (processing / "chapters.json").write_text(json.dumps(chapters))
+    (processing / "epub_data.json").write_text(json.dumps({"title": "Test", "chapters": chapters}))
 
     # Patch book_paths_from_yaml to return a fake BookPaths
     from wiki_creator.paths import BookPaths
