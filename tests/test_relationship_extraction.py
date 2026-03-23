@@ -933,6 +933,39 @@ def test_classify_relationships_still_classifies_person_pairs_with_entity_types(
     assert result[0]["relationship_type"] == "ami"
 
 
+def test_build_cooccurrence_graph_stores_at_most_one_context_per_chapter():
+    """When the same pair co-appears multiple times in the same chapter, only one context is stored."""
+    from scripts.relationship_extraction import build_cooccurrence_graph
+
+    entities = [
+        {"canonical_name": "Cain", "type": "PERSON", "aliases": [], "relevant": True},
+        {"canonical_name": "Chaol", "type": "PERSON", "aliases": [], "relevant": True},
+    ]
+    # 5 sentences in same chapter, all with tight proximity (gap=0 or gap=1)
+    # This would normally produce 3 contexts without per-chapter cap
+    mentions = {
+        "Cain": {"ch01": [
+            "Cain faced Chaol.",
+            "The hall was silent.",
+            "Cain and Chaol exchanged glares.",
+            "Someone else spoke.",
+            "Cain watched Chaol leave.",
+        ]},
+        "Chaol": {"ch01": [
+            "Cain faced Chaol.",
+            "The hall was silent.",
+            "Cain and Chaol exchanged glares.",
+            "Someone else spoke.",
+            "Cain watched Chaol leave.",
+        ]},
+    }
+    rels, _ = build_cooccurrence_graph(
+        entities, mentions, window_size=3, min_cooccurrence=1, min_chapters_together=1
+    )
+    assert len(rels) == 1
+    assert len(rels[0]["sample_contexts"]) == 1  # only 1 context from ch01
+
+
 def test_run_studio_classifier_item_degrades_on_timeout():
     with patch("subprocess.run", side_effect=subprocess.TimeoutExpired(cmd=["studio"], timeout=30)):
         rel = {"entity_a": "A", "entity_b": "B", "sample_contexts": [], "cooccurrence_count": 1}

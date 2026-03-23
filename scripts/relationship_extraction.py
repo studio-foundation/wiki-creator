@@ -226,14 +226,17 @@ def build_cooccurrence_graph(
                     a, b = present_list[idx_a], present_list[idx_b]
                     key = (a, b)
                     if key not in cooc:
-                        cooc[key] = {"count": 0, "chapters": set(), "contexts": []}
+                        cooc[key] = {"count": 0, "chapters": set(), "contexts": [], "context_chapters": set()}
                     cooc[key]["count"] += 1
                     cooc[key]["chapters"].add(chapter_id)
                     name_a_in_window = _find_name_in_window(a, window)
                     name_b_in_window = _find_name_in_window(b, window)
                     span = _tightest_span(window, name_a_in_window, name_b_in_window)
-                    if span is not None and len(cooc[key]["contexts"]) < 3:
+                    if (span is not None
+                            and len(cooc[key]["contexts"]) < 3
+                            and chapter_id not in cooc[key]["context_chapters"]):
                         cooc[key]["contexts"].append(span)
+                        cooc[key]["context_chapters"].add(chapter_id)
 
     # Build output: filter by min_cooccurrence and min_chapters_together
     relationships = []
