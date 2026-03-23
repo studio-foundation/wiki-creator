@@ -122,6 +122,15 @@ def _tightest_span(window: list[str], name_a: str, name_b: str) -> str | None:
     return " ".join(window[best_lo : best_hi + 1])
 
 
+def _span_contains_both(span: str, name_a: str, name_b: str) -> bool:
+    """Return True if both name forms appear (word-boundary) in the span."""
+    span_lower = span.lower()
+    return (
+        bool(re.search(r'\b' + re.escape(name_a.lower()) + r'\b', span_lower))
+        and bool(re.search(r'\b' + re.escape(name_b.lower()) + r'\b', span_lower))
+    )
+
+
 def build_cooccurrence_graph(
     entities: list[dict],
     mentions_by_entity: dict[str, dict[str, list[str]]],
@@ -233,6 +242,7 @@ def build_cooccurrence_graph(
                     name_b_in_window = _find_name_in_window(b, window)
                     span = _tightest_span(window, name_a_in_window, name_b_in_window)
                     if (span is not None
+                            and _span_contains_both(span, name_a_in_window, name_b_in_window)
                             and len(cooc[key]["contexts"]) < 3
                             and chapter_id not in cooc[key]["context_chapters"]):
                         cooc[key]["contexts"].append(span)

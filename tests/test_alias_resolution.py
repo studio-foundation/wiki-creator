@@ -1216,3 +1216,33 @@ def test_detect_role_symmetric_no_false_positive_zero_token_overlap():
         f"Expected no candidates but got: "
         f"{[(p[0]['canonical_name'], p[1]['canonical_name']) for p in pairs]}"
     )
+
+
+def test_detect_pure_title_in_context_no_match_when_sentences_split_by_curly_quote():
+    """Snippet with !" between sentences (curly quote) must split correctly — Crown Prince and Philippa in different sentences → None."""
+    from scripts.alias_resolution import _detect_pure_title_in_context
+    snippet = (
+        "\u201cThe Crown Prince won\u2019t be pleased if you\u2019re late!\u201d "
+        "Celaena paused in the doorway, then looked back at Philippa."
+    )
+    # persons_full must be a dict keyed by source_id, with mentions_by_chapter
+    persons_full = {
+        "entity_crown_prince": {
+            "mentions_by_chapter": {"ch01": [snippet]},
+        },
+    }
+    crown_prince = {
+        "canonical_name": "Crown Prince",
+        "type": "PERSON",
+        "aliases": ["Crown Prince"],
+        "source_ids": ["entity_crown_prince"],
+    }
+    philippa = {
+        "canonical_name": "Philippa",
+        "type": "PERSON",
+        "aliases": ["Philippa"],
+        "source_ids": [],
+    }
+    role_words = ["Crown Prince", "crown", "prince"]
+    result = _detect_pure_title_in_context(crown_prince, philippa, persons_full=persons_full, role_words=role_words)
+    assert result is None, f"Should not merge across curly-quote sentence boundary, got: {result}"

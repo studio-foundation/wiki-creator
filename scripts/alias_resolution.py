@@ -396,7 +396,7 @@ def _detect_pure_title_in_context(
         for snippet in _gather_contexts(title_entity, persons_full):
             # Split into sentences so that names in adjacent sentences don't create false matches.
             # Both the title AND the proper name must appear in the same sentence.
-            sentences = re.split(r'(?<=[.!?])\s+', snippet)
+            sentences = re.split(r'(?<=[.!?])[\u201d\u2019\u201c\u2018"\']?\s+', snippet)
             for sentence in sentences:
                 sent_lower = sentence.lower()
                 if title_lower not in sent_lower:

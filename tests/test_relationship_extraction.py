@@ -971,3 +971,11 @@ def test_run_studio_classifier_item_degrades_on_timeout():
         rel = {"entity_a": "A", "entity_b": "B", "sample_contexts": [], "cooccurrence_count": 1}
         result = _run_studio_classifier_item(rel, novel_summary="", additional_context="")
     assert result.get("error") == "studio_run_timeout"
+
+
+def test_span_contains_both_returns_false_when_name_absent():
+    """_span_contains_both must return False if either name is absent from span."""
+    from scripts.relationship_extraction import _span_contains_both
+    assert _span_contains_both("Chaol stood. Crown Prince entered.", "Chaol", "Crown Prince") is True
+    assert _span_contains_both("Chaol stood. Crown Prince entered.", "Chaol", "Philippa") is False
+    assert _span_contains_both("Chaol stood. Crown Prince entered.", "Elena", "Crown Prince") is False
