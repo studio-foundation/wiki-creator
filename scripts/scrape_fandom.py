@@ -52,11 +52,19 @@ def parse_body(wikitext: str) -> str:
     # Remove File/Image links before stripping wikitext
     for link in parsed.filter_wikilinks():
         if str(link.title).strip().startswith(("File:", "Image:")):
-            parsed.remove(link)
+            try:
+                parsed.remove(link)
+            except ValueError:
+                pass
 
     # Remove all templates (infoboxes, navboxes, etc.)
+    # Use try/except: filter_templates() is recursive so nested templates may
+    # already be gone when we try to remove them individually.
     for template in parsed.filter_templates():
-        parsed.remove(template)
+        try:
+            parsed.remove(template)
+        except ValueError:
+            pass
 
     # Get plain text with section headings preserved
     lines = []
