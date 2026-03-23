@@ -1,10 +1,11 @@
 """Tests for scripts/scrape_fandom.py."""
+import json
 import os
 import sys
 from unittest.mock import patch, MagicMock
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from scripts.scrape_fandom import parse_infobox, parse_body, is_redirect, is_stub, fetch_category_members, fetch_wikitext, derive_wiki_slug
+from scripts.scrape_fandom import parse_infobox, parse_body, is_redirect, is_stub, fetch_category_members, fetch_wikitext, derive_wiki_slug, main
 
 
 WIKITEXT_WITH_INFOBOX = """\
@@ -186,3 +187,138 @@ def test_derive_wiki_slug_strips_fandom_suffix():
 
 def test_derive_wiki_slug_with_trailing_slash():
     assert derive_wiki_slug("https://throneofglass.fandom.com/") == "throneofglass"
+
+
+FAKE_CATEGORY_RESPONSE = {
+    "query": {
+        "categorymembers": [
+            {"title": "Celaena Sardothien"},
+        ]
+    }
+}
+
+FAKE_PAGE_RESPONSE = {
+    "query": {
+        "pages": {
+            "1": {
+                "revisions": [{
+                    "*": (
+                        "{{Infobox character\n"
+                        "| species = Human\n"
+                        "| status  = Alive\n"
+                        "}}\n"
+                        "== Biography ==\n"
+                        + "Celaena Sardothien is a world-famous assassin. " * 10
+                    )
+                }]
+            }
+        }
+    }
+}
+
+
+def test_main_writes_jsonl(tmp_path):
+    out_file = tmp_path / "output.jsonl"
+    responses = [
+        _mock_response(FAKE_CATEGORY_RESPONSE),  # discover PERSON
+        _mock_response(FAKE_PAGE_RESPONSE),       # fetch page
+    ]
+    with patch("scripts.scrape_fandom.requests.get", side_effect=responses):
+        with patch("scripts.scrape_fandom.time.sleep"):
+            main([
+                "--wiki", "https://throneofglass.fandom.com",
+                "--types", "PERSON",
+                "--lang", "en",
+                "--out", str(out_file),
+            ])
+    assert out_file.exists()
+    lines = out_file.read_text().strip().splitlines()
+    assert len(lines) == 1
+    record = json.loads(lines[0])
+    assert record["source"] == "fandom"
+    assert record["wiki_slug"] == "throneofglass"
+    assert record["page_title"] == "Celaena Sardothien"
+    assert record["entity_type"] == "PERSON"
+    assert record["infobox_fields"]["species"] == "Human"
+    assert record["content_lang"] == "en"
+    assert "scraped_at" in record
+
+
+def test_main_skips_redirects(tmp_path):
+    out_file = tmp_path / "output.jsonl"
+    redirect_response = {
+        "query": {
+            "pages": {"1": {"revisions": [{"*": "#REDIRECT [[Celaena Sardothien]]"}]}}
+        }
+    }
+    responses = [
+        _mock_response(FAKE_CATEGORY_RESPONSE),
+        _mock_response(redirect_response),
+    ]
+    with patch("scripts.scrape_fandom.requests.get", side_effect=responses):
+        with patch("scripts.scrape_fandom.time.sleep"):
+            main([
+                "--wiki", "https://throneofglass.fandom.com",
+                "--types", "PERSON",
+                "--out", str(out_file),
+            ])
+    # File may not exist or be empty — either is correct
+    if out_file.exists():
+        assert out_file.read_text().strip() == ""
+
+
+def test_main_skips_stubs(tmp_path):
+    out_file = tmp_path / "output.jsonl"
+    stub_response = {
+        "query": {
+            "pages": {"1": {"revisions": [{"*": "{{Infobox character}}\n== Bio ==\nToo short."}]}}
+        }
+    }
+    responses = [
+        _mock_response(FAKE_CATEGORY_RESPONSE),
+        _mock_response(stub_response),
+    ]
+    with patch("scripts.scrape_fandom.requests.get", side_effect=responses):
+        with patch("scripts.scrape_fandom.time.sleep"):
+            main([
+                "--wiki", "https://throneofglass.fandom.com",
+                "--types", "PERSON",
+                "--out", str(out_file),
+            ])
+    if out_file.exists():
+        assert out_file.read_text().strip() == ""
+
+
+def test_main_respects_limit(tmp_path):
+    out_file = tmp_path / "output.jsonl"
+    category_response = {
+        "query": {
+            "categorymembers": [
+                {"title": "Page A"},
+                {"title": "Page B"},
+                {"title": "Page C"},
+            ]
+        }
+    }
+    long_body = "Some content about a character. " * 20
+    page_response = {
+        "query": {
+            "pages": {
+                "1": {"revisions": [{"*": f"{{{{Infobox character}}}}\n== Bio ==\n{long_body}"}]}
+            }
+        }
+    }
+    responses = (
+        [_mock_response(category_response)]
+        + [_mock_response(page_response)] * 3
+    )
+    with patch("scripts.scrape_fandom.requests.get", side_effect=responses):
+        with patch("scripts.scrape_fandom.time.sleep"):
+            main([
+                "--wiki", "https://throneofglass.fandom.com",
+                "--types", "PERSON",
+                "--limit", "2",
+                "--out", str(out_file),
+            ])
+    lines = out_file.read_text().strip().splitlines()
+    assert len(lines) == 2

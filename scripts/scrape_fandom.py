@@ -133,3 +133,73 @@ def derive_wiki_slug(wiki_url: str) -> str:
     """Derive wiki slug from fandom URL. e.g. https://throneofglass.fandom.com → throneofglass"""
     host = urlparse(wiki_url).hostname or ""
     return host.replace(".fandom.com", "")
+
+
+def scrape_page(
+    api_url: str,
+    title: str,
+    entity_type: str,
+    wiki_slug: str,
+    lang: str,
+) -> dict | None:
+    """Fetch, parse, and filter a single wiki page. Returns record dict or None."""
+    wikitext = fetch_wikitext(api_url, title)
+    if wikitext is None:
+        return None
+    if is_redirect(wikitext):
+        return None
+    infobox = parse_infobox(wikitext)
+    body = parse_body(wikitext)
+    if is_stub(body):
+        return None
+    return {
+        "source": "fandom",
+        "wiki_slug": wiki_slug,
+        "page_title": title,
+        "entity_type": entity_type,
+        "infobox_fields": infobox,
+        "content": body,
+        "content_lang": lang,
+        "scraped_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description="Scrape a fandom.com wiki via MediaWiki API.")
+    parser.add_argument("--wiki", required=True, help="Base URL of the fandom wiki")
+    parser.add_argument("--types", nargs="+", default=["PERSON", "PLACE", "ORG"])
+    parser.add_argument("--lang", default="en", choices=["en", "fr"])
+    parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument("--out", required=True)
+    args = parser.parse_args(argv)
+
+    api_url = args.wiki.rstrip("/") + "/api.php"
+    wiki_slug = derive_wiki_slug(args.wiki)
+    out_path = Path(args.out)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    written = 0
+    with out_path.open("w", encoding="utf-8") as out_file:
+        for entity_type in args.types:
+            if args.limit is not None and written >= args.limit:
+                break
+            category = DEFAULT_CATEGORIES.get(entity_type, entity_type)
+            titles = fetch_category_members(api_url, category)
+            if not titles:
+                print(f"WARNING: category '{category}' returned 0 results for type {entity_type}")
+                continue
+            for title in titles:
+                if args.limit is not None and written >= args.limit:
+                    break
+                record = scrape_page(api_url, title, entity_type, wiki_slug, args.lang)
+                if record is None:
+                    continue
+                out_file.write(json.dumps(record, ensure_ascii=False) + "\n")
+                written += 1
+                print(f"[{written}] {entity_type} — {title}")
+
+    print(f"Done. {written} pages written to {out_path}")
+
+
+if __name__ == "__main__":
+    main()
