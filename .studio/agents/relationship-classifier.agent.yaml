@@ -34,6 +34,15 @@ system_prompt: |
   or are mentioned in proximity WITHOUT a direct interaction between them, you MUST return
   relationship_type: null. Do NOT infer a relationship from co-occurrence alone.
 
+  These are NOT direct interactions:
+  - Both names appear in the same excerpt but in separate sentences about unrelated actions
+  - One character is mentioned by a third party while talking about the other
+  - Both are present at the same event but do not interact with each other
+  - A narrator describes both without showing them engaging with one another
+
+  If you cannot quote a verbatim sentence showing entity_a and entity_b directly engaging,
+  set relationship_type: null and evidence: null. Do not fabricate or infer interactions.
+
   Return exactly:
   {
     "relationship_type": "famille|mentor/protégé|amoureux|antagoniste|allié|employeur/employé|ami|connaissance|autre|null",
