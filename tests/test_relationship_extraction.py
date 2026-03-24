@@ -760,6 +760,28 @@ def test_tightest_span_uses_closest_pair_when_multiple_occurrences():
     assert "Cain entered first" not in result   # farther pair not included
 
 
+def test_tightest_span_returns_none_when_name_appears_only_in_artifact_genitive():
+    """'Eye of Elena' — 'Elena' after 'of' is an artifact reference, not the character. Must return None."""
+    from scripts.relationship_extraction import _tightest_span
+    window = ["Celaena grabbed the Eye of Elena from the altar."]
+    result = _tightest_span(window, "Celaena", "Elena")
+    assert result is None, f"Expected None when Elena only appears as artifact genitive, got: {result!r}"
+
+
+def test_tightest_span_uses_standalone_name_even_when_artifact_also_present():
+    """If 'Elena' appears both in 'Eye of Elena' and standalone, the standalone counts."""
+    from scripts.relationship_extraction import _tightest_span
+    window = [
+        "Celaena entered the chamber.",      # Celaena @ 0
+        "Elena spoke to her from the mist.", # Elena @ 1 — standalone, gap=1
+        "The Eye of Elena glowed.",          # Elena @ 2 — artifact only, should not count
+    ]
+    result = _tightest_span(window, "Celaena", "Elena")
+    assert result is not None
+    assert "Celaena" in result
+    assert "Elena spoke" in result
+
+
 def test_build_cooccurrence_graph_excludes_pairs_without_proximity_context():
     """Pairs whose names never appear within 1 sentence of each other must be excluded."""
     from scripts.relationship_extraction import build_cooccurrence_graph

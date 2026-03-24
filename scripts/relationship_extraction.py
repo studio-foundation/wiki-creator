@@ -97,8 +97,9 @@ def _tightest_span(window: list[str], name_a: str, name_b: str) -> str | None:
     is farther apart than _MAX_DIRECT_INTERACTION_GAP — indicating co-presence without
     direct interaction.
     """
-    pat_a = re.compile(r'\b' + re.escape(name_a.lower()) + r'\b')
-    pat_b = re.compile(r'\b' + re.escape(name_b.lower()) + r'\b')
+    # Match names not preceded by "of " (artifact genitives like "Eye of Elena" are excluded)
+    pat_a = re.compile(r'(?<!of )' + r'\b' + re.escape(name_a.lower()) + r'\b')
+    pat_b = re.compile(r'(?<!of )' + r'\b' + re.escape(name_b.lower()) + r'\b')
 
     indices_a = [i for i, s in enumerate(window) if pat_a.search(s.lower())]
     indices_b = [i for i, s in enumerate(window) if pat_b.search(s.lower())]
