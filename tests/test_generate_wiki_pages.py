@@ -10,6 +10,7 @@ from scripts.generate_wiki_pages import (
     _is_page_complete,
     _print_generation_summary,
     _run_generation_for_entity,
+    _strip_relations_section,
     build_prompt,
     generation_profile,
     make_stub_page,
@@ -706,3 +707,71 @@ def test_print_generation_summary_no_failures(capsys):
     captured = capsys.readouterr()
     assert "0" in captured.err   # zero failures
     assert "2" in captured.err   # total / succeeded
+
+
+# --- STU-303: ## Relations must not bleed into content ---
+
+def test_build_prompt_forbids_relations_when_not_in_sections():
+    """When 'relationships' is absent from sections, prompt must explicitly forbid ## Relations."""
+    entity = {
+        "canonical_name": "Hollin",
+        "importance": "figurant",
+        "type": "PERSON",
+        "aliases": [],
+        "context_by_chapter": {},
+        "relationships": [
+            {"entity_a": "Hollin", "entity_b": "Dorian", "relationship_type": "frères", "cooccurrence_count": 5}
+        ],
+    }
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography"])
+    assert "Do NOT include" in prompt or "do not include" in prompt.lower() or "## Relations" in prompt and "DO NOT" in prompt
+    # Must not instruct LLM to produce ## Relations
+    assert "ALWAYS include" not in prompt
+
+
+def test_build_prompt_forbids_relations_when_no_typed_rels():
+    """When typed relationships are empty, prompt must not instruct LLM to produce ## Relations."""
+    entity = {
+        "canonical_name": "Celaena Sardothien",
+        "importance": "principal",
+        "type": "PERSON",
+        "aliases": [],
+        "context_by_chapter": {},
+        "relationships": [],
+    }
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"])
+    # The strong negative rule must appear, not just the soft omit hint
+    assert "Do NOT include a ## Relations" in prompt or "do not include a ## Relations" in prompt.lower()
+
+
+def _make_content_with_relations() -> str:
+    return (
+        "## Biographie\n\nCelaena est une assassin.\n\n"
+        "## Relations\n\n**[[Dorian Havilliard]]** — ami (42 mentions communes).\n\n"
+        "## Anecdotes\n\nElle aime la musique."
+    )
+
+
+def test_strip_relations_section_removes_section_from_content():
+    """_strip_relations_section must remove the ## Relations section entirely from content."""
+    content = _make_content_with_relations()
+    result = _strip_relations_section(content)
+    assert "## Relations" not in result
+    assert "Dorian Havilliard" not in result
+
+
+def test_strip_relations_section_preserves_surrounding_sections():
+    """_strip_relations_section must not remove other sections."""
+    content = _make_content_with_relations()
+    result = _strip_relations_section(content)
+    assert "## Biographie" in result
+    assert "Celaena est une assassin." in result
+    assert "## Anecdotes" in result
+    assert "Elle aime la musique." in result
+
+
+def test_strip_relations_section_no_op_when_absent():
+    """_strip_relations_section must be a no-op when content has no ## Relations section."""
+    content = "## Biographie\n\nCelaena est une assassin.\n\n## Anecdotes\n\nElle aime la musique."
+    result = _strip_relations_section(content)
+    assert result == content

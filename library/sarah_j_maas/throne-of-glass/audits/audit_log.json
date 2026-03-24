@@ -216,5 +216,35 @@
     "new_issues": [
       "## Relations réapparu sur 3 pages (Celaena, Dorian, Hollin) — instabilité prompt, 3e occurrence (runs 6/9/11)"
     ]
+  },
+  {
+    "run": 12,
+    "date": "2026-03-23",
+    "pages_generated": 15,
+    "infobox_pct": 87,
+    "lang_fr_pct": 100,
+    "alias_duplicates": 0,
+    "hallucinations": 0,
+    "gt_violations": [
+      {
+        "page": "Dorian Havilliard",
+        "signal": "roi d'Adarlan comme titre actuel — 'lequel devient le roi d'Adarlan au décès de son père'",
+        "cause": "extrapolation"
+      }
+    ],
+    "regression": {
+      "prefixed_keys": "✅",
+      "epub_ids": "❌",
+      "entity_type_null": "✅",
+      "alias_duplicates": "✅",
+      "cross_serie": "✅",
+      "evolution_quality": "❌",
+      "temporal_context": "✅",
+      "ground_truth": "⚠️"
+    },
+    "verdict": "Run 12 : +2 pages (15 vs 13), 100% FR, 0 doublon, 0 hallucination cross-série, 1 seule violation GT (Dorian extrapolation). Régression persistante : 0/159 relations typées dans batches — classify-relationships toujours non propagé dans wiki-preparation. ID EPUB Cain réapparu. Priorité : corriger la source de données relations dans wiki_preparation.py.",
+    "new_issues": [
+      "ID EPUB Cain réapparu (3e occurrence intermittente, runs 8/9/12) — nettoyage chapitre incomplet dans génération"
+    ]
   }
 ]

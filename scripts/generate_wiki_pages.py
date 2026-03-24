@@ -282,6 +282,16 @@ def build_prompt(entity: dict, book_title: str, sections: list[str]) -> str:
     # Few-shot example serialisé
     few_shot_json = json.dumps(FEW_SHOT_EXAMPLE, ensure_ascii=False, indent=2)
 
+    has_typed_rels = bool(relationships_block)
+    rels_in_sections = "relationships" in sections
+    if rels_in_sections and has_typed_rels:
+        relations_rule = (
+            '- For PERSON entities: ALWAYS include a "## Relations" section when "relationships" is in the sections list AND typed relationships are provided above. Do not skip it.\n'
+            '- Each "## Relations" entry must use this format: "**[[related_entity]]** — [relationship_type] ([cooccurrence_count] mentions communes). [evolution if available]"'
+        )
+    else:
+        relations_rule = "- Do NOT include a ## Relations section in the content field. No relationships data is available for this entity."
+
     return f"""This is a fictional world. The following excerpts are the ONLY authoritative source of truth. Ignore any prior knowledge you have of this book, series, or author.
 
 You are writing a wiki page for a fictional novel called "{book_title}".
@@ -337,9 +347,7 @@ Structure:
 - Use exactly these sections in this order: {sections_str}.
 - Target length: {length_guide}
 - The "Infobox" section must use this format: one bullet per field, "- Key: Value".
-- For PERSON entities: ALWAYS include a "## Relations" section when "relationships" is in the sections list AND typed relationships are provided above. Do not skip it.
-- Each "## Relations" entry must use this format: "**[[related_entity]]** — [relationship_type] ([cooccurrence_count] mentions communes). [evolution if available]"
-- If no typed relationships are available, omit the "## Relations" section entirely.
+{relations_rule}
 - infobox_fields keys must be plain strings — no leading "- " or "* ". Correct: {{"nom": "X"}}, Wrong: {{"- nom": "X"}}.
 - Context labels like [Chapter N] are internal references — never mention them in your output.
 - The ## Références section must list ONLY "{book_title}". Do not add any other book, volume, or series title.
@@ -362,6 +370,20 @@ Output this JSON object:
 }}
 
 Output ONLY the JSON. Nothing before, nothing after."""
+
+
+def _strip_relations_section(content: str) -> str:
+    """Remove any ## Relations section from Markdown content.
+
+    Post-processing guard: the LLM may produce a ## Relations section even
+    when instructed not to. This strips it deterministically before saving.
+    """
+    return re.sub(
+        r"(?m)^## Relations\s*\n(?:(?!^##\s).*\n?)*",
+        "",
+        content,
+    ).rstrip("\n")
+
 
 def make_stub_page(entity: dict, failed: bool = False) -> dict:
     page = {
@@ -605,6 +627,10 @@ def _run_generation_for_entity(
     if isinstance(item_result, dict) and item_result.get("error"):
         _save_generation_debug_artifact(debug_dir, entity, item_result)
         return make_stub_page(entity, failed=True)
+    typed_rels = entity.get("relationships", [])
+    if isinstance(item_result, dict) and "content" in item_result:
+        if "relationships" not in sections or not typed_rels:
+            item_result["content"] = _strip_relations_section(item_result["content"] or "")
     return item_result
 
 

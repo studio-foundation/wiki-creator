@@ -424,6 +424,23 @@ def main() -> None:
         return
 
     paths = _paths_from_payload(payload)
+
+    # Prefer relationships_classified.json (enriched with type/evolution/key_moments)
+    # over the unclassified relationships forwarded by the entity-classification stage.
+    _rc_file = paths.processing / "relationships_classified.json"
+    if _rc_file.exists():
+        with open(_rc_file, encoding="utf-8") as _f:
+            relationships = json.load(_f).get("relationships", [])
+        print(
+            f"wiki-preparation: loaded {len(relationships)} classified relationships from disk",
+            file=sys.stderr,
+        )
+    else:
+        print(
+            "wiki-preparation: relationships_classified.json not found — using unclassified relationships from stage output",
+            file=sys.stderr,
+        )
+
     book_cfg = load_book_config_from_payload(payload)
     chapter_summary_max = chapter_summary_limit_from_config(book_cfg)
     persons = load_registry(str(paths.processing / "persons_full.json"), "persons_full")
