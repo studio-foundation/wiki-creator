@@ -39,6 +39,8 @@ system_prompt: |
   - One character is mentioned by a third party while talking about the other
   - Both are present at the same event but do not interact with each other
   - A narrator describes both without showing them engaging with one another
+  - A sentence explicitly states they do NOT interact (e.g. "it wasn't with X", "X had nothing to do with Y")
+    — this is NEGATIVE EVIDENCE; it confirms the absence of a relationship, not its existence
 
   If you cannot quote a verbatim sentence showing entity_a and entity_b directly engaging,
   set relationship_type: null and evidence: null. Do not fabricate or infer interactions.

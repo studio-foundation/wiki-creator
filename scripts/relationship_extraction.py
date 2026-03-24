@@ -122,6 +122,18 @@ def _tightest_span(window: list[str], name_a: str, name_b: str) -> str | None:
     return " ".join(window[best_lo : best_hi + 1])
 
 
+_NEGATION_RELATION_RE = re.compile(
+    r"\bit wasn't with\b|\bit was not with\b|\bnothing to do with\b"
+    r"|\bnot involved with\b|\bwasn't involved with\b|\bhad no connection\b",
+    re.IGNORECASE,
+)
+
+
+def _is_negating_relationship(span: str) -> bool:
+    """Return True if span explicitly negates a direct relationship between co-present names."""
+    return bool(_NEGATION_RELATION_RE.search(span))
+
+
 def _span_contains_both(span: str, name_a: str, name_b: str) -> bool:
     """Return True if both name forms appear (word-boundary) in the span."""
     span_lower = span.lower()
@@ -243,6 +255,7 @@ def build_cooccurrence_graph(
                     span = _tightest_span(window, name_a_in_window, name_b_in_window)
                     if (span is not None
                             and _span_contains_both(span, name_a_in_window, name_b_in_window)
+                            and not _is_negating_relationship(span)
                             and len(cooc[key]["contexts"]) < 3
                             and chapter_id not in cooc[key]["context_chapters"]):
                         cooc[key]["contexts"].append(span)

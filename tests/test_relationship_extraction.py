@@ -966,6 +966,51 @@ def test_build_cooccurrence_graph_stores_at_most_one_context_per_chapter():
     assert len(rels[0]["sample_contexts"]) == 1  # only 1 context from ch01
 
 
+def test_is_negating_relationship_detects_it_wasnt_with():
+    """'it wasn't with [name]' must be identified as a negation-of-relationship context."""
+    from scripts.relationship_extraction import _is_negating_relationship
+    assert _is_negating_relationship("Whatever Nehemia's involvement was, it wasn't with Cain.") is True
+
+
+def test_is_negating_relationship_detects_nothing_to_do_with():
+    from scripts.relationship_extraction import _is_negating_relationship
+    assert _is_negating_relationship("Chaol had nothing to do with Dorian's scheme.") is True
+
+
+def test_is_negating_relationship_does_not_filter_genuine_antagonism():
+    """'Cain wasn't amused by Celaena' is an interaction — must NOT be filtered."""
+    from scripts.relationship_extraction import _is_negating_relationship
+    assert _is_negating_relationship("Cain wasn't amused by Celaena's performance.") is False
+
+
+def test_build_cooccurrence_graph_excludes_negation_of_relationship_contexts():
+    """Contexts explicitly negating a direct connection must be excluded from sample_contexts."""
+    from scripts.relationship_extraction import build_cooccurrence_graph
+
+    entities = [
+        {"canonical_name": "Nehemia", "type": "PERSON", "aliases": [], "relevant": True},
+        {"canonical_name": "Cain", "type": "PERSON", "aliases": [], "relevant": True},
+    ]
+    # Only evidence is a sentence that explicitly negates their relationship
+    mentions = {
+        "Nehemia": {"ch01": [
+            "Whatever Nehemia's involvement was, it wasn't with Cain.",
+        ]},
+        "Cain": {"ch01": [
+            "Whatever Nehemia's involvement was, it wasn't with Cain.",
+        ]},
+    }
+    rels, _ = build_cooccurrence_graph(
+        entities, mentions, window_size=3, min_cooccurrence=1, min_chapters_together=1
+    )
+    # The pair may still co-occur, but must have 0 valid contexts
+    for r in rels:
+        if {r["entity_a"], r["entity_b"]} == {"Nehemia", "Cain"}:
+            assert r["sample_contexts"] == [], (
+                f"Negation context must be excluded, got: {r['sample_contexts']}"
+            )
+
+
 def test_run_studio_classifier_item_degrades_on_timeout():
     with patch("subprocess.run", side_effect=subprocess.TimeoutExpired(cmd=["studio"], timeout=30)):
         rel = {"entity_a": "A", "entity_b": "B", "sample_contexts": [], "cooccurrence_count": 1}
