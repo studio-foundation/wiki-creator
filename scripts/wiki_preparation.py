@@ -34,7 +34,9 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+from dataclasses import asdict
 from wiki_creator.paths import book_paths_from_epub, BookPaths
+from wiki_creator.character_graph import CharacterGraph
 
 
 def _paths_from_payload(payload: dict) -> BookPaths:
@@ -317,6 +319,7 @@ def build_entity_bundle(
     chapter_summaries: dict[str, dict] | None = None,
     chapter_summary_max: int = DEFAULT_CHAPTER_SUMMARY_MAX,
     chapter_id_to_title: dict[str, str] | None = None,
+    graph: "CharacterGraph | None" = None,
 ) -> dict:
     canonical_name = entity["canonical_name"]
     context_by_chapter = extract_context(entity, persons, places, orgs, events)
@@ -330,6 +333,12 @@ def build_entity_bundle(
         "first_seen": get_first_seen(entity, persons, places, orgs, events),
         "context_by_chapter": context_by_chapter,
         "relationships": filter_relationships(canonical_name, relationships),
+        "indirect_relationships": [
+            asdict(r) for r in (
+                graph.indirect_relationships(canonical_name, max_hops=2)
+                if graph is not None else []
+            )
+        ],
         "related_context": build_related_context(
             canonical_name,
             relationships,
@@ -441,6 +450,20 @@ def main() -> None:
             file=sys.stderr,
         )
 
+    # Load series character graph if available
+    _series_graph_path = paths.series_character_graph
+    _series_graph: CharacterGraph | None = None
+    if _series_graph_path.exists():
+        try:
+            _series_graph = CharacterGraph.from_json(json.loads(_series_graph_path.read_text()))
+            print(
+                f"wiki-preparation: loaded series graph ({len(_series_graph._g.nodes)} nodes, "
+                f"{len(_series_graph._g.edges)} edges)",
+                file=sys.stderr,
+            )
+        except Exception as _e:
+            print(f"wiki-preparation: could not load series graph — {_e}", file=sys.stderr)
+
     book_cfg = load_book_config_from_payload(payload)
     chapter_summary_max = chapter_summary_limit_from_config(book_cfg)
     persons = load_registry(str(paths.processing / "persons_full.json"), "persons_full")
@@ -502,6 +525,7 @@ def main() -> None:
             chapter_summaries=chapter_summaries,
             chapter_summary_max=chapter_summary_max,
             chapter_id_to_title=chapter_id_to_title,
+            graph=_series_graph,
         )
         for e in relevant_entities
     ]
