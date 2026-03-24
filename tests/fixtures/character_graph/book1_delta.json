@@ -1,0 +1,19 @@
+{
+  "directed": true,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {"id": "Celaena", "type": "CHARACTER", "importance": "major", "aliases": [], "books": ["01-tog"]},
+    {"id": "Chaol",   "type": "CHARACTER", "importance": "major", "aliases": [], "books": ["01-tog"]}
+  ],
+  "links": [
+    {
+      "source": "Celaena", "target": "Chaol",
+      "edge_type": "INTERACTION", "relationship_type": "allié",
+      "direction": "symétrique", "cooccurrence_count": 20,
+      "chapter_weights": {"01-tog/C01.xhtml": 20},
+      "sample_contexts": ["Celaena et Chaol s'entraînaient."],
+      "evolution": "", "books": ["01-tog"]
+    }
+  ]
+}

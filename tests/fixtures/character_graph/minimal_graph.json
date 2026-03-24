@@ -1,0 +1,37 @@
+{
+  "directed": true,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {"id": "Celaena", "type": "CHARACTER", "importance": "major", "aliases": [], "books": ["01-tog"]},
+    {"id": "Chaol",   "type": "CHARACTER", "importance": "major", "aliases": [], "books": ["01-tog"]},
+    {"id": "Nehemia", "type": "CHARACTER", "importance": "major", "aliases": [], "books": ["01-tog"]},
+    {"id": "Cain",    "type": "CHARACTER", "importance": "supporting", "aliases": [], "books": ["01-tog"]}
+  ],
+  "links": [
+    {
+      "source": "Celaena", "target": "Chaol",
+      "edge_type": "INTERACTION", "relationship_type": "allié",
+      "direction": "symétrique", "cooccurrence_count": 45,
+      "chapter_weights": {"01-tog/C01.xhtml": 10, "01-tog/C05.xhtml": 35},
+      "sample_contexts": ["Celaena et Chaol traversèrent la salle."],
+      "evolution": "", "books": ["01-tog"]
+    },
+    {
+      "source": "Celaena", "target": "Nehemia",
+      "edge_type": "INTERACTION", "relationship_type": "amie",
+      "direction": "symétrique", "cooccurrence_count": 30,
+      "chapter_weights": {"01-tog/C03.xhtml": 30},
+      "sample_contexts": ["Nehemia sourit à Celaena."],
+      "evolution": "", "books": ["01-tog"]
+    },
+    {
+      "source": "Celaena", "target": "Cain",
+      "edge_type": "INTERACTION", "relationship_type": "antagoniste",
+      "direction": "asymétrique", "cooccurrence_count": 20,
+      "chapter_weights": {"01-tog/C10.xhtml": 20},
+      "sample_contexts": ["Cain défia Celaena du regard."],
+      "evolution": "", "books": ["01-tog"]
+    }
+  ]
+}

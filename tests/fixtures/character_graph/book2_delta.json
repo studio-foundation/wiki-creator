@@ -1,0 +1,28 @@
+{
+  "directed": true,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {"id": "Celaena", "type": "CHARACTER", "importance": "major", "aliases": [], "books": ["02-com"]},
+    {"id": "Chaol",   "type": "CHARACTER", "importance": "major", "aliases": [], "books": ["02-com"]},
+    {"id": "Aedion",  "type": "CHARACTER", "importance": "supporting", "aliases": [], "books": ["02-com"]}
+  ],
+  "links": [
+    {
+      "source": "Celaena", "target": "Chaol",
+      "edge_type": "INTERACTION", "relationship_type": "allié",
+      "direction": "symétrique", "cooccurrence_count": 25,
+      "chapter_weights": {"02-com/C02.xhtml": 25},
+      "sample_contexts": ["Celaena regarda Chaol avec méfiance."],
+      "evolution": "", "books": ["02-com"]
+    },
+    {
+      "source": "Celaena", "target": "Aedion",
+      "edge_type": "INTERACTION", "relationship_type": "allié",
+      "direction": "symétrique", "cooccurrence_count": 15,
+      "chapter_weights": {"02-com/C04.xhtml": 15},
+      "sample_contexts": ["Aedion se battit aux côtés de Celaena."],
+      "evolution": "", "books": ["02-com"]
+    }
+  ]
+}
