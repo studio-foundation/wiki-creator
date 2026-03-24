@@ -2,6 +2,7 @@ import json
 import pytest
 from pathlib import Path
 from wiki_creator.character_graph import CharacterGraph, IndirectRelationship
+from wiki_creator.paths import book_paths_from_yaml
 
 FIXTURES = Path(__file__).parent / "fixtures" / "character_graph"
 
@@ -143,3 +144,23 @@ def test_serialization_roundtrip():
     g2 = CharacterGraph.from_json(data)
     assert set(g2._g.nodes) == set(g._g.nodes)
     assert set(g2._g.edges) == set(g._g.edges)
+
+
+def test_series_character_graph_path():
+    # Use the real book yaml from the library
+    yaml = "library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml"
+    paths = book_paths_from_yaml(yaml)
+    sgp = paths.series_character_graph
+    # Should be: library/sarah_j_maas/throne-of-glass/character_graph.json
+    assert sgp.name == "character_graph.json"
+    assert "throne-of-glass" in str(sgp)
+    assert "processing_output" not in str(sgp)
+
+
+def test_book_graph_delta_path():
+    yaml = "library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml"
+    paths = book_paths_from_yaml(yaml)
+    delta = paths.book_graph_delta
+    assert delta.name == "character_graph_delta.json"
+    assert "processing_output" in str(delta)
+    assert "01-throne-of-glass" in str(delta)

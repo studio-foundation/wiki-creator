@@ -21,6 +21,16 @@ class BookPaths:
     wiki_inputs: Path  # …/wiki_inputs/<slug>/
     output: Path       # …/output/<slug>/
 
+    @property
+    def series_character_graph(self) -> Path:
+        """Series-level graph: library/<author>/<series>/character_graph.json"""
+        return self.epub.parent.parent / "character_graph.json"
+
+    @property
+    def book_graph_delta(self) -> Path:
+        """Per-book delta graph: processing_output/<slug>/character_graph_delta.json"""
+        return self.processing / "character_graph_delta.json"
+
 
 def book_paths_from_epub(epub_path: Path | str) -> BookPaths:
     """Derive all book working directories from the epub path.
