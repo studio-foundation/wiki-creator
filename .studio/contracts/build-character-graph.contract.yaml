@@ -1,0 +1,17 @@
+name: build-character-graph
+version: 1
+schema:
+  required_fields:
+    - graph
+    - delta
+  # graph: NetworkX node_link_data dict (directed=true) — series-level character graph
+  # delta: NetworkX node_link_data dict — this book's contribution only
+  #
+  # Each graph contains:
+  #   nodes: list of CHARACTER nodes with fields:
+  #     id (str), type ("CHARACTER"), importance (str), aliases (list), books (list)
+  #   links: list of INTERACTION edges with fields:
+  #     source (str), target (str), edge_type ("INTERACTION"),
+  #     relationship_type (str|null), direction (str|null),
+  #     cooccurrence_count (int), chapter_weights (dict), sample_contexts (list),
+  #     evolution (str), books (list)
