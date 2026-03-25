@@ -100,3 +100,31 @@ def test_series_graph_merged_across_two_books():
     # Both books listed
     assert "01-tog" in g1._g.nodes["Celaena"]["books"]
     assert "02-com" in g1._g.nodes["Celaena"]["books"]
+
+
+def test_indirect_block_injected_for_major_character():
+    """build_prompt should include indirect relationship line for major characters."""
+    import scripts.generate_wiki_pages as gwp
+
+    entity_bundle = {
+        "canonical_name": "Nehemia",
+        "type": "PERSON",
+        "importance": "major",
+        "aliases": [],
+        "total_mentions": 30,
+        "chapters_present": 5,
+        "relationships": [],
+        "indirect_relationships": [
+            {"entity_a": "Nehemia", "entity_b": "Cain", "via": ["Celaena"],
+             "path_edge_types": ["amie", "antagoniste"], "strength": 0.67, "inferred": True},
+            {"entity_a": "Nehemia", "entity_b": "Chaol", "via": ["Celaena"],
+             "path_edge_types": ["amie", "allié"], "strength": 0.60, "inferred": True},
+        ],
+        "related_context": [],
+        "context_by_chapter": {},
+        "first_seen": None,
+        "chapter_summary_context": [],
+    }
+    prompt = gwp.build_prompt(entity_bundle, book_title="Throne of Glass", sections=["infobox", "biography", "relationships"])
+    assert "inferred: true" in prompt
+    assert "Cain" in prompt

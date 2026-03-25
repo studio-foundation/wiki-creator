@@ -232,6 +232,20 @@ def build_prompt(entity: dict, book_title: str, sections: list[str]) -> str:
         rel_lines.append(line)
     relationships_block = "\n".join(rel_lines) if rel_lines else ""
 
+    # Indirect (inferred) relationships
+    indirect_rels = entity.get("indirect_relationships", [])
+    indirect_lines = []
+    for r in indirect_rels[:5]:  # cap at 5 to avoid prompt bloat
+        other = r.get("entity_b", "")
+        via = " → ".join(r.get("via", []))
+        path = " → ".join(r.get("path_edge_types", []))
+        strength = r.get("strength", 0)
+        if other and strength >= 0.1:
+            indirect_lines.append(
+                f"  - related_entity: {other} | via: {via} | path: {path} | inferred: true"
+            )
+    indirect_block = "\n".join(indirect_lines) if indirect_lines else ""
+
     present_lines = []
     backstory_lines = []
     for chapter in chapter_summary_context[:8]:
@@ -282,6 +296,10 @@ def build_prompt(entity: dict, book_title: str, sections: list[str]) -> str:
     # Few-shot example serialisé
     few_shot_json = json.dumps(FEW_SHOT_EXAMPLE, ensure_ascii=False, indent=2)
 
+    indirect_section = ""
+    if entity.get("importance") == "major" and len(indirect_rels) >= 2 and indirect_block:
+        indirect_section = f"\nIndirect relationships (inferred — do NOT treat as confirmed direct interactions):\n{indirect_block}"
+
     has_typed_rels = bool(relationships_block)
     rels_in_sections = "relationships" in sections
     if rels_in_sections and has_typed_rels:
@@ -316,7 +334,7 @@ Related entities (disambiguation only — do not derive narrative from cooccurre
 {related_block}
 
 Typed relationships (use these directly for the ## Relations section):
-{relationships_block if relationships_block else "  (no typed relationships available)"}
+{relationships_block if relationships_block else "  (no typed relationships available)"}{indirect_section}
 
 Chapter summaries (orientation context — lower priority than excerpts):
 {chapter_summary_block}
