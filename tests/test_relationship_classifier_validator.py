@@ -34,6 +34,13 @@ def test_check_evolution_null_passes():
     assert check_evolution_not_generic(clf) == []
 
 
+def test_check_evolution_empty_string_fails():
+    """evolution: empty string should fail validation."""
+    clf = {"relationship_type": "ami", "evolution": ""}
+    errors = check_evolution_not_generic(clf)
+    assert errors != []
+
+
 def test_validate_classification_valid():
     clf = {
         "relationship_type": "ami",

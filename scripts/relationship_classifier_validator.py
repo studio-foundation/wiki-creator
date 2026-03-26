@@ -26,7 +26,6 @@ _VALID_TYPES = {
 _GENERIC_EVOLUTIONS = {
     "relation stable dans les extraits fournis",
     "relation stable",
-    "",
 }
 
 
@@ -88,7 +87,9 @@ def check_evolution_not_generic(clf: dict) -> list[str]:
     evol = clf.get("evolution")
     if evol is None:
         return []  # null explicite = valide (aucune évolution observable dans les extraits)
-    if evol.strip().lower() in {"relation stable dans les extraits fournis", "relation stable"}:
+    if not evol.strip():
+        return ["❌ evolution générique ou nulle — décris comment la relation évolue concrètement"]
+    if evol.strip().lower() in _GENERIC_EVOLUTIONS:
         return ["❌ evolution générique ou nulle — décris comment la relation évolue concrètement"]
     return []
 
