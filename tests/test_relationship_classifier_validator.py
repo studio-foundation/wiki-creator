@@ -152,3 +152,10 @@ def test_validate_classification_invalid_when_evidence_lacks_entity():
     }
     result = validate_classification(clf, meta={"entity_a": "Elena", "entity_b": "Philippa"})
     assert result["valid"] is False
+
+
+def test_build_feedback_mentions_evidence():
+    """Le message de feedback doit rappeler l'obligation de fournir evidence."""
+    from scripts.relationship_classifier_validator import build_feedback
+    msg = build_feedback(["❌ evolution générique"])
+    assert "evidence" in msg.lower()

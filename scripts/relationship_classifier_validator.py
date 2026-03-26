@@ -113,7 +113,9 @@ def build_feedback(errors: list[str]) -> str:
         f"{lines}\n\n"
         "Rappels : utilise uniquement les types autorisés "
         "(famille|mentor/protégé|amoureux|antagoniste|allié|employeur/employé|ami|connaissance|autre). "
-        "evolution doit décrire une évolution observable dans les extraits, pas une phrase générique."
+        "evolution doit décrire une évolution observable dans les extraits, pas une phrase générique. "
+        "evidence doit être un extrait verbatim de sample_contexts montrant les deux personnages "
+        "en interaction directe — ce champ est obligatoire quand relationship_type n'est pas null."
     )
 
 
