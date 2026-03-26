@@ -107,7 +107,7 @@ def main() -> None:
     for page in pages:
         title = page["title"]
         entity_type = page.get("entity_type", "PERSON")
-        importance = page.get("importance", "secondary")
+        importance = page.get("importance", "secondaire")
         infobox_fields = page.get("infobox_fields", {})
         content_md = page.get("content", "")
 

@@ -17,11 +17,11 @@ Output (stdout):
   {
     "entities": [{ ...same fields..., "total_mentions": int, "chapters_present": int, "importance": str }],
     "relationships": [...passthrough...],
-    "stats": { "principal": int, "secondary": int, "figurant": int, "ignored": int, "thresholds_used": str },
+    "stats": { "principal": int, "secondaire": int, "figurant": int, "ignored": int, "thresholds_used": str },
     "narrator": ...passthrough...
   }
 
-importance values: "principal" | "secondary" | "figurant" | "ignored"
+importance values: "principal" | "secondaire" | "figurant" | "ignored"
 
 Standalone test:
   python scripts/entity_classification.py --test
@@ -165,7 +165,7 @@ def assign_importance(
     if total_mentions >= t["principal"]:
         return "principal"
     elif total_mentions >= t["secondary"]:
-        return "secondary"
+        return "secondaire"
     elif total_mentions >= t["figurant"]:
         return "figurant"
     else:
@@ -735,7 +735,7 @@ def run_studio_mode() -> None:
         "relationships": relationships,
         "stats": {
             "principal": importance_counts.get("principal", 0),
-            "secondary": importance_counts.get("secondary", 0),
+            "secondaire": importance_counts.get("secondaire", 0),
             "figurant": importance_counts.get("figurant", 0),
             "ignored": importance_counts.get("ignored", 0),
             "thresholds_used": "auto" if thresholds_config == "auto" else "explicit",

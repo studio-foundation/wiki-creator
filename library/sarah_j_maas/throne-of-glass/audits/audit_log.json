@@ -224,11 +224,31 @@
     "infobox_pct": 87,
     "lang_fr_pct": 100,
     "alias_duplicates": 0,
-    "hallucinations": 0,
+    "hallucinations": 5,
     "gt_violations": [
       {
         "page": "Dorian Havilliard",
         "signal": "roi d'Adarlan comme titre actuel — 'lequel devient le roi d'Adarlan au décès de son père'",
+        "cause": "extrapolation"
+      },
+      {
+        "page": "Celaena Sardothien",
+        "signal": "alias 'Elena' dans infobox + 'connue sous le nom d'Elena' — confusion d'identité avec Elena la reine ancienne",
+        "cause": "confusion_alias"
+      },
+      {
+        "page": "Celaena Sardothien",
+        "signal": "'épée nommée Firefist' — arme inexistante dans Throne of Glass",
+        "cause": "extrapolation"
+      },
+      {
+        "page": "Celaena Sardothien",
+        "signal": "Cain classé 'amoureux' — Cain est l'antagoniste principal",
+        "cause": "extrapolation"
+      },
+      {
+        "page": "Celaena Sardothien",
+        "signal": "Perrington classé 'allié' — Perrington est un antagoniste",
         "cause": "extrapolation"
       }
     ],
@@ -240,60 +260,16 @@
       "cross_serie": "✅",
       "evolution_quality": "❌",
       "temporal_context": "✅",
-      "ground_truth": "⚠️"
-    },
-    "verdict": "Run 12 : +2 pages (15 vs 13), 100% FR, 0 doublon, 0 hallucination cross-série, 1 seule violation GT (Dorian extrapolation). Régression persistante : 0/159 relations typées dans batches — classify-relationships toujours non propagé dans wiki-preparation. ID EPUB Cain réapparu. Priorité : corriger la source de données relations dans wiki_preparation.py.",
-    "new_issues": [
-      "ID EPUB Cain réapparu (3e occurrence intermittente, runs 8/9/12) — nettoyage chapitre incomplet dans génération"
-    ]
-  },
-  {
-    "run": 13,
-    "date": "2026-03-25",
-    "pages_generated": 15,
-    "infobox_pct": 87,
-    "lang_fr_pct": 100,
-    "alias_duplicates": 0,
-    "hallucinations": 4,
-    "gt_violations": [
-      {
-        "page": "Celaena Sardothien",
-        "signal": "alias 'Elena' dans infobox + 'connue sous le nom d'Elena' dans content — confusion d'identité avec Elena la reine ancienne",
-        "cause": "confusion_alias"
-      },
-      {
-        "page": "Celaena Sardothien",
-        "signal": "'épée nommée Firefist' — arme inexistante dans Throne of Glass",
-        "cause": "extrapolation"
-      },
-      {
-        "page": "Celaena Sardothien",
-        "signal": "Cain classé 'amoureux' — Cain est l'antagoniste principal, pas un intérêt romantique",
-        "cause": "extrapolation"
-      },
-      {
-        "page": "Celaena Sardothien",
-        "signal": "Perrington classé 'allié' — Perrington est un antagoniste",
-        "cause": "extrapolation"
-      }
-    ],
-    "regression": {
-      "prefixed_keys": "✅",
-      "epub_ids": "✅",
-      "entity_type_null": "✅",
-      "alias_duplicates": "✅",
-      "cross_serie": "✅",
-      "evolution_quality": "⚠️",
-      "temporal_context": "✅",
       "ground_truth": "❌"
     },
-    "verdict": "Run 13 : 100% FR, 0 doublon, 0 ID EPUB, temporal_context ✅. Première run avec relations typées (94%). Violation GT majeure sur Celaena non détectée par le validateur : confusion d'identité avec Elena (alias infobox), arme inexistante (Firefist), Cain classé amoureux, Perrington classé allié. Validateur GT a des angles morts sur les confusions d'identité et les types de relation erronés. Priorité : renforcer le validateur GT + corriger le prompt de génération pour Celaena.",
+    "verdict": "Run 12 : +2 pages (15 vs 13), 100% FR, 0 doublon, relations typées revenues à 94% (150/159). 5 violations GT : Dorian (extrapolation titre) + 4 sur Celaena (confusion Elena, Firefist, Cain amoureux, Perrington allié). Re-audité le 2026-03-25 avec validateur GT renforcé (STU-314) — violations Celaena manquées lors de l'audit initial. Priorité : corriger le prompt de génération pour Celaena + investiguer Brullo _failed silencieux (STU-311).",
     "new_issues": [
+      "ID EPUB Cain réapparu (3e occurrence intermittente, runs 8/9/12) — nettoyage chapitre incomplet dans génération",
       "Brullo _failed=true malgré returncode=0 — échec silencieux parsing LLM dans generate_wiki_pages.py (STU-311)",
       "importance 'secondary' (EN) sur Perrington et Kaltain — normalisation FR manquante (STU-312)",
       "evidence absent : 43% (69/159) — champ non forcé dans prompt wiki-preparation (STU-313)",
-      "evolution générique : 54% (86/159) — suite STU-279",
-      "FAUX NÉGATIF GT : confusion Celaena/Elena non détectée — validateur GT sans coverage sur alias infobox et types de relation (STU-314)"
-    ]
+      "FAUX NÉGATIF GT : confusion Celaena/Elena non détectée — validateur GT sans coverage sur alias infobox (STU-314)"
+    ],
+    "audit_rerun": "2026-03-25 — re-audit avec skill GT mis à jour (STU-314) : 4 violations Celaena ajoutées"
   }
 ]

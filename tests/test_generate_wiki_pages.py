@@ -21,7 +21,7 @@ from scripts.generate_wiki_pages import (
 def _entity() -> dict:
     return {
         "canonical_name": "Victor Grandes",
-        "importance": "secondary",
+        "importance": "secondaire",
         "type": "PERSON",
     }
 
@@ -29,7 +29,7 @@ def _entity() -> dict:
 def test_parse_response_extracts_json_wrapped_in_text():
     raw = (
         "Voici la sortie demandee.\n"
-        '{"title":"Victor Grandes","importance":"secondary","entity_type":"PERSON",'
+        '{"title":"Victor Grandes","importance":"secondaire","entity_type":"PERSON",'
         '"infobox_fields":{},"content":"## Biographie\\n\\nTexte."}\n'
         "Fin."
     )
@@ -42,20 +42,20 @@ def test_parse_response_extracts_json_wrapped_in_text():
 def test_parse_response_extracts_json_from_fenced_block():
     raw = (
         "```json\n"
-        '{"title":"Victor Grandes","importance":"secondary","entity_type":"PERSON",'
+        '{"title":"Victor Grandes","importance":"secondaire","entity_type":"PERSON",'
         '"infobox_fields":{},"content":"## Biographie\\n\\nTexte."}\n'
         "```\n"
     )
     page = parse_response(raw, _entity())
     assert page["title"] == "Victor Grandes"
-    assert page["importance"] == "secondary"
+    assert page["importance"] == "secondaire"
     assert page["content"] == "## Biographie\n\nTexte."
 
 
 def test_parse_response_ignores_trailing_text_after_fenced_json():
     raw = (
         "```json\n"
-        '{"title":"Victor Grandes","importance":"secondary","entity_type":"PERSON",'
+        '{"title":"Victor Grandes","importance":"secondaire","entity_type":"PERSON",'
         '"infobox_fields":{},"content":"## Biographie\\n\\nTexte."}\n'
         "```\n"
         "Note: generation complete.\n"
@@ -68,7 +68,7 @@ def test_parse_response_ignores_trailing_text_after_fenced_json():
 
 def test_parse_response_populates_infobox_fields_from_infobox_section_bullets():
     raw = (
-        '{"title":"Victor Grandes","importance":"secondary","entity_type":"PERSON",'
+        '{"title":"Victor Grandes","importance":"secondaire","entity_type":"PERSON",'
         '"infobox_fields":{},"content":"## Infobox\\n\\n- Nom: Victor Grandes\\n- Statut: Vivant\\n\\n## Biographie\\n\\nTexte."}'
     )
     page = parse_response(raw, _entity())
@@ -80,7 +80,7 @@ def test_parse_response_populates_infobox_fields_from_infobox_section_bullets():
 
 def test_parse_response_populates_infobox_fields_from_infobox_section_plain_lines():
     raw = (
-        '{"title":"Victor Grandes","importance":"secondary","entity_type":"PERSON",'
+        '{"title":"Victor Grandes","importance":"secondaire","entity_type":"PERSON",'
         '"infobox_fields":{},"content":"## Infobox\\n\\nNom: Victor Grandes\\nStatut: Vivant\\n\\n## Biographie\\n\\nTexte."}'
     )
     page = parse_response(raw, _entity())
@@ -92,7 +92,7 @@ def test_parse_response_populates_infobox_fields_from_infobox_section_plain_line
 
 def test_parse_response_keeps_existing_infobox_fields_when_already_present():
     raw = (
-        '{"title":"Victor Grandes","importance":"secondary","entity_type":"PERSON",'
+        '{"title":"Victor Grandes","importance":"secondaire","entity_type":"PERSON",'
         '"infobox_fields":{"nom":"Existant"},"content":"## Infobox\\n\\n- Nom: Victor Grandes\\n\\n## Biographie\\n\\nTexte."}'
     )
     page = parse_response(raw, _entity())
@@ -229,7 +229,7 @@ def test_is_page_complete_rejects_empty_or_whitespace_content():
 
 def test_parse_response_rejects_template_placeholder_leak():
     raw = (
-        '{"title":"Assassin","importance":"secondary","entity_type":"PERSON",'
+        '{"title":"Assassin","importance":"secondaire","entity_type":"PERSON",'
         '"infobox_fields":{"nom":"<si connu>"},"content":"## Infobox\\n\\n- Nom: <si connu>\\n\\n## Biographie\\n\\nTexte."}'
     )
     page = parse_response(raw, _entity())
@@ -252,7 +252,7 @@ def test_extract_stage_output_from_run_payload_reads_successful_stage_output() -
                 "status": "success",
                 "output": {
                     "title": "Victor Grandes",
-                    "importance": "secondary",
+                    "importance": "secondaire",
                     "entity_type": "PERSON",
                     "infobox_fields": {},
                     "content": "## Biographie\n\nTexte.",
@@ -265,7 +265,7 @@ def test_extract_stage_output_from_run_payload_reads_successful_stage_output() -
 
     assert output == {
         "title": "Victor Grandes",
-        "importance": "secondary",
+        "importance": "secondaire",
         "entity_type": "PERSON",
         "infobox_fields": {},
         "content": "## Biographie\n\nTexte.",
@@ -275,7 +275,7 @@ def test_extract_stage_output_from_run_payload_reads_successful_stage_output() -
 def test_run_generation_for_entity_uses_item_runner_when_not_dry(monkeypatch, tmp_path):
     entity = {
         "canonical_name": "Victor Grandes",
-        "importance": "secondary",
+        "importance": "secondaire",
         "type": "PERSON",
         "context_by_chapter": {"ch01": ["Victor entre dans la pièce."]},
     }
@@ -286,7 +286,7 @@ def test_run_generation_for_entity_uses_item_runner_when_not_dry(monkeypatch, tm
         calls.append((entity["canonical_name"], book_title, model, timeout, sections, max_tokens))
         return {
             "title": "Victor Grandes",
-            "importance": "secondary",
+            "importance": "secondaire",
             "entity_type": "PERSON",
             "infobox_fields": {},
             "content": "## Biographie\n\nTexte.",
@@ -312,7 +312,7 @@ def test_run_generation_for_entity_uses_item_runner_when_not_dry(monkeypatch, tm
 def test_run_generation_for_entity_returns_retryable_failed_stub_and_logs_on_runner_failure(monkeypatch, tmp_path):
     entity = {
         "canonical_name": "Victor Grandes",
-        "importance": "secondary",
+        "importance": "secondaire",
         "type": "PERSON",
         "context_by_chapter": {"ch01": ["Victor entre dans la pièce."]},
     }
@@ -376,7 +376,7 @@ def test_parse_response_removes_internal_artifact_keys_from_infobox():
     """Internal fields like cooccurrence_count must not appear in infobox_fields."""
     raw = json.dumps({
         "title": "Hollin",
-        "importance": "secondary",
+        "importance": "secondaire",
         "entity_type": "PERSON",
         "infobox_fields": {
             "nom": "Hollin",
@@ -387,7 +387,7 @@ def test_parse_response_removes_internal_artifact_keys_from_infobox():
     })
     page = parse_response(raw, {
         "canonical_name": "Hollin",
-        "importance": "secondary",
+        "importance": "secondaire",
         "type": "PERSON",
     })
     assert "cooccurrence_count" not in page["infobox_fields"]
@@ -645,7 +645,7 @@ def test_build_prompt_omits_backstory_block_when_no_flashbacks():
     entity = {
         "canonical_name": "Dorian",
         "type": "PERSON",
-        "importance": "secondary",
+        "importance": "secondaire",
         "aliases": [],
         "context_by_chapter": {},
         "related_context": [],

@@ -93,13 +93,13 @@ def test_build_entity_bundle_builds_sorted_limited_related_context():
         "Nehemia": {
             "canonical_name": "Nehemia",
             "type": "PERSON",
-            "importance": "secondary",
+            "importance": "secondaire",
             "source_ids": ["p5"],
         },
         "Cain": {
             "canonical_name": "Cain",
             "type": "PERSON",
-            "importance": "secondary",
+            "importance": "secondaire",
             "source_ids": ["p6"],
         },
         "Nox": {
@@ -353,7 +353,7 @@ def test_build_entity_bundle_skips_chapter_summary_context_for_non_person():
     entity = {
         "canonical_name": "Adarlan",
         "type": "PLACE",
-        "importance": "secondary",
+        "importance": "secondaire",
         "source_ids": [],
     }
     entities_by_name = {"Adarlan": entity}

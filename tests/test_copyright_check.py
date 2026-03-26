@@ -107,7 +107,7 @@ WIKI_PAGES = [
     {
         "title": "Barcelone",
         "content": "Barcelone est la capitale de la Catalogne.",
-        "importance": "secondary",
+        "importance": "secondaire",
     },
 ]
 

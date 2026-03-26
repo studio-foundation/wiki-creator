@@ -15,7 +15,7 @@ def test_filter_exportable_pages_excludes_failed():
          "infobox_fields": {}, "content": "## Bio\n\nHero."},
         {"title": "Dorian", "entity_type": "PERSON", "importance": "principal",
          "infobox_fields": {}, "content": "stub", "_failed": True},
-        {"title": "Chaol", "entity_type": "PERSON", "importance": "secondary",
+        {"title": "Chaol", "entity_type": "PERSON", "importance": "secondaire",
          "infobox_fields": {}, "content": "## Bio\n\nCaptain."},
     ]
     result = _filter_exportable_pages(pages)
