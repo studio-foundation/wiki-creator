@@ -33,17 +33,6 @@ stages:
       include:
         - all_stage_outputs
 
-  - name: alias-resolution
-    kind: extraction
-    executor: script
-    runtime: python
-    script: scripts/alias_resolution.py
-    contract: alias-resolution
-    context:
-      include:
-        - input
-        - all_stage_outputs
-
   - name: relationship-extraction
     kind: analysis
     executor: script
@@ -51,6 +40,17 @@ stages:
     script: scripts/relationship_extraction.py
     contract: relationship-extraction
     timeout_ms: 1800000
+    context:
+      include:
+        - input
+        - all_stage_outputs
+
+  - name: alias-resolution
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/alias_resolution.py
+    contract: alias-resolution
     context:
       include:
         - input
