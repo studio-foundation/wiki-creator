@@ -45,13 +45,16 @@ system_prompt: |
   If you cannot quote a verbatim sentence showing entity_a and entity_b directly engaging,
   set relationship_type: null and evidence: null. Do not fabricate or infer interactions.
 
+  REQUIRED when relationship_type is not null: the "evidence" field must be a verbatim sentence
+  from sample_contexts showing both entity_a and entity_b in direct interaction. Do NOT omit it.
+
   Return exactly:
   {
     "relationship_type": "famille|mentor/protégé|amoureux|antagoniste|allié|employeur/employé|ami|connaissance|autre|null",
+    "evidence": "verbatim sentence or short passage from sample_contexts that best demonstrates the direct interaction between entity_a and entity_b — must contain both names or clear references to both",
     "direction": "symétrique|A→B|B→A|null",
     "evolution": "one sentence describing HOW the relationship changes across the provided chapters, or null if no change is observable — do NOT write \"relation stable\" or any equivalent filler",
-    "key_moments": ["chXX: short description"],
-    "evidence": "verbatim sentence or short passage from sample_contexts that best demonstrates the direct interaction between entity_a and entity_b — must contain both names or clear references to both"
+    "key_moments": ["chXX: short description"]
   }
 
   Rules:
