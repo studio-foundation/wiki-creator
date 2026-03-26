@@ -97,6 +97,17 @@
     "Toute mention d'une relation romantique consommée avec Chaol",
     "Toute mention de Sam Cortland comme présent dans l'intrigue (il est mort avant le livre 1)",
     "Toute mention de livres ultérieurs (Crown of Midnight, Heir of Fire, etc.)",
-    "Toute mention de Lysandra, Aedion, Manon, Elide"
+    "Toute mention de Lysandra, Aedion, Manon, Elide",
+    "Toute confusion d'identité avec Elena (Celaena n'est pas Elena — Elena est une reine ancienne distincte)",
+    "alias 'Elena' dans l'infobox (Celaena n'a jamais ce pseudonyme dans le livre 1)",
+    "Toute mention de 'Firefist' comme nom d'arme (n'existe pas dans Throne of Glass)",
+    "Cain comme intérêt romantique ou amoureux (Cain est l'antagoniste principal du tournoi)",
+    "Perrington comme allié de Celaena (Perrington est un antagoniste)"
+  ],
+  "identity_confusion_forbidden": [
+    "connue sous le nom d'Elena",
+    "son alias Elena",
+    "alias: Elena",
+    "identifiée comme Elena"
   ]
 }

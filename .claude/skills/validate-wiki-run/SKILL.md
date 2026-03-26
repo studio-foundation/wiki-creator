@@ -27,6 +27,7 @@ Chaque fichier contient :
 - `known_relations_book1` — relations réelles dans le livre 1
 - `forbidden_book1` — éléments qui n'existent pas encore dans ce livre
 - `hallucination_signals` — phrases/termes qui signalent une invention du LLM
+- `identity_confusion_forbidden` — phrases explicites de confusion d'identité (champ optionnel, ex: "alias: Elena" dans l'infobox)
 
 **Intégrer ces fichiers dans l'étape 1b ci-dessous lorsque disponibles.**
 
@@ -119,6 +120,8 @@ def _load_gt_entries(gt_files):
                 'canonical_aliases': aliases,
                 'hallucination_signals': obj.get('hallucination_signals', []),
                 'forbidden': forbidden,
+                'identity_confusion_forbidden': obj.get('identity_confusion_forbidden', []),
+                'known_relations': obj.get('known_relations_book1', {}),
             })
             by_entity[entity_name] = obj
     return entries, by_entity
@@ -164,15 +167,49 @@ for p in pages:
         parts = [part.strip(" '\"") for part in phrase.split(",")]
         return [part for part in parts if len(part) >= 5]
 
-    # 1. Cherche les signaux d'hallucination — scopés à la page de l'entité concernée
+    # Reverse-lookup : alias_lower -> entity_name (pour check cross-entité)
+    all_canonical_lookup = {}
     for entry in gt_entries:
-        is_entity_page = any(a.lower() in title.lower() for a in entry['canonical_aliases'])
-        if not is_entity_page:
-            continue
-        for sig in entry['hallucination_signals']:
+        for alias in entry['canonical_aliases']:
+            all_canonical_lookup[alias.lower()] = entry['entity']
+
+    # Entité GT correspondant à cette page (si applicable)
+    page_entity = None
+    page_entry = None
+    for entry in gt_entries:
+        if any(a.lower() in title.lower() for a in entry['canonical_aliases']):
+            page_entity = entry['entity']
+            page_entry = entry
+            break
+
+    # 1. Cherche les signaux d'hallucination — scopés à la page de l'entité concernée
+    if page_entry:
+        for sig in page_entry['hallucination_signals']:
             phrases = _extract_match_phrases(sig)
             if any(ph.lower() in full_text.lower() for ph in phrases):
-                page_violations.append(f"HALLUC_SIGNAL [{entry['entity']}]: {sig}")
+                page_violations.append(f"HALLUC_SIGNAL [{page_entity}]: {sig}")
+
+    # 1b. Confusions d'identité explicites (STU-314) — scopées à la page de l'entité
+    if page_entry:
+        for phrase in page_entry['identity_confusion_forbidden']:
+            if phrase.lower() in full_text.lower():
+                page_violations.append(f"IDENTITY_CONFUSION [{page_entity}]: '{phrase}'")
+
+    # 1c. Alias infobox cross-entité (STU-314) — infobox alias ne doit pas nommer une autre entité GT
+    if page_entity:
+        ib = p.get('infobox_fields', {})
+        for ak in ['alias', 'aliases', 'pseudonyme', 'pseudonymes', 'noms alternatifs', 'other names']:
+            ib_val = ib.get(ak, '')
+            if not ib_val:
+                continue
+            parts = ib_val if isinstance(ib_val, list) else [v.strip() for v in str(ib_val).split(',')]
+            for part in parts:
+                part = part.strip()
+                if not part:
+                    continue
+                matched = all_canonical_lookup.get(part.lower())
+                if matched and matched != page_entity:
+                    page_violations.append(f"INFOBOX_ALIAS_CROSS [{page_entity}→{matched}]: infobox '{ak}={part}' correspond à l'entité GT '{matched}'")
 
     # 2. Cherche les termes interdits
     for term, entity, cat in all_forbidden:
@@ -214,6 +251,24 @@ Si des fichiers `batch_*.json` sont disponibles, itère sur tous :
 import glob, json
 from collections import Counter
 
+# Charge GT pour la validation des types de relation (STU-314)
+import glob as _glob
+_gt_files = _glob.glob('library/sarah_j_maas/throne-of-glass/books/ground-truth/*.json')
+_gt_by_entity = {}
+_ANTAGONIST_KW = {'rival', 'antagoniste', 'ennemi', 'empoisonne', 'possédé', 'adversaire', 'venin'}
+_POSITIVE_TYPES = {'amoureux', 'allié', 'ami', 'protecteur', 'mentor', 'confident', 'partenaire', 'amie'}
+for _gf in _gt_files:
+    with open(_gf) as _f:
+        _gt = json.load(_f)
+    if 'entity' in _gt:
+        _subs = [(_gt['entity'], _gt)]
+    else:
+        _subs = [(k, v) for k, v in _gt.items() if isinstance(v, dict)]
+    for _name, _obj in _subs:
+        _canonical = _obj.get('canonical_aliases_book1', [])
+        _entity_name = _canonical[0] if _canonical else _name
+        _gt_by_entity[_entity_name] = _obj
+
 batch_files = sorted(glob.glob('/mnt/user-data/uploads/batch_*.json'))
 all_rels = []
 for bf in batch_files:
@@ -240,6 +295,20 @@ for bf in batch_files:
         if tc_values:
             tc_dist = Counter(tc_values)
             print(f"  temporal_context chapitres: {dict(tc_dist)}")
+        # Validation types de relation contre GT known_relations_book1 (STU-314)
+        entity_name = e.get('canonical_name', '')
+        gt_obj = _gt_by_entity.get(entity_name, {})
+        known_rels_gt = gt_obj.get('known_relations_book1', {})
+        for r in rels:
+            target = (r.get('target') or r.get('character') or '').strip()
+            rel_type = (r.get('relationship_type') or '').lower()
+            if not target or not rel_type:
+                continue
+            for gt_char, gt_desc in known_rels_gt.items():
+                if gt_char.lower() in target.lower() or target.lower() in gt_char.lower():
+                    is_antagonist = any(kw in gt_desc.lower() for kw in _ANTAGONIST_KW)
+                    if is_antagonist and any(pos in rel_type for pos in _POSITIVE_TYPES):
+                        print(f"  ⚠️ REL_TYPE_GT_MISMATCH: {entity_name}↔{target}: type='{rel_type}' mais GT décrit comme antagoniste/rival")
         all_rels.extend(rels)
 
 # Sommaire global
@@ -354,8 +423,8 @@ Si des nouvelles issues Linear sont justifiées, les créer via l'outil Linear a
 
 ## Historique des issues connues
 
-Issues Done (ne pas re-créer) : STU-260, STU-261, STU-262, STU-263, STU-264, STU-265, STU-266, STU-267, STU-268, STU-269, STU-270, STU-271, STU-272, STU-273, STU-274, STU-275, STU-276, STU-277, STU-278, STU-279, STU-280, STU-281, STU-282, STU-283, STU-284, STU-285, STU-286, STU-287, STU-288, STU-289, STU-290, STU-294
+Issues Done (ne pas re-créer) : STU-260, STU-261, STU-262, STU-263, STU-264, STU-265, STU-266, STU-267, STU-268, STU-269, STU-270, STU-271, STU-272, STU-273, STU-274, STU-275, STU-276, STU-277, STU-278, STU-279, STU-280, STU-281, STU-282, STU-283, STU-284, STU-285, STU-286, STU-287, STU-288, STU-289, STU-290, STU-294, STU-314
 
-Issues Backlog actives : aucune issue qualité ouverte au 2026-03-20.
+Issues Backlog actives : aucune issue qualité ouverte au 2026-03-25.
 
 Avant de créer une nouvelle issue, vérifier qu'elle ne doublon pas une issue existante via `Linear:list_issues` sur le projet Wiki Creator.
