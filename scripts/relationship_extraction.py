@@ -1011,6 +1011,8 @@ def classify_relationships(
     the model is now configured in the relationship-classifier agent YAML.
     """
     _etypes = entity_types or {}
+    missing = 0
+    total_typed = 0
     result = []
     for rel in relationships:
         if not _should_classify_pair(rel, _etypes):
@@ -1030,12 +1032,15 @@ def classify_relationships(
                 "key_moments": classification.get("key_moments", []),
                 "evidence": classification.get("evidence"),
             }
-            if rel["relationship_type"] and not rel["evidence"]:
-                print(
-                    f"  [WARN] evidence absent pour {rel['entity_a']} ↔ {rel['entity_b']} "
-                    f"(type={rel['relationship_type']})",
-                    file=sys.stderr,
-                )
+            if rel["relationship_type"]:
+                total_typed += 1
+                if not rel["evidence"]:
+                    missing += 1
+                    print(
+                        f"  [WARN] evidence absent pour {rel['entity_a']} ↔ {rel['entity_b']} "
+                        f"(type={rel['relationship_type']})",
+                        file=sys.stderr,
+                    )
         else:
             print(
                 f"  [WARN] Studio classification failed for "
@@ -1045,11 +1050,6 @@ def classify_relationships(
             )
         result.append(rel)
 
-    missing = sum(
-        1 for r in result
-        if r.get("relationship_type") and not r.get("evidence")
-    )
-    total_typed = sum(1 for r in result if r.get("relationship_type"))
     if missing:
         print(
             f"  [WARN] evidence absent : {missing}/{total_typed} relations classifiées",
