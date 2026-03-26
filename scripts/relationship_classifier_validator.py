@@ -85,8 +85,10 @@ def check_evidence_contains_both_names(clf: dict, meta: dict) -> list[str]:
 def check_evolution_not_generic(clf: dict) -> list[str]:
     if clf.get("relationship_type") is None:
         return []  # null type → evolution non requise
-    evol = (clf.get("evolution") or "").strip().lower()
-    if not evol or evol in _GENERIC_EVOLUTIONS:
+    evol = clf.get("evolution")
+    if evol is None:
+        return []  # null explicite = valide (aucune évolution observable dans les extraits)
+    if evol.strip().lower() in {"relation stable dans les extraits fournis", "relation stable"}:
         return ["❌ evolution générique ou nulle — décris comment la relation évolue concrètement"]
     return []
 

@@ -28,10 +28,10 @@ def test_check_evolution_not_generic_passes():
     assert check_evolution_not_generic(clf) == []
 
 
-def test_check_evolution_null_fails():
+def test_check_evolution_null_passes():
+    """evolution: null est explicitement autorisé quand aucune évolution n'est observable."""
     clf = {"relationship_type": "ami", "evolution": None}
-    errors = check_evolution_not_generic(clf)
-    assert errors != []
+    assert check_evolution_not_generic(clf) == []
 
 
 def test_validate_classification_valid():
