@@ -775,3 +775,72 @@ def test_strip_relations_section_no_op_when_absent():
     content = "## Biographie\n\nCelaena est une assassin.\n\n## Anecdotes\n\nElle aime la musique."
     result = _strip_relations_section(content)
     assert result == content
+
+
+# --- STU-311: _insufficient_data flag and short-content warning ---
+
+def test_make_stub_page_sets_insufficient_data_flag():
+    """make_stub_page with insufficient_data=True must set _insufficient_data, not _failed."""
+    entity = {"canonical_name": "Brullo", "importance": "secondaire", "type": "PERSON"}
+    page = make_stub_page(entity, insufficient_data=True)
+    assert page.get("_insufficient_data") is True
+    assert "_failed" not in page
+
+
+def test_make_stub_page_default_sets_no_flags():
+    """make_stub_page() with no flags must set neither _failed nor _insufficient_data."""
+    entity = {"canonical_name": "Brullo", "importance": "secondaire", "type": "PERSON"}
+    page = make_stub_page(entity)
+    assert "_failed" not in page
+    assert "_insufficient_data" not in page
+
+
+def test_run_generation_for_entity_sets_insufficient_data_when_no_context(tmp_path):
+    """When context_by_chapter is empty, _run_generation_for_entity must return _insufficient_data stub."""
+    entity = {
+        "canonical_name": "Brullo",
+        "importance": "secondaire",
+        "type": "PERSON",
+        "context_by_chapter": {},
+    }
+    page = _run_generation_for_entity(
+        entity=entity,
+        book_title="Mon Livre",
+        model="qwen2.5",
+        timeout=120,
+        sections=["infobox", "biography"],
+        max_tokens=800,
+        dry_run=False,
+        debug_dir=tmp_path / "debug",
+    )
+    assert page.get("_insufficient_data") is True
+    assert "_failed" not in page
+
+
+def test_parse_response_warns_on_suspiciously_short_content(capsys):
+    """parse_response must log a warning when content is non-empty but suspiciously short."""
+    raw = json.dumps({
+        "title": "Brullo",
+        "importance": "secondaire",
+        "entity_type": "PERSON",
+        "infobox_fields": {},
+        "content": "## Biographie\n\nPersonnage mineur.",
+    })
+    entity = {"canonical_name": "Brullo", "importance": "secondaire", "type": "PERSON"}
+    page = parse_response(raw, entity)
+    assert not page.get("_failed"), "Short but non-empty content must not be marked failed"
+    captured = capsys.readouterr()
+    assert "brullo" in captured.err.lower() or "court" in captured.err.lower() or "short" in captured.err.lower()
+
+
+def test_print_generation_summary_reports_insufficient_data_separately(capsys):
+    """_print_generation_summary must count and list _insufficient_data pages separately from _failed."""
+    pages = [
+        {"title": "Celaena", "content": "## Bio\n\nHero."},
+        {"title": "Brullo", "content": "...", "_insufficient_data": True},
+        {"title": "Arobynn", "content": "", "_failed": True},
+    ]
+    _print_generation_summary(pages)
+    captured = capsys.readouterr()
+    assert "Brullo" in captured.err
+    assert "insufficient" in captured.err.lower() or "données" in captured.err.lower()

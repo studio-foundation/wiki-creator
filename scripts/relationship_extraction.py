@@ -257,10 +257,36 @@ def build_cooccurrence_graph(
                     if (span is not None
                             and _span_contains_both(span, name_a_in_window, name_b_in_window)
                             and not _is_negating_relationship(span)
-                            and len(cooc[key]["contexts"]) < 3
                             and chapter_id not in cooc[key]["context_chapters"]):
-                        cooc[key]["contexts"].append(span)
+                        # gap=0 means both names appear in the same sentence — stronger signal
+                        # of direct interaction than gap=1 (adjacent sentences).
+                        name_a_lower = name_a_in_window.lower()
+                        name_b_lower = name_b_in_window.lower()
+                        same_sentence = any(
+                            re.search(r'\b' + re.escape(name_a_lower) + r'\b', s.lower())
+                            and re.search(r'\b' + re.escape(name_b_lower) + r'\b', s.lower())
+                            for s in window
+                        )
+                        gap = 0 if same_sentence else 1
+                        cooc[key]["contexts"].append((span, gap))
                         cooc[key]["context_chapters"].add(chapter_id)
+
+    def _pick_distributed(items: list[str], n: int) -> list[str]:
+        """Pick up to n items evenly spaced across the list."""
+        if len(items) <= n:
+            return items
+        step = len(items) / n
+        return [items[int(i * step)] for i in range(n)]
+
+    def _sample_distributed(contexts: list[tuple[str, int]], n: int = 12) -> list[str]:
+        """Pick up to n contexts, preferring gap=0 (same-sentence) over gap=1 (adjacent)."""
+        gap0 = [span for span, gap in contexts if gap == 0]
+        gap1 = [span for span, gap in contexts if gap == 1]
+        selected = _pick_distributed(gap0, n)
+        remaining = n - len(selected)
+        if remaining > 0:
+            selected += _pick_distributed(gap1, remaining)
+        return selected
 
     # Build output: filter by min_cooccurrence and min_chapters_together
     relationships = []
@@ -273,7 +299,7 @@ def build_cooccurrence_graph(
                 "entity_b": b,
                 "cooccurrence_count": data["count"],
                 "chapters": sorted(data["chapters"]),
-                "sample_contexts": data["contexts"],
+                "sample_contexts": _sample_distributed(data["contexts"]),
                 "relationship_type": None,
                 "direction": None,
                 "evolution": None,

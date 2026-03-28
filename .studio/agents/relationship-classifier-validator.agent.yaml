@@ -1,6 +1,6 @@
 name: relationship-classifier-validator
 provider: ollama
-model: mistral
+model: mistral:7b-instruct
 system_prompt: |
   Respond with ONLY a valid JSON object. No markdown fences, no explanation.
 

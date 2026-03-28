@@ -731,6 +731,71 @@ def test_build_cooccurrence_graph_sample_contexts_contain_both_names():
             assert "Hollin" in ctx or "hollin" in ctx.lower(), f"Missing Hollin in: {ctx}"
 
 
+def test_build_cooccurrence_graph_sample_contexts_prefer_same_sentence():
+    """gap=0 contexts (both names same sentence) must appear before gap=1 (adjacent sentences)."""
+    from scripts.relationship_extraction import build_cooccurrence_graph
+
+    entities = [
+        {"canonical_name": "Alice", "type": "PERSON", "aliases": [], "relevant": True},
+        {"canonical_name": "Bob", "type": "PERSON", "aliases": [], "relevant": True},
+    ]
+    # ch01..ch10: gap=1 (Alice in sentence 1, Bob in sentence 2 — no same-sentence occurrence)
+    # ch11..ch20: gap=0 (Alice and Bob in the same sentence)
+    mentions: dict = {"Alice": {}, "Bob": {}}
+    for i in range(1, 11):
+        ch = f"ch{i:02d}"
+        mentions["Alice"][ch] = ["Alice entered the room.", "Bob followed behind."]
+        mentions["Bob"][ch] = ["Alice entered the room.", "Bob followed behind."]
+    for i in range(11, 21):
+        ch = f"ch{i:02d}"
+        mentions["Alice"][ch] = ["Alice and Bob spoke quietly together."]
+        mentions["Bob"][ch] = ["Alice and Bob spoke quietly together."]
+
+    rels, _ = build_cooccurrence_graph(
+        entities, mentions, window_size=3, min_cooccurrence=1, min_chapters_together=1
+    )
+    assert rels, "Expected at least one relationship"
+    contexts = rels[0]["sample_contexts"]
+    # All gap=0 contexts should appear before any gap=1
+    gap0_texts = {c for c in contexts if "Alice and Bob" in c}
+    gap1_texts = {c for c in contexts if "Alice and Bob" not in c}
+    assert gap0_texts, "Expected at least one same-sentence (gap=0) context in results"
+    if gap1_texts:
+        # gap=0 entries must fill the front of the list before gap=1 entries
+        first_gap1_idx = next(i for i, c in enumerate(contexts) if c in gap1_texts)
+        last_gap0_idx = max(i for i, c in enumerate(contexts) if c in gap0_texts)
+        assert last_gap0_idx < first_gap1_idx or len(gap0_texts) == 12, (
+            "gap=0 contexts must be exhausted before gap=1 contexts are included"
+        )
+
+
+def test_build_cooccurrence_graph_sample_contexts_distributed_across_chapters():
+    """sample_contexts must draw from early and late chapters, not just the first 3."""
+    from scripts.relationship_extraction import build_cooccurrence_graph
+
+    entities = [
+        {"canonical_name": "Alice", "type": "PERSON", "aliases": [], "relevant": True},
+        {"canonical_name": "Bob", "type": "PERSON", "aliases": [], "relevant": True},
+    ]
+    # 20 chapters, each with one co-occurrence sentence
+    mentions: dict = {"Alice": {}, "Bob": {}}
+    for i in range(1, 21):
+        ch = f"ch{i:02d}"
+        sentence = f"Alice met Bob in chapter {i}."
+        mentions["Alice"][ch] = [sentence]
+        mentions["Bob"][ch] = [sentence]
+
+    rels, _ = build_cooccurrence_graph(
+        entities, mentions, window_size=3, min_cooccurrence=1, min_chapters_together=1
+    )
+    assert rels, "Expected at least one relationship"
+    contexts = rels[0]["sample_contexts"]
+    assert len(contexts) <= 12, f"Expected at most 12 contexts, got {len(contexts)}"
+    # Must include contexts from late chapters (chapter 15+)
+    late_contexts = [c for c in contexts if any(f"chapter {i}" in c for i in range(15, 21))]
+    assert late_contexts, "sample_contexts must include contexts from late chapters"
+
+
 def test_tightest_span_returns_none_when_names_too_far_apart():
     """Names separated by more than 1 sentence (gap=2) must return None."""
     from scripts.relationship_extraction import _tightest_span

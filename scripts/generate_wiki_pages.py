@@ -57,6 +57,8 @@ _INTERNAL_INFOBOX_KEYS = frozenset({
     "canonical_name",
 })
 
+_MIN_CONTENT_CHARS_WARNING = 80  # warn when LLM output is suspiciously short but not empty
+
 _PLACEHOLDER_PATTERNS = (
     re.compile(r"<[^>\n]{1,80}>"),
     re.compile(r"\bsi connu\b", re.IGNORECASE),
@@ -403,7 +405,7 @@ def _strip_relations_section(content: str) -> str:
     ).rstrip("\n")
 
 
-def make_stub_page(entity: dict, failed: bool = False) -> dict:
+def make_stub_page(entity: dict, failed: bool = False, insufficient_data: bool = False) -> dict:
     page = {
         "title": entity["canonical_name"],
         "importance": entity["importance"],
@@ -413,6 +415,8 @@ def make_stub_page(entity: dict, failed: bool = False) -> dict:
     }
     if failed:
         page["_failed"] = True
+    if insufficient_data:
+        page["_insufficient_data"] = True
     return page
 
 
@@ -630,7 +634,7 @@ def _run_generation_for_entity(
     debug_dir: Path,
 ) -> dict:
     if not entity.get("context_by_chapter", {}):
-        return make_stub_page(entity)
+        return make_stub_page(entity, insufficient_data=True)
     if dry_run:
         return make_stub_page(entity)
 
@@ -738,6 +742,12 @@ def parse_response(raw: str, entity: dict) -> dict:
                 file=sys.stderr,
             )
             return make_stub_page(entity, failed=True)
+        content_len = len(page["content"].strip())
+        if content_len < _MIN_CONTENT_CHARS_WARNING:
+            print(
+                f"    [WARN] Contenu très court pour {entity['canonical_name']} ({content_len} chars) — vérifier la sortie LLM",
+                file=sys.stderr,
+            )
         return page
     except json.JSONDecodeError:
         print(f"    [WARN] JSON parse failed for {entity['canonical_name']}, using stub", file=sys.stderr)
@@ -914,13 +924,17 @@ def _print_generation_summary(pages: list[dict], file=None) -> None:
     if file is None:
         file = sys.stderr
     failed = [p for p in pages if p.get("_failed")]
-    succeeded = len(pages) - len(failed)
+    insufficient = [p for p in pages if p.get("_insufficient_data")]
+    succeeded = len(pages) - len(failed) - len(insufficient)
     print(
-        f"\n[generate-wiki-pages] Done — {len(pages)} total, {succeeded} succeeded, {len(failed)} failed",
+        f"\n[generate-wiki-pages] Done — {len(pages)} total, {succeeded} succeeded, "
+        f"{len(failed)} failed, {len(insufficient)} données insuffisantes",
         file=file,
     )
     for p in failed:
         print(f"  [FAILED] {p.get('title', '?')}", file=file)
+    for p in insufficient:
+        print(f"  [INSUFFICIENT DATA] {p.get('title', '?')}", file=file)
 
 
 def _save(pages: list[dict], output_file: str) -> None:

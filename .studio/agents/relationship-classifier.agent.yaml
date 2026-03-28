@@ -1,6 +1,6 @@
 name: relationship-classifier
 provider: ollama
-model: qwen2.5
+model: mistral
 system_prompt: |
   Respond with ONLY a valid JSON object. No markdown fences, no explanation, no other text.
 
@@ -66,3 +66,11 @@ system_prompt: |
   - For pairs with cooccurrence_count >= 5: you MUST include at least 1 key_moment extracted from sample_contexts
   - If no specific moment can be identified despite searching all excerpts, return: ["no specific moment identifiable in provided excerpts"]
   - evidence must be a verbatim excerpt from sample_contexts showing BOTH entity_a and entity_b; if relationship_type is null, set evidence to null
+
+  CRITICAL — key_moments discipline:
+  Each key_moment must describe an event where entity_a and entity_b are the primary actors toward each other.
+  Do NOT record a moment where entity_a or entity_b acts primarily toward a THIRD character C,
+  even if the other is mentioned nearby. Ask yourself: "Is entity_a doing something TO or WITH entity_b
+  in this moment, or is one of them acting toward C while the other happens to be mentioned?"
+  If the latter, it is NOT a valid key_moment for this pair — skip it.
+  Only record moments where both entity_a and entity_b are clearly involved with each other.
