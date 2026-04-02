@@ -34,7 +34,7 @@ DEFAULT_NUM_PREDICT = 1024
 
 _DEFAULT_SECTIONS_BY_IMPORTANCE = {
     "principal": ["infobox", "biography", "personality", "physical", "powers", "relationships", "trivia", "references"],
-    "secondary": ["infobox", "biography", "relationships", "references"],
+    "secondaire": ["infobox", "biography", "relationships", "references"],
     "figurant": ["infobox", "biography"],
 }
 _SECTION_TITLES = {
@@ -281,7 +281,7 @@ def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_n
 
     length_guide = {
         "principal": "4 to 6 paragraphs total across all sections.",
-        "secondary": "1 to 2 paragraphs for the main section. Keep all other sections brief.",
+        "secondaire": "1 to 2 paragraphs for the main section. Keep all other sections brief.",
         "figurant": "1 short paragraph only. Use only the most relevant section.",
     }.get(importance, "1 short paragraph only.")
 
@@ -871,7 +871,7 @@ def main() -> None:
     )
     parser.add_argument("--model", default=os.environ.get("WIKI_MODEL", "qwen2.5"), help="Ollama model")
     parser.add_argument("--timeout", type=int, default=120, help="Timeout per entity (seconds)")
-    parser.add_argument("--importance", nargs="+", choices=["principal", "secondary", "figurant"],
+    parser.add_argument("--importance", nargs="+", choices=["principal", "secondaire", "figurant"],
                         help="Only process entities of these importance levels")
     parser.add_argument("--dry-run", action="store_true", help="Skip LLM calls, output stubs only")
     args = parser.parse_args()
@@ -881,6 +881,10 @@ def main() -> None:
     wiki_inputs_dir = str(book_paths.wiki_inputs)
     book_cfg = load_book_config(args.book)
     generation_cfg = book_cfg.get("generation", {})
+    validation_cfg = book_cfg.get("validation", {})
+    forbidden_names = validation_cfg.get("forbidden_names", [])
+    if forbidden_names:
+        print(f"[generate-wiki-pages] Forbidden names active: {forbidden_names}", file=sys.stderr)
 
     book_title = load_book_title(str(book_paths.processing / "epub_data.json"))
     batches = load_batch_files(wiki_inputs_dir, args.importance)
@@ -950,6 +954,7 @@ def main() -> None:
                         max_tokens=max_tokens,
                         dry_run=args.dry_run,
                         debug_dir=debug_dir,
+                        forbidden_names=forbidden_names,
                     )
                     all_pages.append(page)
                     _save(all_pages, output_file)
