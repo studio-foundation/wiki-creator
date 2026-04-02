@@ -7,6 +7,7 @@ from scripts.wiki_page_validator import (
     check_infobox_keys,
     check_series_anchor,
     check_forbidden_series,
+    check_forbidden_names,
     check_references_book_title,
     validate_page,
     build_feedback,
@@ -106,6 +107,32 @@ def test_check_forbidden_series_empty_list():
     page = {"content": "N'importe quel contenu.", "infobox_fields": {}}
     meta = {}
     assert check_forbidden_series(page, meta) == []
+
+
+def test_check_forbidden_names_detects_in_content():
+    page = {"content": "Celaena, aussi connue sous le nom d'Aelin Galathynius.", "infobox_fields": {}}
+    meta = {"forbidden_names": ["Aelin Galathynius"]}
+    errors = check_forbidden_names(page, meta)
+    assert any("Aelin Galathynius" in e for e in errors)
+
+
+def test_check_forbidden_names_detects_in_infobox():
+    page = {"content": "Texte propre.", "infobox_fields": {"alias": "Aelin"}}
+    meta = {"forbidden_names": ["Aelin"]}
+    errors = check_forbidden_names(page, meta)
+    assert errors != []
+
+
+def test_check_forbidden_names_passes_clean():
+    page = {"content": "Celaena Sardothien est une assassine.", "infobox_fields": {}}
+    meta = {"forbidden_names": ["Aelin Galathynius"]}
+    assert check_forbidden_names(page, meta) == []
+
+
+def test_check_forbidden_names_empty_config():
+    page = {"content": "N'importe quel contenu.", "infobox_fields": {}}
+    meta = {}
+    assert check_forbidden_names(page, meta) == []
 
 
 def test_validate_page_returns_valid_when_clean():

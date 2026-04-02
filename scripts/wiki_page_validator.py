@@ -73,6 +73,17 @@ def check_forbidden_series(page: dict, meta: dict) -> list[str]:
     return []
 
 
+def check_forbidden_names(page: dict, meta: dict) -> list[str]:
+    forbidden = meta.get("forbidden_names", [])
+    if not forbidden:
+        return []
+    haystack = page.get("content", "") + str(page.get("infobox_fields", {}))
+    hits = [name for name in forbidden if name.lower() in haystack.lower()]
+    if hits:
+        return [f"❌ Spoiler détecté (nom interdit) : {hits[0]}"]
+    return []
+
+
 def check_references_book_title(page: dict, allowed_book_titles: list[str]) -> list[str]:
     content = page.get("content", "")
     match = re.search(r"##\s*Références(.*?)(?=\n##|\Z)", content, re.IGNORECASE | re.DOTALL)
@@ -113,6 +124,7 @@ def validate_page(page: dict, meta: dict) -> dict:
     errors += check_infobox_keys(page)
     errors += check_series_anchor(page, meta)
     errors += check_forbidden_series(page, meta)
+    errors += check_forbidden_names(page, meta)
     allowed_book_titles = _load_allowed_book_titles(meta)
     if allowed_book_titles:
         errors += check_references_book_title(page, allowed_book_titles)
