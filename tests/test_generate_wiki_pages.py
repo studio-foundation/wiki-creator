@@ -889,3 +889,40 @@ def test_check_forbidden_names_returns_empty_for_empty_list():
     page = {"content": "N'importe quel contenu.", "infobox_fields": {}}
     hits = _check_forbidden_names(page, [])
     assert hits == []
+
+
+def test_build_prompt_includes_forbidden_names_block():
+    entity = {
+        "canonical_name": "Celaena Sardothien",
+        "importance": "principal",
+        "type": "PERSON",
+        "context_by_chapter": {"ch01": ["Celaena entre dans la salle."]},
+    }
+    prompt = build_prompt(entity, "Throne of Glass", sections=["infobox", "biography"],
+                          forbidden_names=["Aelin Galathynius", "Aelin"])
+    assert "FORBIDDEN NAMES" in prompt
+    assert "Aelin Galathynius" in prompt
+    assert "Aelin" in prompt
+
+
+def test_build_prompt_no_forbidden_names_block_when_empty():
+    entity = {
+        "canonical_name": "Celaena Sardothien",
+        "importance": "principal",
+        "type": "PERSON",
+        "context_by_chapter": {"ch01": ["Celaena entre dans la salle."]},
+    }
+    prompt = build_prompt(entity, "Throne of Glass", sections=["infobox", "biography"],
+                          forbidden_names=[])
+    assert "FORBIDDEN NAMES" not in prompt
+
+
+def test_build_prompt_no_forbidden_names_block_when_omitted():
+    entity = {
+        "canonical_name": "Celaena Sardothien",
+        "importance": "principal",
+        "type": "PERSON",
+        "context_by_chapter": {"ch01": ["Celaena entre dans la salle."]},
+    }
+    prompt = build_prompt(entity, "Throne of Glass", sections=["infobox", "biography"])
+    assert "FORBIDDEN NAMES" not in prompt

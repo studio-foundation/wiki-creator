@@ -178,7 +178,7 @@ def _label_chapter_key(key: str) -> str:
     return f"Chapter {int(m.group(1))}" if m else key
 
 
-def build_prompt(entity: dict, book_title: str, sections: list[str]) -> str:
+def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_names: list[str] | None = None) -> str:
     name = entity["canonical_name"]
     etype = entity["type"]
     importance = entity["importance"]
@@ -302,6 +302,16 @@ def build_prompt(entity: dict, book_title: str, sections: list[str]) -> str:
     if entity.get("importance") == "major" and len(indirect_rels) >= 2 and indirect_block:
         indirect_section = f"\nIndirect relationships (inferred — do NOT treat as confirmed direct interactions):\n{indirect_block}"
 
+    forbidden_names_rule = ""
+    if forbidden_names:
+        names_list = "\n".join(f"- {n}" for n in forbidden_names)
+        forbidden_names_rule = (
+            f"\n\nFORBIDDEN NAMES (spoilers from later books — NEVER use these):\n"
+            f"{names_list}\n"
+            f"Use ONLY the entity's canonical name and listed aliases. "
+            f"Any output containing a forbidden name will be rejected."
+        )
+
     has_typed_rels = bool(relationships_block)
     rels_in_sections = "relationships" in sections
     if rels_in_sections and has_typed_rels:
@@ -374,7 +384,7 @@ Structure:
 - infobox_fields must contain ONLY wiki-relevant fields (name, role, affiliation, etc.). Do NOT include internal data fields such as cooccurrence_count, entity_type, importance, or any metadata.
 
 Section definitions for type {etype}:
-{section_def_lines}
+{section_def_lines}{forbidden_names_rule}
 
 ---
 
@@ -512,13 +522,13 @@ def _load_studio_stage_output(run_id: str, stage_name: str) -> dict | None:
     return None
 
 
-def _wiki_page_item_input(*, entity: dict, book_title: str, sections: list[str], max_tokens: int) -> dict:
+def _wiki_page_item_input(*, entity: dict, book_title: str, sections: list[str], max_tokens: int, forbidden_names: list[str] | None = None) -> dict:
     return {
         "title": entity.get("canonical_name", ""),
         "importance": entity.get("importance", ""),
         "entity_type": entity.get("type", ""),
         "max_tokens": max_tokens,
-        "prompt": build_prompt(entity, book_title, sections=sections),
+        "prompt": build_prompt(entity, book_title, sections=sections, forbidden_names=forbidden_names),
     }
 
 
@@ -530,12 +540,14 @@ def _run_wiki_page_item(
     timeout: int,
     sections: list[str],
     max_tokens: int,
+    forbidden_names: list[str] | None = None,
 ) -> dict:
     item_input = _wiki_page_item_input(
         entity=entity,
         book_title=book_title,
         sections=sections,
         max_tokens=max_tokens,
+        forbidden_names=forbidden_names,
     )
     timeout_seconds = max(timeout * 4, 120)
 
