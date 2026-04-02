@@ -405,6 +405,14 @@ def _strip_relations_section(content: str) -> str:
     ).rstrip("\n")
 
 
+def _check_forbidden_names(page: dict, forbidden_names: list[str]) -> list[str]:
+    """Return list of forbidden names found in page content or infobox fields."""
+    if not forbidden_names:
+        return []
+    haystack = (page.get("content", "") + " " + str(page.get("infobox_fields", {}))).lower()
+    return [name for name in forbidden_names if name.lower() in haystack]
+
+
 def make_stub_page(entity: dict, failed: bool = False, insufficient_data: bool = False) -> dict:
     page = {
         "title": entity["canonical_name"],

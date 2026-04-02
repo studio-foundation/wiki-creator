@@ -5,6 +5,7 @@ import json
 import pytest
 
 from scripts.generate_wiki_pages import (
+    _check_forbidden_names,
     _contains_template_placeholder,
     _extract_stage_output_from_run_payload,
     _is_page_complete,
@@ -844,3 +845,47 @@ def test_print_generation_summary_reports_insufficient_data_separately(capsys):
     captured = capsys.readouterr()
     assert "Brullo" in captured.err
     assert "insufficient" in captured.err.lower() or "données" in captured.err.lower()
+
+
+# --- STU-317: _check_forbidden_names detection ---
+
+def test_check_forbidden_names_detects_in_content():
+    page = {
+        "content": "Celaena, aussi connue sous le nom d'Aelin Galathynius, est une assassine.",
+        "infobox_fields": {},
+    }
+    hits = _check_forbidden_names(page, ["Aelin Galathynius", "Aelin"])
+    assert "Aelin Galathynius" in hits
+
+
+def test_check_forbidden_names_detects_in_infobox():
+    page = {
+        "content": "Texte propre sans spoiler.",
+        "infobox_fields": {"alias": "Aelin"},
+    }
+    hits = _check_forbidden_names(page, ["Aelin Galathynius", "Aelin"])
+    assert "Aelin" in hits
+
+
+def test_check_forbidden_names_case_insensitive():
+    page = {
+        "content": "Son vrai nom est aelin galathynius.",
+        "infobox_fields": {},
+    }
+    hits = _check_forbidden_names(page, ["Aelin Galathynius"])
+    assert "Aelin Galathynius" in hits
+
+
+def test_check_forbidden_names_returns_empty_when_clean():
+    page = {
+        "content": "Celaena Sardothien est une assassine.",
+        "infobox_fields": {"nom": "Celaena Sardothien"},
+    }
+    hits = _check_forbidden_names(page, ["Aelin Galathynius", "Aelin"])
+    assert hits == []
+
+
+def test_check_forbidden_names_returns_empty_for_empty_list():
+    page = {"content": "N'importe quel contenu.", "infobox_fields": {}}
+    hits = _check_forbidden_names(page, [])
+    assert hits == []
