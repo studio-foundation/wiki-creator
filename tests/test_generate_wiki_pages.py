@@ -283,7 +283,7 @@ def test_run_generation_for_entity_uses_item_runner_when_not_dry(monkeypatch, tm
     debug_dir = tmp_path / "wiki_page_item_debug"
     calls = []
 
-    def fake_runner(*, entity, book_title, model, timeout, sections, max_tokens):
+    def fake_runner(*, entity, book_title, model, timeout, sections, max_tokens, forbidden_names=None):
         calls.append((entity["canonical_name"], book_title, model, timeout, sections, max_tokens))
         return {
             "title": "Victor Grandes",
@@ -926,3 +926,162 @@ def test_build_prompt_no_forbidden_names_block_when_omitted():
     }
     prompt = build_prompt(entity, "Throne of Glass", sections=["infobox", "biography"])
     assert "FORBIDDEN NAMES" not in prompt
+
+
+def test_run_generation_retries_on_forbidden_name(monkeypatch, tmp_path):
+    entity = {
+        "canonical_name": "Celaena Sardothien",
+        "importance": "principal",
+        "type": "PERSON",
+        "context_by_chapter": {"ch01": ["Celaena entre dans la salle."]},
+    }
+    debug_dir = tmp_path / "debug"
+    calls = []
+
+    def fake_runner(**kwargs):
+        calls.append(kwargs.get("forbidden_names"))
+        if len(calls) == 1:
+            return {
+                "title": "Celaena Sardothien",
+                "importance": "principal",
+                "entity_type": "PERSON",
+                "infobox_fields": {},
+                "content": "Celaena, aussi connue sous le nom d'Aelin Galathynius, est une assassine.",
+            }
+        return {
+            "title": "Celaena Sardothien",
+            "importance": "principal",
+            "entity_type": "PERSON",
+            "infobox_fields": {},
+            "content": "Celaena Sardothien est une assassine.",
+        }
+
+    monkeypatch.setattr("scripts.generate_wiki_pages._run_wiki_page_item", fake_runner)
+
+    page = _run_generation_for_entity(
+        entity=entity,
+        book_title="Throne of Glass",
+        model="qwen2.5",
+        timeout=120,
+        sections=["infobox", "biography"],
+        max_tokens=800,
+        dry_run=False,
+        debug_dir=debug_dir,
+        forbidden_names=["Aelin Galathynius", "Aelin"],
+    )
+
+    assert len(calls) == 2
+    assert "Aelin" not in page.get("content", "")
+    assert page["title"] == "Celaena Sardothien"
+
+
+def test_run_generation_returns_stub_after_failed_retry(monkeypatch, tmp_path):
+    entity = {
+        "canonical_name": "Celaena Sardothien",
+        "importance": "principal",
+        "type": "PERSON",
+        "context_by_chapter": {"ch01": ["Celaena entre dans la salle."]},
+    }
+    debug_dir = tmp_path / "debug"
+
+    def fake_runner(**kwargs):
+        return {
+            "title": "Celaena Sardothien",
+            "importance": "principal",
+            "entity_type": "PERSON",
+            "infobox_fields": {},
+            "content": "Celaena, aussi connue sous le nom d'Aelin Galathynius.",
+        }
+
+    monkeypatch.setattr("scripts.generate_wiki_pages._run_wiki_page_item", fake_runner)
+
+    page = _run_generation_for_entity(
+        entity=entity,
+        book_title="Throne of Glass",
+        model="qwen2.5",
+        timeout=120,
+        sections=["infobox", "biography"],
+        max_tokens=800,
+        dry_run=False,
+        debug_dir=debug_dir,
+        forbidden_names=["Aelin Galathynius"],
+    )
+
+    assert page.get("_failed") is True
+    assert page.get("_spoiler_rejected") is True
+
+
+def test_run_generation_no_retry_when_clean(monkeypatch, tmp_path):
+    entity = {
+        "canonical_name": "Celaena Sardothien",
+        "importance": "principal",
+        "type": "PERSON",
+        "context_by_chapter": {"ch01": ["Celaena entre dans la salle."]},
+    }
+    debug_dir = tmp_path / "debug"
+    calls = []
+
+    def fake_runner(**kwargs):
+        calls.append(1)
+        return {
+            "title": "Celaena Sardothien",
+            "importance": "principal",
+            "entity_type": "PERSON",
+            "infobox_fields": {},
+            "content": "Celaena Sardothien est une assassine.",
+        }
+
+    monkeypatch.setattr("scripts.generate_wiki_pages._run_wiki_page_item", fake_runner)
+
+    page = _run_generation_for_entity(
+        entity=entity,
+        book_title="Throne of Glass",
+        model="qwen2.5",
+        timeout=120,
+        sections=["infobox", "biography"],
+        max_tokens=800,
+        dry_run=False,
+        debug_dir=debug_dir,
+        forbidden_names=["Aelin Galathynius"],
+    )
+
+    assert len(calls) == 1
+    assert page["title"] == "Celaena Sardothien"
+    assert not page.get("_failed")
+
+
+def test_run_generation_no_retry_when_no_forbidden_names(monkeypatch, tmp_path):
+    entity = {
+        "canonical_name": "Celaena Sardothien",
+        "importance": "principal",
+        "type": "PERSON",
+        "context_by_chapter": {"ch01": ["Celaena entre dans la salle."]},
+    }
+    debug_dir = tmp_path / "debug"
+    calls = []
+
+    def fake_runner(**kwargs):
+        calls.append(1)
+        return {
+            "title": "Celaena Sardothien",
+            "importance": "principal",
+            "entity_type": "PERSON",
+            "infobox_fields": {},
+            "content": "Celaena aussi connue sous le nom d'Aelin Galathynius.",
+        }
+
+    monkeypatch.setattr("scripts.generate_wiki_pages._run_wiki_page_item", fake_runner)
+
+    page = _run_generation_for_entity(
+        entity=entity,
+        book_title="Throne of Glass",
+        model="qwen2.5",
+        timeout=120,
+        sections=["infobox", "biography"],
+        max_tokens=800,
+        dry_run=False,
+        debug_dir=debug_dir,
+    )
+
+    assert len(calls) == 1
+    assert not page.get("_failed")

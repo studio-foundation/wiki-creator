@@ -652,6 +652,7 @@ def _run_generation_for_entity(
     max_tokens: int,
     dry_run: bool,
     debug_dir: Path,
+    forbidden_names: list[str] | None = None,
 ) -> dict:
     if not entity.get("context_by_chapter", {}):
         return make_stub_page(entity, insufficient_data=True)
@@ -665,6 +666,7 @@ def _run_generation_for_entity(
         timeout=timeout,
         sections=sections,
         max_tokens=max_tokens,
+        forbidden_names=forbidden_names,
     )
     if isinstance(item_result, dict) and item_result.get("error"):
         _save_generation_debug_artifact(debug_dir, entity, item_result)
@@ -673,6 +675,34 @@ def _run_generation_for_entity(
     if isinstance(item_result, dict) and "content" in item_result:
         if "relationships" not in sections or not typed_rels:
             item_result["content"] = _strip_relations_section(item_result["content"] or "")
+
+    # Forbidden names check + retry
+    if forbidden_names and isinstance(item_result, dict) and "content" in item_result:
+        hits = _check_forbidden_names(item_result, forbidden_names)
+        if hits:
+            print(f" ⚠ spoiler detected ({', '.join(hits)}), retrying…", file=sys.stderr, end="", flush=True)
+            item_result = _run_wiki_page_item(
+                entity=entity,
+                book_title=book_title,
+                model=model,
+                timeout=timeout,
+                sections=sections,
+                max_tokens=max_tokens,
+                forbidden_names=forbidden_names,
+            )
+            if isinstance(item_result, dict) and item_result.get("error"):
+                _save_generation_debug_artifact(debug_dir, entity, item_result)
+                return make_stub_page(entity, failed=True)
+            if isinstance(item_result, dict) and "content" in item_result:
+                if "relationships" not in sections or not typed_rels:
+                    item_result["content"] = _strip_relations_section(item_result["content"] or "")
+            hits = _check_forbidden_names(item_result, forbidden_names)
+            if hits:
+                print(f" ✗ spoiler persists ({', '.join(hits)})", file=sys.stderr, end="", flush=True)
+                page = make_stub_page(entity, failed=True)
+                page["_spoiler_rejected"] = True
+                return page
+
     return item_result
 
 
