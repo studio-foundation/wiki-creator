@@ -26,6 +26,7 @@ import json
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 # ---------------------------------------------------------------------------
 # Graceful import checks for heavy GPU-only dependencies
@@ -47,6 +48,23 @@ def _check_dependency(module_name: str, install_hint: str) -> None:
 _check_dependency("unsloth", "pip install unsloth")
 _check_dependency("matplotlib", "pip install matplotlib")
 
+# ---------------------------------------------------------------------------
+# Python 3.14 compat: datasets fingerprinting uses dill which crashes due to
+# a pickle._batch_setitems signature change in CPython 3.14. Replace the
+# fingerprint function with a hashlib-based fallback before anything loads.
+# ---------------------------------------------------------------------------
+import hashlib  # noqa: E402
+import os  # noqa: E402
+import datasets.fingerprint  # noqa: E402
+import datasets.arrow_dataset  # noqa: E402
+
+def _py314_generate_fingerprint(dataset):  # type: ignore[no-untyped-def]
+    return hashlib.md5(os.urandom(16)).hexdigest()
+
+# Patch both the module AND the local reference in arrow_dataset
+datasets.fingerprint.generate_fingerprint = _py314_generate_fingerprint
+datasets.arrow_dataset.generate_fingerprint = _py314_generate_fingerprint
+
 # These imports are deferred past the check so the error message is clean.
 from unsloth import FastLanguageModel  # noqa: E402
 from datasets import Dataset  # noqa: E402
@@ -65,7 +83,7 @@ MODEL_NAME = "unsloth/Llama-3.2-3B-Instruct"
 MAX_SEQ_LENGTH = 4096
 LORA_RANK = 16
 LORA_ALPHA = 32
-TARGET_MODULES = ["q_proj", "v_proj"]
+TARGET_MODULES = ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
 
 CHATML_TEMPLATE = (
     "<|im_start|>user\n{instruction}<|im_end|>\n"
@@ -104,7 +122,7 @@ def format_chatml(example: dict) -> dict:
     }
 
 
-def load_dataset(dataset_dir: Path) -> tuple[Dataset, Dataset]:
+def load_dataset(dataset_dir: Path) -> tuple[Dataset, Dataset | None]:
     """Load train.jsonl and eval.jsonl, return HF Datasets."""
     train_rows = load_jsonl(dataset_dir / "train.jsonl")
     eval_rows = load_jsonl(dataset_dir / "eval.jsonl")
@@ -157,7 +175,7 @@ def train(
         per_device_train_batch_size=1,
         gradient_accumulation_steps=4,
         learning_rate=2e-4,
-        fp16=True,
+        bf16=True,
         logging_steps=1,
         eval_strategy="epoch" if eval_ds else "no",
         save_strategy="epoch",
@@ -257,7 +275,7 @@ def save_loss_curve(
 # Phase 3 — Merge
 # ---------------------------------------------------------------------------
 
-def merge_adapter(output_dir: Path) -> tuple:
+def merge_adapter(output_dir: Path) -> tuple[Any, Any]:
     """Load adapter and merge into base model (float16)."""
     adapter_dir = output_dir / "adapter"
     merged_dir = output_dir / "merged"
@@ -283,7 +301,7 @@ def merge_adapter(output_dir: Path) -> tuple:
 # Phase 4 — Export GGUF
 # ---------------------------------------------------------------------------
 
-def export_gguf(model, tokenizer, output_dir: Path) -> None:
+def export_gguf(model: Any, tokenizer: Any, output_dir: Path) -> None:
     """Export Q4_K_M GGUF."""
     gguf_dir = output_dir / "gguf"
     gguf_dir.mkdir(parents=True, exist_ok=True)
@@ -301,7 +319,7 @@ def export_gguf(model, tokenizer, output_dir: Path) -> None:
     if gguf_files:
         gguf_path = gguf_files[0]
         print(f"\nTo load in Ollama:")
-        print(f"  ollama create wiki-page-item -f {gguf_path}")
+        print(f"  ollama create wiki-page-item --from {gguf_path}")
 
 
 # ---------------------------------------------------------------------------
@@ -356,10 +374,6 @@ def main() -> None:
     output_dir: Path = args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Phase 1 — Load dataset
-    print("=== Phase 1: Loading dataset ===")
-    train_ds, eval_ds = load_dataset(args.dataset_dir)
-
     if args.skip_train:
         # Skip training, verify adapter exists
         adapter_dir = output_dir / "adapter"
@@ -377,6 +391,10 @@ def main() -> None:
         }
         train_losses, eval_losses = [], []
     else:
+        # Phase 1 — Load dataset
+        print("=== Phase 1: Loading dataset ===")
+        train_ds, eval_ds = load_dataset(args.dataset_dir)
+
         # Phase 2 — Train
         print("\n=== Phase 2: Training ===")
         hyperparams, train_losses, eval_losses = train(
