@@ -53,6 +53,9 @@ BATCH_SIZE_BY_IMPORTANCE = {
 }
 # Hard cap on total context chars per batch — prevents long batches even within size limits
 MAX_BATCH_CONTEXT_CHARS = 20000
+# entity-classification outputs French importance labels; normalize to English for downstream
+_IMPORTANCE_NORMALIZE = {"secondaire": "secondary"}
+
 MAX_MENTIONS_PER_CHAPTER = 5
 MAX_CHAPTERS = 25
 # Cap total context chars per entity
@@ -129,11 +132,18 @@ def get_first_seen(entity: dict, persons: dict, places: dict, orgs: dict, events
     return first_seen
 
 
-def filter_relationships(canonical_name: str, relationships: list[dict]) -> list[dict]:
-    """Return relationships involving this entity."""
+def filter_relationships(
+    canonical_name: str,
+    relationships: list[dict],
+    aliases: list[str] | None = None,
+) -> list[dict]:
+    """Return relationships involving this entity (by canonical name or alias)."""
+    names = {canonical_name}
+    if aliases:
+        names.update(aliases)
     return [
         r for r in relationships
-        if r.get("entity_a") == canonical_name or r.get("entity_b") == canonical_name
+        if r.get("entity_a") in names or r.get("entity_b") in names
     ]
 
 
@@ -232,16 +242,20 @@ def build_related_context(
     places: dict,
     orgs: dict,
     events: dict,
+    aliases: list[str] | None = None,
 ) -> list[dict]:
+    names = {canonical_name}
+    if aliases:
+        names.update(aliases)
     related_rows = []
-    for rel in filter_relationships(canonical_name, relationships):
+    for rel in filter_relationships(canonical_name, relationships, aliases=aliases):
         a = rel.get("entity_a")
         b = rel.get("entity_b")
-        related_name = b if a == canonical_name else a
+        related_name = b if a in names else a
         if not related_name or not isinstance(related_name, str):
             continue
         related_name = related_name.strip()
-        if not related_name:
+        if not related_name or related_name in names:
             continue
 
         related_entity = entities_by_name.get(related_name, {})
@@ -332,7 +346,7 @@ def build_entity_bundle(
         "chapters_present": entity.get("chapters_present", 0),
         "first_seen": get_first_seen(entity, persons, places, orgs, events),
         "context_by_chapter": context_by_chapter,
-        "relationships": filter_relationships(canonical_name, relationships),
+        "relationships": filter_relationships(canonical_name, relationships, aliases=entity.get("aliases")),
         "indirect_relationships": [
             asdict(r) for r in (
                 graph.indirect_relationships(canonical_name, max_hops=2)
@@ -347,6 +361,7 @@ def build_entity_bundle(
             places,
             orgs,
             events,
+            aliases=entity.get("aliases"),
         ),
         "chapter_summary_context": build_chapter_summary_context(
             entity=entity,
@@ -424,6 +439,8 @@ def main() -> None:
     classification_output, chapter_summary_output = stage_outputs_from_payload(payload)
 
     entities = classification_output.get("entities", [])
+    for e in entities:
+        e["importance"] = _IMPORTANCE_NORMALIZE.get(e.get("importance", ""), e.get("importance", "figurant"))
     relationships = classification_output.get("relationships", [])
     narrator = classification_output.get("narrator", None)
 

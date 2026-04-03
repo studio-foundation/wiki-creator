@@ -271,5 +271,145 @@
       "FAUX NÉGATIF GT : confusion Celaena/Elena non détectée — validateur GT sans coverage sur alias infobox (STU-314)"
     ],
     "audit_rerun": "2026-03-25 — re-audit avec skill GT mis à jour (STU-314) : 4 violations Celaena ajoutées"
+  },
+  {
+    "run": 13,
+    "date": "2026-03-28",
+    "pages_generated": 11,
+    "infobox_pct": 82,
+    "lang_fr_pct": 100,
+    "alias_duplicates": 0,
+    "hallucinations": 1,
+    "gt_violations": [
+      {
+        "page": "Celaena Sardothien",
+        "signal": "Aelin Galathynius comme identité révélée (héritière légitime au trône)",
+        "cause": "contamination_cross_serie"
+      }
+    ],
+    "regression": {
+      "prefixed_keys": "✅",
+      "epub_ids": "✅",
+      "entity_type_null": "✅",
+      "alias_duplicates": "✅",
+      "cross_serie": "⚠️",
+      "evolution_quality": "⚠️",
+      "temporal_context": "✅",
+      "ground_truth": "⚠️"
+    },
+    "verdict": "Run 13 : plus propre qualitativement (1 violation GT, 0 EPUB, 0 doublon). Régression couverture : 11 pages vs 15 en run 12 — 4 entités disparues. Spoiler Aelin/Celaena persistant (5e run consécutif). evidence absent 59%.",
+    "new_issues": [
+      "Couverture en baisse : 11 pages vs 15 (4 entités disparues du pipeline)",
+      "Spoiler Aelin Galathynius persiste sur page Celaena — contamination mémoire modèle",
+      "## Relations réapparu sur 4 pages (4e occurrence intermittente)",
+      "evidence absent 59% — pire que run 12 (43%)"
+    ]
+  },
+  {
+    "run": 14,
+    "date": "2026-03-28",
+    "pages_generated": 11,
+    "infobox_pct": 82,
+    "lang_fr_pct": 100,
+    "alias_duplicates": 0,
+    "hallucinations": 1,
+    "gt_violations": [
+      {
+        "page": "Celaena Sardothien",
+        "signal": "Aelin Galathynius comme identité révélée",
+        "cause": "contamination_cross_serie",
+        "first_seen_in": "wiki_pages.json (absent de tous fichiers amont)",
+        "component": "generate_wiki_pages.py — hallucination LLM Mistral",
+        "action": "Ajouter prompt négatif anti-spoiler ou post-filtrer termes GT forbidden"
+      }
+    ],
+    "coverage": {
+      "batch_entities": 11,
+      "pages_generated": 11,
+      "missing": [],
+      "failed": [],
+      "filtered_before_batch": 7
+    },
+    "weak_entities": [
+      "Chaol (0 rels)",
+      "Arobynn Hamel (0 rels)",
+      "Wyrdmarks (100% evidence absent)",
+      "Nox Owen (100% evidence absent)",
+      "Hollin (100% evol générique)"
+    ],
+    "regression": {
+      "prefixed_keys": "✅",
+      "epub_ids": "✅",
+      "entity_type_null": "✅",
+      "alias_duplicates": "✅",
+      "cross_serie": "⚠️",
+      "evolution_quality": "❌",
+      "temporal_context": "✅",
+      "ground_truth": "⚠️"
+    },
+    "verdict": "Re-audit run 13 avec traçabilité : pipeline amont propre, seule violation Aelin est hallucination LLM pure. Problèmes structurels : Chaol 0 relations (bug wiki-preparation), 4 entités GT filtrées (Nehemia, Perrington, Cain, Kaltain), 11/11 entités faibles. Priorité : investiguer filtrage relations Chaol.",
+    "new_issues": [
+      "Chaol (principal) a 0 relations dans batch — bug wiki_preparation.py:build_entity_bundle",
+      "Nehemia et Perrington (entités GT) filtrées comme secondaires — seuil importance trop strict",
+      "11/11 entités faibles — aucune entité ne passe tous les seuils qualité"
+    ]
+  },
+  {
+    "run": 15,
+    "date": "2026-04-01",
+    "pages_generated": 15,
+    "infobox_pct": 73,
+    "lang_fr_pct": 100,
+    "alias_duplicates": 0,
+    "hallucinations": 0,
+    "gt_violations": [
+      {
+        "page": "Dorian Havilliard",
+        "signal": "roi d'Adarlan comme titre actuel",
+        "cause": "extrapolation",
+        "first_seen_in": "llm_generation",
+        "component": "generate_wiki_pages.py",
+        "action": "Ajouter 'roi d'Adarlan' aux hallucination_signals de dorian.json GT"
+      }
+    ],
+    "coverage": {
+      "batch_entities": 15,
+      "pages_generated": 15,
+      "missing": ["Philippa (page générée sous titre 'Philippe')"],
+      "failed": ["Celaena Sardothien (_spoiler_rejected)"],
+      "filtered_before_batch": 3
+    },
+    "weak_entities": [
+      "Arobynn Hamel (0 rels)",
+      "Chaol (evidence 65%, evol 81% générique)",
+      "Wyrdmarks (3 non-typées, evidence 100%, evol 100%)",
+      "Perrington (6 non-typées, evidence 70%, evol 91%)",
+      "Kaltain Rompier (evidence 64%, evol 86%)",
+      "Philippa (evidence 58%, evol 100%)",
+      "Hollin (evidence 57%, evol 100%)",
+      "Nox Owen (evidence 100%, evol 100%)",
+      "Brullo (evidence 60%, evol 80%)",
+      "Verin (evidence 56%, evol 78%)",
+      "Elena (3 non-typées, evidence 60%)"
+    ],
+    "regression": {
+      "prefixed_keys": "✅",
+      "epub_ids": "✅",
+      "entity_type_null": "✅",
+      "alias_duplicates": "✅",
+      "cross_serie": "⚠️",
+      "evolution_quality": "❌",
+      "temporal_context": "✅",
+      "ground_truth": "⚠️"
+    },
+    "verdict": "Run 15 : 15 pages (+4 vs R13-14), 100% FR, 0 doublon, 0 EPUB, STU-317 fonctionnel (Celaena _spoiler_rejected). 3 confusions identitaires graves non détectées par GT (Nehemia=Yrene, Verin=Kaltain, Kaltain=Elena). Evidence 57% absent, evolution 78% générique. Priorité : validation post-génération canonical_name vs infobox.",
+    "new_issues": [
+      "Nehemia confondue avec Yrene Astellaris (hallucination identitaire cross-livre 6)",
+      "Verin infobox nom=Kaltain (confusion identitaire LLM)",
+      "Kaltain décrite confidente de reine Elena Havilliard du royaume de Ruhn (hallucination)",
+      "Nox Owen : mort inventée (survit dans le livre)",
+      "Mismatch titre Philippa→Philippe (canonical_name non utilisé comme titre)",
+      "§ Relations réapparu sur 3 pages (Dorian, Elena, Philippe) — 5e occurrence"
+    ]
   }
 ]

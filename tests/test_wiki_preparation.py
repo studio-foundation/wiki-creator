@@ -6,9 +6,11 @@ import sys
 from pathlib import Path
 
 from scripts.wiki_preparation import (
+    _IMPORTANCE_NORMALIZE,
     build_chapter_summary_context,
     build_entity_bundle,
     extract_context,
+    filter_relationships,
     stage_outputs_from_payload,
     write_batches,
 )
@@ -61,6 +63,14 @@ def _registries():
         },
     }
     return persons, {}, {}, {}
+
+
+def test_importance_normalize_maps_secondaire_to_secondary():
+    """Regression: STU-316 – French 'secondaire' from classification must normalize to 'secondary'."""
+    assert _IMPORTANCE_NORMALIZE["secondaire"] == "secondary"
+    # Other values pass through unchanged
+    assert _IMPORTANCE_NORMALIZE.get("principal", "principal") == "principal"
+    assert _IMPORTANCE_NORMALIZE.get("figurant", "figurant") == "figurant"
 
 
 def test_build_entity_bundle_builds_sorted_limited_related_context():
@@ -144,6 +154,42 @@ def test_build_entity_bundle_builds_sorted_limited_related_context():
     assert len(related[0]["support_snippets"]) <= 2
 
 
+def test_filter_relationships_matches_aliases():
+    """Regression: STU-315 – Chaol (canonical) vs Chaol Westfall (in relationships)."""
+    relationships = [
+        {"entity_a": "Celaena", "entity_b": "Chaol Westfall", "cooccurrence_count": 119},
+        {"entity_a": "Chaol Westfall", "entity_b": "Dorian", "cooccurrence_count": 63},
+        {"entity_a": "Celaena", "entity_b": "Dorian", "cooccurrence_count": 175},
+    ]
+    # canonical_name is "Chaol" but relationships use the alias "Chaol Westfall"
+    result = filter_relationships("Chaol", relationships, aliases=["Chaol Westfall", "Captain Westfall"])
+    assert len(result) == 2
+    # Ensure unrelated relationship is excluded
+    names = {(r["entity_a"], r["entity_b"]) for r in result}
+    assert ("Celaena", "Dorian") not in names
+
+
+def test_build_entity_bundle_matches_relationships_via_alias():
+    """Regression: STU-315 – entity bundle should include relationships matched by alias."""
+    persons, places, orgs, events = _registries()
+    entity = {
+        "canonical_name": "Chaol",
+        "type": "PERSON",
+        "importance": "principal",
+        "aliases": ["Chaol Westfall", "Captain Westfall"],
+        "source_ids": ["p1"],
+    }
+    relationships = [
+        {"entity_a": "Celaena", "entity_b": "Chaol Westfall", "cooccurrence_count": 119},
+    ]
+    entities_by_name = {"Chaol": entity, "Celaena": {"canonical_name": "Celaena", "type": "PERSON", "importance": "principal"}}
+
+    bundle = build_entity_bundle(entity, relationships, persons, places, orgs, events, entities_by_name)
+    assert len(bundle["relationships"]) == 1
+    assert len(bundle["related_context"]) == 1
+    assert bundle["related_context"][0]["related_name"] == "Celaena"
+
+
 def test_build_entity_bundle_related_context_empty_without_relationships():
     persons, places, orgs, events = _registries()
     entity = {
@@ -207,6 +253,35 @@ def test_write_batches_counts_related_context_chars_for_splitting(tmp_path: Path
     batches = write_batches(entities, narrator=None, paths=_Paths())
 
     assert len(batches) == 2
+
+
+def test_write_batches_includes_secondary_importance_entities(tmp_path: Path):
+    """Regression: STU-316 – entities with importance 'secondary' must appear in batches."""
+    entities = [
+        {
+            "canonical_name": "Nehemia",
+            "importance": "secondary",
+            "type": "PERSON",
+            "context_by_chapter": {"ch01": ["Nehemia speaks."]},
+            "related_context": [],
+        },
+        {
+            "canonical_name": "Perrington",
+            "importance": "secondary",
+            "type": "PERSON",
+            "context_by_chapter": {"ch01": ["Perrington orders."]},
+            "related_context": [],
+        },
+    ]
+
+    class _Paths:
+        wiki_inputs = tmp_path
+
+    batches = write_batches(entities, narrator=None, paths=_Paths())
+    assert len(batches) >= 1
+    all_names = [e["canonical_name"] for b in batches for e in json.loads((tmp_path / f"{b['batch_id']}.json").read_text())["entities"]]
+    assert "Nehemia" in all_names
+    assert "Perrington" in all_names
 
 
 def test_build_entity_bundle_adds_chapter_summary_context_for_person():
