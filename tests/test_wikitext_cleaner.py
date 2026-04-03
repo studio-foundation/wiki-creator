@@ -1,5 +1,5 @@
 import pytest
-from wiki_creator.wikitext_cleaner import clean_wikitext
+from wiki_creator.wikitext_cleaner import clean_wikitext, normalize_infobox_fields
 
 
 class TestCleanWikitext:
@@ -61,3 +61,33 @@ class TestCleanWikitext:
         assert "<gallery>" not in result
         assert "Queen of Shadows" not in result
         assert "He fought." in result
+
+
+class TestNormalizeInfoboxFields:
+    def test_rename_english_keys(self):
+        fields = {"name": "Abraxos", "allegiance": "Manon", "status": "Alive"}
+        result = normalize_infobox_fields(fields)
+        assert result == {"nom": "Abraxos", "affiliation": "Manon", "statut": "Alive"}
+
+    def test_drop_image_fields(self):
+        fields = {"name": "Abraxos", "image": "photo.jpg", "caption": "A wyvern"}
+        result = normalize_infobox_fields(fields)
+        assert result == {"nom": "Abraxos"}
+
+    def test_passthrough_unknown_keys(self):
+        fields = {"species": "Wyvern", "origin": "Morath"}
+        result = normalize_infobox_fields(fields)
+        assert result == {"species": "Wyvern", "origin": "Morath"}
+
+    def test_drop_collapse_fields(self):
+        fields = {"affcollapse": "off", "statcollapse": "off", "name": "X"}
+        result = normalize_infobox_fields(fields)
+        assert result == {"nom": "X"}
+
+    def test_strip_wiki_markup_in_values(self):
+        fields = {"partner": "[[Narene]] (mate)"}
+        result = normalize_infobox_fields(fields)
+        assert result == {"partner": "Narene (mate)"}
+
+    def test_empty_input(self):
+        assert normalize_infobox_fields({}) == {}
