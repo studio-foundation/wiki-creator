@@ -40,6 +40,10 @@ places_full.json
 orgs_full.json
 extraction-*.jsonl
 chapters.json
+# LoRA / training artifacts
+models/wiki-page-item-lora/
+unsloth_compiled_cache/
+
 # Misc
 .DS_Store
 *.pem
