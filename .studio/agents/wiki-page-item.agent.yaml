@@ -1,6 +1,6 @@
 name: wiki-page-item
 provider: ollama
-model: mistral:7b-instruct
+model: wiki-page-item
 system_prompt: |
   Respond with ONLY a valid JSON object. No markdown fences, no explanation, no other text.
 
