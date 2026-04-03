@@ -185,9 +185,12 @@ def main_with_args(
         out = json.loads(record["output"])
         imp = out["importance"]
         etype = out["entity_type"]
+        title = out.get("title", "")
         by_type[etype] = by_type.get(etype, 0) + 1
         by_importance[imp] = by_importance.get(imp, 0) + 1
-        if imp == "principal":
+        # Only route to eval if the entity is known as principal from batch files
+        known_imp = known_entities.get(title, {}).get("importance")
+        if known_imp == "principal":
             eval_records.append(record)
         else:
             train_records.append(record)

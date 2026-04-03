@@ -117,7 +117,8 @@ class TestProcessFandomEntry:
 
 
 class TestEndToEnd:
-    def test_export_with_fixture_data(self, tmp_path):
+    def test_export_without_batch_dir_all_to_train(self, tmp_path):
+        """Without batch_dir, no known entities → everything goes to train."""
         fandom_path = tmp_path / "fandom.jsonl"
         entries = [
             {
@@ -146,15 +147,50 @@ class TestEndToEnd:
         output_dir = tmp_path / "output"
         main_with_args(fandom_jsonl=fandom_path, batch_dir=None, wiki_pages=None, gold_jsonl=None, output_dir=output_dir)
 
-        assert (output_dir / "train.jsonl").exists()
-        assert (output_dir / "eval.jsonl").exists()
-        assert (output_dir / "export_report.json").exists()
-
         with open(output_dir / "export_report.json") as f:
             report = json.load(f)
         assert report["fandom_total"] == 3
         assert report["fandom_rejected"] == 1
         assert report["fandom_accepted"] == 2
+        assert report["train_count"] == 2
+        assert report["eval_count"] == 0
+
+    def test_export_with_batch_dir_splits_by_known(self, tmp_path):
+        """With batch_dir, known principal entities go to eval."""
+        fandom_path = tmp_path / "fandom.jsonl"
+        entries = [
+            {
+                "page_title": "Hero",
+                "entity_type": "PERSON",
+                "infobox_fields": {"name": "Hero"},
+                "content": "'''Hero''' is the main character.\n\n## Biography\n\nHero did many things. " * 30,
+            },
+            {
+                "page_title": "Sidekick",
+                "entity_type": "PERSON",
+                "infobox_fields": {"name": "Sidekick"},
+                "content": "'''Sidekick''' helps the hero.\n\n## Biography\n\nA loyal companion. " * 30,
+            },
+        ]
+        with open(fandom_path, "w") as f:
+            for entry in entries:
+                f.write(json.dumps(entry) + "\n")
+
+        # Create batch file with Hero as principal
+        batch_dir = tmp_path / "batches"
+        batch_dir.mkdir()
+        batch = {
+            "batch_id": "batch_000",
+            "narrator": None,
+            "entities": [
+                {"canonical_name": "Hero", "type": "PERSON", "importance": "principal"},
+            ],
+        }
+        with open(batch_dir / "batch_000.json", "w") as f:
+            json.dump(batch, f)
+
+        output_dir = tmp_path / "output"
+        main_with_args(fandom_jsonl=fandom_path, batch_dir=batch_dir, wiki_pages=None, gold_jsonl=None, output_dir=output_dir)
 
         with open(output_dir / "eval.jsonl") as f:
             eval_lines = [json.loads(l) for l in f]
@@ -164,4 +200,4 @@ class TestEndToEnd:
         with open(output_dir / "train.jsonl") as f:
             train_lines = [json.loads(l) for l in f]
         assert len(train_lines) == 1
-        assert json.loads(train_lines[0]["output"])["title"] == "Village"
+        assert json.loads(train_lines[0]["output"])["title"] == "Sidekick"

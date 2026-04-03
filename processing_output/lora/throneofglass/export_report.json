@@ -1,0 +1,39 @@
+{
+  "fandom_total": 227,
+  "fandom_accepted": 209,
+  "fandom_rejected": 18,
+  "pipeline_accepted": 9,
+  "gold_accepted": 8,
+  "rejected_pages": [
+    "Cyrene",
+    "Farasha",
+    "Hafiza",
+    "Kaltain Rompier",
+    "Kharankui",
+    "Lani",
+    "Maddy",
+    "Rena Goldsmith",
+    "Ress",
+    "Sayed Faliq",
+    "Tern",
+    "Wesley",
+    "Ferian Gap",
+    "Meah",
+    "Rifthold",
+    "Skull's Bay",
+    "The Vaults",
+    "Varese"
+  ],
+  "by_type": {
+    "PERSON": 189,
+    "PLACE": 36,
+    "OTHER": 1
+  },
+  "by_importance": {
+    "principal": 114,
+    "secondary": 78,
+    "figurant": 34
+  },
+  "train_count": 220,
+  "eval_count": 6
+}
