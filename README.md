@@ -2,6 +2,8 @@
 
 **Powered by [Studio](https://github.com/studio-foundation/studio)** -- agentic pipeline orchestrator with structural validation.
 
+> **Status: Active development.** This project is a work in progress and is not feature-complete. Expect rough edges and breaking changes.
+
 Wiki Creator takes EPUB books and automatically extracts characters, locations, organizations, and their relationships, then generates complete wiki pages with infoboxes and wikitext export. It combines Python NLP (spaCy NER, coreference resolution) with LLM-powered agents orchestrated by Studio pipelines that validate every output against contracts.
 
 ---
