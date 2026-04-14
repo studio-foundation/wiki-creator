@@ -1,176 +1,77 @@
 # Wiki Creator
 
-Pipeline Python + Studio pour extraire des entites depuis un EPUB, construire un graphe de relations, puis generer des pages wiki Markdown et les exporter en wikitext.
+**Powered by [Studio](https://github.com/studio-foundation/studio)** -- agentic pipeline orchestrator with structural validation.
 
-Statut actuel au 2026-03-09:
-- `pytest -q` passe (`288 passed`)
-- le workflow principal passe par `wiki-extraction` -> `wiki-resolution` -> `wiki-preparation` -> `generate_wiki_pages.py` -> `pages-export`
-- les sorties sont stockees par livre sous `library/<author>/<series>/...`
+Wiki Creator takes EPUB books and automatically extracts characters, locations, organizations, and their relationships, then generates complete wiki pages with infoboxes and wikitext export. It combines Python NLP (spaCy NER, coreference resolution) with LLM-powered agents orchestrated by Studio pipelines that validate every output against contracts.
 
-## Objectif
+---
 
-Le projet prend un fichier YAML de livre, derive automatiquement les chemins du livre associe, puis produit:
-- des artefacts intermediaires par etape (`processing_output/<book-slug>/`)
-- des batches de generation (`wiki_inputs/<book-slug>/`)
-- des pages wiki exportees (`output/<book-slug>/`)
+## How it works
 
-Le cas d'usage actif visible dans le repo est `Throne of Glass`:
-- [01-throne-of-glass.yaml](/home/arianeguay/dev/src/wiki-creator-by-studio/library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml)
+The workflow is split into four Studio pipelines, each with structurally validated stages:
 
-## Stack
+1. **wiki-extraction** -- Parses the EPUB, runs spaCy NER to extract entities, clusters them, verifies entity types, and splits by category (persons, places, organizations).
+
+2. **wiki-resolution** -- Resolves entity clusters (alias detection, merge), extracts inter-entity relationships from chapter text, and classifies entities using an LLM agent with a RALPH validation loop.
+
+3. **wiki-preparation** -- Loads classified entities and EPUB data, generates chapter summaries (LLM agent with retry/validation), then batches everything into wiki input files.
+
+4. **wiki-page-item** -- Generates individual wiki pages using an LLM agent inside a generation-validation group (max 3 iterations). A validator agent checks each page; rejected pages trigger a group retry with accumulated feedback.
+
+5. **pages-export** -- Loads generated wiki pages, runs a copyright check (no verbatim passages from the source), and exports to wikitext format.
+
+## Getting started
+
+### Prerequisites
 
 - Python 3.11+
-- Studio pour l'orchestration des pipelines
-- spaCy pour le NER
-- fastcoref optionnel pour enrichir les relations
-- Ollama pour la generation locale des pages
-- Prisma/SQLite en option
+- [Studio CLI](https://github.com/studio-foundation/studio) installed from source
+- A spaCy English model (`python -m spacy download en_core_web_sm`)
 
-## Installation
+### Setup
 
 ```bash
-pip install -e ".[dev]"
+git clone https://github.com/studio-foundation/wiki-creator.git
+cd wiki-creator-by-studio
+pip install -e .
+studio config set provider anthropic --api-key $ANTHROPIC_API_KEY
 ```
 
-Optionnel:
+### Run
+
+Place a book YAML config in `library/<author>/<series>/books/` with the corresponding EPUB, then:
 
 ```bash
-npm install -g @studio/cli
-DATABASE_URL="file:./dev.db" npx prisma migrate dev
-```
-
-## Commandes utiles
-
-Le `Makefile` est la source de verite des commandes de travail:
-
-```bash
-# Livre par defaut:
-# library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml
-
-make run
+# Full pipeline (extraction through export)
 make run BOOK=library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml
 
+# Or run individual stages
 make run-extraction
 make run-resolution
 make run-preparation
 make generate-pages
-make generate-pages-dry
 make pages-export
-make run-generation
 
-make run-from-resolution
-make run-from-generation
+# Check status
 make run-status
 
-make test-extraction
-make test-clustering
-make test-relationships
-make test
-make test-coref
-make test-coref-parallel
-
+# Run tests
 pytest -q
-mypy wiki_creator/
 ```
 
-## Pipeline reel
+## Project structure
 
-### 1. `wiki-extraction`
-
-- `parse_epub.py`
-- `entity_extraction.py`
-- `entity_clustering.py`
-- `verify_entity_types.py`
-- `split_clusters.py`
-
-Sorties principales:
-- `processing_output/<slug>/epub_data.json`
-- `processing_output/<slug>/splits.json`
-- `processing_output/<slug>/persons_full.json`
-- `processing_output/<slug>/places_full.json`
-- `processing_output/<slug>/orgs_full.json`
-- `processing_output/<slug>/chapters.json`
-
-### 2. `wiki-resolution`
-
-- `load_splits.py`
-- `resolve_clusters.py`
-- `merge_entities.py`
-- `relationship_extraction.py`
-- `entity_classification.py`
-
-Sortie principale:
-- `processing_output/<slug>/entities_classified.json`
-
-### 3. `wiki-preparation`
-
-- `load_epub_data.py`
-- `load_classified_entities.py`
-- `chapter_summary.py`
-- `wiki_preparation.py`
-
-Sorties principales:
-- `processing_output/<slug>/chapter_summaries.json`
-- `wiki_inputs/<slug>/batch_*.json`
-
-### 4. Generation standalone
-
-- `scripts/generate_wiki_pages.py --book <book.yaml>`
-
-Sortie principale:
-- `processing_output/<slug>/wiki_pages.json`
-
-### 5. `pages-export`
-
-- `load_wiki_pages.py`
-- `copyright_check.py`
-- `wiki_export.py`
-
-Sortie principale:
-- `output/<slug>/**/*.wiki`
-
-Note:
-- `.studio/pipelines/wiki-generation.pipeline.yaml` existe encore comme pipeline combine, mais le workflow utilise par `Makefile` et `run_wiki.py` est le split `wiki-preparation` + generation standalone + `pages-export`.
-
-## Arborescence
-
-```text
+```
 wiki-creator-by-studio/
-├── .studio/
-│   ├── pipelines/
-│   ├── contracts/
-│   ├── agents/
-│   ├── tools/
-│   └── inputs/
-├── library/
-│   └── <author>/<series>/
-│       ├── books/<slug>.yaml
-│       ├── books/<slug>.epub
-│       ├── processing_output/<slug>/
-│       ├── wiki_inputs/<slug>/
-│       └── output/<slug>/
-├── scripts/
-├── tests/
-├── wiki_creator/
-├── Makefile
-└── run_wiki.py
+├── .studio/              # Studio configs (pipelines, agents, contracts, tools)
+├── library/              # Book configs (.yaml) and EPUBs, per author/series
+├── wiki_creator/         # Python package (NER, clustering, export logic)
+├── scripts/              # Pipeline stage scripts (called by Studio)
+├── tests/                # Test suite (pytest)
+├── Makefile              # Developer commands
+└── run_wiki.py           # Local orchestrator script
 ```
 
-## Fichiers importants
+## License
 
-- [Makefile](/home/arianeguay/dev/src/wiki-creator-by-studio/Makefile): commandes de travail
-- [run_wiki.py](/home/arianeguay/dev/src/wiki-creator-by-studio/run_wiki.py): orchestrateur local
-- [wiki_creator/paths.py](/home/arianeguay/dev/src/wiki-creator-by-studio/wiki_creator/paths.py): derive les chemins a partir du YAML/EPUB
-- [.studio/pipelines/wiki-extraction.pipeline.yaml](/home/arianeguay/dev/src/wiki-creator-by-studio/.studio/pipelines/wiki-extraction.pipeline.yaml)
-- [.studio/pipelines/wiki-resolution.pipeline.yaml](/home/arianeguay/dev/src/wiki-creator-by-studio/.studio/pipelines/wiki-resolution.pipeline.yaml)
-- [.studio/pipelines/wiki-preparation.pipeline.yaml](/home/arianeguay/dev/src/wiki-creator-by-studio/.studio/pipelines/wiki-preparation.pipeline.yaml)
-- [.studio/pipelines/pages-export.pipeline.yaml](/home/arianeguay/dev/src/wiki-creator-by-studio/.studio/pipelines/pages-export.pipeline.yaml)
-
-## Gotchas
-
-- Les chemins ne sont plus globaux au repo: ils sont derives par livre via `wiki_creator.paths`.
-- `entity_extraction.py` utilise les IDs de chapitre pour `first_seen` et `mentions_by_chapter`, pas les titres.
-- `generate_wiki_pages.py` n'est pas un stage Studio; il faut lancer `wiki-preparation` avant.
-- `relationship_extraction.py --live` attend normalement `--book`.
-- `workers` pour fastcoref augmentent vite l'usage memoire.
-- `CLAUDE.md` et `AGENTS.md` contiennent les consignes operatoires pour les agents, pas une doc produit.
+MIT -- see [LICENSE](./LICENSE)
