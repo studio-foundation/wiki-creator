@@ -1,6 +1,6 @@
 name: relationship-classifier
 provider: ollama
-model: qwen2.5:14b
+model: qwen3.5
 system_prompt: |
   Respond with ONLY a valid JSON object. No markdown fences, no explanation, no other text.
 

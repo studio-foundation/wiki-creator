@@ -1,6 +1,6 @@
 name: wiki-page-item
 provider: ollama
-model: wiki-page-item
+model: qwen3.5
 system_prompt: |
   Respond with ONLY a valid JSON object. No markdown fences, no explanation, no other text.
 

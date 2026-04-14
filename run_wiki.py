@@ -20,7 +20,7 @@ from pathlib import Path
 
 from wiki_creator.paths import book_paths_from_yaml
 
-PIPELINES = ["wiki-extraction", "wiki-resolution", "wiki-preparation", "pages-export"]
+PIPELINES = ["wiki-extraction", "wiki-resolution", "wiki-preparation", "wiki-generation", "pages-export"]
 
 
 def required_files(book_path: str) -> dict[str, list[str]]:
@@ -38,9 +38,10 @@ def required_files(book_path: str) -> dict[str, list[str]]:
             str(p.processing / "relationships_classified.json"),
             str(p.wiki_inputs),
         ],
-        "pages-export": [
+        "wiki-generation": [
             str(p.processing / "wiki_pages.json"),
         ],
+        "pages-export": [],
     }
 
 
@@ -66,9 +67,10 @@ def clean_files(book_path: str) -> dict[str, list[str]]:
             str(p.processing / "relationships_classified.json"),
             str(p.wiki_inputs),
         ],
-        "pages-export": [
+        "wiki-generation": [
             str(p.processing / "wiki_pages.json"),
         ],
+        "pages-export": [],
     }
 
 
@@ -76,7 +78,7 @@ def clean_files(book_path: str) -> dict[str, list[str]]:
 PRE_STEPS = {
     "wiki-resolution":  ["python", "scripts/chapter_summary.py", "--book"],
     "wiki-preparation": ["python", "scripts/classify_relationships.py", "--book"],
-    "pages-export":     ["python", "scripts/generate_wiki_pages.py", "--book"],
+    "wiki-generation":  ["python", "scripts/generate_wiki_pages.py", "--book"],
 }
 
 
@@ -141,7 +143,7 @@ def print_status(book_path: str) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Wiki creation orchestrator")
     parser.add_argument("--book", required=True, help="Path to book YAML config")
-    parser.add_argument("--restart", choices=PIPELINES + ["wiki-generation"], help="Restart from this pipeline")
+    parser.add_argument("--restart", choices=PIPELINES, help="Restart from this pipeline")
     parser.add_argument("--retries", type=int, default=3, help="Max attempts per pipeline")
     parser.add_argument("--clean", action="store_true", help="Delete outputs of restarted stages before running")
     parser.add_argument("--status", action="store_true", help="Show run status and exit")
@@ -156,12 +158,6 @@ def main() -> None:
         return
 
     state = load_state(args.book)
-
-    # Determine start pipeline
-    # "wiki-generation" is kept as a backwards-compatible alias for "wiki-preparation"
-    _RESTART_ALIASES = {"wiki-generation": "wiki-preparation"}
-    if args.restart and args.restart in _RESTART_ALIASES:
-        args.restart = _RESTART_ALIASES[args.restart]
 
     start_idx = 0
     if args.restart:
