@@ -8,8 +8,11 @@ from scripts.generate_wiki_pages import (
     _check_forbidden_names,
     _contains_template_placeholder,
     _extract_stage_output_from_run_payload,
+    _force_correct_identity,
     _is_page_complete,
+    _nom_matches_identity,
     _print_generation_summary,
+    _rejection_is_identity_only,
     _run_generation_for_entity,
     _strip_relations_section,
     build_prompt,
@@ -1190,3 +1193,238 @@ def test_prompt_includes_pov_note_for_limited_pov():
 def test_prompt_no_pov_note_for_omniscient():
     prompt = build_prompt(_entity_with_chapter("omniscient", None), "Book", ["main"])
     assert "perspective —" not in prompt  # no per-chapter POV note emitted
+
+
+# --- STU-318: identity repair helpers ---
+
+def _verin_entity():
+    return {
+        "canonical_name": "Verin",
+        "type": "PERSON",
+        "aliases": ["Verin", "Lord Verin"],
+    }
+
+
+def test_nom_matches_identity_true_for_partial_canonical():
+    entity = {"canonical_name": "Nehemia Ytger", "type": "PERSON", "aliases": []}
+    assert _nom_matches_identity("Nehemia", entity) is True
+
+
+def test_nom_matches_identity_true_for_known_alias():
+    entity = {"canonical_name": "Chaol", "type": "PERSON",
+              "aliases": ["Captain Westfall", "Chaol Westfall"]}
+    assert _nom_matches_identity("Captain Westfall", entity) is True
+
+
+def test_nom_matches_identity_false_for_swapped_name():
+    assert _nom_matches_identity("Kaltain", _verin_entity()) is False
+
+
+def test_nom_matches_identity_true_for_empty_nom():
+    assert _nom_matches_identity("", _verin_entity()) is True
+
+
+def test_force_correct_identity_rewrites_swapped_nom():
+    page = {"infobox_fields": {"nom": "Kaltain", "rôle": "Dame de la cour"},
+            "content": "## Biographie\n\nTexte."}
+    changed = _force_correct_identity(page, _verin_entity())
+    assert changed is True
+    assert page["infobox_fields"]["nom"] == "Verin"
+    assert page["_identity_corrected"] is True
+
+
+def test_force_correct_identity_noop_when_clean():
+    page = {"infobox_fields": {"nom": "Verin"}, "content": "x"}
+    changed = _force_correct_identity(page, _verin_entity())
+    assert changed is False
+    assert "_identity_corrected" not in page
+
+
+def test_force_correct_identity_strips_sibling_swapped_alias():
+    page = {"infobox_fields": {"nom": "Verin", "alias": "Kaltain, Le Fléau"},
+            "content": "x"}
+    changed = _force_correct_identity(page, _verin_entity(),
+                                      sibling_canonicals={"Kaltain Rompier"})
+    assert changed is True
+    assert page["infobox_fields"]["alias"] == "Le Fléau"
+
+
+def test_force_correct_identity_keeps_own_alias_even_if_sibling_token_overlaps():
+    entity = {"canonical_name": "Kaltain Rompier", "type": "PERSON",
+              "aliases": ["Kaltain", "Kaltain Rompier"]}
+    page = {"infobox_fields": {"nom": "Kaltain Rompier", "alias": "Kaltain"},
+            "content": "x"}
+    changed = _force_correct_identity(page, entity, sibling_canonicals={"Kaltain Rompier"})
+    assert page["infobox_fields"]["alias"] == "Kaltain"
+    assert changed is False
+
+
+# --- STU-318: recovery + force-correct wiring ---
+
+def _verin_entity_ctx():
+    return {
+        "canonical_name": "Verin",
+        "importance": "secondary",
+        "type": "PERSON",
+        "aliases": ["Verin", "Lord Verin"],
+        "context_by_chapter": {"ch01": ["Verin entre dans la cour."]},
+    }
+
+
+def test_force_correct_on_success_path_keeps_page(monkeypatch, tmp_path):
+    def fake_runner(**kwargs):
+        return {
+            "title": "Verin",
+            "importance": "secondary",
+            "entity_type": "PERSON",
+            "infobox_fields": {"nom": "Kaltain"},
+            "content": "## Biographie\n\nVerin est un lord.",
+        }
+
+    monkeypatch.setattr("scripts.generate_wiki_pages._run_wiki_page_item", fake_runner)
+
+    page = _run_generation_for_entity(
+        entity=_verin_entity_ctx(),
+        book_title="Throne of Glass",
+        model="qwen2.5",
+        timeout=120,
+        sections=["infobox", "biography"],
+        max_tokens=800,
+        dry_run=False,
+        debug_dir=tmp_path / "debug",
+        sibling_canonicals={"Kaltain Rompier"},
+    )
+
+    assert page.get("_failed") is not True
+    assert page["infobox_fields"]["nom"] == "Verin"
+    assert page["_identity_corrected"] is True
+
+
+def test_recovers_and_corrects_on_identity_only_rejection(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        "scripts.generate_wiki_pages._run_wiki_page_item",
+        lambda **_: {"error": "studio_run_failed", "run_metadata": {"run_id": "r1"}},
+    )
+
+    def fake_stage_output(run_id, stage_name):
+        if stage_name == "wiki-page-validator":
+            return {"valid": False,
+                    "errors": ["❌ Infobox 'nom: Kaltain' ne correspond pas à l'entité 'Verin'"]}
+        return {
+            "title": "Verin",
+            "importance": "secondary",
+            "entity_type": "PERSON",
+            "infobox_fields": {"nom": "Kaltain"},
+            "content": "## Biographie\n\nVerin est un lord.",
+        }
+
+    monkeypatch.setattr("scripts.generate_wiki_pages._load_studio_stage_output", fake_stage_output)
+
+    page = _run_generation_for_entity(
+        entity=_verin_entity_ctx(),
+        book_title="Throne of Glass",
+        model="qwen2.5",
+        timeout=120,
+        sections=["infobox", "biography"],
+        max_tokens=800,
+        dry_run=False,
+        debug_dir=tmp_path / "debug",
+        sibling_canonicals={"Kaltain Rompier"},
+    )
+
+    assert page.get("_failed") is not True
+    assert page["infobox_fields"]["nom"] == "Verin"
+    assert page["_identity_corrected"] is True
+
+
+def test_does_not_recover_on_non_identity_rejection(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        "scripts.generate_wiki_pages._run_wiki_page_item",
+        lambda **_: {"error": "studio_run_failed", "run_metadata": {"run_id": "r1"}},
+    )
+
+    def fake_stage_output(run_id, stage_name):
+        if stage_name == "wiki-page-validator":
+            return {"valid": False,
+                    "errors": ["❌ Nom non ancré dans les extraits source : Yrene"]}
+        return {"title": "Verin", "importance": "secondary", "entity_type": "PERSON",
+                "infobox_fields": {"nom": "Kaltain"}, "content": "x"}
+
+    monkeypatch.setattr("scripts.generate_wiki_pages._load_studio_stage_output", fake_stage_output)
+
+    page = _run_generation_for_entity(
+        entity=_verin_entity_ctx(),
+        book_title="Throne of Glass",
+        model="qwen2.5",
+        timeout=120,
+        sections=["infobox", "biography"],
+        max_tokens=800,
+        dry_run=False,
+        debug_dir=tmp_path / "debug",
+        sibling_canonicals={"Kaltain Rompier"},
+    )
+
+    assert page.get("_failed") is True
+
+
+def test_does_not_recover_when_no_run_id(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        "scripts.generate_wiki_pages._run_wiki_page_item",
+        lambda **_: {"error": "studio_run_timeout", "run_metadata": {}},
+    )
+    page = _run_generation_for_entity(
+        entity=_verin_entity_ctx(),
+        book_title="Throne of Glass",
+        model="qwen2.5",
+        timeout=120,
+        sections=["infobox", "biography"],
+        max_tokens=800,
+        dry_run=False,
+        debug_dir=tmp_path / "debug",
+    )
+    assert page.get("_failed") is True
+
+
+def test_non_person_success_page_not_touched(monkeypatch, tmp_path):
+    entity = {"canonical_name": "Rifthold", "importance": "secondary", "type": "PLACE",
+              "aliases": [], "context_by_chapter": {"ch01": ["Rifthold est une cité."]}}
+
+    monkeypatch.setattr(
+        "scripts.generate_wiki_pages._run_wiki_page_item",
+        lambda **_: {"title": "Rifthold", "importance": "secondary", "entity_type": "PLACE",
+                     "infobox_fields": {"nom": "Adarlan"}, "content": "## Description\n\nx"},
+    )
+
+    page = _run_generation_for_entity(
+        entity=entity,
+        book_title="Throne of Glass",
+        model="qwen2.5",
+        timeout=120,
+        sections=["infobox"],
+        max_tokens=800,
+        dry_run=False,
+        debug_dir=tmp_path / "debug",
+        sibling_canonicals={"Adarlan"},
+    )
+
+    assert page["infobox_fields"]["nom"] == "Adarlan"
+    assert "_identity_corrected" not in page
+
+
+def test_rejection_is_identity_only(monkeypatch):
+    monkeypatch.setattr(
+        "scripts.generate_wiki_pages._load_studio_stage_output",
+        lambda run_id, stage: {"errors": ["❌ Infobox 'nom: X' ne correspond pas à l'entité 'Y'"]},
+    )
+    assert _rejection_is_identity_only("r1") is True
+
+
+def test_rejection_is_identity_only_false_when_mixed(monkeypatch):
+    monkeypatch.setattr(
+        "scripts.generate_wiki_pages._load_studio_stage_output",
+        lambda run_id, stage: {"errors": [
+            "❌ Infobox 'nom: X' ne correspond pas à l'entité 'Y'",
+            "❌ Nom non ancré dans les extraits source : Z",
+        ]},
+    )
+    assert _rejection_is_identity_only("r1") is False
