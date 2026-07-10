@@ -21,3 +21,16 @@ def test_new_template_override_removes_slot():
     book = {"generation": {"template": {"PERSON": {"remove": ["powers"]}}}}
     rt = pt.resolve_template("PERSON", "principal", book_config=book)
     assert "powers" not in [s.token for s in rt.sections()]
+
+
+def test_empty_legacy_list_drops_all_sections():
+    book = {"generation": {"principal": {"sections_by_type": {"ORG": []}}}}
+    rt = pt.resolve_template("ORG", "principal", book_config=book)
+    assert rt.section_tokens() == []
+
+
+def test_malformed_generation_does_not_raise():
+    book = {"generation": ["oops"]}
+    rt = pt.resolve_template("PERSON", "principal", book_config=book)
+    # falls back to base-default (no legacy filtering, no override)
+    assert "biography" in [s.token for s in rt.sections()]

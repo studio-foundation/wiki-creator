@@ -102,7 +102,7 @@ def resolve_template(entity_type, importance, book_config=None, base=None):
     if not groups:
         return ResolvedTemplate(etype, importance, ())
 
-    gen = (book_config or {}).get("generation", {}) if book_config else {}
+    gen = book_config.get("generation", {}) if book_config else {}
     tier_cfg = gen.get(importance, {}) if isinstance(gen, dict) else {}
     legacy = tier_cfg.get("sections_by_type", {}).get(etype) \
         if isinstance(tier_cfg.get("sections_by_type"), dict) else None
@@ -126,7 +126,8 @@ def resolve_template(entity_type, importance, book_config=None, base=None):
                     continue
             slots.append(slot)
 
-    new_override = (gen.get("template", {}) or {}).get(etype) if isinstance(gen.get("template"), dict) else None
+    template_cfg = gen.get("template") if isinstance(gen, dict) else None
+    new_override = template_cfg.get(etype) if isinstance(template_cfg, dict) else None
     if new_override:
         slots = _apply_new_overrides(slots, new_override)
     return ResolvedTemplate(etype, importance, tuple(slots))
