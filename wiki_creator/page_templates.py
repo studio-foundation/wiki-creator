@@ -159,3 +159,23 @@ def relationship_label(token, lang, base=None) -> str:
     if not spec:
         return token
     return (spec.get("labels") or {}).get(lang, token)
+
+
+def slot_label(token, lang, base=None) -> str:
+    raw = base if base is not None else load_base_template()
+    entry = (raw.get("labels") or {}).get(token)
+    if entry and lang in entry:
+        return entry[lang]
+    return token.replace("_", " ").title()
+
+
+def output_language(book_config) -> str:
+    cfg = book_config or {}
+    gen = cfg.get("generation", {}) if isinstance(cfg.get("generation"), dict) else {}
+    if gen.get("output_language"):
+        return str(gen["output_language"])
+    export = cfg.get("export", {}) if isinstance(cfg.get("export"), dict) else {}
+    cats = export.get("categories", {}) if isinstance(export.get("categories"), dict) else {}
+    if cats.get("language"):
+        return str(cats["language"])
+    return "en"
