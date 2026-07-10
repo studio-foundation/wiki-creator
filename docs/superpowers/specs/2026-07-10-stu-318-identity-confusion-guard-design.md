@@ -1,4 +1,4 @@
-# STU-318 — Identity-confusion guard for generated PERSON pages
+# STU-318 — Identity-confusion terminal safety net for generated PERSON pages
 
 **Linear:** [STU-318](https://linear.app/studioag/issue/STU-318/confusions-identitaires-llm-validation-post-generation-canonical-name)
 **Date:** 2026-07-10
@@ -7,170 +7,206 @@
 ## Problem
 
 Run 15 produced three *pure LLM hallucinations* — identity confusions between
-distinct characters, with no upstream file (entities_classified, relationships,
-batches) containing the bad association:
+distinct characters, with no upstream file containing the bad association:
 
-1. **Nehemia** described as "de son vrai nom Yrene Astellaris" (Yrene is a
-   book-6 character) — *prose-level* confusion.
-2. **Verin** infobox `nom: Kaltain`, `date_de_naissance: Années 800 EC` — Verin
-   is not Kaltain Rompier — *infobox-level* swap.
+1. **Nehemia** described as "de son vrai nom Yrene Astellaris" — *prose-level*.
+2. **Verin** infobox `nom: Kaltain` — *infobox-level* swap.
 3. **Kaltain Rompier** described as "confidente de la reine Elena Havilliard du
-   royaume de Ruhn" (Elena is an ancient legend; "Ruhn" does not exist in the
-   series) — *prose-level* confusion.
+   royaume de Ruhn" — *prose-level*.
 
-The current generator force-sets `title`, `importance`, and `entity_type` from
-the batch entity ([`parse_response`](../../../scripts/generate_wiki_pages.py)),
-but the LLM-authored infobox `nom` field and biography prose are unvalidated —
-which is exactly where the confusions live.
+## Critical context: detection already shipped (commit #41, same day)
+
+STU-318 was filed 2026-04-02; **the identity-confusion *detection* it asks for
+landed 2026-07-10 in commit `4b8f6bd` (#41)** — after the issue was filed.
+[`check_identity_match`](../../../scripts/wiki_page_validator.py) already:
+
+- verifies the infobox `nom`/`name`/`titre` and the page `title` match the
+  requested `canonical_name` (accent/case-insensitive containment),
+- **explicitly targets Verin→Kaltain** (named in its docstring; covered by a
+  passing test asserting `{"title": "Verin"}` + `nom: Kaltain` returns errors),
+- is wired as a **hard validation stage** in the `wiki-page-item` pipeline inside
+  a `max_iterations: 3` RALPH group, so a detected confusion already triggers up
+  to 3 regenerations.
+
+**Therefore STU-318's detection half is done.** The remaining, un-shipped gap is
+the *terminal behaviour*: when the confusion survives all 3 retries, the run
+rejects → [`_run_wiki_page_item`](../../../scripts/generate_wiki_pages.py) returns
+an error → `generate_wiki_pages` emits a **failed stub**, discarding the whole
+(possibly-good) biography. This spec closes that gap.
 
 ## Scope
 
-This issue ships a **small, targeted guard** — detection + correction after
-generation. A deeper fix (page templates that make identity fields
-*deterministic* so the LLM never authors them) is intentionally **out of scope**
-and tracked as a separate issue. This spec closes the highest-value, lowest-risk
-slice now.
+### In scope — Design A: terminal safety net
 
-### In scope
+Leave the validator and the 3× RALPH retries **untouched** — the LLM keeps its 3
+chances to self-correct (best-quality outcome). Change only what happens *after*
+exhaustion, in `scripts/generate_wiki_pages.py`, for `entity_type == "PERSON"`:
 
-A post-generation identity guard in `scripts/generate_wiki_pages.py`, running
-**only for `entity_type == "PERSON"`**, structured as a sibling of the existing
-`forbidden_names` retry block. Two detections:
-
-- **Self-mismatch** — the generated infobox `nom` shares no token with the
-  entity's own `{canonical_name} ∪ aliases`.
-- **Sibling-swap** — the generated infobox `nom`, or a value in the infobox
-  `alias` field, exactly equals a *different* batch entity's canonical_name.
-
-On detection: **retry once**, then **force-correct** (keep the page — do not
-stub it).
+1. **Recover** the generation output of a rejected run instead of stubbing, using
+   the existing [`_load_studio_stage_output(run_id, "wiki-page-item")`](../../../scripts/generate_wiki_pages.py)
+   (already used elsewhere as a fallback; reads the run's `.jsonl` log).
+2. **Force-correct** the recovered page's identity fields and **keep** it:
+   - infobox `nom` → `canonical_name` if it matches neither the entity's own
+     `canonical_name` nor any known alias;
+   - drop any infobox `alias` value that matches a *sibling* batch entity's
+     canonical_name (the **sibling-swap** cross-check — genuinely new; the
+     validator only compares against the entity's own name);
+   - tag `page["_identity_corrected"] = True`, write a debug artifact, log.
+3. **Belt-and-suspenders:** apply the same force-correct on the *success* path
+   too (a no-op when `nom` already matches), so a bad `nom` that slips the
+   validator for any reason is still repaired.
 
 ### Out of scope (deferred, conscious decisions)
 
-- **Page templates / deterministic identity fields** → separate issue. This is
-  the real root-cause fix (prevention over detection); it touches `build_prompt`,
-  `parse_response`, the `wiki_pages.json` shape, `wiki_export.py`, and many
-  tests, so it gets its own spec.
-- **Promoting "Yrene Astellaris" into code-enforced `validation.forbidden_names`**
-  (would let the existing retry loop catch case #1 in prose). Dropped from this
-  issue.
-- **`nehemia.json` GT edit** (issue action #2 — add "Yrene Astellaris" to
-  `identity_confusion_forbidden`). The GT files feed the human `validate-wiki-run`
-  audit skill, not pipeline code. Dropped from this issue by explicit decision.
+- **Re-implementing detection** in `generate_wiki_pages.py` — rejected; would
+  duplicate `check_identity_match` and create two sources of truth.
+- **Page templates / deterministic identity fields** → [STU-436](https://linear.app/studioag/issue/STU-436/page-templates-make-wiki-page-identityinfobox-fields-deterministic).
+- **Promoting "Yrene Astellaris" into code `validation.forbidden_names`** — dropped.
+- **`nehemia.json` GT edit** (issue action #2) — the GT files feed the human
+  `validate-wiki-run` audit skill, not pipeline code; dropped by explicit decision.
 
-Cases #1 and #3 are *prose-level* confusions inside the LLM-authored biography;
-this guard does not target them. The existing `forbidden_names` guard remains the
-mechanism for prose, and the template refactor will shrink the prose surface
-further. This guard targets case #2 (the infobox swap) and any future
-infobox-`nom` confusion.
+Cases #1 and #3 are *prose-level* confusions in the LLM-authored biography; this
+guard targets the *infobox* class (case #2) plus the page-loss regression. The
+`forbidden_names` guard remains the mechanism for prose.
 
 ## Design
 
-### 1. Pure detection function
+### Reuse the validator's normalization primitive
+
+Import [`_normalize_name`](../../../scripts/wiki_page_validator.py) (NFKD, strip
+combining marks, lowercase, strip) from `scripts.wiki_page_validator` — one
+normalization definition shared with the detector, so the repair decision uses
+the same rule that flagged the page. Do **not** duplicate normalization.
+
+### Identity match (aliases-aware)
+
+`check_identity_match` compares only against the entity's *title* (canonical) and
+ignores aliases — that is fine for *flagging*, but the *repair* must not clobber a
+legitimately alias-derived `nom` (e.g. Chaol's `nom: "Captain Westfall"`). So the
+repair's self-match consults `{canonical_name} ∪ aliases`:
 
 ```python
-def _check_identity_confusion(
-    page: dict,
-    entity: dict,
-    sibling_canonicals: set[str],
-) -> list[str]:
-    """Return human-readable identity issues; empty list means clean.
-
-    PERSON-only. Caller is responsible for skipping non-PERSON entities.
-    """
+def _nom_matches_identity(nom: str, entity: dict) -> bool:
+    """True if nom (accent/case-insensitively) matches canonical_name or any alias."""
+    nom_n = _normalize_name(nom)
+    if not nom_n:
+        return True  # nothing authored to be wrong
+    candidates = [entity.get("canonical_name", ""), *entity.get("aliases", [])]
+    for cand in candidates:
+        cand_n = _normalize_name(cand)
+        if cand_n and (nom_n in cand_n or cand_n in nom_n):
+            return True
+    return False
 ```
 
-Behaviour:
+Containment (not token-set equality) mirrors `check_identity_match` and handles
+multi-word names: `"Nehemia"` matches `"Nehemia Ytger"`; `"Kaltain"` matches
+neither `"Verin"` nor its aliases → repaired.
 
-- **Normalization** — a shared `_normalize_identity(s)` helper: lowercase, strip
-  accents, strip punctuation, split into a token set. Reused by both detections.
-- **Self-mismatch** — let `nom = infobox_fields.get("nom")`. If `nom` is present
-  and non-empty, require at least one shared token between `tokens(nom)` and
-  `tokens(canonical_name) ∪ ⋃ tokens(alias)` over the entity's known aliases.
-  No overlap → append an issue string naming the offending `nom`.
-  - If `nom` is absent/empty, no self-mismatch issue (nothing was authored to be
-    wrong; the infobox extractor / template layer handles absence elsewhere).
-- **Sibling-swap** — build the normalized-token sets of *other* batch entities'
-  canonical_names (`sibling_canonicals`, already excluding this entity). If
-  `tokens(nom)` **shares ≥1 token** with a sibling's canonical tokens, **or** any
-  comma-split value in the infobox `alias` field does, append an issue string
-  naming the swapped-with entity. Overlap (not exact set-equality) is required:
-  the bad `nom: "Kaltain"` (`{kaltain}`) must match the sibling canonical
-  "Kaltain Rompier" (`{kaltain, rompier}`), whose sets are not equal.
-  - To avoid noise from generic shared tokens (e.g. "princess", "lady"), the
-    swap-check ignores tokens that also appear in *this* entity's own
-    `{canonical_name} ∪ aliases` — only a token that is distinctive to the
-    sibling counts as a swap signal.
+### Force-correct
 
-Return the accumulated issues. The self-check catches *any* wrong `nom` (including
-invented names no sibling set can know); the swap-check adds precise diagnostics
-("swapped with Kaltain") and reaches into the `alias` field the self-check does
-not inspect. They overlap on Verin→Kaltain but are not redundant.
+```python
+def _force_correct_identity(
+    page: dict, entity: dict, sibling_canonicals: set[str] | None = None
+) -> bool:
+    """Repair infobox identity fields in-place. Returns True if changed.
 
-### 2. Guard flow
+    PERSON-only; caller gates on entity_type. Reuses _normalize_name.
+    """
+    infobox = page.get("infobox_fields") or {}
+    changed = False
+    canonical = entity.get("canonical_name", "")
 
-In [`_run_generation_for_entity`](../../../scripts/generate_wiki_pages.py), add a
-block parallel to the `forbidden_names` retry, gated on
-`entity.get("type") == "PERSON"`:
+    nom = str(infobox.get("nom", "")).strip()
+    if nom and not _nom_matches_identity(nom, entity):
+        infobox["nom"] = canonical
+        changed = True
 
-1. Run `_check_identity_confusion`. If clean, no-op.
-2. If issues found: log a warning, **retry once** via a fresh
-   `_run_wiki_page_item` (same re-strip-relations handling as the existing block).
-3. Re-check. If still issues → **force-correct**:
-   - `page["infobox_fields"]["nom"] = entity["canonical_name"]`
-   - strip any sibling-canonical value from the infobox `alias` field
-   - write a debug artifact via `_save_generation_debug_artifact`
-   - tag `page["_identity_corrected"] = True`
-   - log a warning; **return the (corrected) page** — never a stub.
+    sib_norm = {_normalize_name(s) for s in (sibling_canonicals or set()) if _normalize_name(s)}
+    if sib_norm and infobox.get("alias"):
+        kept = []
+        for value in str(infobox["alias"]).split(","):
+            v_n = _normalize_name(value)
+            is_swap = bool(v_n) and not _nom_matches_identity(value, entity) and any(
+                v_n == s or v_n in s or s in v_n for s in sib_norm
+            )
+            if is_swap:
+                changed = True
+            else:
+                kept.append(value.strip())
+        infobox["alias"] = ", ".join(k for k in kept if k)
+        if not infobox["alias"]:
+            infobox.pop("alias", None)
 
-Force-correct over stub is the right tradeoff: we already own the correct value
-(`canonical_name`), so discarding a probably-good biography over one bad field
-would throw away signal to punish a typo.
+    if changed:
+        page["infobox_fields"] = infobox
+        page["_identity_corrected"] = True
+    return changed
+```
 
-### 3. Threading `sibling_canonicals`
+The alias-swap strip is conservative: it only removes a value that matches a
+sibling *and* does not match this entity's own identity, so a legitimate alias is
+never dropped.
 
-`main` builds, per batch, `sibling_canonicals_by_entity` — or more simply, for
-each entity computes the set of *other* entities' canonical_names in that batch —
-and passes `sibling_canonicals` into `_run_generation_for_entity` (new optional
-param, defaulting to an empty set so existing callers/tests are unaffected).
+### Wire into `_run_generation_for_entity`
+
+Add a PERSON-gated block after the existing forbidden_names handling:
+
+- **Success path** (`item_result` has `"content"`): call
+  `_force_correct_identity(item_result, entity, sibling_canonicals)`; if it
+  changed anything, write a debug artifact and log a warning. Return the page.
+- **Error path** (`item_result.get("error")`): if
+  `item_result["run_metadata"]["run_id"]` is present, try
+  `recovered = _load_studio_stage_output(run_id, "wiki-page-item")`. If a page is
+  recovered, run it through `parse_response(json.dumps(recovered), entity)`, then
+  `_force_correct_identity(...)`, keep it (tag `_identity_corrected`), write a
+  debug artifact, log. If nothing recoverable → existing failed-stub behaviour.
+
+Only PERSON entities take this path; non-PERSON keeps today's behaviour.
+
+### Thread `sibling_canonicals`
+
+`main` builds, per batch, `all_canonicals = {e["canonical_name"] for e in entities}`
+and passes `sibling_canonicals = all_canonicals - {name}` into
+`_run_generation_for_entity` (new optional param, default `None`, so existing
+callers/tests are unaffected).
 
 ## Testing
 
-Unit tests for `_check_identity_confusion`:
+Unit tests for the new pure functions:
 
-- Verin → `nom: Kaltain` where the sibling canonical is "Kaltain Rompier":
-  flagged by **both** checks (exercises token-overlap, not set-equality).
-- Generic shared token: entity "Princess Nehemia" alias, `nom: "Princess X"`
-  where a sibling is "Princess Y" — the shared "princess" token must **not** by
-  itself trigger a swap (distinctive-token rule).
-- Verin → `nom: <invented non-sibling>`: flagged by self-check only.
-- Clean PERSON (`nom` matches canonical or an alias): no issues.
-- Multi-token canonical ("Nehemia Ytger") with `nom: "Nehemia"`: token overlap →
-  no issue.
-- Non-PERSON entity: caller skips (assert the guard flow does not run / returns
-  early) — a translated title like `nom: "Le Roi d'Adarlan"` vs canonical
-  "The King of Adarlan" must **not** false-positive because it is never checked.
-- Alias-field swap: `alias` contains a sibling canonical → flagged.
+- `_nom_matches_identity`: `"Nehemia"` vs entity canonical `"Nehemia Ytger"` → True;
+  `"Kaltain"` vs entity `"Verin"` (+ its aliases) → False; `"Captain Westfall"`
+  vs entity `"Chaol"` with that alias → True (legit alias not clobbered);
+  empty nom → True.
+- `_force_correct_identity`:
+  - `nom: "Kaltain"` on entity `"Verin"` → nom rewritten to `"Verin"`,
+    `_identity_corrected` True, returns True.
+  - clean `nom` matching canonical → no change, returns False.
+  - `alias: "Kaltain, Le Fléau"` with `"Kaltain Rompier"` a sibling → the
+    Kaltain value stripped, `"Le Fléau"` kept.
+  - legit alias equal to an own alias but token-overlapping a sibling → kept
+    (conservative rule).
 
-Guard-flow test:
+Guard-flow tests (monkeypatch `_run_wiki_page_item` / `_load_studio_stage_output`,
+mirroring the existing forbidden_names tests):
 
-- After a persistent mismatch, assert the page is **kept** (not a stub),
-  `infobox_fields["nom"] == canonical_name`, `_identity_corrected is True`, and a
-  debug artifact was written.
+- **Success path with bad nom:** runner returns a page with `nom: "Kaltain"` for
+  entity `"Verin"` → returned page is kept (not a stub), `nom == "Verin"`,
+  `_identity_corrected is True`, debug artifact written.
+- **Error path recovery:** runner returns `{"error": ..., "run_metadata": {"run_id": "r1"}}`;
+  `_load_studio_stage_output` monkeypatched to return a page with bad `nom` →
+  returned page is kept, force-corrected, `_identity_corrected is True` — **not**
+  a `_failed` stub.
+- **Error path, unrecoverable:** runner error with no `run_id` (or recovery
+  returns None) → existing failed-stub behaviour preserved.
+- **Non-PERSON:** an ORG/PLACE entity with a "wrong" nom is left untouched (guard
+  skipped).
 
-Run `pytest -q` and `mypy wiki_creator/` (script lives under `scripts/`, but keep
-types clean) before claiming completion.
+Run `pytest -q` and `mypy wiki_creator/` before claiming completion.
 
 ## Follow-up issue
 
-Tracked as [STU-436](https://linear.app/studioag/issue/STU-436/page-templates-make-wiki-page-identityinfobox-fields-deterministic).
-
-**Title:** Page templates: make wiki-page identity/infobox fields deterministic
-(prevent identity confusion at the source)
-
-**Gist:** Generalize STU-319's force-set-from-batch approach into a per-
-`entity_type` page template where identity/infobox slots (`nom`, `alias`, `type`)
-are bound by code from the batch entity, and the LLM only fills descriptive prose
-sections. Makes the infobox class of identity confusion unrepresentable rather
-than merely detected. Touches `build_prompt`, `parse_response`, `wiki_pages.json`
-shape, `wiki_export.py`, and tests. Related to STU-318 and STU-319.
+Tracked as [STU-436](https://linear.app/studioag/issue/STU-436/page-templates-make-wiki-page-identityinfobox-fields-deterministic)
+— page templates that make identity fields deterministic (prevention over
+detection). Related to STU-318 and STU-319.
