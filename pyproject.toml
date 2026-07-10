@@ -13,10 +13,12 @@ dependencies = [
     "ebooklib>=0.18",
     "beautifulsoup4>=4.12",
     "spacy>=3.7",
+    # spaCy's CLI (spacy download) imports click directly but no longer gets
+    # it transitively: typer >= 0.26 dropped its click dependency.
+    "click>=8",
     "lxml>=5.0",
     "anthropic>=0.40",
     "pyyaml>=6.0",
-    "fastcoref>=2.1",
     "mwparserfromhell>=0.6",
     "requests>=2.31",
     "networkx>=3.0",
@@ -26,6 +28,13 @@ dependencies = [
 dev = [
     "pytest>=8.0",
     "mypy>=1.0",
+    "types-networkx",
+]
+# Coreference resolution (scripts/relationship_extraction.py, opt-in via
+# `coref: true` in the book YAML). Kept out of core deps: pulls torch and
+# its wheel build breaks on some platforms.
+coref = [
+    "fastcoref>=2.1",
 ]
 
 [project.urls]

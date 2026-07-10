@@ -28,6 +28,7 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+from wiki_creator.lang import book_language
 from wiki_creator.paths import book_paths_from_yaml
 
 DEFAULT_NUM_PREDICT = 1024
@@ -522,12 +523,27 @@ def _load_studio_stage_output(run_id: str, stage_name: str) -> dict | None:
     return None
 
 
-def _wiki_page_item_input(*, entity: dict, book_title: str, sections: list[str], max_tokens: int, forbidden_names: list[str] | None = None) -> dict:
+def _wiki_page_item_input(
+    *,
+    entity: dict,
+    book_title: str,
+    sections: list[str],
+    max_tokens: int,
+    forbidden_names: list[str] | None = None,
+    language: str = "fr",
+    file_path: str = "",
+) -> dict:
+    # language / forbidden_names / file_path feed the wiki-page-validator
+    # stage inside the wiki-page-item pipeline (its checks read them from
+    # additional_context — without them those checks are no-ops).
     return {
         "title": entity.get("canonical_name", ""),
         "importance": entity.get("importance", ""),
         "entity_type": entity.get("type", ""),
         "max_tokens": max_tokens,
+        "language": language,
+        "forbidden_names": forbidden_names or [],
+        "file_path": file_path,
         "prompt": build_prompt(entity, book_title, sections=sections, forbidden_names=forbidden_names),
     }
 
@@ -541,6 +557,8 @@ def _run_wiki_page_item(
     sections: list[str],
     max_tokens: int,
     forbidden_names: list[str] | None = None,
+    language: str = "fr",
+    file_path: str = "",
 ) -> dict:
     item_input = _wiki_page_item_input(
         entity=entity,
@@ -548,6 +566,8 @@ def _run_wiki_page_item(
         sections=sections,
         max_tokens=max_tokens,
         forbidden_names=forbidden_names,
+        language=language,
+        file_path=file_path,
     )
     timeout_seconds = max(timeout * 4, 120)
 
@@ -653,6 +673,8 @@ def _run_generation_for_entity(
     dry_run: bool,
     debug_dir: Path,
     forbidden_names: list[str] | None = None,
+    language: str = "fr",
+    file_path: str = "",
 ) -> dict:
     if not entity.get("context_by_chapter", {}):
         return make_stub_page(entity, insufficient_data=True)
@@ -667,6 +689,8 @@ def _run_generation_for_entity(
         sections=sections,
         max_tokens=max_tokens,
         forbidden_names=forbidden_names,
+        language=language,
+        file_path=file_path,
     )
     if isinstance(item_result, dict) and item_result.get("error"):
         _save_generation_debug_artifact(debug_dir, entity, item_result)
@@ -689,6 +713,8 @@ def _run_generation_for_entity(
                 sections=sections,
                 max_tokens=max_tokens,
                 forbidden_names=forbidden_names,
+                language=language,
+                file_path=file_path,
             )
             if isinstance(item_result, dict) and item_result.get("error"):
                 _save_generation_debug_artifact(debug_dir, entity, item_result)
@@ -885,6 +911,8 @@ def main() -> None:
     forbidden_names = validation_cfg.get("forbidden_names", [])
     if forbidden_names:
         print(f"[generate-wiki-pages] Forbidden names active: {forbidden_names}", file=sys.stderr)
+    book_lang = book_language(book_cfg)
+    book_file_path = book_cfg.get("file_path", "")
 
     book_title = load_book_title(str(book_paths.processing / "epub_data.json"))
     batches = load_batch_files(wiki_inputs_dir, args.importance)
@@ -955,6 +983,8 @@ def main() -> None:
                         dry_run=args.dry_run,
                         debug_dir=debug_dir,
                         forbidden_names=forbidden_names,
+                        language=book_lang,
+                        file_path=book_file_path,
                     )
                     all_pages.append(page)
                     _save(all_pages, output_file)

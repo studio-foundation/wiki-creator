@@ -28,14 +28,24 @@ The workflow is split into four Studio pipelines, each with structurally validat
 
 - Python 3.11+
 - [Studio CLI](https://github.com/studio-foundation/studio) installed from source
-- A spaCy English model (`python -m spacy download en_core_web_sm`)
+- A spaCy model matching your book's language:
+  - French books: `python -m spacy download fr_core_news_lg`
+  - English books: `python -m spacy download en_core_web_sm`
+
+> **Language support:** the pipeline is French-first — page generation and
+> validation target French output by default. Set a top-level `language:` key
+> in your book YAML (e.g. `language: en`) to disable French-only validation
+> for books in other languages. POV detection and cue words currently support
+> `fr` and `en`.
 
 ### Setup
 
 ```bash
 git clone https://github.com/studio-foundation/wiki-creator.git
-cd wiki-creator-by-studio
+cd wiki-creator
 pip install -e .
+# Optional: coreference resolution support (pulls torch, large download)
+pip install -e ".[coref]"
 studio config set provider anthropic --api-key $ANTHROPIC_API_KEY
 ```
 
@@ -59,12 +69,16 @@ make run-status
 
 # Run tests
 pytest -q
+
+# End-to-end smoke test — runs the EPUB parse + NER extraction stages on a
+# small committed fixture novella, no real book or LLM required
+make smoke
 ```
 
 ## Project structure
 
 ```
-wiki-creator-by-studio/
+wiki-creator/
 ├── .studio/              # Studio configs (pipelines, agents, contracts, tools)
 ├── library/              # Book configs (.yaml) and EPUBs, per author/series
 ├── wiki_creator/         # Python package (NER, clustering, export logic)

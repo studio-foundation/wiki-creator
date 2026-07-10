@@ -16,9 +16,15 @@ from scripts.entity_extraction import (
 )
 
 
+from _markers import requires_en_sm, requires_fr_lg
+
+
 @pytest.fixture(scope="module")
 def nlp():
     """Small English model for fast tests."""
+    from _markers import spacy_model_available
+    if not spacy_model_available("en_core_web_sm"):
+        pytest.skip("requires spaCy model en_core_web_sm")
     return spacy.load("en_core_web_sm")
 
 
@@ -295,6 +301,7 @@ def test_split_entities_for_resolution_has_core_fields(nlp):
 
 # --- --test mode integration test ---
 
+@requires_en_sm
 def test_test_mode_exits_successfully():
     """python scripts/entity_extraction.py --test should exit 0 and print a summary."""
     import subprocess
@@ -575,6 +582,7 @@ def test_save_chapters_json_writes_chapter_texts(tmp_path):
     assert data == {"chapters": {"ch01": "Hello world.", "ch02": "Goodbye world."}}
 
 
+@requires_fr_lg
 def test_pos_filter_rejects_verb_at_sentence_start():
     """Capitalized French verb at dialogue start must not appear as entity."""
     nlp = spacy.load("fr_core_news_lg")
@@ -602,6 +610,7 @@ def test_pos_filter_rejects_verb_at_sentence_start():
     assert any("Vidal" in m or "Martín" in m for m in raw_mentions)
 
 
+@requires_en_sm
 def test_main_exits_on_empty_entities():
     """main() must exit 1 with error JSON when no entities are extracted."""
     import subprocess
@@ -703,6 +712,7 @@ def test_ensure_sentencizer_adds_sentencizer_when_missing():
     assert "sentencizer" in nlp.pipe_names
 
 
+@requires_en_sm
 def test_ensure_sentencizer_skips_when_parser_present():
     """A model with a parser already sets sentence boundaries — don't add sentencizer."""
     nlp = spacy.load("en_core_web_sm")
@@ -720,6 +730,7 @@ def test_ensure_sentencizer_allows_doc_sents(nlp):
     assert len(sents) >= 1
 
 
+@requires_en_sm
 def test_main_writes_only_entities_meeting_min_mentions_threshold(tmp_path):
     """main() should exclude low-mention entities from persons_full.json."""
     import json as _json

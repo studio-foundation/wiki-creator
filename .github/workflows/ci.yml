@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      # click is imported by spaCy's CLI (spacy download) but no longer
+      # arrives transitively: typer >= 0.26 dropped its click dependency
+      # while spacy 3.8 still does `from click import NoSuchOption`.
+      - name: Install package with dev dependencies
+        run: pip install -e ".[dev]" "click>=8"
+
+      # Small English model — enough for the NER-dependent tests.
+      # Tests needing fr_core_news_lg (~570 MB) or the coref extra skip
+      # cleanly (see tests/_markers.py) to keep CI fast.
+      - name: Install spaCy model
+        run: python -m spacy download en_core_web_sm
+
+      - name: Type-check
+        run: python -m mypy wiki_creator/
+
+      - name: Tests
+        run: python -m pytest -q

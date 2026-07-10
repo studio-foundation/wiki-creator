@@ -1,52 +1,174 @@
 {
   "place_cue_words": [
-    "ville", "royaume", "continent", "pays", "château", "chateau", "palais",
-    "camp", "mine", "forêt", "foret", "rivière", "riviere", "mer",
-    "port", "rue", "route", "avenue"
+    "ville",
+    "royaume",
+    "continent",
+    "pays",
+    "château",
+    "chateau",
+    "palais",
+    "camp",
+    "mine",
+    "forêt",
+    "foret",
+    "rivière",
+    "riviere",
+    "mer",
+    "port",
+    "rue",
+    "route",
+    "avenue"
   ],
   "person_cue_words": [
-    "prince", "princesse", "roi", "reine", "duc", "dame", "seigneur",
-    "capitaine", "sir", "monsieur", "madame", "mademoiselle"
+    "prince",
+    "princesse",
+    "roi",
+    "reine",
+    "duc",
+    "dame",
+    "seigneur",
+    "capitaine",
+    "sir",
+    "monsieur",
+    "madame",
+    "mademoiselle"
   ],
   "place_prepositions": [
-    "dans", "à", "a", "de", "depuis", "vers", "au", "aux", "en"
+    "dans",
+    "à",
+    "a",
+    "de",
+    "depuis",
+    "vers",
+    "au",
+    "aux",
+    "en"
   ],
   "event_suffixes": [
-    "bal", "festival", "fête", "fete", "cérémonie", "ceremonie",
-    "célébration", "celebration", "prières", "prieres", "bénédiction",
-    "benediction", "matin", "nuit", "veille"
+    "bal",
+    "festival",
+    "fête",
+    "fete",
+    "cérémonie",
+    "ceremonie",
+    "célébration",
+    "celebration",
+    "prières",
+    "prieres",
+    "bénédiction",
+    "benediction",
+    "matin",
+    "nuit",
+    "veille"
   ],
   "pronouns": [
-    "il", "elle", "ils", "elles", "lui", "leur",
-    "le", "la", "les", "l'", "l\u2019", "y", "en",
-    "se", "s'", "s\u2019"
+    "il",
+    "elle",
+    "ils",
+    "elles",
+    "lui",
+    "leur",
+    "le",
+    "la",
+    "les",
+    "l'",
+    "l’",
+    "y",
+    "en",
+    "se",
+    "s'",
+    "s’"
   ],
-  "determiners": ["le", "la", "les", "un", "une", "des", "du", "de"],
+  "determiners": [
+    "le",
+    "la",
+    "les",
+    "un",
+    "une",
+    "des",
+    "du",
+    "de"
+  ],
   "noise_words": [
-    "oui", "non", "ah", "oh", "eh", "ok",
-    "le", "la", "les", "un", "une", "des",
-    "et", "ou", "mais", "donc", "or", "ni", "car",
-    "ici", "là", "que", "qui", "quoi",
-    "ça", "ce", "cet", "cette", "ces"
+    "oui",
+    "non",
+    "ah",
+    "oh",
+    "eh",
+    "ok",
+    "le",
+    "la",
+    "les",
+    "un",
+    "une",
+    "des",
+    "et",
+    "ou",
+    "mais",
+    "donc",
+    "or",
+    "ni",
+    "car",
+    "ici",
+    "là",
+    "que",
+    "qui",
+    "quoi",
+    "ça",
+    "ce",
+    "cet",
+    "cette",
+    "ces"
   ],
   "false_positive_words": [
-    "cher", "chère", "chers", "chères",
-    "monsieur", "madame", "mademoiselle",
-    "excusez", "pardonnez", "intéressant",
-    "merci", "bonjour", "bonsoir", "adieu"
+    "cher",
+    "chère",
+    "chers",
+    "chères",
+    "monsieur",
+    "madame",
+    "mademoiselle",
+    "excusez",
+    "pardonnez",
+    "intéressant",
+    "merci",
+    "bonjour",
+    "bonsoir",
+    "adieu"
   ],
-  "coordination_connectors": ["et", "y"],
+  "coordination_connectors": [
+    "et",
+    "y"
+  ],
   "reveal_words": [
-    "sous un autre nom", "vrai nom", "nom réel",
-    "identité cachée", "alias", "également connu sous"
+    "sous un autre nom",
+    "vrai nom",
+    "nom réel",
+    "identité cachée",
+    "alias",
+    "également connu sous"
   ],
   "geo_keywords": [
-    "royaume", "pays", "ville", "capitale", "empire", "continent",
-    "côte", "mer", "montagne", "forêt"
+    "royaume",
+    "pays",
+    "ville",
+    "capitale",
+    "empire",
+    "continent",
+    "côte",
+    "mer",
+    "montagne",
+    "forêt"
   ],
   "event_keywords": [
-    "fête", "fete", "cérémonie", "ceremonie",
-    "célébration", "celebration", "rite", "rituel"
+    "fête",
+    "fete",
+    "cérémonie",
+    "ceremonie",
+    "célébration",
+    "celebration",
+    "rite",
+    "rituel"
   ],
   "alias_pattern_templates": [
     "\\bvous pouvez m'appeler {b}\\b",
@@ -58,18 +180,59 @@
     "\\b{a}[^.]{{0,80}}\\bsous un autre nom[^.]{{0,80}}\\b{b}\\b"
   ],
   "action_cues": [
-    "trouva", "découvrit", "révéla", "avertit", "signala", "suivit",
-    "attaqua", "tua", "s'échappa", "rencontra", "décida", "réalisa",
-    "arriva", "partir", "repartit", "demanda", "ouvrit", "ferma"
+    "trouva",
+    "découvrit",
+    "révéla",
+    "avertit",
+    "signala",
+    "suivit",
+    "attaqua",
+    "tua",
+    "s'échappa",
+    "rencontra",
+    "décida",
+    "réalisa",
+    "arriva",
+    "partir",
+    "repartit",
+    "demanda",
+    "ouvrit",
+    "ferma"
   ],
   "geo_suffixes": [
-    "montagnes", "montagne", "mer", "océan", "rivière", "lac", "forêt",
-    "côte", "baie", "golfe", "île", "vallée", "désert",
-    "plaines", "pic", "col", "détroit", "fjord", "cap"
+    "montagnes",
+    "montagne",
+    "mer",
+    "océan",
+    "rivière",
+    "lac",
+    "forêt",
+    "côte",
+    "baie",
+    "golfe",
+    "île",
+    "vallée",
+    "désert",
+    "plaines",
+    "pic",
+    "col",
+    "détroit",
+    "fjord",
+    "cap"
   ],
   "role_words": [
-    "capitaine", "garde", "reine", "roi", "prince", "princesse", "dame", "seigneur",
-    "duc", "sir", "assassin", "champion"
+    "capitaine",
+    "garde",
+    "reine",
+    "roi",
+    "prince",
+    "princesse",
+    "dame",
+    "seigneur",
+    "duc",
+    "sir",
+    "assassin",
+    "champion"
   ],
   "role_patterns": [
     "\\b[a-z][a-zàâéèêëîïôùûüç'\\- ]*assassin\\b",
@@ -87,5 +250,25 @@
     "dans un autre temps",
     "autrefois",
     "jadis"
+  ],
+  "first_person_pronouns": [
+    "je",
+    "me",
+    "moi",
+    "mon",
+    "ma",
+    "mes"
+  ],
+  "first_person_prefixes": [
+    "m'",
+    "j'"
+  ],
+  "third_person_thought_markers": [
+    "il pensait",
+    "elle pensait",
+    "il savait",
+    "elle savait",
+    "il sentait",
+    "elle sentait"
   ]
 }

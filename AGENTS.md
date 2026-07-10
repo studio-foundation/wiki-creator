@@ -60,7 +60,8 @@ Minimum before closing a code task:
 - if behavior changed across shared scripts, run `pytest -q`
 
 Current known good baseline:
-- `pytest -q` passed on 2026-03-09 with `288 passed`
+- `pytest -q` passed on 2026-07-10 with `735 passed, 31 skipped`
+  (skips require optional spaCy models / the `coref` extra — see `tests/_markers.py`)
 
 ## Common Pitfalls
 

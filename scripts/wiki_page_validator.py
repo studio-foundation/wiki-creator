@@ -2,11 +2,13 @@
 """Stage: wiki-page-validator (script executor)
 
 Valide la page générée par wiki-page-item.
-Checks structurels (toutes importances) + grounding LLM (principal/secondary).
+Checks structurels (toutes importances) : langue, IDs EPUB, clés infobox,
+ancrage série, noms/séries interdits, cohérence identitaire (grounding v1).
 
 Input (Studio stdin):
   previous_outputs["wiki-page-item"]: page générée
-  additional_context: YAML avec file_path, series, forbidden_series
+  additional_context: YAML avec title (canonical_name), language, file_path,
+  series, forbidden_series, forbidden_names
 
 Output (stdout):
   { "valid": bool, "errors": [...], "feedback": str }
@@ -14,6 +16,7 @@ Output (stdout):
 import json
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 import yaml
@@ -21,17 +24,18 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
-
-
-_EN_MARKERS = [
-    "is the", "was a", "was the", "known as", "also known",
-    "she was", "he is", "he was", "they are", "is an", "is a",
-]
+from wiki_creator.lang import load_lang_config
 
 
 def check_language_fr(page: dict) -> list[str]:
+    """Detect English contamination in a page that must be French.
+
+    Marker vocabulary comes from cue_words/en.json (language_id_markers) —
+    never hardcoded here. Degrades to no-op if the key is absent.
+    """
+    markers = load_lang_config("en").get("language_id_markers", [])
     content = page.get("content", "").lower()
-    hits = [m for m in _EN_MARKERS if m in content]
+    hits = [m for m in markers if m in content]
     if hits:
         return [f"❌ Contenu en anglais détecté (marqueurs : {', '.join(hits[:3])})"]
     return []
@@ -84,6 +88,50 @@ def check_forbidden_names(page: dict, meta: dict) -> list[str]:
     return []
 
 
+_IDENTITY_INFOBOX_KEYS = {"nom", "name", "titre", "title", "nom complet", "full name"}
+
+
+def _normalize_name(value: str) -> str:
+    """Lowercase and strip accents for tolerant name comparison."""
+    value = unicodedata.normalize("NFKD", value)
+    value = "".join(c for c in value if not unicodedata.combining(c))
+    return value.strip().lower()
+
+
+def check_identity_match(page: dict, meta: dict) -> list[str]:
+    """Grounding v1 — the page must describe the entity it was asked for.
+
+    Catches identity confusions observed in real runs (page 'Verin' with
+    infobox nom='Kaltain', title 'Philippa' rendered as 'Philippe'):
+    - page title must match the requested canonical_name;
+    - identity infobox fields (nom/name/titre) must reference it.
+    A match is exact or by containment in either direction (accent- and
+    case-insensitive), so 'Celaena' vs 'Celaena Sardothien' passes.
+    """
+    expected = meta.get("title", "")
+    if not expected:
+        return []
+    expected_n = _normalize_name(expected)
+    errors = []
+
+    def matches(value: str) -> bool:
+        value_n = _normalize_name(value)
+        return bool(value_n) and (expected_n in value_n or value_n in expected_n)
+
+    page_title = str(page.get("title", ""))
+    if page_title and not matches(page_title):
+        errors.append(
+            f"❌ Titre de page '{page_title}' ≠ entité demandée '{expected}'"
+        )
+
+    for key, value in (page.get("infobox_fields") or {}).items():
+        if _normalize_name(str(key)) in _IDENTITY_INFOBOX_KEYS and not matches(str(value)):
+            errors.append(
+                f"❌ Infobox '{key}: {value}' ne correspond pas à l'entité '{expected}'"
+            )
+    return errors
+
+
 def check_references_book_title(page: dict, allowed_book_titles: list[str]) -> list[str]:
     content = page.get("content", "")
     match = re.search(r"##\s*Références(.*?)(?=\n##|\Z)", content, re.IGNORECASE | re.DOTALL)
@@ -119,8 +167,12 @@ def _load_allowed_book_titles(meta: dict) -> list[str]:
 
 def validate_page(page: dict, meta: dict) -> dict:
     errors: list[str] = []
-    errors += check_language_fr(page)
+    # The FR-contamination check only applies to French books; the book
+    # language comes from the item input (default 'fr', historical corpus).
+    if meta.get("language", "fr") == "fr":
+        errors += check_language_fr(page)
     errors += check_epub_ids(page)
+    errors += check_identity_match(page, meta)
     errors += check_infobox_keys(page)
     errors += check_series_anchor(page, meta)
     errors += check_forbidden_series(page, meta)

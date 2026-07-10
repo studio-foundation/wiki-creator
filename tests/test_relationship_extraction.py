@@ -11,6 +11,11 @@ from scripts.relationship_extraction import enrich_mentions_with_coref
 _TEST_MODEL = "qwen2.5"
 
 
+from _markers import requires_fastcoref, requires_fr_lg
+
+
+@requires_fastcoref
+@requires_fr_lg
 def test_enrich_mentions_adds_pronoun_sentence():
     """Pronoun sentence after a named entity must be added to its mentions."""
     chapters = {
