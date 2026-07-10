@@ -8,6 +8,7 @@ from scripts.wiki_page_validator import (
     check_series_anchor,
     check_forbidden_series,
     check_forbidden_names,
+    check_identity_match,
     check_references_book_title,
     validate_page,
     build_feedback,
@@ -270,3 +271,79 @@ def test_validate_page_skips_references_check_when_title_empty(tmp_path):
     # Empty title → check skipped → no references error
     result = validate_page(page, meta)
     assert not any("Titre non autorisé" in e for e in result.get("errors", []))
+
+
+# --- Language gate (A4) ---
+
+
+def test_language_gate_skips_fr_check_for_english_book():
+    page = {"title": "Elias", "importance": "principal", "entity_type": "PERSON",
+            "infobox_fields": {}, "content": "Elias is the captain. He was a sailor."}
+    result = validate_page(page, {"language": "en"})
+    assert not any("anglais" in e for e in result["errors"])
+
+
+def test_language_gate_defaults_to_fr():
+    page = {"title": "Elias", "importance": "principal", "entity_type": "PERSON",
+            "infobox_fields": {}, "content": "Elias is the captain. He was a sailor."}
+    result = validate_page(page, {})
+    assert any("anglais" in e for e in result["errors"])
+
+
+def test_language_gate_explicit_fr_still_checks():
+    page = {"title": "Elias", "importance": "principal", "entity_type": "PERSON",
+            "infobox_fields": {}, "content": "Elias is the captain."}
+    result = validate_page(page, {"language": "fr"})
+    assert any("anglais" in e for e in result["errors"])
+
+
+# --- Identity grounding v1 (A5) ---
+
+
+def test_identity_match_passes_exact_title():
+    page = {"title": "Celaena Sardothien", "infobox_fields": {"nom": "Celaena Sardothien"}}
+    assert check_identity_match(page, {"title": "Celaena Sardothien"}) == []
+
+
+def test_identity_match_passes_containment_both_ways():
+    page = {"title": "Celaena", "infobox_fields": {"nom": "Celaena Sardothien"}}
+    assert check_identity_match(page, {"title": "Celaena Sardothien"}) == []
+    page2 = {"title": "Celaena Sardothien", "infobox_fields": {}}
+    assert check_identity_match(page2, {"title": "Celaena"}) == []
+
+
+def test_identity_match_detects_wrong_infobox_name():
+    # Real regression from run 15: page 'Verin' with infobox nom='Kaltain'
+    page = {"title": "Verin", "infobox_fields": {"nom": "Kaltain"}}
+    errors = check_identity_match(page, {"title": "Verin"})
+    assert any("Kaltain" in e for e in errors)
+
+
+def test_identity_match_detects_title_drift():
+    # Real regression from run 15: entity 'Philippa' titled 'Philippe'
+    page = {"title": "Philippe", "infobox_fields": {}}
+    errors = check_identity_match(page, {"title": "Philippa"})
+    assert any("Philippe" in e for e in errors)
+
+
+def test_identity_match_accent_insensitive():
+    page = {"title": "Néhémia", "infobox_fields": {"nom": "Nehemia Ytger"}}
+    assert check_identity_match(page, {"title": "Nehemia"}) == []
+
+
+def test_identity_match_ignores_non_identity_infobox_keys():
+    page = {"title": "Celaena", "infobox_fields": {"allégeance": "Adarlan", "statut": "vivante"}}
+    assert check_identity_match(page, {"title": "Celaena"}) == []
+
+
+def test_identity_match_skips_without_expected_title():
+    page = {"title": "Anything", "infobox_fields": {"nom": "Someone Else"}}
+    assert check_identity_match(page, {}) == []
+
+
+def test_validate_page_includes_identity_errors():
+    page = {"title": "Verin", "importance": "secondary", "entity_type": "PERSON",
+            "infobox_fields": {"nom": "Kaltain"}, "content": "Texte en français correct."}
+    result = validate_page(page, {"title": "Verin", "language": "fr"})
+    assert result["valid"] is False
+    assert any("Kaltain" in e for e in result["errors"])

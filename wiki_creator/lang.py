@@ -12,6 +12,21 @@ def infer_language(spacy_model: str) -> str:
     return "en"
 
 
+def book_language(ctx: dict) -> str:
+    """Resolve the book language from its YAML config dict.
+
+    Priority: explicit top-level `language:` key, then inference from
+    `spacy_model`, then 'fr' (historical default of this repo's corpus).
+    """
+    explicit = (ctx.get("language") or "").strip().lower()
+    if explicit:
+        return explicit
+    spacy_model = (ctx.get("spacy_model") or "").strip()
+    if spacy_model:
+        return infer_language(spacy_model)
+    return "fr"
+
+
 def load_lang_config(language: str) -> dict:
     """Load wiki_creator/cue_words/<language>.json as a plain dict.
 

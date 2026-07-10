@@ -306,3 +306,37 @@ def test_parse_epub_output_includes_pov_detection(tmp_path):
     result = parse_epub(epub_path)
     assert "pov_detection" in result
     assert result["pov_detection"]["pov"] == "first_person"
+
+
+# --- Language-aware POV detection (cue_words-driven) ---
+
+
+def test_detect_pov_english_first_person():
+    text = "I walked to the harbor. My ship was waiting for me and I felt free. " * 5
+    result = detect_pov(text, language="en")
+    assert result["pov"] == "first_person"
+    assert result["first_person_count"] > 0
+
+
+def test_detect_pov_english_third_person_default_fr_misses():
+    # The same English text analyzed with French vocabulary finds no
+    # first-person markers — this documents why language must be threaded.
+    text = "I walked to the harbor. My ship was waiting for me and I felt free. " * 5
+    result = detect_pov(text)  # default fr
+    # 'me' is shared between fr and en vocabularies; ratio stays below the
+    # first-person threshold with fr pronouns only.
+    assert result["first_person_count"] < detect_pov(text, language="en")["first_person_count"]
+
+
+def test_detect_pov_english_thought_markers_third_limited():
+    text = "The captain looked at the sea. He knew the storm would come. " * 3
+    result = detect_pov(text, language="en")
+    assert result["pov"] == "third_limited"
+
+
+def test_detect_pov_unknown_language_degrades_gracefully():
+    # Unknown language falls back to en.json (load_lang_config behavior);
+    # detection still returns a well-formed result.
+    result = detect_pov("Ein Schiff segelte über das Meer.", language="de")
+    assert result["pov"] in {"omniscient", "third_limited", "first_person"}
+    assert "confidence" in result

@@ -283,7 +283,8 @@ def test_run_generation_for_entity_uses_item_runner_when_not_dry(monkeypatch, tm
     debug_dir = tmp_path / "wiki_page_item_debug"
     calls = []
 
-    def fake_runner(*, entity, book_title, model, timeout, sections, max_tokens, forbidden_names=None):
+    def fake_runner(*, entity, book_title, model, timeout, sections, max_tokens,
+                    forbidden_names=None, language="fr", file_path=""):
         calls.append((entity["canonical_name"], book_title, model, timeout, sections, max_tokens))
         return {
             "title": "Victor Grandes",
@@ -1085,3 +1086,40 @@ def test_run_generation_no_retry_when_no_forbidden_names(monkeypatch, tmp_path):
 
     assert len(calls) == 1
     assert not page.get("_failed")
+
+
+def test_wiki_page_item_input_carries_validator_context():
+    """language / forbidden_names / file_path must reach the wiki-page-item
+    pipeline input — the wiki-page-validator stage reads them from
+    additional_context and its checks are no-ops without them."""
+    from scripts.generate_wiki_pages import _wiki_page_item_input
+
+    entity = {"canonical_name": "Celaena Sardothien", "importance": "principal",
+              "type": "PERSON", "context_by_chapter": {"ch01": ["..."]}}
+    item = _wiki_page_item_input(
+        entity=entity,
+        book_title="Throne of Glass",
+        sections=["infobox", "biography"],
+        max_tokens=800,
+        forbidden_names=["Aelin"],
+        language="fr",
+        file_path="library/x/books/01.epub",
+    )
+    assert item["title"] == "Celaena Sardothien"
+    assert item["language"] == "fr"
+    assert item["forbidden_names"] == ["Aelin"]
+    assert item["file_path"] == "library/x/books/01.epub"
+
+
+def test_wiki_page_item_input_defaults():
+    from scripts.generate_wiki_pages import _wiki_page_item_input
+
+    item = _wiki_page_item_input(
+        entity={"canonical_name": "X", "importance": "figurant", "type": "PERSON"},
+        book_title="B",
+        sections=["infobox"],
+        max_tokens=200,
+    )
+    assert item["language"] == "fr"
+    assert item["forbidden_names"] == []
+    assert item["file_path"] == ""

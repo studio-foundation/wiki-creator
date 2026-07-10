@@ -21,6 +21,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 from wiki_creator.paths import book_paths_from_epub, BookPaths
+from wiki_creator.lang import book_language, load_lang_config
 
 
 def _paths_from_payload(payload: dict) -> BookPaths:
@@ -103,21 +104,51 @@ def clean_chapter_text(text: str) -> str:
     return text.strip()
 
 
-# French first-person pronouns (word-boundary matched)
-_FIRST_PERSON_RE = re.compile(
-    r"\b(?:je|me|moi|mon|ma|mes)\b|\bm'|\bj'",
-    re.IGNORECASE,
-)
+def _first_person_regex(language: str) -> re.Pattern | None:
+    """Build the first-person detection regex from cue_words/<language>.json.
+
+    Vocabulary lives in cue_words (never hardcoded here). Returns None when
+    the language config defines no first-person vocabulary — POV detection
+    then degrades gracefully to 'omniscient'.
+    """
+    cfg = load_lang_config(language)
+    pronouns = cfg.get("first_person_pronouns", [])
+    prefixes = cfg.get("first_person_prefixes", [])
+    parts = []
+    if pronouns:
+        parts.append(r"\b(?:" + "|".join(re.escape(p) for p in pronouns) + r")\b")
+    for prefix in prefixes:
+        parts.append(r"\b" + re.escape(prefix))
+    if not parts:
+        return None
+    return re.compile("|".join(parts), re.IGNORECASE)
 
 
-def detect_pov(text: str) -> dict:
-    """Detect narrative point of view from raw chapter text."""
+def _thought_markers_regex(language: str) -> re.Pattern | None:
+    """Third-person 'thought' markers regex from cue_words/<language>.json."""
+    cfg = load_lang_config(language)
+    markers = cfg.get("third_person_thought_markers", [])
+    if not markers:
+        return None
+    return re.compile(
+        r"\b(?:" + "|".join(re.escape(m) for m in markers) + r")\b",
+        re.IGNORECASE,
+    )
+
+
+def detect_pov(text: str, language: str = "fr") -> dict:
+    """Detect narrative point of view from raw chapter text.
+
+    `language` selects the pronoun vocabulary from cue_words/<language>.json;
+    defaults to 'fr' to preserve historical behavior.
+    """
     tokens = text.split()
     total_tokens = len(tokens)
     if total_tokens == 0:
         return {"pov": "omniscient", "first_person_count": 0, "total_tokens": 0, "confidence": "low"}
 
-    first_person_count = len(_FIRST_PERSON_RE.findall(text))
+    fp_re = _first_person_regex(language)
+    first_person_count = len(fp_re.findall(text)) if fp_re else 0
     ratio = first_person_count / total_tokens
 
     if ratio > 0.05:
@@ -128,11 +159,8 @@ def detect_pov(text: str) -> dict:
         pov = "first_person"
     else:
         confidence = "low" if ratio > 0 else "high"
-        has_thought_markers = bool(re.search(
-            r"\b(il pensait|elle pensait|il savait|elle savait|il sentait|elle sentait)\b",
-            text,
-            re.IGNORECASE,
-        ))
+        tm_re = _thought_markers_regex(language)
+        has_thought_markers = bool(tm_re.search(text)) if tm_re else False
         pov = "third_limited" if has_thought_markers else "omniscient"
 
     return {
@@ -202,7 +230,7 @@ def _extract_chapter_title(soup, item, toc_titles: dict) -> str:
     return basename
 
 
-def parse_epub(file_path: str) -> dict:
+def parse_epub(file_path: str, language: str = "fr") -> dict:
     import ebooklib
     from ebooklib import epub
     from bs4 import BeautifulSoup
@@ -243,7 +271,7 @@ def parse_epub(file_path: str) -> dict:
     # Compute POV per chapter, then take modal result for robustness
     # (avoids dilution in mixed-POV or frame-narrative books)
     if chapters:
-        chapter_results = [detect_pov(ch["content"]) for ch in chapters]
+        chapter_results = [detect_pov(ch["content"], language=language) for ch in chapters]
         pov_counts: dict[str, int] = {}
         for r in chapter_results:
             pov_counts[r["pov"]] = pov_counts.get(r["pov"], 0) + 1
@@ -278,7 +306,9 @@ def main():
         json.dump({"error": "missing field: file_path"}, sys.stdout)
         sys.exit(1)
 
-    result = parse_epub(file_path)
+    language = book_language(input_data)
+    result = parse_epub(file_path, language=language)
+    result["language"] = language
     paths = _paths_from_payload(payload)
     paths.processing.mkdir(parents=True, exist_ok=True)
     with open(paths.processing / "epub_data.json", "w", encoding="utf-8") as _f:
