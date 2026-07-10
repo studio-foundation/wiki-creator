@@ -532,11 +532,13 @@ def _wiki_page_item_input(
     forbidden_names: list[str] | None = None,
     language: str = "fr",
     file_path: str = "",
+    grounding: dict | None = None,
 ) -> dict:
-    # language / forbidden_names / file_path feed the wiki-page-validator
-    # stage inside the wiki-page-item pipeline (its checks read them from
-    # additional_context — without them those checks are no-ops).
-    return {
+    # language / forbidden_names / file_path / grounding_* feed the
+    # wiki-page-validator stage inside the wiki-page-item pipeline (its
+    # checks read them from additional_context — without them those checks
+    # are no-ops).
+    item = {
         "title": entity.get("canonical_name", ""),
         "importance": entity.get("importance", ""),
         "entity_type": entity.get("type", ""),
@@ -546,6 +548,14 @@ def _wiki_page_item_input(
         "file_path": file_path,
         "prompt": build_prompt(entity, book_title, sections=sections, forbidden_names=forbidden_names),
     }
+    grounding = grounding or {}
+    if grounding.get("llm"):
+        item["grounding_llm"] = True
+        if grounding.get("llm_model"):
+            item["grounding_llm_model"] = grounding["llm_model"]
+        if grounding.get("llm_timeout"):
+            item["grounding_llm_timeout"] = grounding["llm_timeout"]
+    return item
 
 
 def _run_wiki_page_item(
@@ -559,6 +569,7 @@ def _run_wiki_page_item(
     forbidden_names: list[str] | None = None,
     language: str = "fr",
     file_path: str = "",
+    grounding: dict | None = None,
 ) -> dict:
     item_input = _wiki_page_item_input(
         entity=entity,
@@ -568,6 +579,7 @@ def _run_wiki_page_item(
         forbidden_names=forbidden_names,
         language=language,
         file_path=file_path,
+        grounding=grounding,
     )
     timeout_seconds = max(timeout * 4, 120)
 
@@ -675,6 +687,7 @@ def _run_generation_for_entity(
     forbidden_names: list[str] | None = None,
     language: str = "fr",
     file_path: str = "",
+    grounding: dict | None = None,
 ) -> dict:
     if not entity.get("context_by_chapter", {}):
         return make_stub_page(entity, insufficient_data=True)
@@ -691,6 +704,7 @@ def _run_generation_for_entity(
         forbidden_names=forbidden_names,
         language=language,
         file_path=file_path,
+        grounding=grounding,
     )
     if isinstance(item_result, dict) and item_result.get("error"):
         _save_generation_debug_artifact(debug_dir, entity, item_result)
@@ -715,6 +729,7 @@ def _run_generation_for_entity(
                 forbidden_names=forbidden_names,
                 language=language,
                 file_path=file_path,
+                grounding=grounding,
             )
             if isinstance(item_result, dict) and item_result.get("error"):
                 _save_generation_debug_artifact(debug_dir, entity, item_result)
@@ -913,6 +928,13 @@ def main() -> None:
         print(f"[generate-wiki-pages] Forbidden names active: {forbidden_names}", file=sys.stderr)
     book_lang = book_language(book_cfg)
     book_file_path = book_cfg.get("file_path", "")
+    grounding_cfg = validation_cfg.get("grounding", {}) or {}
+    if grounding_cfg.get("llm"):
+        print(
+            f"[generate-wiki-pages] LLM grounding active "
+            f"(model: {grounding_cfg.get('llm_model', 'mistral:7b-instruct')})",
+            file=sys.stderr,
+        )
 
     book_title = load_book_title(str(book_paths.processing / "epub_data.json"))
     batches = load_batch_files(wiki_inputs_dir, args.importance)
@@ -985,6 +1007,7 @@ def main() -> None:
                         forbidden_names=forbidden_names,
                         language=book_lang,
                         file_path=book_file_path,
+                        grounding=grounding_cfg,
                     )
                     all_pages.append(page)
                     _save(all_pages, output_file)
