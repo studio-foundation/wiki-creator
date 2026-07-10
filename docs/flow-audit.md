@@ -187,8 +187,9 @@ L'analyste adapte sa fiche selon le tome couvert. Le pipeline traite le livre en
 **2. POV narratif (`pov_character`) → batch files (perte silencieuse)**
 `parse_epub.py` détecte le POV par chapitre et l'écrit dans `epub_data.json`. `chapter_summary.py` reçoit les données EPUB mais ne propage pas le POV au niveau du résumé. Le writer ne sait donc pas si un chapitre est narré du point de vue d'un personnage secondaire.
 
-**3. `verify_entity_types.py` corrections → pipeline aval (perte conditionnelle)**
-Les corrections de types LLM produites par `verify_entity_types.py` sont dans le flux en mémoire mais ce stage est optionnel. Si les corrections ont été faites dans une run précédente et que le pipeline repart de `wiki-resolution`, les corrections ne sont pas rechargées depuis le disque — elles doivent être recalculées.
+**3. `verify_entity_types.py` corrections → pipeline aval (résolu — STU-302)**
+~~Les corrections de types LLM produites par `verify_entity_types.py` sont dans le flux en mémoire mais ce stage est optionnel. Si les corrections ont été faites dans une run précédente et que le pipeline repart de `wiki-resolution`, les corrections ne sont pas rechargées depuis le disque — elles doivent être recalculées.~~
+Corrigé par STU-302 (2026-03-22, le lendemain de cet audit) : `verify_entity_types.py` persiste désormais les corrections dans `processing_output/<slug>/entity_type_corrections.json`, et `entity_classification.py` (stage de `wiki-resolution`) les recharge et les ré-applique par `canonical_name`/aliases après la normalisation heuristique. Un restart `make run-from-resolution` récupère donc les décisions du LLM sans relancer Ollama.
 
 **4. `sample_contexts` (extraits textuels) → writer (perte partielle)**
 `relationship_extraction.py` extrait des `sample_contexts` (phrases brutes du texte pour chaque paire). Ces extraits pourraient servir de preuves textuelles au writer. Ils sont dans `relationships.json` et `relationships_classified.json` mais absents des batch files.
