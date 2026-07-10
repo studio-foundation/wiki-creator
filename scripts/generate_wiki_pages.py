@@ -30,6 +30,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 from wiki_creator.lang import book_language
 from wiki_creator.paths import book_paths_from_yaml
+from scripts.wiki_page_validator import _normalize_name
 
 DEFAULT_NUM_PREDICT = 1024
 
@@ -435,6 +436,58 @@ def _check_forbidden_names(page: dict, forbidden_names: list[str]) -> list[str]:
         return []
     haystack = (page.get("content", "") + " " + str(page.get("infobox_fields", {}))).lower()
     return [name for name in forbidden_names if name.lower() in haystack]
+
+
+def _nom_matches_identity(nom: str, entity: dict) -> bool:
+    """True if nom matches (accent/case-insensitively) the entity's own
+    canonical_name or any known alias. Empty nom counts as a match: there is
+    nothing authored to be wrong."""
+    nom_n = _normalize_name(nom)
+    if not nom_n:
+        return True
+    candidates = [entity.get("canonical_name", ""), *entity.get("aliases", [])]
+    for cand in candidates:
+        cand_n = _normalize_name(cand)
+        if cand_n and (nom_n in cand_n or cand_n in nom_n):
+            return True
+    return False
+
+
+def _force_correct_identity(
+    page: dict, entity: dict, sibling_canonicals: set[str] | None = None
+) -> bool:
+    """Repair infobox identity fields in place. PERSON-only (caller gates on
+    type). Rewrites a swapped `nom` to canonical_name and drops any `alias`
+    value that belongs to a *sibling* batch entity. Returns True if changed."""
+    infobox = page.get("infobox_fields") or {}
+    canonical = entity.get("canonical_name", "")
+    changed = False
+
+    nom = str(infobox.get("nom", "")).strip()
+    if nom and not _nom_matches_identity(nom, entity):
+        infobox["nom"] = canonical
+        changed = True
+
+    sib_norm = {n for n in (_normalize_name(s) for s in (sibling_canonicals or set())) if n}
+    if sib_norm and infobox.get("alias"):
+        kept = []
+        for value in str(infobox["alias"]).split(","):
+            v_n = _normalize_name(value)
+            is_swap = bool(v_n) and not _nom_matches_identity(value, entity) and any(
+                v_n == s or v_n in s or s in v_n for s in sib_norm
+            )
+            if is_swap:
+                changed = True
+            else:
+                kept.append(value.strip())
+        infobox["alias"] = ", ".join(k for k in kept if k)
+        if not infobox["alias"]:
+            infobox.pop("alias", None)
+
+    if changed:
+        page["infobox_fields"] = infobox
+        page["_identity_corrected"] = True
+    return changed
 
 
 def make_stub_page(entity: dict, failed: bool = False, insufficient_data: bool = False) -> dict:

@@ -8,7 +8,9 @@ from scripts.generate_wiki_pages import (
     _check_forbidden_names,
     _contains_template_placeholder,
     _extract_stage_output_from_run_payload,
+    _force_correct_identity,
     _is_page_complete,
+    _nom_matches_identity,
     _print_generation_summary,
     _run_generation_for_entity,
     _strip_relations_section,
@@ -1190,3 +1192,67 @@ def test_prompt_includes_pov_note_for_limited_pov():
 def test_prompt_no_pov_note_for_omniscient():
     prompt = build_prompt(_entity_with_chapter("omniscient", None), "Book", ["main"])
     assert "perspective —" not in prompt  # no per-chapter POV note emitted
+
+
+# --- STU-318: identity repair helpers ---
+
+def _verin_entity():
+    return {
+        "canonical_name": "Verin",
+        "type": "PERSON",
+        "aliases": ["Verin", "Lord Verin"],
+    }
+
+
+def test_nom_matches_identity_true_for_partial_canonical():
+    entity = {"canonical_name": "Nehemia Ytger", "type": "PERSON", "aliases": []}
+    assert _nom_matches_identity("Nehemia", entity) is True
+
+
+def test_nom_matches_identity_true_for_known_alias():
+    entity = {"canonical_name": "Chaol", "type": "PERSON",
+              "aliases": ["Captain Westfall", "Chaol Westfall"]}
+    assert _nom_matches_identity("Captain Westfall", entity) is True
+
+
+def test_nom_matches_identity_false_for_swapped_name():
+    assert _nom_matches_identity("Kaltain", _verin_entity()) is False
+
+
+def test_nom_matches_identity_true_for_empty_nom():
+    assert _nom_matches_identity("", _verin_entity()) is True
+
+
+def test_force_correct_identity_rewrites_swapped_nom():
+    page = {"infobox_fields": {"nom": "Kaltain", "rôle": "Dame de la cour"},
+            "content": "## Biographie\n\nTexte."}
+    changed = _force_correct_identity(page, _verin_entity())
+    assert changed is True
+    assert page["infobox_fields"]["nom"] == "Verin"
+    assert page["_identity_corrected"] is True
+
+
+def test_force_correct_identity_noop_when_clean():
+    page = {"infobox_fields": {"nom": "Verin"}, "content": "x"}
+    changed = _force_correct_identity(page, _verin_entity())
+    assert changed is False
+    assert "_identity_corrected" not in page
+
+
+def test_force_correct_identity_strips_sibling_swapped_alias():
+    page = {"infobox_fields": {"nom": "Verin", "alias": "Kaltain, Le Fléau"},
+            "content": "x"}
+    changed = _force_correct_identity(page, _verin_entity(),
+                                      sibling_canonicals={"Kaltain Rompier"})
+    assert changed is True
+    assert page["infobox_fields"]["alias"] == "Le Fléau"
+
+
+def test_force_correct_identity_keeps_own_alias_even_if_sibling_token_overlaps():
+    entity = {"canonical_name": "Kaltain Rompier", "type": "PERSON",
+              "aliases": ["Kaltain", "Kaltain Rompier"]}
+    page = {"infobox_fields": {"nom": "Kaltain Rompier", "alias": "Kaltain"},
+            "content": "x"}
+    changed = _force_correct_identity(page, entity, sibling_canonicals={"Kaltain Rompier"})
+    assert page["infobox_fields"]["alias"] == "Kaltain"
+    assert changed is False
