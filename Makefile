@@ -83,6 +83,9 @@ test-coref-parallel: test-extraction
 	python scripts/entity_clustering.py --live --book $(BOOK)
 	python scripts/relationship_extraction.py --live --book $(BOOK) --coref --workers 8
 
+smoke:  ## End-to-end smoke test on the committed fixture novella (no real EPUB needed)
+	python -m pytest tests/test_e2e_smoke.py -q
+
 clean:  ## Remove generated files (keeps .gitkeep sentinels)
 	@SERIES_DIR=$$(python -c "from wiki_creator.paths import book_paths_from_yaml; p = book_paths_from_yaml('$(BOOK)'); print(p.processing.parent.parent)"); \
 	find $$SERIES_DIR/processing_output $$SERIES_DIR/wiki_inputs $$SERIES_DIR/output \
