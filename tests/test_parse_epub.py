@@ -340,3 +340,25 @@ def test_detect_pov_unknown_language_degrades_gracefully():
     result = detect_pov("Ein Schiff segelte über das Meer.", language="de")
     assert result["pov"] in {"omniscient", "third_limited", "first_person"}
     assert "confidence" in result
+
+
+from scripts.parse_epub import annotate_pov
+
+
+def test_annotate_pov_persists_per_chapter_fields():
+    """Each chapter gets its own pov + pov_confidence, not just the book modal."""
+    chapters = [
+        {"id": "c1", "content": "Je marche. Je pense donc je suis. Je regarde le ciel."},
+        {"id": "c2", "content": "Le roi regarda la salle. Les gardes attendaient en silence."},
+    ]
+    modal = annotate_pov(chapters, language="fr")
+    assert chapters[0]["pov"] == "first_person"
+    assert chapters[0]["pov_confidence"] in {"high", "medium", "low"}
+    assert "pov" in chapters[1] and "pov_confidence" in chapters[1]
+    # Book-level modal is still returned with its historical shape.
+    assert set(modal) == {"pov", "first_person_count", "total_tokens", "confidence"}
+
+
+def test_annotate_pov_empty_chapters():
+    """No chapters → omniscient modal, no crash."""
+    assert annotate_pov([], language="fr")["pov"] == "omniscient"

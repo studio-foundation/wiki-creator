@@ -10,3 +10,6 @@ schema:
 # summary_bullets: list of 1..N non-empty summary bullet strings
 # temporal_context: "present" | "flashback" | "mixed" | "unknown"  (optional, default "unknown")
 # flashback_anchor: str | null  — e.g. "5 ans avant les événements du ch.01"
+# pov: "first_person" | "third_limited" | "omniscient" | "unknown"  (optional)
+# pov_character: str | null  (optional — the chapter's focal character)
+# pov_character_confidence: "high" | "medium" | "low"  (optional, default "medium")

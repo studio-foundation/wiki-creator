@@ -742,3 +742,32 @@ def test_main_falls_back_to_disk_when_chapter_summary_stage_output_is_empty(tmp_
     # chapter_summary_context would be empty here since Celaena has no mentions_by_chapter,
     # but the key point is that no exception was raised and the fallback ran.
     assert "chapter_summary_context" in celaena
+
+
+def test_batch_chapter_entry_carries_pov():
+    """POV fields propagate from the chapter summary into each batch chapter entry."""
+    entity = {"canonical_name": "Chaol", "type": "PERSON"}
+    summaries = {
+        "c1": {
+            "chapter_id": "c1",
+            "summary_bullets": ["Chaol did a thing."],
+            "temporal_context": "present",
+            "pov": "third_limited",
+            "pov_confidence": "high",
+            "pov_character": "Chaol",
+            "pov_character_confidence": "high",
+            "pov_character_source": "deterministic",
+        }
+    }
+    out = build_chapter_summary_context(
+        entity,
+        chapter_summaries=summaries,
+        chapter_summary_max=8,
+        context_by_chapter={"c1": ["ctx"]},
+        chapter_id_to_title={},
+    )
+    assert out and out[0]["pov"] == "third_limited"
+    assert out[0]["pov_confidence"] == "high"
+    assert out[0]["pov_character"] == "Chaol"
+    assert out[0]["pov_character_confidence"] == "high"
+    assert out[0]["pov_character_source"] == "deterministic"

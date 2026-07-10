@@ -18,7 +18,9 @@ system_prompt: |
     "chapter_title": input["chapter_title"],
     "summary_bullets": ["...", "..."],
     "temporal_context": "present" | "flashback" | "mixed" | "unknown",
-    "flashback_anchor": "..." | null
+    "flashback_anchor": "..." | null,
+    "pov_character": "..." | null,
+    "pov_character_confidence": "high" | "medium" | "low"
   }
 
   Temporal context detection rules:
@@ -28,6 +30,15 @@ system_prompt: |
   - "unknown": cannot determine with confidence — USE THIS WHEN IN DOUBT
 
   flashback_anchor: a short description of the temporal offset (e.g. "5 ans avant les événements du ch.01"). Set to null if temporal_context is "present" or "unknown".
+
+  pov_character: the single character whose viewpoint this chapter is narrated from
+  (whose thoughts/feelings the narration follows). Use the character's name as it
+  appears in the text. Set to null for an omniscient/multi-viewpoint chapter or when
+  in doubt.
+
+  pov_character_confidence: your certainty in pov_character — "high" (one clear
+  viewpoint throughout), "medium" (likely but the chapter shifts or is ambiguous),
+  or "low". Use "low" when pov_character is null.
 
   Rules:
   - Use only chapter_content

@@ -171,6 +171,42 @@ def detect_pov(text: str, language: str = "fr") -> dict:
     }
 
 
+def annotate_pov(chapters: list[dict], language: str = "fr") -> dict:
+    """Persist per-chapter POV onto each chapter and return the book-level modal.
+
+    Recovers the per-chapter detail that parse_epub previously discarded: writes
+    `pov` and `pov_confidence` onto every chapter dict, then returns the modal
+    `pov_detection` (unchanged shape) for backward compatibility. The book-level
+    result uses the modal per-chapter POV for robustness (avoids dilution in
+    mixed-POV or frame-narrative books).
+    """
+    if not chapters:
+        return {"pov": "omniscient", "first_person_count": 0, "total_tokens": 0, "confidence": "low"}
+
+    chapter_results = [detect_pov(ch["content"], language=language) for ch in chapters]
+    for ch, r in zip(chapters, chapter_results):
+        ch["pov"] = r["pov"]
+        ch["pov_confidence"] = r["confidence"]
+
+    pov_counts: dict[str, int] = {}
+    for r in chapter_results:
+        pov_counts[r["pov"]] = pov_counts.get(r["pov"], 0) + 1
+    modal_pov = max(pov_counts, key=lambda p: pov_counts[p])
+    total_fp = sum(r["first_person_count"] for r in chapter_results)
+    total_tokens = sum(r["total_tokens"] for r in chapter_results)
+    agg_ratio = total_fp / total_tokens if total_tokens > 0 else 0
+    if modal_pov == "first_person":
+        confidence = "high" if agg_ratio > 0.05 else "medium" if agg_ratio > 0.01 else "low"
+    else:
+        confidence = "high"
+    return {
+        "pov": modal_pov,
+        "first_person_count": total_fp,
+        "total_tokens": total_tokens,
+        "confidence": confidence,
+    }
+
+
 MIN_CHAPTER_CHARS = 100
 
 
@@ -268,31 +304,8 @@ def parse_epub(file_path: str, language: str = "fr") -> dict:
             "content": cleaned,
         })
 
-    # Compute POV per chapter, then take modal result for robustness
-    # (avoids dilution in mixed-POV or frame-narrative books)
-    if chapters:
-        chapter_results = [detect_pov(ch["content"], language=language) for ch in chapters]
-        pov_counts: dict[str, int] = {}
-        for r in chapter_results:
-            pov_counts[r["pov"]] = pov_counts.get(r["pov"], 0) + 1
-        modal_pov = max(pov_counts, key=lambda p: pov_counts[p])
-        # Aggregate stats from all chapters
-        total_fp = sum(r["first_person_count"] for r in chapter_results)
-        total_tokens = sum(r["total_tokens"] for r in chapter_results)
-        # Re-assess confidence from aggregate ratio
-        agg_ratio = total_fp / total_tokens if total_tokens > 0 else 0
-        if modal_pov == "first_person":
-            confidence = "high" if agg_ratio > 0.05 else "medium" if agg_ratio > 0.01 else "low"
-        else:
-            confidence = "high"
-        pov_detection = {
-            "pov": modal_pov,
-            "first_person_count": total_fp,
-            "total_tokens": total_tokens,
-            "confidence": confidence,
-        }
-    else:
-        pov_detection = {"pov": "omniscient", "first_person_count": 0, "total_tokens": 0, "confidence": "low"}
+    # Compute per-chapter POV (persisted onto each chapter) + book-level modal.
+    pov_detection = annotate_pov(chapters, language=language)
 
     return {"title": title, "author": author, "chapters": chapters, "pov_detection": pov_detection}
 

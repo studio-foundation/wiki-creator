@@ -43,6 +43,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from wiki_creator.paths import BookPaths, book_paths_from_epub, book_paths_from_yaml
 from wiki_creator.lang import load_lang_config, infer_language
+from wiki_creator.pov_attribution import attribute_pov_character
 from scripts.entity_extraction import _is_frontmatter_chapter
 
 _FALLBACK_BULLET = "No reliable summary available for this chapter."
@@ -186,6 +187,48 @@ def _detect_temporal_context(content: str, flashback_cues: tuple[str, ...] = ())
     return "present"
 
 
+def _resolve_pov_fields(
+    chapter: dict,
+    thought_markers: tuple[str, ...] = (),
+    exclusion_words: tuple[str, ...] = (),
+    llm_item_result: dict | None = None,
+) -> dict:
+    """Resolve the canonical per-chapter POV field set.
+
+    Gate: deterministic attribution wins when it is `high`; otherwise use the
+    LLM item's `pov_character` when present; otherwise abstain (`null`).
+    """
+    pov = str(chapter.get("pov", "unknown") or "unknown")
+    fields = {
+        "pov": pov,
+        "pov_confidence": str(chapter.get("pov_confidence", "unknown") or "unknown"),
+        "pov_character": None,
+        "pov_character_confidence": "low",
+        "pov_character_source": "none",
+    }
+    if pov not in ("first_person", "third_limited"):
+        return fields
+
+    det = attribute_pov_character(chapter.get("content", ""), pov, thought_markers, exclusion_words)
+    if det["pov_character"] and det["pov_character_confidence"] == "high":
+        fields["pov_character"] = det["pov_character"]
+        fields["pov_character_confidence"] = "high"
+        fields["pov_character_source"] = "deterministic"
+        return fields
+
+    if isinstance(llm_item_result, dict):
+        llm_name = str(llm_item_result.get("pov_character") or "").strip()
+        if llm_name:
+            fields["pov_character"] = llm_name
+            fields["pov_character_confidence"] = str(
+                llm_item_result.get("pov_character_confidence", "medium") or "medium"
+            )
+            fields["pov_character_source"] = "llm"
+            return fields
+
+    return fields
+
+
 def _score_sentence(sentence: str, index: int, total: int, action_cues: tuple[str, ...] = ()) -> float:
     tokens = re.findall(r"[A-Za-zÀ-ÿ']+", sentence)
     token_count = len(tokens)
@@ -293,7 +336,7 @@ def _call_llm_summary(*, chapter: dict, model: str, timeout_seconds: int, max_bu
     return {"summary_bullets": bullets, "error": error, "raw_response": response_text}
 
 
-def _summarize_chapter_extractive(chapter: dict, cfg: ChapterSummaryConfig, method: str = "extractive", seed_flags: list[str] | None = None, action_cues: tuple[str, ...] = (), flashback_cues: tuple[str, ...] = ()) -> dict:
+def _summarize_chapter_extractive(chapter: dict, cfg: ChapterSummaryConfig, method: str = "extractive", seed_flags: list[str] | None = None, action_cues: tuple[str, ...] = (), flashback_cues: tuple[str, ...] = (), thought_markers: tuple[str, ...] = (), exclusion_words: tuple[str, ...] = ()) -> dict:
     chapter_id = str(chapter.get("id", "")).strip()
     chapter_title = str(chapter.get("title", "")).strip()
     sentences = _split_sentences(chapter.get("content", ""))
@@ -326,10 +369,11 @@ def _summarize_chapter_extractive(chapter: dict, cfg: ChapterSummaryConfig, meth
         "quality_flags": quality_flags,
         "temporal_context": _detect_temporal_context(chapter.get("content", ""), flashback_cues),
         "flashback_anchor": None,
+        **_resolve_pov_fields(chapter, thought_markers, exclusion_words),
     }
 
 
-def summarize_chapter(chapter: dict, config: ChapterSummaryConfig | None = None, action_cues: tuple[str, ...] = (), flashback_cues: tuple[str, ...] = ()) -> dict:
+def summarize_chapter(chapter: dict, config: ChapterSummaryConfig | None = None, action_cues: tuple[str, ...] = (), flashback_cues: tuple[str, ...] = (), thought_markers: tuple[str, ...] = (), exclusion_words: tuple[str, ...] = ()) -> dict:
     cfg = config or ChapterSummaryConfig()
     if cfg.mode == "llm":
         llm_result = _call_llm_summary(
@@ -338,8 +382,8 @@ def summarize_chapter(chapter: dict, config: ChapterSummaryConfig | None = None,
             timeout_seconds=cfg.llm_timeout_seconds,
             max_bullets=cfg.max_bullets,
         )
-        return summarize_chapter_from_item_result(chapter, llm_result, config=cfg, action_cues=action_cues, flashback_cues=flashback_cues)
-    return _summarize_chapter_extractive(chapter, cfg, action_cues=action_cues, flashback_cues=flashback_cues)
+        return summarize_chapter_from_item_result(chapter, llm_result, config=cfg, action_cues=action_cues, flashback_cues=flashback_cues, thought_markers=thought_markers, exclusion_words=exclusion_words)
+    return _summarize_chapter_extractive(chapter, cfg, action_cues=action_cues, flashback_cues=flashback_cues, thought_markers=thought_markers, exclusion_words=exclusion_words)
 
 
 def _run_chapter_summary_item(*, chapter: dict, config: ChapterSummaryConfig) -> dict:
@@ -544,7 +588,7 @@ def _save_llm_debug_artifact(debug_dir: Path, chapter: dict, llm_result: dict) -
         json.dump(payload, f, ensure_ascii=False, indent=2)
 
 
-def summarize_chapters(chapters: list[dict], config: ChapterSummaryConfig | None = None, action_cues: tuple[str, ...] = (), flashback_cues: tuple[str, ...] = ()) -> dict[str, dict]:
+def summarize_chapters(chapters: list[dict], config: ChapterSummaryConfig | None = None, action_cues: tuple[str, ...] = (), flashback_cues: tuple[str, ...] = (), thought_markers: tuple[str, ...] = (), exclusion_words: tuple[str, ...] = ()) -> dict[str, dict]:
     result: dict[str, dict] = {}
     for chapter in chapters:
         if _is_frontmatter_chapter(chapter):
@@ -552,7 +596,7 @@ def summarize_chapters(chapters: list[dict], config: ChapterSummaryConfig | None
         key = _chapter_key(chapter)
         if not key:
             continue
-        result[key] = summarize_chapter(chapter, config=config, action_cues=action_cues, flashback_cues=flashback_cues)
+        result[key] = summarize_chapter(chapter, config=config, action_cues=action_cues, flashback_cues=flashback_cues, thought_markers=thought_markers, exclusion_words=exclusion_words)
     return result
 
 
@@ -589,6 +633,8 @@ def summarize_chapters_incrementally(
     config: ChapterSummaryConfig | None = None,
     action_cues: tuple[str, ...] = (),
     flashback_cues: tuple[str, ...] = (),
+    thought_markers: tuple[str, ...] = (),
+    exclusion_words: tuple[str, ...] = (),
 ) -> dict[str, dict]:
     result = {
         key: value
@@ -615,9 +661,9 @@ def summarize_chapters_incrementally(
             item_result = _run_chapter_summary_item(chapter=chapter, config=(config or ChapterSummaryConfig()))
             if debug_dir is not None and isinstance(item_result, dict) and item_result.get("error"):
                 _save_llm_debug_artifact(debug_dir, chapter, item_result)
-            result[key] = summarize_chapter_from_item_result(chapter, item_result, config=config, action_cues=action_cues, flashback_cues=flashback_cues)
+            result[key] = summarize_chapter_from_item_result(chapter, item_result, config=config, action_cues=action_cues, flashback_cues=flashback_cues, thought_markers=thought_markers, exclusion_words=exclusion_words)
         else:
-            result[key] = summarize_chapter(chapter, config=config, action_cues=action_cues, flashback_cues=flashback_cues)
+            result[key] = summarize_chapter(chapter, config=config, action_cues=action_cues, flashback_cues=flashback_cues, thought_markers=thought_markers, exclusion_words=exclusion_words)
         _save_chapter_summaries(result, output_file)
         if bar is not None:
             bar.set_postfix(chapter=key[:40])
@@ -635,6 +681,8 @@ def summarize_chapter_from_item_result(
     config: ChapterSummaryConfig | None = None,
     action_cues: tuple[str, ...] = (),
     flashback_cues: tuple[str, ...] = (),
+    thought_markers: tuple[str, ...] = (),
+    exclusion_words: tuple[str, ...] = (),
 ) -> dict:
     cfg = config or ChapterSummaryConfig()
     if isinstance(item_result, list):
@@ -648,6 +696,13 @@ def summarize_chapter_from_item_result(
         temporal_context = item_result.get("temporal_context") or _detect_temporal_context(chapter.get("content", ""), flashback_cues)
         flashback_anchor = item_result.get("flashback_anchor") or None
 
+    _pov = _resolve_pov_fields(
+        chapter,
+        thought_markers,
+        exclusion_words,
+        llm_item_result=item_result if isinstance(item_result, dict) else None,
+    )
+
     if llm_bullets:
         return {
             "chapter_id": str(chapter.get("id", "")).strip(),
@@ -657,6 +712,7 @@ def summarize_chapter_from_item_result(
             "quality_flags": [],
             "temporal_context": temporal_context,
             "flashback_anchor": flashback_anchor,
+            **_pov,
         }
     if cfg.llm_fallback_to_extractive:
         return _summarize_chapter_extractive(
@@ -666,6 +722,8 @@ def summarize_chapter_from_item_result(
             seed_flags=([llm_error] if llm_error else []) + ["fallback_used"],
             action_cues=action_cues,
             flashback_cues=flashback_cues,
+            thought_markers=thought_markers,
+            exclusion_words=exclusion_words,
         )
     return {
         "chapter_id": str(chapter.get("id", "")).strip(),
@@ -675,6 +733,7 @@ def summarize_chapter_from_item_result(
         "quality_flags": [llm_error] if llm_error else [],
         "temporal_context": "unknown",
         "flashback_anchor": None,
+        **_pov,
     }
 
 
@@ -718,6 +777,14 @@ def _main_from_book(book_path: str) -> None:
     lang_config = load_lang_config(language)
     action_cues = tuple(lang_config.get("action_cues", ()))
     flashback_cues = tuple(lang_config.get("flashback_cues", ()))
+    thought_markers = tuple(lang_config.get("third_person_thought_markers", ()))
+    exclusion_words = tuple(
+        set(lang_config.get("noise_words", []))
+        | set(lang_config.get("false_positive_words", []))
+        | set(lang_config.get("determiners", []))
+        | set(lang_config.get("role_words", []))
+        | set(lang_config.get("pronouns", []))
+    )
 
     generation_cfg = book_cfg.get("generation", {})
     summary_cfg = generation_cfg.get("chapter_summary", {}) if isinstance(generation_cfg, dict) else {}
@@ -743,6 +810,8 @@ def _main_from_book(book_path: str) -> None:
         config=config,
         action_cues=action_cues,
         flashback_cues=flashback_cues,
+        thought_markers=thought_markers,
+        exclusion_words=exclusion_words,
     )
 
 
@@ -768,6 +837,14 @@ def main() -> None:
     lang_config = load_lang_config(language)
     action_cues = tuple(lang_config.get("action_cues", ()))
     flashback_cues = tuple(lang_config.get("flashback_cues", ()))
+    thought_markers = tuple(lang_config.get("third_person_thought_markers", ()))
+    exclusion_words = tuple(
+        set(lang_config.get("noise_words", []))
+        | set(lang_config.get("false_positive_words", []))
+        | set(lang_config.get("determiners", []))
+        | set(lang_config.get("role_words", []))
+        | set(lang_config.get("pronouns", []))
+    )
 
     paths = _paths_from_payload(payload)
     out_file = paths.processing / "chapter_summaries.json"
@@ -779,6 +856,8 @@ def main() -> None:
         config=config,
         action_cues=action_cues,
         flashback_cues=flashback_cues,
+        thought_markers=thought_markers,
+        exclusion_words=exclusion_words,
     )
     out = {"chapter_summaries": chapter_summaries}
     json.dump(out, sys.stdout, ensure_ascii=False)
