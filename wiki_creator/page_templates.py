@@ -67,6 +67,13 @@ class ResolvedTemplate:
     def sections(self) -> list[Slot]:
         return [s for s in self.slots if s.group == "section"]
 
+    def section_tokens(self) -> list[str]:
+        toks: list[str] = []
+        if self.infobox():
+            toks.append("infobox")
+        toks.extend(s.token for s in self.sections())
+        return toks
+
 
 def _slot_from_raw(raw: dict) -> Slot:
     return Slot(
@@ -80,16 +87,46 @@ def _slot_from_raw(raw: dict) -> Slot:
     )
 
 
+def _apply_new_overrides(slots: list, override: dict) -> list:
+    remove = set(override.get("remove") or [])
+    slots = [s for s in slots if s.token not in remove]
+    for add in override.get("add") or []:
+        slots.append(_slot_from_raw(add))
+    return slots
+
+
 def resolve_template(entity_type, importance, book_config=None, base=None):
     raw = base if base is not None else load_base_template()
     etype = str(entity_type).upper()
     groups = (raw.get("entity_types") or {}).get(etype)
     if not groups:
         return ResolvedTemplate(etype, importance, ())
+
+    gen = (book_config or {}).get("generation", {}) if book_config else {}
+    tier_cfg = gen.get(importance, {}) if isinstance(gen, dict) else {}
+    legacy = tier_cfg.get("sections_by_type", {}).get(etype) \
+        if isinstance(tier_cfg.get("sections_by_type"), dict) else None
+    if legacy is None:
+        legacy = tier_cfg.get("sections")  # may be None
+    legacy_set = set(legacy) if isinstance(legacy, list) else None
+
     slots = []
     for group in ("infobox", "sections"):
         for slot_raw in groups.get(group) or []:
             slot = _slot_from_raw(slot_raw)
-            if importance in slot.tiers:
-                slots.append(slot)
+            if importance not in slot.tiers:
+                continue
+            # Legacy shape lists section tokens (and the "infobox" token);
+            # honor it as a whitelist over sections. Infobox group is kept
+            # whenever "infobox" appears in the legacy list.
+            if legacy_set is not None:
+                if slot.group == "infobox" and "infobox" not in legacy_set:
+                    continue
+                if slot.group == "section" and slot.token not in legacy_set:
+                    continue
+            slots.append(slot)
+
+    new_override = (gen.get("template", {}) or {}).get(etype) if isinstance(gen.get("template"), dict) else None
+    if new_override:
+        slots = _apply_new_overrides(slots, new_override)
     return ResolvedTemplate(etype, importance, tuple(slots))
