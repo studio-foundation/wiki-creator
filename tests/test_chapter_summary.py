@@ -632,3 +632,44 @@ def test_main_from_book_reads_chapters_json(tmp_path, monkeypatch):
     mock_sum.assert_called_once()
     call_chapters = mock_sum.call_args[0][0]
     assert call_chapters == chapters
+
+
+from scripts.chapter_summary import _resolve_pov_fields, _summarize_chapter_extractive, ChapterSummaryConfig
+
+_MARKERS = ("wondered", "felt", "realized", "thought")
+_EXCLUDE = ("the", "and", "she", "he", "lord")
+
+
+def test_resolve_pov_fields_deterministic_high():
+    chapter = {
+        "id": "c1",
+        "content": "Chaol wondered. Chaol felt cold. Chaol realized the plan. Chaol thought hard.",
+        "pov": "third_limited",
+        "pov_confidence": "high",
+    }
+    out = _resolve_pov_fields(chapter, _MARKERS, _EXCLUDE)
+    assert out["pov"] == "third_limited"
+    assert out["pov_character"] == "Chaol"
+    assert out["pov_character_source"] == "deterministic"
+
+
+def test_resolve_pov_fields_omniscient_abstains():
+    chapter = {"id": "c2", "content": "The court gathered.", "pov": "omniscient", "pov_confidence": "high"}
+    out = _resolve_pov_fields(chapter, _MARKERS, _EXCLUDE)
+    assert out["pov_character"] is None
+    assert out["pov_character_source"] == "none"
+
+
+def test_resolve_pov_fields_llm_fallback_when_uncertain():
+    """Deterministic uncertain + LLM provided a name → source 'llm'."""
+    chapter = {"id": "c3", "content": "A spoke. B answered.", "pov": "third_limited", "pov_confidence": "low"}
+    llm = {"pov_character": "Celaena", "pov_character_confidence": "high"}
+    out = _resolve_pov_fields(chapter, _MARKERS, _EXCLUDE, llm_item_result=llm)
+    assert out["pov_character"] == "Celaena"
+    assert out["pov_character_source"] == "llm"
+
+
+def test_extractive_summary_carries_pov_fields():
+    chapter = {"id": "c4", "content": "Chaol felt cold. Chaol felt tired. Chaol moved on.", "pov": "third_limited", "pov_confidence": "high"}
+    out = _summarize_chapter_extractive(chapter, ChapterSummaryConfig(), thought_markers=_MARKERS, exclusion_words=_EXCLUDE)
+    assert "pov" in out and "pov_character" in out and "pov_character_source" in out
