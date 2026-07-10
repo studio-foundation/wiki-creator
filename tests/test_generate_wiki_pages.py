@@ -1147,3 +1147,26 @@ def test_wiki_page_item_input_grounding_off_by_default():
         book_title="B", sections=["infobox"], max_tokens=200,
     )
     assert "grounding_llm" not in item
+
+
+def _entity_with_chapter(pov, pov_character):
+    return {
+        "canonical_name": "Chaol",
+        "type": "PERSON",
+        "importance": "principal",
+        "aliases": [],
+        "chapter_summary_context": [
+            {"chapter_key": "c1", "summary_bullets": ["Something happened."],
+             "temporal_context": "present", "pov": pov, "pov_character": pov_character},
+        ],
+    }
+
+
+def test_prompt_includes_pov_note_for_limited_pov():
+    prompt = build_prompt(_entity_with_chapter("third_limited", "Chaol"), "Book", ["main"])
+    assert "Chaol's perspective" in prompt
+
+
+def test_prompt_no_pov_note_for_omniscient():
+    prompt = build_prompt(_entity_with_chapter("omniscient", None), "Book", ["main"])
+    assert "perspective —" not in prompt  # no per-chapter POV note emitted

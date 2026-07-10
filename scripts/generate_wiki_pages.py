@@ -259,6 +259,18 @@ def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_n
         entry_lines = [f"  - Chapter: {chapter_key}"]
         for bullet in chapter.get("summary_bullets", [])[:3]:
             entry_lines.append(f"    - {bullet}")
+        pov = chapter.get("pov", "unknown")
+        pov_char = chapter.get("pov_character")
+        if pov_char:
+            entry_lines.append(
+                f"    - POV: narrated from {pov_char}'s perspective — statements about other "
+                f"characters may reflect a subjective view, not objective fact."
+            )
+        elif pov in ("first_person", "third_limited"):
+            entry_lines.append(
+                "    - POV: subjective narration — some statements may reflect a character's "
+                "perception rather than objective fact."
+            )
         if temporal == "flashback":
             backstory_lines.extend(entry_lines)
         else:
@@ -359,6 +371,7 @@ WRITING RULES (follow strictly):
 Tone and register:
 - Write in encyclopedic French. Neutral, precise, factual.
 - Describe what the entity IS before describing what happens to it.
+- When a chapter summary is tagged with a subjective POV, attribute contested claims to that viewpoint ("selon X", "du point de vue de X") rather than stating them as fact.
 - Use specific, concrete language. Avoid generic adjectives without textual evidence.
 - If aliases exist, introduce them naturally in the biography ("also known as X", "born Y").
 - Use ONLY aliases listed in "Known aliases" above. Do NOT infer or invent aliases from context.
