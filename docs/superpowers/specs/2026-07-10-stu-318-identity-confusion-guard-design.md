@@ -161,7 +161,9 @@ Guard-flow test:
 Run `pytest -q` and `mypy wiki_creator/` (script lives under `scripts/`, but keep
 types clean) before claiming completion.
 
-## Follow-up issue (to create)
+## Follow-up issue
+
+Tracked as [STU-436](https://linear.app/studioag/issue/STU-436/page-templates-make-wiki-page-identityinfobox-fields-deterministic).
 
 **Title:** Page templates: make wiki-page identity/infobox fields deterministic
 (prevent identity confusion at the source)
