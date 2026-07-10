@@ -490,6 +490,43 @@ def _force_correct_identity(
     return changed
 
 
+# Kept in sync with check_identity_match in scripts/wiki_page_validator.py:
+# these are the only validator errors that identity confusion produces.
+_IDENTITY_ERROR_MARKERS = ("≠ entité demandée", "ne correspond pas à l'entité")
+
+
+def _rejection_is_identity_only(run_id: str) -> bool:
+    """True iff the validator rejected the run and *every* error it reported is
+    an identity error. Guards against smuggling a page past grounding/language
+    validators when we recover it."""
+    vout = _load_studio_stage_output(str(run_id), "wiki-page-validator")
+    errors = (vout or {}).get("errors") or []
+    return bool(errors) and all(
+        any(marker in str(e) for marker in _IDENTITY_ERROR_MARKERS) for e in errors
+    )
+
+
+def _recover_identity_rejected_page(
+    *, entity: dict, item_result: dict, sibling_canonicals: set[str] | None = None
+) -> dict | None:
+    """Recover a PERSON page from an identity-only rejected run and force-correct
+    its identity fields. Returns the kept page, or None if not recoverable."""
+    if entity.get("type") != "PERSON":
+        return None
+    run_id = str((item_result.get("run_metadata") or {}).get("run_id") or "").strip()
+    if not run_id or not _rejection_is_identity_only(run_id):
+        return None
+    recovered = _load_studio_stage_output(run_id, "wiki-page-item")
+    if not isinstance(recovered, dict):
+        return None
+    page = parse_response(json.dumps(recovered, ensure_ascii=False), entity)
+    if page.get("_failed"):
+        return None
+    _force_correct_identity(page, entity, sibling_canonicals)
+    page["_identity_corrected"] = True
+    return page
+
+
 def make_stub_page(entity: dict, failed: bool = False, insufficient_data: bool = False) -> dict:
     page = {
         "title": entity["canonical_name"],
@@ -754,6 +791,7 @@ def _run_generation_for_entity(
     language: str = "fr",
     file_path: str = "",
     grounding: dict | None = None,
+    sibling_canonicals: set[str] | None = None,
 ) -> dict:
     if not entity.get("context_by_chapter", {}):
         return make_stub_page(entity, insufficient_data=True)
@@ -773,7 +811,15 @@ def _run_generation_for_entity(
         grounding=grounding,
     )
     if isinstance(item_result, dict) and item_result.get("error"):
+        recovered = _recover_identity_rejected_page(
+            entity=entity,
+            item_result=item_result,
+            sibling_canonicals=sibling_canonicals,
+        )
         _save_generation_debug_artifact(debug_dir, entity, item_result)
+        if recovered is not None:
+            print(" ⚠ identity-corrected from rejected run", file=sys.stderr, end="", flush=True)
+            return recovered
         return make_stub_page(entity, failed=True)
     typed_rels = entity.get("relationships", [])
     if isinstance(item_result, dict) and "content" in item_result:
@@ -809,6 +855,14 @@ def _run_generation_for_entity(
                 page = make_stub_page(entity, failed=True)
                 page["_spoiler_rejected"] = True
                 return page
+
+    if (
+        entity.get("type") == "PERSON"
+        and isinstance(item_result, dict)
+        and "content" in item_result
+        and _force_correct_identity(item_result, entity, sibling_canonicals)
+    ):
+        print(" ⚠ nom force-corrected", file=sys.stderr, end="", flush=True)
 
     return item_result
 
@@ -1029,6 +1083,9 @@ def main() -> None:
             batch_id = batch.get("batch_id", os.path.basename(path))
             entities = batch.get("entities", [])
             print(f"\n[{batch_id}] {len(entities)} entities", file=sys.stderr)
+            batch_canonicals = {
+                e.get("canonical_name", "") for e in entities if e.get("canonical_name")
+            }
 
             for entity in entities:
                 name = entity.get("canonical_name", "?")
@@ -1078,6 +1135,7 @@ def main() -> None:
                         language=book_lang,
                         file_path=book_file_path,
                         grounding=grounding_cfg,
+                        sibling_canonicals=batch_canonicals - {name},
                     )
                     all_pages.append(page)
                     _save(all_pages, output_file)
