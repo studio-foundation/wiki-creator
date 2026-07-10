@@ -16,8 +16,11 @@ jobs:
           python-version: "3.11"
           cache: pip
 
+      # click is imported by spaCy's CLI (spacy download) but no longer
+      # arrives transitively: typer >= 0.26 dropped its click dependency
+      # while spacy 3.8 still does `from click import NoSuchOption`.
       - name: Install package with dev dependencies
-        run: pip install -e ".[dev]"
+        run: pip install -e ".[dev]" "click>=8"
 
       # Small English model — enough for the NER-dependent tests.
       # Tests needing fr_core_news_lg (~570 MB) or the coref extra skip
