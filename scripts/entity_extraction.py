@@ -24,6 +24,7 @@ Standalone test mode:
   Does not write persons_full.json, places_full.json, or orgs_full.json.
 """
 
+import functools
 import json
 import re
 import sys
@@ -372,6 +373,20 @@ def _is_valid_mention(text: str) -> bool:
     return True
 
 
+@functools.lru_cache(maxsize=32)
+def _word_set_pattern(words: frozenset) -> "re.Pattern | None":
+    """Compile a word-boundary alternation for a cue-word set.
+
+    Whole-word matching only: 'sea' must not hit 'seawall', 'port' must not
+    hit 'important', 'miss' must not hit 'mission'. Cached per frozenset —
+    cue-word sets are loaded once and reused across the whole registry.
+    """
+    if not words:
+        return None
+    alternation = "|".join(re.escape(w) for w in sorted(words, key=len, reverse=True))
+    return re.compile(rf"\b(?:{alternation})\b")
+
+
 def _retag_entity_type_from_context(
     entity: dict,
     cue_words: dict[str, frozenset[str]] | None = None,
@@ -380,7 +395,9 @@ def _retag_entity_type_from_context(
     Conservative type correction for frequent PERSON false positives.
 
     Uses lexical cues from mention contexts to retag PERSON entities as PLACE
-    or EVENT when evidence is strong.
+    or EVENT when evidence is strong. All cue matching is whole-word
+    (boundary-anchored) — substring matching retagged every protagonist of
+    place-heavy prose ('sea' in 'seawall', 'port' in 'Port Saffron').
     """
     current = entity.get("type", "OTHER")
     if current not in {"PERSON", "PLACE", "ORG"}:
@@ -393,6 +410,9 @@ def _retag_entity_type_from_context(
         return current
     mention = mentions[0]
     mention_l = mention.lower()
+    mention_re = re.compile(rf"\b{re.escape(mention_l)}\b")
+    place_cues_re = _word_set_pattern(frozenset(cue_words["place_cue_words"]))
+    person_cues_re = _word_set_pattern(frozenset(cue_words["person_cue_words"]))
 
     place_score = 0
     event_score = 0
@@ -412,10 +432,10 @@ def _retag_entity_type_from_context(
             if not s:
                 continue
 
-            if mention_l in s:
-                if any(word in s for word in cue_words["place_cue_words"]):
+            if mention_re.search(s):
+                if place_cues_re and place_cues_re.search(s):
                     place_score += 2
-                if any(word in s for word in cue_words["person_cue_words"]):
+                if person_cues_re and person_cues_re.search(s):
                     person_score += 2
 
             if place_preps and re.search(rf"\b({place_preps})\s+{re.escape(mention_l)}\b", s):

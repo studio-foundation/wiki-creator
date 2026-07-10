@@ -785,3 +785,63 @@ def test_main_writes_only_entities_meeting_min_mentions_threshold(tmp_path):
     ]
     assert any("Alice" in mention for mention in all_mentions), f"Expected Alice in {all_mentions}"
     assert all("Bob" not in mention for mention in all_mentions), f"Bob should be filtered out: {all_mentions}"
+
+
+# --- Word-boundary cue matching in _retag_entity_type_from_context ---
+# Substring matching used to retag every protagonist of place-heavy prose
+# ('sea' hit 'seawall', 'port' hit 'Port Saffron', 'miss' hit 'mission').
+
+
+def test_retag_place_cue_requires_whole_word():
+    """'seawall'/'important' must not fire the 'sea'/'port' place cues."""
+    entity = {
+        "type": "PERSON",
+        "raw_mentions": ["Elias Thorn"],
+        "mentions_by_chapter": {
+            "ch01": [
+                "Elias Thorn walked along the seawall at dusk.",
+                "Elias Thorn made an important decision that night.",
+            ]
+        },
+    }
+    assert _retag_entity_type_from_context(entity) == "PERSON"
+
+
+def test_retag_place_cue_standalone_word_still_fires():
+    entity = {
+        "type": "PERSON",
+        "raw_mentions": ["Endovier"],
+        "mentions_by_chapter": {
+            "ch01": [
+                "The sea surrounded Endovier on three sides.",
+                "Endovier was a camp carved into the mountains.",
+            ]
+        },
+    }
+    assert _retag_entity_type_from_context(entity) == "PLACE"
+
+
+def test_retag_person_cue_requires_whole_word():
+    """'mission' must not fire the 'miss' person cue on an ORG."""
+    entity = {
+        "type": "ORG",
+        "raw_mentions": ["Salt Guild"],
+        "mentions_by_chapter": {
+            "ch01": ["The Salt Guild gave them a mission along the coast."]
+        },
+    }
+    assert _retag_entity_type_from_context(entity) == "ORG"
+
+
+def test_retag_mention_match_requires_whole_word():
+    """Mention 'Vale' must not match inside 'valeur'-like words."""
+    entity = {
+        "type": "PERSON",
+        "raw_mentions": ["Vale"],
+        "mentions_by_chapter": {
+            # 'vale' appears only inside 'valentine'; the standalone city
+            # cue in the same sentence must therefore not score.
+            "ch01": ["The valentine card mentioned a city far away."]
+        },
+    }
+    assert _retag_entity_type_from_context(entity) == "PERSON"
