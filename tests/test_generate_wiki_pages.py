@@ -100,6 +100,26 @@ def test_parse_response_keeps_existing_infobox_fields_when_already_present():
     assert page["infobox_fields"] == {"nom": "Existant"}
 
 
+def test_parse_response_forces_identity_fields_from_batch_entity():
+    # STU-319: the LLM sometimes "corrects"/frenchifies the echoed identity
+    # fields (Philippa -> Philippe), and may reclassify type/importance. The
+    # batch entity is the source of truth for identity, so parse_response must
+    # override whatever the LLM returned.
+    entity = {
+        "canonical_name": "Philippa",
+        "importance": "secondaire",
+        "type": "PERSON",
+    }
+    raw = (
+        '{"title":"Philippe","importance":"principal","entity_type":"ORGANIZATION",'
+        '"infobox_fields":{},"content":"## Biographie\\n\\nTexte."}'
+    )
+    page = parse_response(raw, entity)
+    assert page["title"] == "Philippa"
+    assert page["importance"] == "secondaire"
+    assert page["entity_type"] == "PERSON"
+
+
 def test_build_prompt_includes_requested_sections_in_order():
     entity = {
         "canonical_name": "Victor Grandes",

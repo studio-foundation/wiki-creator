@@ -816,9 +816,13 @@ def parse_response(raw: str, entity: dict) -> dict:
     try:
         if page is None:
             raise json.JSONDecodeError("No JSON object found", raw, 0)
-        page.setdefault("title", entity["canonical_name"])
-        page.setdefault("importance", entity["importance"])
-        page.setdefault("entity_type", entity["type"])
+        # STU-319: the batch entity is the source of truth for identity. The
+        # LLM only echoes these fields back and sometimes mangles them
+        # (e.g. Philippa -> Philippe), which breaks the batch -> page mapping.
+        # Force them from the entity rather than trusting the LLM's echo.
+        page["title"] = entity["canonical_name"]
+        page["importance"] = entity["importance"]
+        page["entity_type"] = entity["type"]
         page.setdefault("infobox_fields", {})
         page.setdefault("content", "")
         if not _is_page_complete(page):
