@@ -1,4 +1,4 @@
-"""Tests for wiki_export.py — focusing on _failed page filtering."""
+"""Tests for wiki_export.py — _failed page filtering and the copyright gate."""
 import sys
 from pathlib import Path
 
@@ -6,7 +6,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from scripts.wiki_export import _filter_exportable_pages
+from scripts.wiki_export import _copyright_gate, _filter_exportable_pages
 
 
 def test_filter_exportable_pages_excludes_failed():
@@ -38,3 +38,51 @@ def test_filter_exportable_pages_all_failed():
          "importance": "principal", "infobox_fields": {}, "content": ""},
     ]
     assert _filter_exportable_pages(pages) == []
+
+
+# --- INV-WC-01 copyright gate ---
+
+
+def test_copyright_gate_blocks_on_fail():
+    prev = {
+        "copyright-check": {
+            "status": "fail",
+            "feedback": "Violations copyright détectées dans : [Celaena].",
+            "violations": [
+                {"page_title": "Celaena", "chapter": "ch03",
+                 "wiki_excerpt": "…", "consecutive_words": 18},
+            ],
+            "pages": [{"title": "Celaena"}],
+        }
+    }
+    result = _copyright_gate(prev)
+    assert result is not None
+    assert result["error"] == "copyright_check_failed"
+    assert result["violating_pages"] == ["Celaena"]
+    assert result["violations"][0]["consecutive_words"] == 18
+
+
+def test_copyright_gate_passes_on_pass():
+    prev = {"copyright-check": {"status": "pass", "violations": [], "pages": []}}
+    assert _copyright_gate(prev) is None
+
+
+def test_copyright_gate_passes_when_stage_absent():
+    # Pipelines without a copyright-check stage must still export.
+    assert _copyright_gate({}) is None
+    assert _copyright_gate({"copyright-check": None}) is None
+
+
+def test_copyright_gate_dedupes_and_sorts_titles():
+    prev = {
+        "copyright-check": {
+            "status": "fail",
+            "violations": [
+                {"page_title": "Zed", "chapter": "c1", "wiki_excerpt": "", "consecutive_words": 15},
+                {"page_title": "Ada", "chapter": "c2", "wiki_excerpt": "", "consecutive_words": 16},
+                {"page_title": "Zed", "chapter": "c3", "wiki_excerpt": "", "consecutive_words": 17},
+            ],
+        }
+    }
+    result = _copyright_gate(prev)
+    assert result["violating_pages"] == ["Ada", "Zed"]

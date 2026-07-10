@@ -49,6 +49,26 @@ def _load_epub_data(paths: BookPaths) -> dict:
     return {}
 
 
+def _copyright_gate(prev: dict) -> dict | None:
+    """Return a blocking error payload if the copyright-check stage failed.
+
+    Enforces INV-WC-01: a `status: "fail"` from copyright-check must stop the
+    export — pages containing verbatim passages never reach the wikitext output.
+    Returns None when the check passed or was not run in this pipeline.
+    """
+    result = prev.get("copyright-check") or {}
+    if result.get("status") != "fail":
+        return None
+    violations = result.get("violations", [])
+    titles = sorted({v.get("page_title", "?") for v in violations})
+    return {
+        "error": "copyright_check_failed",
+        "feedback": result.get("feedback", ""),
+        "violating_pages": titles,
+        "violations": violations,
+    }
+
+
 def _filter_exportable_pages(pages: list[dict]) -> list[dict]:
     """Exclude pages that failed generation — they have no usable content."""
     exportable = [p for p in pages if not p.get("_failed")]
@@ -64,6 +84,16 @@ def main() -> None:
     prev = payload["previous_outputs"]
 
     paths = _paths_from_payload(payload)
+
+    gate_error = _copyright_gate(prev)
+    if gate_error is not None:
+        print(
+            f"[wiki-export] BLOCKED — copyright-check failed for: "
+            f"{', '.join(gate_error['violating_pages'])}",
+            file=sys.stderr,
+        )
+        json.dump(gate_error, sys.stdout, ensure_ascii=False)
+        sys.exit(1)
 
     pages = (
         prev.get("copyright-check", {}).get("pages")
