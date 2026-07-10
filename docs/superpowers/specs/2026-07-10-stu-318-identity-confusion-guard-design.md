@@ -155,14 +155,41 @@ Add a PERSON-gated block after the existing forbidden_names handling:
 - **Success path** (`item_result` has `"content"`): call
   `_force_correct_identity(item_result, entity, sibling_canonicals)`; if it
   changed anything, write a debug artifact and log a warning. Return the page.
-- **Error path** (`item_result.get("error")`): if
-  `item_result["run_metadata"]["run_id"]` is present, try
-  `recovered = _load_studio_stage_output(run_id, "wiki-page-item")`. If a page is
-  recovered, run it through `parse_response(json.dumps(recovered), entity)`, then
-  `_force_correct_identity(...)`, keep it (tag `_identity_corrected`), write a
-  debug artifact, log. If nothing recoverable → existing failed-stub behaviour.
+- **Error path** (`item_result.get("error")`): recover **only** when the
+  rejection was *identity-only* — otherwise keeping the page would smuggle
+  content past legitimate validators (grounding, French-contamination, forbidden
+  series). Steps: read `run_id` from `item_result["run_metadata"]`; fetch the
+  validator output `_load_studio_stage_output(run_id, "wiki-page-validator")`;
+  if its `errors` are **all** identity errors, then recover the generation output
+  `_load_studio_stage_output(run_id, "wiki-page-item")`, run it through
+  `parse_response(json.dumps(recovered), entity)`, `_force_correct_identity(...)`,
+  keep it (tag `_identity_corrected`), write a debug artifact, log. Any
+  non-identity error, missing `run_id`, or unrecoverable output → existing
+  failed-stub behaviour.
 
 Only PERSON entities take this path; non-PERSON keeps today's behaviour.
+
+#### Identity-only rejection gate
+
+`check_identity_match` is the only validator that emits errors containing the
+markers `"≠ entité demandée"` or `"ne correspond pas à l'entité"`. Gate recovery
+on *every* validator error matching one of those markers:
+
+```python
+_IDENTITY_ERROR_MARKERS = ("≠ entité demandée", "ne correspond pas à l'entité")
+
+def _rejection_is_identity_only(run_id: str) -> bool:
+    """True iff the validator rejected and *all* its errors are identity errors.
+    Keeps in sync with check_identity_match in wiki_page_validator.py."""
+    vout = _load_studio_stage_output(str(run_id), "wiki-page-validator")
+    errors = (vout or {}).get("errors") or []
+    return bool(errors) and all(
+        any(m in str(e) for m in _IDENTITY_ERROR_MARKERS) for e in errors
+    )
+```
+
+This couples to the validator's error strings; the plan adds a regression test
+asserting a *non*-identity rejection is **not** recovered, so drift is caught.
 
 ### Thread `sibling_canonicals`
 
@@ -194,10 +221,15 @@ mirroring the existing forbidden_names tests):
 - **Success path with bad nom:** runner returns a page with `nom: "Kaltain"` for
   entity `"Verin"` → returned page is kept (not a stub), `nom == "Verin"`,
   `_identity_corrected is True`, debug artifact written.
-- **Error path recovery:** runner returns `{"error": ..., "run_metadata": {"run_id": "r1"}}`;
-  `_load_studio_stage_output` monkeypatched to return a page with bad `nom` →
-  returned page is kept, force-corrected, `_identity_corrected is True` — **not**
-  a `_failed` stub.
+- **Error path recovery (identity-only):** runner returns
+  `{"error": ..., "run_metadata": {"run_id": "r1"}}`; `_load_studio_stage_output`
+  monkeypatched so `"wiki-page-validator"` → `{"errors": ["❌ Infobox 'nom: Kaltain'
+  ne correspond pas à l'entité 'Verin'"]}` and `"wiki-page-item"` → a page with
+  bad `nom` → returned page is kept, force-corrected, `_identity_corrected is
+  True` — **not** a `_failed` stub.
+- **Error path, non-identity rejection:** validator errors include a grounding
+  error (e.g. `"❌ Nom non ancré…"`) → recovery is **refused**, existing
+  failed-stub behaviour preserved (no smuggling past grounding).
 - **Error path, unrecoverable:** runner error with no `run_id` (or recovery
   returns None) → existing failed-stub behaviour preserved.
 - **Non-PERSON:** an ORG/PLACE entity with a "wrong" nom is left untouched (guard
