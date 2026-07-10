@@ -290,5 +290,13 @@
     "they are",
     "is an",
     "is a"
-  ]
+  ],
+  "name_connectors": [
+    "of",
+    "the",
+    "de",
+    "van",
+    "von"
+  ],
+  "elision_prefixes": []
 }

@@ -347,3 +347,131 @@ def test_validate_page_includes_identity_errors():
     result = validate_page(page, {"title": "Verin", "language": "fr"})
     assert result["valid"] is False
     assert any("Kaltain" in e for e in result["errors"])
+
+
+# --- Grounding v2: ungrounded proper nouns (deterministic) ---
+
+_SOURCE_PROMPT = (
+    "Extraits source : Celaena Sardothien est emprisonnée à Endovier. "
+    "Dorian Havilliard lui offre un marché. Chaol Westfall la supervise. "
+    "Nox Owen est un voleur du nord."
+)
+
+
+def test_check_ungrounded_names_passes_grounded_page():
+    from scripts.wiki_page_validator import check_ungrounded_names
+    page = {"content": "Celaena Sardothien s'entraîne avec Chaol Westfall.",
+            "infobox_fields": {"nom": "Celaena Sardothien"}}
+    meta = {"prompt": _SOURCE_PROMPT, "title": "Celaena Sardothien", "language": "fr"}
+    assert check_ungrounded_names(page, meta) == []
+
+
+def test_check_ungrounded_names_flags_invented_name():
+    from scripts.wiki_page_validator import check_ungrounded_names
+    page = {"content": "Elle est aussi connue sous le nom de Yrene Astellaris.",
+            "infobox_fields": {}}
+    meta = {"prompt": _SOURCE_PROMPT, "title": "Celaena Sardothien", "language": "fr"}
+    errors = check_ungrounded_names(page, meta)
+    assert any("Yrene" in e for e in errors)
+
+
+def test_check_ungrounded_names_skips_without_prompt():
+    from scripts.wiki_page_validator import check_ungrounded_names
+    page = {"content": "Yrene Astellaris apparaît.", "infobox_fields": {}}
+    assert check_ungrounded_names(page, {}) == []
+
+
+def test_validate_page_includes_ungrounded_names():
+    page = {"title": "Celaena Sardothien", "importance": "principal",
+            "entity_type": "PERSON", "infobox_fields": {},
+            "content": "Celaena Sardothien rencontre Yrene Astellaris au palais."}
+    meta = {"prompt": _SOURCE_PROMPT, "title": "Celaena Sardothien", "language": "fr"}
+    result = validate_page(page, meta)
+    assert result["valid"] is False
+    assert any("Yrene" in e for e in result["errors"])
+
+
+# --- Grounding v2: LLM claim verification (mocked Ollama) ---
+
+
+class _FakeResponse:
+    def __init__(self, payload: dict):
+        self._payload = payload
+
+    def read(self):
+        return json.dumps(self._payload).encode()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return False
+
+
+def _llm_meta(**extra):
+    meta = {"prompt": _SOURCE_PROMPT, "title": "Nox Owen",
+            "language": "fr", "grounding_llm": True}
+    meta.update(extra)
+    return meta
+
+
+def _nox_page():
+    # Run 15 regression: invented death — Nox Owen survives in the book.
+    return {"title": "Nox Owen", "importance": "principal",
+            "entity_type": "PERSON", "infobox_fields": {},
+            "content": "Nox Owen meurt lors du Tournoi, empoisonné par Cain."}
+
+
+def test_check_grounding_llm_off_by_default():
+    from scripts.wiki_page_validator import check_grounding_llm
+    meta = {"prompt": _SOURCE_PROMPT, "title": "Nox Owen", "language": "fr"}
+    assert check_grounding_llm(_nox_page(), meta) == []
+
+
+def test_check_grounding_llm_skips_figurant():
+    from scripts.wiki_page_validator import check_grounding_llm
+    page = _nox_page()
+    page["importance"] = "figurant"
+    assert check_grounding_llm(page, _llm_meta()) == []
+
+
+def test_check_grounding_llm_skips_when_ollama_unavailable(monkeypatch):
+    import scripts.wiki_page_validator as v
+    monkeypatch.setattr(v, "_ollama_available", lambda url, timeout=2: False)
+    assert v.check_grounding_llm(_nox_page(), _llm_meta()) == []
+
+
+def test_check_grounding_llm_flags_unsupported_claims(monkeypatch):
+    import scripts.wiki_page_validator as v
+    monkeypatch.setattr(v, "_ollama_available", lambda url, timeout=2: True)
+    fake = _FakeResponse({"response": json.dumps({
+        "grounded": False,
+        "ungrounded_claims": ["Nox Owen meurt lors du Tournoi (il survit)"],
+    })})
+    monkeypatch.setattr(v.urllib.request, "urlopen", lambda req, timeout=120: fake)
+    errors = v.check_grounding_llm(_nox_page(), _llm_meta())
+    assert len(errors) == 1
+    assert "Nox Owen meurt" in errors[0]
+
+
+def test_check_grounding_llm_passes_grounded_page(monkeypatch):
+    import scripts.wiki_page_validator as v
+    monkeypatch.setattr(v, "_ollama_available", lambda url, timeout=2: True)
+    fake = _FakeResponse({"response": '{"grounded": true, "ungrounded_claims": []}'})
+    monkeypatch.setattr(v.urllib.request, "urlopen", lambda req, timeout=120: fake)
+    assert v.check_grounding_llm(_nox_page(), _llm_meta()) == []
+
+
+def test_check_grounding_llm_graceful_on_malformed_response(monkeypatch):
+    import scripts.wiki_page_validator as v
+    monkeypatch.setattr(v, "_ollama_available", lambda url, timeout=2: True)
+    fake = _FakeResponse({"response": "je ne peux pas répondre en JSON"})
+    monkeypatch.setattr(v.urllib.request, "urlopen", lambda req, timeout=120: fake)
+    assert v.check_grounding_llm(_nox_page(), _llm_meta()) == []
+
+
+def test_parse_grounding_response_caps_claims():
+    from scripts.wiki_page_validator import _parse_grounding_response
+    raw = json.dumps({"grounded": False,
+                      "ungrounded_claims": [f"claim {i}" for i in range(10)]})
+    assert len(_parse_grounding_response(raw)) == 5

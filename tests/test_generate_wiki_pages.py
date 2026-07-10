@@ -284,7 +284,7 @@ def test_run_generation_for_entity_uses_item_runner_when_not_dry(monkeypatch, tm
     calls = []
 
     def fake_runner(*, entity, book_title, model, timeout, sections, max_tokens,
-                    forbidden_names=None, language="fr", file_path=""):
+                    forbidden_names=None, language="fr", file_path="", grounding=None):
         calls.append((entity["canonical_name"], book_title, model, timeout, sections, max_tokens))
         return {
             "title": "Victor Grandes",
@@ -1123,3 +1123,27 @@ def test_wiki_page_item_input_defaults():
     assert item["language"] == "fr"
     assert item["forbidden_names"] == []
     assert item["file_path"] == ""
+
+
+def test_wiki_page_item_input_grounding_config():
+    from scripts.generate_wiki_pages import _wiki_page_item_input
+
+    entity = {"canonical_name": "Nox Owen", "importance": "principal",
+              "type": "PERSON", "context_by_chapter": {"ch01": ["..."]}}
+    item = _wiki_page_item_input(
+        entity=entity, book_title="B", sections=["infobox"], max_tokens=200,
+        grounding={"llm": True, "llm_model": "qwen2.5", "llm_timeout": 60},
+    )
+    assert item["grounding_llm"] is True
+    assert item["grounding_llm_model"] == "qwen2.5"
+    assert item["grounding_llm_timeout"] == 60
+
+
+def test_wiki_page_item_input_grounding_off_by_default():
+    from scripts.generate_wiki_pages import _wiki_page_item_input
+
+    item = _wiki_page_item_input(
+        entity={"canonical_name": "X", "importance": "figurant", "type": "PERSON"},
+        book_title="B", sections=["infobox"], max_tokens=200,
+    )
+    assert "grounding_llm" not in item

@@ -270,5 +270,25 @@
     "elle savait",
     "il sentait",
     "elle sentait"
+  ],
+  "name_connectors": [
+    "de",
+    "du",
+    "des",
+    "le",
+    "la",
+    "les",
+    "d'",
+    "l'"
+  ],
+  "elision_prefixes": [
+    "l'",
+    "d'",
+    "j'",
+    "m'",
+    "n'",
+    "s'",
+    "t'",
+    "qu'"
   ]
 }

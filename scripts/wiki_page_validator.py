@@ -4,19 +4,31 @@
 Valide la page générée par wiki-page-item.
 Checks structurels (toutes importances) : langue, IDs EPUB, clés infobox,
 ancrage série, noms/séries interdits, cohérence identitaire (grounding v1).
+Checks de grounding :
+  - déterministe (toutes importances) : noms propres absents des extraits
+    source (wiki_creator/grounding.py)
+  - LLM optionnel (principal/secondary, opt-in via grounding_llm) :
+    vérification claim-par-claim via Ollama — même contrat JSON que
+    .studio/agents/wiki-page-validator.agent.yaml ; skip silencieux si
+    Ollama indisponible.
 
 Input (Studio stdin):
   previous_outputs["wiki-page-item"]: page générée
   additional_context: YAML avec title (canonical_name), language, file_path,
-  series, forbidden_series, forbidden_names
+  series, forbidden_series, forbidden_names, prompt (extraits source),
+  grounding_llm (bool), grounding_llm_model
 
 Output (stdout):
   { "valid": bool, "errors": [...], "feedback": str }
 """
 import json
+import os
 import re
+import socket
 import sys
 import unicodedata
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 import yaml
@@ -24,6 +36,7 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+from wiki_creator.grounding import find_ungrounded_names
 from wiki_creator.lang import load_lang_config
 
 
@@ -132,6 +145,140 @@ def check_identity_match(page: dict, meta: dict) -> list[str]:
     return errors
 
 
+def check_ungrounded_names(page: dict, meta: dict) -> list[str]:
+    """Grounding déterministe — noms propres inventés.
+
+    Le prompt de génération (meta['prompt']) contient tout ce que le writer
+    avait le droit de savoir. Un nom propre de la page absent de ce prompt
+    est une invention (contamination cross-livre, personnage halluciné).
+    """
+    source = meta.get("prompt", "")
+    if not source:
+        return []
+    # The expected title is legitimate even if phrased differently.
+    source = f"{source}\n{meta.get('title', '')}"
+    names = find_ungrounded_names(
+        page.get("content", ""),
+        page.get("infobox_fields") or {},
+        source,
+        language=meta.get("language", "fr"),
+    )
+    return [f"❌ Nom non ancré dans les extraits source : {n}" for n in names]
+
+
+_OLLAMA_URL_DEFAULT = "http://localhost:11434"
+_GROUNDING_IMPORTANCES = {"principal", "secondary", "secondaire"}
+_MAX_REPORTED_CLAIMS = 5
+
+# Same contract as .studio/agents/wiki-page-validator.agent.yaml (the agent
+# variant of this check) — keep the two in sync.
+_GROUNDING_PROMPT_TEMPLATE = """Respond with ONLY a valid JSON object. No markdown fences, no explanation.
+
+Tu es un validateur de pages wiki pour un roman.
+
+Les extraits source ci-dessous sont la seule vérité autorisée :
+---
+{source}
+---
+
+Page wiki à vérifier :
+---
+{page_content}
+---
+
+Pour chaque affirmation factuelle de la page (rôles, relations, événements,
+morts, titres), vérifie qu'elle est directement ancrée dans les extraits.
+N'utilise aucune connaissance externe sur le livre ou l'auteur.
+Les noms propres seuls ne sont pas des affirmations — ignore-les.
+
+Retourne exactement :
+{{"grounded": true, "ungrounded_claims": []}}
+ou
+{{"grounded": false, "ungrounded_claims": ["description courte", ...]}}
+(au maximum {max_claims} claims)
+"""
+
+
+def _ollama_available(url: str, timeout: int = 2) -> bool:
+    try:
+        req = urllib.request.Request(f"{url}/api/tags", method="HEAD")
+        with urllib.request.urlopen(req, timeout=timeout):
+            return True
+    except (urllib.error.URLError, socket.timeout, OSError):
+        return False
+
+
+def _parse_grounding_response(raw: str) -> list[str]:
+    """Extract ungrounded_claims from the model output; [] on any mismatch."""
+    match = re.search(r"\{.*\}", raw, re.DOTALL)
+    if not match:
+        return []
+    try:
+        data = json.loads(match.group(0))
+    except json.JSONDecodeError:
+        return []
+    if data.get("grounded") is True:
+        return []
+    claims = data.get("ungrounded_claims", [])
+    if not isinstance(claims, list):
+        return []
+    return [str(c) for c in claims[:_MAX_REPORTED_CLAIMS] if str(c).strip()]
+
+
+def check_grounding_llm(page: dict, meta: dict) -> list[str]:
+    """Grounding LLM — vérification claim-par-claim via Ollama (opt-in).
+
+    Attrape les faits inventés sur des noms légitimes (ex : mort d'un
+    personnage qui survit dans le livre), hors de portée de la couche
+    déterministe. Dégradation gracieuse : sans Ollama, le check est sauté
+    avec un avertissement stderr — jamais d'échec de stage.
+    """
+    if not meta.get("grounding_llm"):
+        return []
+    if page.get("importance") not in _GROUNDING_IMPORTANCES:
+        return []
+    source = meta.get("prompt", "")
+    content = page.get("content", "")
+    if not source or not content:
+        return []
+
+    url = os.environ.get("OLLAMA_URL", _OLLAMA_URL_DEFAULT)
+    if not _ollama_available(url):
+        print(
+            f"[wiki-page-validator] Ollama not available at {url} — "
+            "LLM grounding check skipped.",
+            file=sys.stderr,
+        )
+        return []
+
+    prompt = _GROUNDING_PROMPT_TEMPLATE.format(
+        source=source,
+        page_content=content,
+        max_claims=_MAX_REPORTED_CLAIMS,
+    )
+    body = json.dumps({
+        "model": meta.get("grounding_llm_model", "mistral:7b-instruct"),
+        "prompt": prompt,
+        "stream": False,
+        "options": {"temperature": 0.0, "num_predict": 512},
+    }).encode()
+    req = urllib.request.Request(
+        f"{url}/api/generate",
+        data=body,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=int(meta.get("grounding_llm_timeout", 120))) as resp:
+            data = json.loads(resp.read())
+    except (urllib.error.URLError, socket.timeout, OSError, json.JSONDecodeError) as exc:
+        print(f"[wiki-page-validator] LLM grounding call failed: {exc}", file=sys.stderr)
+        return []
+
+    claims = _parse_grounding_response(data.get("response", ""))
+    return [f"❌ Affirmation non ancrée dans les extraits source : {c}" for c in claims]
+
+
 def check_references_book_title(page: dict, allowed_book_titles: list[str]) -> list[str]:
     content = page.get("content", "")
     match = re.search(r"##\s*Références(.*?)(?=\n##|\Z)", content, re.IGNORECASE | re.DOTALL)
@@ -177,6 +324,8 @@ def validate_page(page: dict, meta: dict) -> dict:
     errors += check_series_anchor(page, meta)
     errors += check_forbidden_series(page, meta)
     errors += check_forbidden_names(page, meta)
+    errors += check_ungrounded_names(page, meta)
+    errors += check_grounding_llm(page, meta)
     allowed_book_titles = _load_allowed_book_titles(meta)
     if allowed_book_titles:
         errors += check_references_book_title(page, allowed_book_titles)
