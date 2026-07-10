@@ -1161,6 +1161,111 @@ def test_resolve_aliases_pure_title_auto_merges_without_llm():
     assert result["stats"]["merges_by_method"].get("pure_title", 0) == 1
 
 
+# ---------------------------------------------------------------------------
+# STU-430: pure_title must require apposition, not mere same-sentence presence
+# ---------------------------------------------------------------------------
+
+def test_detect_pure_title_in_context_no_match_when_title_and_name_conjoined():
+    """STU-430: 'Crown Prince' and 'Perrington' in the SAME sentence but joined by
+    'sat with' (conjunction, not apposition) are two distinct people — must NOT match.
+
+    This is the exact Run 16 snippet that produced the bad merge.
+    """
+    from scripts.alias_resolution import _detect_pure_title_in_context
+    crown_prince = {
+        "canonical_name": "Crown Prince",
+        "aliases": ["Crown Prince"],
+        "source_ids": ["e_crown_prince"],
+    }
+    perrington = {
+        "canonical_name": "Perrington",
+        "aliases": ["Perrington", "Duke Perrington"],
+        "source_ids": ["e_perrington"],
+    }
+    persons_full = {
+        "e_crown_prince": {
+            "mentions_by_chapter": {
+                "ch02": [
+                    "The Crown Prince, of course, sat with Perrington "
+                    "on their own two logs, far from her.",
+                ]
+            }
+        },
+        "e_perrington": {
+            "mentions_by_chapter": {"ch02": ["Perrington scowled at the competitors."]}
+        },
+    }
+    result = _detect_pure_title_in_context(
+        crown_prince, perrington, persons_full,
+        role_words=["crown prince", "prince", "duke"],
+        connective_words=["the", "a", "an", "of"],
+    )
+    assert result is None
+
+
+def test_resolve_aliases_does_not_merge_conjoined_title_and_name():
+    """STU-430 regression: the Run 16 snippet must leave Crown Prince and Perrington
+    as two separate entities — no bad fusion."""
+    from scripts.alias_resolution import resolve_aliases
+    crown_prince = {
+        "canonical_name": "Crown Prince",
+        "type": "PERSON",
+        "aliases": ["Crown Prince"],
+        "source_ids": ["e_crown_prince"],
+        "relevant": True,
+    }
+    perrington = {
+        "canonical_name": "Perrington",
+        "type": "PERSON",
+        "aliases": ["Perrington", "Duke Perrington"],
+        "source_ids": ["e_perrington"],
+        "relevant": True,
+    }
+    persons_full = {
+        "e_crown_prince": {
+            "mentions_by_chapter": {
+                "ch02": [
+                    "The Crown Prince, of course, sat with Perrington "
+                    "on their own two logs, far from her.",
+                ]
+            }
+        },
+        "e_perrington": {
+            "mentions_by_chapter": {"ch02": ["Perrington scowled at the competitors."]}
+        },
+    }
+    result = resolve_aliases(
+        [crown_prince, perrington],
+        persons_full=persons_full,
+        llm_confirmer=None,
+        role_words=["crown prince", "prince", "duke"],
+        connective_words=["the", "a", "an", "of"],
+    )
+    names = sorted(e["canonical_name"] for e in result["entities"])
+    assert names == ["Crown Prince", "Perrington"]
+    assert result["stats"]["merges_applied"] == 0
+
+
+def test_detect_pure_title_in_context_matches_apposition_with_connectors():
+    """STU-430: true apposition ('Brullo — the Master —') must still merge when the
+    only tokens between name and title are connective words / punctuation."""
+    from scripts.alias_resolution import _detect_pure_title_in_context
+    brullo = {"canonical_name": "Brullo", "aliases": ["Brullo"], "source_ids": ["e_brullo"]}
+    master = {"canonical_name": "Master", "aliases": ["Master"], "source_ids": ["e_master"]}
+    persons_full = {
+        "e_master": {
+            "mentions_by_chapter": {"ch05": ["Brullo — the Master — nodded at Celaena."]}
+        },
+        "e_brullo": {"mentions_by_chapter": {"ch05": ["Brullo watched."]}},
+    }
+    result = _detect_pure_title_in_context(
+        brullo, master, persons_full,
+        role_words=["master"], connective_words=["the", "a", "an"],
+    )
+    assert result is not None
+    assert result["method"] == "pure_title"
+
+
 def test_detect_role_symmetric_no_false_positive_zero_token_overlap():
     """
     Hollin and Queen Georgina share ≥2 family-relation buckets (via Dorian and the King)
