@@ -318,6 +318,11 @@ def build_chapter_summary_context(
             "chapter_key": chapter_key,
             "summary_bullets": bullets,
             "temporal_context": summary.get("temporal_context", "unknown"),
+            "pov": summary.get("pov", "unknown"),
+            "pov_confidence": summary.get("pov_confidence", "unknown"),
+            "pov_character": summary.get("pov_character"),
+            "pov_character_confidence": summary.get("pov_character_confidence", "low"),
+            "pov_character_source": summary.get("pov_character_source", "none"),
         })
     return result
 
