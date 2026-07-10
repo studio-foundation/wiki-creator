@@ -90,4 +90,6 @@ wiki-creator/
 
 ## License
 
-MIT -- see [LICENSE](./LICENSE)
+GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later) -- see [LICENSE](./LICENSE).
+
+Copyleft by conviction, matching [Studio](https://github.com/studio-foundation/studio): anyone may use, study, and modify Wiki Creator, but modified versions -- including those offered as a network service -- must share their source under the same terms. The AGPL applies to the *program*; the wiki pages it generates are your output, not covered by this license.
