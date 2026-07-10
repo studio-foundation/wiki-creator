@@ -123,6 +123,7 @@ Inside `wiki-resolution`, order matters:
 
 ## Working Norms
 
+- **ALWAYS use a git worktree for every task.** Start each task in its own isolated worktree/branch off `main` — never work directly on a shared or unrelated branch. This keeps every change scoped to a single issue and prevents mixing concerns.
 - Prefer `rg` for search.
 - Use `apply_patch` for manual edits.
 - Do not assume docs are current; verify against `Makefile`, pipeline YAML, and tests.
