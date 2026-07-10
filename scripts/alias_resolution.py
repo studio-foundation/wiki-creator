@@ -368,11 +368,56 @@ def _detect_cooccurrence_window(
     return snippet[:200]
 
 
+def _tokens_between_are_connective(between: str, connective_words: set[str]) -> bool:
+    """True when every word in ``between`` is a connective (article/preposition) or
+    pure punctuation — the marker of apposition rather than conjunction.
+
+    "" / " - the " -> apposition (only 'the' + punctuation).
+    ", of course, sat with " -> NOT apposition ('course', 'sat', 'with' are content words).
+    """
+    for raw in between.split():
+        core = raw.strip(".,;:!?\"'”“’‘—–-()[]").lower()
+        if not core:
+            continue  # pure punctuation between the two names
+        if core not in connective_words:
+            return False
+    return True
+
+
+def _is_apposition(sentence: str, title: str, name: str, connective_words: set[str]) -> bool:
+    """True when ``name`` sits in apposition to ``title`` within ``sentence``.
+
+    Apposition = the two phrases are adjacent, separated only by connective words
+    and/or punctuation ("Master Brullo", "Brullo - the Master -", "Crown Prince Dorian").
+    A conjunction like "The Crown Prince sat with Perrington" is NOT apposition:
+    content words sit between the two, so they denote distinct people (STU-430).
+    """
+    low = sentence.lower()
+    title_spans = [(m.start(), m.end()) for m in re.finditer(re.escape(title.lower()), low)]
+    name_spans = [(m.start(), m.end()) for m in re.finditer(re.escape(name.lower()), low)]
+    if not title_spans or not name_spans:
+        return False
+    for t0, t1 in title_spans:
+        for n0, n1 in name_spans:
+            if n0 >= t0 and n1 <= t1:
+                continue  # name is a substring of the title occurrence — not evidence
+            if n0 >= t1:
+                between = sentence[t1:n0]
+            elif t0 >= n1:
+                between = sentence[n1:t0]
+            else:
+                continue  # spans overlap without nesting — inconclusive
+            if _tokens_between_are_connective(between, connective_words):
+                return True
+    return False
+
+
 def _detect_pure_title_in_context(
     entity_a: dict,
     entity_b: dict,
     persons_full: dict,
     role_words: list[str] | None = None,
+    connective_words: list[str] | None = None,
 ) -> dict | None:
     """
     Return evidence if one entity's canonical name is a pure role title (e.g. "Master")
@@ -385,23 +430,23 @@ def _detect_pure_title_in_context(
     role_words = role_words or []
     if not role_words:
         return None
+    connective_set = {w.lower() for w in (connective_words or [])}
     for title_entity, proper_entity in ((entity_a, entity_b), (entity_b, entity_a)):
         title_name = title_entity.get("canonical_name", "")
         if not _is_pure_title(title_name, role_words):
             continue
-        proper_names = [n.lower() for n in _entity_names(proper_entity) if n]
+        proper_names = [n for n in _entity_names(proper_entity) if n]
         if not proper_names:
             continue
         title_lower = title_name.lower()
         for snippet in _gather_contexts(title_entity, persons_full):
             # Split into sentences so that names in adjacent sentences don't create false matches.
-            # Both the title AND the proper name must appear in the same sentence.
+            # Within a sentence, the proper name must sit in apposition to the title.
             sentences = re.split(r'(?<=[.!?])[\u201d\u2019\u201c\u2018"\']?\s+', snippet)
             for sentence in sentences:
-                sent_lower = sentence.lower()
-                if title_lower not in sent_lower:
+                if title_lower not in sentence.lower():
                     continue
-                if any(pn in sent_lower for pn in proper_names):
+                if any(_is_apposition(sentence, title_name, pn, connective_set) for pn in proper_names):
                     return {
                         "method": "pure_title",
                         "confidence": "medium",
@@ -666,12 +711,14 @@ def resolve_aliases(
     llm_confirmer=None,
     reveal_words: tuple[str, ...] = (),
     role_words: list[str] | None = None,
+    connective_words: list[str] | None = None,
     pattern_templates: tuple[str, ...] = (),
     relationships: list[dict] | None = None,
     role_symmetric_min_shared: int = 2,
 ) -> dict:
     stats = _empty_stats()
     role_words = role_words or []
+    connective_words = connective_words or []
     relationships = relationships or []
     resolved: list[dict] = []
     consumed: set[int] = set()
@@ -723,7 +770,10 @@ def resolve_aliases(
                 consumed.add(candidate_index)
                 break
 
-            pure_title = _detect_pure_title_in_context(entity, candidate, persons_full, role_words=role_words)
+            pure_title = _detect_pure_title_in_context(
+                entity, candidate, persons_full,
+                role_words=role_words, connective_words=connective_words,
+            )
             if pure_title:
                 merged = _merge_entities(entity, candidate, pure_title, persons_full, role_words=role_words)
                 stats["merges_applied"] += 1
@@ -811,6 +861,12 @@ def main() -> None:
     role_words: list[str] = list(classification_cfg.get("role_words", []))
     cue_role_words = [w.lower() for w in lang_cfg.get("person_cue_words", [])]
     role_words = list(dict.fromkeys(role_words + cue_role_words))  # dedup, preserve order
+    # Apposition-safe words: articles/determiners + name connectors. Absent keys degrade
+    # to an empty collection (only adjacency/punctuation counts as apposition then).
+    connective_words = list(dict.fromkeys(
+        [w.lower() for w in lang_cfg.get("determiners", [])]
+        + [w.lower() for w in lang_cfg.get("name_connectors", [])]
+    ))
 
     persons_full = {}
     try:
@@ -842,7 +898,8 @@ def main() -> None:
     result = resolve_aliases(
         entities, persons_full=persons_full, narrator=narrator,
         llm_confirmer=llm_confirmer, reveal_words=reveal_words,
-        role_words=role_words, pattern_templates=pattern_templates,
+        role_words=role_words, connective_words=connective_words,
+        pattern_templates=pattern_templates,
         relationships=relationships,
         role_symmetric_min_shared=ctx.get("role_symmetric_min_shared", 2),
     )
