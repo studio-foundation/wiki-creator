@@ -131,3 +131,31 @@ def resolve_template(entity_type, importance, book_config=None, base=None):
     if new_override:
         slots = _apply_new_overrides(slots, new_override)
     return ResolvedTemplate(etype, importance, tuple(slots))
+
+
+def _rel_enum(base: dict | None):
+    raw = base if base is not None else load_base_template()
+    return (raw.get("relationships") or {}).get("enum") or {}
+
+
+def relationship_tokens(base=None) -> list[str]:
+    return list(_rel_enum(base).keys())
+
+
+def canonical_relationship(value, base=None):
+    if not value:
+        return None
+    enum = _rel_enum(base)
+    if value in enum:
+        return value
+    for token, spec in enum.items():
+        if value in (spec.get("legacy") or []):
+            return token
+    return None
+
+
+def relationship_label(token, lang, base=None) -> str:
+    spec = _rel_enum(base).get(token)
+    if not spec:
+        return token
+    return (spec.get("labels") or {}).get(lang, token)
