@@ -375,8 +375,12 @@
     "coverage": {
       "batch_entities": 15,
       "pages_generated": 15,
-      "missing": ["Philippa (page générée sous titre 'Philippe')"],
-      "failed": ["Celaena Sardothien (_spoiler_rejected)"],
+      "missing": [
+        "Philippa (page générée sous titre 'Philippe')"
+      ],
+      "failed": [
+        "Celaena Sardothien (_spoiler_rejected)"
+      ],
       "filtered_before_batch": 3
     },
     "weak_entities": [
@@ -410,6 +414,90 @@
       "Nox Owen : mort inventée (survit dans le livre)",
       "Mismatch titre Philippa→Philippe (canonical_name non utilisé comme titre)",
       "§ Relations réapparu sur 3 pages (Dorian, Elena, Philippe) — 5e occurrence"
+    ]
+  },
+  {
+    "run": 16,
+    "date": "2026-07-10",
+    "stage": "resolution",
+    "pages_generated": null,
+    "note": "Pre-generation audit — wiki_pages.json not yet produced; page-level metrics N/A.",
+    "batch_relations_total": 187,
+    "relations_typed_real_pct": 45,
+    "evolution_non_generic_pct": 28,
+    "evidence_present_pct": 45,
+    "key_moments_populated_pct": 95,
+    "temporal_context": {
+      "present": 116,
+      "flashback": 41
+    },
+    "gt_violations": [
+      {
+        "page": "Perrington (entities_classified)",
+        "signal": "Crown Prince fusionné dans Perrington au lieu de Dorian",
+        "cause": "confusion_alias",
+        "first_seen_in": "entities_classified.json",
+        "component": "alias_resolution.py / entity_classification.py",
+        "action": "Bloquer merge titre→nom si le titre mappe vers un PERSON différent (STU-430)"
+      }
+    ],
+    "gt_false_positives": [
+      {
+        "term": "Gavin",
+        "location": "sample_contexts",
+        "note": "verbatim EPUB evidence, not generated content"
+      },
+      {
+        "term": "Terrasen",
+        "location": "sample_contexts",
+        "note": "verbatim EPUB evidence, not generated content"
+      },
+      {
+        "term": "Perrington",
+        "location": "sample_contexts",
+        "note": "verbatim EPUB evidence, not generated content"
+      },
+      {
+        "term": "Grave",
+        "location": "sample_contexts",
+        "note": "verbatim EPUB evidence, not generated content"
+      }
+    ],
+    "coverage": {
+      "classified": 18,
+      "batch_entities": 15,
+      "filtered_before_batch": [
+        "King of Adarlan",
+        "Queen Georgina",
+        "Nothung"
+      ],
+      "high_severity_filtered": "King of Adarlan (series antagonist)"
+    },
+    "weak_entities": [
+      "Arobynn Hamel (0 rels)",
+      "Chaol (evidence 54%, evol 81% générique)",
+      "Wyrdmarks (evidence 100% absent, evol 100%)",
+      "Nehemia (evidence 69%, evol 75%)",
+      "Kaltain Rompier (evidence 79%, evol 86%)",
+      "Philippa (evidence 75%, evol 92%)",
+      "Elena (evidence 80%, evol 90%)",
+      "Hollin (evidence 71%, evol 100%)",
+      "Verin (evidence 67%, evol 78%)"
+    ],
+    "regression": {
+      "entity_type_null": "✅",
+      "alias_duplicates": "✅",
+      "temporal_context": "✅",
+      "key_moments": "✅",
+      "evolution_quality": "❌",
+      "relations_typed": "⚠️",
+      "ground_truth": "❌",
+      "coverage_important_entities": "⚠️"
+    },
+    "verdict": "Run 16 resolution/preparation: 0 real GT violations, alias merge OK, key_moments 14%→95%. Blockers: evolution 72% générique, evidence 55% absent, real typing 45%; King of Adarlan filtered before batches (no page). Fix King filter, re-run generation, then full page audit. Wrong merge Crown Prince→Perrington détecté dans entities_classified (STU-430).",
+    "new_issues": [
+      "STU-430: mauvais merge Crown Prince→Perrington",
+      "STU-431: King of Adarlan filtré avant batches"
     ]
   }
 ]
