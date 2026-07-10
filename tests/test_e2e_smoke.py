@@ -139,11 +139,17 @@ def test_entity_extraction_finds_fixture_entities(parse_result, smoke_epub):
         }
 
     persons = mentions("PERSON")
-    # The two protagonists are each mentioned 4+ times with full names —
-    # any reasonable NER model must surface them.
-    assert any("Thorn" in m for m in persons), f"PERSON mentions: {persons}"
-    assert any("Vale" in m for m in persons), f"PERSON mentions: {persons}"
-    assert any("Saffron" in m for m in mentions()), f"all mentions: {mentions()}"
+    # The two protagonists are each mentioned 4+ times with full names and
+    # person cues (title, dialogue verbs) — the fixture prose is written to
+    # cooperate with _retag_entity_type_from_context, whose place-cue
+    # scoring can retag PERSON entities in place-heavy sentences.
+    registry_dump = {
+        eid: {"type": e.get("type"), "raw_mentions": e.get("raw_mentions")}
+        for eid, e in entities.items()
+    }
+    assert any("Thorn" in m for m in persons), f"registry: {registry_dump}"
+    assert any("Vale" in m for m in persons), f"registry: {registry_dump}"
+    assert any("Saffron" in m for m in mentions()), f"registry: {registry_dump}"
 
     # Per-type registries and chapters.json land in processing_output/<slug>/
     processing = smoke_epub.parent.parent / "processing_output" / "smoke-novella"
