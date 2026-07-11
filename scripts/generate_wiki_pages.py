@@ -968,6 +968,62 @@ def _run_generation_for_entity(
     return item_result
 
 
+def _run_generation_sectioned(
+    *,
+    entity: dict,
+    book_title: str,
+    model: str,
+    timeout: int,
+    sections: list[str],
+    max_tokens: int,
+    dry_run: bool,
+    debug_dir: Path,
+    forbidden_names: list[str] | None = None,
+    language: str = "fr",
+    file_path: str = "",
+    grounding: dict | None = None,
+    sibling_canonicals: set[str] | None = None,
+    book_config: dict | None = None,
+) -> dict:
+    if not entity.get("context_by_chapter", {}):
+        return make_stub_page(entity, insufficient_data=True)
+    if dry_run:
+        return make_stub_page(entity)
+
+    content_sections = [s for s in sections if s not in ("infobox", "references")]
+    blocks: list[str] = []
+    for section in content_sections:
+        block = _generate_one_section(
+            entity=entity, section=section, book_title=book_title, model=model,
+            timeout=timeout, max_tokens=max_tokens, forbidden_names=forbidden_names,
+            language=language, file_path=file_path, grounding=grounding,
+        )
+        if block:
+            blocks.append(block)
+        elif section == "biography":
+            _save_generation_debug_artifact(debug_dir, entity, {"error": "biography_failed"})
+            return make_stub_page(entity, failed=True)
+        # else: OPT section omitted
+
+    if not blocks:
+        return make_stub_page(entity, failed=True)
+
+    if "references" in sections:
+        blocks.append(_references_block(book_title))
+
+    page = {
+        "title": entity["canonical_name"],
+        "importance": entity["importance"],
+        "entity_type": entity["type"],
+        "infobox_fields": {},
+        "content": _assemble_section_blocks(blocks),
+    }
+    if entity.get("type") == "PERSON":
+        _force_correct_identity(page, entity, sibling_canonicals)
+    _bind_batch_fields(page, entity, book_config)
+    return page
+
+
 def _clean_infobox_fields(fields: dict) -> dict:
     """Strip Markdown list prefixes from keys and remove internal artifact keys."""
     cleaned: dict[str, str] = {}
@@ -1221,7 +1277,7 @@ def main() -> None:
                         and "relationships" not in sections
                     ):
                         sections = list(sections) + ["relationships"]
-                    page = _run_generation_for_entity(
+                    page = _run_generation_sectioned(
                         entity=entity,
                         book_title=book_title,
                         model=args.model,
