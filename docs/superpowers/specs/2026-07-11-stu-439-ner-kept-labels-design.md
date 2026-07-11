@@ -43,9 +43,13 @@ All changes in `scripts/entity_extraction.py` unless noted.
 
 - `KEPT_LABELS` += `PLACE`, `EVENT`, `FACTION`.
 - `LABEL_TO_TYPE` += `PLACE → PLACE`, `EVENT → EVENT`, `FACTION → ORG`.
-- No behaviour change for stock spaCy models (they never emit these
-  labels). For the custom model, PLACE/EVENT entities flow into the
-  registry with their own types and FACTION entities flow in as ORG.
+- Stock French models are unaffected (they never emit these labels).
+  Stock English models (`en_core_web_*`) **do** emit EVENT: on those
+  runs, EVENT entities previously dropped now flow into the registry as
+  type EVENT — an intended improvement (downstream already has the
+  EVENT bucket), to keep in mind when auditing the next validation run.
+  For the custom model, PLACE/EVENT entities flow into the registry
+  with their own types and FACTION entities flow in as ORG.
 
 ### 2. Silent-drop safety net
 
