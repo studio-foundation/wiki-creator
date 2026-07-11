@@ -95,6 +95,39 @@ def _references_block(book_title: str) -> str:
     return f"## {_SECTION_TITLES['references']}\n\n- {book_title}"
 
 
+def _isolate_section(content: str, section: str) -> str | None:
+    """Return only the requested section's markdown block from a single-section
+    generation, dropping any leaked foreign blocks (e.g. a ## Infobox echoed from
+    the few-shot). If the model returned just the body with no heading, wrap it
+    under the section's title. Returns None if nothing usable remains."""
+    title = _SECTION_TITLES.get(section, section.replace("_", " ").title())
+    text = (content or "").strip()
+    if not text:
+        return None
+    # Split into level-2 heading blocks: [pre, "## H1", body1, "## H2", body2, ...]
+    parts = re.split(r"(?m)^(##\s+.+?)\s*$", text)
+    headings = parts[1::2]
+    bodies = parts[2::2]
+    if not headings:
+        # No headings at all → the model returned just the section body.
+        return f"## {title}\n\n{text}"
+
+    def _norm(s: str) -> str:
+        return s.strip().lstrip("#").strip().lower()
+
+    blocks = []
+    for h, b in zip(headings, bodies):
+        blocks.append((_norm(h), f"{h.strip()}\n\n{b.strip()}".strip()))
+    # Prefer an exact title match; else, if exactly one non-infobox block, take it.
+    for norm, block in blocks:
+        if norm == title.lower():
+            return block
+    non_infobox = [blk for norm, blk in blocks if norm != _SECTION_TITLES["infobox"].lower()]
+    if len(non_infobox) == 1:
+        return non_infobox[0]
+    return None
+
+
 FEW_SHOT_EXAMPLE = {
     "title": "John Doe",
     "importance": "principal",
@@ -857,14 +890,14 @@ def _generate_one_section(
     result = _once()
     if not isinstance(result, dict) or result.get("error"):
         return None
-    content = result.get("content") or ""
+    content = _isolate_section(result.get("content") or "", section) or ""
     if section == "relationships" and not entity.get("relationships"):
         content = _strip_relations_section(content)
     if forbidden_names and _check_forbidden_names({"content": content, "infobox_fields": {}}, forbidden_names):
         result = _once()
         if not isinstance(result, dict) or result.get("error"):
             return None
-        content = result.get("content") or ""
+        content = _isolate_section(result.get("content") or "", section) or ""
         if section == "relationships" and not entity.get("relationships"):
             content = _strip_relations_section(content)
         if _check_forbidden_names({"content": content, "infobox_fields": {}}, forbidden_names):

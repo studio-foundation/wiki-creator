@@ -108,3 +108,26 @@ def test_sectioned_omits_failed_optional_section(monkeypatch):
     assert page.get("_failed") is not True
     assert "## Biographie" in page["content"]
     assert "powers" not in page["content"]              # failed OPT section omitted
+
+
+def test_isolate_section_drops_leaked_infobox(monkeypatch):
+    leaked = "## Infobox\n\n- Nom: X\n\n## Biographie\n\nBio réelle."
+    monkeypatch.setattr(gwp, "_run_wiki_page_item", lambda **kw: _fake_item(leaked))
+    out = gwp._generate_one_section(entity={"canonical_name": "A"}, section="biography",
+                                    book_title="B", model="m", timeout=10, max_tokens=500)
+    assert out == "## Biographie\n\nBio réelle."
+    assert "Infobox" not in out
+
+
+def test_isolate_section_wraps_bare_body(monkeypatch):
+    monkeypatch.setattr(gwp, "_run_wiki_page_item", lambda **kw: _fake_item("Juste le corps."))
+    out = gwp._generate_one_section(entity={"canonical_name": "A"}, section="biography",
+                                    book_title="B", model="m", timeout=10, max_tokens=500)
+    assert out == "## Biographie\n\nJuste le corps."
+
+
+def test_isolate_section_none_when_only_infobox(monkeypatch):
+    monkeypatch.setattr(gwp, "_run_wiki_page_item", lambda **kw: _fake_item("## Infobox\n\n- Nom: X"))
+    out = gwp._generate_one_section(entity={"canonical_name": "A"}, section="biography",
+                                    book_title="B", model="m", timeout=10, max_tokens=500)
+    assert out is None
