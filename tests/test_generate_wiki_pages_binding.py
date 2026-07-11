@@ -70,3 +70,14 @@ def test_generation_profile_base_default_when_no_config():
 def test_generation_profile_unknown_type_falls_back():
     sections, _ = gwp.generation_profile({}, "principal", None)
     assert "infobox" in sections and "biography" in sections
+
+
+def test_generation_profile_principal_person_uses_base_template_order():
+    # No book config -> sections come from base.yaml's PERSON principal template,
+    # whose order differs from the old _DEFAULT_SECTIONS_BY_IMPORTANCE
+    # (relationships before personality). Pins that sections are template-sourced.
+    sections, _ = gwp.generation_profile({}, "principal", "PERSON")
+    assert sections == [
+        "infobox", "biography", "relationships", "personality",
+        "physical", "powers", "trivia", "references",
+    ]
