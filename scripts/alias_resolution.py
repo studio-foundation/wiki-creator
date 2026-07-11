@@ -421,11 +421,16 @@ def _detect_pure_title_in_context(
 ) -> dict | None:
     """
     Return evidence if one entity's canonical name is a pure role title (e.g. "Master")
-    AND the other entity's name appears in that title entity's context snippets.
+    AND the other entity's name appears in apposition to the title in either entity's
+    context snippets.
 
     This handles the case where NER produces a bare title entity ("Master") that refers
     to a named character ("Brullo") — a case _detect_title_alias cannot cover because the
     title entity has no surname remainder.
+
+    Both entities' contexts are scanned because NER attributes an appositive span like
+    "Dorian Havilliard, Crown Prince of Adarlan" to the proper-name entity, so the
+    decisive sentence may never appear in the title entity's own snippets (STU-440).
     """
     role_words = role_words or []
     if not role_words:
@@ -439,7 +444,9 @@ def _detect_pure_title_in_context(
         if not proper_names:
             continue
         title_lower = title_name.lower()
-        for snippet in _gather_contexts(title_entity, persons_full):
+        for snippet in _gather_contexts(title_entity, persons_full) + _gather_contexts(
+            proper_entity, persons_full
+        ):
             # Split into sentences so that names in adjacent sentences don't create false matches.
             # Within a sentence, the proper name must sit in apposition to the title.
             sentences = re.split(r'(?<=[.!?])[\u201d\u2019\u201c\u2018"\']?\s+', snippet)

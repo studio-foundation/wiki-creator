@@ -148,16 +148,9 @@ def _warn_if_no_pos_tagger(nlp) -> None:
             file=sys.stderr,
         )
 
-# Entity labels to keep. Covers French/English spaCy models and the
-# fine-tuned fiction models (models/wiki-ner-*), which emit
-# PERSON / PLACE / ORG / FACTION / EVENT (see ner_dataset_generation.py).
-# French (fr_core_news_*): PER, LOC, ORG
-# English (en_core_web_*): PERSON, GPE, LOC, ORG, FAC, NORP
-KEPT_LABELS = {
-    "PER", "LOC", "ORG", "PERSON", "GPE", "FAC", "NORP",
-    "PLACE", "EVENT", "FACTION",
-}
-
+# Map every NER label we can type to its canonical entity type. Covers both
+# standard spaCy models (PER/LOC/GPE/FAC/ORG/NORP/PERSON) and the project's
+# custom fantasy-NER model (wiki-ner-en: PERSON/PLACE/FACTION/ORG/EVENT).
 LABEL_TO_TYPE = {
     "PER": "PERSON",
     "PERSON": "PERSON",
@@ -181,6 +174,8 @@ IGNORED_LABELS = {
     "CARDINAL", "DATE", "TIME", "MONEY", "PERCENT", "QUANTITY", "ORDINAL",
     "LANGUAGE", "LAW", "PRODUCT", "WORK_OF_ART", "MISC",
 }
+# Keep any label we know how to type — derived so the two can never drift.
+KEPT_LABELS = frozenset(LABEL_TO_TYPE)
 
 CUE_WORDS_DIR = PROJECT_ROOT / "wiki_creator" / "cue_words"
 
@@ -453,12 +448,16 @@ def _retag_entity_type_from_context(
     cue_words: dict[str, frozenset[str]] | None = None,
 ) -> str:
     """
-    Conservative type correction for frequent PERSON false positives.
+    Conservative type correction for frequent PERSON/ORG/PLACE false positives.
 
-    Uses lexical cues from mention contexts to retag PERSON entities as PLACE
-    or EVENT when evidence is strong. All cue matching is whole-word
-    (boundary-anchored) — substring matching retagged every protagonist of
-    place-heavy prose ('sea' in 'seawall', 'port' in 'Port Saffron').
+    Uses lexical cues from mention contexts to retag PERSON entities as EVENT
+    when evidence is strong, and ORG/PLACE entities as PERSON when person
+    cues dominate. It no longer retags PERSON to PLACE: the custom NER model
+    now labels places directly, so a model-asserted PERSON is trusted even
+    when its introduction is place-dense (e.g. a person found on a riverbank).
+    All cue matching is whole-word (boundary-anchored) — substring matching
+    retagged every protagonist of place-heavy prose ('sea' in 'seawall',
+    'port' in 'Port Saffron').
     """
     current = entity.get("type", "OTHER")
     if current not in {"PERSON", "PLACE", "ORG"}:
@@ -523,8 +522,6 @@ def _retag_entity_type_from_context(
             if re.search(rf"\b{re.escape(mention_l)}'s\b", s):
                 person_score += 1
 
-    if current == "PERSON" and place_score >= 2 and place_score > max(event_score, person_score):
-        return "PLACE"
     if current == "PERSON" and event_cue_hits >= 1 and event_score >= 2 and event_score > max(place_score, person_score):
         return "EVENT"
     if current in {"ORG", "PLACE"} and person_score >= 2 and person_score > max(place_score, event_score):
