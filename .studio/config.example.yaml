@@ -1,0 +1,28 @@
+# Studio Configuration — EXAMPLE
+# Copy this file to .studio/config.yaml and fill in your values.
+# .studio/config.yaml is gitignored — it contains secrets and must NEVER be committed.
+#
+#   cp .studio/config.example.yaml .studio/config.yaml
+#
+# The ${VAR} syntax reads from your environment, so you can keep keys out of
+# the file entirely (recommended):
+#
+#   export ANTHROPIC_API_KEY=sk-ant-...
+
+providers:
+  # Local, no API key required — the default. Install: https://ollama.com
+  ollama:
+    baseUrl: http://localhost:11434
+  # Optional cloud providers:
+  anthropic:
+    apiKey: ${ANTHROPIC_API_KEY}
+  openai:
+    apiKey: ${OPENAI_API_KEY}
+  claude-code: {}
+
+defaults:
+  provider: ollama
+  model: llama3:8b
+
+api:
+  port: 3700
