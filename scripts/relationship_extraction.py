@@ -471,6 +471,48 @@ def _patch_attn_eager() -> None:
     transformers.AutoModel.from_config = _patched
 
 
+def _patch_datasets_pickler_py314() -> None:
+    """Make datasets' Pickler._batch_setitems accept the Python 3.14 pickle API.
+
+    Python 3.14 stdlib pickle calls _batch_setitems(items, obj); the override in
+    datasets < 4.4 (utils/_dill.py, used by fastcoref for dataset fingerprinting)
+    only accepts (items), which crashes every coref inference with
+    "Pickler._batch_setitems() takes 2 positional arguments but 3 were given".
+    Fixed upstream in datasets 4.4.0. No-ops on older Pythons, on fixed datasets
+    versions, and when datasets is absent.
+    """
+    if sys.version_info < (3, 14):
+        return
+    try:
+        import inspect
+        import pickle as _pickle
+
+        from datasets.utils import _dill as _ds_dill
+
+        params = inspect.signature(_ds_dill.Pickler._batch_setitems).parameters
+        if len(params) > 2 or any(
+            p.kind is inspect.Parameter.VAR_POSITIONAL for p in params.values()
+        ):
+            return  # datasets >= 4.4 already compatible
+
+        # Same semantics as datasets 4.3's override (sorted keys for stable
+        # fingerprints), with the obj argument passed through to the stdlib.
+        def _batch_setitems(self, items, obj=None):  # type: ignore[no-untyped-def]
+            if getattr(self, "_legacy_no_dict_keys_sorting", False):
+                return _pickle._Pickler._batch_setitems(self, items, obj)
+            try:
+                items = sorted(items)
+            except Exception:
+                from datasets.fingerprint import Hasher
+
+                items = sorted(items, key=lambda x: Hasher.hash(x[0]))
+            return _pickle._Pickler._batch_setitems(self, items, obj)
+
+        _ds_dill.Pickler._batch_setitems = _batch_setitems
+    except Exception:
+        return
+
+
 _SENT_BOUNDARY = re.compile(r'(?<=[.!?»])\s+(?=[A-ZÀÂÇÈÉÊÎÔÙÛÜ\u2014«])')
 
 
@@ -592,6 +634,7 @@ def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
         from fastcoref import spacy_component  # noqa: F401
 
         _patch_attn_eager()
+        _patch_datasets_pickler_py314()
         nlp = spacy.load(
             spacy_model,
             exclude=["parser", "lemmatizer", "ner", "textcat"],
@@ -673,6 +716,7 @@ def enrich_mentions_with_fastcoref(
             from fastcoref import spacy_component  # noqa: F401
 
             _patch_attn_eager()
+            _patch_datasets_pickler_py314()
             nlp = spacy.load(
                 spacy_model,
                 exclude=["parser", "lemmatizer", "ner", "textcat"],

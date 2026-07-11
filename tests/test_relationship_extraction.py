@@ -1176,3 +1176,25 @@ def test_span_contains_both_returns_false_when_name_absent():
     assert _span_contains_both("Chaol stood. Crown Prince entered.", "Chaol", "Crown Prince") is True
     assert _span_contains_both("Chaol stood. Crown Prince entered.", "Chaol", "Philippa") is False
     assert _span_contains_both("Chaol stood. Crown Prince entered.", "Elena", "Crown Prince") is False
+
+
+def test_patch_datasets_pickler_py314_makes_signature_compatible():
+    """On py3.14 with datasets < 4.4, the patch must make Pickler._batch_setitems
+    accept the stdlib's (items, obj) call; it must no-op cleanly otherwise."""
+    import inspect
+    import sys as _sys
+
+    import pytest as _pytest
+
+    from scripts.relationship_extraction import _patch_datasets_pickler_py314
+
+    _patch_datasets_pickler_py314()  # must never raise
+
+    if _sys.version_info < (3, 14):
+        return
+    ds_dill = _pytest.importorskip("datasets.utils._dill")
+    params = inspect.signature(ds_dill.Pickler._batch_setitems).parameters
+    accepts_obj = len(params) > 2 or any(
+        p.kind is inspect.Parameter.VAR_POSITIONAL for p in params.values()
+    )
+    assert accepts_obj, "Pickler._batch_setitems still incompatible with py3.14 pickle"
