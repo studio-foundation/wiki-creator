@@ -148,3 +148,55 @@ def test_validate_rejects_duplicate_entity_ids():
     registry.decisions.update(d_dup)
     with pytest.raises(ValueError, match="duplicate entity_id"):
         registry.validate()
+
+
+def test_round_trip_save_load_preserves_everything(tmp_path):
+    registry = _valid_registry()
+    registry.entities[0].mentions.append(
+        Mention(surface="Chaol", chapter_id="ch01", context="Chaol stood guard.")
+    )
+    registry.warnings.append("test warning")
+    path = tmp_path / "registry.json"
+
+    registry.save(path)
+    loaded = Registry.load(path)
+
+    assert loaded.to_dict() == registry.to_dict()
+    assert loaded.entities[0].mentions[0] == registry.entities[0].mentions[0]
+    assert loaded.decisions == registry.decisions
+    assert loaded.warnings == ["test warning"]
+
+
+def test_saved_json_shape(tmp_path):
+    import json as jsonlib
+
+    path = tmp_path / "registry.json"
+    _valid_registry().save(path)
+    raw = jsonlib.loads(path.read_text(encoding="utf-8"))
+    assert raw["version"] == 1
+    assert {e["entity_id"] for e in raw["entities"]} == {"chaol_westfall", "perrington"}
+    # decisions are stored once, top-level, referenced by id from records
+    top_ids = {d["decision_id"] for d in raw["decisions"]}
+    for entity in raw["entities"]:
+        assert set(entity["decisions"]) <= top_ids
+
+
+def test_save_enforces_invariants(tmp_path):
+    registry = _valid_registry()
+    registry.entities[0].aliases.append("Unjustified Alias")
+    with pytest.raises(ValueError, match="invariant 2"):
+        registry.save(tmp_path / "registry.json")
+    assert not (tmp_path / "registry.json").exists()
+
+
+def test_load_rejects_corrupted_registry(tmp_path):
+    import json as jsonlib
+
+    registry = _valid_registry()
+    path = tmp_path / "registry.json"
+    registry.save(path)
+    raw = jsonlib.loads(path.read_text(encoding="utf-8"))
+    raw["entities"][0]["aliases"].append("Injected Alias")
+    path.write_text(jsonlib.dumps(raw), encoding="utf-8")
+    with pytest.raises(ValueError, match="invariant 2"):
+        Registry.load(path)

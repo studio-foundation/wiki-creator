@@ -161,3 +161,78 @@ class Registry:
                         f"invariant 2 violated: alias '{alias}' of "
                         f"'{record.entity_id}' has no MergeDecision"
                     )
+
+    def to_dict(self) -> dict:
+        return {
+            "version": REGISTRY_VERSION,
+            "entities": [
+                {
+                    "entity_id": r.entity_id,
+                    "canonical_name": r.canonical_name,
+                    "entity_type": r.entity_type,
+                    "aliases": list(r.aliases),
+                    "mentions": [asdict(m) for m in r.mentions],
+                    "decisions": list(r.decisions),
+                }
+                for r in self.entities
+            ],
+            "decisions": [
+                {
+                    "decision_id": d.decision_id,
+                    "strategy": d.strategy,
+                    "inputs": list(d.inputs),
+                    "evidence": d.evidence,
+                    "confidence": d.confidence,
+                    "reversible": d.reversible,
+                }
+                for d in self.audit_log()
+            ],
+            "warnings": list(self.warnings),
+        }
+
+    @classmethod
+    def from_dict(cls, raw: dict) -> "Registry":
+        decisions: dict[str, MergeDecision] = {}
+        for d in raw.get("decisions") or []:
+            inputs = list(d.get("inputs") or ["", ""])
+            decisions[str(d["decision_id"])] = MergeDecision(
+                decision_id=str(d["decision_id"]),
+                strategy=str(d.get("strategy") or ""),
+                inputs=(str(inputs[0]), str(inputs[1])),
+                evidence=str(d.get("evidence") or ""),
+                confidence=str(d.get("confidence") or ""),
+                reversible=bool(d.get("reversible", True)),
+            )
+        entities: list[EntityRecord] = []
+        for e in raw.get("entities") or []:
+            entities.append(
+                EntityRecord(
+                    entity_id=str(e["entity_id"]),
+                    canonical_name=str(e.get("canonical_name") or ""),
+                    entity_type=str(e.get("entity_type") or "OTHER"),
+                    aliases=[str(a) for a in e.get("aliases") or []],
+                    mentions=[Mention(**m) for m in e.get("mentions") or []],
+                    decisions=[str(d) for d in e.get("decisions") or []],
+                )
+            )
+        return cls(
+            entities=entities,
+            decisions=decisions,
+            warnings=[str(w) for w in raw.get("warnings") or []],
+        )
+
+    def save(self, path: Path | str) -> None:
+        """Serialize to JSON. Invariants are verified on every save (spec §3.2)."""
+        self.validate()
+        p = Path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump(self.to_dict(), f, ensure_ascii=False, indent=2)
+            f.write("\n")
+
+    @classmethod
+    def load(cls, path: Path | str) -> "Registry":
+        with open(path, encoding="utf-8") as f:
+            registry = cls.from_dict(json.load(f))
+        registry.validate()
+        return registry
