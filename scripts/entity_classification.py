@@ -355,6 +355,12 @@ def _normalize_entity_type(
     return current_type
 
 
+# A role-named entity whose merge fails but who co-occurs with at least this many
+# distinct PERSONs is treated as a standalone character known only by their title
+# (e.g. "King of Adarlan") rather than an alias fragment to discard (STU-431).
+MIN_DISTINCT_PERSONS_FOR_STANDALONE_ROLE = 3
+
+
 def _is_role_entity_name(name: str, role_words=None, role_patterns=None) -> bool:
     _roles = role_words if role_words is not None else frozenset()
     _patterns = role_patterns if role_patterns is not None else ()
@@ -511,9 +517,11 @@ def _canonicalize_role_entities(
             _merge_entity_fields(target, entity)
             merge_map[name] = top_name
             entity["relevant"] = False
-        else:
+        elif len(counts) < MIN_DISTINCT_PERSONS_FOR_STANDALONE_ROLE:
             entity["type"] = "OTHER"
             entity["relevant"] = False
+        # else: unmerged role entity co-occurring with many distinct persons is a
+        # character known only by their title (e.g. "King of Adarlan") — keep it (STU-431).
 
     filtered = [e for e in entities if e.get("canonical_name") not in merge_map]
     rewritten = _rewrite_relationships(relationships, merge_map)
