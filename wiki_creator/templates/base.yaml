@@ -8,7 +8,7 @@ entity_types:
       - {token: status,      group: infobox, provenance: extracted-fact, obligation: MIN, fallback: unknown, tiers: [figurant, secondary, principal]}
       - {token: species,     group: infobox, provenance: extracted-fact, obligation: OPT, genre_gated: true, tiers: [secondary, principal]}
       - {token: affiliation, group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
-      - {token: titles,      group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [principal]}
+      - {token: titles,      group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
     sections:
       - {token: biography,     group: section, provenance: llm-prose,      obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: relationships, group: section, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
