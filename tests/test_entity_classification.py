@@ -417,6 +417,59 @@ def test_canonicalize_role_entities_merges_role_surname_into_full_name():
     assert "Captain Westfall" in chaol["aliases"]
 
 
+# --- STU-431: title-only characters must survive role canonicalization ---
+
+def test_canonicalize_role_entities_keeps_title_only_character_with_broad_cooccurrence():
+    """A role-named entity that fails the merge but co-occurs with ≥3 distinct
+    PERSONs is a real character known only by title (e.g. King of Adarlan) —
+    it must stay PERSON/relevant, not be flipped to OTHER/ignored."""
+    entities = [
+        {"canonical_name": "Celaena", "type": "PERSON", "aliases": [], "source_ids": ["e1"], "relevant": True},
+        {"canonical_name": "Nehemia", "type": "PERSON", "aliases": [], "source_ids": ["e2"], "relevant": True},
+        {"canonical_name": "Cain", "type": "PERSON", "aliases": [], "source_ids": ["e3"], "relevant": True},
+        {"canonical_name": "King of Adarlan", "type": "PERSON", "aliases": [], "source_ids": ["e4"], "relevant": True},
+    ]
+    # Top candidate (46) does not double the second (29) → merge correctly fails.
+    relationships = [
+        {"entity_a": "Celaena", "entity_b": "King of Adarlan", "cooccurrence_count": 46},
+        {"entity_a": "King of Adarlan", "entity_b": "Nehemia", "cooccurrence_count": 29},
+        {"entity_a": "Cain", "entity_b": "King of Adarlan", "cooccurrence_count": 27},
+    ]
+
+    out_entities, _, merge_map = _canonicalize_role_entities(
+        entities, relationships, {}, {}, {}, {},
+        role_words=_ROLE_WORDS, role_patterns=_ROLE_PATTERNS,
+    )
+    assert "King of Adarlan" not in merge_map
+    king = next(e for e in out_entities if e["canonical_name"] == "King of Adarlan")
+    assert king["relevant"] is True
+    assert king["type"] == "PERSON"
+
+
+def test_canonicalize_role_entities_ignores_unmerged_role_with_narrow_cooccurrence():
+    """A role-named entity that fails the merge and co-occurs with <3 distinct
+    PERSONs stays ignored (OTHER/relevant=False) — likely a noise fragment."""
+    entities = [
+        {"canonical_name": "Celaena", "type": "PERSON", "aliases": [], "source_ids": ["e1"], "relevant": True},
+        {"canonical_name": "Nehemia", "type": "PERSON", "aliases": [], "source_ids": ["e2"], "relevant": True},
+        {"canonical_name": "Head Guard", "type": "PERSON", "aliases": [], "source_ids": ["e3"], "relevant": True},
+    ]
+    # Merge fails (4 < 2×3) and only 2 distinct persons → still ignored.
+    relationships = [
+        {"entity_a": "Head Guard", "entity_b": "Celaena", "cooccurrence_count": 4},
+        {"entity_a": "Head Guard", "entity_b": "Nehemia", "cooccurrence_count": 3},
+    ]
+
+    out_entities, _, merge_map = _canonicalize_role_entities(
+        entities, relationships, {}, {}, {}, {},
+        role_words=_ROLE_WORDS, role_patterns=_ROLE_PATTERNS,
+    )
+    assert "Head Guard" not in merge_map
+    guard = next(e for e in out_entities if e["canonical_name"] == "Head Guard")
+    assert guard["relevant"] is False
+    assert guard["type"] == "OTHER"
+
+
 def test_canonicalize_role_entities_marks_compound_role_noun_as_other():
     """'Royal Guard' with no matching PERSON should be marked OTHER/irrelevant."""
     entities = [
