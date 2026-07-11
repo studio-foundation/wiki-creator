@@ -29,6 +29,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 from wiki_creator.lang import book_language
+from wiki_creator.page_templates import resolve_template
 from wiki_creator.paths import book_paths_from_yaml
 from scripts.wiki_page_validator import _normalize_name
 
@@ -501,6 +502,23 @@ def _batch_bound_value(entity: dict, token: str) -> str | None:
         aliases = [a for a in (entity.get("aliases") or []) if a]
         return ", ".join(aliases) if aliases else None
     return None
+
+
+def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> None:
+    """Overwrite batch-bound infobox tokens with their batch-entity values, per
+    the resolved template. Prevention counterpart to _force_correct_identity:
+    the LLM's authored value is discarded for these tokens, so identity
+    confusion is impossible for them. No-op when book_config is None."""
+    if book_config is None:
+        return
+    page.setdefault("infobox_fields", {})
+    resolved = resolve_template(entity.get("type"), entity.get("importance"), book_config)
+    for slot in resolved.infobox():
+        if slot.provenance != "batch-bound":
+            continue
+        value = _batch_bound_value(entity, slot.token)
+        if value:
+            page["infobox_fields"][slot.token] = value
 
 
 # Kept in sync with check_identity_match in scripts/wiki_page_validator.py:
