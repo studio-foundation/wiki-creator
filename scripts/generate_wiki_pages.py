@@ -823,6 +823,7 @@ def _run_generation_for_entity(
     file_path: str = "",
     grounding: dict | None = None,
     sibling_canonicals: set[str] | None = None,
+    book_config: dict | None = None,
 ) -> dict:
     if not entity.get("context_by_chapter", {}):
         return make_stub_page(entity, insufficient_data=True)
@@ -849,6 +850,7 @@ def _run_generation_for_entity(
         )
         _save_generation_debug_artifact(debug_dir, entity, item_result)
         if recovered is not None:
+            _bind_batch_fields(recovered, entity, book_config)
             print(" ⚠ identity-corrected from rejected run", file=sys.stderr, end="", flush=True)
             return recovered
         return make_stub_page(entity, failed=True)
@@ -894,6 +896,9 @@ def _run_generation_for_entity(
         and _force_correct_identity(item_result, entity, sibling_canonicals)
     ):
         print(" ⚠ nom force-corrected", file=sys.stderr, end="", flush=True)
+
+    if isinstance(item_result, dict) and "content" in item_result:
+        _bind_batch_fields(item_result, entity, book_config)
 
     return item_result
 
@@ -1165,6 +1170,7 @@ def main() -> None:
                         file_path=book_file_path,
                         grounding=grounding_cfg,
                         sibling_canonicals=batch_canonicals - {name},
+                        book_config=book_cfg,
                     )
                     all_pages.append(page)
                     _save(all_pages, output_file)
