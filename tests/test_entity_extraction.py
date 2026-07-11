@@ -1,6 +1,7 @@
 """Tests for scripts/entity_extraction.py — spaCy NER stage."""
 import pytest
 import spacy
+from spacy.tokens import Span
 import sys
 import os
 
@@ -13,6 +14,7 @@ from scripts.entity_extraction import (
     _resolve_cue_words_language, _load_cue_words,
     _spacy_model_candidates, _load_spacy_model_with_fallback,
     _is_frontmatter_chapter, _ensure_sentencizer, _audit_ner_labels,
+    _is_valid_span, _warn_if_no_pos_tagger,
 )
 
 
@@ -908,4 +910,44 @@ def test_audit_silent_for_kept_and_ignored_labels(capsys):
 def test_audit_without_ner_pipe_is_silent(capsys):
     nlp = spacy.blank("en")
     _audit_ner_labels(nlp)
+    assert capsys.readouterr().err == ""
+
+
+# --- _is_valid_span and _warn_if_no_pos_tagger tests (STU-439) ---
+
+
+@requires_en_sm
+def test_is_valid_span_rejects_verb_when_pos_available(nlp):
+    doc = nlp("He said hello to Marion yesterday.")
+    span = Span(doc, 1, 2, label="PERSON")  # "said", pos_ == VERB
+    assert _is_valid_span(span) is False
+
+
+def test_is_valid_span_skips_pos_check_without_tagger():
+    """Tagger-less model (e.g. wiki-ner-en): POS filter is an explicit no-op (STU-439)."""
+    blank = spacy.blank("en")
+    doc = blank("He said hello to Marion yesterday.")
+    span = Span(doc, 1, 2, label="PERSON")  # same span, but pos_ is empty
+    assert _is_valid_span(span) is True
+
+
+def test_is_valid_span_dash_rejection_survives_missing_pos():
+    """The dialogue-dash check does not depend on POS and must stay active."""
+    blank = spacy.blank("en")
+    doc = blank("— Regarde toi.")  # tokens: ['—', 'Regarde', 'toi', '.']
+    span = Span(doc, 1, 2, label="PERSON")  # "Regarde", preceded by dash
+    assert _is_valid_span(span) is False
+
+
+def test_warns_when_model_has_no_tagger(capsys):
+    blank = spacy.blank("en")
+    _warn_if_no_pos_tagger(blank)
+    err = capsys.readouterr().err
+    assert "[WARN]" in err
+    assert "POS filters disabled" in err
+
+
+@requires_en_sm
+def test_no_warning_when_tagger_present(nlp, capsys):
+    _warn_if_no_pos_tagger(nlp)
     assert capsys.readouterr().err == ""

@@ -134,6 +134,20 @@ def _audit_ner_labels(nlp) -> None:
             file=sys.stderr,
         )
 
+
+def _warn_if_no_pos_tagger(nlp) -> None:
+    """
+    The _BAD_POS filters in _is_valid_span need POS annotation. Fine-tuned
+    ['tok2vec','ner'] models have no tagger, so those filters cannot apply.
+    Make that explicit instead of silent (STU-439).
+    """
+    if not any(p in nlp.pipe_names for p in ("tagger", "morphologizer")):
+        print(
+            "[WARN] POS filters disabled: model has no tagger/morphologizer, "
+            "_BAD_POS span filtering will not apply",
+            file=sys.stderr,
+        )
+
 # Entity labels to keep. Covers French/English spaCy models and the
 # fine-tuned fiction models (models/wiki-ner-*), which emit
 # PERSON / PLACE / ORG / FACTION / EVENT (see ner_dataset_generation.py).
@@ -355,18 +369,28 @@ def _is_valid_span(span) -> bool:
     French NER models often misclassify sentence-initial verbs/adjectives after dialogue
     dashes as PROPN (e.g. "— Regarde" → PER with pos=PROPN). The preceding dash is the
     reliable signal since POS tagging itself is confused in these contexts.
+
+    Tagger-less pipelines (e.g. fine-tuned ['tok2vec','ner'] models) carry no
+    POS annotation; the _BAD_POS checks are then deliberately skipped
+    (warned once at load time by _warn_if_no_pos_tagger). The dialogue-dash
+    rejection below does not depend on POS and always applies.
     """
     tokens = list(span)
+    # Tagger-less pipelines (e.g. fine-tuned ['tok2vec','ner'] models) carry no
+    # POS annotation; the _BAD_POS checks are then deliberately skipped
+    # (warned once at load time by _warn_if_no_pos_tagger). The dialogue-dash
+    # rejection below does not depend on POS and always applies.
+    has_pos = span.doc.has_annotation("POS")
     if len(tokens) == 1:
         tok = tokens[0]
-        if tok.pos_ in _BAD_POS:
+        if has_pos and tok.pos_ in _BAD_POS:
             return False
         # Reject if immediately preceded by a dialogue dash (French dialogue marker)
         if tok.i > 0 and span.doc[tok.i - 1].text in {"—", "–", "-"}:
             return False
     else:
         head = span.root
-        if head.pos_ in _BAD_POS:
+        if has_pos and head.pos_ in _BAD_POS:
             return False
         # Reject multi-token spans that start immediately after a dialogue dash
         if span.start > 0 and span.doc[span.start - 1].text in {"—", "–", "-"}:
@@ -780,6 +804,7 @@ def main() -> None:
         print(f"[WARN] spaCy model '{spacy_model}' not available; using '{loaded_model}'", file=sys.stderr)
     _ensure_sentencizer(nlp)
     _audit_ner_labels(nlp)
+    _warn_if_no_pos_tagger(nlp)
 
     try:
         cue_words_language = _resolve_cue_words_language(
