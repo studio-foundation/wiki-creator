@@ -571,19 +571,20 @@ def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
     Must be a top-level function (picklable by multiprocessing).
 
     Args:
-        args: (chapter_id, text, name_to_canonical, spacy_model)
+        args: (chapter_id, text, name_to_canonical, spacy_model, max_chars)
             name_to_canonical: {lowercased_name: canonical_name}
             spacy_model: spaCy model name to load (e.g. "fr_core_news_lg")
+            max_chars: character cap per chapter (0 = no cap)
 
     Returns:
         List of (canonical_name, chapter_id, sentence) tuples to be merged
         by the parent process. Returns [] on any error (graceful degradation).
     """
-    chapter_id, text, name_to_canonical, spacy_model = args
+    chapter_id, text, name_to_canonical, spacy_model, max_chars = args
     if not text or not text.strip():
         return []
 
-    chunk = text[:8000]
+    chunk = text[:max_chars] if max_chars > 0 else text
 
     try:
         import spacy
@@ -622,10 +623,11 @@ def enrich_mentions_with_fastcoref(
     mentions_by_entity: dict[str, dict[str, list[str]]],
     workers: int = 1,
     spacy_model: str = "fr_core_news_lg",
+    max_chars: int = 8000,
 ) -> dict[str, dict[str, list[str]]]:
     """Enrich mentions using fastcoref + LingMessCoref for accurate coreference.
 
-    For each chapter (first 8 000 chars), run LingMessCoref to get coreference
+    For each chapter (first `max_chars` characters; 0 = full chapter), run LingMessCoref to get coreference
     clusters. For each cluster containing a known PERSON entity mention, find
     pronoun mentions in the same cluster and attribute their sentences to that
     entity.
@@ -640,6 +642,7 @@ def enrich_mentions_with_fastcoref(
                  Each worker loads its own model (~590 MB RAM per worker).
                  RAM budget: 1 worker=~3 GB, 4 workers=~10 GB, 8 workers=~20 GB.
         spacy_model: spaCy model name to load (default "fr_core_news_lg").
+        max_chars: character cap per chapter (default 8000, 0 = no cap).
 
     Returns:
         mentions_by_entity enriched in-place (also returned for convenience)
@@ -691,7 +694,7 @@ def enrich_mentions_with_fastcoref(
         for chapter_id, text in chapters.items():
             if not text or not text.strip():
                 continue
-            chunk = text[:8000]
+            chunk = text[:max_chars] if max_chars > 0 else text
             try:
                 doc = nlp(chunk, component_cfg={"fastcoref": {"resolve_text": True}})
             except Exception as e:
@@ -715,7 +718,7 @@ def enrich_mentions_with_fastcoref(
         import multiprocessing
 
         chapter_items = [
-            (cid, text, name_to_canonical, spacy_model)
+            (cid, text, name_to_canonical, spacy_model, max_chars)
             for cid, text in chapters.items()
             if text and text.strip()
         ]
@@ -734,7 +737,7 @@ def enrich_mentions_with_fastcoref(
                 f"[WARN] Parallel coref failed ({type(e).__name__}: {e}) — falling back to sequential (workers=1)",
                 file=sys.stderr,
             )
-            return enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=1, spacy_model=spacy_model)
+            return enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=1, spacy_model=spacy_model, max_chars=max_chars)
 
         # Merge results from all workers
         for worker_results in all_results:

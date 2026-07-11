@@ -164,9 +164,8 @@ def test_narrator_passthrough_null_when_absent():
 def test_coref_worker_returns_list():
     """_coref_worker returns a list (empty when fastcoref not available)."""
     from scripts.relationship_extraction import _coref_worker
-    result = _coref_worker(("ch01", "Il travaillait.", {"david martín": "David Martín"}, "fr_core_news_lg"))
+    result = _coref_worker(("ch01", "Il travaillait.", {"david martín": "David Martín"}, "fr_core_news_lg", 8000))
     assert isinstance(result, list)
-    # Each item is (canonical, chapter_id, sentence)
     for item in result:
         assert len(item) == 3
         assert isinstance(item[0], str)
@@ -181,6 +180,15 @@ def test_enrich_fastcoref_accepts_workers_param():
     sig = inspect.signature(enrich_mentions_with_fastcoref)
     assert "workers" in sig.parameters
     assert sig.parameters["workers"].default == 1
+
+
+def test_enrich_fastcoref_accepts_max_chars_param():
+    """enrich_mentions_with_fastcoref accepts max_chars with default 8000."""
+    import inspect
+    from scripts.relationship_extraction import enrich_mentions_with_fastcoref
+    sig = inspect.signature(enrich_mentions_with_fastcoref)
+    assert "max_chars" in sig.parameters
+    assert sig.parameters["max_chars"].default == 8000
 
 
 def test_main_parses_workers_flag(monkeypatch):
@@ -330,11 +338,10 @@ def test_true_relation_survives_filter():
     assert ("David Martín", "Pedro Vidal") in pairs or ("Pedro Vidal", "David Martín") in pairs
 
 
-def test_coref_worker_accepts_4_tuple():
-    """_coref_worker must unpack (chapter_id, text, name_to_canonical, spacy_model)."""
+def test_coref_worker_accepts_5_tuple():
+    """_coref_worker must unpack (chapter_id, text, name_to_canonical, spacy_model, max_chars)."""
     from scripts.relationship_extraction import _coref_worker
-    # Empty text → empty result, no crash
-    result = _coref_worker(("ch01", "", {}, "en_core_web_sm"))
+    result = _coref_worker(("ch01", "", {}, "en_core_web_sm", 8000))
     assert result == []
 
 
