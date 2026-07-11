@@ -1081,6 +1081,48 @@ def test_detect_pure_title_in_context_multi_word_phrase_title():
     assert result["method"] == "pure_title"
 
 
+def test_detect_pure_title_in_context_finds_apposition_in_proper_entity_snippets():
+    """STU-440: the apposition evidence may live in the proper-name entity's snippets
+    (NER attributes 'Dorian Havilliard, Crown Prince of Adarlan' to Dorian, not to the
+    title entity). Both entities' contexts must be scanned."""
+    from scripts.alias_resolution import _detect_pure_title_in_context
+    dorian = {
+        "canonical_name": "Dorian Havilliard",
+        "aliases": ["Dorian Havilliard", "Dorian"],
+        "source_ids": ["e_dorian"],
+    }
+    crown_prince = {
+        "canonical_name": "Crown Prince",
+        "aliases": ["Crown Prince"],
+        "source_ids": ["e_crown_prince"],
+    }
+    persons_full = {
+        # Title entity's own snippets contain only the conjunction sentence — correctly rejected.
+        "e_crown_prince": {
+            "mentions_by_chapter": {
+                "ch05": [
+                    "The Crown Prince, of course, sat with Perrington on their own two logs, far from her.",
+                ]
+            }
+        },
+        # The apposition lives in the proper entity's snippets.
+        "e_dorian": {
+            "mentions_by_chapter": {
+                "ch02": [
+                    "But, as you probably know, I'm Dorian Havilliard, Crown Prince of Adarlan.",
+                ]
+            }
+        },
+    }
+    result = _detect_pure_title_in_context(
+        dorian, crown_prince, persons_full,
+        role_words=["crown prince", "prince"],
+        connective_words=["the", "of"],
+    )
+    assert result is not None
+    assert result["method"] == "pure_title"
+
+
 def test_detect_pure_title_in_context_no_match_when_names_in_different_sentences():
     """
     'Crown Prince' and 'Cain' in the same multi-sentence snippet but different sentences
