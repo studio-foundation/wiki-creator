@@ -490,6 +490,19 @@ def _force_correct_identity(
     return changed
 
 
+def _batch_bound_value(entity: dict, token: str) -> str | None:
+    """Value for a batch-bound infobox token, sourced from the batch entity.
+    Returns None for tokens the batch cannot sensibly supply (skipped by the
+    binder). `type` is intentionally unsupported: the coarse batch type is
+    infobox noise; the specific type is an extracted-fact (slice C)."""
+    if token == "nom":
+        return entity.get("canonical_name") or None
+    if token == "alias":
+        aliases = [a for a in (entity.get("aliases") or []) if a]
+        return ", ".join(aliases) if aliases else None
+    return None
+
+
 # Kept in sync with check_identity_match in scripts/wiki_page_validator.py:
 # these are the only validator errors that identity confusion produces.
 _IDENTITY_ERROR_MARKERS = ("≠ entité demandée", "ne correspond pas à l'entité")
