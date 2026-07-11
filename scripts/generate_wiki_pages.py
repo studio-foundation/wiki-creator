@@ -85,6 +85,16 @@ def _content_template_for_sections(sections: list[str]) -> str:
     return "\\n\\n".join(blocks)
 
 
+def _assemble_section_blocks(blocks: list[str]) -> str:
+    """Join non-empty section markdown blocks with a blank line."""
+    return "\n\n".join(b.strip() for b in blocks if b and b.strip())
+
+
+def _references_block(book_title: str) -> str:
+    """Deterministic References section — lists only the book title (no LLM)."""
+    return f"## {_SECTION_TITLES['references']}\n\n- {book_title}"
+
+
 FEW_SHOT_EXAMPLE = {
     "title": "John Doe",
     "importance": "principal",
