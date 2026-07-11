@@ -52,15 +52,26 @@ All changes in `scripts/entity_extraction.py` unless noted.
 At model load time, compare the model's NER labels
 (`nlp.get_pipe("ner").labels`, when a `ner` pipe exists) against
 `KEPT_LABELS`; any label the model can emit that is not in
-`KEPT_LABELS` triggers a single `logger.warning` listing the dropped
-labels. A future custom ontology can no longer be disconnected
-silently.
+`KEPT_LABELS` triggers a single warning listing the dropped labels. A
+future custom ontology can no longer be disconnected silently.
+
+**Refinement (found during planning):** stock spaCy models emit labels
+we drop *deliberately* (`en_core_web_*`: CARDINAL, DATE, TIME, MONEY,
+PERCENT, QUANTITY, ORDINAL, LANGUAGE, LAW, PRODUCT, WORK_OF_ART;
+`fr_core_news_*`: MISC). A naive audit would warn on every stock-model
+run — warning fatigue that defeats the net. These go in an explicit
+`IGNORED_LABELS` constant (documented intentional drops); the warning
+fires only for labels in neither `KEPT_LABELS` nor `IGNORED_LABELS`.
+
+Warnings use the script's existing convention:
+`print("[WARN] …", file=sys.stderr)` (stdout is reserved for the JSON
+payload; the script has no logger).
 
 ### 3. Explicit POS no-op (not silent)
 
 - At model load time, if no POS-producing component (`tagger` or
-  `morphologizer`) is in `nlp.pipe_names`, log one
-  `logger.warning` ("POS filters disabled: model has no tagger …").
+  `morphologizer`) is in `nlp.pipe_names`, print one `[WARN]` line to
+  stderr ("POS filters disabled: model has no tagger …").
 - In `_is_valid_span`, explicitly skip the `_BAD_POS` checks when the
   doc carries no POS annotation (`span.doc.has_annotation("POS")`).
   The dialogue-dash rejection does **not** depend on POS and stays
