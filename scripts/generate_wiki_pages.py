@@ -29,6 +29,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 from wiki_creator.lang import book_language
+from wiki_creator.page_templates import resolve_template
 from wiki_creator.paths import book_paths_from_yaml
 from scripts.wiki_page_validator import _normalize_name
 
@@ -490,6 +491,36 @@ def _force_correct_identity(
     return changed
 
 
+def _batch_bound_value(entity: dict, token: str) -> str | None:
+    """Value for a batch-bound infobox token, sourced from the batch entity.
+    Returns None for tokens the batch cannot sensibly supply (skipped by the
+    binder). `type` is intentionally unsupported: the coarse batch type is
+    infobox noise; the specific type is an extracted-fact (slice C)."""
+    if token == "nom":
+        return entity.get("canonical_name") or None
+    if token == "alias":
+        aliases = [a for a in (entity.get("aliases") or []) if a]
+        return ", ".join(aliases) if aliases else None
+    return None
+
+
+def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> None:
+    """Overwrite batch-bound infobox tokens with their batch-entity values, per
+    the resolved template. Prevention counterpart to _force_correct_identity:
+    the LLM's authored value is discarded for these tokens, so identity
+    confusion is impossible for them. No-op when book_config is None."""
+    if book_config is None:
+        return
+    page.setdefault("infobox_fields", {})
+    resolved = resolve_template(entity.get("type"), entity.get("importance"), book_config)
+    for slot in resolved.infobox():
+        if slot.provenance != "batch-bound":
+            continue
+        value = _batch_bound_value(entity, slot.token)
+        if value:
+            page["infobox_fields"][slot.token] = value
+
+
 # Kept in sync with check_identity_match in scripts/wiki_page_validator.py:
 # these are the only validator errors that identity confusion produces.
 _IDENTITY_ERROR_MARKERS = ("≠ entité demandée", "ne correspond pas à l'entité")
@@ -792,6 +823,7 @@ def _run_generation_for_entity(
     file_path: str = "",
     grounding: dict | None = None,
     sibling_canonicals: set[str] | None = None,
+    book_config: dict | None = None,
 ) -> dict:
     if not entity.get("context_by_chapter", {}):
         return make_stub_page(entity, insufficient_data=True)
@@ -818,6 +850,7 @@ def _run_generation_for_entity(
         )
         _save_generation_debug_artifact(debug_dir, entity, item_result)
         if recovered is not None:
+            _bind_batch_fields(recovered, entity, book_config)
             print(" ⚠ identity-corrected from rejected run", file=sys.stderr, end="", flush=True)
             return recovered
         return make_stub_page(entity, failed=True)
@@ -863,6 +896,9 @@ def _run_generation_for_entity(
         and _force_correct_identity(item_result, entity, sibling_canonicals)
     ):
         print(" ⚠ nom force-corrected", file=sys.stderr, end="", flush=True)
+
+    if isinstance(item_result, dict) and "content" in item_result:
+        _bind_batch_fields(item_result, entity, book_config)
 
     return item_result
 
@@ -1008,16 +1044,14 @@ def load_book_config(book_yaml_path: str) -> dict:
 
 def generation_profile(config: dict, importance: str, entity_type: str | None = None) -> tuple[list[str], int]:
     profile = config.get(importance, {})
-    default_sections = _DEFAULT_SECTIONS_BY_IMPORTANCE.get(importance, _DEFAULT_SECTIONS_BY_IMPORTANCE["figurant"])
 
-    sections_by_type = profile.get("sections_by_type", {})
-    type_override = None
-    if isinstance(sections_by_type, dict) and entity_type:
-        type_override = sections_by_type.get(str(entity_type).upper())
+    resolved = resolve_template(entity_type, importance, {"generation": config})
+    sections = resolved.section_tokens()
+    if not sections:  # unknown/None type → keep the legacy default
+        sections = _DEFAULT_SECTIONS_BY_IMPORTANCE.get(
+            importance, _DEFAULT_SECTIONS_BY_IMPORTANCE["figurant"]
+        )
 
-    sections = type_override if type_override is not None else profile.get("sections", default_sections)
-    if not isinstance(sections, list) or not sections:
-        sections = default_sections
     max_tokens = profile.get("max_tokens_per_page", DEFAULT_NUM_PREDICT)
     try:
         max_tokens = int(max_tokens)
@@ -1136,6 +1170,7 @@ def main() -> None:
                         file_path=book_file_path,
                         grounding=grounding_cfg,
                         sibling_canonicals=batch_canonicals - {name},
+                        book_config=book_cfg,
                     )
                     all_pages.append(page)
                     _save(all_pages, output_file)
