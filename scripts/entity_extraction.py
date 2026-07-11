@@ -116,10 +116,15 @@ def _load_spacy_model_with_fallback(spacy_load, requested_model: str):
             errors.append(f"{model}: {exc}")
     raise OSError("Unable to load spaCy model. Tried: " + " | ".join(errors))
 
-# Entity labels to keep. Covers both French and English spaCy models.
+# Entity labels to keep. Covers French/English spaCy models and the
+# fine-tuned fiction models (models/wiki-ner-*), which emit
+# PERSON / PLACE / ORG / FACTION / EVENT (see ner_dataset_generation.py).
 # French (fr_core_news_*): PER, LOC, ORG
 # English (en_core_web_*): PERSON, GPE, LOC, ORG, FAC, NORP
-KEPT_LABELS = {"PER", "LOC", "ORG", "PERSON", "GPE", "FAC", "NORP"}
+KEPT_LABELS = {
+    "PER", "LOC", "ORG", "PERSON", "GPE", "FAC", "NORP",
+    "PLACE", "EVENT", "FACTION",
+}
 
 LABEL_TO_TYPE = {
     "PER": "PERSON",
@@ -127,8 +132,13 @@ LABEL_TO_TYPE = {
     "LOC": "PLACE",
     "GPE": "PLACE",
     "FAC": "PLACE",
+    "PLACE": "PLACE",
     "ORG": "ORG",
     "NORP": "ORG",
+    # FACTION → ORG: downstream type vocabulary is frozen to
+    # PERSON/PLACE/ORG/EVENT/OTHER (wiki_creator/types.py).
+    "FACTION": "ORG",
+    "EVENT": "EVENT",
 }
 
 CUE_WORDS_DIR = PROJECT_ROOT / "wiki_creator" / "cue_words"

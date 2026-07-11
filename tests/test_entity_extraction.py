@@ -582,6 +582,40 @@ def test_save_chapters_json_writes_chapter_texts(tmp_path):
     assert data == {"chapters": {"ch01": "Hello world.", "ch02": "Goodbye world."}}
 
 
+@pytest.fixture()
+def custom_ontology_nlp():
+    """Mimics models/wiki-ner-en: custom fiction labels, no tagger/parser."""
+    nlp = spacy.blank("en")
+    nlp.add_pipe("sentencizer")
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns([
+        {"label": "PERSON", "pattern": "Celaena"},
+        {"label": "PLACE", "pattern": "Endovier"},
+        {"label": "EVENT", "pattern": "Yulemas"},
+        {"label": "FACTION", "pattern": [{"TEXT": "Silent"}, {"TEXT": "Assassins"}]},
+    ])
+    return nlp
+
+
+def test_custom_ontology_labels_survive_extraction(custom_ontology_nlp):
+    """PLACE/EVENT/FACTION from the fine-tuned model must not be dropped (STU-439)."""
+    chapters = [{
+        "id": "ch01",
+        "title": "Chapter 1",
+        "content": "Celaena walked to Endovier. Everyone celebrated Yulemas. The Silent Assassins waited.",
+    }]
+    result = extract_entities(chapters, custom_ontology_nlp)
+    types_by_mention = {
+        m: entry["type"]
+        for entry in result["entities"].values()
+        for m in entry["raw_mentions"]
+    }
+    assert types_by_mention.get("Celaena") == "PERSON"
+    assert types_by_mention.get("Endovier") == "PLACE"
+    assert types_by_mention.get("Yulemas") == "EVENT"
+    assert types_by_mention.get("Silent Assassins") == "ORG"  # FACTION → ORG (spec decision)
+
+
 @requires_fr_lg
 def test_pos_filter_rejects_verb_at_sentence_start():
     """Capitalized French verb at dialogue start must not appear as entity."""
