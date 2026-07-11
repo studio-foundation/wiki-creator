@@ -116,20 +116,23 @@ def _load_spacy_model_with_fallback(spacy_load, requested_model: str):
             errors.append(f"{model}: {exc}")
     raise OSError("Unable to load spaCy model. Tried: " + " | ".join(errors))
 
-# Entity labels to keep. Covers both French and English spaCy models.
-# French (fr_core_news_*): PER, LOC, ORG
-# English (en_core_web_*): PERSON, GPE, LOC, ORG, FAC, NORP
-KEPT_LABELS = {"PER", "LOC", "ORG", "PERSON", "GPE", "FAC", "NORP"}
-
+# Map every NER label we can type to its canonical entity type. Covers both
+# standard spaCy models (PER/LOC/GPE/FAC/ORG/NORP/PERSON) and the project's
+# custom fantasy-NER model (wiki-ner-en: PERSON/PLACE/FACTION/ORG/EVENT).
 LABEL_TO_TYPE = {
     "PER": "PERSON",
     "PERSON": "PERSON",
     "LOC": "PLACE",
     "GPE": "PLACE",
     "FAC": "PLACE",
+    "PLACE": "PLACE",
     "ORG": "ORG",
     "NORP": "ORG",
+    "FACTION": "ORG",
+    "EVENT": "EVENT",
 }
+# Keep any label we know how to type — derived so the two can never drift.
+KEPT_LABELS = frozenset(LABEL_TO_TYPE)
 
 CUE_WORDS_DIR = PROJECT_ROOT / "wiki_creator" / "cue_words"
 
