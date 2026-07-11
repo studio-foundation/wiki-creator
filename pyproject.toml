@@ -30,6 +30,7 @@ dev = [
     "pytest>=8.0",
     "mypy>=1.0",
     "types-networkx",
+    "types-PyYAML",
 ]
 # Coreference resolution (scripts/relationship_extraction.py, opt-in via
 # `coref: true` in the book YAML). Kept out of core deps: pulls torch and

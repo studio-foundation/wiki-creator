@@ -1,0 +1,76 @@
+version: 1
+entity_types:
+  PERSON:
+    infobox:
+      - {token: nom,         group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
+      - {token: type,        group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
+      - {token: alias,       group: infobox, provenance: batch-bound,    obligation: OPT, tiers: [figurant, secondary, principal]}
+      - {token: status,      group: infobox, provenance: extracted-fact, obligation: MIN, fallback: unknown, tiers: [figurant, secondary, principal]}
+      - {token: species,     group: infobox, provenance: extracted-fact, obligation: OPT, genre_gated: true, tiers: [secondary, principal]}
+      - {token: affiliation, group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
+      - {token: titles,      group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [principal]}
+    sections:
+      - {token: biography,     group: section, provenance: llm-prose,      obligation: MIN, tiers: [figurant, secondary, principal]}
+      - {token: relationships, group: section, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
+      - {token: personality,   group: section, provenance: llm-prose,      obligation: OPT, tiers: [principal]}
+      - {token: physical,      group: section, provenance: llm-prose,      obligation: OPT, tiers: [principal]}
+      - {token: powers,        group: section, provenance: llm-prose,      obligation: OPT, genre_gated: true, tiers: [principal]}
+      - {token: trivia,        group: section, provenance: llm-prose,      obligation: OPT, tiers: [principal]}
+      - {token: references,    group: section, provenance: extracted-fact, obligation: MIN, fallback: none, tiers: [figurant, secondary, principal]}
+  PLACE:
+    infobox:
+      - {token: nom,         group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
+      - {token: type,        group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
+      - {token: location,    group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
+    sections:
+      - {token: biography,     group: section, provenance: llm-prose,      obligation: MIN, tiers: [figurant, secondary, principal]}
+      - {token: physical,      group: section, provenance: llm-prose,      obligation: OPT, tiers: [principal]}
+      - {token: relationships, group: section, provenance: extracted-fact, obligation: OPT, tiers: [principal]}
+      - {token: trivia,        group: section, provenance: llm-prose,      obligation: OPT, tiers: [principal]}
+      - {token: references,    group: section, provenance: extracted-fact, obligation: MIN, fallback: none, tiers: [figurant, secondary, principal]}
+  ORG:
+    infobox:
+      - {token: nom,     group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
+      - {token: type,    group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
+      - {token: leaders, group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
+    sections:
+      - {token: biography,     group: section, provenance: llm-prose,      obligation: MIN, tiers: [figurant, secondary, principal]}
+      - {token: relationships, group: section, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
+      - {token: references,    group: section, provenance: extracted-fact, obligation: MIN, fallback: none, tiers: [figurant, secondary, principal]}
+  EVENT:
+    infobox:
+      - {token: nom,  group: infobox, provenance: batch-bound, obligation: MIN, tiers: [figurant, secondary, principal]}
+      - {token: type, group: infobox, provenance: batch-bound, obligation: MIN, tiers: [figurant, secondary, principal]}
+    sections:
+      - {token: biography,     group: section, provenance: llm-prose,      obligation: MIN, tiers: [figurant, secondary, principal]}
+      - {token: relationships, group: section, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
+      - {token: references,    group: section, provenance: extracted-fact, obligation: MIN, fallback: none, tiers: [figurant, secondary, principal]}
+relationships:
+  enum:
+    family:       {legacy: [famille],            labels: {en: Family,       fr: Famille}}
+    mentor:       {legacy: ["mentor/protégé"],   labels: {en: Mentor,       fr: "Mentor/protégé"}}
+    romance:      {legacy: [amoureux],           labels: {en: Romance,      fr: Amoureux}}
+    antagonist:   {legacy: [antagoniste],        labels: {en: Antagonist,   fr: Antagoniste}}
+    ally:         {legacy: [allié],              labels: {en: Ally,         fr: Allié}}
+    employment:   {legacy: ["employeur/employé"], labels: {en: Employment,  fr: "Employeur/employé"}}
+    friend:       {legacy: [ami],                labels: {en: Friend,       fr: Ami}}
+    acquaintance: {legacy: [connaissance],       labels: {en: Acquaintance, fr: Connaissance}}
+    other:        {legacy: [autre],              labels: {en: Other,        fr: Autre}}
+labels:
+  nom:           {en: Name,        fr: Nom}
+  type:          {en: Type,        fr: Type}
+  alias:         {en: Aliases,     fr: Alias}
+  status:        {en: Status,      fr: Statut}
+  species:       {en: Species,     fr: Espèce}
+  affiliation:   {en: Affiliation, fr: Affiliation}
+  titles:        {en: Titles,      fr: Titres}
+  location:      {en: Location,    fr: Localisation}
+  leaders:       {en: Leaders,     fr: Leaders}
+  infobox:       {en: Infobox,     fr: Infobox}
+  biography:     {en: Biography,   fr: Biographie}
+  relationships: {en: Relationships, fr: Relations}
+  personality:   {en: Personality, fr: Personnalité}
+  physical:      {en: Appearance,  fr: "Description physique"}
+  powers:        {en: Powers,      fr: Pouvoirs}
+  trivia:        {en: Trivia,      fr: Anecdotes}
+  references:    {en: References,  fr: Références}

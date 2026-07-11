@@ -1,0 +1,51 @@
+from wiki_creator import page_templates as pt
+
+
+def test_section_tokens_parity_shape():
+    rt = pt.resolve_template("PERSON", "secondary")
+    toks = rt.section_tokens()
+    assert toks[0] == "infobox"
+    assert "biography" in toks and "references" in toks
+
+
+def test_legacy_sections_by_type_override_restricts_sections():
+    book = {"generation": {"principal": {
+        "sections_by_type": {"ORG": ["infobox", "biography", "references"]}}}}
+    rt = pt.resolve_template("ORG", "principal", book_config=book)
+    assert rt.section_tokens() == ["infobox", "biography", "references"]
+    # relationships was in the base ORG.principal set but is excluded by the override
+    assert "relationships" not in rt.section_tokens()
+
+
+def test_new_template_override_removes_slot():
+    book = {"generation": {"template": {"PERSON": {"remove": ["powers"]}}}}
+    rt = pt.resolve_template("PERSON", "principal", book_config=book)
+    assert "powers" not in [s.token for s in rt.sections()]
+
+
+def test_empty_legacy_list_drops_all_sections():
+    book = {"generation": {"principal": {"sections_by_type": {"ORG": []}}}}
+    rt = pt.resolve_template("ORG", "principal", book_config=book)
+    assert rt.section_tokens() == []
+
+
+def test_legacy_section_order_is_preserved():
+    # book lists sections in an order different from base.yaml
+    book = {"generation": {"principal": {"sections_by_type": {
+        "PERSON": ["infobox", "biography", "personality", "physical",
+                   "powers", "relationships", "trivia", "references"]}}}}
+    rt = pt.resolve_template("PERSON", "principal", book_config=book)
+    assert rt.section_tokens() == [
+        "infobox", "biography", "personality", "physical",
+        "powers", "relationships", "trivia", "references"]
+    # section slots (excluding infobox) follow the book's order, not base.yaml's
+    assert [s.token for s in rt.sections()] == [
+        "biography", "personality", "physical",
+        "powers", "relationships", "trivia", "references"]
+
+
+def test_malformed_generation_does_not_raise():
+    book = {"generation": ["oops"]}
+    rt = pt.resolve_template("PERSON", "principal", book_config=book)
+    # falls back to base-default (no legacy filtering, no override)
+    assert "biography" in [s.token for s in rt.sections()]
