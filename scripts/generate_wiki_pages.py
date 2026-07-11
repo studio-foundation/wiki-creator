@@ -831,6 +831,48 @@ def _run_wiki_page_item(
     }
 
 
+def _generate_one_section(
+    *,
+    entity: dict,
+    section: str,
+    book_title: str,
+    model: str,
+    timeout: int,
+    max_tokens: int,
+    forbidden_names: list[str] | None = None,
+    language: str = "fr",
+    file_path: str = "",
+    grounding: dict | None = None,
+) -> str | None:
+    """Generate a single section via a scoped wiki-page-item call. Returns the
+    section's content block, or None on error / persistent forbidden-name hit."""
+
+    def _once() -> dict:
+        return _run_wiki_page_item(
+            entity=entity, book_title=book_title, model=model, timeout=timeout,
+            sections=[section], max_tokens=max_tokens, forbidden_names=forbidden_names,
+            language=language, file_path=file_path, grounding=grounding,
+        )
+
+    result = _once()
+    if not isinstance(result, dict) or result.get("error"):
+        return None
+    content = result.get("content") or ""
+    if section == "relationships" and not entity.get("relationships"):
+        content = _strip_relations_section(content)
+    if forbidden_names and _check_forbidden_names({"content": content, "infobox_fields": {}}, forbidden_names):
+        result = _once()
+        if not isinstance(result, dict) or result.get("error"):
+            return None
+        content = result.get("content") or ""
+        if section == "relationships" and not entity.get("relationships"):
+            content = _strip_relations_section(content)
+        if _check_forbidden_names({"content": content, "infobox_fields": {}}, forbidden_names):
+            return None
+    content = content.strip()
+    return content or None
+
+
 def _run_generation_for_entity(
     *,
     entity: dict,
