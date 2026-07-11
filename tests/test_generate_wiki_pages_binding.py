@@ -95,3 +95,26 @@ def test_generation_profile_place_secondary_drops_relationships():
     # Contrast: PERSON.relationships includes secondary in base.yaml, so it is kept.
     person_sections, _ = gwp.generation_profile(config, "secondary", "PERSON")
     assert "relationships" in person_sections
+
+
+def test_bind_fills_titles_extracted_fact_at_secondary():
+    entity = {"canonical_name": "Chaol Westfall", "type": "PERSON",
+              "importance": "secondary", "aliases": ["Chaol"], "titles": ["Captain"]}
+    page = {"infobox_fields": {}}
+    gwp._bind_batch_fields(page, entity, {})
+    assert page["infobox_fields"]["titles"] == "Captain"     # extracted-fact bound
+    assert page["infobox_fields"]["nom"] == "Chaol Westfall"  # batch-bound still works
+
+
+def test_bind_omits_titles_when_absent():
+    entity = {"canonical_name": "Nehemia", "type": "PERSON",
+              "importance": "secondary", "aliases": [], "titles": []}
+    page = {"infobox_fields": {}}
+    gwp._bind_batch_fields(page, entity, {})
+    assert "titles" not in page["infobox_fields"]            # OPT + no value → omitted
+
+
+def test_extracted_fact_value_titles_and_unknown():
+    assert gwp._extracted_fact_value({"titles": ["Captain", "Duke"]}, "titles") == "Captain, Duke"
+    assert gwp._extracted_fact_value({"titles": []}, "titles") is None
+    assert gwp._extracted_fact_value({"affiliation": "X"}, "affiliation") is None

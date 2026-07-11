@@ -504,19 +504,32 @@ def _batch_bound_value(entity: dict, token: str) -> str | None:
     return None
 
 
+def _extracted_fact_value(entity: dict, token: str) -> str | None:
+    """Value for an extracted-fact infobox token, sourced from facts the pipeline
+    produced into the batch entity. None when the fact is absent (slot omitted).
+    `status`, `affiliation`, and the specific `type` are future slices."""
+    if token == "titles":
+        titles = [t for t in (entity.get("titles") or []) if t]
+        return ", ".join(titles) if titles else None
+    return None
+
+
 def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> None:
-    """Overwrite batch-bound infobox tokens with their batch-entity values, per
-    the resolved template. Prevention counterpart to _force_correct_identity:
-    the LLM's authored value is discarded for these tokens, so identity
-    confusion is impossible for them. No-op when book_config is None."""
+    """Overwrite pipeline-sourced infobox tokens with authoritative values, per
+    the resolved template: `batch-bound` from the batch identity, `extracted-fact`
+    from facts the pipeline produced. `llm-prose` slots are left to the LLM.
+    No-op when book_config is None."""
     if book_config is None:
         return
     page.setdefault("infobox_fields", {})
     resolved = resolve_template(entity.get("type"), entity.get("importance"), book_config)
     for slot in resolved.infobox():
-        if slot.provenance != "batch-bound":
+        if slot.provenance == "batch-bound":
+            value = _batch_bound_value(entity, slot.token)
+        elif slot.provenance == "extracted-fact":
+            value = _extracted_fact_value(entity, slot.token)
+        else:
             continue
-        value = _batch_bound_value(entity, slot.token)
         if value:
             page["infobox_fields"][slot.token] = value
 

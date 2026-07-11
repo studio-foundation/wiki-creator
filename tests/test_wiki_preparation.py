@@ -771,3 +771,31 @@ def test_batch_chapter_entry_carries_pov():
     assert out[0]["pov_character"] == "Chaol"
     assert out[0]["pov_character_confidence"] == "high"
     assert out[0]["pov_character_source"] == "deterministic"
+
+
+def test_build_entity_bundle_extracts_titles_from_aliases():
+    persons, places, orgs, events = _registries()
+    entity = {
+        "canonical_name": "Chaol",
+        "type": "PERSON",
+        "importance": "secondary",
+        "aliases": ["Chaol Westfall", "Captain Westfall"],
+    }
+    entities_by_name = {"Chaol": entity}
+    role_words = ["captain", "duke", "king", "prince", "assassin"]
+
+    bundle = build_entity_bundle(
+        entity, [], persons, places, orgs, events, entities_by_name,
+        role_words=role_words,
+    )
+    assert bundle["titles"] == ["Captain"]
+
+
+def test_build_entity_bundle_titles_empty_without_role_words():
+    persons, places, orgs, events = _registries()
+    entity = {"canonical_name": "Chaol", "type": "PERSON", "importance": "secondary",
+              "aliases": ["Captain Westfall"]}
+    bundle = build_entity_bundle(
+        entity, [], persons, places, orgs, events, {"Chaol": entity},
+    )
+    assert bundle["titles"] == []
