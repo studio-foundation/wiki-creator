@@ -116,6 +116,38 @@ def _load_spacy_model_with_fallback(spacy_load, requested_model: str):
             errors.append(f"{model}: {exc}")
     raise OSError("Unable to load spaCy model. Tried: " + " | ".join(errors))
 
+
+def _audit_ner_labels(nlp) -> None:
+    """
+    Warn (never raise) if the loaded model can emit NER labels that the
+    extraction filter would silently drop — i.e. labels in neither
+    KEPT_LABELS nor IGNORED_LABELS. Guards against a custom ontology
+    being half-disconnected again (STU-439).
+    """
+    if "ner" not in nlp.pipe_names:
+        return
+    unknown = sorted(set(nlp.get_pipe("ner").labels) - KEPT_LABELS - IGNORED_LABELS)
+    if unknown:
+        print(
+            "[WARN] NER model emits labels outside KEPT_LABELS/IGNORED_LABELS; "
+            f"these entities will be dropped: {', '.join(unknown)}",
+            file=sys.stderr,
+        )
+
+
+def _warn_if_no_pos_tagger(nlp) -> None:
+    """
+    The _BAD_POS filters in _is_valid_span need POS annotation. Fine-tuned
+    ['tok2vec','ner'] models have no tagger, so those filters cannot apply.
+    Make that explicit instead of silent (STU-439).
+    """
+    if not any(p in nlp.pipe_names for p in ("tagger", "morphologizer")):
+        print(
+            "[WARN] POS filters disabled: model has no tagger/morphologizer, "
+            "_BAD_POS span filtering will not apply",
+            file=sys.stderr,
+        )
+
 # Map every NER label we can type to its canonical entity type. Covers both
 # standard spaCy models (PER/LOC/GPE/FAC/ORG/NORP/PERSON) and the project's
 # custom fantasy-NER model (wiki-ner-en: PERSON/PLACE/FACTION/ORG/EVENT).
@@ -128,8 +160,19 @@ LABEL_TO_TYPE = {
     "PLACE": "PLACE",
     "ORG": "ORG",
     "NORP": "ORG",
+    # FACTION → ORG: downstream type vocabulary is frozen to
+    # PERSON/PLACE/ORG/EVENT/OTHER (wiki_creator/types.py).
     "FACTION": "ORG",
     "EVENT": "EVENT",
+}
+
+# Stock-model labels we deliberately do NOT extract. Kept explicit so the
+# load-time audit (_audit_ner_labels) can tell "intentionally dropped"
+# from "silently disconnected" (STU-439).
+# en_core_web_*: numerics/dates/works.  fr_core_news_*: MISC.
+IGNORED_LABELS = {
+    "CARDINAL", "DATE", "TIME", "MONEY", "PERCENT", "QUANTITY", "ORDINAL",
+    "LANGUAGE", "LAW", "PRODUCT", "WORK_OF_ART", "MISC",
 }
 # Keep any label we know how to type — derived so the two can never drift.
 KEPT_LABELS = frozenset(LABEL_TO_TYPE)
@@ -321,18 +364,28 @@ def _is_valid_span(span) -> bool:
     French NER models often misclassify sentence-initial verbs/adjectives after dialogue
     dashes as PROPN (e.g. "— Regarde" → PER with pos=PROPN). The preceding dash is the
     reliable signal since POS tagging itself is confused in these contexts.
+
+    Tagger-less pipelines (e.g. fine-tuned ['tok2vec','ner'] models) carry no
+    POS annotation; the _BAD_POS checks are then deliberately skipped
+    (warned once at load time by _warn_if_no_pos_tagger). The dialogue-dash
+    rejection below does not depend on POS and always applies.
     """
     tokens = list(span)
+    # Tagger-less pipelines (e.g. fine-tuned ['tok2vec','ner'] models) carry no
+    # POS annotation; the _BAD_POS checks are then deliberately skipped
+    # (warned once at load time by _warn_if_no_pos_tagger). The dialogue-dash
+    # rejection below does not depend on POS and always applies.
+    has_pos = span.doc.has_annotation("POS")
     if len(tokens) == 1:
         tok = tokens[0]
-        if tok.pos_ in _BAD_POS:
+        if has_pos and tok.pos_ in _BAD_POS:
             return False
         # Reject if immediately preceded by a dialogue dash (French dialogue marker)
         if tok.i > 0 and span.doc[tok.i - 1].text in {"—", "–", "-"}:
             return False
     else:
         head = span.root
-        if head.pos_ in _BAD_POS:
+        if has_pos and head.pos_ in _BAD_POS:
             return False
         # Reject multi-token spans that start immediately after a dialogue dash
         if span.start > 0 and span.doc[span.start - 1].text in {"—", "–", "-"}:
@@ -747,6 +800,8 @@ def main() -> None:
     if loaded_model != spacy_model:
         print(f"[WARN] spaCy model '{spacy_model}' not available; using '{loaded_model}'", file=sys.stderr)
     _ensure_sentencizer(nlp)
+    _audit_ner_labels(nlp)
+    _warn_if_no_pos_tagger(nlp)
 
     try:
         cue_words_language = _resolve_cue_words_language(

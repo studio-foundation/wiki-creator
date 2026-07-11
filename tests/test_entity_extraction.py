@@ -1,6 +1,7 @@
 """Tests for scripts/entity_extraction.py — spaCy NER stage."""
 import pytest
 import spacy
+from spacy.tokens import Span
 import sys
 import os
 
@@ -12,7 +13,8 @@ from scripts.entity_extraction import (
     _retag_entity_type_from_context, _infer_cue_words_language,
     _resolve_cue_words_language, _load_cue_words,
     _spacy_model_candidates, _load_spacy_model_with_fallback,
-    _is_frontmatter_chapter, _ensure_sentencizer,
+    _is_frontmatter_chapter, _ensure_sentencizer, _audit_ner_labels,
+    _is_valid_span, _warn_if_no_pos_tagger,
 )
 
 
@@ -582,6 +584,40 @@ def test_save_chapters_json_writes_chapter_texts(tmp_path):
     assert data == {"chapters": {"ch01": "Hello world.", "ch02": "Goodbye world."}}
 
 
+@pytest.fixture()
+def custom_ontology_nlp():
+    """Mimics models/wiki-ner-en: custom fiction labels, no tagger/parser."""
+    nlp = spacy.blank("en")
+    nlp.add_pipe("sentencizer")
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns([
+        {"label": "PERSON", "pattern": "Celaena"},
+        {"label": "PLACE", "pattern": "Endovier"},
+        {"label": "EVENT", "pattern": "Yulemas"},
+        {"label": "FACTION", "pattern": [{"TEXT": "Silent"}, {"TEXT": "Assassins"}]},
+    ])
+    return nlp
+
+
+def test_custom_ontology_labels_survive_extraction(custom_ontology_nlp):
+    """PLACE/EVENT/FACTION from the fine-tuned model must not be dropped (STU-439)."""
+    chapters = [{
+        "id": "ch01",
+        "title": "Chapter 1",
+        "content": "Celaena walked to Endovier. Everyone celebrated Yulemas. The Silent Assassins waited.",
+    }]
+    result = extract_entities(chapters, custom_ontology_nlp)
+    types_by_mention = {
+        m: entry["type"]
+        for entry in result["entities"].values()
+        for m in entry["raw_mentions"]
+    }
+    assert types_by_mention.get("Celaena") == "PERSON"
+    assert types_by_mention.get("Endovier") == "PLACE"
+    assert types_by_mention.get("Yulemas") == "EVENT"
+    assert types_by_mention.get("Silent Assassins") == "ORG"  # FACTION → ORG (spec decision)
+
+
 @requires_fr_lg
 def test_pos_filter_rejects_verb_at_sentence_start():
     """Capitalized French verb at dialogue start must not appear as entity."""
@@ -845,6 +881,76 @@ def test_retag_mention_match_requires_whole_word():
         },
     }
     assert _retag_entity_type_from_context(entity) == "PERSON"
+
+
+# --- _audit_ner_labels tests (STU-439) ---
+
+
+def test_audit_warns_on_unknown_ner_label(capsys):
+    """A model emitting labels outside KEPT_LABELS ∪ IGNORED_LABELS must warn (STU-439)."""
+    nlp = spacy.blank("en")
+    ner = nlp.add_pipe("ner")
+    ner.add_label("ARTIFACT")
+    _audit_ner_labels(nlp)
+    err = capsys.readouterr().err
+    assert "[WARN]" in err
+    assert "ARTIFACT" in err
+
+
+def test_audit_silent_for_kept_and_ignored_labels(capsys):
+    """Custom ontology + deliberately-ignored stock labels: no warning."""
+    nlp = spacy.blank("en")
+    ner = nlp.add_pipe("ner")
+    for label in ("PERSON", "PLACE", "ORG", "FACTION", "EVENT", "DATE", "CARDINAL", "MISC"):
+        ner.add_label(label)
+    _audit_ner_labels(nlp)
+    assert capsys.readouterr().err == ""
+
+
+def test_audit_without_ner_pipe_is_silent(capsys):
+    nlp = spacy.blank("en")
+    _audit_ner_labels(nlp)
+    assert capsys.readouterr().err == ""
+
+
+# --- _is_valid_span and _warn_if_no_pos_tagger tests (STU-439) ---
+
+
+@requires_en_sm
+def test_is_valid_span_rejects_verb_when_pos_available(nlp):
+    doc = nlp("He said hello to Marion yesterday.")
+    span = Span(doc, 1, 2, label="PERSON")  # "said", pos_ == VERB
+    assert _is_valid_span(span) is False
+
+
+def test_is_valid_span_skips_pos_check_without_tagger():
+    """Tagger-less model (e.g. wiki-ner-en): POS filter is an explicit no-op (STU-439)."""
+    blank = spacy.blank("en")
+    doc = blank("He said hello to Marion yesterday.")
+    span = Span(doc, 1, 2, label="PERSON")  # same span, but pos_ is empty
+    assert _is_valid_span(span) is True
+
+
+def test_is_valid_span_dash_rejection_survives_missing_pos():
+    """The dialogue-dash check does not depend on POS and must stay active."""
+    blank = spacy.blank("en")
+    doc = blank("— Regarde toi.")  # tokens: ['—', 'Regarde', 'toi', '.']
+    span = Span(doc, 1, 2, label="PERSON")  # "Regarde", preceded by dash
+    assert _is_valid_span(span) is False
+
+
+def test_warns_when_model_has_no_tagger(capsys):
+    blank = spacy.blank("en")
+    _warn_if_no_pos_tagger(blank)
+    err = capsys.readouterr().err
+    assert "[WARN]" in err
+    assert "POS filters disabled" in err
+
+
+@requires_en_sm
+def test_no_warning_when_tagger_present(nlp, capsys):
+    _warn_if_no_pos_tagger(nlp)
+    assert capsys.readouterr().err == ""
 
 
 def test_custom_model_labels_are_mapped_and_kept():
