@@ -164,7 +164,7 @@ def test_narrator_passthrough_null_when_absent():
 def test_coref_worker_returns_list():
     """_coref_worker returns a list (empty when fastcoref not available)."""
     from scripts.relationship_extraction import _coref_worker
-    result = _coref_worker(("ch01", "Il travaillait.", {"david martín": "David Martín"}, "fr_core_news_lg", 8000))
+    result = _coref_worker(("ch01", "Il travaillait.", {"david martín": "David Martín"}, "fr_core_news_lg", 8000, frozenset({"il"})))
     assert isinstance(result, list)
     for item in result:
         assert len(item) == 3
@@ -391,10 +391,10 @@ def test_true_relation_survives_filter():
     assert ("David Martín", "Pedro Vidal") in pairs or ("Pedro Vidal", "David Martín") in pairs
 
 
-def test_coref_worker_accepts_5_tuple():
-    """_coref_worker must unpack (chapter_id, text, name_to_canonical, spacy_model, max_chars)."""
+def test_coref_worker_accepts_6_tuple():
+    """_coref_worker must unpack (chapter_id, text, name_to_canonical, spacy_model, max_chars, pronouns)."""
     from scripts.relationship_extraction import _coref_worker
-    result = _coref_worker(("ch01", "", {}, "en_core_web_sm", 8000))
+    result = _coref_worker(("ch01", "", {}, "en_core_web_sm", 8000, frozenset({"she"})))
     assert result == []
 
 
@@ -1198,3 +1198,25 @@ def test_patch_datasets_pickler_py314_makes_signature_compatible():
         p.kind is inspect.Parameter.VAR_POSITIONAL for p in params.values()
     )
     assert accepts_obj, "Pickler._batch_setitems still incompatible with py3.14 pickle"
+
+
+def test_pronouns_for_model_derives_language():
+    """Pronoun set for coref must follow the book's language, not default to fr."""
+    from scripts.relationship_extraction import _pronouns_for_model
+
+    en = _pronouns_for_model("models/wiki-ner-en/model-best")
+    assert "she" in en and "he" in en
+    fr = _pronouns_for_model("fr_core_news_lg")
+    assert "elle" in fr and "il" in fr
+
+
+def test_process_chapter_clusters_english_pronouns():
+    """An English pronoun in a cluster with a known entity is attributed to it."""
+    from scripts.relationship_extraction import _process_chapter_clusters
+
+    chunk = "Celaena walked into the hall. She smiled at Dorian."
+    clusters = [[(0, 7), (30, 33)]]  # "Celaena", "She"
+    out = _process_chapter_clusters(
+        clusters, chunk, "ch01", {"celaena": "Celaena"}, frozenset({"she", "he"})
+    )
+    assert ("Celaena", "ch01", "She smiled at Dorian.") in out

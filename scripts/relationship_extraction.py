@@ -513,6 +513,11 @@ def _patch_datasets_pickler_py314() -> None:
         return
 
 
+def _pronouns_for_model(spacy_model: str) -> frozenset:
+    """Pronoun cue set for the language inferred from the spaCy model name."""
+    return frozenset(load_lang_config(infer_language(spacy_model)).get("pronouns", []))
+
+
 _SENT_BOUNDARY = re.compile(r'(?<=[.!?»])\s+(?=[A-ZÀÂÇÈÉÊÎÔÙÛÜ\u2014«])')
 
 
@@ -614,7 +619,7 @@ def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
     Must be a top-level function (picklable by multiprocessing).
 
     Args:
-        args: (chapter_id, text, name_to_canonical, spacy_model, max_chars)
+        args: (chapter_id, text, name_to_canonical, spacy_model, max_chars, pronouns)
             name_to_canonical: {lowercased_name: canonical_name}
             spacy_model: spaCy model name to load (e.g. "fr_core_news_lg")
             max_chars: character cap per chapter (0 = no cap)
@@ -623,7 +628,7 @@ def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
         List of (canonical_name, chapter_id, sentence) tuples to be merged
         by the parent process. Returns [] on any error (graceful degradation).
     """
-    chapter_id, text, name_to_canonical, spacy_model, max_chars = args
+    chapter_id, text, name_to_canonical, spacy_model, max_chars, pronouns = args
     if not text or not text.strip():
         return []
 
@@ -658,7 +663,7 @@ def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
         return []
 
     raw_clusters = doc._.coref_clusters or []
-    return _process_chapter_clusters(raw_clusters, chunk, chapter_id, name_to_canonical)
+    return _process_chapter_clusters(raw_clusters, chunk, chapter_id, name_to_canonical, pronouns)
 
 
 def enrich_mentions_with_fastcoref(
@@ -708,6 +713,7 @@ def enrich_mentions_with_fastcoref(
         return mentions_by_entity
 
     total_added = 0
+    pronouns = _pronouns_for_model(spacy_model)
 
     if workers <= 1:
         # Sequential path — load model once, iterate chapters
@@ -747,7 +753,7 @@ def enrich_mentions_with_fastcoref(
                 continue
 
             raw_clusters = doc._.coref_clusters or []
-            for canonical, cid, sentence in _process_chapter_clusters(raw_clusters, chunk, chapter_id, name_to_canonical):
+            for canonical, cid, sentence in _process_chapter_clusters(raw_clusters, chunk, chapter_id, name_to_canonical, pronouns):
                 if canonical not in mentions_by_entity:
                     mentions_by_entity[canonical] = {}
                 if cid not in mentions_by_entity[canonical]:
@@ -763,7 +769,7 @@ def enrich_mentions_with_fastcoref(
         import multiprocessing
 
         chapter_items = [
-            (cid, text, name_to_canonical, spacy_model, max_chars)
+            (cid, text, name_to_canonical, spacy_model, max_chars, pronouns)
             for cid, text in chapters.items()
             if text and text.strip()
         ]
