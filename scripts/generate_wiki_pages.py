@@ -85,6 +85,49 @@ def _content_template_for_sections(sections: list[str]) -> str:
     return "\\n\\n".join(blocks)
 
 
+def _assemble_section_blocks(blocks: list[str]) -> str:
+    """Join non-empty section markdown blocks with a blank line."""
+    return "\n\n".join(b.strip() for b in blocks if b and b.strip())
+
+
+def _references_block(book_title: str) -> str:
+    """Deterministic References section — lists only the book title (no LLM)."""
+    return f"## {_SECTION_TITLES['references']}\n\n- {book_title}"
+
+
+def _isolate_section(content: str, section: str) -> str | None:
+    """Return only the requested section's markdown block from a single-section
+    generation, dropping any leaked foreign blocks (e.g. a ## Infobox echoed from
+    the few-shot). If the model returned just the body with no heading, wrap it
+    under the section's title. Returns None if nothing usable remains."""
+    title = _SECTION_TITLES.get(section, section.replace("_", " ").title())
+    text = (content or "").strip()
+    if not text:
+        return None
+    # Split into level-2 heading blocks: [pre, "## H1", body1, "## H2", body2, ...]
+    parts = re.split(r"(?m)^(##\s+.+?)\s*$", text)
+    headings = parts[1::2]
+    bodies = parts[2::2]
+    if not headings:
+        # No headings at all → the model returned just the section body.
+        return f"## {title}\n\n{text}"
+
+    def _norm(s: str) -> str:
+        return s.strip().lstrip("#").strip().lower()
+
+    blocks = []
+    for h, b in zip(headings, bodies):
+        blocks.append((_norm(h), f"{h.strip()}\n\n{b.strip()}".strip()))
+    # Prefer an exact title match; else, if exactly one non-infobox block, take it.
+    for norm, block in blocks:
+        if norm == title.lower():
+            return block
+    non_infobox = [blk for norm, blk in blocks if norm != _SECTION_TITLES["infobox"].lower()]
+    if len(non_infobox) == 1:
+        return non_infobox[0]
+    return None
+
+
 FEW_SHOT_EXAMPLE = {
     "title": "John Doe",
     "importance": "principal",
@@ -867,6 +910,48 @@ def _run_wiki_page_item(
     }
 
 
+def _generate_one_section(
+    *,
+    entity: dict,
+    section: str,
+    book_title: str,
+    model: str,
+    timeout: int,
+    max_tokens: int,
+    forbidden_names: list[str] | None = None,
+    language: str = "fr",
+    file_path: str = "",
+    grounding: dict | None = None,
+) -> str | None:
+    """Generate a single section via a scoped wiki-page-item call. Returns the
+    section's content block, or None on error / persistent forbidden-name hit."""
+
+    def _once() -> dict:
+        return _run_wiki_page_item(
+            entity=entity, book_title=book_title, model=model, timeout=timeout,
+            sections=[section], max_tokens=max_tokens, forbidden_names=forbidden_names,
+            language=language, file_path=file_path, grounding=grounding,
+        )
+
+    result = _once()
+    if not isinstance(result, dict) or result.get("error"):
+        return None
+    content = _isolate_section(result.get("content") or "", section) or ""
+    if section == "relationships" and not entity.get("relationships"):
+        content = _strip_relations_section(content)
+    if forbidden_names and _check_forbidden_names({"content": content, "infobox_fields": {}}, forbidden_names):
+        result = _once()
+        if not isinstance(result, dict) or result.get("error"):
+            return None
+        content = _isolate_section(result.get("content") or "", section) or ""
+        if section == "relationships" and not entity.get("relationships"):
+            content = _strip_relations_section(content)
+        if _check_forbidden_names({"content": content, "infobox_fields": {}}, forbidden_names):
+            return None
+    content = content.strip()
+    return content or None
+
+
 def _run_generation_for_entity(
     *,
     entity: dict,
@@ -960,6 +1045,62 @@ def _run_generation_for_entity(
         _bind_batch_fields(item_result, entity, book_config)
 
     return item_result
+
+
+def _run_generation_sectioned(
+    *,
+    entity: dict,
+    book_title: str,
+    model: str,
+    timeout: int,
+    sections: list[str],
+    max_tokens: int,
+    dry_run: bool,
+    debug_dir: Path,
+    forbidden_names: list[str] | None = None,
+    language: str = "fr",
+    file_path: str = "",
+    grounding: dict | None = None,
+    sibling_canonicals: set[str] | None = None,
+    book_config: dict | None = None,
+) -> dict:
+    if not entity.get("context_by_chapter", {}):
+        return make_stub_page(entity, insufficient_data=True)
+    if dry_run:
+        return make_stub_page(entity)
+
+    content_sections = [s for s in sections if s not in ("infobox", "references")]
+    blocks: list[str] = []
+    for section in content_sections:
+        block = _generate_one_section(
+            entity=entity, section=section, book_title=book_title, model=model,
+            timeout=timeout, max_tokens=max_tokens, forbidden_names=forbidden_names,
+            language=language, file_path=file_path, grounding=grounding,
+        )
+        if block:
+            blocks.append(block)
+        elif section == "biography":
+            _save_generation_debug_artifact(debug_dir, entity, {"error": "biography_failed"})
+            return make_stub_page(entity, failed=True)
+        # else: OPT section omitted
+
+    if not blocks:
+        return make_stub_page(entity, failed=True)
+
+    if "references" in sections:
+        blocks.append(_references_block(book_title))
+
+    page = {
+        "title": entity["canonical_name"],
+        "importance": entity["importance"],
+        "entity_type": entity["type"],
+        "infobox_fields": {},
+        "content": _assemble_section_blocks(blocks),
+    }
+    if entity.get("type") == "PERSON":
+        _force_correct_identity(page, entity, sibling_canonicals)
+    _bind_batch_fields(page, entity, book_config)
+    return page
 
 
 def _clean_infobox_fields(fields: dict) -> dict:
@@ -1215,7 +1356,7 @@ def main() -> None:
                         and "relationships" not in sections
                     ):
                         sections = list(sections) + ["relationships"]
-                    page = _run_generation_for_entity(
+                    page = _run_generation_sectioned(
                         entity=entity,
                         book_title=book_title,
                         model=args.model,
