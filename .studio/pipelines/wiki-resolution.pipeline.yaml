@@ -73,7 +73,6 @@ stages:
     runtime: python
     script: scripts/build_character_graph.py
     contract: build-character-graph
-    concurrency: 1
     context:
       include:
         - input
