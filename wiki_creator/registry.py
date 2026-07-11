@@ -80,3 +80,84 @@ def _decision_id(strategy: str, inputs: tuple[str, str], evidence: str) -> str:
     """Content-derived id: identical decision content ⇒ identical id across runs."""
     payload = json.dumps([strategy, list(inputs), evidence], ensure_ascii=False)
     return "d_" + hashlib.sha1(payload.encode("utf-8")).hexdigest()[:12]
+
+
+class Registry:
+    """In-memory registry. Invariants (spec §3.2) are enforced by validate():
+
+    1. an alias belongs to exactly one entity (casefold comparison);
+    2. every alias ≠ canonical_name is justified by ≥1 MergeDecision
+       (its slug appears in the inputs of a decision attached to the record);
+    3. canonical_name ∈ aliases;
+    4. entity_id determinism — structural (ids derive only from content,
+       see entity_slug/_decision_id) and covered by tests, not checkable
+       within a single instance.
+    """
+
+    def __init__(
+        self,
+        entities: list[EntityRecord] | None = None,
+        decisions: dict[str, MergeDecision] | None = None,
+        warnings: list[str] | None = None,
+    ) -> None:
+        self.entities: list[EntityRecord] = list(entities or [])
+        self.decisions: dict[str, MergeDecision] = dict(decisions or {})
+        self.warnings: list[str] = list(warnings or [])
+
+    def lookup(self, surface: str) -> EntityRecord | None:
+        key = str(surface).casefold()
+        for record in self.entities:
+            if any(alias.casefold() == key for alias in record.aliases):
+                return record
+        return None
+
+    def alias_table(self) -> dict[str, str]:
+        """surface → entity_id (the STU-435 consumer API)."""
+        table: dict[str, str] = {}
+        for record in self.entities:
+            for alias in record.aliases:
+                table[alias] = record.entity_id
+        return table
+
+    def audit_log(self) -> list[MergeDecision]:
+        return sorted(self.decisions.values(), key=lambda d: d.decision_id)
+
+    def validate(self) -> None:
+        seen_ids: set[str] = set()
+        owners: dict[str, str] = {}
+        for record in self.entities:
+            if record.entity_id in seen_ids:
+                raise ValueError(f"duplicate entity_id '{record.entity_id}'")
+            seen_ids.add(record.entity_id)
+
+            if record.canonical_name not in record.aliases:
+                raise ValueError(
+                    "invariant 3 violated: canonical_name "
+                    f"'{record.canonical_name}' not in aliases of '{record.entity_id}'"
+                )
+            for alias in record.aliases:
+                key = alias.casefold()
+                owner = owners.get(key)
+                if owner is not None and owner != record.entity_id:
+                    raise ValueError(
+                        f"invariant 1 violated: alias '{alias}' belongs to "
+                        f"both '{owner}' and '{record.entity_id}'"
+                    )
+                owners[key] = record.entity_id
+
+            justified: set[str] = set()
+            for d_id in record.decisions:
+                decision = self.decisions.get(d_id)
+                if decision is None:
+                    raise ValueError(
+                        f"unknown decision_id '{d_id}' on entity '{record.entity_id}'"
+                    )
+                justified.update(decision.inputs)
+            for alias in record.aliases:
+                if alias == record.canonical_name:
+                    continue
+                if entity_slug(alias) not in justified:
+                    raise ValueError(
+                        f"invariant 2 violated: alias '{alias}' of "
+                        f"'{record.entity_id}' has no MergeDecision"
+                    )
