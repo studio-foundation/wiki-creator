@@ -198,7 +198,7 @@ def test_main_parses_workers_flag(monkeypatch):
 
     captured = {}
 
-    def fake_run_live(window_size, threshold, coref=False, workers=1, min_cooccurrence=None, min_chapters_together=2):
+    def fake_run_live(window_size, threshold, coref=False, workers=1, min_cooccurrence=None, min_chapters_together=2, coref_max_chars=8000):
         captured["workers"] = workers
 
     monkeypatch.setattr(rel, "run_live_mode", fake_run_live)
@@ -206,6 +206,59 @@ def test_main_parses_workers_flag(monkeypatch):
     rel.main()
 
     assert captured["workers"] == 4
+
+
+def test_main_parses_coref_max_chars_flag(monkeypatch):
+    """--coref-max-chars N is parsed and passed through to run_live_mode."""
+    import sys
+    import scripts.relationship_extraction as rel
+
+    captured = {}
+
+    def fake_run_live(window_size, threshold, coref=False, workers=1, min_cooccurrence=None, min_chapters_together=2, coref_max_chars=8000):
+        captured["coref_max_chars"] = coref_max_chars
+
+    monkeypatch.setattr(rel, "run_live_mode", fake_run_live)
+    monkeypatch.setattr(sys, "argv", ["rel.py", "--live", "--coref", "--coref-max-chars", "0"])
+    rel.main()
+
+    assert captured["coref_max_chars"] == 0
+
+
+def test_executor_parses_coref_max_chars(monkeypatch, tmp_path, capsys):
+    """coref_max_chars in additional_context reaches enrich_mentions_with_fastcoref."""
+    import io
+    import json
+    import sys
+    from types import SimpleNamespace
+    import scripts.relationship_extraction as rel
+
+    (tmp_path / "chapters.json").write_text(json.dumps({"chapters": {"ch01": "Celaena walked. She smiled."}}), encoding="utf-8")
+
+    captured = {}
+
+    def fake_enrich(chapters, entities, mentions_by_entity, workers=1, spacy_model="fr_core_news_lg", max_chars=8000):
+        captured["max_chars"] = max_chars
+        return mentions_by_entity
+
+    monkeypatch.setattr(rel, "enrich_mentions_with_fastcoref", fake_enrich)
+    monkeypatch.setattr(rel, "_paths_from_payload", lambda payload: SimpleNamespace(processing=tmp_path))
+
+    payload = {
+        "previous_outputs": {
+            "entity-resolution": {
+                "entities": [{"canonical_name": "Celaena", "type": "PERSON", "aliases": [], "source_ids": [], "relevant": True}],
+            },
+        },
+        "additional_context": "coref: true\ncoref_max_chars: 4321\n",
+    }
+    monkeypatch.setattr(sys, "argv", ["rel.py"])
+    monkeypatch.setattr(sys, "stdin", io.StringIO(json.dumps(payload)))
+    rel.main()
+
+    assert captured["max_chars"] == 4321
+    out = capsys.readouterr().out
+    assert json.loads(out)  # executor still emits valid JSON
 
 
 def test_parallel_merge_matches_direct_process_chapters():

@@ -43,6 +43,7 @@ Standalone test:
   python scripts/relationship_extraction.py --live --coref
   python scripts/relationship_extraction.py --live --coref --workers 4
   python scripts/relationship_extraction.py --test --coref --workers 2
+  python scripts/relationship_extraction.py --test --coref --coref-max-chars 0
 
 Workers / RAM budget (LingMessCoref ~590M params per worker):
   --workers 1  :  ~3 GB  (default, safe on any machine)
@@ -762,6 +763,7 @@ def run_test_mode(
     workers: int = 1,
     min_cooccurrence: int | None = None,
     min_chapters_together: int = DEFAULT_MIN_CHAPTERS_TOGETHER,
+    coref_max_chars: int = 8000,
 ) -> None:
     """Run with hardcoded Le Jeu de l'Ange data."""
     entities = [
@@ -856,7 +858,7 @@ def run_test_mode(
                     chapters_demo[chapter_id] += " " + text
                 else:
                     chapters_demo[chapter_id] = text
-        mentions_by_entity = enrich_mentions_with_fastcoref(chapters_demo, entities, mentions_by_entity, workers=workers)
+        mentions_by_entity = enrich_mentions_with_fastcoref(chapters_demo, entities, mentions_by_entity, workers=workers, max_chars=coref_max_chars)
 
     relationships, stats = build_cooccurrence_graph(
         entities, mentions_by_entity, window_size, threshold,
@@ -1122,6 +1124,7 @@ def run_live_mode(
     workers: int = 1,
     min_cooccurrence: int | None = None,
     min_chapters_together: int = DEFAULT_MIN_CHAPTERS_TOGETHER,
+    coref_max_chars: int = 8000,
 ) -> None:
     """Live mode: read persons_full.json, cluster entities, then run co-occurrence on real data."""
     import sys as _sys
@@ -1246,7 +1249,7 @@ def run_live_mode(
             with open(chapters_path, encoding="utf-8") as f:
                 chapters_data = json.load(f)
             chapters = chapters_data.get("chapters", {})
-            mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=workers)
+            mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=workers, max_chars=coref_max_chars)
 
     print(f"=== LIVE MODE — relationship-extraction ===\n")
     print(f"Loaded {len(entities)} persons from {persons_path}")
@@ -1333,6 +1336,11 @@ def main() -> None:
         idx = args.index("--workers")
         workers = int(args[idx + 1])
 
+    coref_max_chars = 8000
+    if "--coref-max-chars" in args:
+        idx = args.index("--coref-max-chars")
+        coref_max_chars = int(args[idx + 1])
+
     min_cooccurrence = None
     if "--min-cooccurrence" in args:
         idx = args.index("--min-cooccurrence")
@@ -1348,6 +1356,7 @@ def main() -> None:
             window_size, threshold, coref=coref, workers=workers,
             min_cooccurrence=min_cooccurrence,
             min_chapters_together=min_chapters_together,
+            coref_max_chars=coref_max_chars,
         )
         return
 
@@ -1362,12 +1371,14 @@ def main() -> None:
                 window_size, threshold, coref=coref, workers=workers,
                 min_cooccurrence=min_cooccurrence,
                 min_chapters_together=min_chapters_together,
+                coref_max_chars=coref_max_chars,
             )
         else:
             run_live_mode(
                 window_size, threshold, live_paths, coref=coref, workers=workers,
                 min_cooccurrence=min_cooccurrence,
                 min_chapters_together=min_chapters_together,
+                coref_max_chars=coref_max_chars,
             )
         return
 
@@ -1392,6 +1403,7 @@ def main() -> None:
     min_cooccurrence_val = None
     min_chapters_together = DEFAULT_MIN_CHAPTERS_TOGETHER
     spacy_model = "fr_core_news_lg"
+    coref_max_chars = 8000
     llm_model: str | None = None
     ollama_url = os.environ.get("OLLAMA_URL", _OLLAMA_URL)
     pronouns: frozenset = frozenset(load_lang_config("fr").get("pronouns", []))
@@ -1405,6 +1417,7 @@ def main() -> None:
             novel_summary = (additional.get("novel_summary") or "").strip() or None
             ollama_url = additional.get("ollama_url", os.environ.get("OLLAMA_URL", _OLLAMA_URL))
             do_coref = bool(additional.get("coref", False))
+            coref_max_chars = int(additional.get("coref_max_chars", 8000))
             window_size = int(additional.get("window", window_size))
             threshold = int(additional.get("threshold", threshold))
             workers = int(additional.get("workers", workers))
@@ -1435,7 +1448,7 @@ def main() -> None:
                 chapters_data = json.load(f)
             chapters = chapters_data.get("chapters", {})
             mentions_by_entity = enrich_mentions_with_fastcoref(
-                chapters, entities, mentions_by_entity, workers=workers, spacy_model=spacy_model
+                chapters, entities, mentions_by_entity, workers=workers, spacy_model=spacy_model, max_chars=coref_max_chars
             )
 
     relationships, stats = build_cooccurrence_graph(
