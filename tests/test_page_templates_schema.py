@@ -23,3 +23,10 @@ def test_validate_requires_fallback_for_min_extracted_fact():
     raw["entity_types"]["PERSON"]["infobox"].append(slot)
     with pytest.raises(ValueError, match="fallback"):
         pt.validate_template(raw)
+
+
+def test_validate_rejects_empty_tiers():
+    raw = copy.deepcopy(pt.load_base_template())
+    raw["entity_types"]["PERSON"]["infobox"][0]["tiers"] = []
+    with pytest.raises(ValueError, match="tiers"):
+        pt.validate_template(raw)

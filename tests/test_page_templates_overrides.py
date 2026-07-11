@@ -29,6 +29,21 @@ def test_empty_legacy_list_drops_all_sections():
     assert rt.section_tokens() == []
 
 
+def test_legacy_section_order_is_preserved():
+    # book lists sections in an order different from base.yaml
+    book = {"generation": {"principal": {"sections_by_type": {
+        "PERSON": ["infobox", "biography", "personality", "physical",
+                   "powers", "relationships", "trivia", "references"]}}}}
+    rt = pt.resolve_template("PERSON", "principal", book_config=book)
+    assert rt.section_tokens() == [
+        "infobox", "biography", "personality", "physical",
+        "powers", "relationships", "trivia", "references"]
+    # section slots (excluding infobox) follow the book's order, not base.yaml's
+    assert [s.token for s in rt.sections()] == [
+        "biography", "personality", "physical",
+        "powers", "relationships", "trivia", "references"]
+
+
 def test_malformed_generation_does_not_raise():
     book = {"generation": ["oops"]}
     rt = pt.resolve_template("PERSON", "principal", book_config=book)

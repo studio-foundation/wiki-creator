@@ -37,7 +37,10 @@ def validate_template(raw: dict) -> None:
         obl = slot.get("obligation")
         if obl not in OBLIGATIONS:
             raise ValueError(f"{etype}.{token}: invalid obligation {obl!r}")
-        tiers = slot.get("tiers") or []
+        tiers = slot.get("tiers")
+        if tiers is not None and len(tiers) == 0:
+            raise ValueError(f"{etype}.{token}: empty tiers list will never resolve")
+        tiers = tiers or []
         if not set(tiers) <= set(TIERS):
             raise ValueError(f"{etype}.{token}: invalid tiers {tiers!r}")
         if obl == "MIN" and prov == "extracted-fact" and not slot.get("fallback"):
@@ -125,6 +128,13 @@ def resolve_template(entity_type, importance, book_config=None, base=None):
                 if slot.group == "section" and slot.token not in legacy_set:
                     continue
             slots.append(slot)
+
+    if legacy is not None:
+        legacy_order = {token: i for i, token in enumerate(legacy)}
+        infobox_slots = [s for s in slots if s.group == "infobox"]
+        section_slots = [s for s in slots if s.group == "section"]
+        section_slots.sort(key=lambda s: legacy_order.get(s.token, len(legacy_order)))
+        slots = infobox_slots + section_slots
 
     template_cfg = gen.get("template") if isinstance(gen, dict) else None
     new_override = template_cfg.get(etype) if isinstance(template_cfg, dict) else None
