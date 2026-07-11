@@ -106,3 +106,23 @@ def test_render_sample_has_checkbox_column():
     assert "He laughed." in md
     assert "✓/✗" in md
     assert "Dorian" in md
+
+
+def test_variant_output_dir_layout(tmp_path):
+    d = ec.variant_dir(tmp_path, "coref-8k")
+    assert d == tmp_path / "coref_eval" / "coref-8k"
+
+
+def test_build_child_command_uses_time_v(monkeypatch):
+    monkeypatch.setattr(ec.shutil, "which", lambda name: "/usr/bin/time" if name == "time" else None)
+    cmd = ec.build_child_command("coref-8k", "book.yaml", workers=4)
+    assert cmd[:2] == ["/usr/bin/time", "-v"]
+    assert "--variant-run" in cmd and "coref-8k" in cmd
+    assert cmd[cmd.index("--workers") + 1] == "4"
+
+
+def test_build_child_command_without_gnu_time(monkeypatch):
+    monkeypatch.setattr(ec.shutil, "which", lambda name: None)
+    cmd = ec.build_child_command("baseline", "book.yaml", workers=1)
+    assert cmd[0].endswith("python") or "python" in cmd[0]
+    assert "/usr/bin/time" not in cmd

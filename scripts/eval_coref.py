@@ -175,3 +175,142 @@ def render_sample(samples: dict, chapters: dict) -> str:
             lines.append(f"| {i} | {row['entity']} | {row['chapter_id']} | **{sent}** — {ctx} | |")
         lines.append("")
     return "\n".join(lines) + "\n"
+
+
+# ------------------------------------------------------------ orchestration
+
+def variant_dir(processing: Path, variant: str) -> Path:
+    return processing / "coref_eval" / variant
+
+
+def build_child_command(variant: str, book_yaml: str, workers: int) -> list[str]:
+    """Child invocation, wrapped in GNU time -v when available."""
+    cmd = [sys.executable, str(Path(__file__).resolve()), "--variant-run", variant,
+           "--book", str(book_yaml), "--workers", str(workers)]
+    gnu_time = shutil.which("time")
+    if gnu_time:
+        cmd = [gnu_time, "-v"] + cmd
+    return cmd
+
+
+def _load_book(book_yaml: Path):
+    """(paths, cfg, entities, chapters) for one book."""
+    import yaml
+    from wiki_creator.paths import book_paths_from_yaml
+
+    paths = book_paths_from_yaml(book_yaml)
+    with open(book_yaml, encoding="utf-8") as f:
+        cfg = yaml.safe_load(f) or {}
+    with open(paths.processing / "entities_classified.json", encoding="utf-8") as f:
+        entities = json.load(f)["entities"]
+    with open(paths.processing / "chapters.json", encoding="utf-8") as f:
+        chapters = json.load(f).get("chapters", {})
+    return paths, cfg, entities, chapters
+
+
+def run_variant(book_yaml: Path, variant: str, workers: int) -> None:
+    """Child mode: run one variant in-process and write its outputs."""
+    from scripts.relationship_extraction import (
+        DEFAULT_MIN_CHAPTERS_TOGETHER,
+        DEFAULT_THRESHOLD,
+        DEFAULT_WINDOW,
+        _load_mentions_from_files,
+        build_cooccurrence_graph,
+        enrich_mentions_with_fastcoref,
+    )
+
+    paths, cfg, entities, chapters = _load_book(book_yaml)
+    mentions = _load_mentions_from_files(paths.processing)
+    sentences_before = count_sentences(mentions)
+
+    if variant != "baseline":
+        mentions = enrich_mentions_with_fastcoref(
+            chapters, entities, mentions,
+            workers=workers,
+            spacy_model=cfg.get("spacy_model", "fr_core_news_lg"),
+            max_chars=VARIANT_MAX_CHARS[variant],
+        )
+
+    min_cooc = cfg.get("min_cooccurrence")
+    relationships, stats = build_cooccurrence_graph(
+        entities, mentions,
+        int(cfg.get("window", DEFAULT_WINDOW)),
+        int(cfg.get("threshold", DEFAULT_THRESHOLD)),
+        min_cooccurrence=int(min_cooc) if min_cooc is not None else None,
+        min_chapters_together=int(cfg.get("min_chapters_together", DEFAULT_MIN_CHAPTERS_TOGETHER)),
+    )
+    stats["pronoun_sentences_added"] = count_sentences(mentions) - sentences_before
+
+    out = variant_dir(paths.processing, variant)
+    out.mkdir(parents=True, exist_ok=True)
+    for name, data in (("mentions.json", mentions), ("relationships.json", relationships), ("stats.json", stats)):
+        with open(out / name, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    print(f"[eval/{variant}] wrote {out} — {stats['pronoun_sentences_added']} pronoun sentences added", file=sys.stderr)
+
+
+def run_all(book_yaml: Path, workers: int, sample_n: int, seed: int, variants: tuple[str, ...] = VARIANTS) -> Path:
+    """Parent mode: run every variant, compute deltas, write report + sample."""
+    paths, _cfg, _entities, chapters = _load_book(book_yaml)
+    eval_root = paths.processing / "coref_eval"
+    results: dict[str, dict] = {}
+
+    for variant in variants:
+        print(f"[eval] running {variant}…", file=sys.stderr)
+        t0 = time.monotonic()
+        proc = subprocess.run(
+            build_child_command(variant, str(book_yaml), workers),
+            capture_output=True, text=True,
+        )
+        wall = time.monotonic() - t0
+        sys.stderr.write(proc.stderr)
+        if proc.returncode != 0:
+            raise RuntimeError(f"variant {variant} failed (exit {proc.returncode})")
+        with open(variant_dir(paths.processing, variant) / "stats.json", encoding="utf-8") as f:
+            stats = json.load(f)
+        results[variant] = {
+            "wall_seconds": wall,
+            "pronoun_sentences_added": stats.get("pronoun_sentences_added", 0),
+            **parse_time_v(proc.stderr),
+        }
+
+    def _load(variant: str, name: str):
+        with open(variant_dir(paths.processing, variant) / name, encoding="utf-8") as f:
+            return json.load(f)
+
+    base_mentions = _load("baseline", "mentions.json")
+    base_rels = _load("baseline", "relationships.json")
+    samples: dict[str, list[dict]] = {}
+    for variant in variants:
+        if variant == "baseline":
+            continue
+        var_mentions = _load(variant, "mentions.json")
+        results[variant]["mention_deltas"] = compute_mention_deltas(base_mentions, var_mentions)
+        results[variant]["relationship_deltas"] = compute_relationship_deltas(base_rels, _load(variant, "relationships.json"))
+        samples[variant] = sample_new_sentences(base_mentions, var_mentions, n=sample_n, seed=seed)
+
+    (eval_root / "report.md").write_text(render_report(paths.processing.name, results), encoding="utf-8")
+    (eval_root / "sample_for_review.md").write_text(render_sample(samples, chapters), encoding="utf-8")
+    print(f"[eval] report: {eval_root / 'report.md'}", file=sys.stderr)
+    print(f"[eval] review sheet: {eval_root / 'sample_for_review.md'}", file=sys.stderr)
+    return eval_root
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--book", required=True, help="path to the book .yaml")
+    parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument("--sample", type=int, default=30)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--variants", default=",".join(VARIANTS), help="comma-separated subset of variants")
+    parser.add_argument("--variant-run", default=None, help=argparse.SUPPRESS)
+    args = parser.parse_args()
+
+    if args.variant_run:
+        run_variant(Path(args.book), args.variant_run, args.workers)
+        return
+    run_all(Path(args.book), args.workers, args.sample, args.seed, tuple(args.variants.split(",")))
+
+
+if __name__ == "__main__":
+    main()
