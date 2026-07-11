@@ -507,6 +507,127 @@ def test_build_prompt_no_relationships_omits_section_rule():
     assert "no typed relationships available" in prompt
 
 
+def _relationship(other: str, count: int, **extra) -> dict:
+    return {
+        "entity_a": "Celaena Sardothien",
+        "entity_b": other,
+        "cooccurrence_count": count,
+        "relationship_type": "allié",
+        "direction": "B→A",
+        "evolution": None,
+        **extra,
+    }
+
+
+def _entity_with_relationships(importance: str, relationships: list[dict]) -> dict:
+    return {
+        "canonical_name": "Celaena Sardothien",
+        "importance": importance,
+        "type": "PERSON",
+        "aliases": [],
+        "context_by_chapter": {},
+        "relationships": relationships,
+    }
+
+
+def test_build_prompt_includes_relationship_evidence_and_key_moments():
+    """STU-438: evidence and key_moments must reach the writer prompt."""
+    entity = _entity_with_relationships("principal", [
+        _relationship(
+            "Elena", 61,
+            evidence="Elena tendit la main à Celaena au bord du gouffre.",
+            key_moments=["ch05: Elena sauve Celaena", "ch09: Elena révèle son passé", "ch12: adieux"],
+        ),
+    ])
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"])
+    assert 'evidence: "Elena tendit la main à Celaena au bord du gouffre."' in prompt
+    assert "key_moment: ch05: Elena sauve Celaena" in prompt
+    assert "key_moment: ch09: Elena révèle son passé" in prompt
+    # capped at 2 key moments per relation
+    assert "ch12: adieux" not in prompt
+    # anchoring rule emitted when at least one relation is enriched
+    assert "Anchor each" in prompt
+
+
+def test_build_prompt_filters_sentinel_key_moment():
+    """The classifier's 'no moment found' sentinel must not leak into the prompt."""
+    entity = _entity_with_relationships("principal", [
+        _relationship(
+            "Elena", 61,
+            evidence="Elena parla à Celaena.",
+            key_moments=["no specific moment identifiable in provided excerpts"],
+        ),
+    ])
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"])
+    assert "no specific moment identifiable" not in prompt
+    assert "key_moment:" not in prompt
+
+
+def test_build_prompt_sample_context_is_fallback_only():
+    """sample_contexts appears only for relations without evidence, truncated."""
+    long_context = "Chaol regarda Celaena traverser la salle. " * 10  # > 200 chars
+    entity = _entity_with_relationships("principal", [
+        _relationship(
+            "Elena", 61,
+            evidence="Elena parla à Celaena.",
+            sample_contexts=["Elena et Celaena discutèrent longuement dans la crypte."],
+        ),
+        _relationship(
+            "Chaol Westfall", 45,
+            relationship_type=None,
+            sample_contexts=[long_context],
+        ),
+    ])
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"])
+    # relation with evidence: its raw sample context must NOT be duplicated
+    assert "discutèrent longuement dans la crypte" not in prompt
+    # relation without evidence: gets the fallback context, truncated
+    assert 'context: "Chaol regarda Celaena traverser la salle.' in prompt
+    assert long_context not in prompt
+
+
+def test_build_prompt_relationship_enrichment_budget_by_importance():
+    """principal enriches top 5, secondary top 3, figurant none."""
+    rels = [
+        _relationship(f"Perso {i}", 100 - i, evidence=f"Preuve numéro {i}.")
+        for i in range(6)
+    ]
+
+    prompt = build_prompt(
+        _entity_with_relationships("principal", rels),
+        "Throne of Glass", ["infobox", "biography", "relationships"],
+    )
+    assert 'evidence: "Preuve numéro 4."' in prompt
+    assert 'evidence: "Preuve numéro 5."' not in prompt
+
+    prompt = build_prompt(
+        _entity_with_relationships("secondary", rels),
+        "Throne of Glass", ["infobox", "biography", "relationships"],
+    )
+    assert 'evidence: "Preuve numéro 2."' in prompt
+    assert 'evidence: "Preuve numéro 3."' not in prompt
+
+    prompt = build_prompt(
+        _entity_with_relationships("figurant", rels),
+        "Throne of Glass", ["infobox", "biography", "relationships"],
+    )
+    assert "evidence:" not in prompt
+    assert "Anchor each" not in prompt
+
+
+def test_build_prompt_without_evidence_fields_is_unchanged():
+    """Regression guard: relations lacking the STU-438 fields keep the bare format."""
+    entity = _entity_with_relationships("principal", [
+        _relationship("Elena", 61),
+    ])
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"])
+    assert "related_entity: Elena" in prompt
+    assert "evidence:" not in prompt
+    assert "key_moment:" not in prompt
+    assert "context:" not in prompt
+    assert "Anchor each" not in prompt
+
+
 def test_build_prompt_instructs_no_training_knowledge():
     """Prompt must contain instruction to not use prior training knowledge."""
     entity = {

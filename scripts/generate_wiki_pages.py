@@ -181,6 +181,39 @@ def _label_chapter_key(key: str) -> str:
     return f"Chapter {int(m.group(1))}" if m else key
 
 
+# STU-438: how many top relations (already sorted by cooccurrence desc) get
+# evidence/key_moments/context sub-lines in the prompt, per page importance.
+_RELATIONSHIP_ENRICHMENT_BUDGET = {"principal": 5, "secondary": 3, "figurant": 0}
+_MAX_KEY_MOMENTS_PER_RELATION = 2
+_SAMPLE_CONTEXT_MAX_CHARS = 200
+# Kept in sync with .studio/agents/relationship-classifier.agent.yaml: the
+# classifier returns this exact string when no key moment could be identified.
+_KEY_MOMENT_SENTINEL = "no specific moment identifiable in provided excerpts"
+
+
+def _relationship_evidence_lines(rel: dict) -> list[str]:
+    """Grounding sub-lines for one relation: verbatim evidence, key moments,
+    and — only when evidence is absent — a truncated sample context fallback."""
+    lines = []
+    evidence = str(rel.get("evidence") or "").strip()
+    if evidence:
+        lines.append(f'    evidence: "{evidence}"')
+    moments = [
+        m for m in (str(m or "").strip() for m in rel.get("key_moments") or [])
+        if m and m != _KEY_MOMENT_SENTINEL
+    ]
+    for moment in moments[:_MAX_KEY_MOMENTS_PER_RELATION]:
+        lines.append(f"    key_moment: {moment}")
+    if not evidence:
+        contexts = [c for c in (str(c or "").strip() for c in rel.get("sample_contexts") or []) if c]
+        if contexts:
+            snippet = contexts[0]
+            if len(snippet) > _SAMPLE_CONTEXT_MAX_CHARS:
+                snippet = snippet[:_SAMPLE_CONTEXT_MAX_CHARS].rstrip() + "…"
+            lines.append(f'    context: "{snippet}"')
+    return lines
+
+
 def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_names: list[str] | None = None) -> str:
     name = entity["canonical_name"]
     etype = entity["type"]
@@ -218,6 +251,8 @@ def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_n
         key=lambda r: int(r.get("cooccurrence_count", 0) or 0),
         reverse=True,
     )
+    enrichment_budget = _RELATIONSHIP_ENRICHMENT_BUDGET.get(importance, 0)
+    rels_enriched = False
     rel_lines = []
     for r in relationships[:10]:
         a = (r.get("entity_a") or "").strip()
@@ -234,6 +269,11 @@ def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_n
             line += f" | direction: {direction}"
         if evolution:
             line += f"\n    evolution: {evolution}"
+        if len(rel_lines) < enrichment_budget:
+            evidence_lines = _relationship_evidence_lines(r)
+            if evidence_lines:
+                line += "\n" + "\n".join(evidence_lines)
+                rels_enriched = True
         rel_lines.append(line)
     relationships_block = "\n".join(rel_lines) if rel_lines else ""
 
@@ -334,6 +374,12 @@ def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_n
             '- For PERSON entities: ALWAYS include a "## Relations" section when "relationships" is in the sections list AND typed relationships are provided above. Do not skip it.\n'
             '- Each "## Relations" entry must use this format: "**[[related_entity]]** — [relationship_type] ([cooccurrence_count] mentions communes). [evolution if available]"'
         )
+        if rels_enriched:
+            relations_rule += (
+                '\n- Anchor each "## Relations" entry in the evidence quotes, key moments, and contexts provided above: '
+                "cite or closely paraphrase these grounded facts instead of paraphrasing the abstract relationship_type. "
+                "Do NOT invent moments that are not listed."
+            )
     else:
         relations_rule = "- Do NOT include a ## Relations section in the content field. No relationships data is available for this entity."
 
