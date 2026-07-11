@@ -169,7 +169,7 @@ def test_entity_type_is_included(nlp):
         assert entry["type"] in {"PERSON", "PLACE", "ORG", "EVENT", "OTHER"}
 
 
-def test_retags_place_from_context():
+def test_place_cues_no_longer_retag_person_to_place():
     entity = {
         "type": "PERSON",
         "raw_mentions": ["Endovier"],
@@ -180,7 +180,7 @@ def test_retags_place_from_context():
             ]
         },
     }
-    assert _retag_entity_type_from_context(entity) == "PLACE"
+    assert _retag_entity_type_from_context(entity) == "PERSON"
 
 
 def test_retags_event_from_context():
@@ -807,7 +807,7 @@ def test_retag_place_cue_requires_whole_word():
     assert _retag_entity_type_from_context(entity) == "PERSON"
 
 
-def test_retag_place_cue_standalone_word_still_fires():
+def test_standalone_place_cue_word_no_longer_forces_place():
     entity = {
         "type": "PERSON",
         "raw_mentions": ["Endovier"],
@@ -818,7 +818,7 @@ def test_retag_place_cue_standalone_word_still_fires():
             ]
         },
     }
-    assert _retag_entity_type_from_context(entity) == "PLACE"
+    assert _retag_entity_type_from_context(entity) == "PERSON"
 
 
 def test_retag_person_cue_requires_whole_word():
@@ -861,3 +861,20 @@ def test_custom_model_labels_are_mapped_and_kept():
     assert LABEL_TO_TYPE["ORG"] == "ORG"
     # KEPT_LABELS is derived from the map (can't drift)
     assert KEPT_LABELS == frozenset(LABEL_TO_TYPE)
+
+
+def test_person_with_place_dense_context_stays_person():
+    # Arobynn Hamel is a person whose introduction is place-dense. The custom
+    # model labels him PERSON; ambient place words must NOT retag him to PLACE.
+    entity = {
+        "type": "PERSON",
+        "raw_mentions": ["Arobynn Hamel"],
+        "mentions_by_chapter": {
+            "C05": [
+                "Arobynn Hamel found her half-submerged on the banks of a frozen "
+                "river and brought her to his keep on the border between Adarlan "
+                "and Terrasen.",
+            ]
+        },
+    }
+    assert _retag_entity_type_from_context(entity) == "PERSON"
