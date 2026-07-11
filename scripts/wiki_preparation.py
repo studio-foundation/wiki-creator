@@ -351,6 +351,9 @@ def build_entity_bundle(
         "importance": entity.get("importance", "figurant"),
         "aliases": entity.get("aliases", []),
         "titles": extract_titles(
+            # canonical_name + aliases are the real sources here; raw_mentions is a
+            # forward-compat splat (stripped before preparation in the current
+            # pipeline, so empty) that lets titles improve for free if it ever flows.
             [canonical_name, *entity.get("aliases", []), *entity.get("raw_mentions", [])],
             role_words or [],
         ),
