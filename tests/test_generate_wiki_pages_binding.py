@@ -50,3 +50,23 @@ def test_bind_creates_infobox_and_is_noop_without_config():
     assert page.get("infobox_fields", {}) == {}
     gwp._bind_batch_fields(page, _person_entity(), {})       # dict config → binds
     assert page["infobox_fields"]["nom"] == "Verin"
+
+
+def test_generation_profile_uses_template_order():
+    # legacy-style book config; sections must come back in the config's order
+    config = {"principal": {"sections_by_type": {"PERSON": [
+        "infobox", "biography", "personality", "relationships", "references"]}}}
+    sections, _ = gwp.generation_profile(config, "principal", "PERSON")
+    assert sections == ["infobox", "biography", "personality", "relationships", "references"]
+
+
+def test_generation_profile_base_default_when_no_config():
+    sections, max_tokens = gwp.generation_profile({}, "figurant", "PERSON")
+    assert sections[0] == "infobox"
+    assert "biography" in sections
+    assert isinstance(max_tokens, int)
+
+
+def test_generation_profile_unknown_type_falls_back():
+    sections, _ = gwp.generation_profile({}, "principal", None)
+    assert "infobox" in sections and "biography" in sections

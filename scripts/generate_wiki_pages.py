@@ -1039,16 +1039,14 @@ def load_book_config(book_yaml_path: str) -> dict:
 
 def generation_profile(config: dict, importance: str, entity_type: str | None = None) -> tuple[list[str], int]:
     profile = config.get(importance, {})
-    default_sections = _DEFAULT_SECTIONS_BY_IMPORTANCE.get(importance, _DEFAULT_SECTIONS_BY_IMPORTANCE["figurant"])
 
-    sections_by_type = profile.get("sections_by_type", {})
-    type_override = None
-    if isinstance(sections_by_type, dict) and entity_type:
-        type_override = sections_by_type.get(str(entity_type).upper())
+    resolved = resolve_template(entity_type, importance, {"generation": config})
+    sections = resolved.section_tokens()
+    if not sections:  # unknown/None type → keep the legacy default
+        sections = _DEFAULT_SECTIONS_BY_IMPORTANCE.get(
+            importance, _DEFAULT_SECTIONS_BY_IMPORTANCE["figurant"]
+        )
 
-    sections = type_override if type_override is not None else profile.get("sections", default_sections)
-    if not isinstance(sections, list) or not sections:
-        sections = default_sections
     max_tokens = profile.get("max_tokens_per_page", DEFAULT_NUM_PREDICT)
     try:
         max_tokens = int(max_tokens)
