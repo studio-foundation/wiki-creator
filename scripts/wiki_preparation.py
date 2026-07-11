@@ -37,6 +37,8 @@ if str(PROJECT_ROOT) not in sys.path:
 from dataclasses import asdict
 from wiki_creator.paths import book_paths_from_epub, BookPaths
 from wiki_creator.character_graph import CharacterGraph
+from wiki_creator.facts import extract_titles
+from wiki_creator.lang import book_language, load_lang_config
 
 
 def _paths_from_payload(payload: dict) -> BookPaths:
@@ -339,6 +341,7 @@ def build_entity_bundle(
     chapter_summary_max: int = DEFAULT_CHAPTER_SUMMARY_MAX,
     chapter_id_to_title: dict[str, str] | None = None,
     graph: "CharacterGraph | None" = None,
+    role_words: list[str] | None = None,
 ) -> dict:
     canonical_name = entity["canonical_name"]
     context_by_chapter = extract_context(entity, persons, places, orgs, events)
@@ -347,6 +350,10 @@ def build_entity_bundle(
         "type": entity.get("type", "OTHER"),
         "importance": entity.get("importance", "figurant"),
         "aliases": entity.get("aliases", []),
+        "titles": extract_titles(
+            [canonical_name, *entity.get("aliases", []), *entity.get("raw_mentions", [])],
+            role_words or [],
+        ),
         "total_mentions": entity.get("total_mentions", 0),
         "chapters_present": entity.get("chapters_present", 0),
         "first_seen": get_first_seen(entity, persons, places, orgs, events),
@@ -441,6 +448,8 @@ def write_batches(entity_bundles: list[dict], narrator: object, paths: "BookPath
 
 def main() -> None:
     payload = json.load(sys.stdin)
+    _ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    role_words = load_lang_config(book_language(_ctx)).get("role_words", [])
     classification_output, chapter_summary_output = stage_outputs_from_payload(payload)
 
     entities = classification_output.get("entities", [])
@@ -548,6 +557,7 @@ def main() -> None:
             chapter_summary_max=chapter_summary_max,
             chapter_id_to_title=chapter_id_to_title,
             graph=_series_graph,
+            role_words=role_words,
         )
         for e in relevant_entities
     ]
