@@ -53,7 +53,13 @@ _generate_one_section(*, entity, section, book_title, model, timeout,
     return content or None
 ```
 
-### Rewrite `_run_generation_for_entity` to loop
+### New `_run_generation_sectioned` (the main loop switches to it)
+
+Additive, to isolate risk: add a **new** `_run_generation_sectioned(...)` with the
+same signature as `_run_generation_for_entity` and switch the main-loop call site
+to it. The old `_run_generation_for_entity` (and its ~10 single-call tests) stays
+**unchanged and passing** — superseded in production, removed in a cleanup
+fast-follow once the sectioned path is validated e2e. Zero existing-test churn.
 
 ```
 stub checks (unchanged: insufficient-data, dry-run)
@@ -102,8 +108,10 @@ not invoked by the sectioned flow.
 
 ## Files
 
-- Modify: `scripts/generate_wiki_pages.py` — `_assemble_section_blocks`,
-  `_generate_one_section`, `_references_block`, rewrite `_run_generation_for_entity`.
+- Modify: `scripts/generate_wiki_pages.py` — add `_assemble_section_blocks`,
+  `_generate_one_section`, `_references_block`, `_run_generation_sectioned`; switch
+  the main-loop call site to `_run_generation_sectioned`. `_run_generation_for_entity`
+  is kept unchanged (superseded; cleanup fast-follow).
 - Test: `tests/test_generate_wiki_pages.py` (or a new module) — assembly (pure),
   per-section generation (mock `_run_wiki_page_item`), sectioned flow
   (per-section calls, biography-fail-stub, omit-failed-OPT, deterministic refs,
