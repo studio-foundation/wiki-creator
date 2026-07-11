@@ -81,3 +81,17 @@ def test_generation_profile_principal_person_uses_base_template_order():
         "infobox", "biography", "relationships", "personality",
         "physical", "powers", "trivia", "references",
     ]
+
+
+def test_generation_profile_place_secondary_drops_relationships():
+    # base.yaml gates PLACE.relationships to principal-only, so even though the
+    # book's flat secondary config lists "relationships", it is filtered out for
+    # a PLACE at secondary tier. Deliberate type-aware refinement (STU-436).
+    config = {"secondary": {"sections": ["infobox", "biography", "relationships", "references"]}}
+    sections, _ = gwp.generation_profile(config, "secondary", "PLACE")
+    assert "relationships" not in sections
+    assert sections == ["infobox", "biography", "references"]
+
+    # Contrast: PERSON.relationships includes secondary in base.yaml, so it is kept.
+    person_sections, _ = gwp.generation_profile(config, "secondary", "PERSON")
+    assert "relationships" in person_sections
