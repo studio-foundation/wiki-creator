@@ -43,6 +43,7 @@ Standalone test:
   python scripts/relationship_extraction.py --live --coref
   python scripts/relationship_extraction.py --live --coref --workers 4
   python scripts/relationship_extraction.py --test --coref --workers 2
+  python scripts/relationship_extraction.py --test --coref --coref-max-chars 0
 
 Workers / RAM budget (LingMessCoref ~590M params per worker):
   --workers 1  :  ~3 GB  (default, safe on any machine)
@@ -470,6 +471,53 @@ def _patch_attn_eager() -> None:
     transformers.AutoModel.from_config = _patched
 
 
+def _patch_datasets_pickler_py314() -> None:
+    """Make datasets' Pickler._batch_setitems accept the Python 3.14 pickle API.
+
+    Python 3.14 stdlib pickle calls _batch_setitems(items, obj); the override in
+    datasets < 4.4 (utils/_dill.py, used by fastcoref for dataset fingerprinting)
+    only accepts (items), which crashes every coref inference with
+    "Pickler._batch_setitems() takes 2 positional arguments but 3 were given".
+    Fixed upstream in datasets 4.4.0. No-ops on older Pythons, on fixed datasets
+    versions, and when datasets is absent.
+    """
+    if sys.version_info < (3, 14):
+        return
+    try:
+        import inspect
+        import pickle as _pickle
+
+        from datasets.utils import _dill as _ds_dill
+
+        params = inspect.signature(_ds_dill.Pickler._batch_setitems).parameters
+        if len(params) > 2 or any(
+            p.kind is inspect.Parameter.VAR_POSITIONAL for p in params.values()
+        ):
+            return  # datasets >= 4.4 already compatible
+
+        # Same semantics as datasets 4.3's override (sorted keys for stable
+        # fingerprints), with the obj argument passed through to the stdlib.
+        def _batch_setitems(self, items, obj=None):  # type: ignore[no-untyped-def]
+            if getattr(self, "_legacy_no_dict_keys_sorting", False):
+                return _pickle._Pickler._batch_setitems(self, items, obj)
+            try:
+                items = sorted(items)
+            except Exception:
+                from datasets.fingerprint import Hasher
+
+                items = sorted(items, key=lambda x: Hasher.hash(x[0]))
+            return _pickle._Pickler._batch_setitems(self, items, obj)
+
+        _ds_dill.Pickler._batch_setitems = _batch_setitems
+    except Exception:
+        return
+
+
+def _pronouns_for_model(spacy_model: str) -> frozenset:
+    """Pronoun cue set for the language inferred from the spaCy model name."""
+    return frozenset(load_lang_config(infer_language(spacy_model)).get("pronouns", []))
+
+
 _SENT_BOUNDARY = re.compile(r'(?<=[.!?»])\s+(?=[A-ZÀÂÇÈÉÊÎÔÙÛÜ\u2014«])')
 
 
@@ -571,25 +619,27 @@ def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
     Must be a top-level function (picklable by multiprocessing).
 
     Args:
-        args: (chapter_id, text, name_to_canonical, spacy_model)
+        args: (chapter_id, text, name_to_canonical, spacy_model, max_chars, pronouns)
             name_to_canonical: {lowercased_name: canonical_name}
             spacy_model: spaCy model name to load (e.g. "fr_core_news_lg")
+            max_chars: character cap per chapter (0 = no cap)
 
     Returns:
         List of (canonical_name, chapter_id, sentence) tuples to be merged
         by the parent process. Returns [] on any error (graceful degradation).
     """
-    chapter_id, text, name_to_canonical, spacy_model = args
+    chapter_id, text, name_to_canonical, spacy_model, max_chars, pronouns = args
     if not text or not text.strip():
         return []
 
-    chunk = text[:8000]
+    chunk = text[:max_chars] if max_chars > 0 else text
 
     try:
         import spacy
         from fastcoref import spacy_component  # noqa: F401
 
         _patch_attn_eager()
+        _patch_datasets_pickler_py314()
         nlp = spacy.load(
             spacy_model,
             exclude=["parser", "lemmatizer", "ner", "textcat"],
@@ -613,7 +663,7 @@ def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
         return []
 
     raw_clusters = doc._.coref_clusters or []
-    return _process_chapter_clusters(raw_clusters, chunk, chapter_id, name_to_canonical)
+    return _process_chapter_clusters(raw_clusters, chunk, chapter_id, name_to_canonical, pronouns)
 
 
 def enrich_mentions_with_fastcoref(
@@ -622,10 +672,11 @@ def enrich_mentions_with_fastcoref(
     mentions_by_entity: dict[str, dict[str, list[str]]],
     workers: int = 1,
     spacy_model: str = "fr_core_news_lg",
+    max_chars: int = 8000,
 ) -> dict[str, dict[str, list[str]]]:
     """Enrich mentions using fastcoref + LingMessCoref for accurate coreference.
 
-    For each chapter (first 8 000 chars), run LingMessCoref to get coreference
+    For each chapter (first `max_chars` characters; 0 = full chapter), run LingMessCoref to get coreference
     clusters. For each cluster containing a known PERSON entity mention, find
     pronoun mentions in the same cluster and attribute their sentences to that
     entity.
@@ -640,6 +691,7 @@ def enrich_mentions_with_fastcoref(
                  Each worker loads its own model (~590 MB RAM per worker).
                  RAM budget: 1 worker=~3 GB, 4 workers=~10 GB, 8 workers=~20 GB.
         spacy_model: spaCy model name to load (default "fr_core_news_lg").
+        max_chars: character cap per chapter (default 8000, 0 = no cap).
 
     Returns:
         mentions_by_entity enriched in-place (also returned for convenience)
@@ -661,6 +713,7 @@ def enrich_mentions_with_fastcoref(
         return mentions_by_entity
 
     total_added = 0
+    pronouns = _pronouns_for_model(spacy_model)
 
     if workers <= 1:
         # Sequential path — load model once, iterate chapters
@@ -669,6 +722,7 @@ def enrich_mentions_with_fastcoref(
             from fastcoref import spacy_component  # noqa: F401
 
             _patch_attn_eager()
+            _patch_datasets_pickler_py314()
             nlp = spacy.load(
                 spacy_model,
                 exclude=["parser", "lemmatizer", "ner", "textcat"],
@@ -691,7 +745,7 @@ def enrich_mentions_with_fastcoref(
         for chapter_id, text in chapters.items():
             if not text or not text.strip():
                 continue
-            chunk = text[:8000]
+            chunk = text[:max_chars] if max_chars > 0 else text
             try:
                 doc = nlp(chunk, component_cfg={"fastcoref": {"resolve_text": True}})
             except Exception as e:
@@ -699,7 +753,7 @@ def enrich_mentions_with_fastcoref(
                 continue
 
             raw_clusters = doc._.coref_clusters or []
-            for canonical, cid, sentence in _process_chapter_clusters(raw_clusters, chunk, chapter_id, name_to_canonical):
+            for canonical, cid, sentence in _process_chapter_clusters(raw_clusters, chunk, chapter_id, name_to_canonical, pronouns):
                 if canonical not in mentions_by_entity:
                     mentions_by_entity[canonical] = {}
                 if cid not in mentions_by_entity[canonical]:
@@ -715,7 +769,7 @@ def enrich_mentions_with_fastcoref(
         import multiprocessing
 
         chapter_items = [
-            (cid, text, name_to_canonical, spacy_model)
+            (cid, text, name_to_canonical, spacy_model, max_chars, pronouns)
             for cid, text in chapters.items()
             if text and text.strip()
         ]
@@ -734,7 +788,7 @@ def enrich_mentions_with_fastcoref(
                 f"[WARN] Parallel coref failed ({type(e).__name__}: {e}) — falling back to sequential (workers=1)",
                 file=sys.stderr,
             )
-            return enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=1, spacy_model=spacy_model)
+            return enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=1, spacy_model=spacy_model, max_chars=max_chars)
 
         # Merge results from all workers
         for worker_results in all_results:
@@ -759,6 +813,7 @@ def run_test_mode(
     workers: int = 1,
     min_cooccurrence: int | None = None,
     min_chapters_together: int = DEFAULT_MIN_CHAPTERS_TOGETHER,
+    coref_max_chars: int = 8000,
 ) -> None:
     """Run with hardcoded Le Jeu de l'Ange data."""
     entities = [
@@ -853,7 +908,7 @@ def run_test_mode(
                     chapters_demo[chapter_id] += " " + text
                 else:
                     chapters_demo[chapter_id] = text
-        mentions_by_entity = enrich_mentions_with_fastcoref(chapters_demo, entities, mentions_by_entity, workers=workers)
+        mentions_by_entity = enrich_mentions_with_fastcoref(chapters_demo, entities, mentions_by_entity, workers=workers, max_chars=coref_max_chars)
 
     relationships, stats = build_cooccurrence_graph(
         entities, mentions_by_entity, window_size, threshold,
@@ -1119,6 +1174,7 @@ def run_live_mode(
     workers: int = 1,
     min_cooccurrence: int | None = None,
     min_chapters_together: int = DEFAULT_MIN_CHAPTERS_TOGETHER,
+    coref_max_chars: int = 8000,
 ) -> None:
     """Live mode: read persons_full.json, cluster entities, then run co-occurrence on real data."""
     import sys as _sys
@@ -1243,7 +1299,7 @@ def run_live_mode(
             with open(chapters_path, encoding="utf-8") as f:
                 chapters_data = json.load(f)
             chapters = chapters_data.get("chapters", {})
-            mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=workers)
+            mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=workers, max_chars=coref_max_chars)
 
     print(f"=== LIVE MODE — relationship-extraction ===\n")
     print(f"Loaded {len(entities)} persons from {persons_path}")
@@ -1330,6 +1386,11 @@ def main() -> None:
         idx = args.index("--workers")
         workers = int(args[idx + 1])
 
+    coref_max_chars = 8000
+    if "--coref-max-chars" in args:
+        idx = args.index("--coref-max-chars")
+        coref_max_chars = int(args[idx + 1])
+
     min_cooccurrence = None
     if "--min-cooccurrence" in args:
         idx = args.index("--min-cooccurrence")
@@ -1345,6 +1406,7 @@ def main() -> None:
             window_size, threshold, coref=coref, workers=workers,
             min_cooccurrence=min_cooccurrence,
             min_chapters_together=min_chapters_together,
+            coref_max_chars=coref_max_chars,
         )
         return
 
@@ -1359,12 +1421,14 @@ def main() -> None:
                 window_size, threshold, coref=coref, workers=workers,
                 min_cooccurrence=min_cooccurrence,
                 min_chapters_together=min_chapters_together,
+                coref_max_chars=coref_max_chars,
             )
         else:
             run_live_mode(
                 window_size, threshold, live_paths, coref=coref, workers=workers,
                 min_cooccurrence=min_cooccurrence,
                 min_chapters_together=min_chapters_together,
+                coref_max_chars=coref_max_chars,
             )
         return
 
@@ -1389,6 +1453,7 @@ def main() -> None:
     min_cooccurrence_val = None
     min_chapters_together = DEFAULT_MIN_CHAPTERS_TOGETHER
     spacy_model = "fr_core_news_lg"
+    coref_max_chars = 8000
     llm_model: str | None = None
     ollama_url = os.environ.get("OLLAMA_URL", _OLLAMA_URL)
     pronouns: frozenset = frozenset(load_lang_config("fr").get("pronouns", []))
@@ -1402,6 +1467,7 @@ def main() -> None:
             novel_summary = (additional.get("novel_summary") or "").strip() or None
             ollama_url = additional.get("ollama_url", os.environ.get("OLLAMA_URL", _OLLAMA_URL))
             do_coref = bool(additional.get("coref", False))
+            coref_max_chars = int(additional.get("coref_max_chars", 8000))
             window_size = int(additional.get("window", window_size))
             threshold = int(additional.get("threshold", threshold))
             workers = int(additional.get("workers", workers))
@@ -1432,7 +1498,7 @@ def main() -> None:
                 chapters_data = json.load(f)
             chapters = chapters_data.get("chapters", {})
             mentions_by_entity = enrich_mentions_with_fastcoref(
-                chapters, entities, mentions_by_entity, workers=workers, spacy_model=spacy_model
+                chapters, entities, mentions_by_entity, workers=workers, spacy_model=spacy_model, max_chars=coref_max_chars
             )
 
     relationships, stats = build_cooccurrence_graph(

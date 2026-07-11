@@ -164,9 +164,8 @@ def test_narrator_passthrough_null_when_absent():
 def test_coref_worker_returns_list():
     """_coref_worker returns a list (empty when fastcoref not available)."""
     from scripts.relationship_extraction import _coref_worker
-    result = _coref_worker(("ch01", "Il travaillait.", {"david martín": "David Martín"}, "fr_core_news_lg"))
+    result = _coref_worker(("ch01", "Il travaillait.", {"david martín": "David Martín"}, "fr_core_news_lg", 8000, frozenset({"il"})))
     assert isinstance(result, list)
-    # Each item is (canonical, chapter_id, sentence)
     for item in result:
         assert len(item) == 3
         assert isinstance(item[0], str)
@@ -183,6 +182,15 @@ def test_enrich_fastcoref_accepts_workers_param():
     assert sig.parameters["workers"].default == 1
 
 
+def test_enrich_fastcoref_accepts_max_chars_param():
+    """enrich_mentions_with_fastcoref accepts max_chars with default 8000."""
+    import inspect
+    from scripts.relationship_extraction import enrich_mentions_with_fastcoref
+    sig = inspect.signature(enrich_mentions_with_fastcoref)
+    assert "max_chars" in sig.parameters
+    assert sig.parameters["max_chars"].default == 8000
+
+
 def test_main_parses_workers_flag(monkeypatch):
     """--workers N is parsed and passed through to run_live_mode."""
     import sys
@@ -190,7 +198,7 @@ def test_main_parses_workers_flag(monkeypatch):
 
     captured = {}
 
-    def fake_run_live(window_size, threshold, coref=False, workers=1, min_cooccurrence=None, min_chapters_together=2):
+    def fake_run_live(window_size, threshold, coref=False, workers=1, min_cooccurrence=None, min_chapters_together=2, coref_max_chars=8000):
         captured["workers"] = workers
 
     monkeypatch.setattr(rel, "run_live_mode", fake_run_live)
@@ -198,6 +206,59 @@ def test_main_parses_workers_flag(monkeypatch):
     rel.main()
 
     assert captured["workers"] == 4
+
+
+def test_main_parses_coref_max_chars_flag(monkeypatch):
+    """--coref-max-chars N is parsed and passed through to run_live_mode."""
+    import sys
+    import scripts.relationship_extraction as rel
+
+    captured = {}
+
+    def fake_run_live(window_size, threshold, coref=False, workers=1, min_cooccurrence=None, min_chapters_together=2, coref_max_chars=8000):
+        captured["coref_max_chars"] = coref_max_chars
+
+    monkeypatch.setattr(rel, "run_live_mode", fake_run_live)
+    monkeypatch.setattr(sys, "argv", ["rel.py", "--live", "--coref", "--coref-max-chars", "0"])
+    rel.main()
+
+    assert captured["coref_max_chars"] == 0
+
+
+def test_executor_parses_coref_max_chars(monkeypatch, tmp_path, capsys):
+    """coref_max_chars in additional_context reaches enrich_mentions_with_fastcoref."""
+    import io
+    import json
+    import sys
+    from types import SimpleNamespace
+    import scripts.relationship_extraction as rel
+
+    (tmp_path / "chapters.json").write_text(json.dumps({"chapters": {"ch01": "Celaena walked. She smiled."}}), encoding="utf-8")
+
+    captured = {}
+
+    def fake_enrich(chapters, entities, mentions_by_entity, workers=1, spacy_model="fr_core_news_lg", max_chars=8000):
+        captured["max_chars"] = max_chars
+        return mentions_by_entity
+
+    monkeypatch.setattr(rel, "enrich_mentions_with_fastcoref", fake_enrich)
+    monkeypatch.setattr(rel, "_paths_from_payload", lambda payload: SimpleNamespace(processing=tmp_path))
+
+    payload = {
+        "previous_outputs": {
+            "entity-resolution": {
+                "entities": [{"canonical_name": "Celaena", "type": "PERSON", "aliases": [], "source_ids": [], "relevant": True}],
+            },
+        },
+        "additional_context": "coref: true\ncoref_max_chars: 4321\n",
+    }
+    monkeypatch.setattr(sys, "argv", ["rel.py"])
+    monkeypatch.setattr(sys, "stdin", io.StringIO(json.dumps(payload)))
+    rel.main()
+
+    assert captured["max_chars"] == 4321
+    out = capsys.readouterr().out
+    assert json.loads(out)  # executor still emits valid JSON
 
 
 def test_parallel_merge_matches_direct_process_chapters():
@@ -330,11 +391,10 @@ def test_true_relation_survives_filter():
     assert ("David Martín", "Pedro Vidal") in pairs or ("Pedro Vidal", "David Martín") in pairs
 
 
-def test_coref_worker_accepts_4_tuple():
-    """_coref_worker must unpack (chapter_id, text, name_to_canonical, spacy_model)."""
+def test_coref_worker_accepts_6_tuple():
+    """_coref_worker must unpack (chapter_id, text, name_to_canonical, spacy_model, max_chars, pronouns)."""
     from scripts.relationship_extraction import _coref_worker
-    # Empty text → empty result, no crash
-    result = _coref_worker(("ch01", "", {}, "en_core_web_sm"))
+    result = _coref_worker(("ch01", "", {}, "en_core_web_sm", 8000, frozenset({"she"})))
     assert result == []
 
 
@@ -1116,3 +1176,47 @@ def test_span_contains_both_returns_false_when_name_absent():
     assert _span_contains_both("Chaol stood. Crown Prince entered.", "Chaol", "Crown Prince") is True
     assert _span_contains_both("Chaol stood. Crown Prince entered.", "Chaol", "Philippa") is False
     assert _span_contains_both("Chaol stood. Crown Prince entered.", "Elena", "Crown Prince") is False
+
+
+def test_patch_datasets_pickler_py314_makes_signature_compatible():
+    """On py3.14 with datasets < 4.4, the patch must make Pickler._batch_setitems
+    accept the stdlib's (items, obj) call; it must no-op cleanly otherwise."""
+    import inspect
+    import sys as _sys
+
+    import pytest as _pytest
+
+    from scripts.relationship_extraction import _patch_datasets_pickler_py314
+
+    _patch_datasets_pickler_py314()  # must never raise
+
+    if _sys.version_info < (3, 14):
+        return
+    ds_dill = _pytest.importorskip("datasets.utils._dill")
+    params = inspect.signature(ds_dill.Pickler._batch_setitems).parameters
+    accepts_obj = len(params) > 2 or any(
+        p.kind is inspect.Parameter.VAR_POSITIONAL for p in params.values()
+    )
+    assert accepts_obj, "Pickler._batch_setitems still incompatible with py3.14 pickle"
+
+
+def test_pronouns_for_model_derives_language():
+    """Pronoun set for coref must follow the book's language, not default to fr."""
+    from scripts.relationship_extraction import _pronouns_for_model
+
+    en = _pronouns_for_model("models/wiki-ner-en/model-best")
+    assert "she" in en and "he" in en
+    fr = _pronouns_for_model("fr_core_news_lg")
+    assert "elle" in fr and "il" in fr
+
+
+def test_process_chapter_clusters_english_pronouns():
+    """An English pronoun in a cluster with a known entity is attributed to it."""
+    from scripts.relationship_extraction import _process_chapter_clusters
+
+    chunk = "Celaena walked into the hall. She smiled at Dorian."
+    clusters = [[(0, 7), (30, 33)]]  # "Celaena", "She"
+    out = _process_chapter_clusters(
+        clusters, chunk, "ch01", {"celaena": "Celaena"}, frozenset({"she", "he"})
+    )
+    assert ("Celaena", "ch01", "She smiled at Dorian.") in out
