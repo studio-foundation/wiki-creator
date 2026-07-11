@@ -48,8 +48,13 @@ or a hardcoded default. Change: derive `sections` from
   1117), so it is wrapped as `{"generation": config}` to match `resolve_template`'s
   `book_config["generation"]…` access. Section resolution needs nothing else.
 - `max_tokens` resolution is unchanged (stays a `generation_profile` concern).
-- Slice A guarantees `section_tokens()` preserves the legacy config's section **order**
-  (regression-tested), so this is a behavior-preserving swap for the shipping book.
+- Slice A guarantees `section_tokens()` preserves the legacy config's section **order**,
+  so the swap is order-preserving. It is **behavior-preserving for the shipping book on 11
+  of 12 (type × tier) combinations**; the exception is intentional: the book's *flat*
+  `secondary.sections` lists `relationships` for every type, but the type-aware template
+  gates PLACE `relationships` to `principal`, so **PLACE/secondary drops `relationships`**
+  (`[infobox, biography, references]`). This is the desired type-aware refinement (the
+  point of the reshape), pinned by `test_generation_profile_place_secondary_drops_relationships`.
 - Backward compat: a book with no `generation.<tier>` config resolves to the base-default
   template for its entity type — which is the intended new default, and matches the old
   `_DEFAULT_SECTIONS_BY_IMPORTANCE` closely (references now included at figurant, an
@@ -87,13 +92,13 @@ _bind_batch_fields(page: dict, entity: dict, book_config: dict) -> None
 
 ### 3. Threading & call sites
 
-`_generate_page(...)` (the per-entity function ending at line 867) gains a
+`_run_generation_for_entity(...)` (the per-entity generation function) gains a
 `book_config: dict | None = None` parameter, passed from the main loop (which already holds
-`book_cfg`, line 1047). `_bind_batch_fields(page, entity, book_config)` is called on the
-successful page immediately before `return item_result` (line ~866) and on the recovered
-page in the identity-rejected path (line ~820), so every non-stub page gets deterministic
-identity fields. Stub pages already carry `title = canonical_name` and an empty infobox;
-they are left as-is.
+`book_cfg`). `_bind_batch_fields(page, entity, book_config)` is called on the successful
+page immediately before `return item_result` (after the `_force_correct_identity` block) and
+on the recovered page in the identity-rejected path (before `return recovered`), so every
+non-stub page gets deterministic identity fields. Stub / dry-run / insufficient-data pages
+already carry `title = canonical_name` and an empty infobox; they are left as-is.
 
 ### 4. The post-hoc net stays
 
@@ -107,7 +112,7 @@ redundant infobox repair is deferred (documented for a later cleanup).
 ## Files
 
 - Modify: `scripts/generate_wiki_pages.py` — `generation_profile`, new `_batch_bound_value`
-  / `_bind_batch_fields`, `_generate_page` signature + two call sites.
+  / `_bind_batch_fields`, `_run_generation_for_entity` signature + two call sites.
 - Test: `tests/test_generate_wiki_pages_binding.py` (new), plus any existing
   `generation_profile` tests that assert the old section source.
 
