@@ -116,6 +116,24 @@ def _load_spacy_model_with_fallback(spacy_load, requested_model: str):
             errors.append(f"{model}: {exc}")
     raise OSError("Unable to load spaCy model. Tried: " + " | ".join(errors))
 
+
+def _audit_ner_labels(nlp) -> None:
+    """
+    Warn (never raise) if the loaded model can emit NER labels that the
+    extraction filter would silently drop — i.e. labels in neither
+    KEPT_LABELS nor IGNORED_LABELS. Guards against a custom ontology
+    being half-disconnected again (STU-439).
+    """
+    if "ner" not in nlp.pipe_names:
+        return
+    unknown = sorted(set(nlp.get_pipe("ner").labels) - KEPT_LABELS - IGNORED_LABELS)
+    if unknown:
+        print(
+            "[WARN] NER model emits labels outside KEPT_LABELS/IGNORED_LABELS; "
+            f"these entities will be dropped: {', '.join(unknown)}",
+            file=sys.stderr,
+        )
+
 # Entity labels to keep. Covers French/English spaCy models and the
 # fine-tuned fiction models (models/wiki-ner-*), which emit
 # PERSON / PLACE / ORG / FACTION / EVENT (see ner_dataset_generation.py).
@@ -139,6 +157,15 @@ LABEL_TO_TYPE = {
     # PERSON/PLACE/ORG/EVENT/OTHER (wiki_creator/types.py).
     "FACTION": "ORG",
     "EVENT": "EVENT",
+}
+
+# Stock-model labels we deliberately do NOT extract. Kept explicit so the
+# load-time audit (_audit_ner_labels) can tell "intentionally dropped"
+# from "silently disconnected" (STU-439).
+# en_core_web_*: numerics/dates/works.  fr_core_news_*: MISC.
+IGNORED_LABELS = {
+    "CARDINAL", "DATE", "TIME", "MONEY", "PERCENT", "QUANTITY", "ORDINAL",
+    "LANGUAGE", "LAW", "PRODUCT", "WORK_OF_ART", "MISC",
 }
 
 CUE_WORDS_DIR = PROJECT_ROOT / "wiki_creator" / "cue_words"
@@ -752,6 +779,7 @@ def main() -> None:
     if loaded_model != spacy_model:
         print(f"[WARN] spaCy model '{spacy_model}' not available; using '{loaded_model}'", file=sys.stderr)
     _ensure_sentencizer(nlp)
+    _audit_ner_labels(nlp)
 
     try:
         cue_words_language = _resolve_cue_words_language(

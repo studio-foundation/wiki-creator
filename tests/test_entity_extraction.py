@@ -12,7 +12,7 @@ from scripts.entity_extraction import (
     _retag_entity_type_from_context, _infer_cue_words_language,
     _resolve_cue_words_language, _load_cue_words,
     _spacy_model_candidates, _load_spacy_model_with_fallback,
-    _is_frontmatter_chapter, _ensure_sentencizer,
+    _is_frontmatter_chapter, _ensure_sentencizer, _audit_ner_labels,
 )
 
 
@@ -879,3 +879,33 @@ def test_retag_mention_match_requires_whole_word():
         },
     }
     assert _retag_entity_type_from_context(entity) == "PERSON"
+
+
+# --- _audit_ner_labels tests (STU-439) ---
+
+
+def test_audit_warns_on_unknown_ner_label(capsys):
+    """A model emitting labels outside KEPT_LABELS ∪ IGNORED_LABELS must warn (STU-439)."""
+    nlp = spacy.blank("en")
+    ner = nlp.add_pipe("ner")
+    ner.add_label("ARTIFACT")
+    _audit_ner_labels(nlp)
+    err = capsys.readouterr().err
+    assert "[WARN]" in err
+    assert "ARTIFACT" in err
+
+
+def test_audit_silent_for_kept_and_ignored_labels(capsys):
+    """Custom ontology + deliberately-ignored stock labels: no warning."""
+    nlp = spacy.blank("en")
+    ner = nlp.add_pipe("ner")
+    for label in ("PERSON", "PLACE", "ORG", "FACTION", "EVENT", "DATE", "CARDINAL", "MISC"):
+        ner.add_label(label)
+    _audit_ner_labels(nlp)
+    assert capsys.readouterr().err == ""
+
+
+def test_audit_without_ner_pipe_is_silent(capsys):
+    nlp = spacy.blank("en")
+    _audit_ner_labels(nlp)
+    assert capsys.readouterr().err == ""
