@@ -7,7 +7,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.entity_extraction import (
     extract_entities, extract_context, split_entities, split_by_type,
-    KEPT_LABELS, _is_valid_mention, FRONTMATTER_ID_PATTERNS, _truncate_mention,
+    KEPT_LABELS, LABEL_TO_TYPE, _is_valid_mention, FRONTMATTER_ID_PATTERNS, _truncate_mention,
     _get_min_mentions_absolute, filter_entities_by_min_mentions,
     _retag_entity_type_from_context, _infer_cue_words_language,
     _resolve_cue_words_language, _load_cue_words,
@@ -169,7 +169,7 @@ def test_entity_type_is_included(nlp):
         assert entry["type"] in {"PERSON", "PLACE", "ORG", "EVENT", "OTHER"}
 
 
-def test_retags_place_from_context():
+def test_place_cues_no_longer_retag_person_to_place():
     entity = {
         "type": "PERSON",
         "raw_mentions": ["Endovier"],
@@ -180,7 +180,7 @@ def test_retags_place_from_context():
             ]
         },
     }
-    assert _retag_entity_type_from_context(entity) == "PLACE"
+    assert _retag_entity_type_from_context(entity) == "PERSON"
 
 
 def test_retags_event_from_context():
@@ -807,7 +807,7 @@ def test_retag_place_cue_requires_whole_word():
     assert _retag_entity_type_from_context(entity) == "PERSON"
 
 
-def test_retag_place_cue_standalone_word_still_fires():
+def test_standalone_place_cue_word_no_longer_forces_place():
     entity = {
         "type": "PERSON",
         "raw_mentions": ["Endovier"],
@@ -818,7 +818,7 @@ def test_retag_place_cue_standalone_word_still_fires():
             ]
         },
     }
-    assert _retag_entity_type_from_context(entity) == "PLACE"
+    assert _retag_entity_type_from_context(entity) == "PERSON"
 
 
 def test_retag_person_cue_requires_whole_word():
@@ -842,6 +842,39 @@ def test_retag_mention_match_requires_whole_word():
             # 'vale' appears only inside 'valentine'; the standalone city
             # cue in the same sentence must therefore not score.
             "ch01": ["The valentine card mentioned a city far away."]
+        },
+    }
+    assert _retag_entity_type_from_context(entity) == "PERSON"
+
+
+def test_custom_model_labels_are_mapped_and_kept():
+    from scripts.entity_extraction import LABEL_TO_TYPE, KEPT_LABELS
+    # custom wiki-ner-en model labels: {PERSON, PLACE, FACTION, ORG, EVENT}
+    assert LABEL_TO_TYPE["PLACE"] == "PLACE"
+    assert LABEL_TO_TYPE["FACTION"] == "ORG"
+    assert LABEL_TO_TYPE["EVENT"] == "EVENT"
+    for lab in ("PLACE", "FACTION", "EVENT"):
+        assert lab in KEPT_LABELS
+    # standard-model labels still mapped (backward compat)
+    assert LABEL_TO_TYPE["PERSON"] == "PERSON"
+    assert LABEL_TO_TYPE["GPE"] == "PLACE"
+    assert LABEL_TO_TYPE["ORG"] == "ORG"
+    # KEPT_LABELS is derived from the map (can't drift)
+    assert KEPT_LABELS == frozenset(LABEL_TO_TYPE)
+
+
+def test_person_with_place_dense_context_stays_person():
+    # Arobynn Hamel is a person whose introduction is place-dense. The custom
+    # model labels him PERSON; ambient place words must NOT retag him to PLACE.
+    entity = {
+        "type": "PERSON",
+        "raw_mentions": ["Arobynn Hamel"],
+        "mentions_by_chapter": {
+            "C05": [
+                "Arobynn Hamel found her half-submerged on the banks of a frozen "
+                "river and brought her to his keep on the border between Adarlan "
+                "and Terrasen.",
+            ]
         },
     }
     assert _retag_entity_type_from_context(entity) == "PERSON"
