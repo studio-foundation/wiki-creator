@@ -33,6 +33,7 @@ def required_files(book_path: str) -> dict[str, list[str]]:
         "wiki-resolution": [
             str(p.processing / "entities_classified.json"),
             str(p.processing / "chapter_summaries.json"),
+            str(p.processing / "registry.json"),
         ],
         "wiki-preparation": [
             str(p.processing / "relationships_classified.json"),
@@ -62,6 +63,7 @@ def clean_files(book_path: str) -> dict[str, list[str]]:
         ],
         "wiki-resolution": [
             str(p.processing / "entities_classified.json"),
+            str(p.processing / "registry.json"),
         ],
         "wiki-preparation": [
             str(p.processing / "relationships_classified.json"),
