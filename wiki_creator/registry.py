@@ -377,8 +377,12 @@ class Registry:
 
         Conflict — an alias now on survivor also owned by a third entity — is
         resolved deterministically: canonical owner wins, else higher
-        len(mentions), else first-seen order. The loser drops the alias and its
-        orphaned decision; a warning is appended. Returns survivor's entity_id.
+        len(mentions), else first-seen order. The loser drops the alias and
+        unlinks its now-orphaned decision id from its record; a warning is
+        appended. (The MergeDecision itself stays in self.decisions — validate()
+        permits unreferenced decisions; from_artifacts prunes them at the end. A
+        standalone caller that wants self.decisions kept tight should prune too.)
+        Returns survivor's entity_id.
         """
         keeper = self._by_id(survivor)
         if keeper is None:

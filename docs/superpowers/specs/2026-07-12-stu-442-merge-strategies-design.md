@@ -142,9 +142,12 @@ Une seule primitive couvre les deux :
 **Conflit** (tie-break déterministe) : si un alias ajouté est déjà possédé par une
 tierce entité `c`, on résout *propriétaire canonique gagne → plus grand nombre de
 mentions (`len(mentions)`) → ordre d'apparition*. Le perdant lâche l'alias et sa
-décision devenue orpheline, et une ligne `warnings` est ajoutée. C'est exactement
-la règle actuelle de `_resolve_alias_collisions`, remontée dans `merge()` pour
-qu'il n'y ait qu'une implémentation.
+décision devenue orpheline, et une ligne `warnings` est ajoutée. C'est la règle de
+`_resolve_alias_collisions`, remontée dans `merge()` pour qu'il n'y ait qu'une
+implémentation. (Nuance : `merge()` classe par `len(mentions)`, l'ancienne passe
+sommait `full[sid].mention_count` ; les deux coïncident sur les runs réels —
+`mention_count` = nombre de phrases préservées — et ne divergeraient que sur une
+forme d'artefact dégénérée, `raw_mentions` sans `mentions_by_chapter`.)
 
 **Réversibilité :** `decision.reversible` est porté et sérialisé mais **ne pilote
 pas** la résolution de conflit en pas 2 (le tie-break déterministe gagne toujours).
@@ -166,7 +169,9 @@ compare donc la **projection identité**, canoniquement :
 
 ```python
 Registry.to_entities_classified() -> list[dict]
-    # par entité : {canonical_name, type, aliases (triés), source_ids (triés)}
+    # par entité : {canonical_name, type, aliases (triés)}
+    # (source_ids omis — les Mention ne portent pas d'id d'entité source ;
+    #  la projection identité compare canonical_name/type/aliases)
 ```
 
 Le test construit le registre depuis le bundle Run 16, projette, et affirme
