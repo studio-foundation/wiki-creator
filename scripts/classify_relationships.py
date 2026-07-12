@@ -23,6 +23,8 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from wiki_creator.paths import book_paths_from_yaml
+from wiki_creator.registry import Registry
+from wiki_creator.relationship_fold import fold_relationships
 from scripts.relationship_extraction import (
     _run_studio_classifier_item,
     _should_classify_pair,
@@ -81,6 +83,31 @@ def main() -> None:
     relationships = data.get("relationships", [])
     entity_types = {e["canonical_name"]: e.get("type", "") for e in data.get("entities", [])}
     base = {k: v for k, v in data.items() if k != "relationships"}
+
+    # STU-435: fold the co-occurrence graph onto canonical entities before
+    # classifying. The graph is built at mention level (surface forms, pre
+    # alias-resolution) so a single entity's edges are split across its aliases
+    # (e.g. "Chaol Westfall" vs "Captain Westfall"). registry.alias_table()
+    # collapses them so each canonical pair is classified exactly once, on the
+    # summed cooccurrence signal instead of two weak fragments.
+    registry_path = book_paths.processing / "registry.json"
+    if registry_path.exists():
+        registry = Registry.load(registry_path)
+        before = len(relationships)
+        relationships = fold_relationships(relationships, registry)
+        # Registry types are refined (post entity-classification) — prefer them.
+        entity_types = {rec.canonical_name: rec.entity_type for rec in registry.entities}
+        print(
+            f"[classify-relationships] Folded {before} surface edges into "
+            f"{len(relationships)} canonical pairs via registry.alias_table()",
+            file=sys.stderr,
+        )
+    else:
+        print(
+            f"[classify-relationships] registry.json not found ({registry_path}) — "
+            "classifying unfolded surface edges",
+            file=sys.stderr,
+        )
 
     with open(args.book, encoding="utf-8") as f:
         book_cfg = yaml.safe_load(f) or {}
