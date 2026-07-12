@@ -89,3 +89,14 @@ stages:
       include:
         - input
         - all_stage_outputs
+
+  - name: write-registry
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/write_registry.py
+    contract: write-registry
+    context:
+      include:
+        - input
+        - all_stage_outputs
