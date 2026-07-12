@@ -660,13 +660,20 @@ def _recover_identity_rejected_page(
     return page
 
 
+# STU-465: a technical generation failure and a genuine data famine are
+# distinct conditions. Keep their stub content distinct so `_failed` pages are
+# not mislabelled with an "insufficient data" message that masks a real failure.
+_STUB_CONTENT_FAILED = "## Biographie\n\n*Échec technique de la génération pour cette entité.*"
+_STUB_CONTENT_INSUFFICIENT = "## Biographie\n\n*Informations insuffisantes disponibles pour cette entité.*"
+
+
 def make_stub_page(entity: dict, failed: bool = False, insufficient_data: bool = False) -> dict:
     page = {
         "title": entity["canonical_name"],
         "importance": entity["importance"],
         "entity_type": entity["type"],
         "infobox_fields": {},
-        "content": "## Biographie\n\n*Informations insuffisantes disponibles pour cette entité.*",
+        "content": _STUB_CONTENT_FAILED if failed else _STUB_CONTENT_INSUFFICIENT,
     }
     if failed:
         page["_failed"] = True
@@ -1103,6 +1110,56 @@ def _run_generation_sectioned(
     return page
 
 
+def _run_generation(
+    *,
+    entity: dict,
+    book_title: str,
+    model: str,
+    timeout: int,
+    sections: list[str],
+    max_tokens: int,
+    dry_run: bool,
+    debug_dir: Path,
+    forbidden_names: list[str] | None = None,
+    language: str = "fr",
+    file_path: str = "",
+    grounding: dict | None = None,
+    sibling_canonicals: set[str] | None = None,
+    book_config: dict | None = None,
+) -> dict:
+    """Route generation by entity type.
+
+    PERSON uses section-scoped prose (slice E): the few-shot trains stable French
+    section titles ("Biographie", "Personnalité"…) that `_isolate_section` can
+    extract cleanly. PLACE/ORG/EVENT are article-shaped — the model titles them
+    itself (Géographie, Histoire, Culture…) and returns several blocks per page.
+    Sectioned isolation would then discard that valid content as a false
+    `biography_failed` (STU-465), so non-PERSON types use single-shot generation
+    which keeps the model's multi-section article as-is.
+    """
+    generator = (
+        _run_generation_sectioned
+        if entity.get("type") == "PERSON"
+        else _run_generation_for_entity
+    )
+    return generator(
+        entity=entity,
+        book_title=book_title,
+        model=model,
+        timeout=timeout,
+        sections=sections,
+        max_tokens=max_tokens,
+        dry_run=dry_run,
+        debug_dir=debug_dir,
+        forbidden_names=forbidden_names,
+        language=language,
+        file_path=file_path,
+        grounding=grounding,
+        sibling_canonicals=sibling_canonicals,
+        book_config=book_config,
+    )
+
+
 def _clean_infobox_fields(fields: dict) -> dict:
     """Strip Markdown list prefixes from keys and remove internal artifact keys."""
     cleaned: dict[str, str] = {}
@@ -1356,7 +1413,7 @@ def main() -> None:
                         and "relationships" not in sections
                     ):
                         sections = list(sections) + ["relationships"]
-                    page = _run_generation_sectioned(
+                    page = _run_generation(
                         entity=entity,
                         book_title=book_title,
                         model=args.model,
