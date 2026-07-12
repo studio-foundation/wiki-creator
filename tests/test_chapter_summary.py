@@ -673,3 +673,92 @@ def test_extractive_summary_carries_pov_fields():
     chapter = {"id": "c4", "content": "Chaol felt cold. Chaol felt tired. Chaol moved on.", "pov": "third_limited", "pov_confidence": "high"}
     out = _summarize_chapter_extractive(chapter, ChapterSummaryConfig(), thought_markers=_MARKERS, exclusion_words=_EXCLUDE)
     assert "pov" in out and "pov_character" in out and "pov_character_source" in out
+
+
+# --- STU-433: weight extractive summaries by entity importance ---
+
+from scripts.chapter_summary import (
+    build_entity_importance_index,
+    _load_classified_entities,
+)
+
+
+def test_build_entity_importance_index_weights_principal_over_secondary():
+    entities = [
+        {"canonical_name": "Celaena", "aliases": ["Celaena", "Sardothien"], "importance": "principal"},
+        {"canonical_name": "Chaol", "aliases": [], "importance": "secondary"},
+        {"canonical_name": "Guard", "aliases": [], "importance": "figurant"},
+        {"canonical_name": "Rando", "aliases": [], "importance": "ignored"},
+    ]
+    index = build_entity_importance_index(entities)
+    matched = {pat.pattern: w for pat, w in index}
+    # principal + secondary present, figurant/ignored absent
+    weights = sorted(set(matched.values()), reverse=True)
+    assert len(weights) == 2
+    assert weights[0] > weights[1]
+    # figurant/ignored surfaces excluded
+    joined = " ".join(matched.keys()).lower()
+    assert "guard" not in joined
+    assert "rando" not in joined
+
+
+def test_build_entity_importance_index_accepts_french_secondaire():
+    index = build_entity_importance_index(
+        [{"canonical_name": "Corelli", "aliases": [], "importance": "secondaire"}]
+    )
+    assert len(index) == 1
+
+
+def test_score_sentence_accepts_entity_index_kwarg():
+    score = _score_sentence("Celaena drew her blade.", 0, 5, entity_index=())
+    assert isinstance(score, float)
+
+
+def test_score_sentence_boosts_important_entity_mention():
+    index = build_entity_importance_index(
+        [{"canonical_name": "Celaena", "aliases": [], "importance": "principal"}]
+    )
+    base = _score_sentence("Celaena drew her blade.", 2, 5)
+    boosted = _score_sentence("Celaena drew her blade.", 2, 5, entity_index=index)
+    assert boosted > base
+
+
+def test_score_sentence_matches_whole_word_only():
+    index = build_entity_importance_index(
+        [{"canonical_name": "Cel", "aliases": [], "importance": "principal"}]
+    )
+    # "Celaena" must not match the shorter important entity "Cel"
+    base = _score_sentence("Celaena drew her blade.", 2, 5)
+    boosted = _score_sentence("Celaena drew her blade.", 2, 5, entity_index=index)
+    assert boosted == base
+
+
+def test_summarize_chapter_prioritizes_important_entities():
+    # Two comparable candidate sentences; only one mentions the principal entity.
+    content = (
+        "The morning fog rolled across the stony courtyard below. "
+        "Celaena crossed the courtyard toward the northern tower. "
+    )
+    index = build_entity_importance_index(
+        [{"canonical_name": "Celaena", "aliases": [], "importance": "principal"}]
+    )
+    cfg = ChapterSummaryConfig(max_bullets=1)
+    without = summarize_chapter({"id": "c1", "title": "T", "content": content}, config=cfg)
+    with_idx = summarize_chapter(
+        {"id": "c1", "title": "T", "content": content}, config=cfg, entity_index=index
+    )
+    assert "Celaena" in with_idx["summary_bullets"][0]
+    # Degradation: empty index leaves behavior unchanged.
+    same = summarize_chapter({"id": "c1", "title": "T", "content": content}, config=cfg, entity_index=())
+    assert same["summary_bullets"] == without["summary_bullets"]
+
+
+def test_load_classified_entities_reads_file(tmp_path):
+    p = tmp_path / "entities_classified.json"
+    p.write_text(json.dumps({"entities": [{"canonical_name": "X", "importance": "principal"}]}))
+    ents = _load_classified_entities(p)
+    assert ents == [{"canonical_name": "X", "importance": "principal"}]
+
+
+def test_load_classified_entities_missing_file_returns_empty(tmp_path):
+    assert _load_classified_entities(tmp_path / "nope.json") == []
