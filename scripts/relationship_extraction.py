@@ -612,6 +612,25 @@ def _process_chapter_clusters(
     return results
 
 
+def _resolve_coref_device(explicit: str | None = None) -> str:
+    """Pick the device for coref inference.
+
+    Auto-detects CUDA when no explicit device is given. LingMessCoref (590M)
+    runs far faster on GPU; on CPU a full book is prohibitively slow — the
+    original reason coref shipped disabled by default (STU-466).
+    """
+    if explicit:
+        return explicit
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            return "cuda"
+    except Exception:
+        pass
+    return "cpu"
+
+
 def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
     """Worker function for ProcessPoolExecutor: load model + process one chapter.
 
@@ -619,16 +638,23 @@ def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
     Must be a top-level function (picklable by multiprocessing).
 
     Args:
-        args: (chapter_id, text, name_to_canonical, spacy_model, max_chars, pronouns)
+        args: (chapter_id, text, name_to_canonical, spacy_model, max_chars, pronouns, device)
             name_to_canonical: {lowercased_name: canonical_name}
             spacy_model: spaCy model name to load (e.g. "fr_core_news_lg")
             max_chars: character cap per chapter (0 = no cap)
+            device: torch device for LingMessCoref ("cpu" or "cuda")
 
     Returns:
         List of (canonical_name, chapter_id, sentence) tuples to be merged
         by the parent process. Returns [] on any error (graceful degradation).
     """
-    chapter_id, text, name_to_canonical, spacy_model, max_chars, pronouns = args
+    # Tolerate the legacy 6-tuple (no device) for backward compatibility;
+    # default to "cpu" as the old hardcoded behavior did.
+    if len(args) >= 7:
+        chapter_id, text, name_to_canonical, spacy_model, max_chars, pronouns, device = args[:7]
+    else:
+        chapter_id, text, name_to_canonical, spacy_model, max_chars, pronouns = args
+        device = "cpu"
     if not text or not text.strip():
         return []
 
@@ -640,6 +666,16 @@ def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
 
         _patch_attn_eager()
         _patch_datasets_pickler_py314()
+        if device == "cpu":
+            # Parallel CPU path: pin each worker to a single torch thread so N
+            # worker processes don't each spawn all-core thread pools and
+            # oversubscribe the machine (thrash, often slower than sequential).
+            try:
+                import torch
+
+                torch.set_num_threads(1)
+            except Exception:
+                pass
         nlp = spacy.load(
             spacy_model,
             exclude=["parser", "lemmatizer", "ner", "textcat"],
@@ -649,7 +685,7 @@ def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
             config={
                 "model_architecture": "LingMessCoref",
                 "model_path": "biu-nlp/lingmess-coref",
-                "device": "cpu",
+                "device": device,
             },
         )
         doc = nlp(chunk, component_cfg={"fastcoref": {"resolve_text": True}})
@@ -673,6 +709,7 @@ def enrich_mentions_with_fastcoref(
     workers: int = 1,
     spacy_model: str = "fr_core_news_lg",
     max_chars: int = 8000,
+    device: str | None = None,
 ) -> dict[str, dict[str, list[str]]]:
     """Enrich mentions using fastcoref + LingMessCoref for accurate coreference.
 
@@ -690,8 +727,11 @@ def enrich_mentions_with_fastcoref(
         workers: number of parallel processes (default 1 = sequential).
                  Each worker loads its own model (~590 MB RAM per worker).
                  RAM budget: 1 worker=~3 GB, 4 workers=~10 GB, 8 workers=~20 GB.
+                 Forced to 1 when running on GPU (a single card can't hold
+                 N×590M in VRAM).
         spacy_model: spaCy model name to load (default "fr_core_news_lg").
         max_chars: character cap per chapter (default 8000, 0 = no cap).
+        device: torch device ("cpu"/"cuda"). None auto-detects CUDA.
 
     Returns:
         mentions_by_entity enriched in-place (also returned for convenience)
@@ -715,6 +755,16 @@ def enrich_mentions_with_fastcoref(
     total_added = 0
     pronouns = _pronouns_for_model(spacy_model)
 
+    device = _resolve_coref_device(device)
+    if device != "cpu" and workers > 1:
+        print(
+            f"[coref] device={device}: forcing workers=1 "
+            f"(a single GPU can't hold {workers}×590M in VRAM)",
+            file=sys.stderr,
+        )
+        workers = 1
+    print(f"[coref] device={device}, workers={workers}", file=sys.stderr)
+
     if workers <= 1:
         # Sequential path — load model once, iterate chapters
         try:
@@ -732,7 +782,7 @@ def enrich_mentions_with_fastcoref(
                 config={
                     "model_architecture": "LingMessCoref",
                     "model_path": "biu-nlp/lingmess-coref",
-                    "device": "cpu",
+                    "device": device,
                 },
             )
         except Exception as e:
@@ -769,7 +819,7 @@ def enrich_mentions_with_fastcoref(
         import multiprocessing
 
         chapter_items = [
-            (cid, text, name_to_canonical, spacy_model, max_chars, pronouns)
+            (cid, text, name_to_canonical, spacy_model, max_chars, pronouns, device)
             for cid, text in chapters.items()
             if text and text.strip()
         ]
@@ -788,7 +838,7 @@ def enrich_mentions_with_fastcoref(
                 f"[WARN] Parallel coref failed ({type(e).__name__}: {e}) — falling back to sequential (workers=1)",
                 file=sys.stderr,
             )
-            return enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=1, spacy_model=spacy_model, max_chars=max_chars)
+            return enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=1, spacy_model=spacy_model, max_chars=max_chars, device=device)
 
         # Merge results from all workers
         for worker_results in all_results:
@@ -814,6 +864,7 @@ def run_test_mode(
     min_cooccurrence: int | None = None,
     min_chapters_together: int = DEFAULT_MIN_CHAPTERS_TOGETHER,
     coref_max_chars: int = 8000,
+    coref_device: str | None = None,
 ) -> None:
     """Run with hardcoded Le Jeu de l'Ange data."""
     entities = [
@@ -908,7 +959,7 @@ def run_test_mode(
                     chapters_demo[chapter_id] += " " + text
                 else:
                     chapters_demo[chapter_id] = text
-        mentions_by_entity = enrich_mentions_with_fastcoref(chapters_demo, entities, mentions_by_entity, workers=workers, max_chars=coref_max_chars)
+        mentions_by_entity = enrich_mentions_with_fastcoref(chapters_demo, entities, mentions_by_entity, workers=workers, max_chars=coref_max_chars, device=coref_device)
 
     relationships, stats = build_cooccurrence_graph(
         entities, mentions_by_entity, window_size, threshold,
@@ -1175,6 +1226,7 @@ def run_live_mode(
     min_cooccurrence: int | None = None,
     min_chapters_together: int = DEFAULT_MIN_CHAPTERS_TOGETHER,
     coref_max_chars: int = 8000,
+    coref_device: str | None = None,
 ) -> None:
     """Live mode: read persons_full.json, cluster entities, then run co-occurrence on real data."""
     import sys as _sys
@@ -1299,7 +1351,7 @@ def run_live_mode(
             with open(chapters_path, encoding="utf-8") as f:
                 chapters_data = json.load(f)
             chapters = chapters_data.get("chapters", {})
-            mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=workers, max_chars=coref_max_chars)
+            mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=workers, max_chars=coref_max_chars, device=coref_device)
 
     print(f"=== LIVE MODE — relationship-extraction ===\n")
     print(f"Loaded {len(entities)} persons from {persons_path}")
@@ -1391,6 +1443,11 @@ def main() -> None:
         idx = args.index("--coref-max-chars")
         coref_max_chars = int(args[idx + 1])
 
+    coref_device = None
+    if "--coref-device" in args:
+        idx = args.index("--coref-device")
+        coref_device = args[idx + 1]
+
     min_cooccurrence = None
     if "--min-cooccurrence" in args:
         idx = args.index("--min-cooccurrence")
@@ -1407,6 +1464,7 @@ def main() -> None:
             min_cooccurrence=min_cooccurrence,
             min_chapters_together=min_chapters_together,
             coref_max_chars=coref_max_chars,
+            coref_device=coref_device,
         )
         return
 
@@ -1422,6 +1480,7 @@ def main() -> None:
                 min_cooccurrence=min_cooccurrence,
                 min_chapters_together=min_chapters_together,
                 coref_max_chars=coref_max_chars,
+                coref_device=coref_device,
             )
         else:
             run_live_mode(
@@ -1429,6 +1488,7 @@ def main() -> None:
                 min_cooccurrence=min_cooccurrence,
                 min_chapters_together=min_chapters_together,
                 coref_max_chars=coref_max_chars,
+                coref_device=coref_device,
             )
         return
 
@@ -1454,6 +1514,7 @@ def main() -> None:
     min_chapters_together = DEFAULT_MIN_CHAPTERS_TOGETHER
     spacy_model = "fr_core_news_lg"
     coref_max_chars = 8000
+    coref_device: str | None = None
     llm_model: str | None = None
     ollama_url = os.environ.get("OLLAMA_URL", _OLLAMA_URL)
     pronouns: frozenset = frozenset(load_lang_config("fr").get("pronouns", []))
@@ -1468,6 +1529,7 @@ def main() -> None:
             ollama_url = additional.get("ollama_url", os.environ.get("OLLAMA_URL", _OLLAMA_URL))
             do_coref = bool(additional.get("coref", False))
             coref_max_chars = int(additional.get("coref_max_chars", 8000))
+            coref_device = additional.get("coref_device")
             window_size = int(additional.get("window", window_size))
             threshold = int(additional.get("threshold", threshold))
             workers = int(additional.get("workers", workers))
@@ -1498,7 +1560,7 @@ def main() -> None:
                 chapters_data = json.load(f)
             chapters = chapters_data.get("chapters", {})
             mentions_by_entity = enrich_mentions_with_fastcoref(
-                chapters, entities, mentions_by_entity, workers=workers, spacy_model=spacy_model, max_chars=coref_max_chars
+                chapters, entities, mentions_by_entity, workers=workers, spacy_model=spacy_model, max_chars=coref_max_chars, device=coref_device
             )
 
     relationships, stats = build_cooccurrence_graph(
