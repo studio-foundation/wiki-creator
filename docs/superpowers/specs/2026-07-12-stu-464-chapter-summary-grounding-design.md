@@ -63,8 +63,10 @@ No other files. The orphaned agent YAML is left as-is (out of scope for this iss
    context norm).
 2. Build a normalized token set from `chapter_text`: casefold, Unicode-aware, with
    punctuation and possessives stripped.
-3. For each bullet in `summary_bullets`, extract **proper-noun candidates**:
-   uppercase-initial tokens (Unicode-aware), length ≥ 2, not pure digits.
+3. For each bullet in `summary_bullets`, split into sentences on `.!?…` and, within
+   each sentence, extract **proper-noun candidates**: uppercase-initial tokens
+   (Unicode-aware), length ≥ 2, not pure digits — **skipping the sentence-initial
+   token**, whose capitalization is grammatical, not evidence of a proper noun.
 4. Normalize each candidate the same way as step 2. If the normalized candidate is
    **not** in the chapter token set → ungrounded.
 5. Dedupe (preserving first-seen order), cap the reported list at 5, return a single
@@ -77,10 +79,17 @@ carries `chapter_content`.
 ### Why this is word-list-free
 
 The project forbids hardcoded vocabulary in scripts. This heuristic needs none: the
-chapter text *is* the allowlist. Common sentence-initial words ("Elle", "The", "When")
-self-filter because their casefolded form appears somewhere in the source text; real
-names appear in the source; only invented proper nouns survive as flags. No stopword
-list, no `cue_words` dependency.
+chapter text *is* the allowlist. Two mechanisms keep common words from being flagged,
+without any word list:
+
+- **Sentence-initial tokens are skipped** — a capitalized first word ("Elle", "The",
+  "When") is grammatical, not a name. This is deterministic and independent of chapter
+  length.
+- **Mid-sentence function/common words self-filter** — their casefolded form almost
+  always appears somewhere in the (long) source chapter, so they're grounded.
+
+Real names appear in the source; only invented proper nouns survive as flags. No
+stopword list, no `cue_words` dependency.
 
 ### Normalization rules
 
@@ -98,6 +107,11 @@ A fabricated scene built entirely from *real* names (chapters 14/24/32) passes �
 token is grounded. This heuristic targets the invented-name class only. Semantic
 fabrication detection would require Option B (LLM agent) or C (stronger generator),
 both deferred.
+
+Secondary consequence of skipping sentence-initial tokens: an invented name that
+*opens* a bullet sentence (e.g. "Niflaren attaque la ville.") is missed. This is an
+accepted precision/recall trade-off — bullets overwhelmingly open with the grounded POV
+character, and a false positive is expensive because it burns a regeneration cycle.
 
 ## Tests
 
