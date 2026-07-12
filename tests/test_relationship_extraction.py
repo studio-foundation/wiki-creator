@@ -191,6 +191,58 @@ def test_enrich_fastcoref_accepts_max_chars_param():
     assert sig.parameters["max_chars"].default == 8000
 
 
+def test_enrich_fastcoref_accepts_device_param():
+    """enrich_mentions_with_fastcoref accepts device, default None (auto-detect)."""
+    import inspect
+    from scripts.relationship_extraction import enrich_mentions_with_fastcoref
+    sig = inspect.signature(enrich_mentions_with_fastcoref)
+    assert "device" in sig.parameters
+    assert sig.parameters["device"].default is None
+
+
+def test_resolve_coref_device_respects_explicit():
+    """An explicit device is returned verbatim, never overridden by auto-detect."""
+    from scripts.relationship_extraction import _resolve_coref_device
+    assert _resolve_coref_device("cpu") == "cpu"
+    assert _resolve_coref_device("cuda") == "cuda"
+
+
+def test_resolve_coref_device_falls_back_to_cpu_without_cuda(monkeypatch):
+    """With no CUDA available, auto-detect returns 'cpu'."""
+    import sys
+    import types
+    from scripts.relationship_extraction import _resolve_coref_device
+    fake_torch = types.SimpleNamespace(cuda=types.SimpleNamespace(is_available=lambda: False))
+    monkeypatch.setitem(sys.modules, "torch", fake_torch)
+    assert _resolve_coref_device() == "cpu"
+    assert _resolve_coref_device(None) == "cpu"
+
+
+def test_resolve_coref_device_picks_cuda_when_available(monkeypatch):
+    """With CUDA available, auto-detect returns 'cuda'."""
+    import sys
+    import types
+    from scripts.relationship_extraction import _resolve_coref_device
+    fake_torch = types.SimpleNamespace(cuda=types.SimpleNamespace(is_available=lambda: True))
+    monkeypatch.setitem(sys.modules, "torch", fake_torch)
+    assert _resolve_coref_device() == "cuda"
+
+
+def test_coref_forces_single_worker_on_gpu(monkeypatch, capsys):
+    """On GPU, workers>1 is forced to 1 (a single card can't hold N×590M in VRAM)."""
+    import scripts.relationship_extraction as rel
+    monkeypatch.setattr(rel, "_resolve_coref_device", lambda explicit=None: "cuda")
+    # Sequential path will try to load fastcoref and fall back to the heuristic;
+    # stub the fallback so the test stays light and deterministic.
+    monkeypatch.setattr(rel, "enrich_mentions_with_coref", lambda chapters, entities, m: m)
+    entities = [{"canonical_name": "Alice", "type": "PERSON", "aliases": [], "relevant": True}]
+    chapters = {"ch01": "Alice walked. She smiled."}
+    mentions = {"Alice": {"ch01": ["Alice walked."]}}
+    rel.enrich_mentions_with_fastcoref(chapters, entities, mentions, workers=8, device="cuda")
+    err = capsys.readouterr().err
+    assert "forcing workers=1" in err
+
+
 def test_main_parses_workers_flag(monkeypatch):
     """--workers N is parsed and passed through to run_live_mode."""
     import sys
@@ -198,7 +250,7 @@ def test_main_parses_workers_flag(monkeypatch):
 
     captured = {}
 
-    def fake_run_live(window_size, threshold, coref=False, workers=1, min_cooccurrence=None, min_chapters_together=2, coref_max_chars=8000):
+    def fake_run_live(window_size, threshold, coref=False, workers=1, min_cooccurrence=None, min_chapters_together=2, coref_max_chars=8000, coref_device=None):
         captured["workers"] = workers
 
     monkeypatch.setattr(rel, "run_live_mode", fake_run_live)
@@ -215,7 +267,7 @@ def test_main_parses_coref_max_chars_flag(monkeypatch):
 
     captured = {}
 
-    def fake_run_live(window_size, threshold, coref=False, workers=1, min_cooccurrence=None, min_chapters_together=2, coref_max_chars=8000):
+    def fake_run_live(window_size, threshold, coref=False, workers=1, min_cooccurrence=None, min_chapters_together=2, coref_max_chars=8000, coref_device=None):
         captured["coref_max_chars"] = coref_max_chars
 
     monkeypatch.setattr(rel, "run_live_mode", fake_run_live)
@@ -237,7 +289,7 @@ def test_executor_parses_coref_max_chars(monkeypatch, tmp_path, capsys):
 
     captured = {}
 
-    def fake_enrich(chapters, entities, mentions_by_entity, workers=1, spacy_model="fr_core_news_lg", max_chars=8000):
+    def fake_enrich(chapters, entities, mentions_by_entity, workers=1, spacy_model="fr_core_news_lg", max_chars=8000, device=None):
         captured["max_chars"] = max_chars
         return mentions_by_entity
 
