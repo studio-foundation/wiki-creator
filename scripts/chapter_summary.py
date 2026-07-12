@@ -54,6 +54,12 @@ _DEFAULT_LLM_MODEL = "qwen2.5"
 _DEFAULT_LLM_TIMEOUT_SECONDS = 45
 _VALID_SUMMARY_MODES = {"extractive", "llm"}
 OLLAMA_URL = "http://localhost:11434"
+
+# STU-433: extractive sentence-selection bonus per entity importance tier.
+# Numeric weights only — the entity surface forms come from entity-classification
+# output, not a hardcoded vocabulary. "secondaire" is the French label emitted by
+# entity_classification.assign_importance; "secondary" is its normalized form.
+_IMPORTANCE_WEIGHTS = {"principal": 0.6, "secondary": 0.3, "secondaire": 0.3}
 _LLM_DEBUGGABLE_ERRORS = {
     "llm_timeout",
     "llm_http_error",
@@ -137,6 +143,53 @@ def _chapter_summary_config_from_payload(payload: dict) -> ChapterSummaryConfig:
         llm_model=llm_model,
         llm_timeout_seconds=llm_timeout_seconds,
     )
+
+
+def build_entity_importance_index(
+    entities: list[dict] | None,
+    weights: dict[str, float] | None = None,
+) -> tuple[tuple[re.Pattern[str], float], ...]:
+    """Compile a whole-word matcher per important entity surface form.
+
+    Returns a tuple of (compiled_pattern, weight). Entities whose importance
+    tier is not in ``weights`` (figurant/ignored/unknown) are skipped, so an
+    empty or absent classification degrades to no weighting.
+    """
+    weights = weights or _IMPORTANCE_WEIGHTS
+    surface_to_weight: dict[str, float] = {}
+    for entity in entities or []:
+        if not isinstance(entity, dict):
+            continue
+        weight = weights.get(str(entity.get("importance", "")).strip().lower())
+        if not weight:
+            continue
+        forms = [entity.get("canonical_name", "")] + list(entity.get("aliases") or [])
+        for form in forms:
+            key = re.sub(r"\s+", " ", str(form or "").strip().lower())
+            if len(key) < 2:
+                continue
+            if surface_to_weight.get(key, 0.0) < weight:
+                surface_to_weight[key] = weight
+
+    index: list[tuple[re.Pattern[str], float]] = []
+    for surface, weight in surface_to_weight.items():
+        # Collapse escaped spaces to \s+ so multi-word names tolerate whitespace runs.
+        body = re.escape(surface).replace(r"\ ", r"\s+")
+        pattern = re.compile(r"(?<!\w)" + body + r"(?!\w)")
+        index.append((pattern, weight))
+    return tuple(index)
+
+
+def _load_classified_entities(path: Path) -> list[dict]:
+    """Load entities from an entities_classified.json file; [] if absent/invalid."""
+    if not path.exists():
+        return []
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    entities = data.get("entities") if isinstance(data, dict) else data
+    return entities if isinstance(entities, list) else []
 
 
 def _chapter_key(chapter: dict) -> str:
@@ -229,7 +282,13 @@ def _resolve_pov_fields(
     return fields
 
 
-def _score_sentence(sentence: str, index: int, total: int, action_cues: tuple[str, ...] = ()) -> float:
+def _score_sentence(
+    sentence: str,
+    index: int,
+    total: int,
+    action_cues: tuple[str, ...] = (),
+    entity_index: tuple[tuple[re.Pattern[str], float], ...] = (),
+) -> float:
     tokens = re.findall(r"[A-Za-zÀ-ÿ']+", sentence)
     token_count = len(tokens)
     if token_count == 0:
@@ -246,8 +305,15 @@ def _score_sentence(sentence: str, index: int, total: int, action_cues: tuple[st
         if cue in lowered:
             action_bonus += 0.15
 
+    # STU-433: favor sentences mentioning entities classified principal/secondary.
+    entity_bonus = 0.0
+    if entity_index:
+        matched = [weight for pat, weight in entity_index if pat.search(lowered)]
+        if matched:
+            entity_bonus = max(matched) + 0.1 * (len(matched) - 1)
+
     dialogue_penalty = 0.75 if _looks_dialogue_heavy(sentence) else 0.0
-    return (proper_nouns / token_count) * 2.0 + unique_ratio + position_bonus * 0.25 + action_bonus - dialogue_penalty
+    return (proper_nouns / token_count) * 2.0 + unique_ratio + position_bonus * 0.25 + action_bonus + entity_bonus - dialogue_penalty
 
 
 def _sanitize_bullets(raw: object, max_bullets: int) -> list[str]:
@@ -336,7 +402,7 @@ def _call_llm_summary(*, chapter: dict, model: str, timeout_seconds: int, max_bu
     return {"summary_bullets": bullets, "error": error, "raw_response": response_text}
 
 
-def _summarize_chapter_extractive(chapter: dict, cfg: ChapterSummaryConfig, method: str = "extractive", seed_flags: list[str] | None = None, action_cues: tuple[str, ...] = (), flashback_cues: tuple[str, ...] = (), thought_markers: tuple[str, ...] = (), exclusion_words: tuple[str, ...] = ()) -> dict:
+def _summarize_chapter_extractive(chapter: dict, cfg: ChapterSummaryConfig, method: str = "extractive", seed_flags: list[str] | None = None, action_cues: tuple[str, ...] = (), flashback_cues: tuple[str, ...] = (), thought_markers: tuple[str, ...] = (), exclusion_words: tuple[str, ...] = (), entity_index: tuple[tuple[re.Pattern[str], float], ...] = ()) -> dict:
     chapter_id = str(chapter.get("id", "")).strip()
     chapter_title = str(chapter.get("title", "")).strip()
     sentences = _split_sentences(chapter.get("content", ""))
@@ -352,7 +418,7 @@ def _summarize_chapter_extractive(chapter: dict, cfg: ChapterSummaryConfig, meth
     else:
         ranked = sorted(
             candidates,
-            key=lambda item: _score_sentence(item[1], item[0], len(sentences), action_cues),
+            key=lambda item: _score_sentence(item[1], item[0], len(sentences), action_cues, entity_index),
             reverse=True,
         )[: cfg.max_bullets]
         chosen_idxs = {idx for idx, _ in ranked}
@@ -373,7 +439,7 @@ def _summarize_chapter_extractive(chapter: dict, cfg: ChapterSummaryConfig, meth
     }
 
 
-def summarize_chapter(chapter: dict, config: ChapterSummaryConfig | None = None, action_cues: tuple[str, ...] = (), flashback_cues: tuple[str, ...] = (), thought_markers: tuple[str, ...] = (), exclusion_words: tuple[str, ...] = ()) -> dict:
+def summarize_chapter(chapter: dict, config: ChapterSummaryConfig | None = None, action_cues: tuple[str, ...] = (), flashback_cues: tuple[str, ...] = (), thought_markers: tuple[str, ...] = (), exclusion_words: tuple[str, ...] = (), entity_index: tuple[tuple[re.Pattern[str], float], ...] = ()) -> dict:
     cfg = config or ChapterSummaryConfig()
     if cfg.mode == "llm":
         llm_result = _call_llm_summary(
@@ -382,8 +448,8 @@ def summarize_chapter(chapter: dict, config: ChapterSummaryConfig | None = None,
             timeout_seconds=cfg.llm_timeout_seconds,
             max_bullets=cfg.max_bullets,
         )
-        return summarize_chapter_from_item_result(chapter, llm_result, config=cfg, action_cues=action_cues, flashback_cues=flashback_cues, thought_markers=thought_markers, exclusion_words=exclusion_words)
-    return _summarize_chapter_extractive(chapter, cfg, action_cues=action_cues, flashback_cues=flashback_cues, thought_markers=thought_markers, exclusion_words=exclusion_words)
+        return summarize_chapter_from_item_result(chapter, llm_result, config=cfg, action_cues=action_cues, flashback_cues=flashback_cues, thought_markers=thought_markers, exclusion_words=exclusion_words, entity_index=entity_index)
+    return _summarize_chapter_extractive(chapter, cfg, action_cues=action_cues, flashback_cues=flashback_cues, thought_markers=thought_markers, exclusion_words=exclusion_words, entity_index=entity_index)
 
 
 def _run_chapter_summary_item(*, chapter: dict, config: ChapterSummaryConfig) -> dict:
@@ -588,7 +654,7 @@ def _save_llm_debug_artifact(debug_dir: Path, chapter: dict, llm_result: dict) -
         json.dump(payload, f, ensure_ascii=False, indent=2)
 
 
-def summarize_chapters(chapters: list[dict], config: ChapterSummaryConfig | None = None, action_cues: tuple[str, ...] = (), flashback_cues: tuple[str, ...] = (), thought_markers: tuple[str, ...] = (), exclusion_words: tuple[str, ...] = ()) -> dict[str, dict]:
+def summarize_chapters(chapters: list[dict], config: ChapterSummaryConfig | None = None, action_cues: tuple[str, ...] = (), flashback_cues: tuple[str, ...] = (), thought_markers: tuple[str, ...] = (), exclusion_words: tuple[str, ...] = (), entity_index: tuple[tuple[re.Pattern[str], float], ...] = ()) -> dict[str, dict]:
     result: dict[str, dict] = {}
     for chapter in chapters:
         if _is_frontmatter_chapter(chapter):
@@ -596,7 +662,7 @@ def summarize_chapters(chapters: list[dict], config: ChapterSummaryConfig | None
         key = _chapter_key(chapter)
         if not key:
             continue
-        result[key] = summarize_chapter(chapter, config=config, action_cues=action_cues, flashback_cues=flashback_cues, thought_markers=thought_markers, exclusion_words=exclusion_words)
+        result[key] = summarize_chapter(chapter, config=config, action_cues=action_cues, flashback_cues=flashback_cues, thought_markers=thought_markers, exclusion_words=exclusion_words, entity_index=entity_index)
     return result
 
 
@@ -635,6 +701,7 @@ def summarize_chapters_incrementally(
     flashback_cues: tuple[str, ...] = (),
     thought_markers: tuple[str, ...] = (),
     exclusion_words: tuple[str, ...] = (),
+    entity_index: tuple[tuple[re.Pattern[str], float], ...] = (),
 ) -> dict[str, dict]:
     result = {
         key: value
@@ -661,9 +728,9 @@ def summarize_chapters_incrementally(
             item_result = _run_chapter_summary_item(chapter=chapter, config=(config or ChapterSummaryConfig()))
             if debug_dir is not None and isinstance(item_result, dict) and item_result.get("error"):
                 _save_llm_debug_artifact(debug_dir, chapter, item_result)
-            result[key] = summarize_chapter_from_item_result(chapter, item_result, config=config, action_cues=action_cues, flashback_cues=flashback_cues, thought_markers=thought_markers, exclusion_words=exclusion_words)
+            result[key] = summarize_chapter_from_item_result(chapter, item_result, config=config, action_cues=action_cues, flashback_cues=flashback_cues, thought_markers=thought_markers, exclusion_words=exclusion_words, entity_index=entity_index)
         else:
-            result[key] = summarize_chapter(chapter, config=config, action_cues=action_cues, flashback_cues=flashback_cues, thought_markers=thought_markers, exclusion_words=exclusion_words)
+            result[key] = summarize_chapter(chapter, config=config, action_cues=action_cues, flashback_cues=flashback_cues, thought_markers=thought_markers, exclusion_words=exclusion_words, entity_index=entity_index)
         _save_chapter_summaries(result, output_file)
         if bar is not None:
             bar.set_postfix(chapter=key[:40])
@@ -683,6 +750,7 @@ def summarize_chapter_from_item_result(
     flashback_cues: tuple[str, ...] = (),
     thought_markers: tuple[str, ...] = (),
     exclusion_words: tuple[str, ...] = (),
+    entity_index: tuple[tuple[re.Pattern[str], float], ...] = (),
 ) -> dict:
     cfg = config or ChapterSummaryConfig()
     if isinstance(item_result, list):
@@ -724,6 +792,7 @@ def summarize_chapter_from_item_result(
             flashback_cues=flashback_cues,
             thought_markers=thought_markers,
             exclusion_words=exclusion_words,
+            entity_index=entity_index,
         )
     return {
         "chapter_id": str(chapter.get("id", "")).strip(),
@@ -801,6 +870,13 @@ def _main_from_book(book_path: str) -> None:
         llm_fallback_to_extractive=_as_bool(summary_cfg.get("llm_fallback_to_extractive", True), True),
     )
 
+    # STU-433: opportunistically weight summaries toward important entities when a
+    # prior entity-classification exists. Absent on a fresh run (chapter-summary is a
+    # pre-step of wiki-resolution), so this degrades cleanly to no weighting.
+    entity_index = build_entity_importance_index(
+        _load_classified_entities(paths.processing / "entities_classified.json")
+    )
+
     out_file = paths.processing / "chapter_summaries.json"
     debug_dir = paths.processing / "chapter_summary_llm_debug"
     summarize_chapters_incrementally(
@@ -812,6 +888,7 @@ def _main_from_book(book_path: str) -> None:
         flashback_cues=flashback_cues,
         thought_markers=thought_markers,
         exclusion_words=exclusion_words,
+        entity_index=entity_index,
     )
 
 
@@ -847,6 +924,16 @@ def main() -> None:
     )
 
     paths = _paths_from_payload(payload)
+
+    # STU-433: weight toward important entities if classification is available —
+    # from the payload's stage outputs, else from disk. Degrades to no weighting.
+    all_outputs = payload.get("all_stage_outputs", {})
+    classification = all_outputs.get("entity-classification", {}) if isinstance(all_outputs, dict) else {}
+    classified_entities = classification.get("entities") if isinstance(classification, dict) else None
+    if not classified_entities:
+        classified_entities = _load_classified_entities(paths.processing / "entities_classified.json")
+    entity_index = build_entity_importance_index(classified_entities)
+
     out_file = paths.processing / "chapter_summaries.json"
     debug_dir = paths.processing / "chapter_summary_llm_debug"
     chapter_summaries = summarize_chapters_incrementally(
@@ -858,6 +945,7 @@ def main() -> None:
         flashback_cues=flashback_cues,
         thought_markers=thought_markers,
         exclusion_words=exclusion_words,
+        entity_index=entity_index,
     )
     out = {"chapter_summaries": chapter_summaries}
     json.dump(out, sys.stdout, ensure_ascii=False)
