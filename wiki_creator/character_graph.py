@@ -5,6 +5,8 @@ from dataclasses import asdict, dataclass, field
 
 import networkx as nx
 
+from wiki_creator.confidence import INTERPRETATION
+
 
 @dataclass
 class IndirectRelationship:
@@ -14,6 +16,8 @@ class IndirectRelationship:
     path_edge_types: list[str]
     strength: float
     inferred: bool = True
+    # Multi-hop paths are derived by reasoning, never attested in the text.
+    confidence: str = INTERPRETATION
 
 
 class CharacterGraph:

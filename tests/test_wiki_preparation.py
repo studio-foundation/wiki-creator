@@ -190,6 +190,35 @@ def test_build_entity_bundle_matches_relationships_via_alias():
     assert bundle["related_context"][0]["related_name"] == "Celaena"
 
 
+def test_build_entity_bundle_tags_confidence():
+    """STU-428: signals sent to the writer carry an explicit/inferred/interpretation tag."""
+    persons, places, orgs, events = _registries()
+    entity = {
+        "canonical_name": "Chaol",
+        "type": "PERSON",
+        "importance": "principal",
+        "source_ids": ["p1"],
+    }
+    relationships = [
+        {"entity_a": "Celaena", "entity_b": "Chaol", "cooccurrence_count": 119,
+         "relationship_type": "ami", "evidence": "Celaena faisait confiance à Chaol."},
+        {"entity_a": "Dorian", "entity_b": "Chaol", "cooccurrence_count": 40},
+    ]
+    entities_by_name = {
+        "Chaol": entity,
+        "Celaena": {"canonical_name": "Celaena", "type": "PERSON", "importance": "principal"},
+        "Dorian": {"canonical_name": "Dorian", "type": "PERSON", "importance": "principal"},
+    }
+
+    bundle = build_entity_bundle(entity, relationships, persons, places, orgs, events, entities_by_name)
+    by_pair = {
+        (r.get("entity_a"), r.get("entity_b")): r["confidence"]
+        for r in bundle["relationships"]
+    }
+    assert by_pair[("Celaena", "Chaol")] == "explicit"
+    assert by_pair[("Dorian", "Chaol")] == "inferred"
+
+
 def test_build_entity_bundle_related_context_empty_without_relationships():
     persons, places, orgs, events = _registries()
     entity = {

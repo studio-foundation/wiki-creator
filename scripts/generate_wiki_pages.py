@@ -307,7 +307,8 @@ def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_n
         direction = r.get("direction") or ""
         evolution = r.get("evolution") or ""
         count = r.get("cooccurrence_count", 0)
-        line = f"  - related_entity: {other} | relationship_type: {rtype} | cooccurrence_count: {count}"
+        confidence = r.get("confidence") or "inferred"
+        line = f"  - related_entity: {other} | relationship_type: {rtype} | confidence: {confidence} | cooccurrence_count: {count}"
         if direction:
             line += f" | direction: {direction}"
         if evolution:
@@ -473,6 +474,7 @@ Content constraints:
 - Chapter summaries serve as orientation only. Direct excerpts take priority.
 - Do NOT invent plot details, relationships, abilities, or physical traits not supported by excerpts.
 - Do NOT turn cooccurrence between entities into narrative causality.
+- Confidence markers: each relationship carries a "confidence" tag. State "explicit" relationships as fact (direct affirmation). Phrase "inferred" and "interpretation" relationships tentatively ("semble", "suggère", "pourrait indiquer") — never as established fact. Indirect relationships listed as "inferred: true" are interpretation: mention them only with such hedged phrasing, if at all.
 - When referring to related entities or characters, use their name EXACTLY as written in the excerpts or relationships list — do not paraphrase, alter, or approximate names.
 - If information is insufficient for a section, omit that section entirely.
 - Do NOT write "information not available", "not mentioned in excerpts", or any similar phrase. Omit instead.
