@@ -127,6 +127,34 @@ def test_validate_rejects_alias_without_merge_decision():
         registry.validate()
 
 
+def test_validate_requires_decision_in_absorbed_slot():
+    # A case-variant alias of the canonical name has the SAME slug as the
+    # entity_id (entity_slug("perrington") == entity_slug("Perrington") ==
+    # "perrington"). No MergeDecision names it in the absorbed-alias slot
+    # (inputs[1]) — the only decision present is a decoy whose inputs[0]
+    # happens to equal that slug. The whole-tuple check would wrongly treat
+    # this as justified; only checking inputs[1] correctly rejects it.
+    entity_id = "perrington"
+    decoy_id = _decision_id("extraction_grouping", (entity_id, "duke_perrington"), "test:decoy")
+    decoy = MergeDecision(
+        decision_id=decoy_id,
+        strategy="extraction_grouping",
+        inputs=(entity_id, "duke_perrington"),
+        evidence="test:decoy",
+        confidence="medium",
+    )
+    record = EntityRecord(
+        entity_id=entity_id,
+        canonical_name="Perrington",
+        entity_type="PERSON",
+        aliases=["Perrington", "perrington"],
+        decisions=[decoy_id],
+    )
+    registry = Registry(entities=[record], decisions={decoy_id: decoy})
+    with pytest.raises(ValueError, match="invariant 2"):
+        registry.validate()
+
+
 def test_validate_rejects_canonical_missing_from_aliases():
     registry = _valid_registry()
     registry.entities[1].aliases.remove("Perrington")

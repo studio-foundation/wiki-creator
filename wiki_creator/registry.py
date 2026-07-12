@@ -152,7 +152,7 @@ class Registry:
                     raise ValueError(
                         f"unknown decision_id '{d_id}' on entity '{record.entity_id}'"
                     )
-                justified.update(decision.inputs)
+                justified.add(decision.inputs[1])
             for alias in record.aliases:
                 if alias == record.canonical_name:
                     continue
