@@ -661,3 +661,17 @@ def test_from_artifacts_no_standalone_collision_passes_remain():
     # the old private passes are gone — merge() owns conflict resolution now
     assert not hasattr(_registry_mod, "_resolve_alias_collisions")
     assert not hasattr(_registry_mod, "_merge_duplicate_canonicals")
+
+
+def test_to_entities_classified_projects_identity_fields_sorted():
+    registry = _valid_registry()
+    projected = registry.to_entities_classified()
+    by_name = {e["canonical_name"]: e for e in projected}
+    assert set(by_name) == {"Chaol Westfall", "Perrington"}
+    perrington = by_name["Perrington"]
+    assert perrington["type"] == "PERSON"
+    assert perrington["aliases"] == sorted(perrington["aliases"], key=str.casefold)
+    assert "Duke Perrington" in perrington["aliases"]
+    assert "Perrington" in perrington["aliases"]
+    # projection is stable regardless of entity order
+    assert projected == sorted(projected, key=lambda e: e["canonical_name"].casefold())

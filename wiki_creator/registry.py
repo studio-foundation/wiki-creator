@@ -444,6 +444,21 @@ class Registry:
                 f"'{winner.entity_id}', dropped from '{loser.entity_id}'"
             )
 
+    def to_entities_classified(self) -> list[dict]:
+        """Identity projection matching the entity shape of entities_classified.json
+        (identity fields only; classification labels are entity_classification.py's
+        concern). Canonical form for the golden equivalence test — entities sorted,
+        alias lists sorted, so ordering/tie-break jitter cannot cause false diffs."""
+        projected = [
+            {
+                "canonical_name": r.canonical_name,
+                "type": r.entity_type,
+                "aliases": sorted(set(r.aliases), key=lambda a: (a.casefold(), a)),
+            }
+            for r in self.entities
+        ]
+        return sorted(projected, key=lambda e: e["canonical_name"].casefold())
+
 
 def _mentions_from_full(
     canonical: str, source_ids: list[str], full: dict
