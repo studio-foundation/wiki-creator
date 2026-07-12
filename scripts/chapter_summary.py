@@ -41,9 +41,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from wiki_creator.paths import BookPaths, book_paths_from_epub, book_paths_from_yaml
+from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.lang import load_lang_config, infer_language
 from wiki_creator.pov_attribution import attribute_pov_character
+from wiki_creator import studio_io
 from scripts.entity_extraction import _is_frontmatter_chapter
 
 _FALLBACK_BULLET = "No reliable summary available for this chapter."
@@ -77,14 +78,6 @@ class ChapterSummaryConfig:
     llm_fallback_to_extractive: bool = True
     llm_model: str = _DEFAULT_LLM_MODEL
     llm_timeout_seconds: int = _DEFAULT_LLM_TIMEOUT_SECONDS
-
-
-def _paths_from_payload(payload: dict) -> BookPaths:
-    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
-    file_path = ctx.get("file_path")
-    if not file_path:
-        raise ValueError("missing file_path in additional_context")
-    return book_paths_from_epub(file_path)
 
 
 def _as_bool(value: object, default: bool) -> bool:
@@ -456,71 +449,6 @@ def _run_chapter_summary_item(*, chapter: dict, config: ChapterSummaryConfig) ->
     return _run_studio_chapter_summary_item(chapter=chapter, config=config)
 
 
-def _extract_first_json_object(text: str) -> dict | None:
-    decoder = json.JSONDecoder()
-    for i, ch in enumerate(str(text or "")):
-        if ch != "{":
-            continue
-        try:
-            candidate, _ = decoder.raw_decode(text[i:])
-        except json.JSONDecodeError:
-            continue
-        if isinstance(candidate, dict):
-            return candidate
-    return None
-
-
-def _studio_run_log_path(run_id: str) -> Path | None:
-    runs_dir = PROJECT_ROOT / ".studio" / "runs"
-    run_id = str(run_id or "").strip()
-    matches = sorted(runs_dir.glob(f"*-{run_id}.jsonl"))
-    if not matches and run_id:
-        matches = sorted(runs_dir.glob(f"*-{run_id[:8]}.jsonl"))
-    if not matches:
-        return None
-    return matches[-1]
-
-
-def _extract_stage_output_from_run_payload(run_payload: dict, stage_name: str) -> dict | None:
-    stages = run_payload.get("stages", [])
-    if not isinstance(stages, list):
-        return None
-    for stage in stages:
-        if not isinstance(stage, dict):
-            continue
-        if stage.get("stage_name") != stage_name:
-            continue
-        if stage.get("status") != "success":
-            continue
-        output = stage.get("output")
-        if isinstance(output, dict):
-            return output
-    return None
-
-
-def _load_studio_stage_output(run_id: str, stage_name: str) -> dict | None:
-    log_path = _studio_run_log_path(run_id)
-    if log_path is None or not log_path.exists():
-        return None
-
-    with open(log_path, encoding="utf-8") as f:
-        for line in f:
-            try:
-                event = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            if event.get("event") != "stage_complete":
-                continue
-            if event.get("stage") != stage_name:
-                continue
-            if event.get("status") != "success":
-                continue
-            output = event.get("output")
-            if isinstance(output, dict):
-                return output
-    return None
-
-
 def _chapter_summary_item_input(chapter: dict, config: ChapterSummaryConfig) -> dict:
     return {
         "chapter_id": str(chapter.get("id", "")).strip(),
@@ -573,7 +501,7 @@ def _run_studio_chapter_summary_item(*, chapter: dict, config: ChapterSummaryCon
             pass
 
     combined_output = (result.stdout or "") + (("\n" + result.stderr) if result.stderr else "")
-    run_payload = _extract_first_json_object(result.stdout or "")
+    run_payload = studio_io.extract_first_json_object(result.stdout or "")
     run_id = str((run_payload or {}).get("id") or "").strip()
     run_metadata = {
         "command": cmd,
@@ -602,9 +530,9 @@ def _run_studio_chapter_summary_item(*, chapter: dict, config: ChapterSummaryCon
             "run_metadata": run_metadata,
         }
 
-    payload = _extract_stage_output_from_run_payload(run_payload, "chapter-summary-item")
+    payload = studio_io.extract_stage_output_from_run_payload(run_payload, "chapter-summary-item")
     if payload is None:
-        payload = _load_studio_stage_output(run_id, "chapter-summary-item")
+        payload = studio_io.load_studio_stage_output(run_id, "chapter-summary-item")
     if payload is None:
         return {
             "error": "studio_run_output_missing",
@@ -628,12 +556,6 @@ def _run_studio_chapter_summary_item(*, chapter: dict, config: ChapterSummaryCon
     }
 
 
-def _slugify_filename(value: str) -> str:
-    slug = re.sub(r"[^A-Za-z0-9._-]+", "_", str(value or "").strip())
-    slug = slug.strip("._")
-    return slug or "untitled"
-
-
 def _save_llm_debug_artifact(debug_dir: Path, chapter: dict, llm_result: dict) -> None:
     error = str(llm_result.get("error") or "").strip()
     if error not in _LLM_DEBUGGABLE_ERRORS and not error.startswith("studio_"):
@@ -642,7 +564,7 @@ def _save_llm_debug_artifact(debug_dir: Path, chapter: dict, llm_result: dict) -
     debug_dir.mkdir(parents=True, exist_ok=True)
     chapter_id = str(chapter.get("id", "")).strip()
     chapter_title = str(chapter.get("title", "")).strip()
-    filename = f"{_slugify_filename(chapter_id or chapter_title)}.json"
+    filename = f"{studio_io.slugify_filename(chapter_id or chapter_title)}.json"
     payload = {
         "chapter_id": chapter_id,
         "chapter_title": chapter_title,
@@ -902,7 +824,7 @@ def main() -> None:
         return
 
     # Studio stdin mode (legacy — called from wiki-preparation pipeline)
-    payload = json.load(sys.stdin)
+    payload = studio_io.read_payload()
     epub_data = _epub_output_from_payload(payload)
     chapters = epub_data.get("chapters", [])
     config = _chapter_summary_config_from_payload(payload)
@@ -923,7 +845,7 @@ def main() -> None:
         | set(lang_config.get("pronouns", []))
     )
 
-    paths = _paths_from_payload(payload)
+    paths = studio_io.paths_from_payload(payload)
 
     # STU-433: weight toward important entities if classification is available —
     # from the payload's stage outputs, else from disk. Degrades to no weighting.

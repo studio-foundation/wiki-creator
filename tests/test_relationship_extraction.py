@@ -242,7 +242,7 @@ def test_executor_parses_coref_max_chars(monkeypatch, tmp_path, capsys):
         return mentions_by_entity
 
     monkeypatch.setattr(rel, "enrich_mentions_with_fastcoref", fake_enrich)
-    monkeypatch.setattr(rel, "_paths_from_payload", lambda payload: SimpleNamespace(processing=tmp_path))
+    monkeypatch.setattr(rel.studio_io, "paths_from_payload", lambda payload, strict=False: SimpleNamespace(processing=tmp_path))
 
     payload = {
         "previous_outputs": {
@@ -633,7 +633,7 @@ def test_pipeline_passes_llm_model_to_classify(monkeypatch):
 
     monkeypatch.setattr(rel_mod, "classify_relationships", fake_classify)
     monkeypatch.setattr(rel_mod, "_load_mentions_from_files", lambda p: {})
-    monkeypatch.setattr(rel_mod, "_paths_from_payload", lambda p: None)
+    monkeypatch.setattr(rel_mod.studio_io, "paths_from_payload", lambda p, strict=False: None)
 
     payload = _make_pipeline_payload(classify=True, llm_model=_TEST_MODEL)
     monkeypatch.setattr("sys.stdin", _io.StringIO(_json.dumps(payload)))
@@ -647,7 +647,7 @@ def test_pipeline_skips_classify_when_no_llm_model(monkeypatch, capsys):
     import scripts.relationship_extraction as rel_mod
 
     monkeypatch.setattr(rel_mod, "_load_mentions_from_files", lambda p: {})
-    monkeypatch.setattr(rel_mod, "_paths_from_payload", lambda p: None)
+    monkeypatch.setattr(rel_mod.studio_io, "paths_from_payload", lambda p, strict=False: None)
 
     payload = _make_pipeline_payload(classify=True, include_llm_model=False)
     monkeypatch.setattr("sys.stdin", _io.StringIO(_json.dumps(payload)))
@@ -671,7 +671,7 @@ def test_pipeline_passes_novel_summary_to_classify(monkeypatch):
 
     monkeypatch.setattr(rel_mod, "classify_relationships", fake_classify)
     monkeypatch.setattr(rel_mod, "_load_mentions_from_files", lambda p: {})
-    monkeypatch.setattr(rel_mod, "_paths_from_payload", lambda p: None)
+    monkeypatch.setattr(rel_mod.studio_io, "paths_from_payload", lambda p, strict=False: None)
 
     payload = _make_pipeline_payload(classify=True, llm_model=_TEST_MODEL)
     payload["additional_context"] += "\nnovel_summary: Celaena is an assassin."

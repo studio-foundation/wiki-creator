@@ -25,21 +25,12 @@ import json
 import os
 import sys
 from pathlib import Path
-import yaml
 
 # Ensure project root is importable when running as `python scripts/<file>.py`.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
-from wiki_creator.paths import book_paths_from_epub, BookPaths
-
-
-def _paths_from_payload(payload: dict) -> BookPaths | None:
-    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
-    file_path = ctx.get("file_path")
-    if not file_path:
-        return None
-    return book_paths_from_epub(file_path)
+from wiki_creator import studio_io
 
 ENTITY_TYPES = ("PERSON", "PLACE", "ORG", "EVENT", "OTHER")
 
@@ -72,7 +63,7 @@ def split_clusters(clusters: list[dict]) -> dict:
 
 
 def main() -> None:
-    payload = json.load(sys.stdin)
+    payload = studio_io.read_payload()
     prev = payload.get("previous_outputs", {})
     # verify-entity-types (if present) sits between entity-clustering and split-clusters
     # and emits the same clusters shape — prefer it as the source of truth.
@@ -96,7 +87,7 @@ def main() -> None:
     if pov_detection is not None:
         result["pov_detection"] = pov_detection
 
-    paths = _paths_from_payload(payload)
+    paths = studio_io.paths_from_payload(payload, strict=False)
     if paths is not None:
         paths.processing.mkdir(parents=True, exist_ok=True)
         with open(paths.processing / "splits.json", "w", encoding="utf-8") as _f:

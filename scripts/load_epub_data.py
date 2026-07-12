@@ -8,26 +8,17 @@ import json
 import os
 import sys
 from pathlib import Path
-import yaml
 
 # Ensure project root is importable when running as `python scripts/<file>.py`.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
-from wiki_creator.paths import book_paths_from_epub, BookPaths
-
-
-def _paths_from_payload(payload: dict) -> BookPaths:
-    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
-    file_path = ctx.get("file_path")
-    if not file_path:
-        raise ValueError("missing file_path in additional_context")
-    return book_paths_from_epub(file_path)
+from wiki_creator import studio_io
 
 
 def main() -> None:
-    payload = json.load(sys.stdin)
-    paths = _paths_from_payload(payload)
+    payload = studio_io.read_payload()
+    paths = studio_io.paths_from_payload(payload)
     path = str(paths.processing / "epub_data.json")
     if not os.path.exists(path):
         print(

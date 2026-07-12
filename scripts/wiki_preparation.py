@@ -35,19 +35,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 from dataclasses import asdict
-from wiki_creator.paths import book_paths_from_epub, BookPaths
+from wiki_creator import studio_io
+from wiki_creator.paths import BookPaths
 from wiki_creator.character_graph import CharacterGraph
 from wiki_creator.facts import extract_titles
 from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator.confidence import relationship_confidence
-
-
-def _paths_from_payload(payload: dict) -> BookPaths:
-    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
-    file_path = ctx.get("file_path")
-    if not file_path:
-        raise ValueError("missing file_path in additional_context")
-    return book_paths_from_epub(file_path)
 
 BATCH_SIZE_BY_IMPORTANCE = {
     "principal": 3,   # full template ~1500 tokens × 3 = 4500 tokens — safe under 8192
@@ -454,7 +447,7 @@ def write_batches(entity_bundles: list[dict], narrator: object, paths: "BookPath
 
 
 def main() -> None:
-    payload = json.load(sys.stdin)
+    payload = studio_io.read_payload()
     _ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
     role_words = load_lang_config(book_language(_ctx)).get("role_words", [])
     classification_output, chapter_summary_output = stage_outputs_from_payload(payload)
@@ -470,7 +463,7 @@ def main() -> None:
         json.dump({"batches": [], "total_entities": 0, "narrator": None}, sys.stdout)
         return
 
-    paths = _paths_from_payload(payload)
+    paths = studio_io.paths_from_payload(payload)
 
     # Prefer relationships_classified.json (enriched with type/evolution/key_moments)
     # over the unclassified relationships forwarded by the entity-classification stage.

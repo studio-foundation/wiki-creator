@@ -23,15 +23,8 @@ from wiki_creator.export_helpers import (
     infobox_template_content,
     main_page_content,
 )
-from wiki_creator.paths import book_paths_from_epub, BookPaths
-
-
-def _paths_from_payload(payload: dict) -> BookPaths:
-    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
-    file_path = ctx.get("file_path")
-    if not file_path:
-        raise ValueError("missing file_path in additional_context")
-    return book_paths_from_epub(file_path)
+from wiki_creator.paths import BookPaths
+from wiki_creator import studio_io
 
 _SUBDIR = {
     "PERSON": "characters",
@@ -79,11 +72,11 @@ def _filter_exportable_pages(pages: list[dict]) -> list[dict]:
 
 
 def main() -> None:
-    payload = json.load(sys.stdin)
+    payload = studio_io.read_payload()
     input_cfg = yaml.safe_load(payload["additional_context"])
     prev = payload["previous_outputs"]
 
-    paths = _paths_from_payload(payload)
+    paths = studio_io.paths_from_payload(payload)
 
     gate_error = _copyright_gate(prev)
     if gate_error is not None:

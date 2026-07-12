@@ -70,16 +70,9 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
-from wiki_creator.paths import book_paths_from_epub, book_paths_from_yaml, BookPaths
+from wiki_creator.paths import book_paths_from_yaml, BookPaths
 from wiki_creator.lang import load_lang_config, infer_language
-
-
-def _paths_from_payload(payload: dict) -> BookPaths | None:
-    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
-    file_path = ctx.get("file_path")
-    if not file_path:
-        return None
-    return book_paths_from_epub(file_path)
+from wiki_creator import studio_io
 
 
 DEFAULT_WINDOW = 5
@@ -1432,7 +1425,7 @@ def main() -> None:
             )
         return
 
-    payload = json.load(sys.stdin)
+    payload = studio_io.read_payload()
 
     prev_outputs = payload.get("previous_outputs", {})
     resolution_output = (
@@ -1488,7 +1481,7 @@ def main() -> None:
             spacy_model = "fr_core_news_lg"
             pronouns = frozenset(load_lang_config("fr").get("pronouns", []))
 
-    paths = _paths_from_payload(payload)
+    paths = studio_io.paths_from_payload(payload, strict=False)
     mentions_by_entity = _load_mentions_from_files(paths.processing) if paths else {}
 
     if do_coref and paths:

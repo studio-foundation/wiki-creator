@@ -31,6 +31,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from wiki_creator.lang import book_language
 from wiki_creator.page_templates import resolve_template
 from wiki_creator.paths import book_paths_from_yaml
+from wiki_creator import studio_io
 from scripts.wiki_page_validator import _normalize_name
 
 DEFAULT_NUM_PREDICT = 1024
@@ -634,7 +635,7 @@ def _rejection_is_identity_only(run_id: str) -> bool:
     """True iff the validator rejected the run and *every* error it reported is
     an identity error. Guards against smuggling a page past grounding/language
     validators when we recover it."""
-    vout = _load_studio_stage_output(str(run_id), "wiki-page-validator")
+    vout = studio_io.load_studio_stage_output(str(run_id), "wiki-page-validator")
     errors = (vout or {}).get("errors") or []
     return bool(errors) and all(
         any(marker in str(e) for marker in _IDENTITY_ERROR_MARKERS) for e in errors
@@ -651,7 +652,7 @@ def _recover_identity_rejected_page(
     run_id = str((item_result.get("run_metadata") or {}).get("run_id") or "").strip()
     if not run_id or not _rejection_is_identity_only(run_id):
         return None
-    recovered = _load_studio_stage_output(run_id, "wiki-page-item")
+    recovered = studio_io.load_studio_stage_output(run_id, "wiki-page-item")
     if not isinstance(recovered, dict):
         return None
     page = parse_response(json.dumps(recovered, ensure_ascii=False), entity)
@@ -684,15 +685,9 @@ def make_stub_page(entity: dict, failed: bool = False, insufficient_data: bool =
     return page
 
 
-def _slugify_filename(value: str) -> str:
-    slug = re.sub(r"[^A-Za-z0-9._-]+", "_", str(value or "").strip())
-    slug = slug.strip("._")
-    return slug or "untitled"
-
-
 def _save_generation_debug_artifact(debug_dir: Path, entity: dict, item_result: dict) -> None:
     debug_dir.mkdir(parents=True, exist_ok=True)
-    filename = f"{_slugify_filename(entity.get('canonical_name', 'untitled'))}.json"
+    filename = f"{studio_io.slugify_filename(entity.get('canonical_name', 'untitled'))}.json"
     payload = {
         "entity_name": entity.get("canonical_name", ""),
         "error": item_result.get("error"),
@@ -701,71 +696,6 @@ def _save_generation_debug_artifact(debug_dir: Path, entity: dict, item_result: 
     }
     with open(debug_dir / filename, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
-
-
-def _extract_first_json_object(text: str) -> dict | None:
-    decoder = json.JSONDecoder()
-    for i, ch in enumerate(str(text or "")):
-        if ch != "{":
-            continue
-        try:
-            candidate, _ = decoder.raw_decode(text[i:])
-        except json.JSONDecodeError:
-            continue
-        if isinstance(candidate, dict):
-            return candidate
-    return None
-
-
-def _studio_run_log_path(run_id: str) -> Path | None:
-    runs_dir = PROJECT_ROOT / ".studio" / "runs"
-    run_id = str(run_id or "").strip()
-    matches = sorted(runs_dir.glob(f"*-{run_id}.jsonl"))
-    if not matches and run_id:
-        matches = sorted(runs_dir.glob(f"*-{run_id[:8]}.jsonl"))
-    if not matches:
-        return None
-    return matches[-1]
-
-
-def _extract_stage_output_from_run_payload(run_payload: dict, stage_name: str) -> dict | None:
-    stages = run_payload.get("stages", [])
-    if not isinstance(stages, list):
-        return None
-    for stage in stages:
-        if not isinstance(stage, dict):
-            continue
-        if stage.get("stage_name") != stage_name:
-            continue
-        if stage.get("status") != "success":
-            continue
-        output = stage.get("output")
-        if isinstance(output, dict):
-            return output
-    return None
-
-
-def _load_studio_stage_output(run_id: str, stage_name: str) -> dict | None:
-    log_path = _studio_run_log_path(run_id)
-    if log_path is None or not log_path.exists():
-        return None
-
-    with open(log_path, encoding="utf-8") as f:
-        for line in f:
-            try:
-                event = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            if event.get("event") != "stage_complete":
-                continue
-            if event.get("stage") != stage_name:
-                continue
-            if event.get("status") != "success":
-                continue
-            output = event.get("output")
-            if isinstance(output, dict):
-                return output
-    return None
 
 
 def _wiki_page_item_input(
@@ -867,7 +797,7 @@ def _run_wiki_page_item(
             pass
 
     combined_output = (result.stdout or "") + (("\n" + result.stderr) if result.stderr else "")
-    run_payload = _extract_first_json_object(result.stdout or "")
+    run_payload = studio_io.extract_first_json_object(result.stdout or "")
     run_id = str((run_payload or {}).get("id") or "").strip()
     run_metadata = {
         "command": cmd,
@@ -896,9 +826,9 @@ def _run_wiki_page_item(
             "run_metadata": run_metadata,
         }
 
-    payload = _extract_stage_output_from_run_payload(run_payload, "wiki-page-item")
+    payload = studio_io.extract_stage_output_from_run_payload(run_payload, "wiki-page-item")
     if payload is None:
-        payload = _load_studio_stage_output(run_id, "wiki-page-item")
+        payload = studio_io.load_studio_stage_output(run_id, "wiki-page-item")
     if payload is None:
         return {
             "error": "studio_run_output_missing",

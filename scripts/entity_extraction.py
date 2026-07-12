@@ -35,16 +35,8 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
-from wiki_creator.paths import book_paths_from_epub, BookPaths
+from wiki_creator import studio_io
 from wiki_creator.lang import infer_language as _infer_lang, load_lang_config as _load_lang_config
-
-
-def _paths_from_payload(payload: dict) -> BookPaths:
-    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
-    file_path = ctx.get("file_path")
-    if not file_path:
-        raise ValueError("missing file_path in additional_context")
-    return book_paths_from_epub(file_path)
 
 
 DEFAULT_MIN_MENTIONS_ABSOLUTE = 3
@@ -779,7 +771,7 @@ def main() -> None:
         run_test_mode()
         return
 
-    payload = json.load(sys.stdin)
+    payload = studio_io.read_payload()
 
     input_data = yaml.safe_load(payload.get("additional_context", "")) or {}
     prev_outputs = payload.get("previous_outputs", {})
@@ -826,7 +818,7 @@ def main() -> None:
         sys.exit(1)
 
     # Write full entities to disk split by type, for wiki-generation to read via repo_manager-read_file
-    paths = _paths_from_payload(payload)
+    paths = studio_io.paths_from_payload(payload)
     paths.processing.mkdir(parents=True, exist_ok=True)
     by_type = split_by_type(entities_full)
     type_files = {

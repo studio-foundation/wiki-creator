@@ -632,7 +632,7 @@ def test_main_injects_chapter_id_to_title_from_epub_data(tmp_path: Path, monkeyp
     _FakePaths.wiki_inputs = wiki_inputs
     _FakePaths.series_character_graph = processing / "series_character_graph.json"
 
-    monkeypatch.setattr(wp, "_paths_from_payload", lambda _payload: _FakePaths())
+    monkeypatch.setattr(wp.studio_io, "paths_from_payload", lambda _payload: _FakePaths())
     monkeypatch.setattr(wp, "load_book_config_from_payload", lambda _payload: {})
 
     entity = {
@@ -724,7 +724,7 @@ def test_main_falls_back_to_disk_when_chapter_summary_stage_output_is_empty(tmp_
     _FakePaths.series_character_graph = processing / "series_character_graph.json"
     wiki_inputs.mkdir(exist_ok=True)
 
-    monkeypatch.setattr(wp, "_paths_from_payload", lambda _payload: _FakePaths())
+    monkeypatch.setattr(wp.studio_io, "paths_from_payload", lambda _payload: _FakePaths())
     monkeypatch.setattr(wp, "load_book_config_from_payload", lambda _payload: {})
 
     entity = {
