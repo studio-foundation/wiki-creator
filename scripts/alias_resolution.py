@@ -153,10 +153,6 @@ def _load_persons_full(processing_dir: Path) -> dict:
     return data.get("persons_full", {})
 
 
-def _normalize(text: str) -> str:
-    return re.sub(r"\s+", " ", (text or "").strip().lower())
-
-
 def _entity_names(entity: dict) -> list[str]:
     names = [entity.get("canonical_name", "")]
     names.extend(entity.get("aliases", []))

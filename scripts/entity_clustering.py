@@ -44,7 +44,6 @@ Safety rules:
 
 import json
 import sys
-import unicodedata
 from collections import defaultdict
 from pathlib import Path
 
@@ -54,6 +53,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from wiki_creator.paths import book_paths_from_yaml
+from wiki_creator.registry import normalize_name as normalize_for_comparison
 
 # --- Configuration ---
 
@@ -94,13 +94,6 @@ FEMININE_TITLES = frozenset({"mme", "mme.", "madame", "señora", "doña"})
 
 
 # --- String utilities ---
-
-def normalize_for_comparison(text: str) -> str:
-    """Lowercase + strip accents for comparison (not for display)."""
-    text = text.lower().strip()
-    nfkd = unicodedata.normalize("NFKD", text)
-    return "".join(c for c in nfkd if not unicodedata.combining(c))
-
 
 def tokenize_name(name: str, title_prefixes: frozenset[str] = TITLE_PREFIXES) -> list[str]:
     """Strip title prefixes and tokenize a name."""

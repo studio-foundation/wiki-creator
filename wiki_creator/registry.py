@@ -55,6 +55,19 @@ class EntityRecord:
     decisions: list[str] = field(default_factory=list)  # decision_ids
 
 
+def normalize_name(text: str) -> str:
+    """Canonical name normalization for tolerant identity matching (STU-450).
+
+    The single source of truth: grounding, clustering and page-validation all
+    route here, so a name that matches in one module matches in every other.
+    Casefold (aggressive caseless folding) + strip accents (NFKD) + trim.
+    NOT for display, NOT for ids — use entity_slug for stable slugs.
+    """
+    text = unicodedata.normalize("NFKD", str(text or ""))
+    text = "".join(c for c in text if not unicodedata.combining(c))
+    return text.casefold().strip()
+
+
 def entity_slug(name: str) -> str:
     """Deterministic ascii slug for entity ids (invariant 4: no randomness)."""
     # Normalize to decomposed form (é -> e + accent)
