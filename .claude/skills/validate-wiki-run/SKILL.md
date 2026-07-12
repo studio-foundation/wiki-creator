@@ -128,7 +128,9 @@ def _load_gt_entries(gt_files):
 
 gt_entries, gt_by_entity = _load_gt_entries(gt_files)
 
-# all_forbidden reste global (termes interdits s'appliquent à toutes les pages)
+# all_forbidden collecte tous les termes interdits avec leur entité propriétaire.
+# La section 2 (plus bas) filtre par attribution : un terme n'est signalé que s'il est
+# attribué à son entité propriétaire dans le texte, pas à une autre entité mentionnée (STU-465).
 all_forbidden = []  # (term, entity_name, category)
 for entry in gt_entries:
     for term, cat in entry['forbidden']:
@@ -161,7 +163,10 @@ for p in pages:
                 phrase = phrase[len(prefix):]
                 break
         # Supprime le contexte trailing : parenthèses, tirets cadratins, clauses "dans le livre N"...
-        phrase = _re.split(r"\s*[\(—]|\s+dans (?:le|la|une|l')\b|\s+en lien\b|\s+comme \w|\s+par nom\b|\s+scopée\b", phrase)[0]
+        # NB: on NE coupe PAS sur "comme \w" — cela réduisait "Perrington comme allié de Celaena"
+        # à "Perrington" (token nu → faux positif sur la mention légitime du duc). Garder la phrase
+        # discriminante complète évite ces faux positifs (STU-465).
+        phrase = _re.split(r"\s*[\(—]|\s+dans (?:le|la|une|l')\b|\s+en lien\b|\s+par nom\b|\s+scopée\b", phrase)[0]
         phrase = phrase.strip(" '\"")
         # Gère les listes séparées par des virgules (ex: "Lysandra, Aedion, Manon, Elide")
         parts = [part.strip(" '\"") for part in phrase.split(",")]
@@ -174,10 +179,13 @@ for p in pages:
             all_canonical_lookup[alias.lower()] = entry['entity']
 
     # Entité GT correspondant à cette page (si applicable)
+    # Match bidirectionnel : le titre de page peut être un token nu ("Elena") alors que
+    # les alias GT sont des noms complets ("Elena Galathynius") — et inversement (STU-465).
     page_entity = None
     page_entry = None
     for entry in gt_entries:
-        if any(a.lower() in title.lower() for a in entry['canonical_aliases']):
+        if any(a.lower() in title.lower() or (len(title) >= 4 and title.lower() in a.lower())
+               for a in entry['canonical_aliases']):
             page_entity = entry['entity']
             page_entry = entry
             break
@@ -211,9 +219,48 @@ for p in pages:
                 if matched and matched != page_entity:
                     page_violations.append(f"INFOBOX_ALIAS_CROSS [{page_entity}→{matched}]: infobox '{ak}={part}' correspond à l'entité GT '{matched}'")
 
-    # 2. Cherche les termes interdits
+    # 2. Cherche les termes interdits — avec suppression par attribution (STU-465)
+    #    Un terme interdit pour l'entité A peut être un fait LÉGITIME d'une entité B mentionnée
+    #    sur la page (ex: 'princesse de Terrasen' décrit Elena, reine ancienne, pas Celaena).
+    #    On regarde l'entité GT la plus proche AVANT l'occurrence : si ce n'est pas l'entité
+    #    propriétaire du terme interdit, c'est attribué à quelqu'un d'autre → on ignore.
+    def _attributed_entity(text_lower, pos, window=60):
+        seg = text_lower[max(0, pos - window):pos]
+        best_off, best_ent = -1, None
+        for alias_lower, ent in all_canonical_lookup.items():
+            off = seg.rfind(alias_lower)
+            if off > best_off:
+                best_off, best_ent = off, ent
+        return best_ent
+
+    _tl = full_text.lower()
     for term, entity, cat in all_forbidden:
-        if len(term) > 4 and term.lower() in full_text.lower():
+        if len(term) <= 4:
+            continue
+        tlow = term.lower()
+        start, real_hit = 0, False
+        while True:
+            idx = _tl.find(tlow, start)
+            if idx == -1:
+                break
+            attributed = _attributed_entity(_tl, idx)
+            if entity == page_entity:
+                # La page porte sur l'entité propriétaire du terme interdit : on signale,
+                # SAUF si l'occurrence est explicitement attribuée à une AUTRE entité GT
+                # (ex: page Celaena mentionnant "la reine Elena, princesse de Terrasen").
+                if attributed is None or attributed == entity:
+                    real_hit = True
+                    break
+            else:
+                # Terme interdit pour une autre entité que le sujet de la page : c'est presque
+                # toujours une mention légitime (le fait interdit pour A décrit A ou une tierce
+                # entité, pas le sujet). On ne signale que si le PROPRIÉTAIRE est nommé juste
+                # avant — vraie contamination cross-page.
+                if attributed == entity:
+                    real_hit = True
+                    break
+            start = idx + len(tlow)
+        if real_hit:
             page_violations.append(f"FORBIDDEN [{entity}/{cat}]: '{term}'")
 
     # 3. Vérifie les relations contre known_relations_book1
@@ -557,7 +604,7 @@ Identifie tout problème absent des runs précédentes. Pour chaque nouveau prob
 - **Cause vérifiée** (issue par la traçabilité 1c, pas une supposition) : nommer le fichier intermédiaire exact où le terme apparaît pour la première fois, ou confirmer "hallucination LLM pure" si absent de tous les fichiers amont
 - **Composant responsable** : le script/agent précis (ex: `wiki_preparation.py:build_related_context`, `generate_wiki_pages.py`, `entity_classification.py`)
 - **Action corrective** : une action ciblée et concrète (ex: "ajouter 'Aelin' au prompt négatif de l'agent wiki-page-generator", "filtrer les termes GT forbidden dans `build_entity_bundle()`")
-- Si ça mérite une issue Linear : oui/non + pourquoi
+- Si ça mérite une issue Linear : oui/non + pourquoi. **Toute issue créée pour un défaut détecté par l'audit (régression, hallucination, échec de génération, violation GT réelle) DOIT porter le label `bug`** — pour la distinguer des tâches qui font avancer le projet (features, refacto, dette d'architecture).
 
 ### Étape 5 — Verdict et prochaine action
 
@@ -623,7 +670,7 @@ Utilise l'outil `Read` pour charger le fichier existant (s'il existe), ajoute l'
 
 Produis les étapes dans cet ordre : 1c (traçabilité), 1d (couverture), 1e (entités faibles), 2 (régression), 3 (cross-runs), 4 (nouveaux problèmes avec diagnostic vérifié), 5 (verdict), 6 (sauvegarde). Pas de prose introductive — aller direct aux résultats.
 
-Si des nouvelles issues Linear sont justifiées, les créer via l'outil Linear après le verdict.
+Si des nouvelles issues Linear sont justifiées, les créer via l'outil Linear après le verdict. **Chaque issue de défaut (bug de pipeline, régression, hallucination, échec de génération, violation GT réelle) doit être créée avec le label `bug`** en plus de `repo:wiki-creator`. Les issues de feature / refacto / dette technique ne portent PAS le label `bug`.
 
 ## Historique des issues connues
 
