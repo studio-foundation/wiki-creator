@@ -6,8 +6,11 @@ processing_output/<slug>/registry.json. Lecture seule : aucun changement de
 comportement du pipeline — rien ne consomme le registre avant STU-435 (pas 3).
 
 Input (Studio stdin):
-  all_stage_outputs["alias-resolution"]: output du stage alias-resolution
-  (fallback : entities_classified.json sur disque, pour les runs repris)
+  all_stage_outputs["entity-classification"]: output du stage entity-classification
+  (fallback : entities_classified.json sur disque, le même stage matérialisé — pour
+  les runs repris). Les deux portent le même jeu d'entités (alias + provenance de
+  fusion identiques), avec les entity_type raffinés par la classification : la source
+  est donc la même que le run soit live ou repris.
 
 Output (stdout): {"registry": {"path", "entities", "decisions", "warnings"}}
 Disk: processing_output/<slug>/registry.json
@@ -52,7 +55,11 @@ def main() -> None:
 
     paths = book_paths_from_epub(file_path)
 
-    alias_output = previous_outputs.get("alias-resolution") or {}
+    # Read the classified entity set so the registry is identical whether the run
+    # is live (stage output in memory) or resumed (entities_classified.json on
+    # disk — the same entity-classification stage materialised). Both carry the
+    # alias_resolution merge-evidence block, so audit provenance is preserved.
+    alias_output = previous_outputs.get("entity-classification") or {}
     if not alias_output.get("entities"):
         alias_output = _load_json(paths.processing / "entities_classified.json")
 
