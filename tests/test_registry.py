@@ -637,3 +637,27 @@ def test_merge_conflict_more_mentions_wins_when_no_canonical_owner():
     assert "Shadow" in reg._by_id("a_one").aliases      # more mentions wins
     assert "Shadow" not in reg._by_id("b_two").aliases
     reg.validate()
+
+
+from wiki_creator import registry as _registry_mod
+
+
+def test_from_artifacts_normalizes_title_alias_to_title_apposition():
+    splits, alias_output, persons_full = _run16_artifacts()
+    alias_output["entities"][1]["aliases"] = ["Duke", "Duke Perrington", "Perrington"]
+    alias_output["entities"][1]["alias_resolution"] = {
+        "merged_from": ["Duke"],
+        "evidence": [{"method": "title_alias", "confidence": "medium", "snippet": "Duke / Perrington"}],
+        "confidence": "medium",
+        "method": "title_alias",
+    }
+    registry = Registry.from_artifacts(splits, alias_output, persons_full)
+    perrington = registry.lookup("Perrington")
+    by_slug = {registry.decisions[d].inputs[1]: registry.decisions[d] for d in perrington.decisions}
+    assert by_slug["duke"].strategy == "title_apposition"  # renamed from title_alias
+
+
+def test_from_artifacts_no_standalone_collision_passes_remain():
+    # the old private passes are gone — merge() owns conflict resolution now
+    assert not hasattr(_registry_mod, "_resolve_alias_collisions")
+    assert not hasattr(_registry_mod, "_merge_duplicate_canonicals")
