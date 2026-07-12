@@ -270,6 +270,7 @@ class Registry:
         warnings: list[str] = []
         mention_counts: dict[str, int] = {}
         used_slugs: dict[str, int] = {}
+        used_entity_ids: set[str] = set()
 
         for raw in entities_raw:
             canonical = str(raw.get("canonical_name") or "").strip()
@@ -279,12 +280,18 @@ class Registry:
 
             slug = entity_slug(canonical)
             used_slugs[slug] = used_slugs.get(slug, 0) + 1
-            entity_id = slug if used_slugs[slug] == 1 else f"{slug}_{used_slugs[slug]}"
+            counter = used_slugs[slug]
+            entity_id = slug if counter == 1 else f"{slug}_{counter}"
+            while entity_id in used_entity_ids:
+                counter += 1
+                used_slugs[slug] = counter
+                entity_id = f"{slug}_{counter}"
+            used_entity_ids.add(entity_id)
 
             aliases = sorted(
                 {str(a) for a in (raw.get("aliases") or []) if str(a).strip()}
                 | {canonical},
-                key=str.casefold,
+                key=lambda a: (a.casefold(), a),
             )
             source_ids = [str(s) for s in (raw.get("source_ids") or [])]
 
@@ -351,6 +358,12 @@ class Registry:
 
         records = _merge_duplicate_canonicals(records, decisions, mention_counts, warnings)
         _resolve_alias_collisions(records, decisions, mention_counts, warnings)
+
+        referenced: set[str] = set()
+        for record in records:
+            referenced.update(record.decisions)
+        decisions = {d_id: d for d_id, d in decisions.items() if d_id in referenced}
+
         return cls(entities=records, decisions=decisions, warnings=warnings)
 
 
@@ -407,7 +420,7 @@ def _merge_duplicate_canonicals(
         for alias in record.aliases:
             if alias not in first.aliases:
                 first.aliases.append(alias)
-        first.aliases.sort(key=str.casefold)
+        first.aliases.sort(key=lambda a: (a.casefold(), a))
         first.mentions.extend(record.mentions)
         for d_id in record.decisions:
             if d_id not in first.decisions:

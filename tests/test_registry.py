@@ -413,3 +413,84 @@ def test_from_artifacts_tolerates_missing_optional_inputs():
     assert len(registry.entities) == 2
     assert all(r.mentions == [] for r in registry.entities)
     registry.validate()
+
+
+def test_from_artifacts_triple_slug_collision_never_yields_duplicate_ids():
+    """Regression (STU-441 review finding 1): 'Crown Prince', 'Crown-Prince' and
+    'Crown Prince 2' would previously collide — the second entity took the
+    suffixed id 'crown_prince_2', and the third entity's *base* slug also
+    computed to 'crown_prince_2', producing a duplicate id and crashing
+    validate()."""
+    splits, alias_output, persons_full = _run16_artifacts()
+    alias_output["entities"] = [
+        {
+            "canonical_name": "Crown Prince",
+            "type": "PERSON",
+            "aliases": ["Crown Prince"],
+            "source_ids": [],
+            "relevant": True,
+        },
+        {
+            "canonical_name": "Crown-Prince",  # slugs to crown_prince -> crown_prince_2
+            "type": "PERSON",
+            "aliases": ["Crown-Prince"],
+            "source_ids": [],
+            "relevant": True,
+        },
+        {
+            "canonical_name": "Crown Prince 2",  # base slug collides with the above suffix
+            "type": "PERSON",
+            "aliases": ["Crown Prince 2"],
+            "source_ids": [],
+            "relevant": True,
+        },
+    ]
+    registry = Registry.from_artifacts(splits, alias_output, persons_full)
+    ids = [r.entity_id for r in registry.entities]
+    assert len(ids) == len(set(ids)), f"duplicate entity_ids produced: {ids}"
+    registry.validate()  # must not raise
+
+
+def test_from_artifacts_alias_order_deterministic_for_casefold_equal_aliases():
+    """Regression (STU-441 review finding 2): when two aliases are casefold-equal
+    but differ in case (e.g. 'Duke' vs 'duke'), the alias list — and therefore
+    the per-entity decisions order built by iterating it — must not depend on
+    set iteration/hash-seed order."""
+    splits, alias_output, persons_full = _run16_artifacts()
+    alias_output["entities"][1]["aliases"] = ["duke", "Duke", "Perrington", "Duke Perrington"]
+    first = Registry.from_artifacts(
+        copy.deepcopy(splits), copy.deepcopy(alias_output), copy.deepcopy(persons_full)
+    )
+    second = Registry.from_artifacts(
+        copy.deepcopy(splits), copy.deepcopy(alias_output), copy.deepcopy(persons_full)
+    )
+    assert first.to_dict() == second.to_dict()
+    perrington = first.lookup("Perrington")
+    # stable secondary key: casefold-equal items keep their relative textual order
+    assert perrington.aliases.index("Duke") < perrington.aliases.index("duke")
+
+
+def test_from_artifacts_prunes_orphan_decisions_after_alias_collision():
+    """Regression (STU-441 review finding 3): when _resolve_alias_collisions
+    drops an alias from the losing record, the now-unreferenced MergeDecision
+    must be pruned from the registry, not just from that record's own
+    .decisions list — otherwise audit_log()/to_dict()["decisions"] keeps
+    listing decisions no entity carries."""
+    splits, alias_output, persons_full = _run16_artifacts()
+    # 'Crown Prince' is (wrongly) also listed as an alias of Perrington: the
+    # collision resolver drops it from Perrington, so Perrington's synthesized
+    # decision for that alias must disappear from the registry entirely.
+    alias_output["entities"][1]["aliases"] = ["Crown Prince", "Duke Perrington", "Perrington"]
+    registry = Registry.from_artifacts(splits, alias_output, persons_full)
+
+    referenced = {d_id for r in registry.entities for d_id in r.decisions}
+    audit_ids = {d.decision_id for d in registry.audit_log()}
+    assert audit_ids == referenced, f"orphan decisions: {audit_ids - referenced}"
+
+    perrington = [r for r in registry.entities if r.entity_id == "perrington"][0]
+    dropped_slug = entity_slug("Crown Prince")
+    assert not any(
+        registry.decisions[d].inputs == (perrington.entity_id, dropped_slug)
+        for d in registry.decisions
+    )
+    registry.validate()
