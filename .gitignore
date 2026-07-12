@@ -40,6 +40,8 @@ places_full.json
 orgs_full.json
 extraction-*.jsonl
 chapters.json
+# ...but always keep committed test fixtures that mirror those artifact names
+!tests/fixtures/**
 # LoRA / training artifacts
 models/wiki-page-item-lora/
 unsloth_compiled_cache/
