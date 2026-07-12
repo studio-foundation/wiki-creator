@@ -499,5 +499,79 @@
       "STU-430: mauvais merge Crown Prince→Perrington",
       "STU-431: King of Adarlan filtré avant batches"
     ]
+  },
+  {
+    "run": 17,
+    "date": "2026-07-12",
+    "pages_generated": 30,
+    "infobox_pct": 77,
+    "lang_fr_pct": 100,
+    "alias_duplicates": 0,
+    "hallucinations": 0,
+    "gt_violations": [
+      {
+        "page": "Celaena Sardothien",
+        "signal": "princesse de Terrasen / Terrasen comme identité",
+        "cause": "faux_positif_audit",
+        "first_seen_in": "llm_generation (Elena, correctement attribué)",
+        "component": "skill validate-wiki-run: forbidden global + _extract_match_phrases",
+        "action": "FAUX POSITIF — 'princesse de Terrasen' décrit Elena (reine ancienne) rencontrée par Celaena, pas une revendication de Celaena. Scoper forbidden par entité de la page."
+      },
+      {
+        "page": "Celaena Sardothien",
+        "signal": "Perrington comme allié de Celaena",
+        "cause": "faux_positif_audit",
+        "first_seen_in": "llm_generation (Perrington=soutien de Cain, antagoniste)",
+        "component": "skill validate-wiki-run: _extract_match_phrases regex '\\s+comme \\w'",
+        "action": "FAUX POSITIF — la regex réduit 'Perrington comme allié de Celaena' à 'Perrington' puis matche 'le duc Perrington' (correctement décrit comme soutien de Cain). Retirer '\\s+comme \\w' du split ou exiger la phrase complète."
+      },
+      {
+        "page": "Elena",
+        "signal": "princesse de Terrasen",
+        "cause": "faux_positif_audit",
+        "first_seen_in": "llm_generation (fait vrai pour Elena)",
+        "component": "skill validate-wiki-run: all_forbidden global (non scopé)",
+        "action": "FAUX POSITIF — Elena EST la première princesse de Terrasen (GT elena: 'Fille de Brannon Galathynius, roi de Terrasen'). Le terme forbidden Celaena ne doit pas s'appliquer à la page Elena."
+      }
+    ],
+    "coverage": {
+      "classified": 31,
+      "batch_entities": 30,
+      "pages_generated": 30,
+      "missing": [],
+      "failed": [
+        "Avery",
+        "Endovier",
+        "Eyllwe",
+        "Rifthold",
+        "Terrasen"
+      ],
+      "filtered_before_batch": [
+        "Nothung"
+      ]
+    },
+    "weak_entities": [
+      "Eyllwe",
+      "Chaol",
+      "Cain",
+      "Kaltain Rompier",
+      "King of Adarlan",
+      "Wyrdmarks",
+      "Queen Georgina"
+    ],
+    "regression": {
+      "prefixed_keys": "✅",
+      "epub_ids": "✅",
+      "entity_type_null": "✅",
+      "alias_duplicates": "✅",
+      "cross_serie": "✅",
+      "evolution_quality": "❌",
+      "temporal_context": "✅",
+      "ground_truth": "✅"
+    },
+    "verdict": "Run 17: couverture doublée (15→30 pages), King of Adarlan + Queen Georgina désormais générés (STU-431 résolu), 0 doublon, 0 hallucination réelle, 100% FR, 0 clé préfixée, 0 ID EPUB. Les 4 'violations' GT sont des faux positifs de l'audit (Elena=princesse de Terrasen légitime; Perrington réduit à un token). Bloqueurs: 5 pages PLACE _failed (biography_failed, raw_response vide) dont Eyllwe pourtant riche (15 rels, 12 chap) → échec génération spécifique aux lieux; qualité relations toujours basse (evolution générique 76%, evidence absent 70%, typées 33%). Action prioritaire: corriger biography_failed sur entités PLACE.",
+    "new_issues": [
+      "PLACE biography_failed: 5 pages lieux échouent avec raw_response vide (Eyllwe a pourtant 15 rels/12 chap) — échec génération, pas famine de données"
+    ]
   }
 ]
