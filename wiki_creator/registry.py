@@ -236,3 +236,244 @@ class Registry:
             registry = cls.from_dict(json.load(f))
         registry.validate()
         return registry
+
+    @classmethod
+    def from_artifacts(
+        cls,
+        splits: dict | None,
+        alias_output: dict | None,
+        full_registries: dict | None = None,
+    ) -> "Registry":
+        """Rebuild the registry from existing artifacts (pas 1 — read only).
+
+        splits: parsed splits.json (multi-entity JW clusters per type).
+        alias_output: alias-resolution stage output ({"entities": [...]});
+            entities_classified.json carries the same entity dicts and works too.
+        full_registries: merged *_full.json registries ({"entity_001": {...}}),
+            used to rebuild mentions and to break alias-collision ties.
+        """
+        splits = splits or {}
+        full = full_registries or {}
+        entities_raw = [
+            e for e in (alias_output or {}).get("entities") or [] if isinstance(e, dict)
+        ]
+
+        jw_names = {
+            str(name).casefold()
+            for etype in ENTITY_TYPES
+            for cluster in (splits.get(etype) or [])
+            for name in (cluster.get("all_mentions") or [])
+        }
+
+        records: list[EntityRecord] = []
+        decisions: dict[str, MergeDecision] = {}
+        warnings: list[str] = []
+        mention_counts: dict[str, int] = {}
+        used_slugs: dict[str, int] = {}
+
+        for raw in entities_raw:
+            canonical = str(raw.get("canonical_name") or "").strip()
+            if not canonical:
+                warnings.append("skipped entity without canonical_name")
+                continue
+
+            slug = entity_slug(canonical)
+            used_slugs[slug] = used_slugs.get(slug, 0) + 1
+            entity_id = slug if used_slugs[slug] == 1 else f"{slug}_{used_slugs[slug]}"
+
+            aliases = sorted(
+                {str(a) for a in (raw.get("aliases") or []) if str(a).strip()}
+                | {canonical},
+                key=str.casefold,
+            )
+            source_ids = [str(s) for s in (raw.get("source_ids") or [])]
+
+            recorded = raw.get("alias_resolution") or {}
+            merged_from = {str(m).casefold() for m in (recorded.get("merged_from") or [])}
+            method = str(recorded.get("method") or "unknown")
+            method_confidence = str(recorded.get("confidence") or "medium")
+            snippets = "; ".join(
+                s
+                for s in (
+                    str(e.get("snippet") or "")
+                    for e in (recorded.get("evidence") or [])
+                    if isinstance(e, dict)
+                )
+                if s
+            )
+
+            decision_ids: list[str] = []
+            for alias in aliases:
+                if alias == canonical:
+                    continue
+                alias_slug = entity_slug(alias)
+                if alias.casefold() in merged_from:
+                    strategy, conf = method, method_confidence
+                    evidence = snippets or (
+                        f"alias-resolution merge of '{alias}' into '{canonical}'"
+                    )
+                elif alias.casefold() in jw_names:
+                    strategy, conf = "cluster_jw", "medium"
+                    evidence = (
+                        f"reconstructed (pas 1) from splits cluster: "
+                        f"'{alias}' co-clustered with '{canonical}'"
+                    )
+                else:
+                    strategy, conf = "extraction_grouping", "medium"
+                    evidence = (
+                        f"reconstructed (pas 1) from extraction surface variants: "
+                        f"'{alias}' grouped under '{canonical}'"
+                    )
+                d_id = _decision_id(strategy, (entity_id, alias_slug), evidence)
+                decisions[d_id] = MergeDecision(
+                    decision_id=d_id,
+                    strategy=strategy,
+                    inputs=(entity_id, alias_slug),
+                    evidence=evidence,
+                    confidence=conf,
+                )
+                if d_id not in decision_ids:
+                    decision_ids.append(d_id)
+
+            mention_counts[entity_id] = sum(
+                int((full.get(sid) or {}).get("mention_count") or 0) for sid in source_ids
+            )
+            records.append(
+                EntityRecord(
+                    entity_id=entity_id,
+                    canonical_name=canonical,
+                    entity_type=str(raw.get("type") or "OTHER"),
+                    aliases=aliases,
+                    mentions=_mentions_from_full(canonical, source_ids, full),
+                    decisions=decision_ids,
+                )
+            )
+
+        records = _merge_duplicate_canonicals(records, decisions, mention_counts, warnings)
+        _resolve_alias_collisions(records, decisions, mention_counts, warnings)
+        return cls(entities=records, decisions=decisions, warnings=warnings)
+
+
+def _mentions_from_full(
+    canonical: str, source_ids: list[str], full: dict
+) -> list[Mention]:
+    """One Mention per preserved context sentence; surface = longest raw
+    mention found in the sentence (offsets/raw labels were never persisted)."""
+    mentions: list[Mention] = []
+    for sid in source_ids:
+        record = full.get(sid) or {}
+        surfaces = [str(m) for m in (record.get("raw_mentions") or []) if str(m).strip()]
+        by_length = sorted(surfaces, key=len, reverse=True)
+        by_chapter = record.get("mentions_by_chapter") or {}
+        for chapter_id in sorted(by_chapter):
+            for sentence in by_chapter[chapter_id] or []:
+                text = str(sentence)
+                surface = next(
+                    (s for s in by_length if s in text),
+                    surfaces[0] if surfaces else canonical,
+                )
+                mentions.append(
+                    Mention(
+                        surface=surface,
+                        chapter_id=str(chapter_id),
+                        source="ner",
+                        context=text,
+                    )
+                )
+    return mentions
+
+
+def _merge_duplicate_canonicals(
+    records: list[EntityRecord],
+    decisions: dict[str, MergeDecision],
+    mention_counts: dict[str, int],
+    warnings: list[str],
+) -> list[EntityRecord]:
+    """Artifacts occasionally carry two entities with the same canonical name;
+    fold the later into the first so invariant 1 can hold (deterministic)."""
+    by_canonical: dict[str, EntityRecord] = {}
+    kept: list[EntityRecord] = []
+    for record in records:
+        key = record.canonical_name.casefold()
+        first = by_canonical.get(key)
+        if first is None:
+            by_canonical[key] = record
+            kept.append(record)
+            continue
+        warnings.append(
+            f"duplicate canonical_name '{record.canonical_name}': "
+            f"merged '{record.entity_id}' into '{first.entity_id}'"
+        )
+        for alias in record.aliases:
+            if alias not in first.aliases:
+                first.aliases.append(alias)
+        first.aliases.sort(key=str.casefold)
+        first.mentions.extend(record.mentions)
+        for d_id in record.decisions:
+            if d_id not in first.decisions:
+                first.decisions.append(d_id)
+        mention_counts[first.entity_id] = mention_counts.get(
+            first.entity_id, 0
+        ) + mention_counts.get(record.entity_id, 0)
+        if record.canonical_name != first.canonical_name:
+            alias_slug = entity_slug(record.canonical_name)
+            evidence = (
+                f"reconstructed (pas 1): duplicate canonical "
+                f"'{record.canonical_name}' folded into '{first.canonical_name}'"
+            )
+            d_id = _decision_id(
+                "extraction_grouping", (first.entity_id, alias_slug), evidence
+            )
+            decisions[d_id] = MergeDecision(
+                decision_id=d_id,
+                strategy="extraction_grouping",
+                inputs=(first.entity_id, alias_slug),
+                evidence=evidence,
+                confidence="medium",
+            )
+            first.decisions.append(d_id)
+    return kept
+
+
+def _resolve_alias_collisions(
+    records: list[EntityRecord],
+    decisions: dict[str, MergeDecision],
+    mention_counts: dict[str, int],
+    warnings: list[str],
+) -> None:
+    """Invariant 1 pre-pass: an alias claimed by several entities stays with
+    its canonical owner, else the highest mention_count, else artifact order."""
+    claims: dict[str, list[EntityRecord]] = {}
+    for record in records:
+        for alias in record.aliases:
+            bucket = claims.setdefault(alias.casefold(), [])
+            if not bucket or bucket[-1] is not record:
+                bucket.append(record)
+
+    for key, claimants in claims.items():
+        if len(claimants) < 2:
+            continue
+        canonical_owners = [
+            r for r in claimants if r.canonical_name.casefold() == key
+        ]
+        if canonical_owners:
+            winner = canonical_owners[0]  # unique after duplicate-canonical merge
+        else:
+            winner = max(claimants, key=lambda r: mention_counts.get(r.entity_id, 0))
+        for loser in claimants:
+            if loser is winner:
+                continue
+            dropped = [a for a in loser.aliases if a.casefold() == key]
+            loser.aliases = [a for a in loser.aliases if a.casefold() != key]
+            dropped_slugs = {entity_slug(a) for a in dropped}
+            still_needed = {entity_slug(a) for a in loser.aliases}
+            loser.decisions = [
+                d_id
+                for d_id in loser.decisions
+                if decisions[d_id].inputs[1] not in dropped_slugs
+                or decisions[d_id].inputs[1] in still_needed
+            ]
+            warnings.append(
+                f"alias '{dropped[0]}' claimed by multiple entities: kept on "
+                f"'{winner.entity_id}', dropped from '{loser.entity_id}'"
+            )
