@@ -46,6 +46,8 @@ unsloth_compiled_cache/
 
 # Claude Code
 .claude/
+.agents/
+skills-lock.json
 
 # Internal planning docs
 docs/plans/
