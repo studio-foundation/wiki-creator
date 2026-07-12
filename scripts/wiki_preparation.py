@@ -40,6 +40,7 @@ from wiki_creator.character_graph import CharacterGraph
 from wiki_creator.facts import extract_titles
 from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator.confidence import relationship_confidence
+from wiki_creator.registry import Registry
 
 
 def _paths_from_payload(payload: dict) -> BookPaths:
@@ -518,6 +519,22 @@ def main() -> None:
         f"wiki-preparation: {len(relevant_entities)}/{len(entities)} entities to process",
         file=sys.stderr,
     )
+
+    # STU-443 (pas 4): identity comes from the registry, the single source of
+    # truth, not the canonical_name/aliases re-derived through the classification
+    # artifact. Bind before entities_by_name so the map keys are authoritative.
+    identity_registry = Registry.load_from_processing(paths.processing)
+    if identity_registry is not None:
+        bound = sum(identity_registry.bind_identity(e) for e in relevant_entities)
+        print(
+            f"wiki-preparation: bound {bound}/{len(relevant_entities)} identities from registry.json",
+            file=sys.stderr,
+        )
+    else:
+        print(
+            "wiki-preparation: registry.json not found — identity from classification artifact",
+            file=sys.stderr,
+        )
 
     entities_by_name = {
         e.get("canonical_name", ""): e
