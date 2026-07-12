@@ -6,6 +6,7 @@ from wiki_creator.registry import (
     MergeDecision,
     Mention,
     entity_slug,
+    normalize_name,
 )
 
 
@@ -604,3 +605,32 @@ def test_load_from_processing_roundtrips(tmp_path):
 def test_load_from_processing_corrupt_returns_none(tmp_path):
     (tmp_path / "registry.json").write_text("{ not json", encoding="utf-8")
     assert Registry.load_from_processing(tmp_path) is None
+
+
+# --- normalize_name (STU-450: single canonical name normalization) ---
+
+
+def test_normalize_name_casefolds_strips_accents_and_trims():
+    assert normalize_name("  Néhémia D'EYLLWE  ") == "nehemia d'eyllwe"
+
+
+def test_normalize_name_casefold_more_aggressive_than_lower():
+    # casefold folds ß -> ss, where str.lower() would not
+    assert normalize_name("Straße") == "strasse"
+
+
+def test_normalize_name_preserves_internal_whitespace():
+    # not a slug: internal spacing/apostrophes/hyphens are kept
+    assert normalize_name("Celaena  Sardothien") == "celaena  sardothien"
+
+
+def test_normalize_name_handles_none_and_non_str():
+    assert normalize_name(None) == ""
+    assert normalize_name(123) == "123"
+
+
+def test_normalize_name_matches_legacy_grounding_and_validator_semantics():
+    # freezes the behavior the 3 former call sites now share
+    assert normalize_name("Martín") == "martin"
+    assert normalize_name("BARCELONE") == "barcelone"
+    assert normalize_name("  Vidal  ") == "vidal"

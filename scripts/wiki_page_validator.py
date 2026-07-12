@@ -26,7 +26,6 @@ import os
 import re
 import socket
 import sys
-import unicodedata
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -38,6 +37,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 from wiki_creator.grounding import find_ungrounded_names
 from wiki_creator.lang import load_lang_config
+from wiki_creator.registry import normalize_name as _normalize_name
 
 
 def check_language_fr(page: dict) -> list[str]:
@@ -102,13 +102,6 @@ def check_forbidden_names(page: dict, meta: dict) -> list[str]:
 
 
 _IDENTITY_INFOBOX_KEYS = {"nom", "name", "titre", "title", "nom complet", "full name"}
-
-
-def _normalize_name(value: str) -> str:
-    """Lowercase and strip accents for tolerant name comparison."""
-    value = unicodedata.normalize("NFKD", value)
-    value = "".join(c for c in value if not unicodedata.combining(c))
-    return value.strip().lower()
 
 
 def check_identity_match(page: dict, meta: dict) -> list[str]:

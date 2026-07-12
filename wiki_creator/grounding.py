@@ -16,9 +16,9 @@ cue_words/<lang>.json — never hardcoded here.
 from __future__ import annotations
 
 import re
-import unicodedata
 
 from wiki_creator.lang import load_lang_config
+from wiki_creator.registry import normalize_name as normalize
 
 # A capitalized word: uppercase letter (incl. accented) + word chars,
 # allowing internal apostrophes/hyphens (D'Artagnan, Jean-Luc).
@@ -30,13 +30,6 @@ _CAP_WORD_RE = re.compile(r"[A-ZÀ-ÖØ-Þ][\w'’-]*")
 _SENTENCE_BREAK = set(".!?«»\"”—–:;\n")
 
 _MARKDOWN_NOISE_RE = re.compile(r"[*_`#>\[\]()|]")
-
-
-def normalize(text: str) -> str:
-    """Casefold and strip accents for tolerant matching."""
-    text = unicodedata.normalize("NFKD", text)
-    text = "".join(c for c in text if not unicodedata.combining(c))
-    return text.casefold()
 
 
 def _strip_elision(token: str, elision_prefixes: list[str]) -> str:
