@@ -44,3 +44,26 @@ Enforced par :
 
 Note : il n'existe pas de contract `entity-registry-resolved` ; la garantie
 est structurelle (ordre des stages), pas contractuelle.
+
+## INV-WC-04 — Tout fix d'identité passe par le registre
+Toute fusion, séparation ou correction d'identité d'entité (alias,
+`canonical_name`) passe par `wiki_creator/registry.py`, tracée par une
+`MergeDecision`. Aucun script ne modifie directement les alias ou le
+`canonical_name` d'une entité hors du registre.
+
+Enforced par :
+- **Blocage (chemin registre)** : `Registry.validate()` — invariant 2 lève
+  `ValueError` si un alias ≠ `canonical_name` n'est justifié par aucune
+  `MergeDecision` attachée à l'entité. Une fusion introduite sans décision
+  tracée fait échouer la validation.
+- **Traçabilité** : chaque fusion construite dans
+  `Registry.from_artifacts` / `_merge_duplicate_canonicals` émet une
+  `MergeDecision` (`decision_id` dérivé du contenu, `strategy`, `evidence`,
+  `confidence`, `reversible`) exposée via `Registry.audit_log()`.
+
+⚠️ NON ENFORCED (clause « aucun script ne modifie directement ») : aucun
+garde-fou n'empêche un script d'écrire `canonical_name`/`aliases` en dur dans
+un JSON en contournant le registre. La clause tient par convention +
+injection de ce fichier dans le system prompt de chaque agent Studio ;
+`validate()` ne la détecte que si le registre est effectivement l'auteur des
+sorties.
