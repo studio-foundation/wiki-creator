@@ -54,6 +54,12 @@ def test_direct_relationships_returns_both_directions():
     assert "Cain" in names
 
 
+def test_indirect_relationship_confidence_is_interpretation():
+    """STU-428: multi-hop paths are interpretation, never attested fact."""
+    r = IndirectRelationship("A", "B", ["X"], ["co-occurrence"], 0.5)
+    assert r.confidence == "interpretation"
+
+
 def test_indirect_relationships_two_hop():
     g = CharacterGraph.from_json(_load_fixture("minimal_graph.json"))
     # Nehemia and Cain are not directly connected; both connect via Celaena

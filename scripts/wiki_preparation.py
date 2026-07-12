@@ -39,6 +39,7 @@ from wiki_creator.paths import book_paths_from_epub, BookPaths
 from wiki_creator.character_graph import CharacterGraph
 from wiki_creator.facts import extract_titles
 from wiki_creator.lang import book_language, load_lang_config
+from wiki_creator.confidence import relationship_confidence
 
 
 def _paths_from_payload(payload: dict) -> BookPaths:
@@ -361,7 +362,10 @@ def build_entity_bundle(
         "chapters_present": entity.get("chapters_present", 0),
         "first_seen": get_first_seen(entity, persons, places, orgs, events),
         "context_by_chapter": context_by_chapter,
-        "relationships": filter_relationships(canonical_name, relationships, aliases=entity.get("aliases")),
+        "relationships": [
+            {**r, "confidence": relationship_confidence(r)}
+            for r in filter_relationships(canonical_name, relationships, aliases=entity.get("aliases"))
+        ],
         "indirect_relationships": [
             asdict(r) for r in (
                 graph.indirect_relationships(canonical_name, max_hops=2)
