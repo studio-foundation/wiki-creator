@@ -1,0 +1,86 @@
+{
+  "entities": [
+    {
+      "canonical_name": "Crown Prince",
+      "type": "PERSON",
+      "aliases": ["Crown Prince"],
+      "source_ids": ["e_crown_prince"],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Perrington",
+      "type": "PERSON",
+      "aliases": ["Duke Perrington", "Perrington"],
+      "source_ids": ["e_perrington"],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Kaltain Rompier",
+      "type": "PERSON",
+      "aliases": ["Kaltain", "Kaltain Rompier"],
+      "source_ids": ["e_kaltain", "e_kaltain_rompier"],
+      "relevant": true
+    },
+    {
+      "canonical_name": "Chaol Westfall",
+      "type": "PERSON",
+      "aliases": ["Captain Westfall", "Chaol", "Chaol Westfall"],
+      "source_ids": ["e_chaol"],
+      "relevant": true,
+      "alias_resolution": {
+        "merged_from": ["Captain Westfall"],
+        "evidence": [{"method": "title_alias", "confidence": "medium", "snippet": "Captain Westfall, the Captain of the Guard, bowed."}],
+        "confidence": "medium",
+        "method": "title_alias"
+      }
+    },
+    {
+      "canonical_name": "Brullo",
+      "type": "PERSON",
+      "aliases": ["Brullo", "the Master"],
+      "source_ids": ["e_brullo"],
+      "relevant": true,
+      "alias_resolution": {
+        "merged_from": ["the Master"],
+        "evidence": [{"method": "pure_title", "confidence": "medium", "snippet": "Brullo — the Master — nodded at Celaena."}],
+        "confidence": "medium",
+        "method": "pure_title"
+      }
+    },
+    {
+      "canonical_name": "Dorian",
+      "type": "PERSON",
+      "aliases": ["Dorian", "the prince"],
+      "source_ids": ["e_dorian"],
+      "relevant": true,
+      "alias_resolution": {
+        "merged_from": ["the prince"],
+        "evidence": [{"method": "llm", "confidence": "high", "snippet": "Dorian, the prince, smiled."}],
+        "confidence": "high",
+        "method": "llm"
+      }
+    },
+    {
+      "canonical_name": "Celaena Sardothien",
+      "type": "PERSON",
+      "aliases": ["Celaena Sardothien", "the King's Champion"],
+      "source_ids": ["e_celaena"],
+      "relevant": true,
+      "alias_resolution": {
+        "merged_from": ["the King's Champion"],
+        "evidence": [{"method": "role_symmetric", "confidence": "medium", "snippet": "Celaena, the King's Champion, drew her blade."}],
+        "confidence": "medium",
+        "method": "role_symmetric"
+      }
+    },
+    {
+      "canonical_name": "Glass Castle",
+      "type": "PLACE",
+      "aliases": ["Glass Castle", "the castle"],
+      "source_ids": ["e_castle"],
+      "relevant": true
+    }
+  ],
+  "narrator": null,
+  "stats": {"merges_applied": 4}
+}
