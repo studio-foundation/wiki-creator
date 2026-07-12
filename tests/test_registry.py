@@ -566,3 +566,41 @@ def test_from_artifacts_prunes_orphan_decisions_after_alias_collision():
         for d in registry.decisions
     )
     registry.validate()
+
+
+# --- STU-443 (pas 4): downstream single-source-of-truth identity binding ---
+
+def test_bind_identity_rewrites_canonical_and_aliases():
+    registry = _valid_registry()
+    # A batch entity that reached us via a non-canonical surface with a partial
+    # alias set: bind_identity replaces both from the authoritative record.
+    entity = {"canonical_name": "Captain Westfall", "aliases": ["Chaol"], "type": "PERSON"}
+    assert registry.bind_identity(entity) is True
+    assert entity["canonical_name"] == "Chaol Westfall"
+    # aliases carry the *other* surfaces only — never the canonical_name itself.
+    assert entity["aliases"] == ["Captain Westfall"]
+    assert "Chaol Westfall" not in entity["aliases"]
+
+
+def test_bind_identity_unknown_entity_leaves_fields_untouched():
+    registry = _valid_registry()
+    entity = {"canonical_name": "Nehemia", "aliases": ["Princess"]}
+    assert registry.bind_identity(entity) is False
+    assert entity["canonical_name"] == "Nehemia"
+    assert entity["aliases"] == ["Princess"]
+
+
+def test_load_from_processing_absent_returns_none(tmp_path):
+    assert Registry.load_from_processing(tmp_path) is None
+
+
+def test_load_from_processing_roundtrips(tmp_path):
+    _valid_registry().save(tmp_path / "registry.json")
+    loaded = Registry.load_from_processing(tmp_path)
+    assert loaded is not None
+    assert loaded.lookup("Duke Perrington").canonical_name == "Perrington"
+
+
+def test_load_from_processing_corrupt_returns_none(tmp_path):
+    (tmp_path / "registry.json").write_text("{ not json", encoding="utf-8")
+    assert Registry.load_from_processing(tmp_path) is None

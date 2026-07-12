@@ -1549,3 +1549,72 @@ def test_rejection_is_identity_only_false_when_mixed(monkeypatch):
         ]},
     )
     assert _rejection_is_identity_only("r1") is False
+
+
+# --- STU-443 (pas 4): identity safety nets are counted, not silent ---
+
+import scripts.generate_wiki_pages as _gwp
+
+
+def test_force_identity_trigger_is_counted(monkeypatch, tmp_path):
+    _gwp._reset_safety_net_telemetry()
+    monkeypatch.setattr(
+        "scripts.generate_wiki_pages._run_wiki_page_item",
+        lambda **_: {"title": "Verin", "importance": "secondary", "entity_type": "PERSON",
+                     "infobox_fields": {"nom": "Kaltain"},
+                     "content": "## Biographie\n\nVerin est un lord."},
+    )
+    _run_generation_for_entity(
+        entity=_verin_entity_ctx(), book_title="TOG", model="q", timeout=1,
+        sections=["infobox", "biography"], max_tokens=800, dry_run=False,
+        debug_dir=tmp_path / "d", sibling_canonicals={"Kaltain Rompier"},
+    )
+    assert _gwp._SAFETY_NET_TRIGGERS["force_identity"] == 1
+    assert _gwp._SAFETY_NET_TRIGGERS["identity_recovery"] == 0
+
+
+def test_clean_page_records_no_trigger(monkeypatch, tmp_path):
+    _gwp._reset_safety_net_telemetry()
+    monkeypatch.setattr(
+        "scripts.generate_wiki_pages._run_wiki_page_item",
+        lambda **_: {"title": "Verin", "importance": "secondary", "entity_type": "PERSON",
+                     "infobox_fields": {"nom": "Verin"},
+                     "content": "## Biographie\n\nVerin est un lord."},
+    )
+    _run_generation_for_entity(
+        entity=_verin_entity_ctx(), book_title="TOG", model="q", timeout=1,
+        sections=["infobox", "biography"], max_tokens=800, dry_run=False,
+        debug_dir=tmp_path / "d",
+    )
+    assert _gwp._SAFETY_NET_TRIGGERS == {"force_identity": 0, "identity_recovery": 0}
+
+
+def test_identity_recovery_trigger_is_counted(monkeypatch, tmp_path):
+    _gwp._reset_safety_net_telemetry()
+    monkeypatch.setattr(
+        "scripts.generate_wiki_pages._run_wiki_page_item",
+        lambda **_: {"error": "studio_run_failed", "run_metadata": {"run_id": "r1"}},
+    )
+
+    def fake_stage_output(run_id, stage_name):
+        if stage_name == "wiki-page-validator":
+            return {"valid": False,
+                    "errors": ["❌ Infobox 'nom: Kaltain' ne correspond pas à l'entité 'Verin'"]}
+        return {"title": "Verin", "importance": "secondary", "entity_type": "PERSON",
+                "infobox_fields": {"nom": "Kaltain"}, "content": "## Biographie\n\nVerin est un lord."}
+
+    monkeypatch.setattr("scripts.generate_wiki_pages.studio_io.load_studio_stage_output", fake_stage_output)
+    _run_generation_for_entity(
+        entity=_verin_entity_ctx(), book_title="TOG", model="q", timeout=1,
+        sections=["infobox", "biography"], max_tokens=800, dry_run=False,
+        debug_dir=tmp_path / "d", sibling_canonicals={"Kaltain Rompier"},
+    )
+    assert _gwp._SAFETY_NET_TRIGGERS["identity_recovery"] == 1
+
+
+def test_write_identity_telemetry_roundtrip(tmp_path):
+    _gwp._reset_safety_net_telemetry()
+    _gwp._record_safety_net("force_identity")
+    _gwp._write_identity_telemetry(tmp_path)
+    written = json.loads((tmp_path / "identity_telemetry.json").read_text())
+    assert written == {"safety_net_triggers": {"force_identity": 1, "identity_recovery": 0}}

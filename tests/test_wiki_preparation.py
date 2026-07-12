@@ -828,3 +828,63 @@ def test_build_entity_bundle_titles_empty_without_role_words():
         entity, [], persons, places, orgs, events, {"Chaol": entity},
     )
     assert bundle["titles"] == []
+
+
+def test_main_binds_identity_from_registry(tmp_path: Path, monkeypatch):
+    """STU-443 (pas 4): main() rewrites batch identity from registry.json (the
+    single source of truth) rather than the classification canonical_name."""
+    import scripts.wiki_preparation as wp
+    from wiki_creator.registry import EntityRecord, MergeDecision, Registry, _decision_id, entity_slug
+
+    processing = tmp_path / "processing"
+    wiki_inputs = tmp_path / "wiki_inputs"
+    processing.mkdir()
+    wiki_inputs.mkdir()
+
+    for name in ("persons_full", "places_full", "orgs_full", "events_full"):
+        (processing / f"{name}.json").write_text(json.dumps({name: {}}), encoding="utf-8")
+    persons_data = {"persons_full": {"p1": {
+        "canonical_name": "Celaena Sardothien",
+        "mentions_by_chapter": {"ch01": ["She stepped inside."]},
+        "first_seen": "ch01", "source_ids": ["p1"],
+    }}}
+    (processing / "persons_full.json").write_text(json.dumps(persons_data), encoding="utf-8")
+
+    # Registry canonical differs from the classification surface ("Celaena").
+    d_id = _decision_id("extraction_grouping", ("celaena_sardothien", entity_slug("Celaena")), "t")
+    record = EntityRecord(
+        entity_id="celaena_sardothien", canonical_name="Celaena Sardothien",
+        entity_type="PERSON", aliases=["Celaena", "Celaena Sardothien"], decisions=[d_id],
+    )
+    Registry(
+        entities=[record],
+        decisions={d_id: MergeDecision(d_id, "extraction_grouping",
+                                       ("celaena_sardothien", entity_slug("Celaena")), "t", "medium")},
+    ).save(processing / "registry.json")
+
+    class _FakePaths:
+        pass
+    _FakePaths.processing = processing
+    _FakePaths.wiki_inputs = wiki_inputs
+    _FakePaths.series_character_graph = processing / "series_character_graph.json"
+    monkeypatch.setattr(wp.studio_io, "paths_from_payload", lambda _payload: _FakePaths())
+    monkeypatch.setattr(wp, "load_book_config_from_payload", lambda _payload: {})
+
+    payload = {"additional_context": "file_path: fake.epub", "all_stage_outputs": {
+        "entity-classification": {"entities": [{
+            "canonical_name": "Celaena", "type": "PERSON", "importance": "principal",
+            "source_ids": ["p1"], "relevant": True, "aliases": [],
+        }], "relationships": [], "narrator": None}}}
+
+    stdin_backup, stdout_backup = sys.stdin, sys.stdout
+    try:
+        sys.stdin = io.StringIO(json.dumps(payload))
+        sys.stdout = io.StringIO()
+        wp.main()
+    finally:
+        sys.stdin, sys.stdout = stdin_backup, stdout_backup
+
+    batch = json.loads(next(wiki_inputs.glob("batch_*.json")).read_text(encoding="utf-8"))
+    entity = batch["entities"][0]
+    assert entity["canonical_name"] == "Celaena Sardothien"   # bound from registry
+    assert entity["aliases"] == ["Celaena"]                    # excludes canonical

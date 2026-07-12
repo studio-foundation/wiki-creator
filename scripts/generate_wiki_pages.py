@@ -32,6 +32,7 @@ from wiki_creator.lang import book_language
 from wiki_creator.page_templates import resolve_template
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator import studio_io
+from wiki_creator.registry import Registry
 from scripts.wiki_page_validator import _normalize_name
 
 DEFAULT_NUM_PREDICT = 1024
@@ -546,6 +547,22 @@ def _nom_matches_identity(nom: str, entity: dict) -> bool:
     return False
 
 
+# STU-443 (pas 4): the identity safety nets are no longer silent — every
+# trigger is counted per run so validation runs can observe when they fall
+# silent and the net can be retired (STU-319 force-identity, STU-318 recovery).
+# `force_identity` counts _force_correct_identity rewrites; `identity_recovery`
+# counts _recover_identity_rejected_page recoveries.
+_SAFETY_NET_TRIGGERS: dict[str, int] = {"force_identity": 0, "identity_recovery": 0}
+
+
+def _reset_safety_net_telemetry() -> None:
+    _SAFETY_NET_TRIGGERS.update(force_identity=0, identity_recovery=0)
+
+
+def _record_safety_net(name: str) -> None:
+    _SAFETY_NET_TRIGGERS[name] = _SAFETY_NET_TRIGGERS.get(name, 0) + 1
+
+
 def _force_correct_identity(
     page: dict, entity: dict, sibling_canonicals: set[str] | None = None
 ) -> bool:
@@ -933,6 +950,7 @@ def _run_generation_for_entity(
         )
         _save_generation_debug_artifact(debug_dir, entity, item_result)
         if recovered is not None:
+            _record_safety_net("identity_recovery")
             _bind_batch_fields(recovered, entity, book_config)
             print(" ⚠ identity-corrected from rejected run", file=sys.stderr, end="", flush=True)
             return recovered
@@ -978,6 +996,7 @@ def _run_generation_for_entity(
         and "content" in item_result
         and _force_correct_identity(item_result, entity, sibling_canonicals)
     ):
+        _record_safety_net("force_identity")
         print(" ⚠ nom force-corrected", file=sys.stderr, end="", flush=True)
 
     if isinstance(item_result, dict) and "content" in item_result:
@@ -1036,8 +1055,10 @@ def _run_generation_sectioned(
         "infobox_fields": {},
         "content": _assemble_section_blocks(blocks),
     }
-    if entity.get("type") == "PERSON":
-        _force_correct_identity(page, entity, sibling_canonicals)
+    if entity.get("type") == "PERSON" and _force_correct_identity(
+        page, entity, sibling_canonicals
+    ):
+        _record_safety_net("force_identity")
     _bind_batch_fields(page, entity, book_config)
     return page
 
@@ -1264,6 +1285,7 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true", help="Skip LLM calls, output stubs only")
     args = parser.parse_args()
 
+    _reset_safety_net_telemetry()
     book_paths = book_paths_from_yaml(args.book)
     output_file = str(book_paths.processing / "wiki_pages.json")
     wiki_inputs_dir = str(book_paths.wiki_inputs)
@@ -1286,6 +1308,13 @@ def main() -> None:
     book_title = load_book_title(str(book_paths.processing / "epub_data.json"))
     batches = load_batch_files(wiki_inputs_dir, args.importance)
 
+    # STU-443 (pas 4): generation's identity binding consults the registry, the
+    # single source of truth, instead of trusting the identity carried by the
+    # batch artifact. None → registry absent, keep the batch identity as-is.
+    identity_registry = Registry.load_from_processing(book_paths.processing)
+    if identity_registry is None:
+        print("[generate-wiki-pages] registry.json not found — identity from batch artifact", file=sys.stderr)
+
     if not batches:
         print("[WARN] No batch files found or all batches empty after filter.", file=sys.stderr)
         _save([], output_file)
@@ -1305,6 +1334,9 @@ def main() -> None:
         for path, batch in batches:
             batch_id = batch.get("batch_id", os.path.basename(path))
             entities = batch.get("entities", [])
+            if identity_registry is not None:
+                for e in entities:
+                    identity_registry.bind_identity(e)
             print(f"\n[{batch_id}] {len(entities)} entities", file=sys.stderr)
             batch_canonicals = {
                 e.get("canonical_name", "") for e in entities if e.get("canonical_name")
@@ -1377,6 +1409,7 @@ def main() -> None:
     except KeyboardInterrupt:
         print(f"\n[generate-wiki-pages] Interrupted — {len(all_pages)} pages saved", file=sys.stderr)
     _print_generation_summary(all_pages)
+    _write_identity_telemetry(book_paths.processing)
 
 
 def _print_generation_summary(pages: list[dict], file=None) -> None:
@@ -1395,6 +1428,27 @@ def _print_generation_summary(pages: list[dict], file=None) -> None:
         print(f"  [FAILED] {p.get('title', '?')}", file=file)
     for p in insufficient:
         print(f"  [INSUFFICIENT DATA] {p.get('title', '?')}", file=file)
+    print(
+        f"[generate-wiki-pages] identity safety nets — force_identity: "
+        f"{_SAFETY_NET_TRIGGERS.get('force_identity', 0)}, identity_recovery: "
+        f"{_SAFETY_NET_TRIGGERS.get('identity_recovery', 0)} (0/0 ⇒ retirable, spec §3.5 pas 4)",
+        file=file,
+    )
+
+
+def _write_identity_telemetry(processing_dir: Path) -> None:
+    """Durable per-run record of identity safety-net triggers. The milestone M1
+    exit criterion ('les safety nets STU-318/319 ne se déclenchent plus') is
+    checked by reading these across consecutive validation runs (spec §3.5 pas 4)."""
+    path = processing_dir / "identity_telemetry.json"
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps({"safety_net_triggers": dict(_SAFETY_NET_TRIGGERS)}, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+    except OSError:
+        pass
 
 
 def _save(pages: list[dict], output_file: str) -> None:
