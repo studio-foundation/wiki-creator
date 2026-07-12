@@ -455,19 +455,63 @@ def test_from_artifacts_alias_order_deterministic_for_casefold_equal_aliases():
     """Regression (STU-441 review finding 2): when two aliases are casefold-equal
     but differ in case (e.g. 'Duke' vs 'duke'), the alias list — and therefore
     the per-entity decisions order built by iterating it — must not depend on
-    set iteration/hash-seed order."""
+    set iteration/hash-seed order.
+
+    A same-process comparison is a tautology (both calls share the same hash
+    seed), so this drives two separate subprocesses with distinct fixed
+    PYTHONHASHSEED values and asserts their to_dict() outputs are
+    byte-identical. That is what actually distinguishes the old (hash-seed
+    dependent) behavior from the fixed, deterministic one.
+    """
+    import json
+    import os
+    import pathlib
+    import subprocess
+    import sys
+
     splits, alias_output, persons_full = _run16_artifacts()
     alias_output["entities"][1]["aliases"] = ["duke", "Duke", "Perrington", "Duke Perrington"]
-    first = Registry.from_artifacts(
+
+    # Lightweight in-process sanity check: both case variants survive as
+    # distinct aliases.
+    registry = Registry.from_artifacts(
         copy.deepcopy(splits), copy.deepcopy(alias_output), copy.deepcopy(persons_full)
     )
-    second = Registry.from_artifacts(
-        copy.deepcopy(splits), copy.deepcopy(alias_output), copy.deepcopy(persons_full)
+    perrington = registry.lookup("Perrington")
+    assert "Duke" in perrington.aliases
+    assert "duke" in perrington.aliases
+
+    repo_root = pathlib.Path(__file__).resolve().parents[1]
+    driver = (
+        "import json, sys\n"
+        "from wiki_creator.registry import Registry\n"
+        "payload = json.loads(sys.stdin.read())\n"
+        "registry = Registry.from_artifacts(\n"
+        "    payload['splits'], payload['alias_output'], payload['persons_full']\n"
+        ")\n"
+        "print(json.dumps(registry.to_dict(), sort_keys=False))\n"
     )
-    assert first.to_dict() == second.to_dict()
-    perrington = first.lookup("Perrington")
-    # stable secondary key: casefold-equal items keep their relative textual order
-    assert perrington.aliases.index("Duke") < perrington.aliases.index("duke")
+    stdin_payload = json.dumps(
+        {"splits": splits, "alias_output": alias_output, "persons_full": persons_full}
+    )
+
+    outputs = []
+    for seed in ("0", "1"):
+        env = dict(os.environ)
+        env["PYTHONHASHSEED"] = seed
+        env["PYTHONPATH"] = str(repo_root)
+        result = subprocess.run(
+            [sys.executable, "-c", driver],
+            input=stdin_payload,
+            capture_output=True,
+            text=True,
+            cwd=str(repo_root),
+            env=env,
+            check=True,
+        )
+        outputs.append(result.stdout)
+
+    assert outputs[0] == outputs[1], "to_dict() output differs across PYTHONHASHSEED values"
 
 
 def test_from_artifacts_prunes_orphan_decisions_after_alias_collision():
