@@ -7,7 +7,6 @@ from scripts.chapter_summary import (
     _chapter_summary_config_from_payload,
     _detect_temporal_context,
     _epub_output_from_payload,
-    _extract_stage_output_from_run_payload,
     _parse_llm_summary_response_text,
     _score_sentence,
     summarize_chapters_incrementally,
@@ -15,6 +14,7 @@ from scripts.chapter_summary import (
     summarize_chapter_from_item_result,
     summarize_chapters,
 )
+from wiki_creator.studio_io import extract_stage_output_from_run_payload
 
 
 def test_score_sentence_accepts_action_cues_kwarg():
@@ -297,7 +297,7 @@ def test_extract_stage_output_from_run_payload_reads_successful_stage_output() -
         ],
     }
 
-    output = _extract_stage_output_from_run_payload(run_payload, "chapter-summary-item")
+    output = extract_stage_output_from_run_payload(run_payload, "chapter-summary-item")
 
     assert output == {
         "chapter_id": "C07.xhtml",

@@ -20,16 +20,8 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
-from wiki_creator.paths import book_paths_from_epub, BookPaths
 from wiki_creator.lang import book_language, load_lang_config
-
-
-def _paths_from_payload(payload: dict) -> BookPaths:
-    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
-    file_path = ctx.get("file_path")
-    if not file_path:
-        raise ValueError("missing file_path in additional_context")
-    return book_paths_from_epub(file_path)
+from wiki_creator import studio_io
 
 # Typographic ligatures that EPUB fonts may encode as single codepoints.
 _LIGATURES: dict[str, str] = {
@@ -311,7 +303,7 @@ def parse_epub(file_path: str, language: str = "fr") -> dict:
 
 
 def main():
-    payload = json.load(sys.stdin)
+    payload = studio_io.read_payload()
     input_data = yaml.safe_load(payload.get("additional_context", "")) or {}
     file_path = input_data.get("file_path")
 
@@ -322,7 +314,7 @@ def main():
     language = book_language(input_data)
     result = parse_epub(file_path, language=language)
     result["language"] = language
-    paths = _paths_from_payload(payload)
+    paths = studio_io.paths_from_payload(payload)
     paths.processing.mkdir(parents=True, exist_ok=True)
     with open(paths.processing / "epub_data.json", "w", encoding="utf-8") as _f:
         json.dump(result, _f, ensure_ascii=False)

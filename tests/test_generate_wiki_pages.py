@@ -7,7 +7,6 @@ import pytest
 from scripts.generate_wiki_pages import (
     _check_forbidden_names,
     _contains_template_placeholder,
-    _extract_stage_output_from_run_payload,
     _force_correct_identity,
     _is_page_complete,
     _nom_matches_identity,
@@ -20,6 +19,7 @@ from scripts.generate_wiki_pages import (
     make_stub_page,
     parse_response,
 )
+from wiki_creator.studio_io import extract_stage_output_from_run_payload
 
 
 def _entity() -> dict:
@@ -285,7 +285,7 @@ def test_extract_stage_output_from_run_payload_reads_successful_stage_output() -
         ],
     }
 
-    output = _extract_stage_output_from_run_payload(run_payload, "wiki-page-item")
+    output = extract_stage_output_from_run_payload(run_payload, "wiki-page-item")
 
     assert output == {
         "title": "Victor Grandes",
@@ -1439,7 +1439,7 @@ def test_recovers_and_corrects_on_identity_only_rejection(monkeypatch, tmp_path)
             "content": "## Biographie\n\nVerin est un lord.",
         }
 
-    monkeypatch.setattr("scripts.generate_wiki_pages._load_studio_stage_output", fake_stage_output)
+    monkeypatch.setattr("scripts.generate_wiki_pages.studio_io.load_studio_stage_output", fake_stage_output)
 
     page = _run_generation_for_entity(
         entity=_verin_entity_ctx(),
@@ -1471,7 +1471,7 @@ def test_does_not_recover_on_non_identity_rejection(monkeypatch, tmp_path):
         return {"title": "Verin", "importance": "secondary", "entity_type": "PERSON",
                 "infobox_fields": {"nom": "Kaltain"}, "content": "x"}
 
-    monkeypatch.setattr("scripts.generate_wiki_pages._load_studio_stage_output", fake_stage_output)
+    monkeypatch.setattr("scripts.generate_wiki_pages.studio_io.load_studio_stage_output", fake_stage_output)
 
     page = _run_generation_for_entity(
         entity=_verin_entity_ctx(),
@@ -1534,7 +1534,7 @@ def test_non_person_success_page_not_touched(monkeypatch, tmp_path):
 
 def test_rejection_is_identity_only(monkeypatch):
     monkeypatch.setattr(
-        "scripts.generate_wiki_pages._load_studio_stage_output",
+        "scripts.generate_wiki_pages.studio_io.load_studio_stage_output",
         lambda run_id, stage: {"errors": ["❌ Infobox 'nom: X' ne correspond pas à l'entité 'Y'"]},
     )
     assert _rejection_is_identity_only("r1") is True
@@ -1542,7 +1542,7 @@ def test_rejection_is_identity_only(monkeypatch):
 
 def test_rejection_is_identity_only_false_when_mixed(monkeypatch):
     monkeypatch.setattr(
-        "scripts.generate_wiki_pages._load_studio_stage_output",
+        "scripts.generate_wiki_pages.studio_io.load_studio_stage_output",
         lambda run_id, stage: {"errors": [
             "❌ Infobox 'nom: X' ne correspond pas à l'entité 'Y'",
             "❌ Nom non ancré dans les extraits source : Z",
@@ -1603,7 +1603,7 @@ def test_identity_recovery_trigger_is_counted(monkeypatch, tmp_path):
         return {"title": "Verin", "importance": "secondary", "entity_type": "PERSON",
                 "infobox_fields": {"nom": "Kaltain"}, "content": "## Biographie\n\nVerin est un lord."}
 
-    monkeypatch.setattr("scripts.generate_wiki_pages._load_studio_stage_output", fake_stage_output)
+    monkeypatch.setattr("scripts.generate_wiki_pages.studio_io.load_studio_stage_output", fake_stage_output)
     _run_generation_for_entity(
         entity=_verin_entity_ctx(), book_title="TOG", model="q", timeout=1,
         sections=["infobox", "biography"], max_tokens=800, dry_run=False,

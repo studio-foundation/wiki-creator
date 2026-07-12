@@ -30,7 +30,7 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
-from wiki_creator.paths import book_paths_from_epub, BookPaths
+from wiki_creator import studio_io
 
 # Keywords that indicate a genuine geographic entity — skip LLM for these
 GEOGRAPHIC_KEYWORDS = frozenset({
@@ -47,14 +47,6 @@ TYPE_TO_KEY = {
     "PLACE": "places_full",
     "ORG": "orgs_full",
 }
-
-
-def _paths_from_payload(payload: dict) -> BookPaths | None:
-    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
-    file_path = ctx.get("file_path")
-    if not file_path:
-        return None
-    return book_paths_from_epub(file_path)
 
 
 def is_obvious_geographic(name: str) -> bool:
@@ -209,7 +201,7 @@ def verify_clusters(
 
 
 def main() -> None:
-    payload = json.load(sys.stdin)
+    payload = studio_io.read_payload()
     input_data = yaml.safe_load(payload.get("additional_context", "") or "") or {}
     enabled = input_data.get("verify_entity_types", False)
 
@@ -225,7 +217,7 @@ def main() -> None:
         )
         return
 
-    paths = _paths_from_payload(payload)
+    paths = studio_io.paths_from_payload(payload, strict=False)
     type_files = None
     if paths is not None:
         type_files = {

@@ -24,7 +24,7 @@ from typing import Literal, TypedDict
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
-from wiki_creator.paths import book_paths_from_epub, BookPaths
+from wiki_creator import studio_io
 from wiki_creator.lang import load_lang_config, infer_language
 
 
@@ -37,14 +37,6 @@ class AliasPair(TypedDict):
 
 
 _WINDOW_SIZE = 300  # tokens
-
-
-def _paths_from_payload(payload: dict) -> BookPaths:
-    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
-    file_path = ctx.get("file_path")
-    if not file_path:
-        raise ValueError("missing file_path in additional_context")
-    return book_paths_from_epub(file_path)
 
 
 def _empty_stats() -> dict:
@@ -840,7 +832,7 @@ def resolve_aliases(
 
 
 def main() -> None:
-    payload = json.load(sys.stdin)
+    payload = studio_io.read_payload()
     previous_outputs = payload.get("previous_outputs", {})
     all_stage_outputs = payload.get("all_stage_outputs", {})
     # New pipeline: entities come from merge-entities; fall back to resolve-clusters for compat.
@@ -877,7 +869,7 @@ def main() -> None:
 
     persons_full = {}
     try:
-        paths = _paths_from_payload(payload)
+        paths = studio_io.paths_from_payload(payload)
         persons_full = _load_persons_full(paths.processing)
     except ValueError:
         persons_full = {}
