@@ -252,6 +252,13 @@ class Registry:
         full_registries: merged *_full.json registries ({"entity_001": {...}}),
             used to rebuild mentions and to break alias-collision ties.
         """
+        from wiki_creator.merge_strategies import (
+            compose_evidence,
+            normalize_method,
+            recover_chapter_id,
+            strategy_for,
+        )
+
         splits = splits or {}
         full = full_registries or {}
         entities_raw = [
@@ -265,17 +272,17 @@ class Registry:
             for name in (cluster.get("all_mentions") or [])
         }
 
-        records: list[EntityRecord] = []
-        decisions: dict[str, MergeDecision] = {}
-        warnings: list[str] = []
-        mention_counts: dict[str, int] = {}
+        reg = cls()
         used_slugs: dict[str, int] = {}
         used_entity_ids: set[str] = set()
+        # remember the raw alias-resolution block + source_ids per entity_id so we
+        # can build decisions after all base records exist (collisions need them all)
+        pending: list[tuple[str, str, dict, list[str]]] = []  # (entity_id, canonical, recorded, aliases)
 
         for raw in entities_raw:
             canonical = str(raw.get("canonical_name") or "").strip()
             if not canonical:
-                warnings.append("skipped entity without canonical_name")
+                reg.warnings.append("skipped entity without canonical_name")
                 continue
 
             slug = entity_slug(canonical)
@@ -289,82 +296,172 @@ class Registry:
             used_entity_ids.add(entity_id)
 
             aliases = sorted(
-                {str(a) for a in (raw.get("aliases") or []) if str(a).strip()}
-                | {canonical},
+                {str(a) for a in (raw.get("aliases") or []) if str(a).strip()} | {canonical},
                 key=lambda a: (a.casefold(), a),
             )
             source_ids = [str(s) for s in (raw.get("source_ids") or [])]
-
-            recorded = raw.get("alias_resolution") or {}
-            merged_from = {str(m).casefold() for m in (recorded.get("merged_from") or [])}
-            method = str(recorded.get("method") or "unknown")
-            method_confidence = str(recorded.get("confidence") or "medium")
-            snippets = "; ".join(
-                s
-                for s in (
-                    str(e.get("snippet") or "")
-                    for e in (recorded.get("evidence") or [])
-                    if isinstance(e, dict)
-                )
-                if s
-            )
-
-            decision_ids: list[str] = []
-            for alias in aliases:
-                if alias == canonical:
-                    continue
-                alias_slug = entity_slug(alias)
-                if alias.casefold() in merged_from:
-                    strategy, conf = method, method_confidence
-                    evidence = snippets or (
-                        f"alias-resolution merge of '{alias}' into '{canonical}'"
-                    )
-                elif alias.casefold() in jw_names:
-                    strategy, conf = "cluster_jw", "medium"
-                    evidence = (
-                        f"reconstructed (pas 1) from splits cluster: "
-                        f"'{alias}' co-clustered with '{canonical}'"
-                    )
-                else:
-                    strategy, conf = "extraction_grouping", "medium"
-                    evidence = (
-                        f"reconstructed (pas 1) from extraction surface variants: "
-                        f"'{alias}' grouped under '{canonical}'"
-                    )
-                d_id = _decision_id(strategy, (entity_id, alias_slug), evidence)
-                decisions[d_id] = MergeDecision(
-                    decision_id=d_id,
-                    strategy=strategy,
-                    inputs=(entity_id, alias_slug),
-                    evidence=evidence,
-                    confidence=conf,
-                )
-                if d_id not in decision_ids:
-                    decision_ids.append(d_id)
-
-            mention_counts[entity_id] = sum(
-                int((full.get(sid) or {}).get("mention_count") or 0) for sid in source_ids
-            )
-            records.append(
+            reg.entities.append(
                 EntityRecord(
                     entity_id=entity_id,
                     canonical_name=canonical,
                     entity_type=str(raw.get("type") or "OTHER"),
                     aliases=aliases,
                     mentions=_mentions_from_full(canonical, source_ids, full),
-                    decisions=decision_ids,
+                    decisions=[],
                 )
             )
+            pending.append((entity_id, canonical, raw.get("alias_resolution") or {}, aliases))
 
-        records = _merge_duplicate_canonicals(records, decisions, mention_counts, warnings)
-        _resolve_alias_collisions(records, decisions, mention_counts, warnings)
+        # Fold duplicate canonicals first (so their shared aliases are not mistaken
+        # for cross-entity collisions), then attach per-alias justifying decisions.
+        _fold_duplicate_canonicals(reg)
+        for entity_id, canonical, recorded, aliases in pending:
+            record = reg._by_id(entity_id)
+            if record is None:  # folded into an earlier duplicate
+                continue
+            merged_from = {str(m).casefold() for m in (recorded.get("merged_from") or [])}
+            method = str(recorded.get("method") or "")
+            method_confidence = str(recorded.get("confidence") or "medium")
+            snippets = "; ".join(
+                s for s in (
+                    str(e.get("snippet") or "")
+                    for e in (recorded.get("evidence") or []) if isinstance(e, dict)
+                ) if s
+            )
+            for alias in list(record.aliases):
+                if alias == record.canonical_name:
+                    continue
+                alias_slug = entity_slug(alias)
+                if alias.casefold() in merged_from:
+                    strategy_name = normalize_method(method)
+                    conf = method_confidence
+                    base = snippets or f"alias-resolution merge of '{alias}' into '{canonical}'"
+                    evidence = compose_evidence(base, recover_chapter_id(snippets, full))
+                elif alias.casefold() in jw_names:
+                    strategy_name, conf = "cluster_jw", "medium"
+                    evidence = (
+                        f"reconstructed (pas 1) from splits cluster: "
+                        f"'{alias}' co-clustered with '{canonical}'"
+                    )
+                else:
+                    strategy_name, conf = "extraction_grouping", "medium"
+                    evidence = (
+                        f"reconstructed (pas 1) from extraction surface variants: "
+                        f"'{alias}' grouped under '{canonical}'"
+                    )
+                decision = strategy_for(strategy_name).propose(
+                    record.entity_id, alias_slug, evidence=evidence, confidence=conf
+                )
+                reg.merge(record.entity_id, alias_slug, decision)
 
+        # prune decisions no longer referenced (collision losers)
         referenced: set[str] = set()
-        for record in records:
+        for record in reg.entities:
             referenced.update(record.decisions)
-        decisions = {d_id: d for d_id, d in decisions.items() if d_id in referenced}
+        reg.decisions = {d_id: d for d_id, d in reg.decisions.items() if d_id in referenced}
+        return reg
 
-        return cls(entities=records, decisions=decisions, warnings=warnings)
+    def _by_id(self, entity_id: str) -> EntityRecord | None:
+        for record in self.entities:
+            if record.entity_id == entity_id:
+                return record
+        return None
+
+    def merge(self, survivor: str, absorbed: str, decision: MergeDecision) -> str:
+        """Single mutation primitive.
+
+        survivor: entity_id of the surviving record (must exist).
+        absorbed: another entity_id → fold its record into survivor; OR an alias
+            slug already present on survivor → attach the justifying decision.
+        decision: registered and referenced by survivor.
+
+        Conflict — an alias now on survivor also owned by a third entity — is
+        resolved deterministically: canonical owner wins, else higher
+        len(mentions), else first-seen order. The loser drops the alias and
+        unlinks its now-orphaned decision id from its record; a warning is
+        appended. (The MergeDecision itself stays in self.decisions — validate()
+        permits unreferenced decisions; from_artifacts prunes them at the end. A
+        standalone caller that wants self.decisions kept tight should prune too.)
+        Returns survivor's entity_id.
+        """
+        keeper = self._by_id(survivor)
+        if keeper is None:
+            raise ValueError(f"merge(): unknown survivor '{survivor}'")
+
+        self.decisions[decision.decision_id] = decision
+        if decision.decision_id not in keeper.decisions:
+            keeper.decisions.append(decision.decision_id)
+
+        contested: set[str] = set()
+        # Check if absorbed is an alias slug on keeper (attach mode)
+        is_attach_case = any(entity_slug(alias) == absorbed for alias in keeper.aliases)
+
+        absorbed_record = self._by_id(absorbed) if not is_attach_case else None
+        if absorbed_record is not None and absorbed_record is not keeper:
+            # Fold case: absorbed is an entity_id
+            for alias in absorbed_record.aliases:
+                if alias not in keeper.aliases:
+                    keeper.aliases.append(alias)
+                contested.add(alias.casefold())
+            keeper.mentions.extend(absorbed_record.mentions)
+            for d_id in absorbed_record.decisions:
+                if d_id not in keeper.decisions:
+                    keeper.decisions.append(d_id)
+            self.entities = [e for e in self.entities if e is not absorbed_record]
+        else:
+            # Attach case: absorbed is an alias slug already on keeper
+            for alias in keeper.aliases:
+                if entity_slug(alias) == absorbed:
+                    contested.add(alias.casefold())
+
+        for key in contested:
+            self._resolve_alias_conflict(key)
+        return keeper.entity_id
+
+    def _resolve_alias_conflict(self, key: str) -> None:
+        """Deterministic tie-break for an alias (casefold `key`) claimed by >1
+        entity: canonical owner → higher len(mentions) → first-seen order."""
+        claimants = [r for r in self.entities if any(a.casefold() == key for a in r.aliases)]
+        if len(claimants) < 2:
+            return
+        canonical_owners = [r for r in claimants if r.canonical_name.casefold() == key]
+        if canonical_owners:
+            winner = canonical_owners[0]
+        else:
+            winner = max(claimants, key=lambda r: len(r.mentions))
+        for loser in claimants:
+            if loser is winner:
+                continue
+            dropped = [a for a in loser.aliases if a.casefold() == key]
+            if not dropped:
+                continue
+            loser.aliases = [a for a in loser.aliases if a.casefold() != key]
+            dropped_slugs = {entity_slug(a) for a in dropped}
+            still_needed = {entity_slug(a) for a in loser.aliases}
+            loser.decisions = [
+                d_id for d_id in loser.decisions
+                if self.decisions[d_id].inputs[1] not in dropped_slugs
+                or self.decisions[d_id].inputs[1] in still_needed
+            ]
+            self.warnings.append(
+                f"alias '{dropped[0]}' claimed by multiple entities: kept on "
+                f"'{winner.entity_id}', dropped from '{loser.entity_id}'"
+            )
+
+    def to_entities_classified(self) -> list[dict]:
+        """Identity projection matching the entity shape of entities_classified.json
+        (identity fields only; classification labels are entity_classification.py's
+        concern). Canonical form for the golden equivalence test — entities sorted,
+        alias lists sorted, so ordering/tie-break jitter cannot cause false diffs."""
+        projected = [
+            {
+                "canonical_name": r.canonical_name,
+                "type": r.entity_type,
+                "aliases": sorted(set(r.aliases), key=lambda a: (a.casefold(), a)),
+            }
+            for r in self.entities
+        ]
+        return sorted(projected, key=lambda e: e["canonical_name"].casefold())
 
 
 def _mentions_from_full(
@@ -396,97 +493,29 @@ def _mentions_from_full(
     return mentions
 
 
-def _merge_duplicate_canonicals(
-    records: list[EntityRecord],
-    decisions: dict[str, MergeDecision],
-    mention_counts: dict[str, int],
-    warnings: list[str],
-) -> list[EntityRecord]:
-    """Artifacts occasionally carry two entities with the same canonical name;
-    fold the later into the first so invariant 1 can hold (deterministic)."""
-    by_canonical: dict[str, EntityRecord] = {}
-    kept: list[EntityRecord] = []
-    for record in records:
+def _fold_duplicate_canonicals(reg: "Registry") -> None:
+    """Fold later entities sharing a casefold canonical into the first, via
+    merge(). Each fold is justified by an extraction_grouping decision."""
+    from wiki_creator.merge_strategies import strategy_for  # local: avoid cycle at import
+
+    seen: dict[str, str] = {}  # casefold canonical → survivor entity_id
+    for record in list(reg.entities):
         key = record.canonical_name.casefold()
-        first = by_canonical.get(key)
-        if first is None:
-            by_canonical[key] = record
-            kept.append(record)
+        survivor = seen.get(key)
+        if survivor is None:
+            seen[key] = record.entity_id
             continue
-        warnings.append(
-            f"duplicate canonical_name '{record.canonical_name}': "
-            f"merged '{record.entity_id}' into '{first.entity_id}'"
+        survivor_record = reg._by_id(survivor)
+        assert survivor_record is not None
+        evidence = (
+            f"reconstructed (pas 1): duplicate canonical "
+            f"'{record.canonical_name}' folded into '{survivor_record.canonical_name}'"
         )
-        for alias in record.aliases:
-            if alias not in first.aliases:
-                first.aliases.append(alias)
-        first.aliases.sort(key=lambda a: (a.casefold(), a))
-        first.mentions.extend(record.mentions)
-        for d_id in record.decisions:
-            if d_id not in first.decisions:
-                first.decisions.append(d_id)
-        mention_counts[first.entity_id] = mention_counts.get(
-            first.entity_id, 0
-        ) + mention_counts.get(record.entity_id, 0)
-        if record.canonical_name != first.canonical_name:
-            alias_slug = entity_slug(record.canonical_name)
-            evidence = (
-                f"reconstructed (pas 1): duplicate canonical "
-                f"'{record.canonical_name}' folded into '{first.canonical_name}'"
-            )
-            d_id = _decision_id(
-                "extraction_grouping", (first.entity_id, alias_slug), evidence
-            )
-            decisions[d_id] = MergeDecision(
-                decision_id=d_id,
-                strategy="extraction_grouping",
-                inputs=(first.entity_id, alias_slug),
-                evidence=evidence,
-                confidence="medium",
-            )
-            first.decisions.append(d_id)
-    return kept
-
-
-def _resolve_alias_collisions(
-    records: list[EntityRecord],
-    decisions: dict[str, MergeDecision],
-    mention_counts: dict[str, int],
-    warnings: list[str],
-) -> None:
-    """Invariant 1 pre-pass: an alias claimed by several entities stays with
-    its canonical owner, else the highest mention_count, else artifact order."""
-    claims: dict[str, list[EntityRecord]] = {}
-    for record in records:
-        for alias in record.aliases:
-            bucket = claims.setdefault(alias.casefold(), [])
-            if not bucket or bucket[-1] is not record:
-                bucket.append(record)
-
-    for key, claimants in claims.items():
-        if len(claimants) < 2:
-            continue
-        canonical_owners = [
-            r for r in claimants if r.canonical_name.casefold() == key
-        ]
-        if canonical_owners:
-            winner = canonical_owners[0]  # unique after duplicate-canonical merge
-        else:
-            winner = max(claimants, key=lambda r: mention_counts.get(r.entity_id, 0))
-        for loser in claimants:
-            if loser is winner:
-                continue
-            dropped = [a for a in loser.aliases if a.casefold() == key]
-            loser.aliases = [a for a in loser.aliases if a.casefold() != key]
-            dropped_slugs = {entity_slug(a) for a in dropped}
-            still_needed = {entity_slug(a) for a in loser.aliases}
-            loser.decisions = [
-                d_id
-                for d_id in loser.decisions
-                if decisions[d_id].inputs[1] not in dropped_slugs
-                or decisions[d_id].inputs[1] in still_needed
-            ]
-            warnings.append(
-                f"alias '{dropped[0]}' claimed by multiple entities: kept on "
-                f"'{winner.entity_id}', dropped from '{loser.entity_id}'"
-            )
+        decision = strategy_for("extraction_grouping").propose(
+            survivor, entity_slug(record.canonical_name), evidence=evidence, confidence="medium"
+        )
+        reg.warnings.append(
+            f"duplicate canonical_name '{record.canonical_name}': "
+            f"merged '{record.entity_id}' into '{survivor}'"
+        )
+        reg.merge(survivor, record.entity_id, decision)
