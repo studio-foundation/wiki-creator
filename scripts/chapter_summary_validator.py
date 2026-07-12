@@ -11,10 +11,14 @@ Output (stdout):
   { "valid": bool, "errors": [...], "feedback": str }
 """
 import json
+import re
 import sys
 from pathlib import Path
 
 import yaml
+
+_WORD_RE = re.compile(r"[^\W\d_]+", re.UNICODE)
+_SENTENCE_RE = re.compile(r"[.!?…]+")
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
@@ -42,10 +46,41 @@ def check_bullets_not_empty(summary: dict) -> list[str]:
     return []
 
 
+def _letter_tokens(text: str) -> list[str]:
+    """Unicode letter-runs only (digits, punctuation, apostrophes, hyphens split)."""
+    return _WORD_RE.findall(text or "")
+
+
+def check_grounding(summary: dict, meta: dict) -> list[str]:
+    chapter_text = str((meta or {}).get("chapter_content", "") or "").strip()
+    if not chapter_text:
+        return []
+    text_tokens = {t.casefold() for t in _letter_tokens(chapter_text)}
+    ungrounded: list[str] = []
+    seen: set[str] = set()
+    for bullet in summary.get("summary_bullets", []) or []:
+        for sentence in _SENTENCE_RE.split(str(bullet)):
+            # Skip the sentence-initial token: its capitalization is grammatical,
+            # not evidence of a proper noun.
+            for tok in _letter_tokens(sentence)[1:]:
+                if len(tok) < 2 or not tok[0].isupper():
+                    continue
+                key = tok.casefold()
+                if key in text_tokens or key in seen:
+                    continue
+                seen.add(key)
+                ungrounded.append(tok)
+    if not ungrounded:
+        return []
+    reported = ", ".join(ungrounded[:5])
+    return [f"❌ Noms/termes absents du texte du chapitre: {reported}"]
+
+
 def validate_summary(summary: dict, meta: dict) -> dict:
     errors: list[str] = []
     errors += check_temporal_context(summary)
     errors += check_bullets_not_empty(summary)
+    errors += check_grounding(summary, meta)
     return {
         "valid": len(errors) == 0,
         "errors": errors,
