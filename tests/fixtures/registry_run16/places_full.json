@@ -1,0 +1,3 @@
+{
+  "e_castle": {"type": "PLACE", "raw_mentions": ["Glass Castle", "the castle"], "first_seen": "ch01", "mention_count": 4, "mentions_by_chapter": {"ch01": ["The Glass Castle loomed above the city."]}}
+}
