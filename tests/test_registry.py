@@ -566,3 +566,74 @@ def test_from_artifacts_prunes_orphan_decisions_after_alias_collision():
         for d in registry.decisions
     )
     registry.validate()
+
+
+def _bare_decision(strategy, survivor, absorbed_slug, evidence="ev", confidence="medium"):
+    d_id = _decision_id(strategy, (survivor, absorbed_slug), evidence)
+    return MergeDecision(
+        decision_id=d_id, strategy=strategy, inputs=(survivor, absorbed_slug),
+        evidence=evidence, confidence=confidence,
+    )
+
+
+def test_merge_attach_records_decision_for_existing_alias():
+    reg = _valid_registry()
+    perrington = reg._by_id("perrington")
+    # 'Duke Perrington' is already an alias; attach its justifying decision
+    d = _bare_decision("title_apposition", "perrington", entity_slug("Duke Perrington"))
+    returned = reg.merge("perrington", entity_slug("Duke Perrington"), d)
+    assert returned == "perrington"
+    assert d.decision_id in perrington.decisions
+    assert reg.decisions[d.decision_id].strategy == "title_apposition"
+
+
+def test_merge_fold_absorbs_entity_record():
+    r1, d1 = _record_with_decision("perrington", "Perrington", ["Duke Perrington", "Perrington"])
+    r2, d2 = _record_with_decision("the_duke", "The Duke", ["The Duke"])
+    reg = Registry(entities=[r1, r2], decisions={**d1, **d2})
+    fold = _bare_decision("role_symmetric", "perrington", entity_slug("The Duke"))
+    r2.aliases.append("The Duke")  # ensure present
+    reg.merge("perrington", "the_duke", fold)
+    assert [r.entity_id for r in reg.entities] == ["perrington"]
+    perrington = reg._by_id("perrington")
+    assert "The Duke" in perrington.aliases
+    assert fold.decision_id in perrington.decisions
+
+
+def test_merge_unknown_survivor_raises():
+    reg = _valid_registry()
+    with pytest.raises(ValueError, match="unknown survivor"):
+        reg.merge("nobody", "x", _bare_decision("manual", "nobody", "x"))
+
+
+def test_merge_conflict_canonical_owner_wins():
+    # perrington (canonical 'Perrington') and a second entity both claim 'Perrington'
+    r1, d1 = _record_with_decision("perrington", "Perrington", ["Duke Perrington", "Perrington"])
+    r2, d2 = _record_with_decision("guard", "Guard", ["Guard"])
+    reg = Registry(entities=[r1, r2], decisions={**d1, **d2})
+    # guard wrongly gains 'Perrington' as an alias, justified by a decision
+    d = _bare_decision("extraction_grouping", "guard", entity_slug("Perrington"))
+    r2.aliases.append("Perrington")
+    reg.merge("guard", entity_slug("Perrington"), d)
+    # canonical owner keeps it; guard loses it + the orphan decision; warning logged
+    assert "Perrington" not in reg._by_id("guard").aliases
+    assert reg._by_id("perrington") is not None
+    assert d.decision_id not in reg._by_id("guard").decisions
+    assert any("Perrington" in w for w in reg.warnings)
+    reg.validate()
+
+
+def test_merge_conflict_more_mentions_wins_when_no_canonical_owner():
+    r1, d1 = _record_with_decision("a_one", "A One", ["A One", "Shadow"])
+    r2, d2 = _record_with_decision("b_two", "B Two", ["B Two", "Shadow"])
+    reg = Registry(entities=[r1, r2], decisions={**d1, **d2})
+    reg._by_id("a_one").mentions.extend(
+        [Mention(surface="Shadow", chapter_id="ch01"), Mention(surface="Shadow", chapter_id="ch02")]
+    )
+    reg._by_id("b_two").mentions.append(Mention(surface="Shadow", chapter_id="ch01"))
+    # trigger resolution by (re-)attaching the contested alias on the lower-mention entity
+    d = _bare_decision("extraction_grouping", "b_two", entity_slug("Shadow"))
+    reg.merge("b_two", entity_slug("Shadow"), d)
+    assert "Shadow" in reg._by_id("a_one").aliases      # more mentions wins
+    assert "Shadow" not in reg._by_id("b_two").aliases
+    reg.validate()

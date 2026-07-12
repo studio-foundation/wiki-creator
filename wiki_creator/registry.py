@@ -366,6 +366,89 @@ class Registry:
 
         return cls(entities=records, decisions=decisions, warnings=warnings)
 
+    def _by_id(self, entity_id: str) -> EntityRecord | None:
+        for record in self.entities:
+            if record.entity_id == entity_id:
+                return record
+        return None
+
+    def merge(self, survivor: str, absorbed: str, decision: MergeDecision) -> str:
+        """Single mutation primitive.
+
+        survivor: entity_id of the surviving record (must exist).
+        absorbed: another entity_id → fold its record into survivor; OR an alias
+            slug already present on survivor → attach the justifying decision.
+        decision: registered and referenced by survivor.
+
+        Conflict — an alias now on survivor also owned by a third entity — is
+        resolved deterministically: canonical owner wins, else higher
+        len(mentions), else first-seen order. The loser drops the alias and its
+        orphaned decision; a warning is appended. Returns survivor's entity_id.
+        """
+        keeper = self._by_id(survivor)
+        if keeper is None:
+            raise ValueError(f"merge(): unknown survivor '{survivor}'")
+
+        self.decisions[decision.decision_id] = decision
+        if decision.decision_id not in keeper.decisions:
+            keeper.decisions.append(decision.decision_id)
+
+        contested: set[str] = set()
+        # Check if absorbed is an alias slug on keeper (attach mode)
+        is_attach_case = any(entity_slug(alias) == absorbed for alias in keeper.aliases)
+
+        absorbed_record = self._by_id(absorbed) if not is_attach_case else None
+        if absorbed_record is not None and absorbed_record is not keeper:
+            # Fold case: absorbed is an entity_id
+            for alias in absorbed_record.aliases:
+                if alias not in keeper.aliases:
+                    keeper.aliases.append(alias)
+                contested.add(alias.casefold())
+            keeper.mentions.extend(absorbed_record.mentions)
+            for d_id in absorbed_record.decisions:
+                if d_id not in keeper.decisions:
+                    keeper.decisions.append(d_id)
+            self.entities = [e for e in self.entities if e is not absorbed_record]
+        else:
+            # Attach case: absorbed is an alias slug already on keeper
+            for alias in keeper.aliases:
+                if entity_slug(alias) == absorbed:
+                    contested.add(alias.casefold())
+
+        for key in contested:
+            self._resolve_alias_conflict(key)
+        return keeper.entity_id
+
+    def _resolve_alias_conflict(self, key: str) -> None:
+        """Deterministic tie-break for an alias (casefold `key`) claimed by >1
+        entity: canonical owner → higher len(mentions) → first-seen order."""
+        claimants = [r for r in self.entities if any(a.casefold() == key for a in r.aliases)]
+        if len(claimants) < 2:
+            return
+        canonical_owners = [r for r in claimants if r.canonical_name.casefold() == key]
+        if canonical_owners:
+            winner = canonical_owners[0]
+        else:
+            winner = max(claimants, key=lambda r: len(r.mentions))
+        for loser in claimants:
+            if loser is winner:
+                continue
+            dropped = [a for a in loser.aliases if a.casefold() == key]
+            if not dropped:
+                continue
+            loser.aliases = [a for a in loser.aliases if a.casefold() != key]
+            dropped_slugs = {entity_slug(a) for a in dropped}
+            still_needed = {entity_slug(a) for a in loser.aliases}
+            loser.decisions = [
+                d_id for d_id in loser.decisions
+                if self.decisions[d_id].inputs[1] not in dropped_slugs
+                or self.decisions[d_id].inputs[1] in still_needed
+            ]
+            self.warnings.append(
+                f"alias '{dropped[0]}' claimed by multiple entities: kept on "
+                f"'{winner.entity_id}', dropped from '{loser.entity_id}'"
+            )
+
 
 def _mentions_from_full(
     canonical: str, source_ids: list[str], full: dict
