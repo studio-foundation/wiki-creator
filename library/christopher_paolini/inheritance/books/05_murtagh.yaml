@@ -1,0 +1,135 @@
+description: |
+  Build a wiki for "Murtagh" by Christopher Paolini,
+  a standalone novel set in the world of the Inheritance Cycle.
+  Parse the book, extract all named entities (characters, locations, organizations, events),
+  resolve aliases, and generate Markdown wiki pages for each entity.
+
+file_path: library/christopher_paolini/inheritance/books/05_murtagh.epub
+spacy_model: en_core_web_lg
+coref: false
+workers: 8
+
+# Entity importance classification — 'auto' uses percentile distribution
+# Override with explicit values if the auto-detected tiers are wrong for your book
+#
+# Absolute pre-filter applied before clustering/classification:
+# entities with total mentions below this value are dropped early.
+min_mentions_absolute: 3
+thresholds: auto
+# Example explicit config (uncomment to use):
+# thresholds:
+#   characters:
+#     principal: { min_mentions: 50, min_chapters: 15 }
+#     secondary: { min_mentions: 10, min_chapters: 3 }
+#     figurant: { min_mentions: 3 }
+#     ignored_below: 3
+#   locations:
+#     major: { min_mentions: 20, min_chapters: 5 }
+#     minor: { min_mentions: 3 }
+#   organizations:
+#     major: { min_mentions: 10 }
+#     minor: { min_mentions: 3 }
+
+generation:
+  chapter_summary:
+    mode: llm
+    max_bullets: 8
+    llm_fallback_to_extractive: true
+    llm_model: qwen2.5
+    llm_timeout_seconds: 45
+  chapter_summary_max_chapters_per_entity: 20
+  principal:
+    sections: [infobox, biography, personality, physical, powers, relationships, trivia, references]
+    sections_by_type:
+      PLACE: [infobox, biography, physical, relationships, trivia, references]
+      ORG: [infobox, biography, relationships, references]
+      EVENT: [infobox, biography, relationships, references]
+    max_tokens_per_page: 2000
+  secondary:
+    sections: [infobox, biography, relationships, references]
+    max_tokens_per_page: 800
+  figurant:
+    sections: [infobox, biography]
+    max_tokens_per_page: 200
+
+export:
+  categories:
+    language: en
+    labels:
+      persons: Characters
+      principal: Main Characters
+      secondary: Secondary Characters
+      locations: Locations
+      organizations: Organizations
+
+classification:
+  concept_keywords:
+    - magic
+    - spell
+    - spells
+    - ancient language
+    - the ancient language
+    - eldunarí
+    - eldunari
+    - gedwëy ignasia
+    - wyrda
+    - true name
+    - true names
+  role_words:
+    - dragon rider
+    - rider
+    - riders
+    - dragon
+    - king
+    - queen
+    - prince
+    - princess
+    - elf
+    - dwarf
+    - urgal
+    - shade
+    - spellcaster
+    - sorcerer
+    - witch
+  role_patterns:
+    - '\b[a-z][a-z''\- ]*rider\b'
+
+entity_overrides:
+  Alagaësia:
+    force_type: PLACE
+  Alagaesia:
+    force_type: PLACE
+  Carvahall:
+    force_type: PLACE
+  Palancar Valley:
+    force_type: PLACE
+  Ellesméra:
+    force_type: PLACE
+  Ellesmera:
+    force_type: PLACE
+  Tronjheim:
+    force_type: PLACE
+  Farthen Dûr:
+    force_type: PLACE
+  Du Weldenvarden:
+    force_type: PLACE
+  Urû'baen:
+    force_type: PLACE
+  Uru'baen:
+    force_type: PLACE
+  Teirm:
+    force_type: PLACE
+  Gil'ead:
+    force_type: PLACE
+  Varden:
+    force_type: ORG
+  Empire:
+    force_type: ORG
+
+validation:
+  series: The Inheritance Cycle
+  forbidden_series:
+    - The Lord of the Rings
+    - A Song of Ice and Fire
+    - The Wheel of Time
+    - Harry Potter
