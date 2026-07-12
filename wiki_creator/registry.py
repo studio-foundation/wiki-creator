@@ -119,6 +119,25 @@ class Registry:
                 table[alias] = record.entity_id
         return table
 
+    def bind_identity(self, entity: dict) -> bool:
+        """Rewrite ``entity['canonical_name']`` and ``entity['aliases']`` to the
+        registry's authoritative record (looked up by the entity's current
+        canonical_name / any surface it already carries).
+
+        Downstream single-source-of-truth binding (spec §3.5 pas 4): preparation
+        and generation consult the registry instead of trusting the identity
+        re-derived through intermediate artifacts. ``aliases`` excludes the
+        canonical_name (invariant 3 keeps it inside ``record.aliases``, but the
+        batch convention lists only the *other* surfaces). Returns True when a
+        record was found and applied, False otherwise (caller keeps prior fields).
+        """
+        record = self.lookup(str(entity.get("canonical_name", "")))
+        if record is None:
+            return False
+        entity["canonical_name"] = record.canonical_name
+        entity["aliases"] = [a for a in record.aliases if a != record.canonical_name]
+        return True
+
     def audit_log(self) -> list[MergeDecision]:
         return sorted(self.decisions.values(), key=lambda d: d.decision_id)
 
@@ -236,6 +255,20 @@ class Registry:
             registry = cls.from_dict(json.load(f))
         registry.validate()
         return registry
+
+    @classmethod
+    def load_from_processing(cls, processing_dir: Path | str) -> "Registry | None":
+        """Load ``<processing_dir>/registry.json`` for downstream consumers, or
+        None when it is absent/unreadable (graceful degradation — the strangler
+        migration must not harden a hard dependency on the registry before it is
+        universally present, spec §3.5 pas 4)."""
+        path = Path(processing_dir) / "registry.json"
+        if not path.exists():
+            return None
+        try:
+            return cls.load(path)
+        except (OSError, ValueError, json.JSONDecodeError):
+            return None
 
     @classmethod
     def from_artifacts(
