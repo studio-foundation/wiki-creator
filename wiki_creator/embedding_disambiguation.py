@@ -104,7 +104,7 @@ class EmbeddingBackend:
         if explicit:
             return explicit
         try:
-            import torch
+            import torch  # type: ignore[import-not-found]  # optional (via embeddings/coref extra)
 
             if torch.cuda.is_available():
                 return "cuda"
