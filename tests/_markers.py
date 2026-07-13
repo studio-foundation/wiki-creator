@@ -35,3 +35,13 @@ requires_fastcoref = pytest.mark.skipif(
     not fastcoref_available(),
     reason="requires the coref extra (pip install -e '.[coref]')",
 )
+
+
+def sentence_transformers_available() -> bool:
+    return importlib.util.find_spec("sentence_transformers") is not None
+
+
+requires_embeddings = pytest.mark.skipif(
+    not sentence_transformers_available(),
+    reason="requires the embeddings extra (pip install -e '.[embeddings]')",
+)

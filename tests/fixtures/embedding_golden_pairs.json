@@ -1,0 +1,99 @@
+{
+  "_comment": "Self-contained golden pairs for STU-468 embedding disambiguation. Contexts baked from a throne-of-glass run (processing_output/ is gitignored) so the eval is hermetic. Labels are ground truth.",
+  "entities": {
+    "celaena": [
+      "Not that she'd let the captain know any of that. Celaena examined the gloved hand holding her arm. The dark leather almost matched the dirt on her skin.",
+      "In here,” the Captain of the Guard growled, and shoved her with his free hand, finally releasing her. Celaena stumbled, her calloused feet slipping on the",
+      ". Lightheaded and immensely heavy all at once, Celaena faced the room. On an ornate redwood throne sat a handsome young man.",
+      "Thundering steps issued from behind her, and someone grabbed her by the neck. Celaena only glimpsed crimson cheeks and a sandy mustache before being thrown to the icy marble floor",
+      "His words were coated with glorious boredom. Celaena tried to pivot a free eye to the prince, but could only see a pair of black leather boots against the white floor."
+    ],
+    "dorian": [
+      "” “So? ” Dorian repeated. “",
+      "” He was standing so near that she could see the fine thread detail on his jacket, and smelled not perfume, but horses and iron. Dorian grinned. “What remarkable eyes you have!",
+      "The men exchanged glances. Dorian steepled his fingers. “",
+      "” Dorian leaned back in his throne. “",
+      "” Dorian straightened as the king continued. “She owes allegiance to none but herself, and won't balk at putting a knife through your heart."
+    ],
+    "duke perrington": [
+      "boots against the white floor. “It's clear that you respect me, Duke Perrington, but it's a bit unnecessary to put such effort into forcing Celaena Sardothien to have the same opinion. You and Iknow very well she has no love for my family.",
+      "“ You might think this… girl can win, but you forget that Duke Perrington is sponsoring Cain. You would have been better off picking a Champion like him—forged in blood and iron on the battle-field.",
+      "a moment longer, from the way he balanced his weight to his left, to what feature he first noticed when his eyes moved on and he examined the other competitors. One was a gargantuan man standing beside Duke Perrington, who seemed crafted of muscle and steel—and took pains to display it with his sleeveless armor. The ma",
+      "“ I'm meeting with His Grace, Duke Perrington. Ido",
+      "But his father never did anything without a reason—and from the few words he'd exchanged with Nehemia, he couldn't help but wonder if she had her own motivations in coming here, too. “It's a pity that Lady Kaltain has an agreement with Duke Perrington,” his mother went on. “She's such a beautiful girl—and so polite."
+    ],
+    "chaol": [
+      "” the Crown Prince said, face caught between a wince and a smile. Chaol glared at her before speaking. “There's no hope of escaping from Endovier.",
+      "your back .” Celaena frowned, but obeyed as he walked to her, Chaol stepping closer. “ Ican'",
+      "Shifting to lie on her side to ease the pain in her dressed and bound back, she ran her hand down the mattress, and blinked at the freeness of movement. Before she'd gotten into the bath, Chaol had removed her shackles. She'd felt everything —the reverberations of the key turning in the lock of her irons, then again as",
+      "Her balcony overlooked a fountain in one of the gardens, and whichever it was, it was beautiful—never mind the guards she spotted posted beneath. Chaol left her, and Celaena didn't wait to hear the door shut before closing herself in her bedroom.",
+      "Chapter 8 Celaena walked down a marble hall, her dress flowing behind in a purple and white wave. Chaol strode beside her, a hand on the eagle-shaped pommel"
+    ],
+    "captain westfall": [
+      "“ Captain Westfall, how far do slaves make it from the mines when they try to escape?",
+      ". “ Captain Westfall! ” Philippa scolded.",
+      "Dorian looked to Chaol, who failed in his attempt to not appear incredulous. “Don't you agree, Captain Westfall? ” “",
+      "“ If you consider that sort of gracelessness equal to swordsmanship… what sort of fighting do you do, Captain Westfall? ” She put a spare hand over her heart and closed her eyes for emphasis.",
+      "Princess Nehemia. Captain Westfall. ”"
+    ],
+    "dorian havilliard": [
+      "'” Celaena gave him a mocking smile, and then returned her attention to the prince. Dorian Havilliard, to her surprise, laughed. “",
+      "Son or no son,” the king snarled, “Iam still your king. You will obey me, Dorian Havilliard, or you will pay. I'll have no more of your questioning.",
+      "Chapter 17 With heavy eyelids, Dorian Havilliard tried not to slouch as he sat upon his throne. Music and chatter flitted through the air, wooing him to sleep.",
+      "Grateful the service was finally over, Dorian Havilliard strode"
+    ],
+    "the assassin": [
+      "Her eyes sore, the assassin looked up from the book and sighed. The library was gloomy, and were it not for the sound of a nearby fountain she'd have thought herself alone.",
+      "The assassin hissed, baring her teeth as she twisted her head to look at the kneeling man who had snapped at her.",
+      "The assassin tried not to preen — and failed miserably.",
+      "The assassin lifted the dust ruffle to peer underneath. Thankfully, the Wyrdmarks had been washed away entirely.",
+      "Unable to say anything, the assassin simply held her — for as long as it took for the pain to ease."
+    ]
+  },
+  "pairs": [
+    {
+      "a": "the assassin",
+      "b": "celaena",
+      "label": "same",
+      "note": "flagship unlock: zero char overlap, epithet cluster for Celaena"
+    },
+    {
+      "a": "captain westfall",
+      "b": "chaol",
+      "label": "same",
+      "note": "unlock: title form, zero overlap with the given name Chaol"
+    },
+    {
+      "a": "dorian havilliard",
+      "b": "dorian",
+      "label": "same",
+      "note": "control: same person, char overlap"
+    },
+    {
+      "a": "dorian",
+      "b": "duke perrington",
+      "label": "different",
+      "note": "flagship veto: two noble men (the ex-STU-430 Crown Prince vs Duke case)"
+    },
+    {
+      "a": "celaena",
+      "b": "chaol",
+      "label": "different"
+    },
+    {
+      "a": "celaena",
+      "b": "dorian",
+      "label": "different"
+    },
+    {
+      "a": "chaol",
+      "b": "duke perrington",
+      "label": "different"
+    },
+    {
+      "a": "dorian havilliard",
+      "b": "duke perrington",
+      "label": "different"
+    }
+  ]
+}

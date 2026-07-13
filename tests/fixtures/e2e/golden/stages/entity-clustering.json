@@ -1,0 +1,98 @@
+{
+ "clusters": [
+  {
+   "cluster_id": "single_entity_003",
+   "type": "PERSON",
+   "canonical_candidate": "Mira Vale",
+   "all_mentions": [
+    "Mira Vale"
+   ],
+   "entity_ids": [
+    "entity_003"
+   ],
+   "entity_count": 1,
+   "first_seen": "chapter_0",
+   "total_mentions": 12
+  },
+  {
+   "cluster_id": "cluster_001",
+   "type": "PERSON",
+   "canonical_candidate": "Captain Elias Thorn",
+   "all_mentions": [
+    "Captain Elias Thorn",
+    "Elias Thorn"
+   ],
+   "entity_ids": [
+    "entity_001",
+    "entity_005"
+   ],
+   "first_seen": "chapter_0",
+   "entity_count": 2,
+   "total_mentions": 10
+  },
+  {
+   "cluster_id": "single_entity_002",
+   "type": "OTHER",
+   "canonical_candidate": "Heron",
+   "all_mentions": [
+    "Heron"
+   ],
+   "entity_ids": [
+    "entity_002"
+   ],
+   "entity_count": 1,
+   "first_seen": "chapter_0",
+   "total_mentions": 3
+  },
+  {
+   "cluster_id": "single_entity_004",
+   "type": "PLACE",
+   "canonical_candidate": "Port Saffron",
+   "all_mentions": [
+    "Port Saffron"
+   ],
+   "entity_ids": [
+    "entity_004"
+   ],
+   "entity_count": 1,
+   "first_seen": "chapter_0",
+   "total_mentions": 3
+  },
+  {
+   "cluster_id": "single_entity_006",
+   "type": "ORG",
+   "canonical_candidate": "Salt Guild",
+   "all_mentions": [
+    "Salt Guild"
+   ],
+   "entity_ids": [
+    "entity_006"
+   ],
+   "entity_count": 1,
+   "first_seen": "chapter_0",
+   "total_mentions": 3
+  },
+  {
+   "cluster_id": "single_entity_007",
+   "type": "PLACE",
+   "canonical_candidate": "Warehouse Nine",
+   "all_mentions": [
+    "Warehouse Nine",
+    "Warehouse nine"
+   ],
+   "entity_ids": [
+    "entity_007"
+   ],
+   "entity_count": 1,
+   "first_seen": "chapter_2",
+   "total_mentions": 3
+  }
+ ],
+ "stats": {
+  "input_entities": 7,
+  "output_clusters": 1,
+  "unclustered_wrapped": 5,
+  "total_items": 6,
+  "reduction_pct": 15
+ }
+}

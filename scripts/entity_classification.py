@@ -429,7 +429,18 @@ def _is_role_entity_name(name: str, role_words=None, role_patterns=None) -> bool
     # Token membership: compound nouns like "Royal Guard" or "Captain Westfall"
     # qualify if at least one token is a role word.
     tokens = re.split(r"[\s'\-]+", lowered)
-    return any(token in _roles for token in tokens if token)
+    if not any(token in _roles for token in tokens if token):
+        return False
+    # A role word inside a fully-named person is a title, not a role entity:
+    # "Captain Elias Thorn" carries a two-token head noun ("Elias Thorn") that
+    # is a real personal name, so merging it into a co-occurrence partner would
+    # swallow the character (same head-noun rule as alias-resolution, STU-471).
+    # "Captain Westfall" (one name token) still qualifies and can merge.
+    name_tokens = [
+        t for t in re.split(r"[\s'\-]+", (name or "").strip())
+        if t and t.lower() not in _roles and t[:1].isupper()
+    ]
+    return len(name_tokens) < 2
 
 
 def _filter_intra_entity_relationships(

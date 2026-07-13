@@ -1,0 +1,110 @@
+{
+ "entities": [
+  {
+   "canonical_name": "Mira Vale",
+   "type": "PERSON",
+   "aliases": [
+    "Mira Vale"
+   ],
+   "source_ids": [
+    "entity_003"
+   ],
+   "relevant": true,
+   "total_mentions": 11,
+   "chapters_present": 4,
+   "importance": "secondaire"
+  },
+  {
+   "canonical_name": "Heron",
+   "type": "OTHER",
+   "aliases": [
+    "Heron"
+   ],
+   "source_ids": [
+    "entity_002"
+   ],
+   "relevant": true,
+   "total_mentions": 0,
+   "chapters_present": 0,
+   "importance": "ignored"
+  },
+  {
+   "canonical_name": "Port Saffron",
+   "type": "PLACE",
+   "aliases": [
+    "Port Saffron"
+   ],
+   "source_ids": [
+    "entity_004"
+   ],
+   "relevant": true,
+   "total_mentions": 3,
+   "chapters_present": 3,
+   "importance": "figurant"
+  },
+  {
+   "canonical_name": "Salt Guild",
+   "type": "ORG",
+   "aliases": [
+    "Salt Guild"
+   ],
+   "source_ids": [
+    "entity_006"
+   ],
+   "relevant": true,
+   "total_mentions": 3,
+   "chapters_present": 3,
+   "importance": "figurant"
+  },
+  {
+   "canonical_name": "Warehouse Nine",
+   "type": "PLACE",
+   "aliases": [
+    "Warehouse Nine",
+    "Warehouse nine"
+   ],
+   "source_ids": [
+    "entity_007"
+   ],
+   "relevant": true,
+   "total_mentions": 3,
+   "chapters_present": 1,
+   "importance": "figurant"
+  },
+  {
+   "canonical_name": "Captain Elias Thorn",
+   "type": "PERSON",
+   "aliases": [
+    "Captain Elias Thorn",
+    "Elias Thorn"
+   ],
+   "source_ids": [
+    "entity_001",
+    "entity_005"
+   ],
+   "relevant": true,
+   "total_mentions": 10,
+   "chapters_present": 4,
+   "importance": "secondaire"
+  }
+ ],
+ "relationships": [
+  {
+   "entity_a": "Captain Elias Thorn",
+   "entity_b": "Mira Vale",
+   "cooccurrence_count": 14,
+   "relationship_type": null,
+   "direction": null,
+   "evolution": null,
+   "key_moments": []
+  }
+ ],
+ "stats": {
+  "principal": 0,
+  "secondaire": 2,
+  "figurant": 3,
+  "ignored": 1,
+  "thresholds_used": "auto"
+ },
+ "narrator": null
+}

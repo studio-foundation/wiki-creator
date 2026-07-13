@@ -4,7 +4,7 @@
 
 - Repo: `wiki-creator-by-studio`
 - Purpose: extract entities from EPUB novels, classify them, generate wiki pages, export wikitext
-- Current verified state on 2026-07-13: `pytest -q` => `1042 passed, 33 skipped`
+- Current verified state on 2026-07-13: `pytest -q` => `1080 passed, 37 skipped`
   (skips = tests needing optional spaCy models or the `coref` extra; see `tests/_markers.py`)
 
 ## Commands
@@ -27,6 +27,8 @@ make run-from-preparation
 make run-from-generation
 make run-status
 make smoke        # e2e smoke test on the committed fixture novella
+make golden       # golden regression run: chained resolution stages vs committed goldens (~2s, no spaCy/LLM)
+make golden-update  # regenerate goldens after an INTENTIONAL behavior change, then review the diff
 ```
 
 Default `BOOK` in the `Makefile`:
@@ -127,6 +129,7 @@ Inside `wiki-resolution`, order matters:
 - `workers` in relationship/coref config directly impact RAM usage.
 - `.studio/config.yaml` and `.studio/runs/` must not be committed.
 - Never add hardcoded word lists to scripts. All vocabulary belongs in `wiki_creator/cue_words/<lang>.json` (language-wide) or the book YAML `classification` section (book-specific). No script may define a fallback vocabulary constant — if a key is absent from cue_words, degrade gracefully to an empty collection.
+- `tests/test_e2e_golden.py` chains all deterministic resolution stages on the fixture novella and compares every stage output to goldens in `tests/fixtures/e2e/golden/stages/`. Any intentional behavior change in those stages requires `make golden-update` and a review of the golden diff in the same PR. The extraction seed is committed (`golden/seed/`, regenerate with `gen_seed.py`); a `@requires_en_sm` test keeps it shape-compatible with real extraction in CI.
 
 ## Working Norms
 

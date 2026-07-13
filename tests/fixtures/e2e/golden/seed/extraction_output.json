@@ -1,0 +1,61 @@
+{
+ "entities_for_resolution": {
+  "entity_001": {
+   "type": "PERSON",
+   "raw_mentions": [
+    "Captain Elias Thorn"
+   ],
+   "first_seen": "chapter_0",
+   "mention_count": 4
+  },
+  "entity_002": {
+   "type": "OTHER",
+   "raw_mentions": [
+    "Heron"
+   ],
+   "first_seen": "chapter_0",
+   "mention_count": 3
+  },
+  "entity_003": {
+   "type": "PERSON",
+   "raw_mentions": [
+    "Mira Vale"
+   ],
+   "first_seen": "chapter_0",
+   "mention_count": 12
+  },
+  "entity_004": {
+   "type": "PLACE",
+   "raw_mentions": [
+    "Port Saffron"
+   ],
+   "first_seen": "chapter_0",
+   "mention_count": 3
+  },
+  "entity_005": {
+   "type": "PERSON",
+   "raw_mentions": [
+    "Elias Thorn"
+   ],
+   "first_seen": "chapter_0",
+   "mention_count": 6
+  },
+  "entity_006": {
+   "type": "ORG",
+   "raw_mentions": [
+    "Salt Guild"
+   ],
+   "first_seen": "chapter_0",
+   "mention_count": 3
+  },
+  "entity_007": {
+   "type": "PLACE",
+   "raw_mentions": [
+    "Warehouse Nine",
+    "Warehouse nine"
+   ],
+   "first_seen": "chapter_2",
+   "mention_count": 3
+  }
+ }
+}

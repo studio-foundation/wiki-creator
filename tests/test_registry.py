@@ -636,6 +636,37 @@ def test_normalize_name_matches_legacy_grounding_and_validator_semantics():
     assert normalize_name("  Vidal  ") == "vidal"
 
 
+# --- from_artifacts: embedding_disambiguation strategy round-trip (STU-468) ---
+
+
+def test_from_artifacts_preserves_embedding_disambiguation_strategy():
+    """method: 'embedding_disambiguation' (recorded by the new alias-resolution
+    strategy) must survive from_artifacts() verbatim as MergeDecision.strategy —
+    same wiring already proven for 'pure_title' in
+    test_from_artifacts_recorded_merge_keeps_method_and_evidence."""
+    splits, alias_output, persons_full = _run16_artifacts()
+    alias_output["entities"][1]["aliases"] = ["Duke", "Duke Perrington", "Perrington"]
+    alias_output["entities"][1]["alias_resolution"] = {
+        "merged_from": ["Duke"],
+        "evidence": [
+            {
+                "method": "embedding_disambiguation",
+                "confidence": "high",
+                "snippet": "context cosine=0.910 (embedding disambiguation)",
+            }
+        ],
+        "confidence": "high",
+        "method": "embedding_disambiguation",
+    }
+    registry = Registry.from_artifacts(splits, alias_output, persons_full)
+    perrington = registry.lookup("Perrington")
+    by_alias_slug = {
+        registry.decisions[d].inputs[1]: registry.decisions[d] for d in perrington.decisions
+    }
+    duke = by_alias_slug["duke"]
+    assert duke.strategy == "embedding_disambiguation"
+    assert duke.confidence == "high"
+    assert "context cosine=0.910 (embedding disambiguation)" in duke.evidence
 # --- Provenance par livre (STU-484: book_id / books / first_book) ---
 
 

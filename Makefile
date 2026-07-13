@@ -2,6 +2,7 @@
         test-extraction test-clustering test-relationships classify-relationships classify-relationships-dry \
         run-events \
         test test-coref test-coref-parallel \
+        smoke golden golden-update \
         clean
 
 #BOOK ?= library/carlos-ruiz-zafon/el-cementerio-de-los-libros-olvidados/books/02-le-jeu-de-lange.yaml
@@ -97,6 +98,12 @@ test-coref-parallel: test-extraction
 
 smoke:  ## End-to-end smoke test on the committed fixture novella (no real EPUB needed)
 	python -m pytest tests/test_e2e_smoke.py -q
+
+golden:  ## Golden regression run: chained resolution stages vs committed goldens (fast, no spaCy/LLM)
+	python -m pytest tests/test_e2e_golden.py -q
+
+golden-update:  ## Regenerate goldens after an INTENTIONAL behavior change, then review the diff
+	UPDATE_GOLDENS=1 python -m pytest tests/test_e2e_golden.py -q
 
 clean:  ## Remove generated files (keeps .gitkeep sentinels)
 	@SERIES_DIR=$$(python -c "from wiki_creator.paths import book_paths_from_yaml; p = book_paths_from_yaml('$(BOOK)'); print(p.processing.parent.parent)"); \

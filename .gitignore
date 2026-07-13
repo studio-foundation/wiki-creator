@@ -40,6 +40,10 @@ places_full.json
 orgs_full.json
 extraction-*.jsonl
 chapters.json
+# ...but the golden-run seed fixtures are committed test data, not artifacts
+!tests/fixtures/e2e/golden/seed/persons_full.json
+!tests/fixtures/e2e/golden/seed/places_full.json
+!tests/fixtures/e2e/golden/seed/orgs_full.json
 # LoRA / training artifacts
 models/wiki-page-item-lora/
 unsloth_compiled_cache/
