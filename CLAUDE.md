@@ -124,6 +124,15 @@ Inside `wiki-resolution`, order matters:
 - `generate_wiki_pages.py` must run after `wiki-preparation`; it consumes `wiki_inputs/<slug>/batch_*.json`.
 - `generate_book_synopsis.py` (SP4) consumes `events.json` (SP0) and writes `processing_output/<slug>/book_synopsis.json`; `load_wiki_pages.py` appends that page to the export flow and `wiki_export.py` renders it at the wiki root (`Synopsis.wiki`, no infobox/categories, `entity_type: SYNOPSIS`). If `events.json` is absent, the stage warns and skips — it never fails the run.
 - `classify_relationships.py` (pre-step to `wiki-preparation`) folds the co-occurrence graph onto canonical entities via `registry.alias_table()` before classifying (STU-435). The graph is built at mention level (pre alias-resolution), so surface forms of one entity (`Chaol Westfall` / `Captain Westfall`) are collapsed, counts summed, `chapters`/`sample_contexts` unioned — one classification per canonical pair. Requires `registry.json` (written by `write-registry`); degrades to unfolded edges if absent. Fold logic is pure in `wiki_creator/relationship_fold.py`.
+- Mention offsets (STU-489): extraction persists `mention_spans_by_chapter` in
+  `*_full.json` — one `{surface, start, end}` per occurrence (uncapped, unlike the
+  3-per-chapter context cap), character offsets into the chapter content saved to
+  `chapters.json`. `Registry.from_artifacts` rebuilds one `Mention` per span with
+  non-`None` `start`/`end` (`Mention.window(chapter_text)` extracts a centered
+  context window); artifacts without the field degrade to the legacy
+  one-Mention-per-context-sentence rebuild with `None` offsets. `write_registry.py`
+  unwraps the per-type wrapper key (`persons_full`, …) when reading full files —
+  before STU-489 it didn't, so real-run registries carried no mentions at all.
 - Multi-tome (STU-485): `write_registry.py` accumulates each tome's registry into the
   series registry `library/<author>/<series>/registry.json` (`Registry.accumulate`,
   decisions `strategy="series_accumulation"`, delta in `processing_output/<slug>/registry_delta.json`).

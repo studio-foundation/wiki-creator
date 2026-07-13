@@ -20,6 +20,36 @@
      "North The Heron slipped her moorings before the dawn bells rang. Captain Elias Thorn held the wheel while Mira Vale watched the lights shrink behind them, the recovered cargo lashed tight below. The Salt Guild would write its angry letters to every port on the coast."
     ]
    },
+   "mention_spans_by_chapter": {
+    "chapter_0": [
+     {
+      "surface": "Captain Elias Thorn",
+      "start": 11,
+      "end": 30
+     }
+    ],
+    "chapter_1": [
+     {
+      "surface": "Captain Elias Thorn",
+      "start": 177,
+      "end": 196
+     }
+    ],
+    "chapter_2": [
+     {
+      "surface": "Captain Elias Thorn",
+      "start": 293,
+      "end": 312
+     }
+    ],
+    "chapter_3": [
+     {
+      "surface": "Captain Elias Thorn",
+      "start": 65,
+      "end": 84
+     }
+    ]
+   },
    "mention_count": 4
   },
   "entity_003": {
@@ -49,6 +79,76 @@
      "The Salt Guild would write its angry letters to every port on the coast. Mira Vale looked north and said nothing. Elias Thorn smiled at the open water and set the course past the shoals."
     ]
    },
+   "mention_spans_by_chapter": {
+    "chapter_0": [
+     {
+      "surface": "Mira Vale",
+      "start": 94,
+      "end": 103
+     },
+     {
+      "surface": "Mira Vale",
+      "start": 218,
+      "end": 227
+     },
+     {
+      "surface": "Mira Vale",
+      "start": 392,
+      "end": 401
+     }
+    ],
+    "chapter_1": [
+     {
+      "surface": "Mira Vale",
+      "start": 106,
+      "end": 115
+     },
+     {
+      "surface": "Mira Vale",
+      "start": 286,
+      "end": 295
+     },
+     {
+      "surface": "Mira Vale",
+      "start": 347,
+      "end": 356
+     }
+    ],
+    "chapter_2": [
+     {
+      "surface": "Mira Vale",
+      "start": 26,
+      "end": 35
+     },
+     {
+      "surface": "Mira Vale",
+      "start": 75,
+      "end": 84
+     },
+     {
+      "surface": "Mira Vale",
+      "start": 209,
+      "end": 218
+     },
+     {
+      "surface": "Mira Vale",
+      "start": 371,
+      "end": 380
+     }
+    ],
+    "chapter_3": [
+     {
+      "surface": "Mira Vale",
+      "start": 106,
+      "end": 115
+     },
+     {
+      "surface": "Mira Vale",
+      "start": 268,
+      "end": 277
+     }
+    ]
+   },
    "mention_count": 12
   },
   "entity_005": {
@@ -71,6 +171,46 @@
     ],
     "chapter_3": [
      "Mira Vale looked north and said nothing. Elias Thorn smiled at the open water and set the course past the shoals. Port Saffron sank back into the fog it had come from."
+    ]
+   },
+   "mention_spans_by_chapter": {
+    "chapter_0": [
+     {
+      "surface": "Elias Thorn",
+      "start": 234,
+      "end": 245
+     },
+     {
+      "surface": "Elias Thorn",
+      "start": 374,
+      "end": 385
+     }
+    ],
+    "chapter_1": [
+     {
+      "surface": "Elias Thorn",
+      "start": 253,
+      "end": 264
+     },
+     {
+      "surface": "Elias Thorn",
+      "start": 396,
+      "end": 407
+     }
+    ],
+    "chapter_2": [
+     {
+      "surface": "Elias Thorn",
+      "start": 392,
+      "end": 403
+     }
+    ],
+    "chapter_3": [
+     {
+      "surface": "Elias Thorn",
+      "start": 309,
+      "end": 320
+     }
     ]
    },
    "mention_count": 6

@@ -301,6 +301,64 @@ def test_split_entities_for_resolution_has_core_fields(nlp):
         assert "first_seen" in entry, f"[{entity_id}] missing 'first_seen'"
 
 
+# --- mention_spans_by_chapter tests (STU-489) ---
+
+def test_mention_spans_offsets_slice_back_to_surface(nlp):
+    """Every persisted span must slice the chapter content back to its surface."""
+    chapters = [
+        {
+            "id": "ch01",
+            "title": "Chapter 1",
+            "content": (
+                "Alice walked into the room. Everyone greeted Alice warmly. "
+                "Later, Alice sat by the window while Bob watched."
+            ),
+        }
+    ]
+    result = extract_entities(chapters, nlp)
+    content = chapters[0]["content"]
+    checked = 0
+    for entry in result["entities"].values():
+        assert "mention_spans_by_chapter" in entry
+        for chapter_id, spans in entry["mention_spans_by_chapter"].items():
+            assert chapter_id == "ch01"
+            for span in spans:
+                assert content[span["start"]:span["end"]] == span["surface"]
+                checked += 1
+    assert checked > 0, f"no spans recorded: {result['entities']}"
+
+
+def test_mention_spans_not_capped_unlike_contexts(nlp):
+    """Contexts are capped at 3 per chapter; spans record every occurrence."""
+    content = " ".join(f"Alice looked at sentence number {i}." for i in range(5))
+    chapters = [{"id": "ch01", "title": "Chapter 1", "content": content}]
+    result = extract_entities(chapters, nlp)
+    alice = next(
+        entry for entry in result["entities"].values()
+        if "Alice" in entry["raw_mentions"]
+    )
+    contexts = alice["mentions_by_chapter"]["ch01"]
+    spans = alice["mention_spans_by_chapter"]["ch01"]
+    assert len(contexts) == 3
+    assert len(spans) == alice["mention_count"] == 5
+    # Contexts pair with the first spans (both appended in occurrence order).
+    for span, context in zip(spans, contexts):
+        assert span["surface"] in context
+
+
+def test_split_entities_for_resolution_has_no_mention_spans(nlp):
+    """entities_for_resolution stays lightweight: spans live only in entities_full."""
+    chapters = [
+        {"id": "ch01", "title": "Chapter 1", "content": "Alice walked into London."}
+    ]
+    result = extract_entities(chapters, nlp)
+    entities_for_resolution, entities_full = split_entities(result["entities"])
+    for entry in entities_for_resolution.values():
+        assert "mention_spans_by_chapter" not in entry
+    for entry in entities_full.values():
+        assert "mention_spans_by_chapter" in entry
+
+
 # --- --test mode integration test ---
 
 @requires_en_sm

@@ -380,6 +380,93 @@ def test_from_artifacts_rebuilds_mentions_with_longest_surface_match():
     assert "sat with Perrington" in mention.context
 
 
+def _with_mention_spans(persons_full: dict) -> tuple[dict, str]:
+    """Add STU-489 mention_spans_by_chapter to the Run 16 artifacts, with
+    offsets indexing into a chapter text. Returns (persons_full, ch02_text)."""
+    ch02 = (
+        "The Crown Prince, of course, sat with Perrington "
+        "on their own two logs, far from her. "
+        "Perrington scowled at the competitors. "
+        "Later, Duke Perrington left the hall."
+    )
+    def _span(surface: str, occurrence: int = 0) -> dict:
+        pos = -1
+        for _ in range(occurrence + 1):
+            pos = ch02.index(surface, pos + 1)
+        return {"surface": surface, "start": pos, "end": pos + len(surface)}
+
+    full = copy.deepcopy(persons_full)
+    full["e_crown_prince"]["mention_spans_by_chapter"] = {
+        "ch02": [_span("Crown Prince")]
+    }
+    full["e_perrington"]["mention_spans_by_chapter"] = {
+        "ch02": [
+            _span("Perrington", 0),
+            _span("Perrington", 1),
+            _span("Duke Perrington"),
+        ]
+    }
+    return full, ch02
+
+
+def test_from_artifacts_populates_offsets_from_mention_spans():
+    """STU-489: with mention_spans_by_chapter persisted, every rebuilt Mention
+    carries non-None offsets and the real per-occurrence surface."""
+    splits, alias_output, persons_full = _run16_artifacts()
+    persons_full, ch02 = _with_mention_spans(persons_full)
+    registry = Registry.from_artifacts(splits, alias_output, persons_full)
+
+    perrington = registry.lookup("Perrington")
+    assert len(perrington.mentions) == 3  # one per occurrence, not per context
+    assert [m.surface for m in perrington.mentions] == [
+        "Perrington", "Perrington", "Duke Perrington",
+    ]
+    for mention in perrington.mentions:
+        assert mention.start is not None and mention.end is not None
+        assert ch02[mention.start:mention.end] == mention.surface
+    # The preserved context pairs with the first occurrence of the chapter.
+    assert perrington.mentions[0].context == "Perrington scowled at the competitors."
+    assert perrington.mentions[1].context is None
+
+
+def test_mention_window_extracts_centered_context():
+    """STU-489 acceptance: a window centered on the mention is extractible."""
+    splits, alias_output, persons_full = _run16_artifacts()
+    persons_full, ch02 = _with_mention_spans(persons_full)
+    registry = Registry.from_artifacts(splits, alias_output, persons_full)
+
+    mention = registry.lookup("Crown Prince").mentions[0]
+    window = mention.window(ch02, radius=20)
+    assert "Crown Prince" in window
+    assert window == ch02[max(0, mention.start - 20) : mention.end + 20]
+    # Small radius stays anchored on the mention, not the chapter head.
+    assert mention.window(ch02, radius=0) == "Crown Prince"
+
+
+def test_mention_window_none_without_offsets():
+    m = Mention(surface="Perrington", chapter_id="ch02")
+    assert m.window("any chapter text") is None
+
+
+def test_offsets_round_trip_save_load(tmp_path):
+    splits, alias_output, persons_full = _run16_artifacts()
+    persons_full, _ = _with_mention_spans(persons_full)
+    registry = Registry.from_artifacts(splits, alias_output, persons_full)
+
+    path = tmp_path / "registry.json"
+    registry.save(path)
+    loaded = Registry.load(path)
+
+    assert loaded.to_dict() == registry.to_dict()
+    expected = [
+        (s["start"], s["end"])
+        for s in persons_full["e_perrington"]["mention_spans_by_chapter"]["ch02"]
+    ]
+    reloaded = loaded.lookup("Perrington").mentions
+    assert [(m.start, m.end) for m in reloaded] == expected
+    assert all(isinstance(m.start, int) and isinstance(m.end, int) for m in reloaded)
+
+
 def test_from_artifacts_canonical_added_to_aliases_when_missing():
     splits, alias_output, persons_full = _run16_artifacts()
     alias_output["entities"][0]["aliases"] = []  # artifact anomaly
