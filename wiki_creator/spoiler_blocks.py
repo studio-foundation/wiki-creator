@@ -58,3 +58,26 @@ def wrap_collapsible(body: str, content_units: list[dict], collapse_after: int) 
         else:
             out.append(block)
     return "".join(out)
+
+
+def relationship_index_lines(entity: dict) -> list[str]:
+    """Dated index line per typed relationship, most-recent-reveal first.
+
+    Language-neutral: entity names + the French relationship_type enum + chapter
+    numbers only. The English evolution/key_moments fields are never surfaced.
+    """
+    own = {entity.get("canonical_name")} | set(entity.get("aliases") or [])
+    rows = []
+    for rel in entity.get("relationships") or []:
+        rtype = rel.get("relationship_type")
+        if not rtype:
+            continue
+        chapters = [c for c in (chapter_number(k) for k in rel.get("chapters") or []) if c is not None]
+        if not chapters:
+            continue
+        other = rel["entity_b"] if rel.get("entity_a") in own else rel["entity_a"]
+        lo, hi = min(chapters), max(chapters)
+        span = f"ch.{lo}" if lo == hi else f"ch.{lo}→ch.{hi}"
+        rows.append((lo, f"* [[{other}]] — {rtype} ({span})"))
+    rows.sort(key=lambda r: r[0], reverse=True)
+    return [line for _, line in rows]
