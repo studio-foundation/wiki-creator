@@ -27,9 +27,11 @@ class Mention:
     surface: str
     chapter_id: str
     source: str = "ner"  # "ner" | "coref" | "pattern"
-    # None when rebuilt from artifacts: extraction does not preserve character
-    # offsets nor the raw model label — real values arrive when extraction
-    # feeds the registry directly (pas 2+).
+    # Character offsets into the chapter content (the text saved to
+    # chapters.json), persisted by extraction since STU-489
+    # (mention_spans_by_chapter in *_full.json). None on artifacts predating
+    # that field, and raw_label stays None until extraction feeds the
+    # registry directly (pas 2+).
     start: int | None = None
     end: int | None = None
     raw_label: str | None = None
@@ -38,6 +40,17 @@ class Mention:
     # livre, cf. book_paths_from_epub). None quand la provenance est inconnue
     # (registres antérieurs / reconstruction sans book_id).
     book_id: str | None = None
+
+    def window(self, chapter_text: str, radius: int = 200) -> str | None:
+        """Context window of ±``radius`` characters centered on the mention,
+        sliced from the chapter text the offsets index into (chapters.json
+        content). The precise window the embedding strategies need (STU-489):
+        unlike ``context`` (sentence ±1), it stays anchored on the mention.
+        None when offsets were not persisted (pre-STU-489 artifacts)."""
+        if self.start is None or self.end is None:
+            return None
+        text = str(chapter_text)
+        return text[max(0, self.start - radius) : min(len(text), self.end + radius)]
 
 
 @dataclass(frozen=True)
@@ -682,17 +695,42 @@ class Registry:
 def _mentions_from_full(
     canonical: str, source_ids: list[str], full: dict, book_id: str | None = None
 ) -> list[Mention]:
-    """One Mention per preserved context sentence; surface = longest raw
-    mention found in the sentence (offsets/raw labels were never persisted)."""
+    """When extraction persisted offsets (mention_spans_by_chapter, STU-489):
+    one Mention per occurrence, carrying surface + start/end; the preserved
+    context sentences pair with the first spans of each chapter (extraction
+    appends both in occurrence order, contexts capped at 3). Artifacts
+    predating that field degrade to one Mention per preserved context
+    sentence; surface = longest raw mention found in the sentence (offsets
+    stay None)."""
     mentions: list[Mention] = []
     for sid in source_ids:
         record = full.get(sid) or {}
         surfaces = [str(m) for m in (record.get("raw_mentions") or []) if str(m).strip()]
         by_length = sorted(surfaces, key=len, reverse=True)
         by_chapter = record.get("mentions_by_chapter") or {}
-        for chapter_id in sorted(by_chapter):
-            for sentence in by_chapter[chapter_id] or []:
-                text = str(sentence)
+        spans_by_chapter = record.get("mention_spans_by_chapter") or {}
+        for chapter_id in sorted(set(by_chapter) | set(spans_by_chapter)):
+            contexts = [str(s) for s in (by_chapter.get(chapter_id) or [])]
+            spans = [
+                s for s in (spans_by_chapter.get(chapter_id) or []) if isinstance(s, dict)
+            ]
+            if spans:
+                for i, span in enumerate(spans):
+                    start, end = span.get("start"), span.get("end")
+                    mentions.append(
+                        Mention(
+                            surface=str(span.get("surface") or "").strip()
+                            or (surfaces[0] if surfaces else canonical),
+                            chapter_id=str(chapter_id),
+                            source="ner",
+                            start=int(start) if isinstance(start, int) else None,
+                            end=int(end) if isinstance(end, int) else None,
+                            context=contexts[i] if i < len(contexts) else None,
+                            book_id=book_id,
+                        )
+                    )
+                continue
+            for text in contexts:
                 surface = next(
                     (s for s in by_length if s in text),
                     surfaces[0] if surfaces else canonical,

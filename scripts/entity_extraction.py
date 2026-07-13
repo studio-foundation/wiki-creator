@@ -523,7 +523,7 @@ def _retag_entity_type_from_context(
     return current
 
 
-def _truncate_mention(span) -> str:
+def _truncate_span(span):
     """
     Tronque un span spaCy au dernier token qui ressemble à un nom propre.
 
@@ -531,6 +531,8 @@ def _truncate_mention(span) -> str:
     (is_title) ou si son POS tag est PROPN.
 
     Si aucun token n'est propre (cas dégénéré), retourne le span complet.
+    Retourne un span (pas un texte) pour que start_char/end_char restent
+    disponibles — les offsets de mention sont persistés (STU-489).
 
     Exemples :
       "Barcelone de ténèbres" → "Barcelone"
@@ -544,8 +546,12 @@ def _truncate_mention(span) -> str:
             last_proper = i + 1
             break
     if last_proper == 0:
-        return span.text
-    return span.doc[span.start : span.start + last_proper].text
+        return span
+    return span.doc[span.start : span.start + last_proper]
+
+
+def _truncate_mention(span) -> str:
+    return _truncate_span(span).text
 
 
 # Hardcoded chapters for --test mode (English, uses en_core_web_sm)
@@ -611,11 +617,20 @@ def extract_entities(
     Process all chapters in order and build the entity registry.
 
     Returns:
-      {"entities": {entity_id: {type, raw_mentions, first_seen, mentions_by_chapter}}}
+      {"entities": {entity_id: {type, raw_mentions, first_seen,
+                                mentions_by_chapter, mention_spans_by_chapter}}}
 
     Grouped by normalized mention text (lowercase + stripped).
     Same surface form in multiple chapters → one entry, multiple chapter keys.
     Alias resolution is left to the LLM stage.
+
+    mention_spans_by_chapter (STU-489) records EVERY occurrence as
+    {surface, start, end} — character offsets into the chapter content
+    (the same text saved to chapters.json), so downstream consumers can
+    extract a window centered on the mention. Unlike mentions_by_chapter
+    (contexts, capped at 3 per chapter), it is not capped: offsets are cheap.
+    Contexts pair with the first spans of a chapter (both appended in
+    occurrence order).
     """
     registry: dict[str, dict] = {}
     entity_counter = 0
@@ -631,7 +646,8 @@ def extract_entities(
             if ent.label_ not in KEPT_LABELS:
                 continue
 
-            mention_text = _truncate_mention(ent)
+            mention_span = _truncate_span(ent)
+            mention_text = mention_span.text
             key = mention_text.lower().strip()
             if not key:
                 continue
@@ -650,6 +666,7 @@ def extract_entities(
                     "raw_mentions": [mention_text],
                     "first_seen": chapter_id,
                     "mentions_by_chapter": {},
+                    "mention_spans_by_chapter": {},
                     "mention_count": 1,
                 }
             else:
@@ -660,6 +677,13 @@ def extract_entities(
             registry[key]["mentions_by_chapter"].setdefault(chapter_id, [])
             if len(registry[key]["mentions_by_chapter"][chapter_id]) < 3:
                 registry[key]["mentions_by_chapter"][chapter_id].append(context)
+            registry[key]["mention_spans_by_chapter"].setdefault(chapter_id, []).append(
+                {
+                    "surface": mention_text,
+                    "start": mention_span.start_char,
+                    "end": mention_span.end_char,
+                }
+            )
 
     entities = {
         "entities": {
@@ -676,12 +700,13 @@ def split_entities(entities: dict) -> tuple[dict, dict]:
     """
     Split the full entity registry into two structures:
     - entities_for_resolution: lightweight (type, raw_mentions, first_seen, mention_count)
-    - entities_full: complete (includes mentions_by_chapter)
+    - entities_full: complete (includes mentions_by_chapter, mention_spans_by_chapter)
 
     Returns (entities_for_resolution, entities_full).
     """
+    _FULL_ONLY = {"mentions_by_chapter", "mention_spans_by_chapter"}
     entities_for_resolution = {
-        entity_id: {k: v for k, v in entity.items() if k != "mentions_by_chapter"}
+        entity_id: {k: v for k, v in entity.items() if k not in _FULL_ONLY}
         for entity_id, entity in entities.items()
     }
     return entities_for_resolution, entities

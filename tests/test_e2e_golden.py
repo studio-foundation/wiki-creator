@@ -251,6 +251,25 @@ def test_registry_covers_classified_entities(chain_run):
     assert registry_out["entities"] >= len(classified)
 
 
+def test_registry_mentions_carry_offsets(chain_run):
+    """STU-489: mentions rebuilt from extraction carry non-None offsets that
+    slice the chapter text (chapters.json) back to the mention surface — so a
+    context window centered on the mention is extractible downstream."""
+    processing = chain_run["processing"]
+    registry = json.loads((processing / "registry.json").read_text(encoding="utf-8"))
+    chapters = json.loads((processing / "chapters.json").read_text(encoding="utf-8"))[
+        "chapters"
+    ]
+    checked = 0
+    for entity in registry["entities"]:
+        for mention in entity["mentions"]:
+            assert mention["start"] is not None and mention["end"] is not None, mention
+            text = chapters[mention["chapter_id"]]
+            assert text[mention["start"] : mention["end"]] == mention["surface"], mention
+            checked += 1
+    assert checked > 0, "no registry mentions to check offsets on"
+
+
 # ---------------------------------------------------------------------------
 # Seed honesty check — in CI (spaCy model installed) verify the committed seed
 # still matches the shapes real entity-extraction produces, so the golden

@@ -78,9 +78,15 @@ def main() -> None:
         alias_output = _load_json(paths.processing / "entities_classified.json")
 
     splits = _load_json(paths.processing / "splits.json")
+    # Extraction wraps each per-type file under its json_key ("persons_full",
+    # …); unwrap it like relationship_extraction does, else no source_id ever
+    # matches and every registry mention is silently dropped. Unwrapped files
+    # (unit fixtures, older runs) keep working.
     full_registries: dict = {}
     for name in FULL_REGISTRY_FILES:
-        full_registries.update(_load_json(paths.processing / name))
+        data = _load_json(paths.processing / name)
+        inner = data.get(name.removesuffix(".json"))
+        full_registries.update(inner if isinstance(inner, dict) else data)
 
     registry = Registry.from_artifacts(splits, alias_output, full_registries, book_id)
     output_path = paths.processing / "registry.json"

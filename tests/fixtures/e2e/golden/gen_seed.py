@@ -8,7 +8,8 @@ suite runs, so the seed is committed. This script rebuilds it deterministically
 from the novella text with a longest-match scanner over a fixed inventory of
 the novella's proper nouns — mimicking the shapes documented in
 scripts/entity_extraction.py (registry keyed by lowercased surface form,
-mentions_by_chapter capped at 3 contexts of sentence ±1, per-type full files).
+mentions_by_chapter capped at 3 contexts of sentence ±1, uncapped
+mention_spans_by_chapter offsets per occurrence, per-type full files).
 
 Run from the repo root after editing the novella chapters:
 
@@ -99,6 +100,7 @@ def build_seed(chapters: list[dict]) -> dict:
                     "raw_mentions": [surface],
                     "first_seen": chapter_id,
                     "mentions_by_chapter": {},
+                    "mention_spans_by_chapter": {},
                     "mention_count": 1,
                 }
             else:
@@ -108,6 +110,9 @@ def build_seed(chapters: list[dict]) -> dict:
             per_chapter = registry[key]["mentions_by_chapter"].setdefault(chapter_id, [])
             if len(per_chapter) < 3:
                 per_chapter.append(_context(sentences, pos, text))
+            registry[key]["mention_spans_by_chapter"].setdefault(chapter_id, []).append(
+                {"surface": surface, "start": pos, "end": pos + len(surface)}
+            )
     return {
         entry["id"]: {k: v for k, v in entry.items() if k != "id"}
         for entry in registry.values()
@@ -135,8 +140,9 @@ def main() -> None:
     ]
 
     entities_full = build_seed(chapters)
+    full_only = {"mentions_by_chapter", "mention_spans_by_chapter"}
     entities_for_resolution = {
-        eid: {k: v for k, v in e.items() if k != "mentions_by_chapter"}
+        eid: {k: v for k, v in e.items() if k not in full_only}
         for eid, e in entities_full.items()
     }
 
