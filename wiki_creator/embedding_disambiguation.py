@@ -112,9 +112,16 @@ class EmbeddingBackend:
             pass
         return "cpu"
 
+    def _embedding_dim(self) -> int:
+        # Renamed in sentence-transformers 5.x; keep the >=3 floor working.
+        getter = getattr(self.model, "get_embedding_dimension", None) or (
+            self.model.get_sentence_embedding_dimension
+        )
+        return int(getter())
+
     def encode(self, texts: list[str]) -> np.ndarray:
         if not texts:
-            return np.zeros((0, self.model.get_sentence_embedding_dimension()), dtype=np.float32)
+            return np.zeros((0, self._embedding_dim()), dtype=np.float32)
         return self.model.encode(
             [f"passage: {t}" for t in texts],
             normalize_embeddings=True,

@@ -1,4 +1,7 @@
 # tests/test_embedding_disambiguation.py
+import json
+from pathlib import Path
+
 import numpy as np
 import pytest
 
@@ -123,3 +126,57 @@ def test_backend_empty_returns_empty():
     backend = EmbeddingBackend(device="cpu")
     vecs = backend.encode([])
     assert vecs.shape[0] == 0
+
+
+# --- Golden-pairs eval (STU-468) ---------------------------------------------
+# The self-contained fixture bakes real throne-of-glass mention contexts
+# (processing_output/ is gitignored). The eval FALSIFIED the centroid-cosine
+# approach: on single-book data, same-person and different-person pairs are not
+# separable because topic/setting dominates the sentence embedding. See
+# docs/superpowers/specs/2026-07-12-embedding-disambiguation-EVAL-RESULTS.md.
+# The two tests below are characterization guards, not success gates — the
+# feature ships opt-in and defaults OFF. If a future representation change makes
+# the pairs separable, `test_golden_pairs_are_not_separable` flips and signals
+# that the strategy is worth enabling.
+
+_FIXTURE = Path(__file__).parent / "fixtures" / "embedding_golden_pairs.json"
+
+
+def _golden_scores():
+    from wiki_creator.embedding_disambiguation import EmbeddingBackend, entity_centroid, cosine
+
+    spec = json.loads(_FIXTURE.read_text(encoding="utf-8"))
+    backend = EmbeddingBackend(device="cpu")
+    centroids = {name: entity_centroid(ctxs, backend) for name, ctxs in spec["entities"].items()}
+    scores = []
+    for pair in spec["pairs"]:
+        ca, cb = centroids[pair["a"]], centroids[pair["b"]]
+        scores.append((cosine(ca, cb), pair["label"]))
+    return scores
+
+
+def test_golden_fixture_is_self_contained():
+    # Runs without the extra: every pair must reference entities that carry
+    # baked contexts, so the eval never depends on the gitignored run output.
+    spec = json.loads(_FIXTURE.read_text(encoding="utf-8"))
+    entities = spec["entities"]
+    assert spec["pairs"], "fixture has no pairs"
+    for pair in spec["pairs"]:
+        assert len(entities.get(pair["a"], [])) >= 2
+        assert len(entities.get(pair["b"], [])) >= 2
+        assert pair["label"] in ("same", "different")
+
+
+@requires_embeddings
+def test_golden_pairs_are_not_separable():
+    # Characterization of the negative eval result: the max different-pair
+    # cosine is >= the min same-pair cosine, i.e. no threshold separates them.
+    scores = _golden_scores()
+    assert all(-1.0 <= s <= 1.0 for s, _ in scores)
+    same = [s for s, label in scores if label == "same"]
+    diff = [s for s, label in scores if label == "different"]
+    assert same and diff
+    assert max(diff) >= min(same), (
+        "golden pairs are now separable — revisit whether embedding "
+        "disambiguation should be enabled (see EVAL-RESULTS doc)"
+    )
