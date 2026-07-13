@@ -573,5 +573,54 @@
     "new_issues": [
       "PLACE biography_failed: 5 pages lieux échouent avec raw_response vide (Eyllwe a pourtant 15 rels/12 chap) — échec génération, pas famine de données"
     ]
+  },
+  {
+    "run": 18,
+    "date": "2026-07-12",
+    "pages_generated": 29,
+    "infobox_pct": 100,
+    "lang_fr_pct": 100,
+    "alias_duplicates": 1,
+    "hallucinations": 0,
+    "gt_violations": [
+      {
+        "page": "Celaena Sardothien",
+        "signal": "King of Adarlan (infobox alias cross-entité)",
+        "cause": "confusion_alias",
+        "first_seen_in": "registry.json / splits (cluster_jw decision d_62dc8f7e11bd)",
+        "component": "entity_clustering.py (strategy cluster_jw)",
+        "action": "garde cross-type (PLACE ne peut pas clusterer dans PERSON) + resserrer JW — voir STU-473"
+      }
+    ],
+    "coverage": {
+      "batch_entities": 29,
+      "pages_generated": 29,
+      "missing": [],
+      "failed": [],
+      "filtered_before_batch": 2
+    },
+    "weak_entities": [
+      "Chaol",
+      "Elena",
+      "Crown Prince",
+      "Eyllwe",
+      "Xavier",
+      "Nehemia"
+    ],
+    "regression": {
+      "prefixed_keys": "✅",
+      "epub_ids": "✅",
+      "entity_type_null": "✅",
+      "alias_duplicates": "❌",
+      "cross_serie": "✅",
+      "evolution_quality": "⚠️",
+      "temporal_context": "non mesuré",
+      "ground_truth": "❌"
+    },
+    "verdict": "Première run coref-ON : fondamentaux au top (100% infobox, 100% FR, 0 _failed, GT 3→1). Coref a densifié les relations. Deux bugs identité opposés (STU-471 false split Crown Prince/Dorian, STU-473 false merge King of Adarlan→Celaena) sont le seul vrai frein.",
+    "new_issues": [
+      "STU-471: Crown Prince ≠ Dorian (false split, page fantôme + Dorian rétrogradé figurant)",
+      "STU-473: King of Adarlan + Adarlan avalés dans Celaena (cluster_jw false merge, GT-confirmé)"
+    ]
   }
 ]

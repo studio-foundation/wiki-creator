@@ -6,7 +6,7 @@ description: |
 
 file_path: library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.epub
 spacy_model: models/wiki-ner-en/model-best
-coref: false
+coref: true
 use_llm: true
 classify: false  # classification handled by scripts/classify_relationships.py (pre-step in run_wiki.py)
 llm_model: mistral:7b-instruct
