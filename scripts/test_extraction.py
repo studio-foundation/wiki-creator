@@ -16,8 +16,6 @@ import sys
 import os
 from datetime import datetime
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from scripts.parse_epub import parse_epub
 from scripts.entity_extraction import extract_entities, split_entities, split_by_type
 from wiki_creator.paths import book_paths_from_yaml

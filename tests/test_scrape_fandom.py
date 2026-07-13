@@ -4,7 +4,6 @@ import os
 import sys
 from unittest.mock import patch, MagicMock
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.scrape_fandom import parse_infobox, parse_body, is_redirect, is_stub, fetch_category_members, fetch_wikitext, derive_wiki_slug, main
 
 

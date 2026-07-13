@@ -47,10 +47,6 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-# Ensure project root is importable when running as `python scripts/<file>.py`.
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 
 from wiki_creator.paths import book_paths_from_epub, book_paths_from_yaml
 from wiki_creator.registry import Registry, normalize_name as normalize_for_comparison

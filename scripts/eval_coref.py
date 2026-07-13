@@ -35,8 +35,6 @@ import sys
 import time
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
 VARIANTS = ("baseline", "coref-8k", "coref-full")
 VARIANT_MAX_CHARS = {"coref-8k": 8000, "coref-full": 0}
 

@@ -18,9 +18,9 @@ Run from the repo root after editing the novella chapters:
 The @requires_en_sm shape-compatibility test in tests/test_e2e_golden.py keeps
 this seed honest against real extraction output in CI.
 """
+import importlib.util
 import json
 import re
-import sys
 from pathlib import Path
 
 SEED_DIR = Path(__file__).resolve().parent / "seed"
@@ -120,8 +120,10 @@ def build_seed(chapters: list[dict]) -> dict:
 
 
 def main() -> None:
-    sys.path.insert(0, str(TESTS_DIR))
-    from test_e2e_smoke import CHAPTER_TITLES, FIXTURE_DIR
+    spec = importlib.util.spec_from_file_location("test_e2e_smoke", TESTS_DIR / "test_e2e_smoke.py")
+    test_e2e_smoke = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(test_e2e_smoke)
+    CHAPTER_TITLES, FIXTURE_DIR = test_e2e_smoke.CHAPTER_TITLES, test_e2e_smoke.FIXTURE_DIR
 
     # Same ids and content parse_epub derives from the smoke EPUB: ebooklib
     # item ids, and the chapter <h1> title prepended to the paragraph text.

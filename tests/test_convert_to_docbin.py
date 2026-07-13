@@ -4,7 +4,6 @@ import pytest
 import spacy
 from spacy.tokens import DocBin
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.convert_to_docbin import examples_to_docbin, split_train_dev
 
 

@@ -17,9 +17,6 @@ from pathlib import Path
 import yaml
 
 # Ensure project root is importable when running as `python scripts/parse_epub.py`.
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator import studio_io
 

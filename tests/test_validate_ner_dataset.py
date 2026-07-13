@@ -2,7 +2,6 @@
 import sys, os
 import pytest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.validate_ner_dataset import validate_example, validate_dataset, resolve_overlaps
 
 

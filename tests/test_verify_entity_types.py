@@ -5,7 +5,6 @@ import json
 import io
 import yaml
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.verify_entity_types import (
     is_obvious_geographic,
     load_context_for_cluster,

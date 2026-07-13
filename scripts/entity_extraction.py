@@ -31,11 +31,9 @@ import sys
 from pathlib import Path
 import yaml
 
-# Ensure project root is importable when running as `python scripts/<file>.py`.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 from wiki_creator import studio_io
+from wiki_creator.chapters import is_frontmatter_chapter
 from wiki_creator.lang import infer_language as _infer_lang, load_lang_config as _load_lang_config
 
 
@@ -283,59 +281,6 @@ def _load_cue_words(language: str) -> dict[str, frozenset[str]]:
         return _load_single_cue_words_file(language)
     # Safe fallback
     return _load_single_cue_words_file("en")
-
-# Chapter IDs (lowercased) matching these substrings are skipped entirely.
-# They contain metadata (author, translator, epub-maker) not story entities.
-FRONTMATTER_ID_PATTERNS: frozenset[str] = frozenset({
-    "titlepage",
-    "cover",
-    "colophon",
-    "copyright",
-    "toc",
-    "halftitle",
-    "dedication",
-    "dedicatoria",
-    "index",
-    "acknowledg",
-    "author",
-    "autor",
-    "about-author",
-    "about_the_author",
-    "notes",
-    "credits",
-    "info",
-    "sinopsis",
-    "remerciement",
-    "remerciements",
-    "auteur",
-    "bio-auteur",
-})
-
-FRONTMATTER_TITLE_PATTERNS: frozenset[str] = frozenset({
-    "acknowledg",
-    "author",
-    "autor",
-    "about the author",
-    "notes",
-    "credits",
-    "info",
-    "sinopsis",
-    "dedicatoria",
-    "remerciement",
-    "remerciements",
-    "auteur",
-    "biographie de l'auteur",
-    "biographie auteur",
-})
-
-
-def _is_frontmatter_chapter(chapter: dict) -> bool:
-    """Return True if chapter metadata suggests front/back matter, not narrative."""
-    chapter_id = str(chapter.get("id", "") or "").lower()
-    title = str(chapter.get("title", "") or "").lower()
-    return any(p in chapter_id for p in FRONTMATTER_ID_PATTERNS) or any(
-        p in title for p in FRONTMATTER_TITLE_PATTERNS
-    )
 
 
 
@@ -638,7 +583,7 @@ def extract_entities(
     for chapter in chapters:
         if "content" not in chapter or "id" not in chapter:
             raise ValueError(f"chapter missing required fields 'content' or 'id': {list(chapter.keys())}")
-        if _is_frontmatter_chapter(chapter):
+        if is_frontmatter_chapter(chapter):
             continue
         chapter_id = chapter["id"]
         doc = nlp(chapter["content"])

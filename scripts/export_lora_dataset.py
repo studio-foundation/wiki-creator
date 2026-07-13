@@ -7,8 +7,6 @@ import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
 from wiki_creator.wikitext_cleaner import clean_wikitext, normalize_infobox_fields
 
 VALID_ENTITY_TYPES = {"PERSON", "PLACE", "ORG", "OTHER"}

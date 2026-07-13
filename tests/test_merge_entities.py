@@ -1,6 +1,5 @@
 """Tests for scripts/merge_entities.py."""
 import sys, os, json, subprocess
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.merge_entities import merge_entities
 
 RESOLVED_PERSON = {"canonical_name": "David Martín", "type": "PERSON",

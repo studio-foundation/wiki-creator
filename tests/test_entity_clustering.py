@@ -2,7 +2,6 @@
 import sys
 import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.entity_clustering import (
     normalize_for_comparison,
     tokenize_name,
