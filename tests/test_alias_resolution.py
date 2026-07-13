@@ -1204,6 +1204,72 @@ def test_resolve_aliases_pure_title_auto_merges_without_llm():
 
 
 # ---------------------------------------------------------------------------
+# STU-471: a modifier+role title ('Crown Prince') is a pure title even when the
+# full phrase is NOT enumerated in role_words — only its head noun ('prince') is.
+# The real cue_words role_words list carries 'prince', never 'crown prince'.
+# ---------------------------------------------------------------------------
+
+def test_is_pure_title_recognizes_modifier_plus_role_head():
+    """'Crown Prince' is a title because its head noun 'prince' is a role word,
+    without 'crown prince' being enumerated (STU-471). Title+surname stays non-title."""
+    from scripts.alias_resolution import _is_pure_title
+    role_words = ["prince", "king", "captain", "lord"]
+    assert _is_pure_title("Crown Prince", role_words) is True
+    assert _is_pure_title("High Lord", role_words) is True
+    assert _is_pure_title("King", role_words) is True
+    # title + surname must remain a title_alias case, not a pure title
+    assert _is_pure_title("Captain Westfall", role_words) is False
+    assert _is_pure_title("Dorian Havilliard", role_words) is False
+
+
+def test_resolve_aliases_merges_crown_prince_without_phrase_in_role_words():
+    """STU-471 gold case: 'Crown Prince' merges into 'Dorian Havilliard' via
+    apposition, with role_words mirroring cue_words (head 'prince', no 'crown prince')."""
+    from scripts.alias_resolution import resolve_aliases
+    dorian = {
+        "canonical_name": "Dorian Havilliard",
+        "type": "PERSON",
+        "aliases": ["Dorian Havilliard", "Dorian"],
+        "source_ids": ["e_dorian"],
+        "relevant": True,
+    }
+    crown_prince = {
+        "canonical_name": "Crown Prince",
+        "type": "PERSON",
+        "aliases": ["Crown Prince"],
+        "source_ids": ["e_crown_prince"],
+        "relevant": True,
+    }
+    persons_full = {
+        "e_dorian": {
+            "mentions_by_chapter": {
+                "ch02": [
+                    "But, as you probably know, I'm Dorian Havilliard, "
+                    "Crown Prince of Adarlan.",
+                ]
+            }
+        },
+        "e_crown_prince": {
+            "mentions_by_chapter": {
+                "ch05": ["The Crown Prince strode from the court."]
+            }
+        },
+    }
+    result = resolve_aliases(
+        [dorian, crown_prince],
+        persons_full=persons_full,
+        llm_confirmer=None,
+        role_words=["prince", "king", "captain", "lord"],
+        connective_words=["the", "of"],
+    )
+    assert len(result["entities"]) == 1
+    entity = result["entities"][0]
+    assert entity["canonical_name"] == "Dorian Havilliard"
+    assert "Crown Prince" in entity["aliases"]
+    assert result["stats"]["merges_by_method"].get("pure_title", 0) == 1
+
+
+# ---------------------------------------------------------------------------
 # STU-430: pure_title must require apposition, not mere same-sentence presence
 # ---------------------------------------------------------------------------
 

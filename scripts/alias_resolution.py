@@ -188,9 +188,16 @@ def _pick_snippets(entity: dict, persons_full: dict, n: int = 3) -> list[str]:
 
 
 def _is_pure_title(name: str, role_words: list[str]) -> bool:
-    """Return True if name consists entirely of role_words (e.g. 'Master', 'Crown Prince').
+    """Return True if name is a bare title, not a title + proper name.
 
-    Handles both single-word roles ('Master') and multi-word role phrases ('Crown Prince').
+    Recognises:
+      * single-word roles: 'Master', 'King'
+      * enumerated role phrases: 'Crown Prince' when 'crown prince' ∈ role_words
+      * modifier + role head: 'Crown Prince', 'High Lord' — a multi-word phrase whose
+        HEAD noun (last token) is a role word, so the leading modifier need not be
+        enumerated (STU-471). English titles are head-final, so the head carries the
+        role. A title + surname ('Captain Westfall') keeps a non-role head and is
+        therefore NOT pure — it is handled by _detect_title_alias instead.
     """
     name_lower = name.lower()
     if not name_lower:
@@ -199,9 +206,12 @@ def _is_pure_title(name: str, role_words: list[str]) -> bool:
     # Match the full name as a role phrase (e.g. "Crown Prince" in {"crown prince", ...})
     if name_lower in role_set:
         return True
-    # Match token-by-token (e.g. "Master" where "master" in role_set)
     tokens = name_lower.split()
-    return all(t in role_set for t in tokens)
+    # Match token-by-token (e.g. "Master" where "master" in role_set)
+    if all(t in role_set for t in tokens):
+        return True
+    # Modifier + role head: last token is a role word ("Crown Prince" -> "prince").
+    return len(tokens) > 1 and tokens[-1] in role_set
 
 
 def _pick_canonical_name(
