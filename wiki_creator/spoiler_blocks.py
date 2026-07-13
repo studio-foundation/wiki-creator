@@ -81,3 +81,24 @@ def relationship_index_lines(entity: dict) -> list[str]:
         rows.append((lo, f"* [[{other}]] — {rtype} ({span})"))
     rows.sort(key=lambda r: r[0], reverse=True)
     return [line for _, line in rows]
+
+
+_RELATIONS_TITLE = _norm(SECTION_TITLES["relationships"])
+
+
+def inject_relationship_index(body: str, lines: list[str]) -> str:
+    """Append an ''Évolution :'' index sub-block at the end of the Relations section."""
+    if not lines:
+        return body
+    blocks = _split_sections(body)
+    for i, block in enumerate(blocks[1:], start=1):
+        heading = _heading_of(block)
+        if heading and _norm(heading) == _RELATIONS_TITLE:
+            sub = "''Évolution :''\n" + "\n".join(lines)
+            blocks[i] = f"{block.rstrip()}\n\n{sub}\n"
+            return "".join(blocks)
+    return body
+
+
+def spoiler_collapse_after(book_cfg: dict) -> int | None:
+    return ((book_cfg.get("generation") or {}).get("spoiler") or {}).get("collapse_after_chapter")

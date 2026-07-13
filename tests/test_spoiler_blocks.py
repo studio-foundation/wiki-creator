@@ -1,4 +1,9 @@
-from wiki_creator.spoiler_blocks import relationship_index_lines, wrap_collapsible
+from wiki_creator.spoiler_blocks import (
+    inject_relationship_index,
+    relationship_index_lines,
+    spoiler_collapse_after,
+    wrap_collapsible,
+)
 
 BODY = (
     "== Biographie ==\n\nNé au chapitre 1.\n\n"
@@ -62,3 +67,27 @@ def test_relationship_index_lines_content_and_order():
 
 def test_relationship_index_lines_empty_when_no_typed():
     assert relationship_index_lines({"canonical_name": "X", "relationships": []}) == []
+
+
+REL_BODY = "== Biographie ==\n\nBio.\n\n== Relations ==\n\nProse FR.\n"
+
+
+def test_inject_appends_index_under_relations():
+    out = inject_relationship_index(REL_BODY, ["* [[Chaol]] — amoureux (ch.1→ch.55)"])
+    assert "Prose FR." in out
+    assert "''Évolution :''" in out
+    assert "* [[Chaol]] — amoureux (ch.1→ch.55)" in out
+    # index sits inside the Relations section, not after Biographie
+    assert out.index("Évolution") > out.index("Relations")
+    assert out.index("Évolution") > out.index("Bio.")
+
+
+def test_inject_noop_without_relations_or_lines():
+    assert inject_relationship_index("== Biographie ==\n\nBio.", ["* x"]) == "== Biographie ==\n\nBio."
+    assert inject_relationship_index(REL_BODY, []) == REL_BODY
+
+
+def test_spoiler_collapse_after_reads_config():
+    assert spoiler_collapse_after({"generation": {"spoiler": {"collapse_after_chapter": 3}}}) == 3
+    assert spoiler_collapse_after({}) is None
+    assert spoiler_collapse_after({"generation": {}}) is None
