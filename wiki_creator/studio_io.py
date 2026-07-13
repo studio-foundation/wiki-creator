@@ -19,11 +19,13 @@ Covers three families of duplication:
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import re
 import sys
+import typing
 from pathlib import Path
-from typing import IO
+from typing import IO, Any, Literal, Union, get_args, get_origin
 
 import yaml
 
@@ -153,3 +155,86 @@ def slugify_filename(value: str) -> str:
     slug = re.sub(r"[^A-Za-z0-9._-]+", "_", str(value or "").strip())
     slug = slug.strip("._")
     return slug or "untitled"
+
+
+class ArtifactSchemaError(ValueError):
+    """Raised when an artifact does not match its declared schema."""
+
+
+def to_dict(obj: Any) -> Any:
+    if dataclasses.is_dataclass(obj) and not isinstance(obj, type):
+        return {f.name: to_dict(getattr(obj, f.name)) for f in dataclasses.fields(obj)}
+    if isinstance(obj, list):
+        return [to_dict(v) for v in obj]
+    if isinstance(obj, dict):
+        return {k: to_dict(v) for k, v in obj.items()}
+    return obj
+
+
+def from_dict(schema: Any, data: Any, path: str = "$") -> Any:
+    origin = get_origin(schema)
+
+    if origin in (list, typing.List):
+        (elem,) = get_args(schema)
+        if not isinstance(data, list):
+            raise ArtifactSchemaError(f"{path}: expected array, got {type(data).__name__}")
+        return [from_dict(elem, v, f"{path}[{i}]") for i, v in enumerate(data)]
+
+    if origin in (dict, typing.Dict):
+        _k, val = get_args(schema)
+        if not isinstance(data, dict):
+            raise ArtifactSchemaError(f"{path}: expected object, got {type(data).__name__}")
+        return {k: from_dict(val, v, f"{path}.{k}") for k, v in data.items()}
+
+    if origin is Union:
+        members = get_args(schema)
+        if data is None and type(None) in members:
+            return None
+        non_none = [m for m in members if m is not type(None)]
+        return from_dict(non_none[0], data, path)
+
+    if origin is Literal:
+        allowed = get_args(schema)
+        if data not in allowed:
+            raise ArtifactSchemaError(f"{path}: {data!r} not one of {allowed}")
+        return data
+
+    if isinstance(schema, type) and dataclasses.is_dataclass(schema):
+        if not isinstance(data, dict):
+            raise ArtifactSchemaError(f"{path}: expected object for {schema.__name__}, got {type(data).__name__}")
+        hints = typing.get_type_hints(schema)
+        fields = {f.name: f for f in dataclasses.fields(schema)}
+        unknown = sorted(set(data) - set(fields))
+        if unknown:
+            raise ArtifactSchemaError(f"{path}: unknown keys {unknown} for {schema.__name__}")
+        kwargs = {}
+        for name, f in fields.items():
+            if name in data:
+                kwargs[name] = from_dict(hints[name], data[name], f"{path}.{name}")
+            elif f.default is dataclasses.MISSING and f.default_factory is dataclasses.MISSING:
+                raise ArtifactSchemaError(f"{path}: missing required field {name!r}")
+        return schema(**kwargs)
+
+    if schema in (int, float, str, bool):
+        if schema is float and isinstance(data, int) and not isinstance(data, bool):
+            return float(data)
+        if isinstance(data, bool) != (schema is bool):
+            raise ArtifactSchemaError(f"{path}: expected {schema.__name__}, got {type(data).__name__}")
+        if not isinstance(data, schema):
+            raise ArtifactSchemaError(f"{path}: expected {schema.__name__}, got {type(data).__name__}")
+        return data
+
+    # Any / untyped dict|list: pass through unvalidated (free-form fields like stats/infobox_fields)
+    return data
+
+
+def save_artifact(path, obj: Any, schema: Any) -> None:
+    payload = to_dict(obj)
+    from_dict(schema, payload)  # roundtrip self-check: never write off-schema
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False)
+
+
+def load_artifact(path, schema: Any) -> Any:
+    with open(path, encoding="utf-8") as f:
+        return from_dict(schema, json.load(f))
