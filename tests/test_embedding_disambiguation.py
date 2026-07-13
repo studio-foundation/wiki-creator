@@ -135,9 +135,11 @@ def test_backend_empty_returns_empty():
 # separable because topic/setting dominates the sentence embedding. See
 # docs/superpowers/specs/2026-07-12-embedding-disambiguation-EVAL-RESULTS.md.
 # The two tests below are characterization guards, not success gates — the
-# feature ships opt-in and defaults OFF. If a future representation change makes
-# the pairs separable, `test_golden_pairs_are_not_separable` flips and signals
-# that the strategy is worth enabling.
+# feature ships opt-in and defaults OFF. `test_golden_fixture_is_self_contained`
+# runs in normal CI and locks hermeticity. `test_golden_pairs_are_not_separable`
+# only runs locally under `.[embeddings]` (it needs the real model) — it is NOT
+# a CI gate; treat it as a reproducible local check that documents the negative
+# result, which flips if a future representation makes the pairs separable.
 
 _FIXTURE = Path(__file__).parent / "fixtures" / "embedding_golden_pairs.json"
 

@@ -45,6 +45,7 @@ def _empty_stats() -> dict:
         "merges_applied": 0,
         "merges_by_method": {"pattern": 0, "cooccurrence": 0, "llm": 0, "title_alias": 0, "role_symmetric": 0, "pure_title": 0},
         "ambiguous_pairs": 0,
+        "embedding_vetoes": 0,
         "llm_attempts": 0,
         "llm_confirmed": 0,
         "llm_failed": 0,
@@ -832,7 +833,7 @@ def resolve_aliases(
                 continue
 
             if judge is not None and judge.veto(index, candidate_index, centroids):
-                stats["embedding_vetoes"] = stats.get("embedding_vetoes", 0) + 1
+                stats["embedding_vetoes"] += 1
                 stats["ambiguous_pairs"] += 1
                 continue
 
@@ -941,6 +942,13 @@ def main() -> None:
     emb_cfg = ctx.get("embedding_disambiguation", {}) or {}
     judge = None
     if emb_cfg.get("enabled"):
+        warnings.warn(
+            "embedding_disambiguation is enabled, but its STU-468 eval falsified the "
+            "centroid-cosine approach on single-book data (same/different pairs are not "
+            "separable; the proposer over-merges). See "
+            "docs/superpowers/specs/2026-07-12-embedding-disambiguation-EVAL-RESULTS.md.",
+            stacklevel=1,
+        )
         try:
             from wiki_creator.embedding_disambiguation import (
                 EmbeddingBackend,
