@@ -86,3 +86,36 @@ def test_copyright_gate_dedupes_and_sorts_titles():
     }
     result = _copyright_gate(prev)
     assert result["violating_pages"] == ["Ada", "Zed"]
+
+
+# --- SP4 synopsis page rendering (STU-482) ---
+
+from scripts.wiki_export import render_page
+
+_LABELS = {
+    "persons": "Personnages",
+    "principal": "Personnages principaux",
+    "secondary": "Personnages secondaires",
+    "locations": "Lieux",
+    "organizations": "Organisations",
+}
+
+
+def test_render_page_person_keeps_infobox_subdir_and_categories():
+    page = {"title": "Celaena Sardothien", "entity_type": "PERSON", "importance": "principal",
+            "infobox_fields": {"nom": "Celaena"}, "content": "## Biographie\n\nHéroïne."}
+    rel_path, content = render_page(page, _LABELS)
+    assert rel_path == "characters/Celaena_Sardothien.wiki"
+    assert "{{Infobox character" in content
+    assert "[[Category:Personnages]]" in content
+
+
+def test_render_page_synopsis_goes_to_wiki_root_without_infobox():
+    page = {"title": "Synopsis", "entity_type": "SYNOPSIS", "importance": "principal",
+            "infobox_fields": {}, "content": "## Synopsis\n\nL'intrigue du livre."}
+    rel_path, content = render_page(page, _LABELS)
+    assert rel_path == "Synopsis.wiki"
+    assert "{{Infobox" not in content
+    assert "[[Category:" not in content
+    assert "== Synopsis ==" in content
+    assert "L'intrigue du livre." in content

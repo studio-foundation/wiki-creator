@@ -112,3 +112,20 @@ def test_main_page_content_contains_title():
 def test_infobox_template_unsupported_type_raises():
     with pytest.raises(ValueError, match="No infobox template"):
         infobox_template_content("EVENT")
+
+
+def test_main_page_links_synopsis_when_present():
+    labels = {"persons": "Personnages", "locations": "Lieux", "organizations": "Organisations"}
+    pages = [
+        {"title": "Synopsis", "importance": "principal", "entity_type": "SYNOPSIS"},
+        {"title": "Celaena", "importance": "principal", "entity_type": "PERSON"},
+    ]
+    content = main_page_content("Throne of Glass", "Sarah J. Maas", pages, labels)
+    assert "[[Synopsis|Synopsis du livre]]" in content
+
+
+def test_main_page_omits_synopsis_section_when_absent():
+    labels = {"persons": "Personnages", "locations": "Lieux", "organizations": "Organisations"}
+    pages = [{"title": "Celaena", "importance": "principal", "entity_type": "PERSON"}]
+    content = main_page_content("Throne of Glass", "Sarah J. Maas", pages, labels)
+    assert "== Synopsis ==" not in content

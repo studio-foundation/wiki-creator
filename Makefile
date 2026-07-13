@@ -1,6 +1,6 @@
 .PHONY: run run-coref run-extraction run-resolution run-preparation run-generation pages-export run-all \
         test-extraction test-clustering test-relationships classify-relationships classify-relationships-dry \
-        run-events \
+        run-events generate-synopsis generate-synopsis-dry \
         test test-coref test-coref-parallel \
         smoke golden golden-update \
         clean
@@ -42,13 +42,19 @@ generate-pages:
 generate-pages-dry:
 	python scripts/generate_wiki_pages.py --book $(BOOK) --dry-run
 
+generate-synopsis:
+	python scripts/generate_book_synopsis.py --book $(BOOK)
+
+generate-synopsis-dry:
+	python scripts/generate_book_synopsis.py --book $(BOOK) --dry-run
+
 run-preparation:
 	studio run wiki-preparation --input-file $(BOOK) --live --verbose
 
 pages-export:
 	studio run pages-export --input-file $(BOOK) --live --verbose
 
-run-generation: run-preparation generate-pages pages-export
+run-generation: run-preparation generate-pages generate-synopsis pages-export
 
 # Orchestrator shortcuts
 run-from-extraction:
