@@ -60,7 +60,7 @@ DEFAULT_CHAPTER_SUMMARY_MAX = 8
 
 def load_registry(path: str, key: str) -> dict:
     if os.path.exists(path):
-        return studio_io.to_dict(studio_io.load_full_file(path, key))
+        return studio_io.load_full_file(path, key)
     return {}
 
 
@@ -80,13 +80,13 @@ def _registry_chain_for_entity(entity: dict, persons: dict, places: dict, orgs: 
     return ordered
 
 
-def _find_entry_for_source_id(entity: dict, source_id: str, persons: dict, places: dict, orgs: dict, events: dict) -> dict:
-    """Find source_id entry, preferring the entity's current type registry."""
+def _find_entry_for_source_id(entity: dict, source_id: str, persons: dict, places: dict, orgs: dict, events: dict):
+    """Find source_id EntityFull, preferring the entity's current type registry."""
     for registry in _registry_chain_for_entity(entity, persons, places, orgs, events):
-        entry = registry.get(source_id, {})
-        if entry:
+        entry = registry.get(source_id)
+        if entry is not None:
             return entry
-    return {}
+    return None
 
 
 def extract_context(entity: dict, persons: dict, places: dict, orgs: dict, events: dict) -> dict:
@@ -94,7 +94,9 @@ def extract_context(entity: dict, persons: dict, places: dict, orgs: dict, event
     combined: dict[str, list[str]] = {}
     for sid in entity.get("source_ids", []):
         entry = _find_entry_for_source_id(entity, sid, persons, places, orgs, events)
-        for chapter, mentions in entry.get("mentions_by_chapter", {}).items():
+        if entry is None:
+            continue
+        for chapter, mentions in entry.mentions_by_chapter.items():
             if chapter not in combined:
                 combined[chapter] = []
             combined[chapter].extend(mentions)
@@ -118,7 +120,9 @@ def get_first_seen(entity: dict, persons: dict, places: dict, orgs: dict, events
     first_seen = ""
     for sid in entity.get("source_ids", []):
         entry = _find_entry_for_source_id(entity, sid, persons, places, orgs, events)
-        fs = entry.get("first_seen", "")
+        if entry is None:
+            continue
+        fs = entry.first_seen
         if fs and (not first_seen or fs < first_seen):
             first_seen = fs
     return first_seen

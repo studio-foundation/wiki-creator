@@ -20,6 +20,22 @@ from scripts.entity_classification import (
     classify_entities,
 )
 from wiki_creator.lang import load_lang_config
+from wiki_creator.types import EntityFull
+
+
+def _pf(records: dict) -> dict:
+    """Wrap plain *_full-shaped record dicts as EntityFull, as load_full_file yields."""
+    return {
+        eid: EntityFull(
+            type=v.get("type", "PERSON"),
+            raw_mentions=v.get("raw_mentions", []),
+            first_seen=v.get("first_seen", ""),
+            mention_count=v.get("mention_count", 0),
+            mentions_by_chapter=v.get("mentions_by_chapter", {}),
+            mention_spans_by_chapter=v.get("mention_spans_by_chapter", {}),
+        )
+        for eid, v in records.items()
+    }
 
 _EN = load_lang_config("en")
 _GEO_SUFFIXES = frozenset(_EN.get("geo_suffixes", []))
@@ -30,7 +46,7 @@ _ROLE_PATTERNS = tuple(_EN.get("role_patterns", []))
 # --- Fixtures ---
 
 PERSONS_FULL = {
-    "persons_full": {
+    "persons_full": _pf({
         "entity_001": {
             "type": "PERSON",
             "raw_mentions": ["David Martín", "Martín"],
@@ -57,11 +73,11 @@ PERSONS_FULL = {
                 "ch05": ["le libraire ferma."],
             },
         },
-    }
+    })
 }
 
 PLACES_FULL = {
-    "places_full": {
+    "places_full": _pf({
         "place_001": {
             "type": "PLACE",
             "raw_mentions": ["Barcelone"],
@@ -71,10 +87,10 @@ PLACES_FULL = {
                 "ch02": ["Barcelone s'endormait."],
             },
         }
-    }
+    })
 }
 
-ORGS_FULL = {"orgs_full": {}}
+ORGS_FULL = {"orgs_full": _pf({})}
 
 
 # --- get_total_mentions ---
@@ -122,7 +138,7 @@ def test_get_total_mentions_unknown_type():
 
 # A central character whose surfaces landed in three separate extraction
 # clusters; only the junk 1-mention cluster made it into source_ids.
-NEHEMIA_PERSONS = {
+NEHEMIA_PERSONS = _pf({
     "entity_048": {  # junk cluster that source_ids points at
         "type": "PERSON",
         "raw_mentions": ["Ianticipate"],
@@ -141,7 +157,7 @@ NEHEMIA_PERSONS = {
         "raw_mentions": ["Nehemia'"],
         "mentions_by_chapter": {"C07": ["Nehemia's guards waited."]},
     },
-}
+})
 
 
 def test_get_total_mentions_source_ids_only_undercounts():
@@ -191,11 +207,11 @@ def test_classify_entities_promotes_undercounted_central_character():
         {"canonical_name": "Extra3", "type": "PERSON", "source_ids": ["e3"], "relevant": True},
     ]
     persons = dict(NEHEMIA_PERSONS)
-    persons.update({
+    persons.update(_pf({
         "e1": {"type": "PERSON", "raw_mentions": ["Extra1"], "mentions_by_chapter": {"C01": ["a"]}},
         "e2": {"type": "PERSON", "raw_mentions": ["Extra2"], "mentions_by_chapter": {"C01": ["b"]}},
         "e3": {"type": "PERSON", "raw_mentions": ["Extra3"], "mentions_by_chapter": {"C01": ["c"]}},
-    })
+    }))
     result = classify_entities(entities, persons, {}, {}, "auto")
     nehemia = next(e for e in result if e["canonical_name"] == "Nehemia")
     assert nehemia["total_mentions"] == 5
@@ -361,28 +377,28 @@ def test_classify_entities_passthrough_extra_fields():
 
 
 def test_normalize_entity_type_retags_geopolitical_name_to_place():
-    entities = {
+    entities = _pf({
         "entity_x": {
             "mentions_by_chapter": {
                 "ch01": ["She left the kingdom of Adarlan."],
                 "ch02": ["Across the country, Adarlan prepared for war."],
             }
         }
-    }
+    })
     entity = {"canonical_name": "Adarlan", "type": "PERSON", "source_ids": ["entity_x"], "aliases": []}
     new_type = _normalize_entity_type(entity, entities, {}, {}, {})
     assert new_type == "PLACE"
 
 
 def test_normalize_entity_type_keeps_person_when_context_has_generic_geo_words():
-    entities = {
+    entities = _pf({
         "entity_n": {
             "mentions_by_chapter": {
                 "ch01": ["Nehemia spoke about the kingdom and the war."],
                 "ch02": ["In the country, Nehemia sought allies."],
             }
         }
-    }
+    })
     entity = {"canonical_name": "Nehemia", "type": "PERSON", "source_ids": ["entity_n"], "aliases": []}
     new_type = _normalize_entity_type(entity, entities, {}, {}, {})
     assert new_type == "PERSON"
@@ -396,13 +412,13 @@ def test_canonicalize_role_entities_merges_unambiguous_assassin_alias():
     relationships = [
         {"entity_a": "Assassin", "entity_b": "Celaena", "cooccurrence_count": 12},
     ]
-    persons_full = {
+    persons_full = _pf({
         "e2": {
             "mentions_by_chapter": {
                 "ch01": ["I am Celaena Sardothien, Adarlan's Assassin."],
             }
         }
-    }
+    })
 
     out_entities, out_relationships, merge_map = _canonicalize_role_entities(
         entities, relationships, persons_full, {}, {}, {},
@@ -494,13 +510,13 @@ def test_canonicalize_role_entities_does_not_swallow_titled_full_name():
     relationships = [
         {"entity_a": "Captain Elias Thorn", "entity_b": "Mira Vale", "cooccurrence_count": 14},
     ]
-    persons_full = {
+    persons_full = _pf({
         "e2": {
             "mentions_by_chapter": {
                 "ch01": ["Captain Elias Thorn stood on the deck. Mira Vale walked to the rail."],
             }
         }
-    }
+    })
 
     out_entities, out_relationships, merge_map = _canonicalize_role_entities(
         entities, relationships, persons_full, {}, {}, {},
@@ -524,13 +540,13 @@ def test_canonicalize_role_entities_merges_role_surname_into_full_name():
     relationships = [
         {"entity_a": "Captain Westfall", "entity_b": "Chaol Westfall", "cooccurrence_count": 10},
     ]
-    persons_full = {
+    persons_full = _pf({
         "e2": {
             "mentions_by_chapter": {
                 "ch01": ["Captain Westfall arrived. Chaol Westfall was loyal."],
             }
         }
-    }
+    })
 
     out_entities, out_relationships, merge_map = _canonicalize_role_entities(
         entities, relationships, persons_full, {}, {}, {},
@@ -656,21 +672,21 @@ def test_normalize_entity_type_retags_place_to_person_when_source_ids_in_persons
     was extracted as PLACE, but the canonical entity has a persons_full source_id with
     many mentions.
     """
-    persons_full = {
+    persons_full = _pf({
         "entity_017": {
             "mentions_by_chapter": {
                 "ch01": ["Arobynn Hamel trained her.", "Arobynn watched from the shadows."],
                 "ch02": ["She had not seen Arobynn since the river."],
             }
         }
-    }
-    places_full = {
+    })
+    places_full = _pf({
         "entity_018": {
             "mentions_by_chapter": {
                 "ch05": ["found her half-submerged on the banks of a frozen river near Arobynn"],
             }
         }
-    }
+    })
     entity = {
         "canonical_name": "Arobynn Hamel",
         "type": "PLACE",
@@ -683,13 +699,13 @@ def test_normalize_entity_type_retags_place_to_person_when_source_ids_in_persons
 
 def test_normalize_entity_type_no_false_retag_when_persons_full_mentions_are_sparse():
     """PLACE entity with only 1 persons_full mention stays PLACE (noise, not a real person)."""
-    persons_full = {
+    persons_full = _pf({
         "entity_noise": {
             "mentions_by_chapter": {
                 "ch01": ["A figure called Arobynn passed by."],
             }
         }
-    }
+    })
     entity = {
         "canonical_name": "Arobynn",
         "type": "PLACE",

@@ -1159,11 +1159,11 @@ def _load_mentions_from_files(processing_dir: Path) -> dict[str, dict[str, list[
         p = processing_dir / filename
         if not p.exists():
             continue
-        data = studio_io.to_dict(studio_io.load_full_file(p, key))
-        for entity_id, entry in data.items():
-            raw = entry.get("raw_mentions", [])
+        records = studio_io.load_full_file(p, key)
+        for entity_id, entry in records.items():
+            raw = entry.raw_mentions
             name = raw[0] if raw else entity_id
-            mentions[name] = entry.get("mentions_by_chapter", {})
+            mentions[name] = entry.mentions_by_chapter
 
     return mentions
 
@@ -1198,23 +1198,23 @@ def run_live_mode(
     clustering_mod = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
     spec.loader.exec_module(clustering_mod)  # type: ignore[union-attr]
 
-    persons_data = studio_io.to_dict(studio_io.load_full_file(persons_path, "persons_full"))
+    persons_data = studio_io.load_full_file(persons_path, "persons_full")
 
     # Build entities dict in format expected by build_clusters
     clustering_input = {}
     raw_mentions_map: dict[str, dict[str, list[str]]] = {}  # entity_id → mentions_by_chapter
     for entity_id, entry in persons_data.items():
-        raw = entry.get("raw_mentions", [])
+        raw = entry.raw_mentions
         if not raw:
             continue
-        mention_count = sum(len(v) for v in entry.get("mentions_by_chapter", {}).values())
+        mention_count = sum(len(v) for v in entry.mentions_by_chapter.values())
         clustering_input[entity_id] = {
             "type": "PERSON",
             "raw_mentions": raw,
-            "first_seen": entry.get("first_seen", ""),
+            "first_seen": entry.first_seen,
             "mention_count": mention_count or len(raw),
         }
-        raw_mentions_map[entity_id] = entry.get("mentions_by_chapter", {})
+        raw_mentions_map[entity_id] = entry.mentions_by_chapter
 
     clusters, unclustered = clustering_mod.build_clusters(clustering_input)
 

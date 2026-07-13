@@ -68,7 +68,7 @@ def build_surface_index(*registries: dict) -> dict[str, list[dict]]:
     for reg in registries:
         for entry in (reg or {}).values():
             seen_keys: set[str] = set()
-            for raw in entry.get("raw_mentions") or []:
+            for raw in entry.raw_mentions or []:
                 key = _surface_key(raw)
                 if key and key not in seen_keys:
                     seen_keys.add(key)
@@ -76,9 +76,9 @@ def build_surface_index(*registries: dict) -> dict[str, list[dict]]:
     return index
 
 
-def _count_entry(entry: dict, chapters: set[str]) -> int:
+def _count_entry(entry, chapters: set[str]) -> int:
     total = 0
-    for ch, mentions in entry.get("mentions_by_chapter", {}).items():
+    for ch, mentions in entry.mentions_by_chapter.items():
         total += len(mentions)
         if mentions:
             chapters.add(ch)
@@ -320,9 +320,9 @@ def _collect_context_sentences(
     for sid in entity.get("source_ids", []):
         for reg in registries:
             entry = reg.get(sid)
-            if not entry:
+            if entry is None:
                 continue
-            for chapter_mentions in entry.get("mentions_by_chapter", {}).values():
+            for chapter_mentions in entry.mentions_by_chapter.values():
                 for sentence in chapter_mentions:
                     snippets.append(sentence)
                     if len(snippets) >= max_sentences:
@@ -395,7 +395,7 @@ def _normalize_entity_type(
         persons_mention_count = sum(
             sum(
                 len(v) if isinstance(v, list) else 1
-                for v in persons_full.get(sid, {}).get("mentions_by_chapter", {}).values()
+                for v in persons_full[sid].mentions_by_chapter.values()
             )
             for sid in entity.get("source_ids", [])
             if sid in persons_full
@@ -678,7 +678,7 @@ def _load_entity_files(processing_dir: Path) -> tuple[dict, dict, dict, dict]:
     def load(name: str, key: str) -> dict:
         p = processing_dir / name
         if p.exists():
-            return studio_io.to_dict(studio_io.load_full_file(p, key))
+            return studio_io.load_full_file(p, key)
         return {}
 
     return (

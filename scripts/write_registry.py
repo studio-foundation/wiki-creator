@@ -84,9 +84,13 @@ def main() -> None:
     for name in FULL_REGISTRY_FILES:
         path = paths.processing / name
         if path.exists():
-            full_registries.update(studio_io.to_dict(studio_io.load_full_file(path, name.removesuffix(".json"))))
+            full_registries.update(studio_io.load_full_file(path, name.removesuffix(".json")))
 
-    registry = Registry.from_artifacts(splits, alias_output, full_registries, book_id)
+    # Registry.from_artifacts consumes raw record dicts; records are already
+    # validated (load_full_file above), so to_dict here is a pure shape adapter.
+    registry = Registry.from_artifacts(
+        splits, alias_output, studio_io.to_dict(full_registries), book_id
+    )
     output_path = paths.processing / "registry.json"
     registry.save(output_path)
 

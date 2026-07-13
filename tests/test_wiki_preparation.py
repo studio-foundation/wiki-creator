@@ -15,6 +15,22 @@ from scripts.wiki_preparation import (
     stage_outputs_from_payload,
     write_batches,
 )
+from wiki_creator.types import EntityFull
+
+
+def _pf(records: dict) -> dict:
+    """Wrap plain *_full-shaped record dicts as EntityFull, as load_full_file yields."""
+    return {
+        eid: EntityFull(
+            type=v.get("type", "PERSON"),
+            raw_mentions=v.get("raw_mentions", []),
+            first_seen=v.get("first_seen", ""),
+            mention_count=v.get("mention_count", 0),
+            mentions_by_chapter=v.get("mentions_by_chapter", {}),
+            mention_spans_by_chapter=v.get("mention_spans_by_chapter", {}),
+        )
+        for eid, v in records.items()
+    }
 
 
 def _registries():
@@ -63,7 +79,7 @@ def _registries():
             },
         },
     }
-    return persons, {}, {}, {}
+    return _pf(persons), {}, {}, {}
 
 
 def test_importance_normalize_maps_secondaire_to_secondary():
@@ -487,7 +503,7 @@ def test_build_entity_bundle_skips_chapter_summary_context_for_non_person():
 
 def test_build_entity_bundle_limits_chapter_summary_context_size():
     persons, places, orgs, events = _registries()
-    persons["p1"]["mentions_by_chapter"] = {
+    persons["p1"].mentions_by_chapter = {
         f"ch{i:02d}": [f"Dorian mention {i}."] for i in range(1, 13)
     }
     entity = {
