@@ -131,9 +131,17 @@ def test_script_stdin_contract_reads_registry_from_processing_dir(tmp_path: Path
     persons_full = {
         "persons_full": {
             "entity_001": {
+                "type": "PERSON",
+                "raw_mentions": ["Celaena"],
+                "first_seen": "ch03",
+                "mention_count": 1,
                 "mentions_by_chapter": {"ch03": ["Celaena said: you may call me Lillian Gordaina."]},
             },
             "entity_002": {
+                "type": "PERSON",
+                "raw_mentions": ["Lillian"],
+                "first_seen": "ch03",
+                "mention_count": 1,
                 "mentions_by_chapter": {"ch03": ["You may call me Lillian Gordaina."]},
             },
         }

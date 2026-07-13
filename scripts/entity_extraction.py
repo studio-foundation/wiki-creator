@@ -39,6 +39,7 @@ from wiki_creator.nlp.loader import (
     ensure_sentencizer as _ensure_sentencizer,
     load_spacy_model_with_fallback as _load_spacy_model_with_fallback,
 )
+from wiki_creator.types import EntityFull
 
 
 DEFAULT_MIN_MENTIONS_ABSOLUTE = 3
@@ -766,8 +767,11 @@ def main() -> None:
         "EVENT": ("events_full.json", "events_full"),
     }
     for type_key, (filename, json_key) in type_files.items():
+        records = {eid: EntityFull(**rec) for eid, rec in by_type[type_key].items()}
+        payload = studio_io.to_dict(records)
+        studio_io.from_dict(dict[str, EntityFull], payload)  # self-check: never write off-schema
         with open(paths.processing / filename, "w", encoding="utf-8") as f:
-            json.dump({json_key: by_type[type_key]}, f, ensure_ascii=False)
+            json.dump({json_key: payload}, f, ensure_ascii=False)
 
     save_chapters_json(chapters, path=str(paths.processing / "chapters.json"))
 

@@ -993,3 +993,14 @@ def test_person_with_place_dense_context_stays_person():
         },
     }
     assert _retag_entity_type_from_context(entity) == "PERSON"
+
+
+def test_full_file_drift_raises(tmp_path):
+    """A *_full.json record with an unknown key must fail validated load (STU-447)."""
+    import json
+    from wiki_creator import studio_io
+    from wiki_creator.studio_io import ArtifactSchemaError
+    p = tmp_path / "persons_full.json"
+    p.write_text(json.dumps({"persons_full": {"e1": {"type": "PERSON", "raw_mentions": [], "first_seen": "c1", "mention_count": 1, "surprise": 9}}}))
+    with pytest.raises(ArtifactSchemaError, match="surprise"):
+        studio_io.load_full_file(p, "persons_full")

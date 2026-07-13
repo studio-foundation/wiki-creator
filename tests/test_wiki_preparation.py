@@ -650,10 +650,11 @@ def test_main_injects_chapter_id_to_title_from_epub_data(tmp_path: Path, monkeyp
     persons_data = {
         "persons_full": {
             "p1": {
-                "canonical_name": "Celaena",
-                "mentions_by_chapter": {"chapter_01.xhtml": ["She stepped inside."]},
+                "type": "PERSON",
+                "raw_mentions": ["Celaena"],
                 "first_seen": "chapter_01.xhtml",
-                "source_ids": ["p1"],
+                "mention_count": 1,
+                "mentions_by_chapter": {"chapter_01.xhtml": ["She stepped inside."]},
             }
         }
     }
@@ -845,9 +846,10 @@ def test_main_binds_identity_from_registry(tmp_path: Path, monkeypatch):
     for name in ("persons_full", "places_full", "orgs_full", "events_full"):
         (processing / f"{name}.json").write_text(json.dumps({name: {}}), encoding="utf-8")
     persons_data = {"persons_full": {"p1": {
-        "canonical_name": "Celaena Sardothien",
+        "type": "PERSON",
+        "raw_mentions": ["Celaena Sardothien"],
         "mentions_by_chapter": {"ch01": ["She stepped inside."]},
-        "first_seen": "ch01", "source_ids": ["p1"],
+        "first_seen": "ch01", "mention_count": 1,
     }}}
     (processing / "persons_full.json").write_text(json.dumps(persons_data), encoding="utf-8")
 

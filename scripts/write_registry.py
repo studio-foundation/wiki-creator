@@ -31,6 +31,7 @@ from pathlib import Path
 
 
 import yaml
+from wiki_creator import studio_io
 from wiki_creator.paths import book_paths_from_epub
 from wiki_creator.registry import Registry
 
@@ -75,15 +76,15 @@ def main() -> None:
         alias_output = _load_json(paths.processing / "entities_classified.json")
 
     splits = _load_json(paths.processing / "splits.json")
-    # Extraction wraps each per-type file under its json_key ("persons_full",
-    # …); unwrap it like relationship_extraction does, else no source_id ever
-    # matches and every registry mention is silently dropped. Unwrapped files
-    # (unit fixtures, older runs) keep working.
+    # load_full_file unwraps each per-type file's json_key ("persons_full", …)
+    # and validates against EntityFull, falling back to the raw payload for
+    # unwrapped fixtures/older runs — else no source_id ever matches and every
+    # registry mention is silently dropped.
     full_registries: dict = {}
     for name in FULL_REGISTRY_FILES:
-        data = _load_json(paths.processing / name)
-        inner = data.get(name.removesuffix(".json"))
-        full_registries.update(inner if isinstance(inner, dict) else data)
+        path = paths.processing / name
+        if path.exists():
+            full_registries.update(studio_io.to_dict(studio_io.load_full_file(path, name.removesuffix(".json"))))
 
     registry = Registry.from_artifacts(splits, alias_output, full_registries, book_id)
     output_path = paths.processing / "registry.json"

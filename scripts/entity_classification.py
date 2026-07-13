@@ -678,8 +678,7 @@ def _load_entity_files(processing_dir: Path) -> tuple[dict, dict, dict, dict]:
     def load(name: str, key: str) -> dict:
         p = processing_dir / name
         if p.exists():
-            with open(p, encoding="utf-8") as f:
-                return json.load(f).get(key, {})
+            return studio_io.to_dict(studio_io.load_full_file(p, key))
         return {}
 
     return (

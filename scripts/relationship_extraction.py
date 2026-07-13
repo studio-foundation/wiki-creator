@@ -1159,9 +1159,8 @@ def _load_mentions_from_files(processing_dir: Path) -> dict[str, dict[str, list[
         p = processing_dir / filename
         if not p.exists():
             continue
-        with open(p, encoding="utf-8") as f:
-            data = json.load(f)
-        for entity_id, entry in data.get(key, {}).items():
+        data = studio_io.to_dict(studio_io.load_full_file(p, key))
+        for entity_id, entry in data.items():
             raw = entry.get("raw_mentions", [])
             name = raw[0] if raw else entity_id
             mentions[name] = entry.get("mentions_by_chapter", {})
@@ -1199,10 +1198,7 @@ def run_live_mode(
     clustering_mod = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
     spec.loader.exec_module(clustering_mod)  # type: ignore[union-attr]
 
-    with open(persons_path, encoding="utf-8") as f:
-        data = json.load(f)
-
-    persons_data = data.get("persons_full", {})
+    persons_data = studio_io.to_dict(studio_io.load_full_file(persons_path, "persons_full"))
 
     # Build entities dict in format expected by build_clusters
     clustering_input = {}

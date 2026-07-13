@@ -239,3 +239,17 @@ def save_artifact(path, obj: Any, schema: Any) -> None:
 def load_artifact(path, schema: Any) -> Any:
     with open(path, encoding="utf-8") as f:
         return from_dict(schema, json.load(f))
+
+
+def load_full_file(path, json_key: str) -> dict:
+    """Load a ``*_full.json`` artifact, validate it against ``dict[str, EntityFull]``.
+
+    These files are wrapped under ``json_key`` (``persons_full``, …); falls
+    back to the raw payload itself for unwrapped fixtures/older runs (matches
+    the unwrap behavior write_registry.py relied on pre-STU-447).
+    """
+    from wiki_creator.types import EntityFull
+
+    with open(path, encoding="utf-8") as f:
+        raw = json.load(f)
+    return from_dict(dict[str, EntityFull], raw.get(json_key, raw))

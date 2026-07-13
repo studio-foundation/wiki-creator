@@ -60,8 +60,7 @@ DEFAULT_CHAPTER_SUMMARY_MAX = 8
 
 def load_registry(path: str, key: str) -> dict:
     if os.path.exists(path):
-        with open(path, encoding="utf-8") as f:
-            return json.load(f).get(key, {})
+        return studio_io.to_dict(studio_io.load_full_file(path, key))
     return {}
 
 

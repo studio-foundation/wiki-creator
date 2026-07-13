@@ -99,9 +99,7 @@ def _load_persons_full(processing_dir: Path) -> dict:
     path = processing_dir / "persons_full.json"
     if not path.exists():
         return {}
-    with open(path, encoding="utf-8") as f:
-        data = json.load(f)
-    return data.get("persons_full", {})
+    return studio_io.to_dict(studio_io.load_full_file(path, "persons_full"))
 
 
 def _entity_names(entity: dict) -> list[str]:
