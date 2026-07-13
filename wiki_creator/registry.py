@@ -172,6 +172,10 @@ class Registry:
             return False
         entity["canonical_name"] = record.canonical_name
         entity["aliases"] = [a for a in record.aliases if a != record.canonical_name]
+        # Provenance par livre (STU-486): expose the registry's book tracking
+        # so generation can render per-tome categories / an appearance line.
+        entity["books"] = list(record.books)
+        entity["first_book"] = record.first_book
         return True
 
     def audit_log(self) -> list[MergeDecision]:

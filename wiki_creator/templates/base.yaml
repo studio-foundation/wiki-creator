@@ -5,6 +5,7 @@ entity_types:
       - {token: nom,         group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: type,        group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: alias,       group: infobox, provenance: batch-bound,    obligation: OPT, tiers: [figurant, secondary, principal]}
+      - {token: apparition,  group: infobox, provenance: batch-bound,    obligation: OPT, tiers: [figurant, secondary, principal]}
       - {token: status,      group: infobox, provenance: extracted-fact, obligation: MIN, fallback: unknown, tiers: [figurant, secondary, principal]}
       - {token: species,     group: infobox, provenance: extracted-fact, obligation: OPT, genre_gated: true, tiers: [secondary, principal]}
       - {token: affiliation, group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
@@ -21,6 +22,7 @@ entity_types:
     infobox:
       - {token: nom,         group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: type,        group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
+      - {token: apparition,  group: infobox, provenance: batch-bound,    obligation: OPT, tiers: [figurant, secondary, principal]}
       - {token: location,    group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
     sections:
       - {token: biography,     group: section, provenance: llm-prose,      obligation: MIN, tiers: [figurant, secondary, principal]}
@@ -32,6 +34,7 @@ entity_types:
     infobox:
       - {token: nom,     group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: type,    group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
+      - {token: apparition, group: infobox, provenance: batch-bound, obligation: OPT, tiers: [figurant, secondary, principal]}
       - {token: leaders, group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
     sections:
       - {token: biography,     group: section, provenance: llm-prose,      obligation: MIN, tiers: [figurant, secondary, principal]}
@@ -41,6 +44,7 @@ entity_types:
     infobox:
       - {token: nom,  group: infobox, provenance: batch-bound, obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: type, group: infobox, provenance: batch-bound, obligation: MIN, tiers: [figurant, secondary, principal]}
+      - {token: apparition, group: infobox, provenance: batch-bound, obligation: OPT, tiers: [figurant, secondary, principal]}
     sections:
       - {token: biography,     group: section, provenance: llm-prose,      obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: relationships, group: section, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
@@ -60,6 +64,7 @@ labels:
   nom:           {en: Name,        fr: Nom}
   type:          {en: Type,        fr: Type}
   alias:         {en: Aliases,     fr: Alias}
+  apparition:    {en: Appearance,  fr: Apparition}
   status:        {en: Status,      fr: Statut}
   species:       {en: Species,     fr: Espèce}
   affiliation:   {en: Affiliation, fr: Affiliation}

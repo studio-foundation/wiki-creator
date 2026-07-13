@@ -678,6 +678,28 @@ def test_bind_identity_unknown_entity_leaves_fields_untouched():
     assert entity["aliases"] == ["Princess"]
 
 
+def test_bind_identity_exposes_books_and_first_book():
+    # STU-486: bind_identity also exposes the record's book provenance so
+    # generation can render per-tome categories / an appearance line.
+    r1, d1 = _record_with_decision("chaol_westfall", "Chaol Westfall", ["Captain Westfall", "Chaol Westfall"])
+    r1.books = ["01-throne-of-glass", "02-crown-of-midnight"]
+    r1.first_book = "01-throne-of-glass"
+    registry = Registry(entities=[r1], decisions=d1)
+    entity = {"canonical_name": "Chaol Westfall", "aliases": []}
+    assert registry.bind_identity(entity) is True
+    assert entity["books"] == ["01-throne-of-glass", "02-crown-of-midnight"]
+    assert entity["first_book"] == "01-throne-of-glass"
+
+
+def test_bind_identity_unknown_provenance_defaults_to_empty():
+    r1, d1 = _record_with_decision("perrington", "Perrington", ["Duke Perrington", "Perrington"])
+    registry = Registry(entities=[r1], decisions=d1)
+    entity = {"canonical_name": "Perrington", "aliases": []}
+    assert registry.bind_identity(entity) is True
+    assert entity["books"] == []
+    assert entity["first_book"] is None
+
+
 def test_load_from_processing_absent_returns_none(tmp_path):
     assert Registry.load_from_processing(tmp_path) is None
 

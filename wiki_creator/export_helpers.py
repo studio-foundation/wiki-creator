@@ -2,6 +2,8 @@
 """Helper functions for wiki export — pure logic, no I/O."""
 from __future__ import annotations
 
+from wiki_creator.tome_labels import tome_number
+
 
 def page_filename(canonical_name: str) -> str:
     """Convert canonical name to wiki filename (spaces → underscores, slashes removed)."""
@@ -10,8 +12,23 @@ def page_filename(canonical_name: str) -> str:
     return name
 
 
-def category_tags(entity_type: str, importance: str, labels: dict) -> list[str]:
-    """Return list of [[Category:X]] tags for a page."""
+# Per-tome category label key (in the `labels` dict) for each entity type that
+# gets one (STU-486). EVENT/OTHER are intentionally absent — the pipeline does
+# not generate wiki pages for those types (cf. md2wiki._TEMPLATE_NAMES).
+_TOME_LABEL_KEYS = {
+    "PERSON": "persons_by_tome",
+    "PLACE": "locations_by_tome",
+    "ORG": "organizations_by_tome",
+}
+
+
+def category_tags(
+    entity_type: str, importance: str, labels: dict, books: list[str] | None = None
+) -> list[str]:
+    """Return list of [[Category:X]] tags for a page, including one per-tome
+    provenance category (STU-486) per entry in ``books`` (EntityRecord.books).
+    ``books`` empty/omitted → no per-tome categories (registry absent or
+    pre-multi-tome artifact)."""
     tags = []
     if entity_type == "PERSON":
         tags.append(f"[[Category:{labels['persons']}]]")
@@ -23,6 +40,13 @@ def category_tags(entity_type: str, importance: str, labels: dict) -> list[str]:
         tags.append(f"[[Category:{labels['locations']}]]")
     elif entity_type == "ORG":
         tags.append(f"[[Category:{labels['organizations']}]]")
+
+    tome_key = _TOME_LABEL_KEYS.get(entity_type)
+    if tome_key:
+        template = labels.get(tome_key, "")
+        for book_id in books or []:
+            if book_id and template:
+                tags.append(f"[[Category:{template.format(n=tome_number(book_id))}]]")
     return tags
 
 

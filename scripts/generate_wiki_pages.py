@@ -26,10 +26,11 @@ import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 from wiki_creator.lang import book_language
-from wiki_creator.page_templates import resolve_template
+from wiki_creator.page_templates import output_language, resolve_template
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator import studio_io
 from wiki_creator.registry import Registry, normalize_name
+from wiki_creator.tome_labels import appearance_label
 
 DEFAULT_NUM_PREDICT = 1024
 
@@ -597,7 +598,7 @@ def _force_correct_identity(
     return changed
 
 
-def _batch_bound_value(entity: dict, token: str) -> str | None:
+def _batch_bound_value(entity: dict, token: str, lang: str = "fr") -> str | None:
     """Value for a batch-bound infobox token, sourced from the batch entity.
     Returns None for tokens the batch cannot sensibly supply (skipped by the
     binder). `type` is intentionally unsupported: the coarse batch type is
@@ -607,6 +608,10 @@ def _batch_bound_value(entity: dict, token: str) -> str | None:
     if token == "alias":
         aliases = [a for a in (entity.get("aliases") or []) if a]
         return ", ".join(aliases) if aliases else None
+    if token == "apparition":
+        # Provenance par livre (STU-486/STU-484): empty `books` (registry
+        # absent or pre-multi-tome artifact) degrades to omitting the slot.
+        return appearance_label(entity.get("books") or [], lang=lang) or None
     return None
 
 
@@ -629,9 +634,10 @@ def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> No
         return
     page.setdefault("infobox_fields", {})
     resolved = resolve_template(entity.get("type"), entity.get("importance"), book_config)
+    lang = output_language(book_config)
     for slot in resolved.infobox():
         if slot.provenance == "batch-bound":
-            value = _batch_bound_value(entity, slot.token)
+            value = _batch_bound_value(entity, slot.token, lang)
         elif slot.provenance == "extracted-fact":
             value = _extracted_fact_value(entity, slot.token)
         else:
@@ -689,6 +695,7 @@ def make_stub_page(entity: dict, failed: bool = False, insufficient_data: bool =
         "title": entity["canonical_name"],
         "importance": entity["importance"],
         "entity_type": entity["type"],
+        "books": list(entity.get("books") or []),
         "infobox_fields": {},
         "content": _STUB_CONTENT_FAILED if failed else _STUB_CONTENT_INSUFFICIENT,
     }
@@ -1056,6 +1063,7 @@ def _run_generation_sectioned(
         "title": entity["canonical_name"],
         "importance": entity["importance"],
         "entity_type": entity["type"],
+        "books": list(entity.get("books") or []),
         "infobox_fields": {},
         "content": _assemble_section_blocks(blocks),
     }
@@ -1193,6 +1201,7 @@ def parse_response(raw: str, entity: dict) -> dict:
         page["title"] = entity["canonical_name"]
         page["importance"] = entity["importance"]
         page["entity_type"] = entity["type"]
+        page["books"] = list(entity.get("books") or [])
         page.setdefault("infobox_fields", {})
         page.setdefault("content", "")
         if not _is_page_complete(page):

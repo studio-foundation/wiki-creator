@@ -24,6 +24,76 @@ def test_batch_bound_value_type_and_unknown_are_none():
     assert gwp._batch_bound_value(entity, "affiliation") is None
 
 
+def test_batch_bound_value_apparition_single_book():
+    entity = {"canonical_name": "X", "books": ["01-throne-of-glass"]}
+    assert gwp._batch_bound_value(entity, "apparition") == "Apparaît au tome 1"
+
+
+def test_batch_bound_value_apparition_multi_book_and_lang():
+    entity = {"canonical_name": "X", "books": ["01-throne-of-glass", "02-crown-of-midnight"]}
+    assert gwp._batch_bound_value(entity, "apparition") == (
+        "Apparaît au tome 1, dernière apparition tome 2"
+    )
+    assert gwp._batch_bound_value(entity, "apparition", "en") == (
+        "First appears in book 1, last appears in book 2"
+    )
+
+
+def test_batch_bound_value_apparition_no_books_is_none():
+    assert gwp._batch_bound_value({"canonical_name": "X"}, "apparition") is None
+    assert gwp._batch_bound_value({"canonical_name": "X", "books": []}, "apparition") is None
+
+
+def test_bind_batch_fields_sets_apparition_infobox_field():
+    entity = {"canonical_name": "Verin", "type": "PERSON", "importance": "secondary",
+              "aliases": ["Ver"], "books": ["01-throne-of-glass", "02-crown-of-midnight"]}
+    book_config = {"export": {"categories": {"language": "fr"}}}
+    page = {"infobox_fields": {}}
+    gwp._bind_batch_fields(page, entity, book_config)
+    assert page["infobox_fields"]["apparition"] == (
+        "Apparaît au tome 1, dernière apparition tome 2"
+    )
+
+
+def test_bind_batch_fields_apparition_defaults_to_english_language():
+    # page_templates.output_language() falls back to "en" absent config —
+    # same default the rest of the infobox/category pipeline already uses.
+    entity = {"canonical_name": "Verin", "type": "PERSON", "importance": "secondary",
+              "aliases": [], "books": ["01-a"]}
+    page = {"infobox_fields": {}}
+    gwp._bind_batch_fields(page, entity, {})
+    assert page["infobox_fields"]["apparition"] == "Appears in book 1"
+
+
+def test_bind_batch_fields_omits_apparition_when_no_books():
+    entity = {"canonical_name": "Verin", "type": "PERSON", "importance": "secondary",
+              "aliases": ["Ver"]}
+    page = {"infobox_fields": {}}
+    gwp._bind_batch_fields(page, entity, {})
+    assert "apparition" not in page["infobox_fields"]
+
+
+def test_make_stub_page_carries_books():
+    entity = {"canonical_name": "X", "importance": "figurant", "type": "PERSON",
+              "books": ["01-a", "02-b"]}
+    page = gwp.make_stub_page(entity)
+    assert page["books"] == ["01-a", "02-b"]
+
+
+def test_make_stub_page_defaults_books_to_empty_list():
+    entity = {"canonical_name": "X", "importance": "figurant", "type": "PERSON"}
+    page = gwp.make_stub_page(entity)
+    assert page["books"] == []
+
+
+def test_parse_response_forces_books_from_entity():
+    entity = {"canonical_name": "X", "importance": "figurant", "type": "PERSON",
+              "books": ["01-a"]}
+    raw = '{"content": "## Biographie\\n\\nSome content long enough to pass.", "books": ["stale"]}'
+    page = gwp.parse_response(raw, entity)
+    assert page["books"] == ["01-a"]
+
+
 def _person_entity():
     return {"canonical_name": "Verin", "type": "PERSON", "importance": "secondary",
             "aliases": ["Ver"]}
