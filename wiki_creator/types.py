@@ -53,6 +53,9 @@ class SplitCluster:
     entity_ids: list[str] = field(default_factory=list)
     all_mentions: list[str] = field(default_factory=list)
     entity_count: int = 0
+    cluster_id: str = ""
+    first_seen: str = ""
+    total_mentions: int = 0
 
 
 @dataclass

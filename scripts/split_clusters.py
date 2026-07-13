@@ -27,6 +27,7 @@ import sys
 from pathlib import Path
 
 from wiki_creator import studio_io
+from wiki_creator.types import SplitCluster, SplitSingle, Splits
 
 ENTITY_TYPES = ("PERSON", "PLACE", "ORG", "EVENT", "OTHER")
 
@@ -86,8 +87,13 @@ def main() -> None:
     paths = studio_io.paths_from_payload(payload, strict=False)
     if paths is not None:
         paths.processing.mkdir(parents=True, exist_ok=True)
-        with open(paths.processing / "splits.json", "w", encoding="utf-8") as _f:
-            json.dump(result, _f, ensure_ascii=False)
+        splits_obj = Splits(
+            singles_resolved=[SplitSingle(**s) for s in result["singles_resolved"]],
+            **{t: [SplitCluster(**c) for c in result[t]] for t in ENTITY_TYPES},
+            stats=result["stats"],
+            pov_detection=result.get("pov_detection"),
+        )
+        studio_io.save_artifact(paths.processing / "splits.json", splits_obj, Splits)
 
     json.dump(result, sys.stdout, ensure_ascii=False)
 

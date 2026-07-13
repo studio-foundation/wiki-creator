@@ -4,18 +4,17 @@ Loader stage for wiki-resolution pipeline.
 Reads <series_dir>/processing_output/splits.json and re-emits it as stage output.
 Named 'split-clusters' in the pipeline so entity-resolution group conditions work unchanged.
 """
-import json
 import os
 import sys
-from pathlib import Path
 
 from wiki_creator import studio_io
+from wiki_creator.types import Splits
 
 
 def main() -> None:
     payload = studio_io.read_payload()
     paths = studio_io.paths_from_payload(payload)
-    path = str(paths.processing / "splits.json")
+    path = paths.processing / "splits.json"
     if not os.path.exists(path):
         print(
             f"[ERROR] {path} not found. Run wiki-extraction first:\n"
@@ -23,9 +22,8 @@ def main() -> None:
             file=sys.stderr,
         )
         sys.exit(1)
-    with open(path, encoding="utf-8") as f:
-        data = json.load(f)
-    json.dump(data, sys.stdout, ensure_ascii=False)
+    splits = studio_io.load_artifact(path, Splits)
+    studio_io.write_output(studio_io.to_dict(splits))
 
 
 if __name__ == "__main__":

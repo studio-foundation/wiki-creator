@@ -34,6 +34,7 @@ import yaml
 from wiki_creator import studio_io
 from wiki_creator.paths import book_paths_from_epub
 from wiki_creator.registry import Registry
+from wiki_creator.types import Splits
 
 FULL_REGISTRY_FILES = (
     "persons_full.json",
@@ -75,7 +76,8 @@ def main() -> None:
     if not alias_output.get("entities"):
         alias_output = _load_json(paths.processing / "entities_classified.json")
 
-    splits = _load_json(paths.processing / "splits.json")
+    splits_path = paths.processing / "splits.json"
+    splits = studio_io.load_artifact(splits_path, Splits) if splits_path.exists() else Splits()
     # load_full_file unwraps each per-type file's json_key ("persons_full", …)
     # and validates against EntityFull, falling back to the raw payload for
     # unwrapped fixtures/older runs — else no source_id ever matches and every
@@ -86,10 +88,11 @@ def main() -> None:
         if path.exists():
             full_registries.update(studio_io.load_full_file(path, name.removesuffix(".json")))
 
-    # Registry.from_artifacts consumes raw record dicts; records are already
-    # validated (load_full_file above), so to_dict here is a pure shape adapter.
+    # Registry.from_artifacts consumes raw record dicts; splits/full_registries
+    # are already validated (load_artifact/load_full_file above), so to_dict
+    # here is a pure shape adapter.
     registry = Registry.from_artifacts(
-        splits, alias_output, studio_io.to_dict(full_registries), book_id
+        studio_io.to_dict(splits), alias_output, studio_io.to_dict(full_registries), book_id
     )
     output_path = paths.processing / "registry.json"
     registry.save(output_path)
