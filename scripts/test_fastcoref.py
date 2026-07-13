@@ -15,6 +15,7 @@ import sys
 import time
 from pathlib import Path
 
+from wiki_creator.nlp.loader import load_spacy_model
 from wiki_creator.paths import book_paths_from_yaml
 
 CORELLI_ALIASES = {"corelli", "le patron", "andreas corelli", "m. corelli"}
@@ -58,7 +59,6 @@ def _patch_transformers_eager() -> None:
 
 def run_fastcoref_on_text(text: str, chapter_id: str) -> dict:
     """Run fastcoref LingMessCoref on text and return analysis."""
-    import spacy
     from fastcoref import spacy_component  # noqa: F401 — registers the pipe
 
     _patch_transformers_eager()
@@ -66,7 +66,7 @@ def run_fastcoref_on_text(text: str, chapter_id: str) -> dict:
     print(f"\n[{chapter_id}] Chargement du modèle spaCy + fastcoref...", file=sys.stderr)
     t0 = time.time()
 
-    nlp = spacy.load(
+    nlp, _ = load_spacy_model(
         "fr_core_news_lg",
         exclude=["parser", "lemmatizer", "ner", "textcat"],
     )

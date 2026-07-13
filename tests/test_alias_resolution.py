@@ -1,14 +1,12 @@
 """Tests for scripts/alias_resolution.py."""
 import json
 import os
-import socket
 import subprocess
 import sys
 import unittest.mock as mock
-import urllib.error
 from pathlib import Path
 
-from scripts.alias_resolution import resolve_aliases, detect_named_aliases, _pick_snippets, _check_ollama_available, make_ollama_confirmer
+from scripts.alias_resolution import resolve_aliases, detect_named_aliases, _pick_snippets, make_ollama_confirmer
 from wiki_creator.lang import load_lang_config
 
 _EN_CFG = load_lang_config("en")
@@ -284,23 +282,6 @@ def test_pick_snippets_empty_when_no_source_ids():
     entity = {"canonical_name": "Ghost", "aliases": [], "source_ids": []}
     assert _pick_snippets(entity, {}, n=3) == []
 
-
-
-def test_check_ollama_available_returns_true_on_success():
-    with mock.patch("urllib.request.urlopen") as m:
-        m.return_value.__enter__ = lambda s: s
-        m.return_value.__exit__ = mock.Mock(return_value=False)
-        assert _check_ollama_available("http://localhost:11434") is True
-
-
-def test_check_ollama_available_returns_false_on_connection_error():
-    with mock.patch("urllib.request.urlopen", side_effect=urllib.error.URLError("refused")):
-        assert _check_ollama_available("http://localhost:11434") is False
-
-
-def test_check_ollama_available_returns_false_on_timeout():
-    with mock.patch("urllib.request.urlopen", side_effect=socket.timeout()):
-        assert _check_ollama_available("http://localhost:11434") is False
 
 
 _ENTITY_A = {

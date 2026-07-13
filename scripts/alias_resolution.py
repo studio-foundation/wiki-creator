@@ -9,10 +9,7 @@ entities when local mention context contains strong alias or reveal evidence.
 import json
 import os
 import re
-import socket
 import sys
-import urllib.error
-import urllib.request
 import warnings
 from pathlib import Path
 
@@ -22,6 +19,7 @@ from typing import Literal, TypedDict
 
 from wiki_creator import studio_io
 from wiki_creator.lang import load_lang_config, infer_language
+from wiki_creator.llm import ollama
 from wiki_creator.registry import EntityRecord, Registry, normalize_name
 
 
@@ -49,8 +47,6 @@ def _empty_stats() -> dict:
     }
 
 
-_OLLAMA_URL = "http://localhost:11434"
-
 _LLM_PROMPT_TEMPLATE = """\
 Given two character entities from a novel, determine if they refer to the same person.
 
@@ -66,21 +62,6 @@ Signal: "{signal}"
 
 Reply ONLY with valid JSON:
 {{"same_person": true/false, "confidence": "high"/"medium"/"low", "evidence": "<one sentence>"}}"""
-
-
-def _parse_llm_response(text: str) -> dict | None:
-    """Try json.loads, then regex extraction, then return None."""
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        pass
-    match = re.search(r'\{[^{}]+\}', text, re.DOTALL)
-    if match:
-        try:
-            return json.loads(match.group())
-        except json.JSONDecodeError:
-            pass
-    return None
 
 
 def _fmt_snippets(snippets: list[str]) -> str:
@@ -109,37 +90,9 @@ def make_ollama_confirmer(model: str, url: str, timeout: int) -> Callable:
             signal=evidence.get("snippet", "")[:300],
         )
 
-        body = json.dumps({
-            "model": model,
-            "prompt": prompt,
-            "stream": False,
-            "options": {"temperature": 0.0, "num_predict": 128},
-        }).encode()
-        req = urllib.request.Request(
-            f"{url}/api/generate",
-            data=body,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
-                data = json.loads(resp.read())
-        except (urllib.error.URLError, socket.timeout, OSError):
-            return None
-        raw = data.get("response", "")
-        return _parse_llm_response(raw)
+        return ollama.generate_json(prompt, model=model, url=url, timeout=timeout, num_predict=128)
 
     return confirmer
-
-
-def _check_ollama_available(url: str, timeout: int = 2) -> bool:
-    """Return True if Ollama is reachable at url/api/tags."""
-    try:
-        req = urllib.request.Request(f"{url}/api/tags", method="HEAD")
-        with urllib.request.urlopen(req, timeout=timeout):
-            return True
-    except (urllib.error.URLError, socket.timeout, OSError):
-        return False
 
 
 def _load_persons_full(processing_dir: Path) -> dict:
@@ -978,9 +931,9 @@ def main() -> None:
             file=sys.stderr,
         )
     if use_llm:
-        ollama_url = os.environ.get("OLLAMA_URL", _OLLAMA_URL)
+        ollama_url = os.environ.get("OLLAMA_URL", ollama.DEFAULT_URL)
         llm_model = ctx.get("llm_model", "mistral")
-        if _check_ollama_available(ollama_url):
+        if ollama.is_available(ollama_url):
             llm_confirmer = make_ollama_confirmer(llm_model, ollama_url, timeout=30)
         else:
             warnings.warn(

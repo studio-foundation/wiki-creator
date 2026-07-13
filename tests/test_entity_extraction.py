@@ -11,8 +11,7 @@ from scripts.entity_extraction import (
     _get_min_mentions_absolute, filter_entities_by_min_mentions,
     _retag_entity_type_from_context, _infer_cue_words_language,
     _resolve_cue_words_language, _load_cue_words,
-    _spacy_model_candidates, _load_spacy_model_with_fallback,
-    _ensure_sentencizer, _audit_ner_labels,
+    _audit_ner_labels,
     _is_valid_span, _warn_if_no_pos_tagger,
 )
 from wiki_creator.chapters import FRONTMATTER_ID_PATTERNS, is_frontmatter_chapter as _is_frontmatter_chapter
@@ -774,54 +773,6 @@ def test_filter_entities_by_min_mentions_excludes_below_threshold():
     }
     filtered = filter_entities_by_min_mentions(entities_full, min_mentions_absolute=3)
     assert set(filtered.keys()) == {"entity_002", "entity_003"}
-
-
-def test_spacy_model_candidates_for_english_adds_sm_fallback():
-    assert _spacy_model_candidates("en_core_web_lg") == ["en_core_web_lg", "en_core_web_sm"]
-
-
-def test_load_spacy_model_with_fallback_uses_second_candidate():
-    calls = []
-
-    def fake_load(model_name):
-        calls.append(model_name)
-        if model_name == "en_core_web_lg":
-            raise OSError("missing model")
-        if model_name == "en_core_web_sm":
-            return {"model": model_name}
-        raise OSError("unexpected model")
-
-    nlp, loaded = _load_spacy_model_with_fallback(fake_load, "en_core_web_lg")
-    assert loaded == "en_core_web_sm"
-    assert nlp == {"model": "en_core_web_sm"}
-    assert calls == ["en_core_web_lg", "en_core_web_sm"]
-
-
-def test_ensure_sentencizer_adds_sentencizer_when_missing():
-    """A model with no sentence segmenter should get a sentencizer added."""
-    nlp = spacy.blank("en")
-    assert "sentencizer" not in nlp.pipe_names
-    assert "parser" not in nlp.pipe_names
-    _ensure_sentencizer(nlp)
-    assert "sentencizer" in nlp.pipe_names
-
-
-@requires_en_sm
-def test_ensure_sentencizer_skips_when_parser_present():
-    """A model with a parser already sets sentence boundaries — don't add sentencizer."""
-    nlp = spacy.load("en_core_web_sm")
-    assert "parser" in nlp.pipe_names
-    _ensure_sentencizer(nlp)
-    assert "sentencizer" not in nlp.pipe_names
-
-
-def test_ensure_sentencizer_allows_doc_sents(nlp):
-    """After _ensure_sentencizer, doc.sents must not raise E030."""
-    nlp_blank = spacy.blank("en")
-    _ensure_sentencizer(nlp_blank)
-    doc = nlp_blank("Bilbo walked. Frodo ran.")
-    sents = list(doc.sents)  # must not raise
-    assert len(sents) >= 1
 
 
 @requires_en_sm

@@ -18,6 +18,7 @@ from datetime import datetime
 
 from scripts.parse_epub import parse_epub
 from scripts.entity_extraction import extract_entities, split_entities, split_by_type
+from wiki_creator.nlp.loader import load_spacy_model
 from wiki_creator.paths import book_paths_from_yaml
 
 SPACY_MODEL = "fr_core_news_lg"
@@ -42,9 +43,10 @@ def main() -> None:
     book = parse_epub(book_path)
     print(f"  → {book['title']} — {len(book['chapters'])} chapters", file=sys.stderr)
 
-    import spacy
     print(f"Loading {spacy_model}...", file=sys.stderr)
-    nlp = spacy.load(spacy_model)
+    nlp, loaded_model = load_spacy_model(spacy_model)
+    if loaded_model != spacy_model:
+        print(f"  → falling back to {loaded_model}", file=sys.stderr)
 
     print("Extracting entities (this may take a few minutes)...", file=sys.stderr)
     result = extract_entities(book["chapters"], nlp)
