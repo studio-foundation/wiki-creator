@@ -49,6 +49,7 @@ _SECTION_TITLES = {
     "relationships": "Relations",
     "trivia": "Anecdotes",
     "events": "Événements",
+    "narrative_role": "Rôle dans le récit",
     "references": "Références",
 }
 _INTERNAL_INFOBOX_KEYS = frozenset({
@@ -190,6 +191,7 @@ SECTION_DEFINITIONS = {
     "PERSON": {
         "Infobox": "Champs factuels clés : nom, alias, rôle, affiliation, statut. Omets les champs inconnus.",
         "Biographie": "Qui est ce personnage et quel est son rôle dans le monde. Les événements servent de contexte, pas de liste chronologique.",
+        "Rôle dans le récit": "Arc chronologique du personnage à travers l'intrigue, en prose, ancré uniquement sur les événements listés.",
         "Personnalité": "Traits observés avec ancrage textuel. Évite les adjectifs génériques sans preuve. Montre les contradictions ou tensions internes si elles existent.",
         "Description physique": "Détails physiques confirmés par le texte uniquement. Concis.",
         "Pouvoirs": "Capacités ou compétences distinctives. Si aucun pouvoir magique, décris les compétences pratiques.",
@@ -252,6 +254,38 @@ def _place_events_block(entity: dict) -> str:
     if not lines:
         return ""
     return "## Events at this place\n" + "\n".join(f"  {line}" for line in lines)
+
+
+# SP1 (STU-479): "Arc perso" projection over the Event Layer (events.json, SP0)
+# — events_for_entity() in wiki_preparation.py filters events where the PERSON
+# participates into entity["entity_events"]. The arc's climax beats (couronnement,
+# duel) sit late in the book, so cap by salience (not chapter order, which would
+# drop the ending) then re-sort chronologically for the prompt.
+_MAX_PERSON_EVENTS = 18
+
+
+def _narrative_events(entity: dict) -> list[dict]:
+    """The character's most salient participant events, in chronological order.
+    Empty for non-PERSON entities or when SP0 produced no events for them."""
+    if entity.get("type") != "PERSON":
+        return []
+    events = entity.get("entity_events") or []
+    top = sorted(
+        events,
+        key=lambda e: (-float(e.get("salience", 0.0)), int(e.get("chapter", 0))),
+    )[:_MAX_PERSON_EVENTS]
+    return sorted(top, key=lambda e: int(e.get("chapter", 0)))
+
+
+def _narrative_role_block(entity: dict) -> str:
+    """Grounding block of the character's arc through the plot, or "" when the
+    entity isn't a PERSON or has no participant events."""
+    lines = event_lines(_narrative_events(entity))
+    if not lines:
+        return ""
+    name = entity.get("canonical_name", "")
+    header = f"## Événements où {name} participe (ordre chronologique)"
+    return header + "\n" + "\n".join(f"  {line}" for line in lines)
 
 
 def _relationship_evidence_lines(rel: dict) -> list[str]:
@@ -398,6 +432,14 @@ def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_n
     place_events_block = _place_events_block(entity)
     place_events_section = f"\n\n{place_events_block}" if place_events_block else ""
 
+    # SP1: only surface the arc block when the narrative_role section is the one
+    # being generated (PERSON is section-scoped — one section per prompt), so it
+    # never leaks into the biography/personality prompts.
+    narrative_role_block = (
+        _narrative_role_block(entity) if "narrative_role" in sections else ""
+    )
+    narrative_role_section = f"\n\n{narrative_role_block}" if narrative_role_block else ""
+
     # --- Paramètres de génération ---
     alias_str = ", ".join(a for a in aliases if a != name) or "none"
 
@@ -464,6 +506,22 @@ def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_n
                 '\n- Do NOT include a "## Événements" section: no narrative events are available for this place.'
             )
 
+    narrative_role_rule = ""
+    if etype == "PERSON" and "narrative_role" in sections:
+        if narrative_role_block:
+            narrative_role_rule = (
+                '\n- Write a "## Rôle dans le récit" section grounded ONLY in the '
+                f'"Événements où {name} participe" block above: retrace the character\'s '
+                "arc through the plot in chronological order, in flowing prose. Describe what "
+                "the character does and what happens to them across these events — not a static "
+                'portrait. Do NOT mention chapter numbers ("Chapitre N") in the prose. Do NOT '
+                "invent events, outcomes, or motives absent from the listed events."
+            )
+        else:
+            narrative_role_rule = (
+                '\n- Do NOT include a "## Rôle dans le récit" section: no narrative events are available for this character.'
+            )
+
     return f"""This is a fictional world. The following excerpts are the ONLY authoritative source of truth. Ignore any prior knowledge you have of this book, series, or author.
 
 You are writing a wiki page for a fictional novel called "{book_title}".
@@ -491,7 +549,7 @@ Typed relationships (use these directly for the ## Relations section):
 {relationships_block if relationships_block else "  (no typed relationships available)"}{indirect_section}
 
 Chapter summaries (orientation context — lower priority than excerpts):
-{chapter_summary_block}{place_events_section}
+{chapter_summary_block}{place_events_section}{narrative_role_section}
 
 ---
 
@@ -512,7 +570,7 @@ Content constraints:
 - Do NOT invent plot details, relationships, abilities, or physical traits not supported by excerpts.
 - Do NOT turn cooccurrence between entities into narrative causality.
 - Confidence markers: each relationship carries a "confidence" tag. State "explicit" relationships as fact (direct affirmation). Phrase "inferred" and "interpretation" relationships tentatively ("semble", "suggère", "pourrait indiquer") — never as established fact. Indirect relationships listed as "inferred: true" are interpretation: mention them only with such hedged phrasing, if at all.
-- When referring to related entities or characters, use their name EXACTLY as written in the excerpts or relationships list — do not paraphrase, alter, or approximate names.{place_events_rule}
+- When referring to related entities or characters, use their name EXACTLY as written in the excerpts or relationships list — do not paraphrase, alter, or approximate names.{place_events_rule}{narrative_role_rule}
 - If information is insufficient for a section, omit that section entirely.
 - Do NOT write "information not available", "not mentioned in excerpts", or any similar phrase. Omit instead.
 - Omit infobox fields entirely if their value is unknown.
@@ -929,6 +987,11 @@ def _generate_one_section(
 ) -> str | None:
     """Generate a single section via a scoped wiki-page-item call. Returns the
     section's content block, or None on error / persistent forbidden-name hit."""
+
+    # SP1: the arc section is data-gated — skip the LLM call entirely when SP0
+    # produced no participant events, rather than prompting it to hallucinate one.
+    if section == "narrative_role" and not _narrative_events(entity):
+        return None
 
     def _once() -> dict:
         return _run_wiki_page_item(

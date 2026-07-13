@@ -9,6 +9,7 @@ from scripts.generate_wiki_pages import (
     _contains_template_placeholder,
     _force_correct_identity,
     _is_page_complete,
+    _narrative_events,
     _nom_matches_identity,
     _print_generation_summary,
     _rejection_is_identity_only,
@@ -281,6 +282,86 @@ def test_build_prompt_ignores_entity_events_for_non_place_types():
 
     assert "## Events at this place" not in prompt
     assert "Événements" not in prompt
+
+
+def _celaena_with_arc():
+    return {
+        "canonical_name": "Celaena Sardothien",
+        "importance": "principal",
+        "type": "PERSON",
+        "aliases": [],
+        "context_by_chapter": {},
+        "entity_events": [
+            {"chapter": 3, "description": "Celaena arrive au château de verre", "participants": ["Celaena Sardothien"], "salience": 0.4},
+            {"chapter": 12, "description": "Celaena affronte Cain lors de l'épreuve finale", "participants": ["Celaena Sardothien", "Cain"], "outcome": "Celaena vainc Cain", "salience": 0.9},
+            {"chapter": 13, "description": "Celaena est couronnée Champion du Roi", "participants": ["Celaena Sardothien"], "outcome": "Celaena est couronnée", "salience": 0.85},
+        ],
+    }
+
+
+def test_build_prompt_includes_narrative_role_block_and_rule_for_person():
+    """STU-479 (SP1): PERSON pages generating the narrative_role section get a
+    grounding block + writing rule for events.json entries where they participate."""
+    prompt = build_prompt(
+        _celaena_with_arc(),
+        "Throne of Glass",
+        sections=["narrative_role"],
+    )
+
+    assert "## Événements où Celaena Sardothien participe (ordre chronologique)" in prompt
+    assert "épreuve finale" in prompt
+    assert "est couronnée Champion du Roi" in prompt
+    assert 'Write a "## Rôle dans le récit" section grounded ONLY in the' in prompt
+    assert 'Do NOT include a "## Rôle dans le récit" section' not in prompt
+
+
+def test_build_prompt_narrative_role_events_ordered_chronologically():
+    """Salience selects which beats survive the cap; the prompt lists them by
+    chapter so the arc reads in order (climax kept even though it sits late)."""
+    prompt = build_prompt(_celaena_with_arc(), "Throne of Glass", sections=["narrative_role"])
+    arrive = prompt.index("arrive au château")
+    duel = prompt.index("épreuve finale")
+    crown = prompt.index("couronnée Champion")
+    assert arrive < duel < crown
+
+
+def test_build_prompt_narrative_role_gated_to_its_own_section():
+    """The arc block never leaks into other PERSON section prompts (biography)."""
+    prompt = build_prompt(_celaena_with_arc(), "Throne of Glass", sections=["biography"])
+    assert "## Événements où Celaena Sardothien participe" not in prompt
+    assert "Rôle dans le récit" not in prompt
+
+
+def test_build_prompt_person_without_events_omits_narrative_block():
+    entity = {
+        "canonical_name": "Perrington",
+        "importance": "secondary",
+        "type": "PERSON",
+        "aliases": [],
+        "context_by_chapter": {},
+        "entity_events": [],
+    }
+    prompt = build_prompt(entity, "Throne of Glass", sections=["narrative_role"])
+    assert "## Événements où" not in prompt
+    assert 'Do NOT include a "## Rôle dans le récit" section' in prompt
+
+
+def test_narrative_events_caps_by_salience_then_orders_by_chapter():
+    events = [
+        {"chapter": c, "description": f"beat {c}", "salience": s}
+        for c, s in [(1, 0.1), (5, 0.9), (2, 0.2), (50, 0.95), (3, 0.15)]
+    ]
+    entity = {"type": "PERSON", "canonical_name": "X", "entity_events": events}
+    import scripts.generate_wiki_pages as gwp
+
+    picked = gwp._narrative_events({**entity})
+    chapters = [e["chapter"] for e in picked]
+    assert chapters == sorted(chapters)  # chronological
+
+
+def test_narrative_events_empty_for_non_person():
+    entity = {"type": "PLACE", "entity_events": [{"chapter": 1, "description": "x", "salience": 1.0}]}
+    assert _narrative_events(entity) == []
 
 
 def test_generation_profile_prefers_sections_by_type_override():

@@ -11,7 +11,8 @@ entity_types:
       - {token: affiliation, group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
       - {token: titles,      group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
     sections:
-      - {token: biography,     group: section, provenance: llm-prose,      obligation: MIN, tiers: [figurant, secondary, principal]}
+      - {token: biography,      group: section, provenance: llm-prose,      obligation: MIN, tiers: [figurant, secondary, principal]}
+      - {token: narrative_role, group: section, provenance: llm-prose,      obligation: OPT, tiers: [secondary, principal]}
       - {token: relationships, group: section, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
       - {token: personality,   group: section, provenance: llm-prose,      obligation: OPT, tiers: [principal]}
       - {token: physical,      group: section, provenance: llm-prose,      obligation: OPT, tiers: [principal]}
@@ -79,5 +80,6 @@ labels:
   physical:      {en: Appearance,  fr: "Description physique"}
   powers:        {en: Powers,      fr: Pouvoirs}
   trivia:        {en: Trivia,      fr: Anecdotes}
+  narrative_role: {en: "Narrative role", fr: "Rôle dans le récit"}
   events:        {en: Events,      fr: Événements}
   references:    {en: References,  fr: Références}
