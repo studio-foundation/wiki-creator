@@ -324,6 +324,17 @@ def build_chapter_summary_context(
     return result
 
 
+def events_for_entity(canonical_name: str, events: list[dict]) -> list[dict]:
+    """Events where the entity participates or that occur at the entity (PLACE),
+    sorted by chapter. The channel Plot Spine projections (SP1-SP4) consume."""
+    hits = [
+        e for e in events
+        if canonical_name in e.get("participants", [])
+        or canonical_name in e.get("places", [])
+    ]
+    return sorted(hits, key=lambda e: e.get("chapter", 0))
+
+
 def build_entity_bundle(
     entity: dict,
     relationships: list[dict],
@@ -337,6 +348,7 @@ def build_entity_bundle(
     chapter_id_to_title: dict[str, str] | None = None,
     graph: "CharacterGraph | None" = None,
     role_words: list[str] | None = None,
+    plot_events: list[dict] | None = None,
 ) -> dict:
     canonical_name = entity["canonical_name"]
     context_by_chapter = extract_context(entity, persons, places, orgs, events)
@@ -383,6 +395,7 @@ def build_entity_bundle(
             context_by_chapter=context_by_chapter,
             chapter_id_to_title=chapter_id_to_title,
         ),
+        "entity_events": events_for_entity(canonical_name, list(plot_events or [])),
     }
 
 
@@ -561,6 +574,17 @@ def main() -> None:
         except (OSError, json.JSONDecodeError, KeyError):
             pass
 
+    _events_path = paths.processing / "events.json"
+    plot_events: list[dict] = []
+    if _events_path.exists():
+        try:
+            with open(_events_path, encoding="utf-8") as _f:
+                plot_events = json.load(_f).get("events", [])
+        except (OSError, json.JSONDecodeError):
+            print("wiki-preparation: events.json could not be read — entity_events will be empty", file=sys.stderr)
+    else:
+        print("wiki-preparation: events.json not found — entity_events will be empty", file=sys.stderr)
+
     entity_bundles = [
         build_entity_bundle(
             e,
@@ -575,6 +599,7 @@ def main() -> None:
             chapter_id_to_title=chapter_id_to_title,
             graph=_series_graph,
             role_words=role_words,
+            plot_events=plot_events,
         )
         for e in relevant_entities
     ]
