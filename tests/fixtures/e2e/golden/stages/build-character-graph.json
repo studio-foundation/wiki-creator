@@ -1,0 +1,94 @@
+{
+ "graph": {
+  "directed": true,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+   {
+    "type": "CHARACTER",
+    "importance": "secondaire",
+    "aliases": [
+     "Mira Vale"
+    ],
+    "books": [
+     "smoke-novella"
+    ],
+    "id": "Mira Vale"
+   },
+   {
+    "type": "CHARACTER",
+    "importance": "secondaire",
+    "aliases": [
+     "Captain Elias Thorn",
+     "Elias Thorn"
+    ],
+    "books": [
+     "smoke-novella"
+    ],
+    "id": "Captain Elias Thorn"
+   }
+  ],
+  "links": [
+   {
+    "edge_type": "INTERACTION",
+    "relationship_type": null,
+    "direction": null,
+    "cooccurrence_count": 14,
+    "chapter_weights": {},
+    "sample_contexts": [],
+    "evolution": null,
+    "books": [
+     "smoke-novella"
+    ],
+    "source": "Captain Elias Thorn",
+    "target": "Mira Vale"
+   }
+  ]
+ },
+ "delta": {
+  "directed": true,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+   {
+    "type": "CHARACTER",
+    "importance": "secondaire",
+    "aliases": [
+     "Mira Vale"
+    ],
+    "books": [
+     "smoke-novella"
+    ],
+    "id": "Mira Vale"
+   },
+   {
+    "type": "CHARACTER",
+    "importance": "secondaire",
+    "aliases": [
+     "Captain Elias Thorn",
+     "Elias Thorn"
+    ],
+    "books": [
+     "smoke-novella"
+    ],
+    "id": "Captain Elias Thorn"
+   }
+  ],
+  "links": [
+   {
+    "edge_type": "INTERACTION",
+    "relationship_type": null,
+    "direction": null,
+    "cooccurrence_count": 14,
+    "chapter_weights": {},
+    "sample_contexts": [],
+    "evolution": null,
+    "books": [
+     "smoke-novella"
+    ],
+    "source": "Captain Elias Thorn",
+    "target": "Mira Vale"
+   }
+  ]
+ }
+}

@@ -1,0 +1,96 @@
+{
+ "version": 1,
+ "entities": [
+  {
+   "entity_id": "mira_vale",
+   "canonical_name": "Mira Vale",
+   "entity_type": "PERSON",
+   "aliases": [
+    "Mira Vale"
+   ],
+   "mentions": [],
+   "decisions": []
+  },
+  {
+   "entity_id": "heron",
+   "canonical_name": "Heron",
+   "entity_type": "OTHER",
+   "aliases": [
+    "Heron"
+   ],
+   "mentions": [],
+   "decisions": []
+  },
+  {
+   "entity_id": "port_saffron",
+   "canonical_name": "Port Saffron",
+   "entity_type": "PLACE",
+   "aliases": [
+    "Port Saffron"
+   ],
+   "mentions": [],
+   "decisions": []
+  },
+  {
+   "entity_id": "salt_guild",
+   "canonical_name": "Salt Guild",
+   "entity_type": "ORG",
+   "aliases": [
+    "Salt Guild"
+   ],
+   "mentions": [],
+   "decisions": []
+  },
+  {
+   "entity_id": "warehouse_nine",
+   "canonical_name": "Warehouse Nine",
+   "entity_type": "PLACE",
+   "aliases": [
+    "Warehouse Nine",
+    "Warehouse nine"
+   ],
+   "mentions": [],
+   "decisions": [
+    "d_b42f1c4f77e7"
+   ]
+  },
+  {
+   "entity_id": "captain_elias_thorn",
+   "canonical_name": "Captain Elias Thorn",
+   "entity_type": "PERSON",
+   "aliases": [
+    "Captain Elias Thorn",
+    "Elias Thorn"
+   ],
+   "mentions": [],
+   "decisions": [
+    "d_fc8e9b34d89b"
+   ]
+  }
+ ],
+ "decisions": [
+  {
+   "decision_id": "d_b42f1c4f77e7",
+   "strategy": "extraction_grouping",
+   "inputs": [
+    "warehouse_nine",
+    "warehouse_nine"
+   ],
+   "evidence": "reconstructed (pas 1) from extraction surface variants: 'Warehouse nine' grouped under 'Warehouse Nine'",
+   "confidence": "medium",
+   "reversible": true
+  },
+  {
+   "decision_id": "d_fc8e9b34d89b",
+   "strategy": "cluster_jw",
+   "inputs": [
+    "captain_elias_thorn",
+    "elias_thorn"
+   ],
+   "evidence": "reconstructed (pas 1) from splits cluster: 'Elias Thorn' co-clustered with 'Captain Elias Thorn'",
+   "confidence": "medium",
+   "reversible": true
+  }
+ ],
+ "warnings": []
+}
