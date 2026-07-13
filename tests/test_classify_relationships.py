@@ -51,10 +51,11 @@ def test_load_done_keys_skips_malformed_pairs(tmp_path):
 def test_save_writes_valid_json(tmp_path):
     output = tmp_path / "out.json"
     base = {"entities": [], "stats": {}, "narrator": None}
-    pairs = [{"entity_a": "A", "entity_b": "B"}]
+    pairs = [{"entity_a": "A", "entity_b": "B", "cooccurrence_count": 5}]
     _save(output, base, pairs)
     written = json.loads(output.read_text())
-    assert written["relationships"] == pairs
+    assert written["relationships"][0]["entity_a"] == "A"
+    assert written["relationships"][0]["entity_b"] == "B"
     assert written["entities"] == []
 
 

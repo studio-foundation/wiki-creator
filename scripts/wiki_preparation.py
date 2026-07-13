@@ -38,6 +38,7 @@ from wiki_creator.facts import extract_titles
 from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator.confidence import relationship_confidence
 from wiki_creator.registry import Registry
+from wiki_creator.types import RelationshipBundle
 
 BATCH_SIZE_BY_IMPORTANCE = {
     "principal": 3,   # full template ~1500 tokens × 3 = 4500 tokens — safe under 8192
@@ -482,8 +483,11 @@ def main() -> None:
     # over the unclassified relationships forwarded by the entity-classification stage.
     _rc_file = paths.processing / "relationships_classified.json"
     if _rc_file.exists():
-        with open(_rc_file, encoding="utf-8") as _f:
-            relationships = json.load(_f).get("relationships", [])
+        # dict-only boundary: batch building below spreads relationships into
+        # computed output dicts (confidence, etc.) — validated on load here.
+        relationships = studio_io.to_dict(
+            studio_io.load_artifact(_rc_file, RelationshipBundle).relationships
+        )
         print(
             f"wiki-preparation: loaded {len(relationships)} classified relationships from disk",
             file=sys.stderr,

@@ -15,10 +15,12 @@ from pathlib import Path
 
 import yaml
 
+from wiki_creator import studio_io
 from wiki_creator.event_layer import build_events
 from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.registry import Registry
+from wiki_creator.types import RelationshipBundle
 
 # Entity-classification importance tiers (scripts/entity_classification.py)
 # -> salience participant-importance weight (STU-483). Tiers absent here
@@ -84,12 +86,12 @@ def _read_relationships(path: Path) -> list[dict]:
     if not path.exists():
         return []
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
+        bundle = studio_io.load_artifact(path, RelationshipBundle)
     except json.JSONDecodeError:
         return []
-    if isinstance(data, dict):
-        return data.get("relationships", [])
-    return data if isinstance(data, list) else []
+    # dict-only boundary: build_events() (wiki_creator/event_layer.py) consumes
+    # plain relationship dicts — validated on load above.
+    return studio_io.to_dict(bundle.relationships)
 
 
 def main() -> None:

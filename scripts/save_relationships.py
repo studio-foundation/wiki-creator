@@ -16,7 +16,9 @@ from pathlib import Path
 
 
 import yaml
+from wiki_creator import studio_io
 from wiki_creator.paths import book_paths_from_epub
+from wiki_creator.types import Relationship, RelationshipBundle
 
 
 def main() -> None:
@@ -38,8 +40,13 @@ def main() -> None:
     paths.processing.mkdir(parents=True, exist_ok=True)
     output_path = paths.processing / "relationships.json"
 
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(rel_output, f, ensure_ascii=False, indent=2)
+    bundle = RelationshipBundle(
+        entities=rel_output.get("entities", []),
+        relationships=[Relationship(**r) for r in rel_output.get("relationships", [])],
+        stats=rel_output.get("stats", {}),
+        narrator=rel_output.get("narrator"),
+    )
+    studio_io.save_artifact(output_path, bundle, RelationshipBundle)
 
     print(f"[save-relationships] Written to {output_path}", file=sys.stderr)
 
