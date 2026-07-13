@@ -139,6 +139,15 @@ Inside `wiki-resolution`, order matters:
   `entity_clustering.py` and `alias_resolution.py` seed tome N's resolution from it
   (`Registry.load_seed_table`) — absent/unreadable series registry degrades to unseeded.
   Re-running a tome replaces its mention contribution (idempotent); prior tomes are never re-resolved.
+- Series orchestration (STU-487): `run_wiki.py --series library/<author>/<series>`
+  (`make run-series SERIES=...`) runs every tome under `books/` in reading order,
+  one full pipeline per tome. Tome order comes from the numeric filename prefix
+  (`wiki_creator/series.py`, reuses `tome_labels.tome_number` — `04.5_` sorts
+  between `04_` and `05_`; non-numbered tomes sort last). No series manifest.
+  Accumulation/seeding are already wired per-tome (write-registry accumulates,
+  clustering/alias seed from the series registry), so series mode is a pure
+  sequential loop — each tome must finish before the next seeds from it. Per-tome
+  run state (`.wiki_runs/`) is reused, so a re-run skips already-completed tomes.
 - `workers` in relationship/coref config directly impact RAM usage.
 - `.studio/config.yaml` and `.studio/runs/` must not be committed.
 - Never add hardcoded word lists to scripts. All vocabulary belongs in `wiki_creator/cue_words/<lang>.json` (language-wide) or the book YAML `classification` section (book-specific). No script may define a fallback vocabulary constant — if a key is absent from cue_words, degrade gracefully to an empty collection.

@@ -52,6 +52,21 @@ def test_pre_steps_wiki_preparation_runs_classify_before_events() -> None:
     )
 
 
+def test_series_mode_runs_each_tome_in_order(monkeypatch) -> None:
+    """--series discovers tomes in reading order and runs each through run_book."""
+    import run_wiki
+
+    books = ["library/a/s/books/01_one.yaml", "library/a/s/books/02_two.yaml"]
+    monkeypatch.setattr(run_wiki, "discover_series_books", lambda d: [__import__("pathlib").Path(b) for b in books])
+    calls: list[str] = []
+    monkeypatch.setattr(run_wiki, "run_book", lambda book, **kw: calls.append(book))
+    monkeypatch.setattr("sys.argv", ["run_wiki.py", "--series", "library/a/s"])
+
+    run_wiki.main()
+
+    assert calls == books, "series mode must run each tome in reading order"
+
+
 def test_pre_steps_wiki_generation_runs_pages_before_synopsis() -> None:
     """The synopsis (SP4) is generated in the same pre-step batch as the entity
     pages, after generate_wiki_pages.py."""
