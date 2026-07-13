@@ -108,8 +108,9 @@ class ClassifiedBundle:
 class RelationshipBundle:
     # entities is pass-through from relationship-extraction, which runs before
     # entity-classification — it does NOT carry importance/total_mentions/
-    # chapters_present yet, so it can't be typed as ClassifiedEntity. Free-form.
-    entities: list = field(default_factory=list)
+    # chapters_present yet, so it can't be ClassifiedEntity. It's the resolved
+    # entity shape from resolve_clusters.cluster_to_entity → SplitSingle.
+    entities: list[SplitSingle] = field(default_factory=list)
     relationships: list[Relationship] = field(default_factory=list)
     stats: dict = field(default_factory=dict)
     narrator: str | None = None

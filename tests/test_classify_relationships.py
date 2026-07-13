@@ -56,6 +56,7 @@ def test_save_writes_valid_json(tmp_path):
     written = json.loads(output.read_text())
     assert written["relationships"][0]["entity_a"] == "A"
     assert written["relationships"][0]["entity_b"] == "B"
+    assert written["relationships"][0]["cooccurrence_count"] == 5
     assert written["entities"] == []
 
 
