@@ -59,6 +59,11 @@ def test_optional_none_ok():
     assert from_dict(Leaf, {"name": "x", "score": 1.0, "note": None}).note is None
 
 
+def test_optional_type_mismatch_raises():
+    with pytest.raises(ArtifactSchemaError, match="note"):
+        from_dict(Leaf, {"name": "x", "score": 1.0, "note": 123})
+
+
 def test_int_accepted_for_float():
     assert from_dict(Leaf, {"name": "x", "score": 1}).score == 1.0
 

@@ -23,6 +23,7 @@ import dataclasses
 import json
 import re
 import sys
+import types
 import typing
 from pathlib import Path
 from typing import IO, Any, Literal, Union, get_args, get_origin
@@ -186,7 +187,7 @@ def from_dict(schema: Any, data: Any, path: str = "$") -> Any:
             raise ArtifactSchemaError(f"{path}: expected object, got {type(data).__name__}")
         return {k: from_dict(val, v, f"{path}.{k}") for k, v in data.items()}
 
-    if origin is Union:
+    if origin is Union or origin is types.UnionType:
         members = get_args(schema)
         if data is None and type(None) in members:
             return None
