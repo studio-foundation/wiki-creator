@@ -217,6 +217,27 @@ def test_build_clusters_mixed_type_tie_uses_fixed_precedence():
     assert clusters[0]["type"] == "PERSON"
 
 
+def test_build_clusters_place_not_absorbed_into_person_title():
+    """STU-473: a PLACE toponym sitting in a person's title after a connector
+    ('King of Adarlan') must NOT fold the PLACE entity into the PERSON.
+    Contrast with a bare surname ('Arobynn Hamel', no connector) which still
+    merges via test_build_clusters_mixed_type_tie_uses_fixed_precedence."""
+    entities = {
+        "e_king": {"type": "PERSON", "raw_mentions": ["King of Adarlan"], "first_seen": "ch01", "mention_count": 10},
+        "e_place": {"type": "PLACE", "raw_mentions": ["Adarlan"], "first_seen": "ch01", "mention_count": 20},
+    }
+    clusters, unclustered = build_clusters(entities, language="en")
+
+    def members_of(eid):
+        for c in clusters:
+            if eid in c["entity_ids"]:
+                return frozenset(c["entity_ids"])
+        return frozenset({eid})
+
+    assert members_of("e_place") != members_of("e_king")
+    assert "Adarlan" not in members_of("e_king")
+
+
 # --- extract_leading_titles ---
 
 def test_extract_leading_titles_mme():

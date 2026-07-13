@@ -85,6 +85,25 @@ def load_title_prefixes(language: str | None = None) -> frozenset[str]:
         return TITLE_PREFIXES
 
 
+def load_name_connectors(language: str | None = None) -> frozenset[str]:
+    """Return genitive/name connectors (of, de, du, …) from cue_words/{lang}.json.
+
+    Used by the cross-type guard to recognise a place toponym embedded in a
+    person's relational title ("King of Adarlan"). Degrades to an empty set when
+    no language is known — the guard then simply does not fire (no hardcoded
+    fallback vocabulary, per project convention)."""
+    if not language:
+        return frozenset()
+    try:
+        from wiki_creator.lang import load_lang_config
+        lang_cfg = load_lang_config(language)
+        return frozenset(w.lower() for w in lang_cfg.get("name_connectors", []))
+    except Exception as exc:
+        import logging
+        logging.warning("load_name_connectors: could not load cue_words for language %r: %s", language, exc)
+        return frozenset()
+
+
 JW_THRESHOLD = 0.92  # Jaro-Winkler threshold for orthographic variant matching
 TYPE_PRECEDENCE = ("PERSON", "PLACE", "ORG", "EVENT", "OTHER")
 
@@ -244,6 +263,51 @@ def should_cluster_jw(name1: str, name2: str, title_prefixes: frozenset[str] = T
     return jaro_winkler(n1, n2) >= JW_THRESHOLD
 
 
+def is_place_titled_toponym(
+    place_name: str,
+    person_name: str,
+    connectors: frozenset[str],
+    title_prefixes: frozenset[str] = TITLE_PREFIXES,
+) -> bool:
+    """STU-473 cross-type guard: True when `place_name` is a toponym embedded in
+    `person_name` right after a name connector — a relational title referring to
+    a place ("King of Adarlan"), not the place itself.
+
+    Only fires on the connector-preceded position, so a bare trailing surname
+    ("Arobynn Hamel", "Captain Chaol Westfall") does NOT match and still merges.
+    Empty `connectors` (unknown language) → never fires."""
+    if not connectors:
+        return False
+    person_tokens = [normalize_for_comparison(t) for t in tokenize_name(person_name, title_prefixes)]
+    place_tokens = {normalize_for_comparison(t) for t in tokenize_name(place_name, title_prefixes)}
+    connectors_n = {normalize_for_comparison(c) for c in connectors}
+    if not place_tokens:
+        return False
+    for i in range(1, len(person_tokens)):
+        if person_tokens[i] in place_tokens and person_tokens[i - 1] in connectors_n:
+            return True
+    return False
+
+
+def cross_type_union_blocked(
+    type_a: str,
+    mention_a: str,
+    type_b: str,
+    mention_b: str,
+    connectors: frozenset[str],
+    title_prefixes: frozenset[str] = TITLE_PREFIXES,
+) -> bool:
+    """Block a PLACE↔PERSON union when the PLACE is only a toponym inside the
+    PERSON's relational title (see `is_place_titled_toponym`)."""
+    if {type_a, type_b} != {"PERSON", "PLACE"}:
+        return False
+    if type_a == "PLACE":
+        place_m, person_m = mention_a, mention_b
+    else:
+        place_m, person_m = mention_b, mention_a
+    return is_place_titled_toponym(place_m, person_m, connectors, title_prefixes)
+
+
 def should_cluster(name1: str, name2: str, title_prefixes: frozenset[str] = TITLE_PREFIXES) -> bool:
     """Combined matching with pre-filter rules for obvious wrong merges."""
     # Rule 1: conflicting gender titles → definitely different people
@@ -289,6 +353,7 @@ def build_clusters(entities: dict, language: str | None = None) -> tuple[list[di
     Returns: (clusters_list, unclustered_entities)
     """
     title_prefixes = load_title_prefixes(language)
+    name_connectors = load_name_connectors(language)
     parent = {eid: eid for eid in entities}
 
     def find(x):
@@ -307,15 +372,22 @@ def build_clusters(entities: dict, language: str | None = None) -> tuple[list[di
     for i in range(len(entity_ids)):
         for j in range(i + 1, len(entity_ids)):
             ei, ej = entity_ids[i], entity_ids[j]
+            ti, tj = entities[ei].get("type", "OTHER"), entities[ej].get("type", "OTHER")
             matched = False
             for mi in entities[ei]["raw_mentions"]:
                 if matched:
                     break
                 for mj in entities[ej]["raw_mentions"]:
-                    if should_cluster(mi, mj, title_prefixes=title_prefixes):
-                        union(ei, ej)
-                        matched = True
-                        break
+                    if not should_cluster(mi, mj, title_prefixes=title_prefixes):
+                        continue
+                    # STU-473: don't let a PLACE fold into a PERSON's titled
+                    # toponym ("Adarlan" into "King of Adarlan"). Keep scanning —
+                    # another mention pair may legitimately match.
+                    if cross_type_union_blocked(ti, mi, tj, mj, name_connectors, title_prefixes):
+                        continue
+                    union(ei, ej)
+                    matched = True
+                    break
 
     # Collect clusters
     raw_clusters = defaultdict(list)
