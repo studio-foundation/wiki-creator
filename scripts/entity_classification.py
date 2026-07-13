@@ -112,14 +112,14 @@ def get_total_mentions(
     counted: set[int] = set()
     for sid in entity.get("source_ids", []):
         # Primary lookup by current type, fallback across registries for retagged entities.
-        entry = type_to_registry.get(entity.get("type", ""), {}).get(sid, {})
-        if not entry:
+        entry = type_to_registry.get(entity.get("type", ""), {}).get(sid)
+        if entry is None:
             for alt in ("PERSON", "PLACE", "ORG", "EVENT"):
-                candidate = type_to_registry.get(alt, {}).get(sid, {})
-                if candidate:
+                candidate = type_to_registry.get(alt, {}).get(sid)
+                if candidate is not None:
                     entry = candidate
                     break
-        if entry and id(entry) not in counted:
+        if entry is not None and id(entry) not in counted:
             counted.add(id(entry))
             total += _count_entry(entry, chapters)
 
