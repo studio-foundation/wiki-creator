@@ -33,6 +33,10 @@ class Mention:
     end: int | None = None
     raw_label: str | None = None
     context: str | None = None  # context sentence from *_full.json
+    # Provenance par livre (STU-484): tome d'où provient la mention (slug du
+    # livre, cf. book_paths_from_epub). None quand la provenance est inconnue
+    # (registres antérieurs / reconstruction sans book_id).
+    book_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -53,6 +57,11 @@ class EntityRecord:
     aliases: list[str] = field(default_factory=list)
     mentions: list[Mention] = field(default_factory=list)
     decisions: list[str] = field(default_factory=list)  # decision_ids
+    # Provenance par livre (STU-484): tomes où l'entité apparaît, dans l'ordre de
+    # première apparition. Aligné sur les nœuds/arêtes du graphe série (liste
+    # `books`). Vide quand la provenance est inconnue. ``first_book`` = books[0].
+    books: list[str] = field(default_factory=list)
+    first_book: str | None = None
 
 
 def normalize_name(text: str) -> str:
@@ -205,6 +214,8 @@ class Registry:
                     "aliases": list(r.aliases),
                     "mentions": [asdict(m) for m in r.mentions],
                     "decisions": list(r.decisions),
+                    "books": list(r.books),
+                    "first_book": r.first_book,
                 }
                 for r in self.entities
             ],
@@ -237,6 +248,8 @@ class Registry:
             )
         entities: list[EntityRecord] = []
         for e in raw.get("entities") or []:
+            books = [str(b) for b in e.get("books") or []]
+            first_book = e.get("first_book")
             entities.append(
                 EntityRecord(
                     entity_id=str(e["entity_id"]),
@@ -245,6 +258,8 @@ class Registry:
                     aliases=[str(a) for a in e.get("aliases") or []],
                     mentions=[Mention(**m) for m in e.get("mentions") or []],
                     decisions=[str(d) for d in e.get("decisions") or []],
+                    books=books,
+                    first_book=str(first_book) if first_book else None,
                 )
             )
         return cls(
@@ -289,6 +304,7 @@ class Registry:
         splits: dict | None,
         alias_output: dict | None,
         full_registries: dict | None = None,
+        book_id: str | None = None,
     ) -> "Registry":
         """Rebuild the registry from existing artifacts (pas 1 — read only).
 
@@ -297,6 +313,9 @@ class Registry:
             entities_classified.json carries the same entity dicts and works too.
         full_registries: merged *_full.json registries ({"entity_001": {...}}),
             used to rebuild mentions and to break alias-collision ties.
+        book_id: provenance stamp (STU-484). When set, every mention carries it
+            and every record lists it in ``books`` / ``first_book``; None leaves
+            the provenance fields empty (single-book, pre-multi-tome behaviour).
         """
         splits = splits or {}
         full = full_registries or {}
@@ -397,8 +416,10 @@ class Registry:
                     canonical_name=canonical,
                     entity_type=str(raw.get("type") or "OTHER"),
                     aliases=aliases,
-                    mentions=_mentions_from_full(canonical, source_ids, full),
+                    mentions=_mentions_from_full(canonical, source_ids, full, book_id),
                     decisions=decision_ids,
+                    books=[book_id] if book_id else [],
+                    first_book=book_id,
                 )
             )
 
@@ -414,7 +435,7 @@ class Registry:
 
 
 def _mentions_from_full(
-    canonical: str, source_ids: list[str], full: dict
+    canonical: str, source_ids: list[str], full: dict, book_id: str | None = None
 ) -> list[Mention]:
     """One Mention per preserved context sentence; surface = longest raw
     mention found in the sentence (offsets/raw labels were never persisted)."""
@@ -437,6 +458,7 @@ def _mentions_from_full(
                         chapter_id=str(chapter_id),
                         source="ner",
                         context=text,
+                        book_id=book_id,
                     )
                 )
     return mentions
@@ -468,6 +490,11 @@ def _merge_duplicate_canonicals(
                 first.aliases.append(alias)
         first.aliases.sort(key=lambda a: (a.casefold(), a))
         first.mentions.extend(record.mentions)
+        for book in record.books:
+            if book not in first.books:
+                first.books.append(book)
+        if first.first_book is None:
+            first.first_book = record.first_book
         for d_id in record.decisions:
             if d_id not in first.decisions:
                 first.decisions.append(d_id)
