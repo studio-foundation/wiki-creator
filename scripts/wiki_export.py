@@ -21,6 +21,11 @@ from wiki_creator.export_helpers import (
 )
 from wiki_creator.paths import BookPaths
 from wiki_creator import studio_io
+from wiki_creator.spoiler_blocks import (
+    wrap_collapsible,
+    inject_relationship_index,
+    spoiler_collapse_after,
+)
 
 _SUBDIR = {
     "PERSON": "characters",
@@ -68,16 +73,24 @@ def _filter_exportable_pages(pages: list[dict]) -> list[dict]:
     return exportable
 
 
-def render_page(page: dict, labels: dict) -> tuple[str, str]:
+def render_page(page: dict, labels: dict, collapse_after: int | None = None) -> tuple[str, str]:
     """(path relative to the wiki dir, wikitext content) for one page.
 
     Entity pages keep the infobox + body + categories layout in their type
     subdir. SYNOPSIS pages (SP4, STU-482) render at the wiki root, body only —
     no infobox, no categories.
+
+    STU-492: the Relations index is injected under the Relations section, and —
+    when ``collapse_after`` is set — sections first revealed after that chapter
+    are wrapped in native mw-collapsible blocks. ``collapse_after=None`` keeps the
+    output byte-identical to pre-STU-492.
     """
     title = page["title"]
     entity_type = page.get("entity_type", "PERSON")
     body = convert(page.get("content", ""))
+    body = inject_relationship_index(body, page.get("relationship_index") or [])
+    if collapse_after is not None:
+        body = wrap_collapsible(body, page.get("content_units") or [], collapse_after)
     filename = page_filename(title) + ".wiki"
 
     if entity_type == "SYNOPSIS":
@@ -94,12 +107,29 @@ def render_page(page: dict, labels: dict) -> tuple[str, str]:
     return f"{subdir}/{filename}", page_content
 
 
+def _load_book_config(payload: dict) -> dict:
+    """Read the book YAML (generation.spoiler lives there) from additional_context."""
+    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    file_path = ctx.get("file_path")
+    if not file_path:
+        return {}
+    yaml_path = Path(file_path).with_suffix(".yaml")
+    if not yaml_path.exists():
+        return {}
+    try:
+        with open(yaml_path, encoding="utf-8") as f:
+            return yaml.safe_load(f) or {}
+    except Exception:
+        return {}
+
+
 def main() -> None:
     payload = studio_io.read_payload()
     input_cfg = yaml.safe_load(payload["additional_context"])
     prev = payload["previous_outputs"]
 
     paths = studio_io.paths_from_payload(payload)
+    collapse_after = spoiler_collapse_after(_load_book_config(payload))
 
     gate_error = _copyright_gate(prev)
     if gate_error is not None:
@@ -159,7 +189,7 @@ def main() -> None:
 
     # Write entity pages (and the synopsis page at the wiki root, if present)
     for page in pages:
-        rel_path, page_content = render_page(page, labels)
+        rel_path, page_content = render_page(page, labels, collapse_after)
         path = wiki_dir / rel_path
         path.write_text(page_content, encoding="utf-8")
         files_written += 1
