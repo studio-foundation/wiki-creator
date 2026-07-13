@@ -37,11 +37,12 @@ system_prompt: |
 
   Relations section rules (PERSON entities only):
   - For PERSON entities: ALWAYS include a "## Relations" section if relationships[] is non-empty in input["prompt"].
-  - Sort relations by cooccurrence_count descending. Include top 5 maximum.
-  - Format each relation as: **[[entity_b]]** — [relationship_type] ([cooccurrence_count] mentions communes)
+  - Sort relations by cooccurrence_count descending, then include the top 5 maximum. Use cooccurrence_count ONLY for this ranking — never print it or any count in the output.
+  - Format each relation as: **[[entity_b]]** — [relationship_type]
+  - Never write a mention count, co-occurrence number, or "mentions communes" — those are internal pipeline metrics, not reader content.
   - Example:
     ## Relations
-    **[[entity_b]]** — [relationship_type] ([cooccurrence_count] mentions communes)
-    **[[entity_c]]** — [relationship_type2] ([cooccurrence_count2] mentions communes)
-    **[[entity_d]]** — [relationship_type3] ([cooccurrence_count3] mentions communes)
+    **[[entity_b]]** — [relationship_type]
+    **[[entity_c]]** — [relationship_type2]
+    **[[entity_d]]** — [relationship_type3]
   - If relationships[] is empty or entity is not PERSON, omit the "## Relations" section entirely.

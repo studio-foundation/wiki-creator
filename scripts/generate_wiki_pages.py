@@ -175,10 +175,10 @@ FEW_SHOT_EXAMPLE = {
         "combat rapproché, et une mémoire quasi photographique des visages et des plans d'architecture. "
         "Il parle couramment quatre langues, dont le dialecte du Sud qu'il utilise pour ses couvertures marchandes.\n\n"
         "## Relations\n\n"
-        "**[[Mira Vayne]]** — mentor/protégé (42 mentions communes). Sa recruteuse et supérieure directe ; "
+        "**[[Mira Vayne]]** — mentor/protégé. Sa recruteuse et supérieure directe ; "
         "leur relation est professionnelle, teintée d'une méfiance mutuelle que ni l'un ni l'autre ne cherche vraiment à dissoudre.\n\n"
-        "**[[Lira]]** — allié (18 mentions communes). Une informante de la Guilde des Ombres avec qui Doe a partagé une mission à Veldrath.\n\n"
-        "**[[Le Commandant Arek]]** — antagoniste (9 mentions communes). L'ancien supérieur dont la trahison à Veldrath a redéfini la trajectoire de Doe.\n\n"
+        "**[[Lira]]** — allié. Une informante de la Guilde des Ombres avec qui Doe a partagé une mission à Veldrath.\n\n"
+        "**[[Le Commandant Arek]]** — antagoniste. L'ancien supérieur dont la trahison à Veldrath a redéfini la trajectoire de Doe.\n\n"
         "## Anecdotes\n\n"
         "- Le surnom \"Le Fantôme\" lui a été donné par les membres de la Guilde, non par ses alliés de la Couronne.\n"
         "- Sa couverture marchande implique un commerce de tissus importés du Sud — un choix qui justifie "
@@ -418,7 +418,8 @@ def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_n
     if rels_in_sections and has_typed_rels:
         relations_rule = (
             '- For PERSON entities: ALWAYS include a "## Relations" section when "relationships" is in the sections list AND typed relationships are provided above. Do not skip it.\n'
-            '- Each "## Relations" entry must use this format: "**[[related_entity]]** — [relationship_type] ([cooccurrence_count] mentions communes). [evolution if available]"'
+            '- Each "## Relations" entry must use this format: "**[[related_entity]]** — [relationship_type]. [evolution if available]"\n'
+            '- NEVER print cooccurrence_count, a mention count, or "mentions communes" in the output. cooccurrence_count is an internal ranking metric only — it must not appear in reader-facing text.'
         )
         if rels_enriched:
             relations_rule += (
