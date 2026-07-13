@@ -4,7 +4,7 @@
 
 - Repo: `wiki-creator-by-studio`
 - Purpose: extract entities from EPUB novels, classify them, generate wiki pages, export wikitext
-- Current verified state on 2026-07-13: `pytest -q` => `1036 passed, 34 skipped`
+- Current verified state on 2026-07-13: `pytest -q` => `1060 passed, 37 skipped`
   (skips = tests needing optional spaCy models or the `coref` extra; see `tests/_markers.py`)
 
 ## Commands
