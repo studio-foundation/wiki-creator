@@ -475,6 +475,47 @@ def test_is_role_entity_name_does_not_flag_proper_compound_without_role_token():
     assert _is_role_entity_name("Nehemia Ytger", role_words=_ROLE_WORDS, role_patterns=_ROLE_PATTERNS) is False
 
 
+def test_is_role_entity_name_keeps_fully_named_person_with_title():
+    """A title in front of a full personal name ('Captain Elias Thorn') does not
+    make the entity a role title: the two-token head noun is a real name, and
+    role-canonicalizing it would merge the character into whichever PERSON it
+    co-occurs with most. 'Captain Westfall' (single name token) still qualifies."""
+    assert _is_role_entity_name("Captain Elias Thorn", role_words=_ROLE_WORDS, role_patterns=_ROLE_PATTERNS) is False
+    assert _is_role_entity_name("Captain Westfall", role_words=_ROLE_WORDS, role_patterns=_ROLE_PATTERNS) is True
+
+
+def test_canonicalize_role_entities_does_not_swallow_titled_full_name():
+    """Regression: a canonical 'Captain <First> <Last>' with a dominant
+    co-occurrence partner must NOT be merged into that partner."""
+    entities = [
+        {"canonical_name": "Mira Vale", "type": "PERSON", "aliases": [], "source_ids": ["e1"], "relevant": True},
+        {"canonical_name": "Captain Elias Thorn", "type": "PERSON",
+         "aliases": ["Elias Thorn"], "source_ids": ["e2"], "relevant": True},
+    ]
+    relationships = [
+        {"entity_a": "Captain Elias Thorn", "entity_b": "Mira Vale", "cooccurrence_count": 14},
+    ]
+    persons_full = {
+        "e2": {
+            "mentions_by_chapter": {
+                "ch01": ["Captain Elias Thorn stood on the deck. Mira Vale walked to the rail."],
+            }
+        }
+    }
+
+    out_entities, out_relationships, merge_map = _canonicalize_role_entities(
+        entities, relationships, persons_full, {}, {}, {},
+        role_words=_ROLE_WORDS, role_patterns=_ROLE_PATTERNS,
+    )
+    assert merge_map == {}
+    names = {e["canonical_name"] for e in out_entities}
+    assert names == {"Mira Vale", "Captain Elias Thorn"}
+    thorn = next(e for e in out_entities if e["canonical_name"] == "Captain Elias Thorn")
+    assert thorn["relevant"] is True
+    assert thorn["type"] == "PERSON"
+    assert out_relationships == relationships
+
+
 def test_canonicalize_role_entities_merges_role_surname_into_full_name():
     """'Captain Westfall' should merge into 'Chaol Westfall' via surname match + relational support."""
     entities = [
