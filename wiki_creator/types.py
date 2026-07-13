@@ -3,7 +3,7 @@ from typing import Literal
 
 ENTITY_TYPE = Literal["PERSON", "PLACE", "ORG", "EVENT", "OTHER"]
 IMPORTANCE = Literal["principal", "secondary", "figurant", "ignored"]
-TEMPORAL = Literal["present", "flashback", "unknown"]
+TEMPORAL = Literal["present", "flashback", "mixed", "unknown"]
 
 
 @dataclass

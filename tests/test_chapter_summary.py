@@ -762,3 +762,23 @@ def test_load_classified_entities_reads_file(tmp_path):
 
 def test_load_classified_entities_missing_file_returns_empty(tmp_path):
     assert _load_classified_entities(tmp_path / "nope.json") == []
+
+
+def test_save_chapter_summaries_accepts_mixed_temporal_context(tmp_path):
+    """LLM mode emits temporal_context "mixed" — the validated save path must not raise."""
+    from scripts.chapter_summary import _save_chapter_summaries
+
+    out_file = tmp_path / "chapter_summaries.json"
+    _save_chapter_summaries(
+        {
+            "Chapter 1": {
+                "chapter_id": "C1.xhtml",
+                "chapter_title": "Chapter 1",
+                "summary_bullets": ["Celaena remembers the salt mines."],
+                "temporal_context": "mixed",
+            }
+        },
+        out_file,
+    )
+    saved = json.loads(out_file.read_text(encoding="utf-8"))
+    assert saved["chapter_summaries"]["Chapter 1"]["temporal_context"] == "mixed"
