@@ -5,6 +5,7 @@ import json
 import pytest
 
 from scripts.generate_wiki_pages import (
+    GenerationConfig,
     _check_forbidden_names,
     _contains_template_placeholder,
     _force_correct_identity,
@@ -16,6 +17,7 @@ from scripts.generate_wiki_pages import (
     _run_generation_for_entity,
     _strip_relations_section,
     build_prompt,
+    generate_pages,
     generation_profile,
     make_stub_page,
     parse_response,
@@ -461,7 +463,7 @@ def test_run_generation_for_entity_uses_item_runner_when_not_dry(monkeypatch, tm
     calls = []
 
     def fake_runner(*, entity, book_title, model, timeout, sections, max_tokens,
-                    forbidden_names=None, language="fr", file_path="", grounding=None):
+                    forbidden_names=None, language="fr", file_path="", grounding=None, runner=None):
         calls.append((entity["canonical_name"], book_title, model, timeout, sections, max_tokens))
         return {
             "title": "Victor Grandes",
@@ -1772,3 +1774,83 @@ def test_write_identity_telemetry_roundtrip(tmp_path):
     _gwp._write_identity_telemetry(tmp_path)
     written = json.loads((tmp_path / "identity_telemetry.json").read_text())
     assert written == {"safety_net_triggers": {"force_identity": 1, "identity_recovery": 0}}
+
+
+# --- STU-449: generate_pages() public interface, runner-injected (no subprocess) ---
+
+
+class _FakeRunner:
+    """Fake StudioRunner: returns a canned page per entity, records calls, and
+    never shells out. Proves generate_pages() is testable without a subprocess."""
+
+    def __init__(self):
+        self.run_calls = []
+
+    def run_item(self, item_input, entity, timeout):
+        self.run_calls.append(entity["canonical_name"])
+        return {
+            "title": entity["canonical_name"],
+            "importance": entity.get("importance", ""),
+            "entity_type": entity.get("type", ""),
+            "infobox_fields": {},
+            "content": f"## Description\n\n{entity['canonical_name']} est un lieu.",
+            "run_metadata": {},
+        }
+
+    def load_stage_output(self, run_id, stage):  # pragma: no cover - unused here
+        return None
+
+
+def _place_batch():
+    entity = {
+        "canonical_name": "Rifthold",
+        "importance": "secondary",
+        "type": "PLACE",
+        "context_by_chapter": {"C01": ["Rifthold, la capitale."]},
+    }
+    return [("batch_00.json", {"batch_id": "batch_00", "entities": [entity]})]
+
+
+def _config(tmp_path) -> GenerationConfig:
+    return GenerationConfig(
+        book_title="Mon Livre",
+        generation_cfg={},
+        output_file=str(tmp_path / "wiki_pages.json"),
+        debug_dir=tmp_path / "debug",
+    )
+
+
+def test_generate_pages_uses_runner_and_saves(tmp_path):
+    runner = _FakeRunner()
+    pages = generate_pages(_place_batch(), _config(tmp_path), runner)
+
+    assert runner.run_calls == ["Rifthold"]
+    assert [p["title"] for p in pages] == ["Rifthold"]
+    assert "Rifthold est un lieu." in pages[0]["content"]
+
+    saved = json.loads((tmp_path / "wiki_pages.json").read_text(encoding="utf-8"))
+    assert [p["title"] for p in saved["pages"]] == ["Rifthold"]
+
+
+def test_generate_pages_dry_run_skips_runner(tmp_path):
+    runner = _FakeRunner()
+    config = _config(tmp_path)
+    config.dry_run = True
+    pages = generate_pages(_place_batch(), config, runner)
+
+    assert runner.run_calls == []
+    assert [p["title"] for p in pages] == ["Rifthold"]
+
+
+def test_generate_pages_resumes_completed_pages(tmp_path):
+    output_file = tmp_path / "wiki_pages.json"
+    output_file.write_text(
+        json.dumps({"pages": [{"title": "Rifthold", "content": "## Description\n\nDéjà fait."}]}),
+        encoding="utf-8",
+    )
+    runner = _FakeRunner()
+    pages = generate_pages(_place_batch(), _config(tmp_path), runner)
+
+    assert runner.run_calls == []  # already-done page not regenerated
+    assert [p["title"] for p in pages] == ["Rifthold"]
+    assert "Déjà fait." in pages[0]["content"]
