@@ -104,7 +104,15 @@ def test_infobox_format():
 
 
 def test_infobox_unknown_type_uses_generic_fallback():
-    fields = {"name": "La Bataille"}
-    result = make_infobox_call("EVENT", fields)
+    fields = {"name": "Quelque chose"}
+    result = make_infobox_call("OTHER", fields)
     assert result.startswith("{{Infobox\n")
-    assert "|name=La Bataille" in result
+    assert "|name=Quelque chose" in result
+
+
+def test_infobox_event():
+    fields = {"name": "La Bataille", "participants": "Celaena, Cain", "chapitre": "48"}
+    result = make_infobox_call("EVENT", fields)
+    assert result.startswith("{{Infobox event\n")
+    assert "|participants=Celaena, Cain" in result
+    assert "|chapitre=48" in result

@@ -45,13 +45,14 @@ def _convert_inline(text: str) -> str:
     return text
 
 
-# EVENT and OTHER are intentionally absent: the pipeline does not generate wiki
-# pages for those entity types, so they fall through to the generic "Infobox"
-# fallback in make_infobox_call().
+# OTHER is intentionally absent: the pipeline does not generate wiki pages for
+# it, so it falls through to the generic "Infobox" fallback in
+# make_infobox_call(). SYNOPSIS renders body-only (no infobox).
 _TEMPLATE_NAMES = {
     "PERSON": "Infobox character",
     "PLACE": "Infobox location",
     "ORG": "Infobox organization",
+    "EVENT": "Infobox event",
 }
 
 

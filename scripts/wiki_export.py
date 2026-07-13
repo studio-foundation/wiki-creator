@@ -26,6 +26,7 @@ _SUBDIR = {
     "PERSON": "characters",
     "PLACE": "locations",
     "ORG": "organizations",
+    "EVENT": "events",
 }
 
 
@@ -129,6 +130,7 @@ def main() -> None:
         "secondary": labels_cfg.get("secondary", "Personnages secondaires"),
         "locations": labels_cfg.get("locations", "Lieux"),
         "organizations": labels_cfg.get("organizations", "Organisations"),
+        "events": labels_cfg.get("events", "Événements"),
         # Per-tome categories (STU-486): "{n}" is filled with the tome number.
         "persons_by_tome": labels_cfg.get("persons_by_tome", "Personnages du Tome {n}"),
         "locations_by_tome": labels_cfg.get("locations_by_tome", "Lieux du Tome {n}"),
@@ -149,6 +151,7 @@ def main() -> None:
         ("PERSON", "Infobox_character"),
         ("PLACE", "Infobox_location"),
         ("ORG", "Infobox_organization"),
+        ("EVENT", "Infobox_event"),
     ]:
         path = wiki_dir / "templates" / f"{template_name}.wiki"
         path.write_text(infobox_template_content(entity_type), encoding="utf-8")
@@ -190,6 +193,9 @@ def _build_categories_wiki(labels: dict) -> str:
         "",
         f"== {labels['organizations']} ==",
         f"* [[Category:{labels['organizations']}]]",
+        "",
+        f"== {labels['events']} ==",
+        f"* [[Category:{labels['events']}]]",
     ]
     return "\n".join(lines)
 
