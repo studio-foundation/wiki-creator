@@ -1737,3 +1737,23 @@ def test_save_rejects_unknown_page_key(tmp_path):
     ]
     with pytest.raises(TypeError):
         _gwp._save(pages, output_file)
+
+
+def test_stray_llm_key_is_dropped_and_does_not_crash_save(tmp_path):
+    """A stray top-level key from the LLM must be dropped by parse_response so
+    the page still validates through _save (regression: WikiPage(**p) would
+    otherwise raise TypeError and brick the run on this + every rerun)."""
+    raw = json.dumps({
+        "title": "Victor Grandes", "importance": "secondaire", "entity_type": "PERSON",
+        "infobox_fields": {}, "content": "## Biographie\n\nTexte.",
+        "reasoning": "chain-of-thought the model leaked", "sources": ["ch1"],
+    })
+    page = parse_response(raw, _entity())
+    assert "reasoning" not in page and "sources" not in page
+
+    output_file = str(tmp_path / "wiki_pages.json")
+    _gwp._save([page], output_file)  # must not raise
+    with open(output_file, encoding="utf-8") as f:
+        raw_disk = json.load(f)
+    validated = studio_io.from_dict(list[WikiPage], raw_disk["pages"])
+    assert validated[0].title == "Victor Grandes"

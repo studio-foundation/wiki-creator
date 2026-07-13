@@ -14,6 +14,7 @@ Usage:
 """
 
 import argparse
+import dataclasses
 import json
 import os
 import re
@@ -33,6 +34,12 @@ from wiki_creator.registry import Registry, normalize_name
 from wiki_creator.synopsis import event_lines
 from wiki_creator.tome_labels import appearance_label
 from wiki_creator.types import WikiPage
+
+# STU-447: pages are persisted via WikiPage(**page); a stray top-level key from
+# the LLM would make that raise TypeError and brick the run (the poisoned dict is
+# reloaded unvalidated on rerun). parse_response drops unknown keys against this
+# set so only WikiPage-shaped dicts ever reach _save.
+_KNOWN_PAGE_KEYS = {f.name for f in dataclasses.fields(WikiPage)}
 
 DEFAULT_NUM_PREDICT = 1024
 
@@ -1260,7 +1267,7 @@ def parse_response(raw: str, entity: dict) -> dict:
                 f"    [WARN] Contenu très court pour {entity['canonical_name']} ({content_len} chars) — vérifier la sortie LLM",
                 file=sys.stderr,
             )
-        return page
+        return {k: v for k, v in page.items() if k in _KNOWN_PAGE_KEYS}
     except json.JSONDecodeError:
         print(f"    [WARN] JSON parse failed for {entity['canonical_name']}, using stub", file=sys.stderr)
         return make_stub_page(entity)
