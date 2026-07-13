@@ -44,4 +44,7 @@ embeddings = ["sentence-transformers>=3"]  # numpy comes transitively via spaCy
 Homepage = "https://github.com/studio-foundation/wiki-creator"
 
 [tool.hatch.build.targets.wheel]
-packages = ["wiki_creator"]
+# `scripts` is packaged too: pipeline stage executors import sibling stages
+# (e.g. classify_relationships imports relationship_extraction) and rely on
+# `pip install -e .` putting both packages on sys.path — no sys.path hacks.
+packages = ["wiki_creator", "scripts"]

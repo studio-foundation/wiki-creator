@@ -32,9 +32,6 @@ from pathlib import Path
 
 import yaml
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 from wiki_creator.grounding import find_ungrounded_names
 from wiki_creator.lang import load_lang_config
 from wiki_creator.registry import normalize_name as _normalize_name

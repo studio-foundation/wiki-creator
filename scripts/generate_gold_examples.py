@@ -17,7 +17,6 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 MAIN_REPO = PROJECT_ROOT.parents[1]  # the main repo root (batch files live there)
-sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.generate_wiki_pages import (
     SECTION_DEFINITIONS,

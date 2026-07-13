@@ -5,17 +5,17 @@ from spacy.tokens import Span
 import sys
 import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.entity_extraction import (
     extract_entities, extract_context, split_entities, split_by_type,
-    KEPT_LABELS, LABEL_TO_TYPE, _is_valid_mention, FRONTMATTER_ID_PATTERNS, _truncate_mention,
+    KEPT_LABELS, LABEL_TO_TYPE, _is_valid_mention, _truncate_mention,
     _get_min_mentions_absolute, filter_entities_by_min_mentions,
     _retag_entity_type_from_context, _infer_cue_words_language,
     _resolve_cue_words_language, _load_cue_words,
     _spacy_model_candidates, _load_spacy_model_with_fallback,
-    _is_frontmatter_chapter, _ensure_sentencizer, _audit_ner_labels,
+    _ensure_sentencizer, _audit_ner_labels,
     _is_valid_span, _warn_if_no_pos_tagger,
 )
+from wiki_creator.chapters import FRONTMATTER_ID_PATTERNS, is_frontmatter_chapter as _is_frontmatter_chapter
 
 
 from _markers import requires_en_sm, requires_fr_lg

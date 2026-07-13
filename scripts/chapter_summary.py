@@ -36,16 +36,13 @@ from pathlib import Path
 
 import yaml
 
-# Ensure project root is importable when running as `python scripts/<file>.py`.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.lang import load_lang_config, infer_language
 from wiki_creator.pov_attribution import attribute_pov_character
 from wiki_creator import studio_io
-from scripts.entity_extraction import _is_frontmatter_chapter
+from wiki_creator.chapters import is_frontmatter_chapter
 
 _FALLBACK_BULLET = "No reliable summary available for this chapter."
 _MIN_SENTENCE_CHARS = 25
@@ -579,7 +576,7 @@ def _save_llm_debug_artifact(debug_dir: Path, chapter: dict, llm_result: dict) -
 def summarize_chapters(chapters: list[dict], config: ChapterSummaryConfig | None = None, action_cues: tuple[str, ...] = (), flashback_cues: tuple[str, ...] = (), thought_markers: tuple[str, ...] = (), exclusion_words: tuple[str, ...] = (), entity_index: tuple[tuple[re.Pattern[str], float], ...] = ()) -> dict[str, dict]:
     result: dict[str, dict] = {}
     for chapter in chapters:
-        if _is_frontmatter_chapter(chapter):
+        if is_frontmatter_chapter(chapter):
             continue
         key = _chapter_key(chapter)
         if not key:
@@ -633,7 +630,7 @@ def summarize_chapters_incrementally(
 
     pending = [
         chapter for chapter in chapters
-        if not _is_frontmatter_chapter(chapter) and _chapter_key(chapter) and _chapter_key(chapter) not in result
+        if not is_frontmatter_chapter(chapter) and _chapter_key(chapter) and _chapter_key(chapter) not in result
     ]
     total = len(result) + len(pending)
     done = len(result)

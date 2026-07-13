@@ -1,6 +1,5 @@
 """Tests for scripts/split_clusters.py."""
 import sys, os, json, subprocess
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.split_clusters import split_clusters
 
 

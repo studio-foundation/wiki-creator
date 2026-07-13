@@ -8,7 +8,6 @@ import unittest.mock as mock
 import urllib.error
 from pathlib import Path
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.alias_resolution import resolve_aliases, detect_named_aliases, _pick_snippets, _check_ollama_available, make_ollama_confirmer
 from wiki_creator.lang import load_lang_config
 

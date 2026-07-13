@@ -36,10 +36,6 @@ from pathlib import Path
 
 import yaml
 
-# Ensure project root is importable when running as `python scripts/<file>.py`.
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 from wiki_creator import studio_io
 from wiki_creator.lang import load_lang_config, infer_language
 from wiki_creator.registry import normalize_name as _normalize_name

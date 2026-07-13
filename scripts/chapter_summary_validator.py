@@ -20,9 +20,6 @@ import yaml
 _WORD_RE = re.compile(r"[^\W\d_]+", re.UNICODE)
 _SENTENCE_RE = re.compile(r"[.!?…]+")
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 
 
 def parse_payload(payload: dict) -> tuple[dict, dict]:

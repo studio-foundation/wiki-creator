@@ -5,7 +5,6 @@ import sys
 import os
 from unittest.mock import patch, MagicMock
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from scripts.relationship_extraction import enrich_mentions_with_coref
 
 _TEST_MODEL = "qwen2.5"
