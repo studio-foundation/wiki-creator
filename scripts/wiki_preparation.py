@@ -38,7 +38,7 @@ from wiki_creator.facts import extract_titles
 from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator.confidence import relationship_confidence
 from wiki_creator.registry import Registry
-from wiki_creator.types import RelationshipBundle
+from wiki_creator.types import ChapterSummary, RelationshipBundle
 
 BATCH_SIZE_BY_IMPORTANCE = {
     "principal": 3,   # full template ~1500 tokens × 3 = 4500 tokens — safe under 8192
@@ -554,8 +554,12 @@ def main() -> None:
     if not chapter_summaries:
         _cs_file = paths.processing / "chapter_summaries.json"
         if _cs_file.exists():
-            with open(_cs_file, encoding="utf-8") as _f:
-                chapter_summaries = json.load(_f).get("chapter_summaries", {})
+            _raw = json.loads(_cs_file.read_text(encoding="utf-8"))
+            # dict-only boundary: build_chapter_summary_context() below consumes
+            # plain chapter-summary dicts — validated on load here.
+            chapter_summaries = studio_io.to_dict(
+                studio_io.from_dict(dict[str, ChapterSummary], _raw.get("chapter_summaries", {}))
+            )
             print(
                 f"wiki-preparation: loaded {len(chapter_summaries)} chapter summaries from disk (stage output was empty)",
                 file=sys.stderr,

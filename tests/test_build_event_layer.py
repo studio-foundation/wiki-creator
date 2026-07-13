@@ -41,6 +41,23 @@ def test_stage_writes_events_json(tmp_path):
     assert out["events"][0]["chapter"] == 12
 
 
+def test_read_summaries_rejects_schema_drift(tmp_path):
+    """An unknown key on a chapter_summaries.json entry must be rejected."""
+    path = tmp_path / "chapter_summaries.json"
+    path.write_text(json.dumps({
+        "chapter_summaries": {
+            "Chapter 1": {
+                "chapter_id": "C1.xhtml", "chapter_title": "Chapter 1",
+                "summary_bullets": [], "surprise": "unexpected",
+            }
+        }
+    }), encoding="utf-8")
+
+    stage = _load_stage()
+    with pytest.raises(studio_io.ArtifactSchemaError):
+        stage._read_summaries(path)
+
+
 def test_read_relationships_rejects_schema_drift(tmp_path):
     """An unknown top-level key on relationships_classified.json must be rejected."""
     path = tmp_path / "relationships_classified.json"

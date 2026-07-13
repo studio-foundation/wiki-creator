@@ -43,6 +43,7 @@ from wiki_creator.lang import load_lang_config, infer_language
 from wiki_creator.pov_attribution import attribute_pov_character
 from wiki_creator import studio_io
 from wiki_creator.chapters import is_frontmatter_chapter
+from wiki_creator.types import ChapterSummary
 
 _FALLBACK_BULLET = "No reliable summary available for this chapter."
 _MIN_SENTENCE_CHARS = 25
@@ -587,8 +588,11 @@ def summarize_chapters(chapters: list[dict], config: ChapterSummaryConfig | None
 
 def _save_chapter_summaries(chapter_summaries: dict[str, dict], output_file: Path) -> None:
     output_file.parent.mkdir(parents=True, exist_ok=True)
+    records = {key: ChapterSummary(**summary) for key, summary in chapter_summaries.items()}
+    payload = studio_io.to_dict(records)
+    studio_io.from_dict(dict[str, ChapterSummary], payload)  # self-check: never write off-schema
     with open(output_file, "w", encoding="utf-8") as f:
-        json.dump({"chapter_summaries": chapter_summaries}, f, ensure_ascii=False, indent=2)
+        json.dump({"chapter_summaries": payload}, f, ensure_ascii=False, indent=2)
 
 
 def _load_existing_chapter_summaries(output_file: Path) -> dict[str, dict]:

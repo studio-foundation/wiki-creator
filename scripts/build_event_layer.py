@@ -20,7 +20,7 @@ from wiki_creator.event_layer import build_events
 from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.registry import Registry
-from wiki_creator.types import RelationshipBundle
+from wiki_creator.types import ChapterSummary, RelationshipBundle
 
 # Entity-classification importance tiers (scripts/entity_classification.py)
 # -> salience participant-importance weight (STU-483). Tiers absent here
@@ -76,10 +76,14 @@ def _read_summaries(path: Path) -> dict:
     if not path.exists():
         return {}
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
+        raw = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError:
         return {}
-    return data.get("chapter_summaries", data) if isinstance(data, dict) else {}
+    data = raw.get("chapter_summaries", raw) if isinstance(raw, dict) else {}
+    summaries = studio_io.from_dict(dict[str, ChapterSummary], data)
+    # dict-only boundary: build_events() (wiki_creator/event_layer.py) consumes
+    # plain chapter-summary dicts — validated on load above.
+    return studio_io.to_dict(summaries)
 
 
 def _read_relationships(path: Path) -> list[dict]:

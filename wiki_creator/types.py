@@ -122,7 +122,7 @@ class ChapterSummary:
     chapter_title: str
     summary_bullets: list[str] = field(default_factory=list)
     summary_method: str = ""
-    quality_flags: list = field(default_factory=list)
+    quality_flags: list[str] = field(default_factory=list)
     temporal_context: TEMPORAL = "present"
     flashback_anchor: str | None = None
     pov: str = "unknown"

@@ -630,7 +630,7 @@ def test_main_injects_chapter_id_to_title_from_epub_data(tmp_path: Path, monkeyp
         json.dumps({
             "chapter_summaries": {
                 "The Glass Castle": {
-                    "chapter_id": None,
+                    "chapter_id": "",
                     "chapter_title": "The Glass Castle",
                     "summary_bullets": ["Celaena enters the castle."],
                     "temporal_context": "present",
@@ -721,6 +721,7 @@ def test_main_falls_back_to_disk_when_chapter_summary_stage_output_is_empty(tmp_
             "chapter_summaries": {
                 "ch01": {
                     "chapter_id": "ch01",
+                    "chapter_title": "Chapter 1",
                     "summary_bullets": ["Celaena arrives at the castle."],
                     "temporal_context": "present",
                 }
