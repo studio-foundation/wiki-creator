@@ -34,7 +34,7 @@ class EntityFull:
     first_seen: str
     mention_count: int
     mentions_by_chapter: dict = field(default_factory=dict)
-    mention_spans_by_chapter: dict = field(default_factory=dict)
+    mention_spans_by_chapter: dict[str, list[MentionSpan]] = field(default_factory=dict)
 
 
 @dataclass
