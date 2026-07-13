@@ -88,3 +88,30 @@ def test_build_events_skips_beats_without_chapter():
     relationships = [{"entity_a": "Celaena", "entity_b": "Cain",
                       "key_moments": ["no chapter marker here"]}]
     assert build_events({}, relationships, reg, action_cues=[]) == []
+
+
+def test_build_events_degrades_gracefully_with_no_registry():
+    # No relationships (so no entity_a/entity_b seed names) — participants and
+    # places can only come from registry name-matching, which is unavailable
+    # when registry is None.
+    summaries = {
+        "Chapter 3": {
+            "chapter_id": "C03.xhtml",
+            "chapter_title": "Chapter 3",
+            "summary_bullets": ["Celaena vainquit Cain at Rifthold"],
+        },
+    }
+    events = build_events(summaries, [], None, action_cues=["vainquit"])
+
+    assert len(events) == 1
+    e = events[0]
+    assert e["chapter"] == 3
+    # no registry → no name-matching, participants/places stay empty
+    assert e["participants"] == []
+    assert e["places"] == []
+    assert e["outcome"] == "Celaena vainquit Cain at Rifthold"
+    assert e["event_id"] == "e_ch3_0"
+
+
+def test_build_events_tolerates_none_summaries_and_relationships():
+    assert build_events(None, None, None, action_cues=[]) == []

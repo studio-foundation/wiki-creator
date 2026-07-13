@@ -80,9 +80,12 @@ def build_events(
     action_cues: list[str],
 ) -> list[dict]:
     """Assemble chapter-summary bullets + relationship key-moments into
-    deduplicated, scored events, sorted by (chapter, event_id).
+    deduplicated, scored events, sorted by (chapter, description) — with
+    event_id assigned per chapter in that resulting sort order.
     """
-    total_chapters = len(chapter_summaries) if chapter_summaries else 0
+    chapter_summaries = chapter_summaries or {}
+    relationships = relationships or []
+    total_chapters = len(chapter_summaries)
 
     # (chapter, normalized_description) -> aggregate
     agg: dict[tuple[int, str], dict] = {}
@@ -118,9 +121,10 @@ def build_events(
             add_beat(chapter, km, _strip_marker(km), seed)
 
     # Source 2: chapter summary bullets
-    for key, summary in (chapter_summaries or {}).items():
-        chapter = _parse_chapter(str(summary.get("chapter_title") or key)) \
-            or _parse_chapter(str(summary.get("chapter_id") or ""))
+    for key, summary in chapter_summaries.items():
+        chapter = _parse_chapter(str(summary.get("chapter_title") or key))
+        if chapter is None:
+            chapter = _parse_chapter(str(summary.get("chapter_id") or ""))
         if chapter is None:
             continue
         for bullet in summary.get("summary_bullets") or []:
