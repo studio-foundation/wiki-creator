@@ -20,7 +20,7 @@ from wiki_creator.event_layer import build_events
 from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.registry import Registry
-from wiki_creator.types import ChapterSummary, RelationshipBundle
+from wiki_creator.types import ChapterSummary, Event, EventBundle, RelationshipBundle
 
 # Entity-classification importance tiers (scripts/entity_classification.py)
 # -> salience participant-importance weight (STU-483). Tiers absent here
@@ -61,10 +61,8 @@ def run_for_processing(processing_dir: Path | str, language: str) -> list[dict]:
     action_cues = load_lang_config(language).get("action_cues", [])
     events = build_events(summaries, relationships, registry, action_cues, participant_importance)
 
-    (processing_dir / "events.json").write_text(
-        json.dumps({"events": events}, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+    bundle = EventBundle(events=[Event(**e) for e in events])
+    studio_io.save_artifact(processing_dir / "events.json", bundle, EventBundle)
     print(
         f"[events] wrote {len(events)} events to {processing_dir / 'events.json'}",
         file=sys.stderr,

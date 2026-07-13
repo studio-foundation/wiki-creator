@@ -1,7 +1,10 @@
 """Tests for scripts/generate_book_synopsis.py — the SP4 stage script."""
 import json
 
+import pytest
+
 import scripts.generate_book_synopsis as gbs
+from wiki_creator import studio_io
 from wiki_creator.synopsis import SYNOPSIS_ENTITY_TYPE, SYNOPSIS_TITLE
 
 
@@ -45,6 +48,15 @@ def test_read_events_distinguishes_absent_from_empty(tmp_path):
 def test_read_events_tolerates_invalid_json(tmp_path):
     (tmp_path / "events.json").write_text("{not json", encoding="utf-8")
     assert gbs.read_events(tmp_path) == []
+
+
+def test_read_events_rejects_schema_drift(tmp_path):
+    """An unknown key on an events.json event entry must be rejected."""
+    events = _events()
+    events[0]["surprise"] = "unexpected"
+    _write_events(tmp_path, events)
+    with pytest.raises(studio_io.ArtifactSchemaError):
+        gbs.read_events(tmp_path)
 
 
 # --- run_for_processing ---

@@ -38,7 +38,7 @@ from wiki_creator.facts import extract_titles
 from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator.confidence import relationship_confidence
 from wiki_creator.registry import Registry
-from wiki_creator.types import ChapterSummary, RelationshipBundle
+from wiki_creator.types import ChapterSummary, EventBundle, RelationshipBundle
 
 BATCH_SIZE_BY_IMPORTANCE = {
     "principal": 3,   # full template ~1500 tokens × 3 = 4500 tokens — safe under 8192
@@ -585,8 +585,9 @@ def main() -> None:
     plot_events: list[dict] = []
     if _events_path.exists():
         try:
-            with open(_events_path, encoding="utf-8") as _f:
-                plot_events = json.load(_f).get("events", [])
+            # dict-only boundary: events_for_entity/build_entity_bundle (pure,
+            # unchanged) consume plain event dicts — validated on load above.
+            plot_events = studio_io.to_dict(studio_io.load_artifact(_events_path, EventBundle).events)
         except (OSError, json.JSONDecodeError):
             print("wiki-preparation: events.json could not be read — entity_events will be empty", file=sys.stderr)
     else:

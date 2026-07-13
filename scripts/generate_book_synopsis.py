@@ -32,6 +32,7 @@ from scripts.generate_wiki_pages import (
     _references_block,
     load_book_title,
 )
+from wiki_creator import studio_io
 from wiki_creator.lang import book_language
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.synopsis import (
@@ -43,6 +44,7 @@ from wiki_creator.synopsis import (
     build_synopsis_prompt,
     select_events,
 )
+from wiki_creator.types import EventBundle
 
 _STUB_CONTENT_FAILED = "## Synopsis\n\n*Échec technique de la génération du synopsis.*"
 _STUB_CONTENT_DRY = "## Synopsis\n\n*Synopsis non généré (dry-run).*"
@@ -83,10 +85,12 @@ def read_events(processing_dir: Path) -> list[dict] | None:
     if not path.exists():
         return None
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
+        bundle = studio_io.load_artifact(path, EventBundle)
     except json.JSONDecodeError:
         return []
-    return data.get("events", []) if isinstance(data, dict) else []
+    # dict-only boundary: synopsis.py's select_events/build_synopsis_prompt
+    # (pure, unchanged) consume plain event dicts — validated on load above.
+    return studio_io.to_dict(bundle.events)
 
 
 def _finalize_page(result: dict, book_title: str) -> dict:
