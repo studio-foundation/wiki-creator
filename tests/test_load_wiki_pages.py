@@ -22,7 +22,7 @@ def test_filter_failed_pages_excludes_failed():
     pages = [
         _page(title="Celaena", content="## Bio\n\nHero."),
         _page(title="Arobynn Hamel", content="", _failed=True),
-        _page(title="Chaol", importance="secondaire", content="## Bio\n\nCaptain."),
+        _page(title="Chaol", importance="secondary", content="## Bio\n\nCaptain."),
     ]
     result = _filter_failed_pages(pages)
     assert len(result) == 2

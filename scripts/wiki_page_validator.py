@@ -154,7 +154,7 @@ def check_ungrounded_names(page: dict, meta: dict) -> list[str]:
     return [f"❌ Nom non ancré dans les extraits source : {n}" for n in names]
 
 
-_GROUNDING_IMPORTANCES = {"principal", "secondary", "secondaire"}
+_GROUNDING_IMPORTANCES = {"principal", "secondary"}
 _MAX_REPORTED_CLAIMS = 5
 
 # Same contract as .studio/agents/wiki-page-validator.agent.yaml (the agent

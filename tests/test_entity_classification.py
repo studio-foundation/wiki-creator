@@ -309,7 +309,7 @@ def test_assign_importance_principal():
 def test_assign_importance_secondary():
     thresholds = {"PERSON": {"principal": 90, "secondary": 40, "figurant": 10}}
     importance = assign_importance("PERSON", 50, 5, thresholds)
-    assert importance == "secondaire"
+    assert importance == "secondary"
 
 
 def test_assign_importance_figurant():
@@ -352,7 +352,7 @@ def test_classify_entities_enriches_with_importance():
     assert "importance" in martín
     assert martín["total_mentions"] == 5
     # David Martín has more mentions → higher importance than le libraire
-    importance_order = ["principal", "secondaire", "figurant", "ignored"]
+    importance_order = ["principal", "secondary", "figurant", "ignored"]
     assert importance_order.index(martín["importance"]) <= importance_order.index(libraire["importance"])
 
 
@@ -742,7 +742,7 @@ def test_is_role_entity_name_empty_role_words_returns_false():
 def test_classify_entities_empty_concept_keywords_does_not_crash():
     entities = [{"canonical_name": "Magic", "type": "OTHER", "source_ids": [], "relevant": True}]
     result = classify_entities(entities, {}, {}, {}, "auto", concept_keywords=frozenset())
-    assert result[0]["importance"] in ("principal", "secondaire", "figurant", "ignored")
+    assert result[0]["importance"] in ("principal", "secondary", "figurant", "ignored")
 
 
 # ---------------------------------------------------------------------------

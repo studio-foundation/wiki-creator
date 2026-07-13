@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 
 from scripts.wiki_preparation import (
-    _IMPORTANCE_NORMALIZE,
     build_chapter_summary_context,
     build_entity_bundle,
     events_for_entity,
@@ -86,14 +85,6 @@ def _registries():
     return _pf(persons), {}, {}, {}
 
 
-def test_importance_normalize_maps_secondaire_to_secondary():
-    """Regression: STU-316 – French 'secondaire' from classification must normalize to 'secondary'."""
-    assert _IMPORTANCE_NORMALIZE["secondaire"] == "secondary"
-    # Other values pass through unchanged
-    assert _IMPORTANCE_NORMALIZE.get("principal", "principal") == "principal"
-    assert _IMPORTANCE_NORMALIZE.get("figurant", "figurant") == "figurant"
-
-
 def test_build_entity_bundle_builds_sorted_limited_related_context():
     persons, places, orgs, events = _registries()
     entities_by_name = {
@@ -124,13 +115,13 @@ def test_build_entity_bundle_builds_sorted_limited_related_context():
         "Nehemia": {
             "canonical_name": "Nehemia",
             "type": "PERSON",
-            "importance": "secondaire",
+            "importance": "secondary",
             "source_ids": ["p5"],
         },
         "Cain": {
             "canonical_name": "Cain",
             "type": "PERSON",
-            "importance": "secondaire",
+            "importance": "secondary",
             "source_ids": ["p6"],
         },
         "Nox": {
@@ -478,7 +469,7 @@ def test_build_entity_bundle_skips_chapter_summary_context_for_non_person():
     entity = {
         "canonical_name": "Adarlan",
         "type": "PLACE",
-        "importance": "secondaire",
+        "importance": "secondary",
         "source_ids": [],
     }
     entities_by_name = {"Adarlan": entity}

@@ -41,7 +41,7 @@ def test_category_tags_secondary_person():
         "locations": "Lieux",
         "organizations": "Organisations",
     }
-    tags = category_tags("PERSON", "secondaire", labels)
+    tags = category_tags("PERSON", "secondary", labels)
     assert "[[Category:Personnages]]" in tags
     assert "[[Category:Personnages secondaires]]" in tags
     assert "[[Category:Personnages principaux]]" not in tags

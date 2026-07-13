@@ -34,7 +34,7 @@ def category_tags(
         tags.append(f"[[Category:{labels['persons']}]]")
         if importance == "principal":
             tags.append(f"[[Category:{labels['principal']}]]")
-        elif importance in ("secondary", "secondaire"):
+        elif importance == "secondary":
             tags.append(f"[[Category:{labels['secondary']}]]")
     elif entity_type == "PLACE":
         tags.append(f"[[Category:{labels['locations']}]]")

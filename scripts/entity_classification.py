@@ -17,11 +17,11 @@ Output (stdout):
   {
     "entities": [{ ...same fields..., "total_mentions": int, "chapters_present": int, "importance": str }],
     "relationships": [...passthrough...],
-    "stats": { "principal": int, "secondaire": int, "figurant": int, "ignored": int, "thresholds_used": str },
+    "stats": { "principal": int, "secondary": int, "figurant": int, "ignored": int, "thresholds_used": str },
     "narrator": ...passthrough...
   }
 
-importance values: "principal" | "secondaire" | "figurant" | "ignored"
+importance values: "principal" | "secondary" | "figurant" | "ignored"
 
 Standalone test:
   python scripts/entity_classification.py --test
@@ -39,6 +39,7 @@ import yaml
 from wiki_creator import studio_io
 from wiki_creator.lang import load_lang_config, infer_language
 from wiki_creator.registry import normalize_name as _normalize_name
+from wiki_creator.types import ClassifiedBundle, ClassifiedEntity, Relationship
 
 _VALID_TYPES = {"PERSON", "PLACE", "ORG", "EVENT", "OTHER"}
 
@@ -211,7 +212,7 @@ def assign_importance(
     if total_mentions >= t["principal"]:
         return "principal"
     elif total_mentions >= t["secondary"]:
-        return "secondaire"
+        return "secondary"
     elif total_mentions >= t["figurant"]:
         return "figurant"
     else:
@@ -799,22 +800,33 @@ def run_studio_mode() -> None:
     from collections import Counter
     importance_counts = Counter(e["importance"] for e in enriched)
 
+    stats = {
+        "principal": importance_counts.get("principal", 0),
+        "secondary": importance_counts.get("secondary", 0),
+        "figurant": importance_counts.get("figurant", 0),
+        "ignored": importance_counts.get("ignored", 0),
+        "thresholds_used": "auto" if thresholds_config == "auto" else "explicit",
+    }
+
     output = {
         "entities": enriched,
         "relationships": relationships,
-        "stats": {
-            "principal": importance_counts.get("principal", 0),
-            "secondaire": importance_counts.get("secondaire", 0),
-            "figurant": importance_counts.get("figurant", 0),
-            "ignored": importance_counts.get("ignored", 0),
-            "thresholds_used": "auto" if thresholds_config == "auto" else "explicit",
-        },
+        "stats": stats,
         "narrator": narrator,
     }
 
+    # save_artifact's field order (canonical_name, type, total_mentions, ...)
+    # differs from `enriched`'s insertion order (source fields first, tiering
+    # fields appended), so stdout keeps the raw `output` dict — the validated
+    # bundle only governs the on-disk artifact.
+    bundle = ClassifiedBundle(
+        entities=[ClassifiedEntity(**e) for e in enriched],
+        relationships=[Relationship(**r) for r in relationships],
+        stats=stats,
+        narrator=narrator,
+    )
     paths.processing.mkdir(parents=True, exist_ok=True)
-    with open(paths.processing / "entities_classified.json", "w", encoding="utf-8") as _f:
-        json.dump(output, _f, ensure_ascii=False)
+    studio_io.save_artifact(paths.processing / "entities_classified.json", bundle, ClassifiedBundle)
 
     json.dump(output, sys.stdout, ensure_ascii=False)
 

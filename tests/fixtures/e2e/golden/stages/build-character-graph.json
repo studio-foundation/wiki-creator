@@ -6,7 +6,7 @@
   "nodes": [
    {
     "type": "CHARACTER",
-    "importance": "secondaire",
+    "importance": "secondary",
     "aliases": [
      "Mira Vale"
     ],
@@ -17,7 +17,7 @@
    },
    {
     "type": "CHARACTER",
-    "importance": "secondaire",
+    "importance": "secondary",
     "aliases": [
      "Captain Elias Thorn",
      "Elias Thorn"
@@ -52,7 +52,7 @@
   "nodes": [
    {
     "type": "CHARACTER",
-    "importance": "secondaire",
+    "importance": "secondary",
     "aliases": [
      "Mira Vale"
     ],
@@ -63,7 +63,7 @@
    },
    {
     "type": "CHARACTER",
-    "importance": "secondaire",
+    "importance": "secondary",
     "aliases": [
      "Captain Elias Thorn",
      "Elias Thorn"

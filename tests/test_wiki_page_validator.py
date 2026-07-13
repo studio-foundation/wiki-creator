@@ -153,7 +153,7 @@ def test_validate_page_returns_valid_when_clean():
 def test_validate_page_aggregates_all_errors():
     page = {
         "title": "Elena",
-        "importance": "secondaire",
+        "importance": "secondary",
         "entity_type": "PERSON",
         "infobox_fields": {},
         "content": "Elena was the queen. She is also known as Philippa. C07.xhtml.",

@@ -20,29 +20,27 @@ from wiki_creator.event_layer import build_events
 from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.registry import Registry
-from wiki_creator.types import ChapterSummary, Event, EventBundle, RelationshipBundle
+from wiki_creator.types import ChapterSummary, ClassifiedBundle, Event, EventBundle, RelationshipBundle
 
 # Entity-classification importance tiers (scripts/entity_classification.py)
 # -> salience participant-importance weight (STU-483). Tiers absent here
 # (e.g. "ignored", or an entity missing from entities_classified.json)
 # default to 0.0 via dict.get.
-_IMPORTANCE_TIER_WEIGHTS = {"principal": 1.0, "secondaire": 0.6, "figurant": 0.3}
+_IMPORTANCE_TIER_WEIGHTS = {"principal": 1.0, "secondary": 0.6, "figurant": 0.3}
 
 
 def _read_participant_importance(path: Path) -> dict[str, float]:
     if not path.exists():
         return {}
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
+        bundle = studio_io.load_artifact(path, ClassifiedBundle)
+    except (OSError, json.JSONDecodeError):
         return {}
-    entities = data.get("entities", []) if isinstance(data, dict) else []
     weights: dict[str, float] = {}
-    for entity in entities:
-        name = entity.get("canonical_name")
-        tier = str(entity.get("importance", "")).strip().lower()
-        if name and tier in _IMPORTANCE_TIER_WEIGHTS:
-            weights[name] = _IMPORTANCE_TIER_WEIGHTS[tier]
+    for entity in bundle.entities:
+        weight = _IMPORTANCE_TIER_WEIGHTS.get(entity.importance)
+        if weight is not None:
+            weights[entity.canonical_name] = weight
     return weights
 
 

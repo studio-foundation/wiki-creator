@@ -47,8 +47,6 @@ BATCH_SIZE_BY_IMPORTANCE = {
 }
 # Hard cap on total context chars per batch — prevents long batches even within size limits
 MAX_BATCH_CONTEXT_CHARS = 20000
-# entity-classification outputs French importance labels; normalize to English for downstream
-_IMPORTANCE_NORMALIZE = {"secondaire": "secondary"}
 
 MAX_MENTIONS_PER_CHAPTER = 5
 MAX_CHAPTERS = 25
@@ -486,8 +484,6 @@ def main() -> None:
     classification_output, chapter_summary_output = stage_outputs_from_payload(payload)
 
     entities = classification_output.get("entities", [])
-    for e in entities:
-        e["importance"] = _IMPORTANCE_NORMALIZE.get(e.get("importance", ""), e.get("importance", "figurant"))
     relationships = classification_output.get("relationships", [])
     narrator = classification_output.get("narrator", None)
 

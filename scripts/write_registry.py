@@ -34,7 +34,7 @@ import yaml
 from wiki_creator import studio_io
 from wiki_creator.paths import book_paths_from_epub
 from wiki_creator.registry import Registry
-from wiki_creator.types import Splits
+from wiki_creator.types import ClassifiedBundle, Splits
 
 FULL_REGISTRY_FILES = (
     "persons_full.json",
@@ -42,14 +42,6 @@ FULL_REGISTRY_FILES = (
     "orgs_full.json",
     "events_full.json",
 )
-
-
-def _load_json(path: Path) -> dict:
-    if path.exists():
-        with open(path, encoding="utf-8") as f:
-            data = json.load(f)
-        return data if isinstance(data, dict) else {}
-    return {}
 
 
 def main() -> None:
@@ -74,7 +66,16 @@ def main() -> None:
     # alias_resolution merge-evidence block, so audit provenance is preserved.
     alias_output = previous_outputs.get("entity-classification") or {}
     if not alias_output.get("entities"):
-        alias_output = _load_json(paths.processing / "entities_classified.json")
+        classified_path = paths.processing / "entities_classified.json"
+        if classified_path.exists():
+            try:
+                # Registry.from_artifacts consumes raw record dicts (Do NOT change
+                # registry.py); to_dict here is a pure shape adapter after validation.
+                alias_output = studio_io.to_dict(
+                    studio_io.load_artifact(classified_path, ClassifiedBundle)
+                )
+            except json.JSONDecodeError:
+                alias_output = {}
 
     splits_path = paths.processing / "splits.json"
     splits = studio_io.load_artifact(splits_path, Splits) if splits_path.exists() else Splits()

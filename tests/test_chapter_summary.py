@@ -702,13 +702,6 @@ def test_build_entity_importance_index_weights_principal_over_secondary():
     assert "rando" not in joined
 
 
-def test_build_entity_importance_index_accepts_french_secondaire():
-    index = build_entity_importance_index(
-        [{"canonical_name": "Corelli", "aliases": [], "importance": "secondaire"}]
-    )
-    assert len(index) == 1
-
-
 def test_score_sentence_accepts_entity_index_kwarg():
     score = _score_sentence("Celaena drew her blade.", 0, 5, entity_index=())
     assert isinstance(score, float)
@@ -755,9 +748,16 @@ def test_summarize_chapter_prioritizes_important_entities():
 
 def test_load_classified_entities_reads_file(tmp_path):
     p = tmp_path / "entities_classified.json"
-    p.write_text(json.dumps({"entities": [{"canonical_name": "X", "importance": "principal"}]}))
+    entity = {
+        "canonical_name": "X",
+        "type": "PERSON",
+        "total_mentions": 5,
+        "chapters_present": 2,
+        "importance": "principal",
+    }
+    p.write_text(json.dumps({"entities": [entity], "relationships": [], "stats": {}, "narrator": None}))
     ents = _load_classified_entities(p)
-    assert ents == [{"canonical_name": "X", "importance": "principal"}]
+    assert ents == [{**entity, "source_ids": [], "aliases": [], "relevant": True}]
 
 
 def test_load_classified_entities_missing_file_returns_empty(tmp_path):
