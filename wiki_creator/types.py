@@ -80,6 +80,12 @@ class ClassifiedEntity:
     source_ids: list[str] = field(default_factory=list)
     aliases: list[str] = field(default_factory=list)
     relevant: bool = True
+    # STU-285 provenance: alias_resolution._merge_entities stamps this block
+    # ({merged_from, evidence, confidence, method}) onto merged PERSON entities.
+    # Registry.from_artifacts reads it for audit trail, so it must survive the
+    # entities_classified.json round-trip — never stripped. Absent on unmerged
+    # entities.
+    alias_resolution: dict | None = None
 
 
 @dataclass

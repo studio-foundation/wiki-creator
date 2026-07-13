@@ -1027,3 +1027,56 @@ def test_run_studio_mode_applies_corrections_file(monkeypatch, classification_tm
     result = json.loads(captured.getvalue())
     arobynn = next(e for e in result["entities"] if e["canonical_name"] == "Arobynn")
     assert arobynn["type"] == "PERSON", f"Expected PERSON, got {arobynn['type']}"
+
+
+def test_merged_entity_alias_resolution_block_round_trips_through_bundle(tmp_path):
+    """STU-285/STU-447: alias-resolution stamps an `alias_resolution` provenance
+    block onto merged PERSON entities. It flows through classify_entities'
+    `enriched = {**entity, ...}` into ClassifiedEntity(**e) and must NOT raise —
+    and must survive the entities_classified.json round-trip so write-registry's
+    resume path preserves audit provenance. The smoke fixture never merges
+    (merges_applied: 0), so this path is otherwise untested."""
+    from wiki_creator import studio_io
+    from wiki_creator.types import ClassifiedBundle, ClassifiedEntity
+
+    enriched = {
+        "canonical_name": "Celaena Sardothien",
+        "type": "PERSON",
+        "aliases": ["Lillian Gordaina"],
+        "source_ids": ["e001", "e099"],
+        "relevant": True,
+        "alias_resolution": {
+            "merged_from": ["Lillian Gordaina"],
+            "evidence": [{"method": "reveal", "confidence": "high", "snippet": "..."}],
+            "confidence": "high",
+            "method": "reveal",
+        },
+        "total_mentions": 42,
+        "chapters_present": 8,
+        "importance": "principal",
+    }
+
+    # Constructing ClassifiedEntity(**enriched) is the exact call at
+    # entity_classification.py that crashed before alias_resolution was added.
+    bundle = ClassifiedBundle(entities=[ClassifiedEntity(**enriched)])
+    path = tmp_path / "entities_classified.json"
+    studio_io.save_artifact(path, bundle, ClassifiedBundle)
+    loaded = studio_io.load_artifact(path, ClassifiedBundle)
+
+    assert loaded.entities[0].alias_resolution == enriched["alias_resolution"]
+
+
+def test_unmerged_entity_omits_alias_resolution(tmp_path):
+    """Non-merged entities carry no alias_resolution key; the optional field
+    defaults to None and still validates."""
+    from wiki_creator import studio_io
+    from wiki_creator.types import ClassifiedBundle, ClassifiedEntity
+
+    entity = ClassifiedEntity(
+        canonical_name="Chaol", type="PERSON", total_mentions=10,
+        chapters_present=4, importance="secondary",
+    )
+    path = tmp_path / "entities_classified.json"
+    studio_io.save_artifact(path, ClassifiedBundle(entities=[entity]), ClassifiedBundle)
+    loaded = studio_io.load_artifact(path, ClassifiedBundle)
+    assert loaded.entities[0].alias_resolution is None
