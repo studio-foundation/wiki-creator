@@ -33,8 +33,7 @@ def run_for_processing(processing_dir: Path | str, language: str) -> list[dict]:
     summaries = _read_summaries(summaries_path)
     relationships = _read_relationships(rels_path)
 
-    registry_path = processing_dir / "registry.json"
-    registry = Registry.load(registry_path) if registry_path.exists() else None
+    registry = Registry.load_from_processing(processing_dir)
 
     action_cues = load_lang_config(language).get("action_cues", [])
     events = build_events(summaries, relationships, registry, action_cues)
