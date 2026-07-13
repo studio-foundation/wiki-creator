@@ -97,3 +97,29 @@ def test_veto_false_when_centroid_missing():
     judge = EmbeddingJudge(backend, 0.86, 0.80)
     centroids = judge.build_centroids({0: ["a"], 1: []})
     assert judge.veto(0, 1, centroids) is False
+
+
+# tests/test_embedding_disambiguation.py  (append)
+from wiki_creator.embedding_disambiguation import EmbeddingBackend
+from tests._markers import requires_embeddings
+
+
+def test_resolve_device_honors_explicit():
+    # Constructing the model is heavy; test resolve_device without __init__.
+    assert EmbeddingBackend.resolve_device(object.__new__(EmbeddingBackend), "cpu") == "cpu"
+
+
+@requires_embeddings
+def test_backend_encodes_normalized_vectors():
+    backend = EmbeddingBackend(device="cpu")
+    vecs = backend.encode(["Celaena drew her blade.", "The assassin moved silently."])
+    assert vecs.shape[0] == 2
+    norms = np.linalg.norm(vecs, axis=1)
+    assert np.allclose(norms, 1.0, atol=1e-3)
+
+
+@requires_embeddings
+def test_backend_empty_returns_empty():
+    backend = EmbeddingBackend(device="cpu")
+    vecs = backend.encode([])
+    assert vecs.shape[0] == 0

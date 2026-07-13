@@ -88,3 +88,35 @@ class EmbeddingJudge:
         if ca is None or cb is None:
             return False  # no evidence → cannot veto
         return cosine(ca, cb) < self.veto_threshold
+
+
+class EmbeddingBackend:
+    """sentence-transformers wrapper. Lazily imports the heavy deps so the
+    rest of this module stays importable without the `embeddings` extra."""
+
+    def __init__(self, model_name: str = DEFAULT_MODEL, device: str | None = None):
+        from sentence_transformers import SentenceTransformer  # type: ignore[import-not-found]  # lazy: may ImportError
+
+        self.device = self.resolve_device(device)
+        self.model = SentenceTransformer(model_name, device=self.device)
+
+    def resolve_device(self, explicit: str | None) -> str:
+        if explicit:
+            return explicit
+        try:
+            import torch
+
+            if torch.cuda.is_available():
+                return "cuda"
+        except Exception:
+            pass
+        return "cpu"
+
+    def encode(self, texts: list[str]) -> np.ndarray:
+        if not texts:
+            return np.zeros((0, self.model.get_sentence_embedding_dimension()), dtype=np.float32)
+        return self.model.encode(
+            [f"passage: {t}" for t in texts],
+            normalize_embeddings=True,
+            convert_to_numpy=True,
+        )
