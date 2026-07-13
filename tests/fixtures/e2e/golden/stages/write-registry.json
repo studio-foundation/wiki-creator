@@ -1,0 +1,8 @@
+{
+ "registry": {
+  "path": "<RUN_DIR>/smoke-series/processing_output/smoke-novella/registry.json",
+  "entities": 6,
+  "decisions": 2,
+  "warnings": []
+ }
+}

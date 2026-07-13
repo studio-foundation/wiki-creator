@@ -1,0 +1,39 @@
+{
+ "places_full": {
+  "entity_004": {
+   "type": "PLACE",
+   "raw_mentions": [
+    "Port Saffron"
+   ],
+   "first_seen": "chapter_0",
+   "mentions_by_chapter": {
+    "chapter_0": [
+     "Mira Vale walked to the rail and looked at the gray water. The lighthouse of Port Saffron blinked in the distance. \"There,\" Mira Vale said."
+    ],
+    "chapter_1": [
+     "The Granite Hall The Salt Guild kept its offices in a granite hall above the fish market of Port Saffron. Mira Vale waited on a bench while the clerks argued behind tall doors."
+    ],
+    "chapter_3": [
+     "Elias Thorn smiled at the open water and set the course past the shoals. Port Saffron sank back into the fog it had come from."
+    ]
+   },
+   "mention_count": 3
+  },
+  "entity_007": {
+   "type": "PLACE",
+   "raw_mentions": [
+    "Warehouse Nine",
+    "Warehouse nine"
+   ],
+   "first_seen": "chapter_2",
+   "mentions_by_chapter": {
+    "chapter_2": [
+     "Warehouse Nine That night Mira Vale found the junior clerk drinking alone. Mira Vale asked careful questions and bought careful answers.",
+     "Mira Vale asked careful questions and bought careful answers. Warehouse nine held the cargo of the Heron, the clerk admitted at last. Mira Vale smiled, paid the keeper, and slipped back into the dark.",
+     "By the old wall, Captain Elias Thorn waited with two lanterns and a crowbar. \"Warehouse nine,\" Mira Vale whispered. Elias Thorn nodded once and picked up the iron bar."
+    ]
+   },
+   "mention_count": 3
+  }
+ }
+}

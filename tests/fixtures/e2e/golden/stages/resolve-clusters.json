@@ -1,0 +1,74 @@
+{
+ "entities": [
+  {
+   "canonical_name": "Mira Vale",
+   "type": "PERSON",
+   "aliases": [
+    "Mira Vale"
+   ],
+   "source_ids": [
+    "entity_003"
+   ],
+   "relevant": true
+  },
+  {
+   "canonical_name": "Heron",
+   "type": "OTHER",
+   "aliases": [
+    "Heron"
+   ],
+   "source_ids": [
+    "entity_002"
+   ],
+   "relevant": true
+  },
+  {
+   "canonical_name": "Port Saffron",
+   "type": "PLACE",
+   "aliases": [
+    "Port Saffron"
+   ],
+   "source_ids": [
+    "entity_004"
+   ],
+   "relevant": true
+  },
+  {
+   "canonical_name": "Salt Guild",
+   "type": "ORG",
+   "aliases": [
+    "Salt Guild"
+   ],
+   "source_ids": [
+    "entity_006"
+   ],
+   "relevant": true
+  },
+  {
+   "canonical_name": "Warehouse Nine",
+   "type": "PLACE",
+   "aliases": [
+    "Warehouse Nine",
+    "Warehouse nine"
+   ],
+   "source_ids": [
+    "entity_007"
+   ],
+   "relevant": true
+  },
+  {
+   "canonical_name": "Captain Elias Thorn",
+   "type": "PERSON",
+   "aliases": [
+    "Captain Elias Thorn",
+    "Elias Thorn"
+   ],
+   "source_ids": [
+    "entity_001",
+    "entity_005"
+   ],
+   "relevant": true
+  }
+ ],
+ "narrator": null
+}
