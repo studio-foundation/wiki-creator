@@ -220,6 +220,41 @@ def test_build_entity_bundle_tags_confidence():
     assert by_pair[("Dorian", "Chaol")] == "inferred"
 
 
+def test_build_entity_bundle_tags_revealed_at_chapter():
+    """STU-491: each bundle sub-unit carries a normalized reveal chapter."""
+    persons, places, orgs, events = _registries()
+    entity = {
+        "canonical_name": "Dorian Havilliard",
+        "type": "PERSON",
+        "importance": "principal",
+        "source_ids": ["p1"],
+    }
+    entities_by_name = {"Dorian Havilliard": entity}
+    relationships = [
+        {"entity_a": "Chaol", "entity_b": "Dorian Havilliard", "chapters": ["ch03", "ch01"]},
+    ]
+    chapter_summaries = {
+        "ch01": {"chapter_id": "ch01", "summary_bullets": ["Dorian meets Chaol."]},
+    }
+    plot_events = [{"chapter": 5, "participants": ["Dorian Havilliard"], "description": "duel"}]
+
+    bundle = build_entity_bundle(
+        entity,
+        relationships,
+        persons,
+        places,
+        orgs,
+        events,
+        entities_by_name,
+        chapter_summaries=chapter_summaries,
+        plot_events=plot_events,
+    )
+
+    assert bundle["relationships"][0]["revealed_at_chapter"] == 1
+    assert bundle["chapter_summary_context"][0]["revealed_at_chapter"] == 1
+    assert bundle["entity_events"][0]["revealed_at_chapter"] == 5
+
+
 def test_build_entity_bundle_related_context_empty_without_relationships():
     persons, places, orgs, events = _registries()
     entity = {

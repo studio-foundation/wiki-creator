@@ -88,6 +88,21 @@ def test_sectioned_calls_once_per_content_section_and_assembles(monkeypatch):
     assert page["infobox_fields"]["titles"] == "Captain"
 
 
+def test_sectioned_page_carries_content_units(monkeypatch):
+    """STU-491: page output tags each emitted section with its reveal chapter."""
+    entity = _entity(rels=[{"chapters": ["ch03", "ch02"]}])
+    entity["entity_events"] = [{"chapter": 4}]
+    _sectioned(monkeypatch, {})
+    from pathlib import Path
+    page = gwp._run_generation_sectioned(
+        entity=entity, book_title="ToG", model="m", timeout=10,
+        sections=["infobox", "biography", "relationships", "narrative_role", "references"],
+        max_tokens=500, dry_run=False, debug_dir=Path("/tmp"), book_config={})
+    units = {u["section"]: u["revealed_at_chapter"] for u in page["content_units"]}
+    assert units == {"biography": 1, "relationships": 2, "narrative_role": 4}
+    assert "infobox" not in units and "references" not in units
+
+
 def test_sectioned_biography_failure_returns_stub(monkeypatch):
     _sectioned(monkeypatch, {"biography": None})
     from pathlib import Path
