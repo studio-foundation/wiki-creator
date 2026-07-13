@@ -74,6 +74,62 @@ def test_category_tags_org():
     assert "[[Category:Organisations]]" in tags
 
 
+def _labels_with_tomes():
+    return {
+        "persons": "Personnages",
+        "principal": "Personnages principaux",
+        "secondary": "Personnages secondaires",
+        "locations": "Lieux",
+        "organizations": "Organisations",
+        "persons_by_tome": "Personnages du Tome {n}",
+        "locations_by_tome": "Lieux du Tome {n}",
+        "organizations_by_tome": "Organisations du Tome {n}",
+    }
+
+
+def test_category_tags_person_present_in_two_tomes_gets_both_categories():
+    # STU-486 test spec: an entity present in tomes 1 and 2 comes out with
+    # both per-tome categories.
+    tags = category_tags(
+        "PERSON", "principal", _labels_with_tomes(),
+        books=["01-throne-of-glass", "02-crown-of-midnight"],
+    )
+    assert "[[Category:Personnages du Tome 1]]" in tags
+    assert "[[Category:Personnages du Tome 2]]" in tags
+
+
+def test_category_tags_tome_two_only_entity_has_no_tome_one_category():
+    # STU-486 test spec: a tome-2-only entity does not carry the tome 1 category.
+    tags = category_tags(
+        "PERSON", "principal", _labels_with_tomes(), books=["02-crown-of-midnight"]
+    )
+    assert "[[Category:Personnages du Tome 2]]" in tags
+    assert "[[Category:Personnages du Tome 1]]" not in tags
+
+
+def test_category_tags_no_books_omits_tome_categories():
+    tags = category_tags("PERSON", "principal", _labels_with_tomes(), books=[])
+    assert not any("du Tome" in t for t in tags)
+    tags_none = category_tags("PERSON", "principal", _labels_with_tomes(), books=None)
+    assert not any("du Tome" in t for t in tags_none)
+
+
+def test_category_tags_tome_categories_for_place_and_org():
+    labels = _labels_with_tomes()
+    place_tags = category_tags("PLACE", "principal", labels, books=["01-a"])
+    assert "[[Category:Lieux du Tome 1]]" in place_tags
+    org_tags = category_tags("ORG", "principal", labels, books=["01-a"])
+    assert "[[Category:Organisations du Tome 1]]" in org_tags
+
+
+def test_category_tags_missing_tome_label_config_skips_silently():
+    # No <type>_by_tome key configured (older book yaml) -> no crash, no tags.
+    labels = {"persons": "Personnages", "principal": "P", "secondary": "S",
+              "locations": "L", "organizations": "O"}
+    tags = category_tags("PERSON", "principal", labels, books=["01-a"])
+    assert not any("Tome" in t for t in tags)
+
+
 def test_infobox_template_person_contains_name_field():
     content = infobox_template_content("PERSON")
     assert "{{{name}}}" in content

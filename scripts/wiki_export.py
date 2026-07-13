@@ -83,7 +83,9 @@ def render_page(page: dict, labels: dict) -> tuple[str, str]:
         return filename, body
 
     infobox = make_infobox_call(entity_type, page.get("infobox_fields", {}))
-    cats = category_tags(entity_type, page.get("importance", "secondaire"), labels)
+    cats = category_tags(
+        entity_type, page.get("importance", "secondaire"), labels, page.get("books")
+    )
     page_content = infobox + "\n\n" + body
     if cats:
         page_content += "\n\n" + "\n".join(cats)
@@ -127,6 +129,12 @@ def main() -> None:
         "secondary": labels_cfg.get("secondary", "Personnages secondaires"),
         "locations": labels_cfg.get("locations", "Lieux"),
         "organizations": labels_cfg.get("organizations", "Organisations"),
+        # Per-tome categories (STU-486): "{n}" is filled with the tome number.
+        "persons_by_tome": labels_cfg.get("persons_by_tome", "Personnages du Tome {n}"),
+        "locations_by_tome": labels_cfg.get("locations_by_tome", "Lieux du Tome {n}"),
+        "organizations_by_tome": labels_cfg.get(
+            "organizations_by_tome", "Organisations du Tome {n}"
+        ),
     }
 
     # Create directories

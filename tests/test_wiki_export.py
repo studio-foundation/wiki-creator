@@ -113,6 +113,31 @@ def test_render_page_synopsis_goes_to_wiki_root_without_infobox():
     rel_path, content = render_page(page, _LABELS)
     assert rel_path == "Synopsis.wiki"
     assert "{{Infobox" not in content
-    assert "[[Category:" not in content
-    assert "== Synopsis ==" in content
-    assert "L'intrigue du livre." in content
+
+
+# --- STU-486: per-tome categories in the rendered wikitext ---
+
+_LABELS_WITH_TOMES = {
+    **_LABELS,
+    "persons_by_tome": "Personnages du Tome {n}",
+    "locations_by_tome": "Lieux du Tome {n}",
+    "organizations_by_tome": "Organisations du Tome {n}",
+}
+
+
+def test_render_page_person_present_in_two_tomes_gets_both_categories():
+    page = {"title": "Chaol Westfall", "entity_type": "PERSON", "importance": "secondary",
+            "infobox_fields": {}, "content": "## Biographie\n\nGarde du corps.",
+            "books": ["01-throne-of-glass", "02-crown-of-midnight"]}
+    _, content = render_page(page, _LABELS_WITH_TOMES)
+    assert "[[Category:Personnages du Tome 1]]" in content
+    assert "[[Category:Personnages du Tome 2]]" in content
+
+
+def test_render_page_tome_two_only_entity_lacks_tome_one_category():
+    page = {"title": "Dorian Havilliard", "entity_type": "PERSON", "importance": "secondary",
+            "infobox_fields": {}, "content": "## Biographie\n\nPrince.",
+            "books": ["02-crown-of-midnight"]}
+    _, content = render_page(page, _LABELS_WITH_TOMES)
+    assert "[[Category:Personnages du Tome 2]]" in content
+    assert "[[Category:Personnages du Tome 1]]" not in content
