@@ -31,6 +31,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 from wiki_creator.lang import book_language
 from wiki_creator.page_templates import output_language, resolve_template
 from wiki_creator.paths import book_paths_from_yaml
+from wiki_creator.provenance import content_units
 from wiki_creator import studio_io
 from wiki_creator.registry import Registry, normalize_name
 from wiki_creator.synopsis import event_lines
@@ -1085,6 +1086,7 @@ def _run_generation_for_entity(
         _save_generation_debug_artifact(debug_dir, entity, item_result)
         if recovered is not None:
             _record_safety_net("identity_recovery")
+            recovered["content_units"] = content_units(sections, entity)
             _bind_batch_fields(recovered, entity, book_config)
             print(" ⚠ identity-corrected from rejected run", file=sys.stderr, end="", flush=True)
             return recovered
@@ -1135,6 +1137,7 @@ def _run_generation_for_entity(
         print(" ⚠ nom force-corrected", file=sys.stderr, end="", flush=True)
 
     if isinstance(item_result, dict) and "content" in item_result:
+        item_result["content_units"] = content_units(sections, entity)
         _bind_batch_fields(item_result, entity, book_config)
 
     return item_result
@@ -1165,6 +1168,7 @@ def _run_generation_sectioned(
 
     content_sections = [s for s in sections if s not in ("infobox", "references")]
     blocks: list[str] = []
+    emitted: list[str] = []
     for section in content_sections:
         block = _generate_one_section(
             entity=entity, section=section, book_title=book_title, model=model,
@@ -1173,6 +1177,7 @@ def _run_generation_sectioned(
         )
         if block:
             blocks.append(block)
+            emitted.append(section)
         elif section == "biography":
             _save_generation_debug_artifact(debug_dir, entity, {"error": "biography_failed"})
             return make_stub_page(entity, failed=True)
@@ -1191,6 +1196,7 @@ def _run_generation_sectioned(
         "books": list(entity.get("books") or []),
         "infobox_fields": {},
         "content": _assemble_section_blocks(blocks),
+        "content_units": content_units(emitted, entity),
     }
     if entity.get("type") == "PERSON" and _force_correct_identity(
         page, entity, sibling_canonicals
