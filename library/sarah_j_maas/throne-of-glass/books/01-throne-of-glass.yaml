@@ -53,15 +53,19 @@ generation:
   principal:
     sections: [infobox, biography, personality, physical, powers, relationships, trivia, references]
     sections_by_type:
-      PLACE: [infobox, biography, physical, relationships, trivia, references]
+      PLACE: [infobox, biography, physical, events, relationships, trivia, references]
       ORG: [infobox, biography, relationships, references]
       EVENT: [infobox, biography, relationships, references]
     max_tokens_per_page: 2000
   secondary:
     sections: [infobox, biography, relationships, references]
+    sections_by_type:
+      PLACE: [infobox, biography, events, references]
     max_tokens_per_page: 800
   figurant:
     sections: [infobox, biography]
+    sections_by_type:
+      PLACE: [infobox, biography, events]
     max_tokens_per_page: 200
 
 export:

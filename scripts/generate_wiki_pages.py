@@ -30,6 +30,7 @@ from wiki_creator.page_templates import resolve_template
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator import studio_io
 from wiki_creator.registry import Registry, normalize_name
+from wiki_creator.synopsis import event_lines
 
 DEFAULT_NUM_PREDICT = 1024
 
@@ -46,6 +47,7 @@ _SECTION_TITLES = {
     "powers": "Pouvoirs",
     "relationships": "Relations",
     "trivia": "Anecdotes",
+    "events": "Événements",
     "references": "Références",
 }
 _INTERNAL_INFOBOX_KEYS = frozenset({
@@ -197,6 +199,7 @@ SECTION_DEFINITIONS = {
         "Infobox": "Nom, type de lieu, région/pays, statut (actif, ruiné, etc.). Omets les champs inconnus.",
         "Description": "Ce qu'est ce lieu, où il se trouve, à quoi il ressemble d'après les extraits.",
         "Histoire": "Événements passés liés à ce lieu mentionnés dans le texte.",
+        "Événements": "Ce qui se passe à cet endroit — les événements narratifs qui s'y déroulent, ancrés sur le bloc \"Events at this place\" ci-dessus. Ne pas se limiter à la géographie ou à l'architecture.",
         "Habitants et factions": "Groupes ou personnages associés à ce lieu.",
         "Anecdotes": "Détails spécifiques qui ne rentrent pas ailleurs.",
     },
@@ -230,6 +233,24 @@ _SAMPLE_CONTEXT_MAX_CHARS = 200
 # Kept in sync with .studio/agents/relationship-classifier.agent.yaml: the
 # classifier returns this exact string when no key moment could be identified.
 _KEY_MOMENT_SENTINEL = "no specific moment identifiable in provided excerpts"
+
+# SP2 (STU-480): "Lieu narratif" projection over the Event Layer (events.json,
+# SP0) — events_for_entity() in wiki_preparation.py already filters events
+# where the PLACE is in `places` into entity["entity_events"]; this just caps
+# how many feed the prompt to bound its size.
+_MAX_PLACE_EVENTS = 10
+
+
+def _place_events_block(entity: dict) -> str:
+    """Grounding block of events that occur at this PLACE, or "" when the
+    entity isn't a PLACE or has no associated events (SP0 not run, or the
+    place is purely descriptive)."""
+    if entity.get("type") != "PLACE":
+        return ""
+    lines = event_lines((entity.get("entity_events") or [])[:_MAX_PLACE_EVENTS])
+    if not lines:
+        return ""
+    return "## Events at this place\n" + "\n".join(f"  {line}" for line in lines)
 
 
 def _relationship_evidence_lines(rel: dict) -> list[str]:
@@ -373,6 +394,9 @@ def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_n
     )
     chapter_summary_block = present_block + ("\n\n" + backstory_block if backstory_block else "")
 
+    place_events_block = _place_events_block(entity)
+    place_events_section = f"\n\n{place_events_block}" if place_events_block else ""
+
     # --- Paramètres de génération ---
     alias_str = ", ".join(a for a in aliases if a != name) or "none"
 
@@ -426,6 +450,19 @@ def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_n
     else:
         relations_rule = "- Do NOT include a ## Relations section in the content field. No relationships data is available for this entity."
 
+    place_events_rule = ""
+    if etype == "PLACE":
+        if place_events_block:
+            place_events_rule = (
+                '\n- Include a "## Événements" section grounded ONLY in the "Events at this place" block above: '
+                "describe what actually happens here — the events themselves, not just the geography or architecture. "
+                'Do NOT mention chapter numbers ("Chapitre N") in the prose.'
+            )
+        else:
+            place_events_rule = (
+                '\n- Do NOT include a "## Événements" section: no narrative events are available for this place.'
+            )
+
     return f"""This is a fictional world. The following excerpts are the ONLY authoritative source of truth. Ignore any prior knowledge you have of this book, series, or author.
 
 You are writing a wiki page for a fictional novel called "{book_title}".
@@ -453,7 +490,7 @@ Typed relationships (use these directly for the ## Relations section):
 {relationships_block if relationships_block else "  (no typed relationships available)"}{indirect_section}
 
 Chapter summaries (orientation context — lower priority than excerpts):
-{chapter_summary_block}
+{chapter_summary_block}{place_events_section}
 
 ---
 
@@ -474,7 +511,7 @@ Content constraints:
 - Do NOT invent plot details, relationships, abilities, or physical traits not supported by excerpts.
 - Do NOT turn cooccurrence between entities into narrative causality.
 - Confidence markers: each relationship carries a "confidence" tag. State "explicit" relationships as fact (direct affirmation). Phrase "inferred" and "interpretation" relationships tentatively ("semble", "suggère", "pourrait indiquer") — never as established fact. Indirect relationships listed as "inferred: true" are interpretation: mention them only with such hedged phrasing, if at all.
-- When referring to related entities or characters, use their name EXACTLY as written in the excerpts or relationships list — do not paraphrase, alter, or approximate names.
+- When referring to related entities or characters, use their name EXACTLY as written in the excerpts or relationships list — do not paraphrase, alter, or approximate names.{place_events_rule}
 - If information is insufficient for a section, omit that section entirely.
 - Do NOT write "information not available", "not mentioned in excerpts", or any similar phrase. Omit instead.
 - Omit infobox fields entirely if their value is unknown.
