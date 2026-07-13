@@ -19,3 +19,30 @@ def _parse_chapter(text: str) -> int | None:
         return None
     m = _CHAPTER_RE.match(text)
     return int(m.group(1)) if m else None
+
+
+def _resolve(name: str, registry: "Registry | None") -> str:
+    """Canonical name for a surface via the registry, or the input unchanged."""
+    if registry is None:
+        return name
+    record = registry.lookup(name)
+    return record.canonical_name if record is not None else name
+
+
+def _names_in(text: str, registry: "Registry | None", entity_type: str) -> list[str]:
+    """Canonical names of the given `entity_type` whose surface appears as a whole word in `text`.
+
+    Returns empty list when no registry.
+    """
+    if registry is None or not text:
+        return []
+    low = text.casefold()
+    found: set[str] = set()
+    for record in registry.entities:
+        if record.entity_type != entity_type:
+            continue
+        for alias in record.aliases:
+            if re.search(rf"\b{re.escape(alias.casefold())}\b", low):
+                found.add(record.canonical_name)
+                break
+    return sorted(found)
