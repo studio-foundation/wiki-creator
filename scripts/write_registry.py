@@ -54,6 +54,10 @@ def main() -> None:
         sys.exit(1)
 
     paths = book_paths_from_epub(file_path)
+    # Provenance stamp (STU-484): the book slug derived by book_paths_from_epub
+    # (== processing dir name). Every mention/record in this book's registry
+    # carries it, aligning identity provenance with the series graph's `books`.
+    book_id = paths.processing.name
 
     # Read the classified entity set so the registry is identical whether the run
     # is live (stage output in memory) or resumed (entities_classified.json on
@@ -68,7 +72,7 @@ def main() -> None:
     for name in FULL_REGISTRY_FILES:
         full_registries.update(_load_json(paths.processing / name))
 
-    registry = Registry.from_artifacts(splits, alias_output, full_registries)
+    registry = Registry.from_artifacts(splits, alias_output, full_registries, book_id)
     output_path = paths.processing / "registry.json"
     registry.save(output_path)
 
