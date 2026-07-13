@@ -37,3 +37,17 @@ def test_names_in_matches_whole_words_by_type():
     assert _names_in(text, reg, "PLACE") == ["Rifthold"]
     assert _names_in("nothing here", reg, "PERSON") == []
     assert _names_in(text, None, "PERSON") == []
+
+
+def test_salience_action_cue_and_position():
+    from wiki_creator.event_layer import _salience
+
+    cues = ["couronna", "vainquit", "tua"]
+    # action cue + last chapter → high
+    assert _salience("Celaena vainquit Cain", 12, 12, cues) == 1.0
+    # action cue, early chapter → 0.5 + small position term
+    assert _salience("Celaena vainquit Cain", 1, 12, cues) < 0.6
+    # no cue, mid book → only the position term
+    assert _salience("Celaena walks the corridor", 6, 12, cues) < 0.3
+    # no cue, no chapters info → 0.0
+    assert _salience("something", 0, 0, cues) == 0.0

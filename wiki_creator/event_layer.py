@@ -46,3 +46,23 @@ def _names_in(text: str, registry: "Registry | None", entity_type: str) -> list[
                 found.add(record.canonical_name)
                 break
     return sorted(found)
+
+
+def _has_action_cue(description: str, action_cues: list[str]) -> bool:
+    """Check if description contains a whole-word match of any action cue (case-insensitive)."""
+    low = description.casefold()
+    return any(re.search(rf"\b{re.escape(c.casefold())}\b", low) for c in action_cues)
+
+
+def _salience(description: str, chapter: int, total_chapters: int,
+              action_cues: list[str]) -> float:
+    """Score a beat by action-cue presence and chapter position (climax bias).
+
+    Returns a score in [0.0, 1.0]:
+    - 0.5 for an action-cue hit
+    - Up to 0.5 scaled by chapter position (climax bias)
+    """
+    score = 0.5 if _has_action_cue(description, action_cues) else 0.0
+    if total_chapters > 0 and chapter > 0:
+        score += 0.5 * (chapter / total_chapters)
+    return round(min(score, 1.0), 3)
