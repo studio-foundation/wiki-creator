@@ -634,3 +634,78 @@ def test_normalize_name_matches_legacy_grounding_and_validator_semantics():
     assert normalize_name("Martín") == "martin"
     assert normalize_name("BARCELONE") == "barcelone"
     assert normalize_name("  Vidal  ") == "vidal"
+
+
+# --- Provenance par livre (STU-484: book_id / books / first_book) ---
+
+
+def test_mention_book_id_defaults_to_none():
+    assert Mention(surface="Perrington", chapter_id="ch02").book_id is None
+
+
+def test_entity_record_provenance_defaults_empty():
+    r = EntityRecord(entity_id="perrington", canonical_name="Perrington", entity_type="PERSON")
+    assert r.books == [] and r.first_book is None
+
+
+def test_from_artifacts_without_book_id_leaves_provenance_empty():
+    splits, alias_output, persons_full = _run16_artifacts()
+    registry = Registry.from_artifacts(splits, alias_output, persons_full)
+    for record in registry.entities:
+        assert record.books == []
+        assert record.first_book is None
+        assert all(m.book_id is None for m in record.mentions)
+
+
+def test_from_artifacts_stamps_book_id_on_mentions_and_records():
+    splits, alias_output, persons_full = _run16_artifacts()
+    registry = Registry.from_artifacts(splits, alias_output, persons_full, book_id="01-book")
+    assert registry.entities  # sanity
+    for record in registry.entities:
+        assert record.books == ["01-book"]
+        assert record.first_book == "01-book"
+        assert record.mentions  # each Run 16 entity has at least one mention
+        assert all(m.book_id == "01-book" for m in record.mentions)
+
+
+def test_provenance_round_trips_through_save_load(tmp_path):
+    splits, alias_output, persons_full = _run16_artifacts()
+    registry = Registry.from_artifacts(splits, alias_output, persons_full, book_id="01-book")
+    path = tmp_path / "registry.json"
+    registry.save(path)
+
+    raw = __import__("json").loads(path.read_text(encoding="utf-8"))
+    perrington = [e for e in raw["entities"] if e["entity_id"] == "perrington"][0]
+    assert perrington["books"] == ["01-book"]
+    assert perrington["first_book"] == "01-book"
+    assert perrington["mentions"][0]["book_id"] == "01-book"
+
+    loaded = Registry.load(path)
+    assert loaded.to_dict() == registry.to_dict()
+    loaded_perrington = loaded.lookup("Perrington")
+    assert loaded_perrington.books == ["01-book"]
+    assert loaded_perrington.first_book == "01-book"
+    assert all(m.book_id == "01-book" for m in loaded_perrington.mentions)
+
+
+def test_from_dict_tolerates_missing_provenance_keys():
+    """Registries written before STU-484 carry no books/first_book/book_id."""
+    legacy = {
+        "version": 1,
+        "entities": [
+            {
+                "entity_id": "perrington",
+                "canonical_name": "Perrington",
+                "entity_type": "PERSON",
+                "aliases": ["Perrington"],
+                "mentions": [{"surface": "Perrington", "chapter_id": "ch02"}],
+                "decisions": [],
+            }
+        ],
+        "decisions": [],
+        "warnings": [],
+    }
+    registry = Registry.from_dict(legacy)
+    record = registry.entities[0]
+    assert record.books == [] and record.first_book is None
+    assert record.mentions[0].book_id is None

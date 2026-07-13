@@ -161,6 +161,29 @@ def test_live_and_resume_paths_agree_on_entity_type(tmp_path):
     assert live_registry == resume_registry
 
 
+def test_write_registry_stamps_book_id_provenance(tmp_path):
+    """STU-484: every mention/record carries book_id derived from the book slug."""
+    epub, processing = _book_tree(tmp_path)
+    splits, alias_output, persons_full = _artifacts()
+    (processing / "splits.json").write_text(json.dumps(splits), encoding="utf-8")
+    (processing / "persons_full.json").write_text(json.dumps(persons_full), encoding="utf-8")
+
+    result = _run(
+        {
+            "additional_context": f"file_path: {epub}\n",
+            "previous_outputs": {"entity-classification": alias_output},
+        }
+    )
+    assert result.returncode == 0, result.stderr
+
+    saved = json.loads((processing / "registry.json").read_text(encoding="utf-8"))
+    for entity in saved["entities"]:
+        assert entity["books"] == ["01-book"]
+        assert entity["first_book"] == "01-book"
+        for mention in entity["mentions"]:
+            assert mention["book_id"] == "01-book"
+
+
 def test_write_registry_fails_without_file_path():
     result = _run({"additional_context": "", "previous_outputs": {}})
     assert result.returncode == 1
