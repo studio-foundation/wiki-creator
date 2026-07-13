@@ -9,7 +9,11 @@
     "Mira Vale"
    ],
    "mentions": [],
-   "decisions": []
+   "decisions": [],
+   "books": [
+    "smoke-novella"
+   ],
+   "first_book": "smoke-novella"
   },
   {
    "entity_id": "heron",
@@ -19,7 +23,11 @@
     "Heron"
    ],
    "mentions": [],
-   "decisions": []
+   "decisions": [],
+   "books": [
+    "smoke-novella"
+   ],
+   "first_book": "smoke-novella"
   },
   {
    "entity_id": "port_saffron",
@@ -29,7 +37,11 @@
     "Port Saffron"
    ],
    "mentions": [],
-   "decisions": []
+   "decisions": [],
+   "books": [
+    "smoke-novella"
+   ],
+   "first_book": "smoke-novella"
   },
   {
    "entity_id": "salt_guild",
@@ -39,7 +51,11 @@
     "Salt Guild"
    ],
    "mentions": [],
-   "decisions": []
+   "decisions": [],
+   "books": [
+    "smoke-novella"
+   ],
+   "first_book": "smoke-novella"
   },
   {
    "entity_id": "warehouse_nine",
@@ -52,7 +68,11 @@
    "mentions": [],
    "decisions": [
     "d_b42f1c4f77e7"
-   ]
+   ],
+   "books": [
+    "smoke-novella"
+   ],
+   "first_book": "smoke-novella"
   },
   {
    "entity_id": "captain_elias_thorn",
@@ -65,7 +85,11 @@
    "mentions": [],
    "decisions": [
     "d_fc8e9b34d89b"
-   ]
+   ],
+   "books": [
+    "smoke-novella"
+   ],
+   "first_book": "smoke-novella"
   }
  ],
  "decisions": [
