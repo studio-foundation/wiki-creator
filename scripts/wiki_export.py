@@ -71,6 +71,30 @@ def _filter_exportable_pages(pages: list[dict]) -> list[dict]:
     return exportable
 
 
+def render_page(page: dict, labels: dict) -> tuple[str, str]:
+    """(path relative to the wiki dir, wikitext content) for one page.
+
+    Entity pages keep the infobox + body + categories layout in their type
+    subdir. SYNOPSIS pages (SP4, STU-482) render at the wiki root, body only —
+    no infobox, no categories.
+    """
+    title = page["title"]
+    entity_type = page.get("entity_type", "PERSON")
+    body = convert(page.get("content", ""))
+    filename = page_filename(title) + ".wiki"
+
+    if entity_type == "SYNOPSIS":
+        return filename, body
+
+    infobox = make_infobox_call(entity_type, page.get("infobox_fields", {}))
+    cats = category_tags(entity_type, page.get("importance", "secondaire"), labels)
+    page_content = infobox + "\n\n" + body
+    if cats:
+        page_content += "\n\n" + "\n".join(cats)
+    subdir = _SUBDIR.get(entity_type, "characters")
+    return f"{subdir}/{filename}", page_content
+
+
 def main() -> None:
     payload = studio_io.read_payload()
     input_cfg = yaml.safe_load(payload["additional_context"])
@@ -126,25 +150,10 @@ def main() -> None:
         path.write_text(infobox_template_content(entity_type), encoding="utf-8")
         files_written += 1
 
-    # Write entity pages
+    # Write entity pages (and the synopsis page at the wiki root, if present)
     for page in pages:
-        title = page["title"]
-        entity_type = page.get("entity_type", "PERSON")
-        importance = page.get("importance", "secondaire")
-        infobox_fields = page.get("infobox_fields", {})
-        content_md = page.get("content", "")
-
-        infobox = make_infobox_call(entity_type, infobox_fields)
-        body = convert(content_md)
-        cats = category_tags(entity_type, importance, labels)
-
-        page_content = infobox + "\n\n" + body
-        if cats:
-            page_content += "\n\n" + "\n".join(cats)
-
-        subdir = _SUBDIR.get(entity_type, "characters")
-        filename = page_filename(title) + ".wiki"
-        path = wiki_dir / subdir / filename
+        rel_path, page_content = render_page(page, labels)
+        path = wiki_dir / rel_path
         path.write_text(page_content, encoding="utf-8")
         files_written += 1
 

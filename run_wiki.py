@@ -88,6 +88,7 @@ PRE_STEPS: dict[str, list[list[str]]] = {
     ],
     "wiki-generation": [
         ["python", "scripts/generate_wiki_pages.py", "--book"],
+        ["python", "scripts/generate_book_synopsis.py", "--book"],
     ],
 }
 

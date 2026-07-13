@@ -50,3 +50,16 @@ def test_pre_steps_wiki_preparation_runs_classify_before_events() -> None:
     assert classify_idx < events_idx, (
         "classify_relationships.py must run before build_event_layer.py in PRE_STEPS['wiki-preparation']"
     )
+
+
+def test_pre_steps_wiki_generation_runs_pages_before_synopsis() -> None:
+    """The synopsis (SP4) is generated in the same pre-step batch as the entity
+    pages, after generate_wiki_pages.py."""
+    from run_wiki import PRE_STEPS
+    cmds = PRE_STEPS["wiki-generation"]
+    joined = [" ".join(cmd) for cmd in cmds]
+    pages_idx = next(i for i, c in enumerate(joined) if "generate_wiki_pages.py" in c)
+    synopsis_idx = next(i for i, c in enumerate(joined) if "generate_book_synopsis.py" in c)
+    assert pages_idx < synopsis_idx, (
+        "generate_wiki_pages.py must run before generate_book_synopsis.py in PRE_STEPS['wiki-generation']"
+    )

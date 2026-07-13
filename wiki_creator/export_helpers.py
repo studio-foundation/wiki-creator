@@ -97,6 +97,7 @@ def main_page_content(book_title: str, author: str, pages: list[dict], labels: d
     persons = [p for p in pages if p["entity_type"] == "PERSON"]
     places = [p for p in pages if p["entity_type"] == "PLACE"]
     orgs = [p for p in pages if p["entity_type"] == "ORG"]
+    synopsis = next((p for p in pages if p.get("entity_type") == "SYNOPSIS"), None)
 
     principals = [p for p in persons if p["importance"] == "principal"][:8]
     major_places = [p for p in places if p["importance"] == "principal"][:5]
@@ -109,6 +110,14 @@ def main_page_content(book_title: str, author: str, pages: list[dict], labels: d
         f"= {book_title} =",
         f"''{author}''",
         "",
+    ]
+    if synopsis is not None:
+        lines += [
+            "== Synopsis ==",
+            f"* [[{synopsis['title']}|Synopsis du livre]]",
+            "",
+        ]
+    lines += [
         "== Personnages principaux ==",
     ]
     for p in principals:

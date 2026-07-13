@@ -42,3 +42,43 @@ def test_filter_failed_pages_all_failed():
 
 def test_filter_failed_pages_empty():
     assert _filter_failed_pages([]) == []
+
+
+# --- SP4 synopsis page (STU-482) ---
+
+import json
+
+from scripts.load_wiki_pages import _load_synopsis_page
+
+
+def _synopsis_page(**extra):
+    page = {"title": "Synopsis", "entity_type": "SYNOPSIS", "importance": "principal",
+            "infobox_fields": {}, "content": "## Synopsis\n\nL'intrigue."}
+    page.update(extra)
+    return page
+
+
+def test_load_synopsis_page_reads_artifact(tmp_path):
+    (tmp_path / "book_synopsis.json").write_text(
+        json.dumps({"page": _synopsis_page()}), encoding="utf-8"
+    )
+    page = _load_synopsis_page(tmp_path)
+    assert page is not None
+    assert page["title"] == "Synopsis"
+    assert page["entity_type"] == "SYNOPSIS"
+
+
+def test_load_synopsis_page_absent(tmp_path):
+    assert _load_synopsis_page(tmp_path) is None
+
+
+def test_load_synopsis_page_skips_failed(tmp_path):
+    (tmp_path / "book_synopsis.json").write_text(
+        json.dumps({"page": _synopsis_page(_failed=True)}), encoding="utf-8"
+    )
+    assert _load_synopsis_page(tmp_path) is None
+
+
+def test_load_synopsis_page_tolerates_bad_json(tmp_path):
+    (tmp_path / "book_synopsis.json").write_text("{not json", encoding="utf-8")
+    assert _load_synopsis_page(tmp_path) is None

@@ -774,6 +774,13 @@ def _run_wiki_page_item(
         file_path=file_path,
         grounding=grounding,
     )
+    return _execute_wiki_page_item(item_input, entity, timeout)
+
+
+def _execute_wiki_page_item(item_input: dict, entity: dict, timeout: int) -> dict:
+    """Run one wiki-page-item pipeline over a prebuilt item input and parse the
+    resulting page. Shared by entity pages (via _run_wiki_page_item) and the
+    book synopsis (scripts/generate_book_synopsis.py, SP4)."""
     timeout_seconds = max(timeout * 4, 120)
 
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".yaml", delete=False) as tmp:
