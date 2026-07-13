@@ -51,3 +51,40 @@ def test_salience_action_cue_and_position():
     assert _salience("Celaena walks the corridor", 6, 12, cues) < 0.3
     # no cue, no chapters info → 0.0
     assert _salience("something", 0, 0, cues) == 0.0
+
+
+from wiki_creator.event_layer import build_events
+
+
+def test_build_events_from_summaries_and_key_moments():
+    reg = _registry(CELAENA, CAIN, RIFTHOLD)
+    summaries = {
+        "Chapter 12": {
+            "chapter_id": "C12.xhtml",
+            "chapter_title": "Chapter 12",
+            "summary_bullets": ["Celaena vainquit Cain at Rifthold"],
+        },
+    }
+    relationships = [
+        {"entity_a": "Celaena", "entity_b": "Cain",
+         "key_moments": ["Ch12: Celaena vainquit Cain at Rifthold"]},
+    ]
+    events = build_events(summaries, relationships, reg, action_cues=["vainquit"])
+
+    # same chapter + identical description → one merged event
+    assert len(events) == 1
+    e = events[0]
+    assert e["chapter"] == 12
+    assert e["participants"] == ["Cain", "Celaena Sardothien"]
+    assert e["places"] == ["Rifthold"]
+    assert e["outcome"] == "Celaena vainquit Cain at Rifthold"  # has action cue
+    assert e["salience"] == 1.0
+    assert len(e["source_bullets"]) == 2  # both sources merged
+    assert e["event_id"] == "e_ch12_0"
+
+
+def test_build_events_skips_beats_without_chapter():
+    reg = _registry(CELAENA)
+    relationships = [{"entity_a": "Celaena", "entity_b": "Cain",
+                      "key_moments": ["no chapter marker here"]}]
+    assert build_events({}, relationships, reg, action_cues=[]) == []

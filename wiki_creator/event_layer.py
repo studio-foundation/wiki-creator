@@ -66,3 +66,84 @@ def _salience(description: str, chapter: int, total_chapters: int,
     if total_chapters > 0 and chapter > 0:
         score += 0.5 * (chapter / total_chapters)
     return round(min(score, 1.0), 3)
+
+
+def _strip_marker(text: str) -> str:
+    """Remove a leading 'Ch12:' / 'Chapter 12:' marker, return the description."""
+    return _CHAPTER_RE.sub("", text).lstrip(" :—-").strip()
+
+
+def build_events(
+    chapter_summaries: dict,
+    relationships: list[dict],
+    registry: "Registry | None",
+    action_cues: list[str],
+) -> list[dict]:
+    """Assemble chapter-summary bullets + relationship key-moments into
+    deduplicated, scored events, sorted by (chapter, event_id).
+    """
+    total_chapters = len(chapter_summaries) if chapter_summaries else 0
+
+    # (chapter, normalized_description) -> aggregate
+    agg: dict[tuple[int, str], dict] = {}
+
+    def add_beat(chapter: int, raw: str, description: str, seed: list[str]) -> None:
+        key = (chapter, description.casefold())
+        entry = agg.get(key)
+        if entry is None:
+            entry = {
+                "chapter": chapter,
+                "description": description,
+                "participants": set(),
+                "places": set(),
+                "source_bullets": [],
+            }
+            agg[key] = entry
+        entry["source_bullets"].append(raw)
+        for name in seed:
+            entry["participants"].add(_resolve(name, registry))
+        for name in _names_in(description, registry, "PERSON"):
+            entry["participants"].add(name)
+        for name in _names_in(description, registry, "PLACE"):
+            entry["places"].add(name)
+
+    # Source 1: relationship key_moments
+    for rel in relationships:
+        seed = [str(rel.get("entity_a", "")), str(rel.get("entity_b", ""))]
+        seed = [s for s in seed if s]
+        for km in rel.get("key_moments") or []:
+            chapter = _parse_chapter(km)
+            if chapter is None:
+                continue
+            add_beat(chapter, km, _strip_marker(km), seed)
+
+    # Source 2: chapter summary bullets
+    for key, summary in (chapter_summaries or {}).items():
+        chapter = _parse_chapter(str(summary.get("chapter_title") or key)) \
+            or _parse_chapter(str(summary.get("chapter_id") or ""))
+        if chapter is None:
+            continue
+        for bullet in summary.get("summary_bullets") or []:
+            add_beat(chapter, bullet, bullet.strip(), [])
+
+    # Materialize, score, id, sort
+    events: list[dict] = []
+    for (chapter, _norm), entry in agg.items():
+        description = entry["description"]
+        events.append({
+            "chapter": chapter,
+            "description": description,
+            "participants": sorted(entry["participants"]),
+            "places": sorted(entry["places"]),
+            "outcome": description if _has_action_cue(description, action_cues) else None,
+            "salience": _salience(description, chapter, total_chapters, action_cues),
+            "source_bullets": entry["source_bullets"],
+        })
+
+    events.sort(key=lambda e: (e["chapter"], e["description"].casefold()))
+    by_chapter: dict[int, int] = {}
+    for e in events:
+        idx = by_chapter.get(e["chapter"], 0)
+        e["event_id"] = f"e_ch{e['chapter']}_{idx}"
+        by_chapter[e["chapter"]] = idx + 1
+    return events
