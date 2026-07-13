@@ -30,6 +30,15 @@ from scripts.relationship_extraction import (
 )
 
 
+# Fields the LLM classifier is allowed to contribute to a relationship dict
+# (relationship-classifier-item.contract.yaml required_fields ∩ Relationship).
+# Everything else the freeform LLM JSON might carry (reasoning, notes, …) is
+# dropped so {**pair, **classification} can only produce a valid Relationship.
+_KNOWN_CLASSIFICATION_KEYS = frozenset(
+    {"relationship_type", "direction", "evolution", "key_moments", "evidence"}
+)
+
+
 def _load_done_keys(output_path: Path) -> tuple[set[tuple[str, str]], list[dict]]:
     """Load already-classified pairs from output file. Returns (done_keys, pairs).
 
@@ -157,6 +166,10 @@ def main() -> None:
                     additional_context="",
                 )
                 if classification and not classification.get("error"):
+                    classification = {
+                        k: v for k, v in classification.items()
+                        if k in _KNOWN_CLASSIFICATION_KEYS
+                    }
                     result = {**pair, **classification}
                 else:
                     print(
