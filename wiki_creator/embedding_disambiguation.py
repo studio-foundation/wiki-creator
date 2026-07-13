@@ -66,7 +66,9 @@ class EmbeddingJudge:
             start = len(flat)
             flat.extend(contexts)
             spans[key] = (start, len(flat))
-        vecs = self.backend.encode(flat) if flat else None
+        if not flat:
+            return {key: None for key in contexts_by_key}
+        vecs = self.backend.encode(flat)
         out: dict = {}
         for key, (start, end) in spans.items():
             out[key] = None if end == start else _mean_pool_normalize(vecs[start:end])
