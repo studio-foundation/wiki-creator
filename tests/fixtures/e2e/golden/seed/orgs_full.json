@@ -1,0 +1,23 @@
+{
+ "orgs_full": {
+  "entity_006": {
+   "type": "ORG",
+   "raw_mentions": [
+    "Salt Guild"
+   ],
+   "first_seen": "chapter_0",
+   "mentions_by_chapter": {
+    "chapter_0": [
+     "Elias Thorn nodded. The Salt Guild controlled every pier along that shore, and its fees had doubled since spring. \"They will bleed us dry,\" Elias Thorn said."
+    ],
+    "chapter_1": [
+     "The Granite Hall The Salt Guild kept its offices in a granite hall above the fish market of Port Saffron. Mira Vale waited on a bench while the clerks argued behind tall doors."
+    ],
+    "chapter_3": [
+     "Captain Elias Thorn held the wheel while Mira Vale watched the lights shrink behind them, the recovered cargo lashed tight below. The Salt Guild would write its angry letters to every port on the coast. Mira Vale looked north and said nothing."
+    ]
+   },
+   "mention_count": 3
+  }
+ }
+}
