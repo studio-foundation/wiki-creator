@@ -1,4 +1,4 @@
-.PHONY: run run-extraction run-resolution run-preparation run-generation pages-export run-all \
+.PHONY: run run-coref run-extraction run-resolution run-preparation run-generation pages-export run-all \
         test-extraction test-clustering test-relationships classify-relationships classify-relationships-dry \
         test test-coref test-coref-parallel \
         clean
@@ -12,6 +12,14 @@ CLEAN ?=--clean
 # Full run via orchestrator
 run:
 	python run_wiki.py --book $(BOOK)
+
+# Relationship extraction with coreference on real book data.
+# device auto-detects CUDA (STU-466); on GPU workers is forced to 1.
+# Override device with: make run-coref COREF_DEVICE=cpu
+COREF_DEVICE ?=
+run-coref: test-extraction
+	python scripts/relationship_extraction.py --live --book $(BOOK) --coref \
+		$(if $(COREF_DEVICE),--coref-device $(COREF_DEVICE),)
 
 run-angel-game:
 	python run_wiki.py --book library/carlos-ruiz-zafon/el-cementerio-de-los-libros-olvidados/books/02-le-jeu-de-lange.yaml
