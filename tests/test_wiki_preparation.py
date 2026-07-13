@@ -5,6 +5,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 from scripts.wiki_preparation import (
     _IMPORTANCE_NORMALIZE,
     build_chapter_summary_context,
@@ -12,9 +14,11 @@ from scripts.wiki_preparation import (
     events_for_entity,
     extract_context,
     filter_relationships,
+    read_plot_events,
     stage_outputs_from_payload,
     write_batches,
 )
+from wiki_creator import studio_io
 from wiki_creator.types import EntityFull
 
 
@@ -922,3 +926,22 @@ def test_entity_events_filtered_by_canonical_name():
     assert [e["event_id"] for e in got] == ["e_ch12_0"]
     got_place = events_for_entity("Rifthold", events)
     assert [e["event_id"] for e in got_place] == ["e_ch12_0"]
+
+
+def test_read_plot_events_absent_warns_and_skips(tmp_path):
+    """STU-447: absent events.json degrades to [] (warn-and-skip), no raise."""
+    assert read_plot_events(tmp_path / "events.json") == []
+
+
+def test_read_plot_events_rejects_schema_drift(tmp_path):
+    """STU-447: an unknown key on an events.json event propagates ArtifactSchemaError."""
+    path = tmp_path / "events.json"
+    path.write_text(json.dumps({
+        "events": [
+            {"event_id": "e_ch1_0", "chapter": 1, "description": "freed",
+             "participants": [], "places": [], "outcome": None, "salience": 0.1,
+             "source_bullets": [], "surprise": "unexpected"}
+        ]
+    }), encoding="utf-8")
+    with pytest.raises(studio_io.ArtifactSchemaError):
+        read_plot_events(path)

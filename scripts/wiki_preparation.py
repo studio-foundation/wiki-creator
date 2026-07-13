@@ -324,6 +324,25 @@ def build_chapter_summary_context(
     return result
 
 
+def read_plot_events(path: Path) -> list[dict]:
+    """Validated events from events.json for the entity-events projection.
+
+    Absent or unreadable file degrades to ``[]`` (warn-and-skip); a
+    schema-drift key propagates ``ArtifactSchemaError``.
+    """
+    if not path.exists():
+        print("wiki-preparation: events.json not found — entity_events will be empty", file=sys.stderr)
+        return []
+    try:
+        bundle = studio_io.load_artifact(path, EventBundle)
+    except (OSError, json.JSONDecodeError):
+        print("wiki-preparation: events.json could not be read — entity_events will be empty", file=sys.stderr)
+        return []
+    # dict-only boundary: events_for_entity/build_entity_bundle (pure,
+    # unchanged) consume plain event dicts — validated on load above.
+    return studio_io.to_dict(bundle.events)
+
+
 def events_for_entity(canonical_name: str, events: list[dict]) -> list[dict]:
     """Events where the entity participates or that occur at the entity (PLACE),
     sorted by chapter. The channel Plot Spine projections (SP1-SP4) consume."""
@@ -581,17 +600,7 @@ def main() -> None:
         except (OSError, json.JSONDecodeError, KeyError):
             pass
 
-    _events_path = paths.processing / "events.json"
-    plot_events: list[dict] = []
-    if _events_path.exists():
-        try:
-            # dict-only boundary: events_for_entity/build_entity_bundle (pure,
-            # unchanged) consume plain event dicts — validated on load above.
-            plot_events = studio_io.to_dict(studio_io.load_artifact(_events_path, EventBundle).events)
-        except (OSError, json.JSONDecodeError):
-            print("wiki-preparation: events.json could not be read — entity_events will be empty", file=sys.stderr)
-    else:
-        print("wiki-preparation: events.json not found — entity_events will be empty", file=sys.stderr)
+    plot_events = read_plot_events(paths.processing / "events.json")
 
     entity_bundles = [
         build_entity_bundle(
