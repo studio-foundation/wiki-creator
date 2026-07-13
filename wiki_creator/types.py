@@ -1,6 +1,10 @@
 from dataclasses import dataclass, field
 from typing import Literal
 
+ENTITY_TYPE = Literal["PERSON", "PLACE", "ORG", "EVENT", "OTHER"]
+IMPORTANCE = Literal["principal", "secondary", "figurant", "ignored"]
+TEMPORAL = Literal["present", "flashback", "unknown"]
+
 
 @dataclass
 class EpubChapter:
@@ -17,49 +21,134 @@ class ParsedBook:
 
 
 @dataclass
-class ExtractedEntity:
-    name: str
-    type: Literal["PERSON", "PLACE", "ORG", "EVENT", "OTHER"]
-    mentions: int
-    context: list[str] = field(default_factory=list)
+class MentionSpan:
+    surface: str
+    start: int
+    end: int
 
 
 @dataclass
-class ResolvedEntity(ExtractedEntity):
-    canonical_name: str = ""
-    aliases: list[str] = field(default_factory=list)
-
-
-@dataclass
-class WikiPageDraft:
-    title: str
-    content: str
-    entity: ResolvedEntity
-
-
-@dataclass
-class EntityRegistryEntry:
+class EntityFull:
+    type: ENTITY_TYPE
     raw_mentions: list[str]
-    type: Literal["PERSON", "PLACE", "ORG", "EVENT", "OTHER"]
     first_seen: str
-    mentions_by_chapter: dict[str, list[str]]
+    mention_count: int
+    mentions_by_chapter: dict = field(default_factory=dict)
+    mention_spans_by_chapter: dict = field(default_factory=dict)
 
 
 @dataclass
-class EntityRegistry:
-    entities: dict[str, EntityRegistryEntry]
+class SplitSingle:
+    canonical_name: str
+    type: ENTITY_TYPE
+    aliases: list[str] = field(default_factory=list)
+    source_ids: list[str] = field(default_factory=list)
+    relevant: bool = True
 
 
 @dataclass
-class ExtractedRelationship:
+class SplitCluster:
+    type: ENTITY_TYPE
+    canonical_candidate: str
+    entity_ids: list[str] = field(default_factory=list)
+    all_mentions: list[str] = field(default_factory=list)
+    entity_count: int = 0
+
+
+@dataclass
+class Splits:
+    singles_resolved: list[SplitSingle] = field(default_factory=list)
+    PERSON: list[SplitCluster] = field(default_factory=list)
+    PLACE: list[SplitCluster] = field(default_factory=list)
+    ORG: list[SplitCluster] = field(default_factory=list)
+    EVENT: list[SplitCluster] = field(default_factory=list)
+    OTHER: list[SplitCluster] = field(default_factory=list)
+    stats: dict = field(default_factory=dict)
+    pov_detection: dict | None = None
+
+
+@dataclass
+class ClassifiedEntity:
+    canonical_name: str
+    type: ENTITY_TYPE
+    total_mentions: int
+    chapters_present: int
+    importance: IMPORTANCE
+    source_ids: list[str] = field(default_factory=list)
+    aliases: list[str] = field(default_factory=list)
+    relevant: bool = True
+
+
+@dataclass
+class Relationship:
     entity_a: str
     entity_b: str
     cooccurrence_count: int
     chapters: list[str] = field(default_factory=list)
     sample_contexts: list[str] = field(default_factory=list)
-    # LLM-filled fields (None if --classify not used)
     relationship_type: str | None = None
     direction: str | None = None
     evolution: str | None = None
     evidence: str | None = None
     key_moments: list[str] = field(default_factory=list)
+
+
+@dataclass
+class ClassifiedBundle:
+    entities: list[ClassifiedEntity] = field(default_factory=list)
+    relationships: list[Relationship] = field(default_factory=list)
+    stats: dict = field(default_factory=dict)
+    narrator: str | None = None
+
+
+@dataclass
+class RelationshipBundle:
+    entities: list[ClassifiedEntity] = field(default_factory=list)
+    relationships: list[Relationship] = field(default_factory=list)
+    stats: dict = field(default_factory=dict)
+    narrator: str | None = None
+
+
+@dataclass
+class ChapterSummary:
+    chapter_id: str
+    chapter_title: str
+    summary_bullets: list[str] = field(default_factory=list)
+    summary_method: str = ""
+    quality_flags: list = field(default_factory=list)
+    temporal_context: TEMPORAL = "present"
+    flashback_anchor: str | None = None
+    pov: str = "unknown"
+    pov_confidence: str = "unknown"
+    pov_character: str | None = None
+    pov_character_confidence: str = "low"
+    pov_character_source: str = "none"
+
+
+@dataclass
+class WikiPage:
+    title: str
+    importance: str
+    entity_type: str
+    books: list[str] = field(default_factory=list)
+    infobox_fields: dict = field(default_factory=dict)
+    content: str = ""
+    _failed: bool | None = None
+    _insufficient_data: bool | None = None
+
+
+@dataclass
+class Event:
+    chapter: int
+    description: str
+    event_id: str
+    participants: list[str] = field(default_factory=list)
+    places: list[str] = field(default_factory=list)
+    outcome: str | None = None
+    salience: float = 0.0
+    source_bullets: list[str] = field(default_factory=list)
+
+
+@dataclass
+class EventBundle:
+    events: list[Event] = field(default_factory=list)
