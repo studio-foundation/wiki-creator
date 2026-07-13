@@ -42,11 +42,52 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 from wiki_creator import studio_io
 from wiki_creator.lang import load_lang_config, infer_language
+from wiki_creator.registry import normalize_name as _normalize_name
 
 _VALID_TYPES = {"PERSON", "PLACE", "ORG", "EVENT", "OTHER"}
 
 
 # --- Pure functions (testable) ---
+
+def _surface_key(text: str) -> str:
+    """Normalized comparison key for a surface form (raw mention / alias).
+
+    Casefold + strip accents (via registry.normalize_name), then drop punctuation
+    so possessives and stray marks collapse: "Nehemia'" and "Nehemia" share a key.
+    """
+    normalized = re.sub(r"[^0-9a-z ]+", " ", _normalize_name(text))
+    return re.sub(r"\s+", " ", normalized).strip()
+
+
+def build_surface_index(*registries: dict) -> dict[str, list[dict]]:
+    """Map surface_key(raw_mention) → registry entries carrying that surface.
+
+    Lets a canonical entity recover *all* its mentions across un-merged
+    extraction clusters (STU-474): the same person surfaces under several
+    entity_ids (e.g. "Nehemia" as entity_216 and "Nehemia'" as entity_219),
+    but only one lands in the entity's source_ids, so a source_id-only count
+    under-reports central characters and mis-ranks them as figurants.
+    """
+    index: dict[str, list[dict]] = defaultdict(list)
+    for reg in registries:
+        for entry in (reg or {}).values():
+            seen_keys: set[str] = set()
+            for raw in entry.get("raw_mentions") or []:
+                key = _surface_key(raw)
+                if key and key not in seen_keys:
+                    seen_keys.add(key)
+                    index[key].append(entry)
+    return index
+
+
+def _count_entry(entry: dict, chapters: set[str]) -> int:
+    total = 0
+    for ch, mentions in entry.get("mentions_by_chapter", {}).items():
+        total += len(mentions)
+        if mentions:
+            chapters.add(ch)
+    return total
+
 
 def get_total_mentions(
     entity: dict,
@@ -54,10 +95,15 @@ def get_total_mentions(
     places_full: dict,
     orgs_full: dict,
     events_full: dict | None = None,
+    surface_index: dict[str, list[dict]] | None = None,
 ) -> tuple[int, int]:
     """Return (total_mentions, chapters_present) for a resolved entity.
 
-    Aggregates mentions across all source_ids from the matching type registry.
+    Aggregates mentions across all source_ids from the matching type registry,
+    plus — when ``surface_index`` is provided — every registry entry whose raw
+    surface form matches the entity's canonical_name or aliases (STU-474). The
+    latter recovers mentions from un-merged clusters that never made it into
+    source_ids, which otherwise under-counts central characters into figurants.
     """
     type_to_registry = {
         "PERSON": persons_full,
@@ -67,6 +113,7 @@ def get_total_mentions(
     }
     total = 0
     chapters: set[str] = set()
+    counted: set[int] = set()
     for sid in entity.get("source_ids", []):
         # Primary lookup by current type, fallback across registries for retagged entities.
         entry = type_to_registry.get(entity.get("type", ""), {}).get(sid, {})
@@ -76,10 +123,21 @@ def get_total_mentions(
                 if candidate:
                     entry = candidate
                     break
-        for ch, mentions in entry.get("mentions_by_chapter", {}).items():
-            total += len(mentions)
-            if mentions:
-                chapters.add(ch)
+        if entry and id(entry) not in counted:
+            counted.add(id(entry))
+            total += _count_entry(entry, chapters)
+
+    if surface_index:
+        surfaces = {_surface_key(entity.get("canonical_name", ""))}
+        surfaces.update(_surface_key(a) for a in entity.get("aliases", []))
+        surfaces.discard("")
+        for key in surfaces:
+            for entry in surface_index.get(key, []):
+                if id(entry) in counted:
+                    continue
+                counted.add(id(entry))
+                total += _count_entry(entry, chapters)
+
     return total, len(chapters)
 
 
@@ -188,13 +246,18 @@ def classify_entities(
     Returns:
         Same list with 3 new fields per entity.
     """
-    # Step 1: compute mention counts for all entities
+    # Step 1: compute mention counts for all entities. The surface index folds
+    # in mentions from un-merged extraction clusters (STU-474) so a canonical
+    # entity is counted from every surface form of its name, not just source_ids.
+    surface_index = build_surface_index(persons_full, places_full, orgs_full, events_full or {})
     mention_data: list[tuple[str, str, int, int]] = []
     for entity in entities:
         if not entity.get("relevant", True):
             mention_data.append((entity["canonical_name"], entity.get("type", "OTHER"), 0, 0))
             continue
-        total, chapters = get_total_mentions(entity, persons_full, places_full, orgs_full, events_full)
+        total, chapters = get_total_mentions(
+            entity, persons_full, places_full, orgs_full, events_full, surface_index
+        )
         mention_data.append((entity["canonical_name"], entity.get("type", "OTHER"), total, chapters))
 
     # Step 2: compute thresholds
