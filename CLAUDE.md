@@ -4,7 +4,7 @@
 
 - Repo: `wiki-creator-by-studio`
 - Purpose: extract entities from EPUB novels, classify them, generate wiki pages, export wikitext
-- Current verified state on 2026-07-10: `pytest -q` => `735 passed, 31 skipped`
+- Current verified state on 2026-07-13: `pytest -q` => `1042 passed, 33 skipped`
   (skips = tests needing optional spaCy models or the `coref` extra; see `tests/_markers.py`)
 
 ## Commands
@@ -118,6 +118,12 @@ Inside `wiki-resolution`, order matters:
 - `split_clusters.py`, `relationship_extraction.py`, and `verify_entity_types.py` are intentionally tolerant of missing `file_path` in unit-test mode.
 - `generate_wiki_pages.py` must run after `wiki-preparation`; it consumes `wiki_inputs/<slug>/batch_*.json`.
 - `classify_relationships.py` (pre-step to `wiki-preparation`) folds the co-occurrence graph onto canonical entities via `registry.alias_table()` before classifying (STU-435). The graph is built at mention level (pre alias-resolution), so surface forms of one entity (`Chaol Westfall` / `Captain Westfall`) are collapsed, counts summed, `chapters`/`sample_contexts` unioned — one classification per canonical pair. Requires `registry.json` (written by `write-registry`); degrades to unfolded edges if absent. Fold logic is pure in `wiki_creator/relationship_fold.py`.
+- Multi-tome (STU-485): `write_registry.py` accumulates each tome's registry into the
+  series registry `library/<author>/<series>/registry.json` (`Registry.accumulate`,
+  decisions `strategy="series_accumulation"`, delta in `processing_output/<slug>/registry_delta.json`).
+  `entity_clustering.py` and `alias_resolution.py` seed tome N's resolution from it
+  (`Registry.load_seed_table`) — absent/unreadable series registry degrades to unseeded.
+  Re-running a tome replaces its mention contribution (idempotent); prior tomes are never re-resolved.
 - `workers` in relationship/coref config directly impact RAM usage.
 - `.studio/config.yaml` and `.studio/runs/` must not be committed.
 - Never add hardcoded word lists to scripts. All vocabulary belongs in `wiki_creator/cue_words/<lang>.json` (language-wide) or the book YAML `classification` section (book-specific). No script may define a fallback vocabulary constant — if a key is absent from cue_words, degrade gracefully to an empty collection.

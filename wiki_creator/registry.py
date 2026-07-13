@@ -14,6 +14,7 @@ import hashlib
 import json
 import re
 import unicodedata
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
@@ -163,6 +164,237 @@ class Registry:
     def audit_log(self) -> list[MergeDecision]:
         return sorted(self.decisions.values(), key=lambda d: d.decision_id)
 
+    def seed_table(self) -> dict[str, "EntityRecord"]:
+        """normalize_name(alias) → owning record — the seeding view (STU-485).
+
+        Book-N resolution (clustering / alias-resolution) starts from the
+        entities already known to the series instead of re-deriving identity
+        from scratch. Normalization is the tolerant STU-450 matching (casefold
+        + accents stripped); on the rare post-normalization collision between
+        two records the first record in registry order wins (deterministic).
+        """
+        table: dict[str, EntityRecord] = {}
+        for record in self.entities:
+            for alias in record.aliases:
+                table.setdefault(normalize_name(alias), record)
+        return table
+
+    def accumulate(self, book: "Registry") -> dict:
+        """Fold a per-book registry into this series registry (STU-485).
+
+        The series-accumulation counterpart of ``CharacterGraph.merge_book``:
+        ``self`` is the series registry (tomes 1..N-1), ``book`` the registry
+        written for tome N. Guarantees:
+
+        * entity_id **stability** — a book entity whose aliases match an
+          existing series entity (normalize_name comparison, STU-450) keeps the
+          series ``entity_id``; nothing existing is overwritten (canonical
+          name and entity_type of the series record win, mismatches warn);
+        * **new** entities are added; on entity_id collision with an unrelated
+          series entity the new record gets a deterministic ``_<n>`` suffix
+          and its decisions are re-emitted against the new id;
+        * aliases / mentions / ``books`` provenance are **unioned**; mentions
+          carrying one of the incoming ``book_id`` are replaced (re-running a
+          tome replaces its contribution instead of duplicating it);
+        * every alias newly attached to an existing record is justified by a
+          ``MergeDecision(strategy="series_accumulation")`` — invariants hold
+          (``validate()`` passes after every accumulation).
+
+        Returns the per-book accumulation delta (the ``book_graph_delta``
+        counterpart): matched/added entities, aliases added, decision ids
+        emitted and warnings. Accumulating the same book registry twice is
+        idempotent.
+        """
+        delta: dict = {
+            "book_ids": [],
+            "matched": [],
+            "added": [],
+            "aliases_added": {},
+            "decisions_added": [],
+            "warnings": [],
+        }
+
+        incoming_books: list[str] = []
+        for record in book.entities:
+            for b in record.books:
+                if b not in incoming_books:
+                    incoming_books.append(b)
+            for mention in record.mentions:
+                if mention.book_id and mention.book_id not in incoming_books:
+                    incoming_books.append(mention.book_id)
+        delta["book_ids"] = list(incoming_books)
+
+        def _warn(message: str) -> None:
+            delta["warnings"].append(message)
+            if message not in self.warnings:
+                self.warnings.append(message)
+
+        # Invariant-1 ownership is casefold; identity matching is the more
+        # tolerant normalize_name (casefold ⊂ normalize, so a casefold
+        # collision always surfaces as a normalized match first).
+        by_normalized: dict[str, EntityRecord] = self.seed_table()
+        owners_casefold: dict[str, EntityRecord] = {
+            alias.casefold(): record
+            for record in self.entities
+            for alias in record.aliases
+        }
+        order = {id(record): i for i, record in enumerate(self.entities)}
+        used_entity_ids = {record.entity_id for record in self.entities}
+
+        for incoming in book.entities:
+            matches: list[EntityRecord] = []
+            overlap: dict[int, int] = {}
+            for alias in incoming.aliases:
+                found = by_normalized.get(normalize_name(alias))
+                if found is None:
+                    continue
+                if found not in matches:
+                    matches.append(found)
+                overlap[id(found)] = overlap.get(id(found), 0) + 1
+
+            if matches:
+                canonical_owner = by_normalized.get(normalize_name(incoming.canonical_name))
+                if canonical_owner is not None:
+                    target = canonical_owner
+                else:
+                    target = min(matches, key=lambda r: (-overlap[id(r)], order[id(r)]))
+                if len(matches) > 1:
+                    others = ", ".join(
+                        f"'{r.entity_id}'" for r in matches if r is not target
+                    )
+                    _warn(
+                        f"series accumulation: '{incoming.entity_id}' also overlaps "
+                        f"{others}; folded into '{target.entity_id}'"
+                    )
+                self._accumulate_into(
+                    target, incoming, incoming_books, by_normalized,
+                    owners_casefold, delta, _warn,
+                )
+                delta["matched"].append(
+                    {"book_entity_id": incoming.entity_id, "series_entity_id": target.entity_id}
+                )
+                continue
+
+            # New entity — keep the id when free, else deterministic suffix.
+            entity_id = incoming.entity_id
+            counter = 1
+            while entity_id in used_entity_ids:
+                counter += 1
+                entity_id = f"{incoming.entity_id}_{counter}"
+            used_entity_ids.add(entity_id)
+
+            decision_ids: list[str] = []
+            for d_id in incoming.decisions:
+                decision = book.decisions.get(d_id)
+                if decision is None:
+                    continue
+                if entity_id != incoming.entity_id:
+                    inputs = (entity_id, decision.inputs[1])
+                    new_id = _decision_id(decision.strategy, inputs, decision.evidence)
+                    decision = MergeDecision(
+                        decision_id=new_id,
+                        strategy=decision.strategy,
+                        inputs=inputs,
+                        evidence=decision.evidence,
+                        confidence=decision.confidence,
+                        reversible=decision.reversible,
+                    )
+                if decision.decision_id not in self.decisions:
+                    delta["decisions_added"].append(decision.decision_id)
+                self.decisions[decision.decision_id] = decision
+                decision_ids.append(decision.decision_id)
+
+            record = EntityRecord(
+                entity_id=entity_id,
+                canonical_name=incoming.canonical_name,
+                entity_type=incoming.entity_type,
+                aliases=list(incoming.aliases),
+                mentions=list(incoming.mentions),
+                decisions=decision_ids,
+                books=list(incoming.books),
+                first_book=incoming.first_book,
+            )
+            self.entities.append(record)
+            order[id(record)] = len(self.entities) - 1
+            for alias in record.aliases:
+                by_normalized.setdefault(normalize_name(alias), record)
+                owners_casefold[alias.casefold()] = record
+            delta["added"].append(
+                {"book_entity_id": incoming.entity_id, "series_entity_id": entity_id}
+            )
+
+        return delta
+
+    def _accumulate_into(
+        self,
+        target: EntityRecord,
+        incoming: EntityRecord,
+        incoming_books: list[str],
+        by_normalized: dict[str, "EntityRecord"],
+        owners_casefold: dict[str, "EntityRecord"],
+        delta: dict,
+        warn: Callable[[str], None],
+    ) -> None:
+        """Union one matched book record into its series record (accumulate helper)."""
+        book_label = ", ".join(incoming.books) or "unknown book"
+        if incoming.entity_type != target.entity_type:
+            warn(
+                f"series accumulation: kept entity_type '{target.entity_type}' for "
+                f"'{target.entity_id}' (book '{book_label}' says '{incoming.entity_type}')"
+            )
+
+        added_aliases: list[str] = []
+        existing = {alias.casefold() for alias in target.aliases}
+        for alias in incoming.aliases:
+            if alias.casefold() in existing:
+                continue
+            owner = owners_casefold.get(alias.casefold())
+            if owner is not None and owner is not target:
+                warn(
+                    f"series accumulation: alias '{alias}' of '{incoming.entity_id}' "
+                    f"already belongs to '{owner.entity_id}'; not moved to "
+                    f"'{target.entity_id}'"
+                )
+                continue
+            target.aliases.append(alias)
+            existing.add(alias.casefold())
+            owners_casefold[alias.casefold()] = target
+            by_normalized.setdefault(normalize_name(alias), target)
+            added_aliases.append(alias)
+
+            evidence = (
+                f"series accumulation from book '{book_label}': alias '{alias}' of "
+                f"'{incoming.canonical_name}' unified under '{target.canonical_name}'"
+            )
+            d_id = _decision_id(
+                "series_accumulation", (target.entity_id, entity_slug(alias)), evidence
+            )
+            if d_id not in self.decisions:
+                delta["decisions_added"].append(d_id)
+            self.decisions[d_id] = MergeDecision(
+                decision_id=d_id,
+                strategy="series_accumulation",
+                inputs=(target.entity_id, entity_slug(alias)),
+                evidence=evidence,
+                confidence="high",
+            )
+            if d_id not in target.decisions:
+                target.decisions.append(d_id)
+        target.aliases.sort(key=lambda a: (a.casefold(), a))
+        if added_aliases:
+            delta["aliases_added"][target.entity_id] = added_aliases
+
+        # Re-running a tome replaces its mentions instead of duplicating them.
+        target.mentions = [
+            m for m in target.mentions if m.book_id not in incoming_books
+        ] + list(incoming.mentions)
+
+        for b in incoming.books:
+            if b not in target.books:
+                target.books.append(b)
+        if target.first_book is None:
+            target.first_book = incoming.first_book
+
     def validate(self) -> None:
         seen_ids: set[str] = set()
         owners: dict[str, str] = {}
@@ -297,6 +529,19 @@ class Registry:
             return cls.load(path)
         except (OSError, ValueError, json.JSONDecodeError):
             return None
+
+    @classmethod
+    def load_seed_table(cls, path: Path | str) -> dict[str, "EntityRecord"]:
+        """Load ``path`` (the series registry) and return its ``seed_table()``,
+        or {} when the file is absent or unreadable — single-book runs and
+        pre-STU-485 series degrade gracefully to unseeded resolution."""
+        p = Path(path)
+        if not p.exists():
+            return {}
+        try:
+            return cls.load(p).seed_table()
+        except (OSError, ValueError, json.JSONDecodeError):
+            return {}
 
     @classmethod
     def from_artifacts(

@@ -709,3 +709,211 @@ def test_from_dict_tolerates_missing_provenance_keys():
     record = registry.entities[0]
     assert record.books == [] and record.first_book is None
     assert record.mentions[0].book_id is None
+
+# --- Series accumulation (STU-485) -------------------------------------------
+
+
+def _book_registry(book_id: str, entities: list[dict]) -> Registry:
+    """Build a valid single-book registry from {canonical, aliases, type?, chapters?}."""
+    records: list[EntityRecord] = []
+    decisions: dict[str, MergeDecision] = {}
+    for spec in entities:
+        canonical = spec["canonical"]
+        aliases = sorted(set(spec.get("aliases", [])) | {canonical}, key=lambda a: (a.casefold(), a))
+        record, record_decisions = _record_with_decision(
+            entity_slug(canonical), canonical, aliases
+        )
+        record.entity_type = spec.get("type", "PERSON")
+        record.mentions = [
+            Mention(surface=canonical, chapter_id=ch, book_id=book_id)
+            for ch in spec.get("chapters", ["ch01"])
+        ]
+        record.books = [book_id]
+        record.first_book = book_id
+        records.append(record)
+        decisions.update(record_decisions)
+    return Registry(entities=records, decisions=decisions)
+
+
+def test_accumulate_inheritance_book1_to_book2():
+    """The STU-485 acceptance scenario: Eragon/Saphira from tome 1 are reused
+    in tome 2 (same entity_id), tome 2's new entities are added, accumulation
+    decisions are traced and auditable."""
+    series = Registry()
+    book1 = _book_registry("01-eragon", [
+        {"canonical": "Eragon", "aliases": ["Eragon Shadeslayer"]},
+        {"canonical": "Saphira", "chapters": ["ch02"]},
+    ])
+    delta1 = series.accumulate(book1)
+    series.validate()
+    assert [e["series_entity_id"] for e in delta1["added"]] == ["eragon", "saphira"]
+    assert delta1["matched"] == []
+
+    book2 = _book_registry("02-eldest", [
+        {"canonical": "Eragon", "aliases": ["Argetlam"], "chapters": ["ch01", "ch05"]},
+        {"canonical": "Saphira", "chapters": ["ch03"]},
+        {"canonical": "Roran", "chapters": ["ch01"]},
+    ])
+    delta2 = series.accumulate(book2)
+    series.validate()
+
+    # Stable ids: tome-1 entities reused, not duplicated.
+    assert {e["series_entity_id"] for e in delta2["matched"]} == {"eragon", "saphira"}
+    assert [e["series_entity_id"] for e in delta2["added"]] == ["roran"]
+    assert {r.entity_id for r in series.entities} == {"eragon", "saphira", "roran"}
+
+    # Aliases and provenance unioned.
+    eragon = series.lookup("Eragon")
+    assert eragon.entity_id == "eragon"
+    assert "Argetlam" in eragon.aliases and "Eragon Shadeslayer" in eragon.aliases
+    assert eragon.books == ["01-eragon", "02-eldest"]
+    assert eragon.first_book == "01-eragon"
+    assert {m.book_id for m in eragon.mentions} == {"01-eragon", "02-eldest"}
+
+    # Accumulation decisions traced and auditable.
+    assert delta2["aliases_added"] == {"eragon": ["Argetlam"]}
+    accumulated = [
+        d for d in series.audit_log() if d.strategy == "series_accumulation"
+    ]
+    assert len(accumulated) == 1
+    assert accumulated[0].inputs == ("eragon", "argetlam")
+    assert "02-eldest" in accumulated[0].evidence
+    assert accumulated[0].decision_id in eragon.decisions
+
+
+def test_accumulate_matches_on_alias_overlap_and_normalization():
+    """A tome-2 canonical that was only an alias in tome 1 still matches, and
+    matching is accent/case tolerant (normalize_name, STU-450)."""
+    series = Registry()
+    series.accumulate(_book_registry("01-book", [
+        {"canonical": "Celaena Sardothien", "aliases": ["Adarlan's Assassin"]},
+    ]))
+    delta = series.accumulate(_book_registry("02-book", [
+        {"canonical": "Adarlan's Assassín", "aliases": ["Lillian Gordaina"]},
+    ]))
+    series.validate()
+    assert delta["added"] == []
+    assert delta["matched"][0]["series_entity_id"] == "celaena_sardothien"
+    record = series.lookup("Lillian Gordaina")
+    assert record.entity_id == "celaena_sardothien"
+    assert record.canonical_name == "Celaena Sardothien"  # series canonical wins
+
+
+def test_accumulate_is_idempotent_per_book():
+    series = Registry()
+    book1 = _book_registry("01-book", [
+        {"canonical": "Eragon", "aliases": ["Eragon Shadeslayer"]},
+    ])
+    series.accumulate(book1)
+    once = series.to_dict()
+
+    delta = series.accumulate(book1)  # re-run of the same tome
+    series.validate()
+    assert series.to_dict() == once
+    assert delta["added"] == [] and delta["decisions_added"] == []
+    assert delta["aliases_added"] == {}
+
+
+def test_accumulate_rerun_replaces_book_mentions():
+    """Re-resolving a tome replaces its mention contribution instead of stacking it."""
+    series = Registry()
+    series.accumulate(_book_registry("01-book", [
+        {"canonical": "Eragon", "chapters": ["ch01", "ch02"]},
+    ]))
+    series.accumulate(_book_registry("02-book", [
+        {"canonical": "Eragon", "chapters": ["ch09"]},
+    ]))
+    # Tome 2 re-run finds one fewer mention.
+    series.accumulate(_book_registry("02-book", [
+        {"canonical": "Eragon", "chapters": ["ch08"]},
+    ]))
+    series.validate()
+    eragon = series.lookup("Eragon")
+    book2_chapters = [m.chapter_id for m in eragon.mentions if m.book_id == "02-book"]
+    assert book2_chapters == ["ch08"]
+    book1_chapters = [m.chapter_id for m in eragon.mentions if m.book_id == "01-book"]
+    assert book1_chapters == ["ch01", "ch02"]
+
+
+def test_accumulate_new_entity_id_collision_gets_suffix():
+    """A new tome-2 entity whose slug collides with an unrelated series entity
+    gets a deterministic suffix; its decisions are re-emitted on the new id."""
+    series = Registry()
+    series.accumulate(_book_registry("01-book", [
+        {"canonical": "The Guard", "aliases": []},
+    ]))
+    # Different entity, same slug, no alias overlap.
+    book2 = _book_registry("02-book", [
+        {"canonical": "Thé Guard!!", "aliases": ["Palace Guard"]},
+    ])
+    # Force distinct identity: rename so normalization cannot match tome 1.
+    book2.entities[0].canonical_name = "Guard Captain"
+    book2.entities[0].aliases = ["Guard Captain", "Palace Guard"]
+    book2.entities[0].entity_id = "the_guard"
+    delta = series.accumulate(book2)
+    series.validate()
+    assert delta["added"] == [
+        {"book_entity_id": "the_guard", "series_entity_id": "the_guard_2"}
+    ]
+    renamed = series.lookup("Guard Captain")
+    assert renamed.entity_id == "the_guard_2"
+    # Its alias decision was re-emitted against the new id.
+    for d_id in renamed.decisions:
+        assert series.decisions[d_id].inputs[0] == "the_guard_2"
+
+
+def test_accumulate_alias_owned_elsewhere_stays_with_owner():
+    """Invariant 1 across tomes: an alias already owned by another series
+    entity is not stolen; the conflict is warned and auditable."""
+    series = Registry()
+    series.accumulate(_book_registry("01-book", [
+        {"canonical": "Murtagh", "aliases": ["The Red Rider"]},
+        {"canonical": "Galbatorix"},
+    ]))
+    delta = series.accumulate(_book_registry("02-book", [
+        {"canonical": "Galbatorix", "aliases": ["The Red Rider"]},
+    ]))
+    series.validate()
+    assert series.lookup("The Red Rider").entity_id == "murtagh"
+    assert "The Red Rider" not in series.lookup("Galbatorix").aliases
+    assert any("already belongs to 'murtagh'" in w for w in delta["warnings"])
+    assert any("already belongs to 'murtagh'" in w for w in series.warnings)
+
+
+def test_accumulate_keeps_series_entity_type_and_warns():
+    series = Registry()
+    series.accumulate(_book_registry("01-book", [
+        {"canonical": "Terrasen", "type": "PLACE"},
+    ]))
+    delta = series.accumulate(_book_registry("02-book", [
+        {"canonical": "Terrasen", "type": "PERSON"},
+    ]))
+    series.validate()
+    assert series.lookup("Terrasen").entity_type == "PLACE"
+    assert any("kept entity_type 'PLACE'" in w for w in delta["warnings"])
+
+
+def test_accumulate_series_round_trips_through_save_load(tmp_path):
+    series = Registry()
+    series.accumulate(_book_registry("01-book", [
+        {"canonical": "Eragon", "aliases": ["Eragon Shadeslayer"]},
+    ]))
+    series.accumulate(_book_registry("02-book", [
+        {"canonical": "Eragon", "aliases": ["Argetlam"]},
+        {"canonical": "Roran"},
+    ]))
+    path = tmp_path / "registry.json"
+    series.save(path)
+    loaded = Registry.load(path)
+    assert loaded.to_dict() == series.to_dict()
+
+
+def test_seed_table_maps_normalized_aliases_to_records():
+    series = Registry()
+    series.accumulate(_book_registry("01-book", [
+        {"canonical": "Celaena Sardothien", "aliases": ["Adarlan's Assassin"]},
+    ]))
+    table = series.seed_table()
+    assert table[normalize_name("ADARLAN'S ASSASSÍN")].entity_id == "celaena_sardothien"
+    assert table[normalize_name("celaena sardothien")].entity_id == "celaena_sardothien"
+    assert normalize_name("Nehemia") not in table
