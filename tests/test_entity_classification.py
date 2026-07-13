@@ -15,6 +15,7 @@ from scripts.entity_classification import (
     _load_type_corrections,
     _normalize_entity_type,
     get_total_mentions,
+    build_surface_index,
     compute_auto_thresholds,
     assign_importance,
     classify_entities,
@@ -116,6 +117,90 @@ def test_get_total_mentions_unknown_type():
     total, chapters = get_total_mentions(entity, {}, {}, {})
     assert total == 0
     assert chapters == 0
+
+
+# --- STU-474: surface-form aggregation across un-merged clusters ---
+
+# A central character whose surfaces landed in three separate extraction
+# clusters; only the junk 1-mention cluster made it into source_ids.
+NEHEMIA_PERSONS = {
+    "entity_048": {  # junk cluster that source_ids points at
+        "type": "PERSON",
+        "raw_mentions": ["Ianticipate"],
+        "mentions_by_chapter": {"C10": ["Ianticipate nothing."]},
+    },
+    "entity_216": {  # real Nehemia surface, never merged in
+        "type": "PERSON",
+        "raw_mentions": ["Nehemia"],
+        "mentions_by_chapter": {
+            "C05": ["Nehemia laughed.", "Nehemia crossed the hall."],
+            "C06": ["Nehemia read the scroll."],
+        },
+    },
+    "entity_219": {  # possessive surface of the same person
+        "type": "PERSON",
+        "raw_mentions": ["Nehemia'"],
+        "mentions_by_chapter": {"C07": ["Nehemia's guards waited."]},
+    },
+}
+
+
+def test_get_total_mentions_source_ids_only_undercounts():
+    """Baseline: without the surface index a mis-clustered entity reads ~1."""
+    entity = {"type": "PERSON", "canonical_name": "Nehemia", "source_ids": ["entity_048"]}
+    total, chapters = get_total_mentions(entity, NEHEMIA_PERSONS, {}, {})
+    assert total == 1
+    assert chapters == 1
+
+
+def test_get_total_mentions_surface_index_recovers_unmerged_mentions():
+    """STU-474: surface aggregation folds every surface form of the canonical
+    name (incl. possessive) plus the source_id cluster, without double-counting."""
+    entity = {"type": "PERSON", "canonical_name": "Nehemia", "source_ids": ["entity_048"]}
+    index = build_surface_index(NEHEMIA_PERSONS)
+    total, chapters = get_total_mentions(
+        entity, NEHEMIA_PERSONS, {}, {}, surface_index=index
+    )
+    assert total == 5  # entity_048: 1, entity_216: 3, entity_219: 1
+    assert chapters == 4  # C10, C05, C06, C07
+
+
+def test_get_total_mentions_surface_index_matches_aliases():
+    entity = {"type": "PERSON", "canonical_name": "Celaena", "aliases": ["Nehemia"]}
+    index = build_surface_index(NEHEMIA_PERSONS)
+    total, _ = get_total_mentions(entity, NEHEMIA_PERSONS, {}, {}, surface_index=index)
+    assert total == 4  # entity_216 (3) + entity_219 (1) via the alias surface
+
+
+def test_get_total_mentions_surface_index_no_double_count():
+    """A cluster reachable via both source_ids and surface is counted once."""
+    entity = {"type": "PERSON", "canonical_name": "Nehemia", "source_ids": ["entity_216"]}
+    index = build_surface_index(NEHEMIA_PERSONS)
+    total, _ = get_total_mentions(entity, NEHEMIA_PERSONS, {}, {}, surface_index=index)
+    assert total == 4  # entity_216 counted once, + entity_219
+
+
+def test_classify_entities_promotes_undercounted_central_character():
+    """STU-474 non-regression: Nehemia must not rank figurant when her surfaces
+    are spread across un-merged clusters."""
+    entities = [
+        {"canonical_name": "Nehemia", "type": "PERSON", "source_ids": ["entity_048"],
+         "aliases": [], "relevant": True},
+        # Filler so percentile thresholds have >= MIN_ENTITIES_FOR_AUTO entities.
+        {"canonical_name": "Extra1", "type": "PERSON", "source_ids": ["e1"], "relevant": True},
+        {"canonical_name": "Extra2", "type": "PERSON", "source_ids": ["e2"], "relevant": True},
+        {"canonical_name": "Extra3", "type": "PERSON", "source_ids": ["e3"], "relevant": True},
+    ]
+    persons = dict(NEHEMIA_PERSONS)
+    persons.update({
+        "e1": {"type": "PERSON", "raw_mentions": ["Extra1"], "mentions_by_chapter": {"C01": ["a"]}},
+        "e2": {"type": "PERSON", "raw_mentions": ["Extra2"], "mentions_by_chapter": {"C01": ["b"]}},
+        "e3": {"type": "PERSON", "raw_mentions": ["Extra3"], "mentions_by_chapter": {"C01": ["c"]}},
+    })
+    result = classify_entities(entities, persons, {}, {}, "auto")
+    nehemia = next(e for e in result if e["canonical_name"] == "Nehemia")
+    assert nehemia["total_mentions"] == 5
+    assert nehemia["importance"] != "figurant"
 
 
 # --- compute_auto_thresholds ---
