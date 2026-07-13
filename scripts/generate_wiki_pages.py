@@ -13,6 +13,8 @@ Usage:
     python scripts/generate_wiki_pages.py --book library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml --dry-run
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import os
@@ -20,6 +22,7 @@ import re
 import subprocess
 import sys
 import tempfile
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
@@ -746,11 +749,12 @@ def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> No
 _IDENTITY_ERROR_MARKERS = ("≠ entité demandée", "ne correspond pas à l'entité")
 
 
-def _rejection_is_identity_only(run_id: str) -> bool:
+def _rejection_is_identity_only(run_id: str, runner: StudioRunner | None = None) -> bool:
     """True iff the validator rejected the run and *every* error it reported is
     an identity error. Guards against smuggling a page past grounding/language
     validators when we recover it."""
-    vout = studio_io.load_studio_stage_output(str(run_id), "wiki-page-validator")
+    runner = runner or StudioRunner()
+    vout = runner.load_stage_output(str(run_id), "wiki-page-validator")
     errors = (vout or {}).get("errors") or []
     return bool(errors) and all(
         any(marker in str(e) for marker in _IDENTITY_ERROR_MARKERS) for e in errors
@@ -758,16 +762,18 @@ def _rejection_is_identity_only(run_id: str) -> bool:
 
 
 def _recover_identity_rejected_page(
-    *, entity: dict, item_result: dict, sibling_canonicals: set[str] | None = None
+    *, entity: dict, item_result: dict, sibling_canonicals: set[str] | None = None,
+    runner: StudioRunner | None = None,
 ) -> dict | None:
     """Recover a PERSON page from an identity-only rejected run and force-correct
     its identity fields. Returns the kept page, or None if not recoverable."""
     if entity.get("type") != "PERSON":
         return None
+    runner = runner or StudioRunner()
     run_id = str((item_result.get("run_metadata") or {}).get("run_id") or "").strip()
-    if not run_id or not _rejection_is_identity_only(run_id):
+    if not run_id or not _rejection_is_identity_only(run_id, runner):
         return None
-    recovered = studio_io.load_studio_stage_output(run_id, "wiki-page-item")
+    recovered = runner.load_stage_output(run_id, "wiki-page-item")
     if not isinstance(recovered, dict):
         return None
     page = parse_response(json.dumps(recovered, ensure_ascii=False), entity)
@@ -861,6 +867,7 @@ def _run_wiki_page_item(
     language: str = "fr",
     file_path: str = "",
     grounding: dict | None = None,
+    runner: StudioRunner | None = None,
 ) -> dict:
     item_input = _wiki_page_item_input(
         entity=entity,
@@ -872,7 +879,7 @@ def _run_wiki_page_item(
         file_path=file_path,
         grounding=grounding,
     )
-    return _execute_wiki_page_item(item_input, entity, timeout)
+    return (runner or StudioRunner()).run_item(item_input, entity, timeout)
 
 
 def _execute_wiki_page_item(item_input: dict, entity: dict, timeout: int) -> dict:
@@ -972,6 +979,18 @@ def _execute_wiki_page_item(item_input: dict, entity: dict, timeout: int) -> dic
     }
 
 
+class StudioRunner:
+    """Every Studio touchpoint of the generation path behind one injectable
+    interface: a fake makes generate_pages() testable without a subprocess, and
+    the seam prepares the M4 fan-out (STU-449)."""
+
+    def run_item(self, item_input: dict, entity: dict, timeout: int) -> dict:
+        return _execute_wiki_page_item(item_input, entity, timeout)
+
+    def load_stage_output(self, run_id: str, stage: str) -> dict | None:
+        return studio_io.load_studio_stage_output(run_id, stage)
+
+
 def _generate_one_section(
     *,
     entity: dict,
@@ -984,6 +1003,7 @@ def _generate_one_section(
     language: str = "fr",
     file_path: str = "",
     grounding: dict | None = None,
+    runner: StudioRunner | None = None,
 ) -> str | None:
     """Generate a single section via a scoped wiki-page-item call. Returns the
     section's content block, or None on error / persistent forbidden-name hit."""
@@ -997,7 +1017,7 @@ def _generate_one_section(
         return _run_wiki_page_item(
             entity=entity, book_title=book_title, model=model, timeout=timeout,
             sections=[section], max_tokens=max_tokens, forbidden_names=forbidden_names,
-            language=language, file_path=file_path, grounding=grounding,
+            language=language, file_path=file_path, grounding=grounding, runner=runner,
         )
 
     result = _once()
@@ -1035,6 +1055,7 @@ def _run_generation_for_entity(
     grounding: dict | None = None,
     sibling_canonicals: set[str] | None = None,
     book_config: dict | None = None,
+    runner: StudioRunner | None = None,
 ) -> dict:
     if not entity.get("context_by_chapter", {}):
         return make_stub_page(entity, insufficient_data=True)
@@ -1052,12 +1073,14 @@ def _run_generation_for_entity(
         language=language,
         file_path=file_path,
         grounding=grounding,
+        runner=runner,
     )
     if isinstance(item_result, dict) and item_result.get("error"):
         recovered = _recover_identity_rejected_page(
             entity=entity,
             item_result=item_result,
             sibling_canonicals=sibling_canonicals,
+            runner=runner,
         )
         _save_generation_debug_artifact(debug_dir, entity, item_result)
         if recovered is not None:
@@ -1087,6 +1110,7 @@ def _run_generation_for_entity(
                 language=language,
                 file_path=file_path,
                 grounding=grounding,
+                runner=runner,
             )
             if isinstance(item_result, dict) and item_result.get("error"):
                 _save_generation_debug_artifact(debug_dir, entity, item_result)
@@ -1132,6 +1156,7 @@ def _run_generation_sectioned(
     grounding: dict | None = None,
     sibling_canonicals: set[str] | None = None,
     book_config: dict | None = None,
+    runner: StudioRunner | None = None,
 ) -> dict:
     if not entity.get("context_by_chapter", {}):
         return make_stub_page(entity, insufficient_data=True)
@@ -1144,7 +1169,7 @@ def _run_generation_sectioned(
         block = _generate_one_section(
             entity=entity, section=section, book_title=book_title, model=model,
             timeout=timeout, max_tokens=max_tokens, forbidden_names=forbidden_names,
-            language=language, file_path=file_path, grounding=grounding,
+            language=language, file_path=file_path, grounding=grounding, runner=runner,
         )
         if block:
             blocks.append(block)
@@ -1191,6 +1216,7 @@ def _run_generation(
     grounding: dict | None = None,
     sibling_canonicals: set[str] | None = None,
     book_config: dict | None = None,
+    runner: StudioRunner | None = None,
 ) -> dict:
     """Route generation by entity type.
 
@@ -1222,6 +1248,7 @@ def _run_generation(
         grounding=grounding,
         sibling_canonicals=sibling_canonicals,
         book_config=book_config,
+        runner=runner,
     )
 
 
@@ -1385,61 +1412,40 @@ def generation_profile(config: dict, importance: str, entity_type: str | None = 
     return sections, max_tokens
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--book", required=True,
-        help="Path to book yaml, e.g. library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml",
-    )
-    parser.add_argument("--model", default=os.environ.get("WIKI_MODEL", "qwen2.5"), help="Ollama model")
-    parser.add_argument("--timeout", type=int, default=120, help="Timeout per entity (seconds)")
-    parser.add_argument("--importance", nargs="+", choices=["principal", "secondary", "figurant"],
-                        help="Only process entities of these importance levels")
-    parser.add_argument("--dry-run", action="store_true", help="Skip LLM calls, output stubs only")
-    args = parser.parse_args()
+@dataclass
+class GenerationConfig:
+    """Run-constant inputs to generate_pages(). Per-entity values (sections,
+    max_tokens, sibling_canonicals) are derived inside the loop."""
+    book_title: str
+    generation_cfg: dict
+    output_file: str
+    debug_dir: Path
+    model: str = "qwen2.5"
+    timeout: int = 120
+    dry_run: bool = False
+    forbidden_names: list[str] = field(default_factory=list)
+    language: str = "fr"
+    file_path: str = ""
+    grounding: dict = field(default_factory=dict)
+    book_config: dict | None = None
+    identity_registry: Registry | None = None
 
+
+def generate_pages(
+    batches: list[tuple[str, dict]],
+    config: GenerationConfig,
+    runner: StudioRunner | None = None,
+) -> list[dict]:
+    """Generate a wiki page for every entity across `batches`, saving to
+    config.output_file after each page (so an interrupted run resumes), and
+    return the full page list. All Studio interaction goes through `runner`,
+    so this is exercisable with a fake runner and no subprocess."""
+    runner = runner or StudioRunner()
     _reset_safety_net_telemetry()
-    book_paths = book_paths_from_yaml(args.book)
-    output_file = str(book_paths.processing / "wiki_pages.json")
-    wiki_inputs_dir = str(book_paths.wiki_inputs)
-    book_cfg = load_book_config(args.book)
-    generation_cfg = book_cfg.get("generation", {})
-    validation_cfg = book_cfg.get("validation", {})
-    forbidden_names = validation_cfg.get("forbidden_names", [])
-    if forbidden_names:
-        print(f"[generate-wiki-pages] Forbidden names active: {forbidden_names}", file=sys.stderr)
-    book_lang = book_language(book_cfg)
-    book_file_path = book_cfg.get("file_path", "")
-    grounding_cfg = validation_cfg.get("grounding", {}) or {}
-    if grounding_cfg.get("llm"):
-        print(
-            f"[generate-wiki-pages] LLM grounding active "
-            f"(model: {grounding_cfg.get('llm_model', 'mistral:7b-instruct')})",
-            file=sys.stderr,
-        )
 
-    book_title = load_book_title(str(book_paths.processing / "epub_data.json"))
-    batches = load_batch_files(wiki_inputs_dir, args.importance)
-
-    # STU-443 (pas 4): generation's identity binding consults the registry, the
-    # single source of truth, instead of trusting the identity carried by the
-    # batch artifact. None → registry absent, keep the batch identity as-is.
-    identity_registry = Registry.load_from_processing(book_paths.processing)
-    if identity_registry is None:
-        print("[generate-wiki-pages] registry.json not found — identity from batch artifact", file=sys.stderr)
-
-    if not batches:
-        print("[WARN] No batch files found or all batches empty after filter.", file=sys.stderr)
-        _save([], output_file)
-        return
-
-    total_entities = sum(len(b["entities"]) for _, b in batches)
-    print(f"[generate-wiki-pages] {total_entities} entities across {len(batches)} batches | model={args.model}", file=sys.stderr)
-
-    # Load existing pages to resume interrupted runs
-    all_pages = [p for p in _load_existing(output_file) if not p.get("_failed") and _is_page_complete(p)]
+    # Resume: keep already-generated complete pages, regenerate failed/empty.
+    all_pages = [p for p in _load_existing(config.output_file) if not p.get("_failed") and _is_page_complete(p)]
     done_titles = {p["title"] for p in all_pages}
-    debug_dir = book_paths.processing / "wiki_page_item_debug"
     if done_titles:
         print(f"[generate-wiki-pages] Resuming — {len(done_titles)} pages already done", file=sys.stderr)
 
@@ -1447,9 +1453,9 @@ def main() -> None:
         for path, batch in batches:
             batch_id = batch.get("batch_id", os.path.basename(path))
             entities = batch.get("entities", [])
-            if identity_registry is not None:
+            if config.identity_registry is not None:
                 for e in entities:
-                    identity_registry.bind_identity(e)
+                    config.identity_registry.bind_identity(e)
             print(f"\n[{batch_id}] {len(entities)} entities", file=sys.stderr)
             batch_canonicals = {
                 e.get("canonical_name", "") for e in entities if e.get("canonical_name")
@@ -1468,21 +1474,21 @@ def main() -> None:
                     print(f"  [STUB] {name} (no context)", file=sys.stderr)
                     page = make_stub_page(entity)
                     all_pages.append(page)
-                    _save(all_pages, output_file)
+                    _save(all_pages, config.output_file)
                     done_titles.add(name)
                     continue
 
-                if args.dry_run:
+                if config.dry_run:
                     print(f"  [DRY]  {name}", file=sys.stderr)
                     page = make_stub_page(entity)
                     all_pages.append(page)
-                    _save(all_pages, output_file)
+                    _save(all_pages, config.output_file)
                     done_titles.add(name)
                     continue
 
                 print(f"  [GEN]  {name} ({importance})", file=sys.stderr, end="", flush=True)
                 try:
-                    sections, max_tokens = generation_profile(generation_cfg, importance, entity.get("type"))
+                    sections, max_tokens = generation_profile(config.generation_cfg, importance, entity.get("type"))
                     typed_rels = entity.get("relationships", [])
                     if (
                         entity.get("type") == "PERSON"
@@ -1492,22 +1498,23 @@ def main() -> None:
                         sections = list(sections) + ["relationships"]
                     page = _run_generation(
                         entity=entity,
-                        book_title=book_title,
-                        model=args.model,
-                        timeout=args.timeout,
+                        book_title=config.book_title,
+                        model=config.model,
+                        timeout=config.timeout,
                         sections=sections,
                         max_tokens=max_tokens,
-                        dry_run=args.dry_run,
-                        debug_dir=debug_dir,
-                        forbidden_names=forbidden_names,
-                        language=book_lang,
-                        file_path=book_file_path,
-                        grounding=grounding_cfg,
+                        dry_run=config.dry_run,
+                        debug_dir=config.debug_dir,
+                        forbidden_names=config.forbidden_names,
+                        language=config.language,
+                        file_path=config.file_path,
+                        grounding=config.grounding,
                         sibling_canonicals=batch_canonicals - {name},
-                        book_config=book_cfg,
+                        book_config=config.book_config,
+                        runner=runner,
                     )
                     all_pages.append(page)
-                    _save(all_pages, output_file)
+                    _save(all_pages, config.output_file)
                     if not page.get("_failed"):
                         done_titles.add(name)
                         print(" ✓", file=sys.stderr)
@@ -1517,11 +1524,76 @@ def main() -> None:
                     print(f" ✗ {e}", file=sys.stderr)
                     page = make_stub_page(entity, failed=True)
                     all_pages.append(page)
-                    _save(all_pages, output_file)
+                    _save(all_pages, config.output_file)
                     # Do NOT add to done_titles — will be retried on next run
     except KeyboardInterrupt:
         print(f"\n[generate-wiki-pages] Interrupted — {len(all_pages)} pages saved", file=sys.stderr)
-    _print_generation_summary(all_pages)
+
+    _save(all_pages, config.output_file)
+    return all_pages
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--book", required=True,
+        help="Path to book yaml, e.g. library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml",
+    )
+    parser.add_argument("--model", default=os.environ.get("WIKI_MODEL", "qwen2.5"), help="Ollama model")
+    parser.add_argument("--timeout", type=int, default=120, help="Timeout per entity (seconds)")
+    parser.add_argument("--importance", nargs="+", choices=["principal", "secondary", "figurant"],
+                        help="Only process entities of these importance levels")
+    parser.add_argument("--dry-run", action="store_true", help="Skip LLM calls, output stubs only")
+    args = parser.parse_args()
+
+    book_paths = book_paths_from_yaml(args.book)
+    book_cfg = load_book_config(args.book)
+    validation_cfg = book_cfg.get("validation", {})
+    forbidden_names = validation_cfg.get("forbidden_names", [])
+    if forbidden_names:
+        print(f"[generate-wiki-pages] Forbidden names active: {forbidden_names}", file=sys.stderr)
+    grounding_cfg = validation_cfg.get("grounding", {}) or {}
+    if grounding_cfg.get("llm"):
+        print(
+            f"[generate-wiki-pages] LLM grounding active "
+            f"(model: {grounding_cfg.get('llm_model', 'mistral:7b-instruct')})",
+            file=sys.stderr,
+        )
+
+    # STU-443 (pas 4): generation's identity binding consults the registry, the
+    # single source of truth, instead of trusting the identity carried by the
+    # batch artifact. None → registry absent, keep the batch identity as-is.
+    identity_registry = Registry.load_from_processing(book_paths.processing)
+    if identity_registry is None:
+        print("[generate-wiki-pages] registry.json not found — identity from batch artifact", file=sys.stderr)
+
+    batches = load_batch_files(str(book_paths.wiki_inputs), args.importance)
+    if not batches:
+        print("[WARN] No batch files found or all batches empty after filter.", file=sys.stderr)
+        _save([], str(book_paths.processing / "wiki_pages.json"))
+        return
+
+    total_entities = sum(len(b["entities"]) for _, b in batches)
+    print(f"[generate-wiki-pages] {total_entities} entities across {len(batches)} batches | model={args.model}", file=sys.stderr)
+
+    config = GenerationConfig(
+        book_title=load_book_title(str(book_paths.processing / "epub_data.json")),
+        generation_cfg=book_cfg.get("generation", {}),
+        output_file=str(book_paths.processing / "wiki_pages.json"),
+        debug_dir=book_paths.processing / "wiki_page_item_debug",
+        model=args.model,
+        timeout=args.timeout,
+        dry_run=args.dry_run,
+        forbidden_names=forbidden_names,
+        language=book_language(book_cfg),
+        file_path=book_cfg.get("file_path", ""),
+        grounding=grounding_cfg,
+        book_config=book_cfg,
+        identity_registry=identity_registry,
+    )
+
+    pages = generate_pages(batches, config, StudioRunner())
+    _print_generation_summary(pages)
     _write_identity_telemetry(book_paths.processing)
 
 
