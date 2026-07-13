@@ -489,3 +489,111 @@ def test_main_parses_live_book_flag(monkeypatch):
     clustering.main()
 
     assert captured["book_yaml"] == "library/foo/books/01.yaml"
+
+
+# --- Series seeding (STU-485) ---
+
+def _seed_registry():
+    from wiki_creator.registry import Registry
+
+    return Registry.from_dict({
+        "version": 1,
+        "entities": [
+            {
+                "entity_id": "eragon",
+                "canonical_name": "Eragon",
+                "entity_type": "PERSON",
+                "aliases": ["Argetlam", "Eragon", "Shadeslayer"],
+                "mentions": [],
+                "decisions": ["d_a", "d_b"],
+                "books": ["01-eragon"],
+                "first_book": "01-eragon",
+            }
+        ],
+        "decisions": [
+            {
+                "decision_id": "d_a",
+                "strategy": "pattern",
+                "inputs": ["eragon", "argetlam"],
+                "evidence": "e",
+                "confidence": "high",
+                "reversible": True,
+            },
+            {
+                "decision_id": "d_b",
+                "strategy": "pattern",
+                "inputs": ["eragon", "shadeslayer"],
+                "evidence": "e",
+                "confidence": "high",
+                "reversible": True,
+            },
+        ],
+        "warnings": [],
+    })
+
+
+def test_build_clusters_seed_unions_known_aliases():
+    """Dissimilar names that are known aliases of one series entity cluster
+    together in tome 2 — identity carried by the registry, not by similarity."""
+    entities = {
+        "e001": {"type": "PERSON", "raw_mentions": ["Eragon"], "first_seen": "ch01"},
+        "e002": {"type": "PERSON", "raw_mentions": ["Argetlam"], "first_seen": "ch04"},
+        "e003": {"type": "PERSON", "raw_mentions": ["Shadeslayer"], "first_seen": "ch07"},
+    }
+    # Without seed: no similarity, nothing clusters.
+    clusters, unclustered = build_clusters(entities)
+    assert clusters == []
+
+    seed = _seed_registry().seed_table()
+    clusters, unclustered = build_clusters(entities, seed=seed)
+    assert len(clusters) == 1
+    assert set(clusters[0]["entity_ids"]) == {"e001", "e002", "e003"}
+
+
+def test_build_clusters_seed_ignores_unknown_names():
+    entities = {
+        "e001": {"type": "PERSON", "raw_mentions": ["Roran"], "first_seen": "ch01"},
+        "e002": {"type": "PERSON", "raw_mentions": ["Katrina"], "first_seen": "ch02"},
+    }
+    clusters, unclustered = build_clusters(entities, seed=_seed_registry().seed_table())
+    assert clusters == []
+    assert set(unclustered.keys()) == {"e001", "e002"}
+
+
+def test_main_seeds_from_series_registry(tmp_path):
+    """End-to-end: file_path in additional_context + a series registry on disk
+    pre-link known aliases in stdin mode."""
+    import subprocess
+    import json as _json
+    import sys as _sys
+
+    books = tmp_path / "library" / "author" / "series" / "books"
+    books.mkdir(parents=True)
+    book_yaml = books / "02-eldest.yaml"
+    book_yaml.write_text("title: Eldest\n", encoding="utf-8")
+    _seed_registry().save(tmp_path / "library" / "author" / "series" / "registry.json")
+
+    entities = {
+        "e001": {"type": "PERSON", "raw_mentions": ["Eragon"], "first_seen": "ch01", "mention_count": 4},
+        "e002": {"type": "PERSON", "raw_mentions": ["Argetlam"], "first_seen": "ch04", "mention_count": 2},
+    }
+    payload = _json.dumps({
+        "additional_context": f"file_path: {book_yaml}\n",
+        "previous_outputs": {
+            "entity-extraction": {"entities_for_resolution": entities}
+        },
+    })
+    result = subprocess.run(
+        [_sys.executable, "scripts/entity_clustering.py"],
+        input=payload,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        cwd=os.path.join(os.path.dirname(__file__), ".."),
+    )
+    assert result.returncode == 0, result.stderr
+    assert "series seeding active" in result.stderr
+    output = _json.loads(result.stdout)
+    seeded = [c for c in output["clusters"] if c["entity_count"] > 1]
+    assert len(seeded) == 1
+    assert set(seeded[0]["entity_ids"]) == {"e001", "e002"}

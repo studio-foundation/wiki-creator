@@ -33,6 +33,9 @@ stages:
     contract: entity-clustering
     context:
       include:
+        # input carries file_path — needed to locate the series registry for
+        # cross-book seeding (STU-485).
+        - input
         - previous_stage_output
 
   - name: verify-entity-types

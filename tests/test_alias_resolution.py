@@ -1461,6 +1461,124 @@ def test_detect_pure_title_in_context_no_match_when_sentences_split_by_curly_quo
     assert result is None, f"Should not merge across curly-quote sentence boundary, got: {result}"
 
 
+# --- Series seeding (STU-485) --------------------------------------------------
+
+
+def _series_seed_registry() -> "Registry":
+    from wiki_creator.registry import Registry
+
+    return Registry.from_dict({
+        "version": 1,
+        "entities": [
+            {
+                "entity_id": "celaena_sardothien",
+                "canonical_name": "Celaena",
+                "entity_type": "PERSON",
+                "aliases": ["Celaena", "Lillian Gordaina"],
+                "mentions": [],
+                "decisions": ["d_seed"],
+                "books": ["01-book"],
+                "first_book": "01-book",
+            },
+            {
+                "entity_id": "nehemia",
+                "canonical_name": "Nehemia",
+                "entity_type": "PERSON",
+                "aliases": ["Nehemia"],
+                "mentions": [],
+                "decisions": [],
+                "books": ["01-book"],
+                "first_book": "01-book",
+            },
+        ],
+        "decisions": [
+            {
+                "decision_id": "d_seed",
+                "strategy": "pattern",
+                "inputs": ["celaena_sardothien", "lillian_gordaina"],
+                "evidence": "call me Lillian",
+                "confidence": "high",
+                "reversible": True,
+            }
+        ],
+        "warnings": [],
+    })
+
+
+def test_series_seed_merges_known_aliases_without_local_evidence():
+    """STU-485: identity established in tome 1 carries into tome 2 — no snippet
+    in this tome links Celaena and Lillian, the series registry does."""
+    seed = _series_seed_registry().seed_table()
+    result = resolve_aliases([PERSON_A, PERSON_B], persons_full={}, seed_lookup=seed)
+    assert len(result["entities"]) == 1
+    merged = result["entities"][0]
+    assert set(merged["aliases"]) >= {"Celaena", "Lillian Gordaina"}
+    assert merged["alias_resolution"]["method"] == "series_seed"
+    assert merged["alias_resolution"]["confidence"] == "high"
+    assert "series registry" in merged["alias_resolution"]["evidence"][0]["snippet"]
+    assert result["stats"]["merges_by_method"]["series_seed"] == 1
+
+
+def test_series_seed_does_not_merge_distinct_known_entities():
+    nehemia = {
+        "canonical_name": "Nehemia",
+        "type": "PERSON",
+        "aliases": ["Nehemia"],
+        "source_ids": ["entity_003"],
+        "relevant": True,
+    }
+    seed = _series_seed_registry().seed_table()
+    result = resolve_aliases([PERSON_A, nehemia], persons_full={}, seed_lookup=seed)
+    assert len(result["entities"]) == 2
+    assert result["stats"]["merges_by_method"]["series_seed"] == 0
+
+
+def test_series_seed_ignores_same_surface_duplicates():
+    """Two entities carrying the same known name are not folded by the seed —
+    only distinct surfaces of one series entity replay a known alias link."""
+    twin = {
+        "canonical_name": "Celaena",
+        "type": "PERSON",
+        "aliases": ["Celaena"],
+        "source_ids": ["entity_004"],
+        "relevant": True,
+    }
+    seed = _series_seed_registry().seed_table()
+    result = resolve_aliases([PERSON_A, twin], persons_full={}, seed_lookup=seed)
+    assert len(result["entities"]) == 2
+    assert result["stats"]["merges_by_method"]["series_seed"] == 0
+
+
+def test_script_stdin_seeds_from_series_registry(tmp_path: Path):
+    """End-to-end: a series registry on disk makes tome-N alias resolution
+    merge known aliases with method=series_seed."""
+    book_yaml = tmp_path / "library" / "author" / "series" / "books" / "02-book.yaml"
+    book_yaml.parent.mkdir(parents=True)
+    book_yaml.write_text("title: Test\n", encoding="utf-8")
+    processing = tmp_path / "library" / "author" / "series" / "processing_output" / "02-book"
+    processing.mkdir(parents=True)
+
+    series_path = tmp_path / "library" / "author" / "series" / "registry.json"
+    _series_seed_registry().save(series_path)
+
+    payload = {
+        "previous_outputs": {"resolve-clusters": {"entities": [PERSON_A, PERSON_B], "narrator": None}},
+        "additional_context": f"file_path: {book_yaml}\n",
+    }
+    result = subprocess.run(
+        [sys.executable, "scripts/alias_resolution.py"],
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+        cwd=os.path.join(os.path.dirname(__file__), ".."),
+    )
+    assert result.returncode == 0, result.stderr
+    assert "series seeding active" in result.stderr
+    output = json.loads(result.stdout)
+    assert len(output["entities"]) == 1
+    assert output["entities"][0]["alias_resolution"]["method"] == "series_seed"
+
+
 # tests/test_alias_resolution.py  (append)
 import numpy as np
 

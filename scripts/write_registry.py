@@ -12,8 +12,18 @@ Input (Studio stdin):
   fusion identiques), avec les entity_type raffinés par la classification : la source
   est donc la même que le run soit live ou repris.
 
-Output (stdout): {"registry": {"path", "entities", "decisions", "warnings"}}
+Depuis STU-485 le stage accumule aussi le registre du tome dans le registre
+série (library/<author>/<series>/registry.json, pendant de character_graph.json)
+et écrit le delta d'accumulation par tome (registry_delta.json, pendant de
+character_graph_delta.json). Un registre série illisible est laissé intact
+(l'accumulation est sautée avec un warning) plutôt qu'écrasé.
+
+Output (stdout): {"registry": {"path", "entities", "decisions", "warnings"},
+                  "series_registry": {"path", "entities", "matched", "added",
+                                      "decisions_added", "warnings"} | None}
 Disk: processing_output/<slug>/registry.json
+      processing_output/<slug>/registry_delta.json
+      library/<author>/<series>/registry.json
 """
 import json
 import sys
@@ -84,6 +94,8 @@ def main() -> None:
     for warning in registry.warnings:
         print(f"[write-registry] warning: {warning}", file=sys.stderr)
 
+    series_summary = _accumulate_into_series(paths, registry)
+
     json.dump(
         {
             "registry": {
@@ -91,11 +103,73 @@ def main() -> None:
                 "entities": len(registry.entities),
                 "decisions": len(registry.decisions),
                 "warnings": registry.warnings,
-            }
+            },
+            "series_registry": series_summary,
         },
         sys.stdout,
         ensure_ascii=False,
     )
+
+
+def _accumulate_into_series(paths, registry: Registry) -> dict | None:
+    """Accumulate this tome's registry into the series registry (STU-485).
+
+    Loads library/<author>/<series>/registry.json (starting empty when absent),
+    folds the book registry in, writes the series registry atomically
+    (write-to-temp + rename, same as the series character graph) and the
+    per-book accumulation delta. An existing-but-unreadable series registry is
+    left untouched: accumulation is skipped with a warning instead of clobbering
+    tomes already accumulated.
+    """
+    series_path = paths.series_registry
+    if series_path.exists():
+        try:
+            series = Registry.load(series_path)
+        except (OSError, ValueError, json.JSONDecodeError) as e:
+            print(
+                f"[write-registry] warning: series registry {series_path} unreadable "
+                f"({e}) — accumulation skipped",
+                file=sys.stderr,
+            )
+            return None
+    else:
+        series = Registry()
+
+    delta = series.accumulate(registry)
+
+    tmp = series_path.with_suffix(".json.tmp")
+    try:
+        series.save(tmp)
+        tmp.rename(series_path)
+    except Exception:
+        if tmp.exists():
+            tmp.unlink()
+        raise
+
+    delta_path = paths.book_registry_delta
+    delta_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(delta_path, "w", encoding="utf-8") as f:
+        json.dump(delta, f, ensure_ascii=False, indent=2)
+        f.write("\n")
+
+    print(
+        f"[write-registry] Series registry {series_path}: "
+        f"{len(series.entities)} entities ({len(delta['matched'])} matched, "
+        f"{len(delta['added'])} added, {len(delta['decisions_added'])} decisions)",
+        file=sys.stderr,
+    )
+    for warning in delta["warnings"]:
+        print(f"[write-registry] series warning: {warning}", file=sys.stderr)
+
+    return {
+        "path": str(series_path),
+        "delta_path": str(delta_path),
+        "entities": len(series.entities),
+        "matched": len(delta["matched"]),
+        "added": len(delta["added"]),
+        "decisions_added": len(delta["decisions_added"]),
+        "warnings": delta["warnings"],
+    }
 
 
 if __name__ == "__main__":

@@ -26,6 +26,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 from wiki_creator import studio_io
 from wiki_creator.lang import load_lang_config, infer_language
+from wiki_creator.registry import EntityRecord, Registry, normalize_name
 
 
 class AliasPair(TypedDict):
@@ -43,7 +44,7 @@ def _empty_stats() -> dict:
     return {
         "candidates_considered": 0,
         "merges_applied": 0,
-        "merges_by_method": {"pattern": 0, "cooccurrence": 0, "llm": 0, "title_alias": 0, "role_symmetric": 0, "pure_title": 0},
+        "merges_by_method": {"pattern": 0, "cooccurrence": 0, "llm": 0, "title_alias": 0, "role_symmetric": 0, "pure_title": 0, "series_seed": 0},
         "ambiguous_pairs": 0,
         "embedding_vetoes": 0,
         "llm_attempts": 0,
@@ -270,6 +271,39 @@ def _merge_entities(
             "method": evidence["method"],
         },
     }
+
+
+def _detect_series_seed(
+    entity_a: dict,
+    entity_b: dict,
+    seed_lookup: dict[str, EntityRecord] | None,
+) -> dict | None:
+    """Series seeding (STU-485): two entities whose names are known aliases of
+    the same series-registry entity are the same person — identity established
+    in a prior tome, no local evidence needed. Names must be *distinct*
+    surfaces (normalize_name) so this only replays known alias links, never
+    folds same-name duplicates that upstream stages deliberately kept apart.
+    """
+    if not seed_lookup:
+        return None
+    for name_a in _entity_names(entity_a):
+        record = seed_lookup.get(normalize_name(name_a))
+        if record is None:
+            continue
+        for name_b in _entity_names(entity_b):
+            if normalize_name(name_b) == normalize_name(name_a):
+                continue
+            if seed_lookup.get(normalize_name(name_b)) is record:
+                books = ", ".join(record.books) or "prior tomes"
+                return {
+                    "method": "series_seed",
+                    "confidence": "high",
+                    "snippet": (
+                        f"series registry: '{name_a}' and '{name_b}' are known "
+                        f"aliases of '{record.canonical_name}' (books: {books})"
+                    ),
+                }
+    return None
 
 
 def _detect_pattern_for_names(
@@ -738,6 +772,7 @@ def resolve_aliases(
     pattern_templates: tuple[str, ...] = (),
     relationships: list[dict] | None = None,
     role_symmetric_min_shared: int = 2,
+    seed_lookup: dict[str, EntityRecord] | None = None,
     judge=None,
 ) -> dict:
     stats = _empty_stats()
@@ -782,6 +817,14 @@ def resolve_aliases(
                 continue
 
             stats["candidates_considered"] += 1
+
+            seed = _detect_series_seed(entity, candidate, seed_lookup)
+            if seed:
+                merged = _merge_entities(entity, candidate, seed, persons_full, role_words=role_words)
+                stats["merges_applied"] += 1
+                stats["merges_by_method"]["series_seed"] = stats["merges_by_method"].get("series_seed", 0) + 1
+                consumed.add(candidate_index)
+                break
 
             evidence = _detect_pattern_match(entity, candidate, persons_full, pattern_templates)
             if evidence:
@@ -913,9 +956,19 @@ def main() -> None:
     ))
 
     persons_full = {}
+    seed_lookup: dict[str, EntityRecord] = {}
     try:
         paths = studio_io.paths_from_payload(payload)
         persons_full = _load_persons_full(paths.processing)
+        # Series seeding (STU-485): tome N starts from the identities
+        # accumulated over tomes 1..N-1.
+        seed_lookup = Registry.load_seed_table(paths.series_registry)
+        if seed_lookup:
+            print(
+                f"[alias-resolution] series seeding active: "
+                f"{len(seed_lookup)} known surfaces from {paths.series_registry}",
+                file=sys.stderr,
+            )
     except ValueError:
         persons_full = {}
 
@@ -982,6 +1035,7 @@ def main() -> None:
         pattern_templates=pattern_templates,
         relationships=relationships,
         role_symmetric_min_shared=ctx.get("role_symmetric_min_shared", 2),
+        seed_lookup=seed_lookup,
         judge=judge,
     )
     json.dump(result, sys.stdout, ensure_ascii=False)

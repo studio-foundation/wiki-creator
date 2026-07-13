@@ -52,8 +52,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from wiki_creator.paths import book_paths_from_yaml
-from wiki_creator.registry import normalize_name as normalize_for_comparison
+from wiki_creator.paths import book_paths_from_epub, book_paths_from_yaml
+from wiki_creator.registry import Registry, normalize_name as normalize_for_comparison
 
 # --- Configuration ---
 
@@ -345,10 +345,17 @@ def _resolve_cluster_type(member_ids: list[str], entities: dict) -> str:
 
 # --- Union-Find clustering ---
 
-def build_clusters(entities: dict, language: str | None = None) -> tuple[list[dict], dict]:
+def build_clusters(
+    entities: dict, language: str | None = None, seed: dict | None = None
+) -> tuple[list[dict], dict]:
     """
     Cluster entities by name similarity using Union-Find.
     Transitive closure: if A~B and B~C, then {A,B,C} are one cluster.
+
+    seed (STU-485): normalized surface → series-registry EntityRecord
+    (``Registry.seed_table()``). Entities whose mentions are known aliases of
+    the same series entity are pre-unioned — tome N starts from identities
+    already established in tomes 1..N-1, regardless of name similarity.
 
     Returns: (clusters_list, unclustered_entities)
     """
@@ -366,6 +373,9 @@ def build_clusters(entities: dict, language: str | None = None) -> tuple[list[di
         ra, rb = find(a), find(b)
         if ra != rb:
             parent[ra] = rb
+
+    if seed:
+        _apply_seed_unions(entities, seed, union, name_connectors, title_prefixes)
 
     # Compare all entity pairs via their mentions
     entity_ids = list(entities.keys())
@@ -443,6 +453,37 @@ def build_clusters(entities: dict, language: str | None = None) -> tuple[list[di
     clusters_list, unclustered = split_conflicting_first_names(clusters_list, unclustered, entities, title_prefixes)
     clusters_list.sort(key=lambda c: c["total_mentions"], reverse=True)
     return clusters_list, unclustered
+
+
+def _apply_seed_unions(
+    entities: dict,
+    seed: dict,
+    union,
+    name_connectors: frozenset[str],
+    title_prefixes: frozenset[str],
+) -> None:
+    """Pre-union entities that surface known aliases of one series entity
+    (STU-485 seeding). The STU-473 cross-type guard still applies between the
+    matched surfaces, so a PLACE toponym never folds into a PERSON title."""
+    groups: dict[str, list[tuple[str, str]]] = defaultdict(list)  # series id → [(eid, surface)]
+    for eid, entity in entities.items():
+        for mention in entity.get("raw_mentions", []):
+            record = seed.get(normalize_for_comparison(mention))
+            if record is not None:
+                groups[record.entity_id].append((eid, mention))
+
+    for members in groups.values():
+        anchor_eid, anchor_mention = members[0]
+        anchor_type = entities[anchor_eid].get("type", "OTHER")
+        for eid, mention in members[1:]:
+            if eid == anchor_eid:
+                continue
+            etype = entities[eid].get("type", "OTHER")
+            if cross_type_union_blocked(
+                anchor_type, anchor_mention, etype, mention, name_connectors, title_prefixes
+            ):
+                continue
+            union(anchor_eid, eid)
 
 
 def _make_cluster(cluster_id: str, eids: list[str], entities: dict) -> dict:
@@ -789,7 +830,20 @@ def main() -> None:
     spacy_model = ctx.get("spacy_model", "")
     language = ctx.get("language") or (infer_language(spacy_model) if spacy_model else None)
 
-    clusters, unclustered = build_clusters(entities, language=language)
+    # Series seeding (STU-485): known aliases from tomes 1..N-1 pre-link this
+    # tome's mentions. Absent file_path / series registry ⇒ unseeded (tome 1,
+    # unit tests, pre-multi-tome pipelines).
+    seed = {}
+    file_path = ctx.get("file_path")
+    if file_path:
+        seed = Registry.load_seed_table(book_paths_from_epub(file_path).series_registry)
+        if seed:
+            print(
+                f"[entity-clustering] series seeding active: {len(seed)} known surfaces",
+                file=sys.stderr,
+            )
+
+    clusters, unclustered = build_clusters(entities, language=language, seed=seed)
 
     total = len(entities)
 

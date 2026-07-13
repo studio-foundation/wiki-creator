@@ -31,6 +31,16 @@ class BookPaths:
         """Per-book delta graph: processing_output/<slug>/character_graph_delta.json"""
         return self.processing / "character_graph_delta.json"
 
+    @property
+    def series_registry(self) -> Path:
+        """Series-level identity registry: library/<author>/<series>/registry.json"""
+        return self.epub.parent.parent / "registry.json"
+
+    @property
+    def book_registry_delta(self) -> Path:
+        """Per-book accumulation delta: processing_output/<slug>/registry_delta.json"""
+        return self.processing / "registry_delta.json"
+
 
 def book_paths_from_epub(epub_path: Path | str) -> BookPaths:
     """Derive all book working directories from the epub path.
