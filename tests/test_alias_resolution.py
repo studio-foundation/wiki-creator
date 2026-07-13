@@ -1459,3 +1459,78 @@ def test_detect_pure_title_in_context_no_match_when_sentences_split_by_curly_quo
     role_words = ["Crown Prince", "crown", "prince"]
     result = _detect_pure_title_in_context(crown_prince, philippa, persons_full=persons_full, role_words=role_words)
     assert result is None, f"Should not merge across curly-quote sentence boundary, got: {result}"
+
+
+# tests/test_alias_resolution.py  (append)
+import numpy as np
+
+from wiki_creator.embedding_disambiguation import EmbeddingJudge
+from scripts.alias_resolution import resolve_aliases
+
+
+class _StubBackend:
+    """Encodes by looking up the first token of each context in a table."""
+    def __init__(self, table, dim=3):
+        self.table = table
+        self.dim = dim
+    def encode(self, texts):
+        rows = []
+        for t in texts:
+            key = t.split()[0].lower() if t.split() else ""
+            vec = np.asarray(self.table.get(key, [0.0] * self.dim), dtype=np.float32)
+            n = np.linalg.norm(vec)
+            rows.append(vec / n if n else vec)
+        return np.vstack(rows) if rows else np.zeros((0, self.dim), dtype=np.float32)
+
+
+def _person(idx, name, source_id):
+    return {
+        "id": f"e{idx}", "canonical_name": name, "type": "PERSON",
+        "relevant": True, "aliases": [name], "source_ids": [source_id],
+    }
+
+
+def _persons_full(mapping):
+    # mapping: source_id -> list[str] context sentences
+    return {sid: {"mentions_by_chapter": {"c1": ctxs}, "mention_count": len(ctxs)}
+            for sid, ctxs in mapping.items()}
+
+
+def test_judge_none_is_backward_compatible():
+    entities = [_person(0, "Celaena", "s0"), _person(1, "Nehemia", "s1")]
+    pf = _persons_full({"s0": ["Celaena fought."], "s1": ["Nehemia ruled."]})
+    without = resolve_aliases(list(entities), persons_full=pf, judge=None)
+    baseline = resolve_aliases(list(entities), persons_full=pf)
+    assert without == baseline
+
+
+def test_embedding_proposer_merges_no_overlap_pair():
+    # "Celaena" and "assassin" share no chars but share context direction.
+    entities = [_person(0, "Celaena", "s0"), _person(1, "the assassin", "s1")]
+    pf = _persons_full({"s0": ["Celaena drew steel."], "s1": ["assassin drew steel."]})
+    backend = _StubBackend({"celaena": [1.0, 0.0, 0.0], "assassin": [1.0, 0.0, 0.0]})
+    judge = EmbeddingJudge(backend, propose_threshold=0.86, veto_threshold=0.80)
+    result = resolve_aliases(entities, persons_full=pf, judge=judge)
+    assert len(result["entities"]) == 1
+    assert result["stats"]["merges_by_method"]["embedding_disambiguation"] == 1
+
+
+def test_embedding_veto_blocks_ambiguous_merge():
+    # Reveal signal would fire, but dissimilar contexts must veto (no LLM call).
+    entities = [_person(0, "Dorian", "s0"), _person(1, "Perrington", "s1")]
+    pf = _persons_full({"s0": ["Dorian smiled warmly."], "s1": ["Perrington schemed coldly."]})
+    reveal = ("revealed",)
+    # Force a reveal signal by giving both a shared reveal context.
+    pf["s0"]["mentions_by_chapter"]["c1"].append("revealed Dorian Perrington")
+    pf["s1"]["mentions_by_chapter"]["c1"].append("revealed Dorian Perrington")
+    backend = _StubBackend({"dorian": [1.0, 0.0, 0.0], "perrington": [0.0, 1.0, 0.0],
+                            "revealed": [0.0, 0.0, 1.0]})
+    judge = EmbeddingJudge(backend, propose_threshold=0.86, veto_threshold=0.80)
+
+    def _llm(_payload):  # must never be called once vetoed
+        raise AssertionError("LLM confirmer called despite veto")
+
+    result = resolve_aliases(entities, persons_full=pf, reveal_words=reveal,
+                             llm_confirmer=_llm, judge=judge)
+    assert len(result["entities"]) == 2
+    assert result["stats"]["embedding_vetoes"] >= 1

@@ -45,6 +45,7 @@ def _empty_stats() -> dict:
         "merges_applied": 0,
         "merges_by_method": {"pattern": 0, "cooccurrence": 0, "llm": 0, "title_alias": 0, "role_symmetric": 0, "pure_title": 0},
         "ambiguous_pairs": 0,
+        "embedding_vetoes": 0,
         "llm_attempts": 0,
         "llm_confirmed": 0,
         "llm_failed": 0,
@@ -709,6 +710,23 @@ def _detect_role_symmetric_pairs(
     return pairs
 
 
+def _detect_embedding_alias(index, candidate_index, judge, centroids) -> dict | None:
+    """Semantic merge proposal for a pair with no lexical signal (STU-468).
+
+    Returns an evidence dict in the same shape as the lexical detectors, or
+    None to abstain. `method` flows verbatim into MergeDecision.strategy via
+    Registry.from_artifacts.
+    """
+    verdict = judge.propose(index, candidate_index, centroids)
+    if verdict.decision != "merge":
+        return None
+    return {
+        "method": "embedding_disambiguation",
+        "confidence": verdict.confidence,
+        "snippet": f"context cosine={verdict.score:.3f} (embedding disambiguation)",
+    }
+
+
 def resolve_aliases(
     entities: list[dict],
     persons_full: dict,
@@ -720,6 +738,7 @@ def resolve_aliases(
     pattern_templates: tuple[str, ...] = (),
     relationships: list[dict] | None = None,
     role_symmetric_min_shared: int = 2,
+    judge=None,
 ) -> dict:
     stats = _empty_stats()
     role_words = role_words or []
@@ -727,6 +746,11 @@ def resolve_aliases(
     relationships = relationships or []
     resolved: list[dict] = []
     consumed: set[int] = set()
+
+    centroids: dict = {}
+    if judge is not None:
+        contexts_by_key = {i: _gather_contexts(e, persons_full) for i, e in enumerate(entities)}
+        centroids = judge.build_centroids(contexts_by_key)
 
     # Pre-compute role-symmetric candidate pairs.
     role_sym_map: dict[tuple[int, int], dict] = {}
@@ -796,6 +820,21 @@ def resolve_aliases(
 
             signal = reveal or role_sym
             if not signal:
+                if judge is not None:
+                    emb = _detect_embedding_alias(index, candidate_index, judge, centroids)
+                    if emb:
+                        merged = _merge_entities(entity, candidate, emb, persons_full, role_words=role_words)
+                        stats["merges_applied"] += 1
+                        stats["merges_by_method"]["embedding_disambiguation"] = (
+                            stats["merges_by_method"].get("embedding_disambiguation", 0) + 1
+                        )
+                        consumed.add(candidate_index)
+                        break
+                continue
+
+            if judge is not None and judge.veto(index, candidate_index, centroids):
+                stats["embedding_vetoes"] += 1
+                stats["ambiguous_pairs"] += 1
                 continue
 
             if llm_confirmer is None:
@@ -900,6 +939,42 @@ def main() -> None:
                 stacklevel=1,
             )
 
+    emb_cfg = ctx.get("embedding_disambiguation", {}) or {}
+    judge = None
+    if emb_cfg.get("enabled"):
+        warnings.warn(
+            "embedding_disambiguation is enabled, but its STU-468 eval falsified the "
+            "centroid-cosine approach on single-book data (same/different pairs are not "
+            "separable; the proposer over-merges). See "
+            "docs/superpowers/specs/2026-07-12-embedding-disambiguation-EVAL-RESULTS.md.",
+            stacklevel=1,
+        )
+        try:
+            from wiki_creator.embedding_disambiguation import (
+                EmbeddingBackend,
+                EmbeddingJudge,
+                DEFAULT_MODEL,
+                DEFAULT_PROPOSE_THRESHOLD,
+                DEFAULT_VETO_THRESHOLD,
+            )
+
+            backend = EmbeddingBackend(
+                model_name=emb_cfg.get("model", DEFAULT_MODEL),
+                device=emb_cfg.get("device"),
+            )
+            judge = EmbeddingJudge(
+                backend,
+                propose_threshold=emb_cfg.get("propose_threshold", DEFAULT_PROPOSE_THRESHOLD),
+                veto_threshold=emb_cfg.get("veto_threshold", DEFAULT_VETO_THRESHOLD),
+            )
+        except ImportError as exc:
+            warnings.warn(
+                f"embedding_disambiguation enabled but deps missing ({exc}); "
+                f"install with pip install -e '.[embeddings]' — skipping.",
+                stacklevel=1,
+            )
+            judge = None
+
     result = resolve_aliases(
         entities, persons_full=persons_full, narrator=narrator,
         llm_confirmer=llm_confirmer, reveal_words=reveal_words,
@@ -907,6 +982,7 @@ def main() -> None:
         pattern_templates=pattern_templates,
         relationships=relationships,
         role_symmetric_min_shared=ctx.get("role_symmetric_min_shared", 2),
+        judge=judge,
     )
     json.dump(result, sys.stdout, ensure_ascii=False)
 
