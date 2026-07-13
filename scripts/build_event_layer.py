@@ -20,6 +20,29 @@ from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.registry import Registry
 
+# Entity-classification importance tiers (scripts/entity_classification.py)
+# -> salience participant-importance weight (STU-483). Tiers absent here
+# (e.g. "ignored", or an entity missing from entities_classified.json)
+# default to 0.0 via dict.get.
+_IMPORTANCE_TIER_WEIGHTS = {"principal": 1.0, "secondaire": 0.6, "figurant": 0.3}
+
+
+def _read_participant_importance(path: Path) -> dict[str, float]:
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    entities = data.get("entities", []) if isinstance(data, dict) else []
+    weights: dict[str, float] = {}
+    for entity in entities:
+        name = entity.get("canonical_name")
+        tier = str(entity.get("importance", "")).strip().lower()
+        if name and tier in _IMPORTANCE_TIER_WEIGHTS:
+            weights[name] = _IMPORTANCE_TIER_WEIGHTS[tier]
+    return weights
+
 
 def run_for_processing(processing_dir: Path | str, language: str) -> list[dict]:
     """Build events.json from artifacts in ``processing_dir``. Returns events."""
@@ -31,9 +54,10 @@ def run_for_processing(processing_dir: Path | str, language: str) -> list[dict]:
     relationships = _read_relationships(rels_path)
 
     registry = Registry.load_from_processing(processing_dir)
+    participant_importance = _read_participant_importance(processing_dir / "entities_classified.json")
 
     action_cues = load_lang_config(language).get("action_cues", [])
-    events = build_events(summaries, relationships, registry, action_cues)
+    events = build_events(summaries, relationships, registry, action_cues, participant_importance)
 
     (processing_dir / "events.json").write_text(
         json.dumps({"events": events}, ensure_ascii=False, indent=2),

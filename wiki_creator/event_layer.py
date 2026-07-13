@@ -54,17 +54,53 @@ def _has_action_cue(description: str, action_cues: list[str]) -> bool:
     return any(re.search(rf"\b{re.escape(c.casefold())}\b", low) for c in action_cues)
 
 
-def _salience(description: str, chapter: int, total_chapters: int,
-              action_cues: list[str]) -> float:
-    """Score a beat by action-cue presence and chapter position (climax bias).
+# STU-483: position was the dominant (and often only live) term, crushing
+# early-book setup beats regardless of narrative weight. Position is now a
+# minor tie-breaker; participant importance carries the most weight, with the
+# turning-point cue (action_cues now spans setup/reveal/resolution phrasing,
+# not just resolution) close behind. Weights sum to 1.0 = the score cap.
+_CUE_WEIGHT = 0.35
+_PARTICIPANT_WEIGHT = 0.45
+_POSITION_WEIGHT = 0.20
 
-    Returns a score in [0.0, 1.0]:
-    - 0.5 for an action-cue hit
-    - Up to 0.5 scaled by chapter position (climax bias)
+
+def _participant_importance_score(
+    participants: list[str], participant_importance: dict[str, float]
+) -> float:
+    """Average importance weight of an event's participants.
+
+    0.0 when there are no participants or no importance signal (registry-less
+    runs degrade to the cue+position terms only).
     """
-    score = 0.5 if _has_action_cue(description, action_cues) else 0.0
+    if not participants or not participant_importance:
+        return 0.0
+    scores = [participant_importance.get(p, 0.0) for p in participants]
+    return sum(scores) / len(scores)
+
+
+def _salience(
+    description: str,
+    chapter: int,
+    total_chapters: int,
+    action_cues: list[str],
+    participants: list[str] | None = None,
+    participant_importance: dict[str, float] | None = None,
+) -> float:
+    """Score a beat by narrative importance, not just where it sits in the book.
+
+    Returns a score in [0.0, 1.0], the sum of three terms:
+    - up to `_CUE_WEIGHT` for a turning-point cue hit (setup/reveal/resolution
+      phrasing via `action_cues`)
+    - up to `_PARTICIPANT_WEIGHT` scaled by the average importance of the
+      event's participants
+    - up to `_POSITION_WEIGHT` scaled by chapter position (minor climax bias)
+    """
+    score = _CUE_WEIGHT if _has_action_cue(description, action_cues) else 0.0
+    score += _PARTICIPANT_WEIGHT * _participant_importance_score(
+        participants or [], participant_importance or {}
+    )
     if total_chapters > 0 and chapter > 0:
-        score += 0.5 * (chapter / total_chapters)
+        score += _POSITION_WEIGHT * (chapter / total_chapters)
     return round(min(score, 1.0), 3)
 
 
@@ -78,17 +114,27 @@ def build_events(
     relationships: list[dict],
     registry: "Registry | None",
     action_cues: list[str],
+    participant_importance: dict[str, float] | None = None,
 ) -> list[dict]:
     """Assemble chapter-summary bullets + relationship key-moments into
     deduplicated, scored events, sorted by (chapter, description) — with
     event_id assigned per chapter in that resulting sort order.
+
+    `participant_importance` maps canonical entity name -> importance weight
+    (e.g. derived from entity-classification tiers) and feeds the salience
+    formula (STU-483). Omitted/empty degrades to a cue+position-only score.
     """
     chapter_summaries = chapter_summaries or {}
     relationships = relationships or []
+    participant_importance = participant_importance or {}
     total_chapters = len(chapter_summaries)
 
     # (chapter, normalized_description) -> aggregate
     agg: dict[tuple[int, str], dict] = {}
+    # Participants seeded by relationship key-moments, per chapter — the
+    # "source pair" a same-chapter, participant-less summary beat can inherit
+    # from (STU-483: orphaned high-salience climax events).
+    chapter_rel_participants: dict[int, set[str]] = {}
 
     def add_beat(chapter: int, raw: str, description: str, seed: list[str]) -> None:
         key = (chapter, description.casefold())
@@ -114,11 +160,13 @@ def build_events(
     for rel in relationships:
         seed = [str(rel.get("entity_a", "")), str(rel.get("entity_b", ""))]
         seed = [s for s in seed if s]
+        resolved_seed = [_resolve(s, registry) for s in seed]
         for km in rel.get("key_moments") or []:
             chapter = _parse_chapter(km)
             if chapter is None:
                 continue
             add_beat(chapter, km, _strip_marker(km), seed)
+            chapter_rel_participants.setdefault(chapter, set()).update(resolved_seed)
 
     # Source 2: chapter summary bullets
     for key, summary in chapter_summaries.items():
@@ -134,13 +182,20 @@ def build_events(
     events: list[dict] = []
     for (chapter, _norm), entry in agg.items():
         description = entry["description"]
+        participants = entry["participants"]
+        if not participants and chapter in chapter_rel_participants:
+            participants = chapter_rel_participants[chapter]
+        participants = sorted(participants)
         events.append({
             "chapter": chapter,
             "description": description,
-            "participants": sorted(entry["participants"]),
+            "participants": participants,
             "places": sorted(entry["places"]),
             "outcome": description if _has_action_cue(description, action_cues) else None,
-            "salience": _salience(description, chapter, total_chapters, action_cues),
+            "salience": _salience(
+                description, chapter, total_chapters, action_cues,
+                participants, participant_importance,
+            ),
             "source_bullets": entry["source_bullets"],
         })
 

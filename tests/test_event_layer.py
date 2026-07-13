@@ -43,14 +43,52 @@ def test_salience_action_cue_and_position():
     from wiki_creator.event_layer import _salience
 
     cues = ["couronna", "vainquit", "tua"]
-    # action cue + last chapter → high
-    assert _salience("Celaena vainquit Cain", 12, 12, cues) == 1.0
-    # action cue, early chapter → 0.5 + small position term
-    assert _salience("Celaena vainquit Cain", 1, 12, cues) < 0.6
-    # no cue, mid book → only the position term
-    assert _salience("Celaena walks the corridor", 6, 12, cues) < 0.3
-    # no cue, no chapters info → 0.0
+    # action cue + last chapter, no participant signal → cue + position terms
+    assert _salience("Celaena vainquit Cain", 12, 12, cues) == 0.55
+    # action cue, first chapter → cue term dominates, position adds almost nothing
+    assert _salience("Celaena vainquit Cain", 1, 12, cues) < 0.4
+    # no cue, mid book, no participants → only the (minor) position term
+    assert _salience("Celaena walks the corridor", 6, 12, cues) < 0.15
+    # no cue, no chapters info, no participants → 0.0
     assert _salience("something", 0, 0, cues) == 0.0
+
+
+def test_salience_position_is_a_minor_term():
+    from wiki_creator.event_layer import _salience
+
+    # Same beat, no cue/participant signal: moving from ch1 to the last
+    # chapter can swing the score by at most the position weight (0.20) —
+    # position is a tie-breaker, not the driver (STU-483).
+    early = _salience("nothing notable happens", 1, 55, [])
+    late = _salience("nothing notable happens", 55, 55, [])
+    assert 0.19 <= late - early <= 0.2
+
+
+def test_salience_participant_importance_outweighs_early_position():
+    from wiki_creator.event_layer import _salience
+
+    importance = {"Celaena Sardothien": 1.0, "Dorian Havilliard": 1.0}
+    # ch1 setup beat: no action cue, but both participants are top-tier →
+    # participant importance alone lifts it well above a plain early-chapter
+    # beat with no participants (STU-483: setup beats aren't crushed).
+    setup_beat = _salience(
+        "Dorian offers Celaena freedom in exchange for serving as his champion",
+        1, 55, [], ["Celaena Sardothien", "Dorian Havilliard"], importance,
+    )
+    plain_early_beat = _salience("Celaena walks the corridor", 1, 55, [], [], importance)
+    assert setup_beat > plain_early_beat
+    assert setup_beat >= 0.45
+
+
+def test_salience_climax_beat_with_cue_and_participants_scores_high():
+    from wiki_creator.event_layer import _salience
+
+    cues = ["crowned"]
+    importance = {"Celaena Sardothien": 1.0}
+    score = _salience(
+        "Celaena is crowned Champion", 55, 55, cues, ["Celaena Sardothien"], importance,
+    )
+    assert score == 1.0
 
 
 from wiki_creator.event_layer import build_events
@@ -115,3 +153,47 @@ def test_build_events_degrades_gracefully_with_no_registry():
 
 def test_build_events_tolerates_none_summaries_and_relationships():
     assert build_events(None, None, None, action_cues=[]) == []
+
+
+def test_build_events_threads_participant_importance_into_salience():
+    reg = _registry(CELAENA, CAIN)
+    summaries = {
+        "Chapter 1": {
+            "chapter_id": "C01.xhtml",
+            "chapter_title": "Chapter 1",
+            "summary_bullets": ["Celaena and Cain meet in the yard"],
+        },
+    }
+    importance = {"Celaena Sardothien": 1.0, "Cain": 1.0}
+    events = build_events({**summaries, "Chapter 2": summaries["Chapter 1"]}, [], reg,
+                           action_cues=[], participant_importance=importance)
+    e = next(ev for ev in events if ev["chapter"] == 1)
+    # Both participants are top-importance → the participant term alone beats
+    # what a cue-less, participant-less early-chapter beat would score.
+    assert e["salience"] > 0.4
+
+
+def test_build_events_orphan_high_salience_event_inherits_source_pair_participants():
+    reg = _registry(CELAENA, CAIN)
+    summaries = {
+        "Chapter 55": {
+            "chapter_id": "C55.xhtml",
+            "chapter_title": "Chapter 55",
+            # No name literally appears in this beat — the climax-orphan case
+            # from STU-483 (ch55, "only her left").
+            "summary_bullets": ["But there were no other Champions left—only her"],
+        },
+    }
+    relationships = [
+        {"entity_a": "Celaena", "entity_b": "Cain",
+         "key_moments": ["Ch55: Celaena defeats the last challenger"]},
+    ]
+    events = build_events(summaries, relationships, reg, action_cues=[])
+
+    orphan = next(e for e in events if "no other Champions" in e["description"])
+    # Inherits the chapter's relationship-source pair instead of staying
+    # participant-less.
+    assert orphan["participants"] == ["Cain", "Celaena Sardothien"]
+
+    # Invariant from the issue: no event of salience >= 0.8 has 0 participants.
+    assert all(e["participants"] for e in events if e["salience"] >= 0.8)
