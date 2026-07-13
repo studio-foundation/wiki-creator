@@ -76,11 +76,19 @@ def clean_files(book_path: str) -> dict[str, list[str]]:
     }
 
 
-# Scripts to run before a pipeline (pre-steps)
-PRE_STEPS = {
-    "wiki-resolution":  ["python", "scripts/chapter_summary.py", "--book"],
-    "wiki-preparation": ["python", "scripts/classify_relationships.py", "--book"],
-    "wiki-generation":  ["python", "scripts/generate_wiki_pages.py", "--book"],
+# Scripts to run before a pipeline (pre-steps). Each pipeline maps to a list
+# of commands, run in order; a non-zero return code aborts the run.
+PRE_STEPS: dict[str, list[list[str]]] = {
+    "wiki-resolution": [
+        ["python", "scripts/chapter_summary.py", "--book"],
+    ],
+    "wiki-preparation": [
+        ["python", "scripts/classify_relationships.py", "--book"],
+        ["python", "scripts/build_event_layer.py", "--book"],
+    ],
+    "wiki-generation": [
+        ["python", "scripts/generate_wiki_pages.py", "--book"],
+    ],
 }
 
 
@@ -195,8 +203,8 @@ def main() -> None:
             save_state(args.book, state)
 
         # Run pre-steps before the pipeline (e.g. generate_wiki_pages.py before wiki-generation)
-        if pipeline in PRE_STEPS:
-            pre_cmd = PRE_STEPS[pipeline] + [args.book]
+        for pre_step in PRE_STEPS.get(pipeline, []):
+            pre_cmd = pre_step + [args.book]
             print(f"\n[pre-step] {' '.join(pre_cmd)}", flush=True)
             pre_result = subprocess.run(pre_cmd)
             if pre_result.returncode != 0:

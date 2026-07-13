@@ -32,7 +32,21 @@ def test_clean_files_wiki_resolution_excludes_chapter_summaries() -> None:
 def test_pre_steps_wiki_resolution_runs_chapter_summary() -> None:
     from run_wiki import PRE_STEPS
     assert "wiki-resolution" in PRE_STEPS, "PRE_STEPS must have wiki-resolution entry"
-    cmd = PRE_STEPS["wiki-resolution"]
-    assert "chapter_summary.py" in " ".join(cmd), (
+    cmds = PRE_STEPS["wiki-resolution"]
+    assert any("chapter_summary.py" in " ".join(cmd) for cmd in cmds), (
         "PRE_STEPS['wiki-resolution'] must invoke chapter_summary.py"
+    )
+
+
+def test_pre_steps_wiki_preparation_runs_classify_before_events() -> None:
+    """events depend on relationships_classified.json, so classify_relationships.py
+    must run before build_event_layer.py."""
+    from run_wiki import PRE_STEPS
+    assert "wiki-preparation" in PRE_STEPS, "PRE_STEPS must have wiki-preparation entry"
+    cmds = PRE_STEPS["wiki-preparation"]
+    joined = [" ".join(cmd) for cmd in cmds]
+    classify_idx = next(i for i, c in enumerate(joined) if "classify_relationships.py" in c)
+    events_idx = next(i for i, c in enumerate(joined) if "build_event_layer.py" in c)
+    assert classify_idx < events_idx, (
+        "classify_relationships.py must run before build_event_layer.py in PRE_STEPS['wiki-preparation']"
     )

@@ -9,6 +9,7 @@ from scripts.wiki_preparation import (
     _IMPORTANCE_NORMALIZE,
     build_chapter_summary_context,
     build_entity_bundle,
+    events_for_entity,
     extract_context,
     filter_relationships,
     stage_outputs_from_payload,
@@ -888,3 +889,17 @@ def test_main_binds_identity_from_registry(tmp_path: Path, monkeypatch):
     entity = batch["entities"][0]
     assert entity["canonical_name"] == "Celaena Sardothien"   # bound from registry
     assert entity["aliases"] == ["Celaena"]                    # excludes canonical
+
+
+def test_entity_events_filtered_by_canonical_name():
+    """STU-478: entity_events channel — events where the canonical name participates or occurs."""
+    events = [
+        {"event_id": "e_ch12_0", "chapter": 12, "description": "duel",
+         "participants": ["Celaena Sardothien", "Cain"], "places": ["Rifthold"]},
+        {"event_id": "e_ch01_0", "chapter": 1, "description": "freed",
+         "participants": ["Dorian Havilliard"], "places": ["Endovier"]},
+    ]
+    got = events_for_entity("Celaena Sardothien", events)
+    assert [e["event_id"] for e in got] == ["e_ch12_0"]
+    got_place = events_for_entity("Rifthold", events)
+    assert [e["event_id"] for e in got_place] == ["e_ch12_0"]
