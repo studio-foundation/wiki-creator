@@ -161,8 +161,10 @@ Inside `wiki-resolution`, order matters:
   title. Enabled only when the book YAML sets `generation.spoiler.collapse_after_chapter: N`
   — unset keeps output byte-identical (goldens safe). The relationship index uses
   language-neutral fields only (names, French `relationship_type`, chapter numbers);
-  the classifier's English `evolution`/`key_moments` are never surfaced. Pure logic
-  in `wiki_creator/spoiler_blocks.py`; section→heading map in `wiki_creator/sections.py`.
+  the classifier's English `evolution`/`key_moments` are never surfaced. The index
+  injects only under an exactly-`Relations` heading (an LLM-drifted heading is
+  silently skipped, same tolerance as collapsible gating). Pure logic in
+  `wiki_creator/spoiler_blocks.py`; section→heading map in `wiki_creator/sections.py`.
 
 ## Working Norms
 
