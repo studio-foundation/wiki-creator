@@ -34,6 +34,7 @@ from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.provenance import content_units
 from wiki_creator import studio_io
 from wiki_creator.registry import Registry, normalize_name
+from wiki_creator.sections import SECTION_TITLES as _SECTION_TITLES
 from wiki_creator.synopsis import event_lines
 from wiki_creator.tome_labels import appearance_label
 
@@ -43,18 +44,6 @@ _DEFAULT_SECTIONS_BY_IMPORTANCE = {
     "principal": ["infobox", "biography", "personality", "physical", "powers", "relationships", "trivia", "references"],
     "secondary": ["infobox", "biography", "relationships", "references"],
     "figurant": ["infobox", "biography"],
-}
-_SECTION_TITLES = {
-    "infobox": "Infobox",
-    "biography": "Biographie",
-    "personality": "Personnalité",
-    "physical": "Description physique",
-    "powers": "Pouvoirs",
-    "relationships": "Relations",
-    "trivia": "Anecdotes",
-    "events": "Événements",
-    "narrative_role": "Rôle dans le récit",
-    "references": "Références",
 }
 _INTERNAL_INFOBOX_KEYS = frozenset({
     "cooccurrence_count",
