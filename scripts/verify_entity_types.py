@@ -27,6 +27,7 @@ from pathlib import Path
 import yaml
 
 from wiki_creator import studio_io
+from wiki_creator.llm import ollama
 
 # Keywords that indicate a genuine geographic entity — skip LLM for these
 GEOGRAPHIC_KEYWORDS = frozenset({
@@ -121,12 +122,6 @@ def _call_ollama(name: str, context_sentences: list[str], model: str) -> str | N
     Ask Ollama to classify `name` as PERSON, PLACE, or ORG.
     Returns "PERSON", "PLACE", "ORG", or None on failure.
     """
-    try:
-        import requests
-    except ImportError:
-        print("Warning: requests not available, skipping Ollama call", file=sys.stderr)
-        return None
-
     context_text = " ".join(context_sentences)
     prompt = (
         f"Given these sentences from a novel, is '{name}' a person, "
@@ -135,21 +130,15 @@ def _call_ollama(name: str, context_sentences: list[str], model: str) -> str | N
         f"Sentences: {context_text}"
     )
 
-    try:
-        resp = requests.post(
-            "http://localhost:11434/api/generate",
-            json={"model": model, "prompt": prompt, "stream": False},
-            timeout=30,  # Ollama can be slow on first model load
-        )
-        resp.raise_for_status()
-        reply = resp.json().get("response", "").upper()
-        for label in ("PERSON", "PLACE", "ORG"):
-            if re.search(rf"\b{label}\b", reply):
-                return label
+    reply = ollama.generate(prompt, model=model, timeout=30)  # Ollama can be slow on first model load
+    if reply is None:
+        print(f"Warning: Ollama call failed for '{name}'", file=sys.stderr)
         return None
-    except Exception as exc:
-        print(f"Warning: Ollama call failed for '{name}': {exc}", file=sys.stderr)
-        return None
+    reply = reply.upper()
+    for label in ("PERSON", "PLACE", "ORG"):
+        if re.search(rf"\b{label}\b", reply):
+            return label
+    return None
 
 
 def verify_clusters(

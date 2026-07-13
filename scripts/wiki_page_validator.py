@@ -24,16 +24,14 @@ Output (stdout):
 import json
 import os
 import re
-import socket
 import sys
-import urllib.error
-import urllib.request
 from pathlib import Path
 
 import yaml
 
 from wiki_creator.grounding import find_ungrounded_names
 from wiki_creator.lang import load_lang_config
+from wiki_creator.llm import ollama
 from wiki_creator.registry import normalize_name as _normalize_name
 
 
@@ -156,7 +154,6 @@ def check_ungrounded_names(page: dict, meta: dict) -> list[str]:
     return [f"❌ Nom non ancré dans les extraits source : {n}" for n in names]
 
 
-_OLLAMA_URL_DEFAULT = "http://localhost:11434"
 _GROUNDING_IMPORTANCES = {"principal", "secondary", "secondaire"}
 _MAX_REPORTED_CLAIMS = 5
 
@@ -187,15 +184,6 @@ ou
 {{"grounded": false, "ungrounded_claims": ["description courte", ...]}}
 (au maximum {max_claims} claims)
 """
-
-
-def _ollama_available(url: str, timeout: int = 2) -> bool:
-    try:
-        req = urllib.request.Request(f"{url}/api/tags", method="HEAD")
-        with urllib.request.urlopen(req, timeout=timeout):
-            return True
-    except (urllib.error.URLError, socket.timeout, OSError):
-        return False
 
 
 def _parse_grounding_response(raw: str) -> list[str]:
@@ -232,8 +220,8 @@ def check_grounding_llm(page: dict, meta: dict) -> list[str]:
     if not source or not content:
         return []
 
-    url = os.environ.get("OLLAMA_URL", _OLLAMA_URL_DEFAULT)
-    if not _ollama_available(url):
+    url = os.environ.get("OLLAMA_URL", ollama.DEFAULT_URL)
+    if not ollama.is_available(url):
         print(
             f"[wiki-page-validator] Ollama not available at {url} — "
             "LLM grounding check skipped.",
@@ -246,26 +234,18 @@ def check_grounding_llm(page: dict, meta: dict) -> list[str]:
         page_content=content,
         max_claims=_MAX_REPORTED_CLAIMS,
     )
-    body = json.dumps({
-        "model": meta.get("grounding_llm_model", "mistral:7b-instruct"),
-        "prompt": prompt,
-        "stream": False,
-        "options": {"temperature": 0.0, "num_predict": 512},
-    }).encode()
-    req = urllib.request.Request(
-        f"{url}/api/generate",
-        data=body,
-        headers={"Content-Type": "application/json"},
-        method="POST",
+    raw = ollama.generate(
+        prompt,
+        model=meta.get("grounding_llm_model", "mistral:7b-instruct"),
+        url=url,
+        timeout=int(meta.get("grounding_llm_timeout", 120)),
+        num_predict=512,
     )
-    try:
-        with urllib.request.urlopen(req, timeout=int(meta.get("grounding_llm_timeout", 120))) as resp:
-            data = json.loads(resp.read())
-    except (urllib.error.URLError, socket.timeout, OSError, json.JSONDecodeError) as exc:
-        print(f"[wiki-page-validator] LLM grounding call failed: {exc}", file=sys.stderr)
+    if raw is None:
+        print("[wiki-page-validator] LLM grounding call failed", file=sys.stderr)
         return []
 
-    claims = _parse_grounding_response(data.get("response", ""))
+    claims = _parse_grounding_response(raw)
     return [f"❌ Affirmation non ancrée dans les extraits source : {c}" for c in claims]
 
 

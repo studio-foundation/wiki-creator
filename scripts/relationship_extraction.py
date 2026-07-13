@@ -56,12 +56,9 @@ Workers / RAM budget (LingMessCoref ~590M params per worker):
 import json
 import os
 import re
-import socket
 import subprocess
 import sys
 import tempfile
-import urllib.error
-import urllib.request
 from pathlib import Path
 
 import yaml
@@ -69,6 +66,8 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 from wiki_creator.paths import book_paths_from_yaml, BookPaths
 from wiki_creator.lang import load_lang_config, infer_language
+from wiki_creator.llm import ollama
+from wiki_creator.nlp.loader import load_spacy_model
 from wiki_creator import studio_io
 
 
@@ -77,7 +76,7 @@ DEFAULT_THRESHOLD = 5
 DEFAULT_MIN_COOCCURRENCE = 3
 DEFAULT_MIN_CHAPTERS_TOGETHER = 2
 _MAX_DIRECT_INTERACTION_GAP = 1  # max sentence distance to qualify as direct interaction
-_OLLAMA_URL = "http://localhost:11434"
+_OLLAMA_URL = ollama.DEFAULT_URL
 
 
 def _tightest_span(window: list[str], name_a: str, name_b: str) -> str | None:
@@ -340,8 +339,6 @@ def enrich_mentions_with_coref(
     Returns:
         mentions_by_entity enriched in-place (also returned for convenience)
     """
-    import spacy
-
     if pronouns is None:
         pronouns = frozenset(load_lang_config("fr").get("pronouns", []))
 
@@ -363,7 +360,7 @@ def enrich_mentions_with_coref(
 
     if nlp is None:
         try:
-            nlp = spacy.load("fr_core_news_lg")
+            nlp, _ = load_spacy_model("fr_core_news_lg")
         except Exception as e:
             print(f"[WARN] spaCy load failed: {e}", file=sys.stderr)
             return mentions_by_entity
@@ -1015,41 +1012,6 @@ def run_test_mode(
     print(f"\n=== STATS ===")
     for k, v in stats.items():
         print(f"  {k}: {v}")
-
-
-def _check_ollama_available(url: str, timeout: int = 2) -> bool:
-    """Return True if Ollama is reachable at url/api/tags."""
-    try:
-        req = urllib.request.Request(f"{url}/api/tags", method="HEAD")
-        with urllib.request.urlopen(req, timeout=timeout):
-            return True
-    except (urllib.error.URLError, socket.timeout, OSError):
-        return False
-
-
-def _call_ollama_classify_json(
-    prompt: str, model: str, ollama_url: str, timeout: int = 30
-) -> dict | None:
-    """Call Ollama /api/generate and parse JSON response. Returns None on any failure."""
-    body = json.dumps({
-        "model": model,
-        "prompt": prompt,
-        "stream": False,
-        "options": {"temperature": 0.0, "num_predict": 300},
-    }).encode()
-    req = urllib.request.Request(
-        f"{ollama_url}/api/generate",
-        data=body,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            data = json.loads(resp.read())
-        raw = data.get("response", "")
-        return json.loads(raw)
-    except (urllib.error.URLError, socket.timeout, OSError, json.JSONDecodeError):
-        return None
 
 
 def _run_studio_classifier_item(

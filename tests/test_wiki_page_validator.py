@@ -437,18 +437,18 @@ def test_check_grounding_llm_skips_figurant():
 
 def test_check_grounding_llm_skips_when_ollama_unavailable(monkeypatch):
     import scripts.wiki_page_validator as v
-    monkeypatch.setattr(v, "_ollama_available", lambda url, timeout=2: False)
+    monkeypatch.setattr(v.ollama, "is_available", lambda url, timeout=2: False)
     assert v.check_grounding_llm(_nox_page(), _llm_meta()) == []
 
 
 def test_check_grounding_llm_flags_unsupported_claims(monkeypatch):
     import scripts.wiki_page_validator as v
-    monkeypatch.setattr(v, "_ollama_available", lambda url, timeout=2: True)
+    monkeypatch.setattr(v.ollama, "is_available", lambda url, timeout=2: True)
     fake = _FakeResponse({"response": json.dumps({
         "grounded": False,
         "ungrounded_claims": ["Nox Owen meurt lors du Tournoi (il survit)"],
     })})
-    monkeypatch.setattr(v.urllib.request, "urlopen", lambda req, timeout=120: fake)
+    monkeypatch.setattr("urllib.request.urlopen", lambda req, timeout=120: fake)
     errors = v.check_grounding_llm(_nox_page(), _llm_meta())
     assert len(errors) == 1
     assert "Nox Owen meurt" in errors[0]
@@ -456,17 +456,17 @@ def test_check_grounding_llm_flags_unsupported_claims(monkeypatch):
 
 def test_check_grounding_llm_passes_grounded_page(monkeypatch):
     import scripts.wiki_page_validator as v
-    monkeypatch.setattr(v, "_ollama_available", lambda url, timeout=2: True)
+    monkeypatch.setattr(v.ollama, "is_available", lambda url, timeout=2: True)
     fake = _FakeResponse({"response": '{"grounded": true, "ungrounded_claims": []}'})
-    monkeypatch.setattr(v.urllib.request, "urlopen", lambda req, timeout=120: fake)
+    monkeypatch.setattr("urllib.request.urlopen", lambda req, timeout=120: fake)
     assert v.check_grounding_llm(_nox_page(), _llm_meta()) == []
 
 
 def test_check_grounding_llm_graceful_on_malformed_response(monkeypatch):
     import scripts.wiki_page_validator as v
-    monkeypatch.setattr(v, "_ollama_available", lambda url, timeout=2: True)
+    monkeypatch.setattr(v.ollama, "is_available", lambda url, timeout=2: True)
     fake = _FakeResponse({"response": "je ne peux pas répondre en JSON"})
-    monkeypatch.setattr(v.urllib.request, "urlopen", lambda req, timeout=120: fake)
+    monkeypatch.setattr("urllib.request.urlopen", lambda req, timeout=120: fake)
     assert v.check_grounding_llm(_nox_page(), _llm_meta()) == []
 
 

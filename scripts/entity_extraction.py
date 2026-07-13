@@ -35,6 +35,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 from wiki_creator import studio_io
 from wiki_creator.chapters import is_frontmatter_chapter
 from wiki_creator.lang import infer_language as _infer_lang, load_lang_config as _load_lang_config
+from wiki_creator.nlp.loader import (
+    ensure_sentencizer as _ensure_sentencizer,
+    load_spacy_model_with_fallback as _load_spacy_model_with_fallback,
+)
 
 
 DEFAULT_MIN_MENTIONS_ABSOLUTE = 3
@@ -69,42 +73,6 @@ def filter_entities_by_min_mentions(entities_full: dict, min_mentions_absolute: 
         for entity_id, entity in entities_full.items()
         if _entity_total_mentions(entity) >= min_mentions_absolute
     }
-
-
-def _spacy_model_candidates(requested_model: str) -> list[str]:
-    """Return ordered candidate models for robust loading."""
-    candidates = [requested_model]
-    if requested_model.startswith("en_core_web_") and requested_model != "en_core_web_sm":
-        candidates.append("en_core_web_sm")
-    if requested_model.startswith("fr_core_news_"):
-        if requested_model != "fr_core_news_lg":
-            candidates.append("fr_core_news_lg")
-        if requested_model != "fr_core_news_sm":
-            candidates.append("fr_core_news_sm")
-    # De-duplicate while preserving order.
-    return list(dict.fromkeys(candidates))
-
-
-def _ensure_sentencizer(nlp) -> None:
-    """Add a sentencizer to *nlp* if no sentence-boundary component is present.
-
-    Fine-tuned models trained with only tok2vec+ner don't include a parser or
-    senter, so doc.sents raises E030.  Adding a sentencizer fixes this without
-    altering NER behaviour.
-    """
-    if not any(p in nlp.pipe_names for p in ("parser", "senter", "sentencizer")):
-        nlp.add_pipe("sentencizer", first=True)
-
-
-def _load_spacy_model_with_fallback(spacy_load, requested_model: str):
-    """Try requested spaCy model, then language-appropriate fallbacks."""
-    errors = []
-    for model in _spacy_model_candidates(requested_model):
-        try:
-            return spacy_load(model), model
-        except OSError as exc:
-            errors.append(f"{model}: {exc}")
-    raise OSError("Unable to load spaCy model. Tried: " + " | ".join(errors))
 
 
 def _audit_ner_labels(nlp) -> None:
