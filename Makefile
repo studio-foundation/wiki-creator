@@ -1,5 +1,6 @@
 .PHONY: run run-coref run-extraction run-resolution run-preparation run-generation pages-export run-all \
         test-extraction test-clustering test-relationships classify-relationships classify-relationships-dry \
+        run-events \
         test test-coref test-coref-parallel \
         clean
 
@@ -78,6 +79,9 @@ classify-relationships:
 
 classify-relationships-dry:
 	python scripts/classify_relationships.py --book $(BOOK) --dry-run
+
+run-events:
+	python scripts/build_event_layer.py --book $(BOOK)
 
 test: test-extraction
 	python scripts/entity_clustering.py --live --book $(BOOK)
