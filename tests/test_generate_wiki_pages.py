@@ -209,6 +209,79 @@ def test_build_prompt_includes_chapter_summary_context_block_and_rules():
     assert "Chapter summaries serve as orientation only. Direct excerpts take priority." in prompt
 
 
+def test_build_prompt_includes_place_events_block_and_rule():
+    """STU-480 (SP2): PLACE pages get a grounding block + writing rule for
+    events.json entries where the place is in `places`."""
+    entity = {
+        "canonical_name": "Rifthold",
+        "importance": "principal",
+        "type": "PLACE",
+        "aliases": [],
+        "context_by_chapter": {},
+        "entity_events": [
+            {
+                "event_id": "e_ch12_0",
+                "chapter": 12,
+                "description": "Celaena affronte Cain lors de l'épreuve finale du tournoi",
+                "participants": ["Celaena Sardothien", "Cain"],
+                "places": ["Rifthold"],
+                "outcome": "Celaena gagne malgré l'empoisonnement au bloodbane",
+            },
+        ],
+    }
+    prompt = build_prompt(
+        entity,
+        "Mon Livre",
+        sections=["infobox", "biography", "events", "references"],
+    )
+
+    assert "## Events at this place" in prompt
+    assert "épreuve finale du tournoi" in prompt
+    assert "personnages : Celaena Sardothien, Cain" in prompt
+    assert 'Include a "## Événements" section grounded ONLY in the "Events at this place" block above' in prompt
+    assert 'Do NOT include a "## Événements" section' not in prompt
+
+
+def test_build_prompt_place_without_events_omits_block_and_forbids_section():
+    entity = {
+        "canonical_name": "Oakwald",
+        "importance": "secondary",
+        "type": "PLACE",
+        "aliases": [],
+        "context_by_chapter": {},
+    }
+    prompt = build_prompt(
+        entity,
+        "Mon Livre",
+        sections=["infobox", "biography", "events", "references"],
+    )
+
+    assert "## Events at this place" not in prompt
+    assert 'Do NOT include a "## Événements" section: no narrative events are available for this place.' in prompt
+
+
+def test_build_prompt_ignores_entity_events_for_non_place_types():
+    """entity_events is populated for PERSON too (SP0 feeds SP1 later) — the
+    SP2 block/rule must stay scoped to PLACE."""
+    entity = {
+        "canonical_name": "Celaena Sardothien",
+        "importance": "principal",
+        "type": "PERSON",
+        "aliases": [],
+        "context_by_chapter": {},
+        "entity_events": [
+            {"chapter": 12, "description": "duel final", "participants": ["Celaena Sardothien"]},
+        ],
+    }
+    prompt = build_prompt(
+        entity,
+        "Mon Livre",
+        sections=["infobox", "biography", "references"],
+    )
+
+    assert "## Events at this place" not in prompt
+    assert "Événements" not in prompt
+
 
 def test_generation_profile_prefers_sections_by_type_override():
     cfg = {

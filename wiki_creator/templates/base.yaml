@@ -27,6 +27,7 @@ entity_types:
     sections:
       - {token: biography,     group: section, provenance: llm-prose,      obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: physical,      group: section, provenance: llm-prose,      obligation: OPT, tiers: [principal]}
+      - {token: events,        group: section, provenance: llm-prose,      obligation: OPT, tiers: [figurant, secondary, principal]}
       - {token: relationships, group: section, provenance: extracted-fact, obligation: OPT, tiers: [principal]}
       - {token: trivia,        group: section, provenance: llm-prose,      obligation: OPT, tiers: [principal]}
       - {token: references,    group: section, provenance: extracted-fact, obligation: MIN, fallback: none, tiers: [figurant, secondary, principal]}
@@ -78,4 +79,5 @@ labels:
   physical:      {en: Appearance,  fr: "Description physique"}
   powers:        {en: Powers,      fr: Pouvoirs}
   trivia:        {en: Trivia,      fr: Anecdotes}
+  events:        {en: Events,      fr: Événements}
   references:    {en: References,  fr: Références}

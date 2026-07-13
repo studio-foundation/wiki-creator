@@ -23,3 +23,13 @@ def test_resolve_person_figurant_is_minimal():
 def test_resolve_unknown_type_returns_empty():
     rt = pt.resolve_template("MONSTER", "principal")
     assert rt.slots == ()
+
+
+def test_resolve_place_events_available_at_every_tier():
+    """STU-480 (SP2): the 'événements' section (Event Layer, SP0) is OPT for
+    PLACE at all tiers — even a figurant place can host a narratively
+    important event."""
+    for importance in ("figurant", "secondary", "principal"):
+        rt = pt.resolve_template("PLACE", importance)
+        tokens = [s.token for s in rt.sections()]
+        assert "events" in tokens
