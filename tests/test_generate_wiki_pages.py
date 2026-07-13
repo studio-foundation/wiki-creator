@@ -1691,3 +1691,49 @@ def test_write_identity_telemetry_roundtrip(tmp_path):
     _gwp._write_identity_telemetry(tmp_path)
     written = json.loads((tmp_path / "identity_telemetry.json").read_text())
     assert written == {"safety_net_triggers": {"force_identity": 1, "identity_recovery": 0}}
+
+
+# --- STU-447: validated wiki_pages.json write boundary ---
+
+from wiki_creator import studio_io
+from wiki_creator.types import WikiPage
+
+
+def test_save_writes_validated_wiki_pages_artifact(tmp_path):
+    """Disk wiki_pages.json round-trips through the WikiPage schema, wrapper preserved."""
+    output_file = str(tmp_path / "wiki_pages.json")
+    pages = [
+        {"title": "Celaena", "importance": "principal", "entity_type": "PERSON",
+         "books": ["01-throne-of-glass"], "infobox_fields": {"nom": "Celaena"},
+         "content": "## Biographie\n\nTexte."},
+        # non-PERSON success path carries run_metadata (_execute_wiki_page_item)
+        {"title": "Rifthold", "importance": "secondaire", "entity_type": "PLACE",
+         "infobox_fields": {}, "content": "## Géographie\n\nTexte.",
+         "run_metadata": {"command": ["studio"], "run_id": "r1"}},
+        # identity-corrected / spoiler-rejected / stub pages omit content/infobox_fields
+        {"title": "Kaltain", "importance": "secondaire", "entity_type": "PERSON",
+         "_identity_corrected": True},
+        {"title": "Arobynn", "importance": "principal", "entity_type": "PERSON",
+         "_failed": True, "_spoiler_rejected": True},
+    ]
+    _gwp._save(pages, output_file)
+
+    with open(output_file, encoding="utf-8") as f:
+        raw = json.load(f)
+    assert list(raw.keys()) == ["pages"]
+    validated = studio_io.from_dict(list[WikiPage], raw["pages"])
+    assert validated[0].title == "Celaena"
+    assert validated[1].run_metadata == {"command": ["studio"], "run_id": "r1"}
+    assert validated[2]._identity_corrected is True
+    assert validated[3]._failed is True and validated[3]._spoiler_rejected is True
+
+
+def test_save_rejects_unknown_page_key(tmp_path):
+    """An unknown key on a page dict must be rejected before it reaches disk."""
+    output_file = str(tmp_path / "wiki_pages.json")
+    pages = [
+        {"title": "Celaena", "importance": "principal", "entity_type": "PERSON",
+         "infobox_fields": {}, "content": "## Bio", "surprise": "unexpected"},
+    ]
+    with pytest.raises(TypeError):
+        _gwp._save(pages, output_file)

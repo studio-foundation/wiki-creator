@@ -1,39 +1,42 @@
 """Tests for load_wiki_pages.py — _failed page filtering at pipeline entry point."""
+import json
 import sys
 from pathlib import Path
 
+import pytest
 
-from scripts.load_wiki_pages import _filter_failed_pages
+from wiki_creator import studio_io
+from wiki_creator.types import WikiPage
+
+from scripts.load_wiki_pages import _filter_failed_pages, _read_pages
+
+
+def _page(**overrides) -> WikiPage:
+    fields = {"title": "A", "entity_type": "PERSON", "importance": "principal",
+              "infobox_fields": {}, "content": "content"}
+    fields.update(overrides)
+    return WikiPage(**fields)
 
 
 def test_filter_failed_pages_excludes_failed():
     pages = [
-        {"title": "Celaena", "entity_type": "PERSON", "importance": "principal",
-         "infobox_fields": {}, "content": "## Bio\n\nHero."},
-        {"title": "Arobynn Hamel", "entity_type": "PERSON", "importance": "principal",
-         "infobox_fields": {}, "content": "", "_failed": True},
-        {"title": "Chaol", "entity_type": "PERSON", "importance": "secondaire",
-         "infobox_fields": {}, "content": "## Bio\n\nCaptain."},
+        _page(title="Celaena", content="## Bio\n\nHero."),
+        _page(title="Arobynn Hamel", content="", _failed=True),
+        _page(title="Chaol", importance="secondaire", content="## Bio\n\nCaptain."),
     ]
     result = _filter_failed_pages(pages)
     assert len(result) == 2
-    assert all(not p.get("_failed") for p in result)
-    assert {p["title"] for p in result} == {"Celaena", "Chaol"}
+    assert all(not p._failed for p in result)
+    assert {p.title for p in result} == {"Celaena", "Chaol"}
 
 
 def test_filter_failed_pages_all_valid():
-    pages = [
-        {"title": "A", "entity_type": "PERSON", "importance": "principal",
-         "infobox_fields": {}, "content": "content"},
-    ]
+    pages = [_page()]
     assert _filter_failed_pages(pages) == pages
 
 
 def test_filter_failed_pages_all_failed():
-    pages = [
-        {"title": "Arobynn", "_failed": True, "entity_type": "PERSON",
-         "importance": "principal", "infobox_fields": {}, "content": ""},
-    ]
+    pages = [_page(title="Arobynn", content="", _failed=True)]
     assert _filter_failed_pages(pages) == []
 
 
@@ -41,9 +44,34 @@ def test_filter_failed_pages_empty():
     assert _filter_failed_pages([]) == []
 
 
-# --- SP4 synopsis page (STU-482) ---
+def test_read_pages_validates_and_round_trips(tmp_path):
+    path = tmp_path / "wiki_pages.json"
+    path.write_text(json.dumps({"pages": [
+        {"title": "Celaena", "entity_type": "PERSON", "importance": "principal",
+         "infobox_fields": {}, "content": "## Bio\n\nHero.",
+         "run_metadata": {"command": ["studio"], "run_id": "r1"},
+         "_identity_corrected": True},
+    ]}), encoding="utf-8")
+    pages = _read_pages(path)
+    assert pages == [WikiPage(
+        title="Celaena", entity_type="PERSON", importance="principal",
+        content="## Bio\n\nHero.", run_metadata={"command": ["studio"], "run_id": "r1"},
+        _identity_corrected=True,
+    )]
 
-import json
+
+def test_read_pages_rejects_schema_drift(tmp_path):
+    """An unknown key on a wiki_pages.json page must be rejected."""
+    path = tmp_path / "wiki_pages.json"
+    path.write_text(json.dumps({"pages": [
+        {"title": "Celaena", "entity_type": "PERSON", "importance": "principal",
+         "infobox_fields": {}, "content": "## Bio", "surprise": "unexpected"},
+    ]}), encoding="utf-8")
+    with pytest.raises(studio_io.ArtifactSchemaError):
+        _read_pages(path)
+
+
+# --- SP4 synopsis page (STU-482) ---
 
 from scripts.load_wiki_pages import _load_synopsis_page
 

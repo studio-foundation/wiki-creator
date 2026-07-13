@@ -142,6 +142,15 @@ class WikiPage:
     content: str = ""
     _failed: bool | None = None
     _insufficient_data: bool | None = None
+    # STU-447: _force_correct_identity/_recover_identity_rejected_page and the
+    # forbidden-names retry in generate_wiki_pages.py stamp these telemetry
+    # flags directly onto real page dicts before they're persisted.
+    _identity_corrected: bool | None = None
+    _spoiler_rejected: bool | None = None
+    # _execute_wiki_page_item's success return spreads {**page, "run_metadata": ...}
+    # for every non-PERSON entity (PERSON pages are built fresh, section by
+    # section, and never carry this key). Free-form: shape is producer telemetry.
+    run_metadata: dict | None = None
 
 
 @dataclass

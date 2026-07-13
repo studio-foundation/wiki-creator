@@ -32,6 +32,7 @@ from wiki_creator import studio_io
 from wiki_creator.registry import Registry, normalize_name
 from wiki_creator.synopsis import event_lines
 from wiki_creator.tome_labels import appearance_label
+from wiki_creator.types import WikiPage
 
 DEFAULT_NUM_PREDICT = 1024
 
@@ -1503,11 +1504,18 @@ def _write_identity_telemetry(processing_dir: Path) -> None:
 
 def _save(pages: list[dict], output_file: str) -> None:
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
+    validated = studio_io.to_dict([WikiPage(**p) for p in pages])
+    studio_io.from_dict(list[WikiPage], validated)  # self-check: never write off-schema
     with open(output_file, "w", encoding="utf-8") as f:
-        json.dump({"pages": pages}, f, ensure_ascii=False, indent=2)
+        json.dump({"pages": validated}, f, ensure_ascii=False, indent=2)
 
 
 def _load_existing(output_file: str) -> list[dict]:
+    # Intentionally unvalidated: this is the resume-on-crash reader for the
+    # incremental generation loop below (needs to tolerate a partial/legacy
+    # file on disk) — matches chapter_summary.py's
+    # _load_existing_chapter_summaries precedent. _save() above re-validates
+    # on every write, so a corrupt entry never survives past the next save.
     if os.path.exists(output_file):
         try:
             with open(output_file, encoding="utf-8") as f:
