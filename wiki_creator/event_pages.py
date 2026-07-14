@@ -10,13 +10,19 @@ from __future__ import annotations
 EVENT_ENTITY_TYPE = "EVENT"
 EVENT_IMPORTANCE = "principal"
 
-# An event of salience >= this threshold earns its own page. Tuned on TOG
-# book 1 (~9 pages at 0.6); overridable via book YAML generation.event_pages.
-DEFAULT_SALIENCE_THRESHOLD = 0.6
+# An event of salience >= this threshold earns its own page. Raised from 0.6
+# to 0.7 (STU-502) to drop the low-value long tail — minor beats now live only
+# in the character/place timelines, not as standalone pages. Overridable via
+# book YAML generation.event_pages.
+DEFAULT_SALIENCE_THRESHOLD = 0.7
 # Hard cap on the number of event pages, applied after threshold+participant
 # filtering, keeping the most salient. 0 or negative disables the cap.
 DEFAULT_MAX_PAGES = 20
 DEFAULT_MAX_TOKENS = 900
+# Neighbouring events (before and after, in narrative order) surfaced to the
+# writer as read-only context so the Déroulement can situate the event instead
+# of paraphrasing its title (STU-502).
+DEFAULT_CONTEXT_WINDOW = 3
 
 
 def select_events(
@@ -96,11 +102,72 @@ def _facts_block(event: dict) -> str:
     return "\n".join(f"  {line}" for line in lines) if lines else "  (no facts available)"
 
 
+def _narrative_order(events: list[dict]) -> list[dict]:
+    """Events in reading order — same (chapter, description) sort the Event
+    Layer and the synopsis use."""
+    return sorted(
+        events or [],
+        key=lambda e: (int(e.get("chapter", 0)), str(e.get("description", "")).casefold()),
+    )
+
+
+def neighbor_context(
+    event: dict, events: list[dict], window: int = DEFAULT_CONTEXT_WINDOW
+) -> tuple[list[dict], list[dict]]:
+    """The ``window`` events immediately before and after ``event`` in
+    narrative order — read-only background so the writer can situate the event.
+    Identity is by ``event_id`` when present, else by object identity. Returns
+    ``([], [])`` when the event is not found or ``window <= 0``."""
+    if window <= 0:
+        return [], []
+    ordered = _narrative_order(events)
+    key = event.get("event_id")
+    idx = next(
+        (
+            i
+            for i, e in enumerate(ordered)
+            if (e.get("event_id") == key if key is not None else e is event)
+        ),
+        None,
+    )
+    if idx is None:
+        return [], []
+    return ordered[max(0, idx - window) : idx], ordered[idx + 1 : idx + 1 + window]
+
+
+def _context_line(event: dict) -> str:
+    """One background line for a neighbouring event: ``description (personnages
+    : … — lieux : …)``."""
+    description = str(event.get("description", "")).strip()
+    if not description:
+        return ""
+    details: list[str] = []
+    participants = [str(p) for p in event.get("participants") or [] if p]
+    if participants:
+        details.append("personnages : " + ", ".join(participants))
+    places = [str(p) for p in event.get("places") or [] if p]
+    if places:
+        details.append("lieux : " + ", ".join(places))
+    return description + (f" ({' — '.join(details)})" if details else "")
+
+
+def _context_block(before: list[dict], after: list[dict]) -> str:
+    """Rendered read-only context, or ``""`` when there is nothing to situate."""
+    sections: list[str] = []
+    for label, group in (("Juste avant", before), ("Juste après", after)):
+        lines = [f"  - {line}" for e in group if (line := _context_line(e))]
+        if lines:
+            sections.append(f"{label} :\n" + "\n".join(lines))
+    return "\n".join(sections)
+
+
 def build_event_prompt(
     event: dict,
     title: str,
     book_title: str,
     forbidden_names: list[str] | None = None,
+    events: list[dict] | None = None,
+    context_window: int = DEFAULT_CONTEXT_WINDOW,
 ) -> str:
     """Anchored writer prompt for one event page.
 
@@ -111,6 +178,22 @@ def build_event_prompt(
     built deterministically by the caller; the writer only authors prose.
     """
     facts_block = _facts_block(event)
+
+    before, after = neighbor_context(event, events or [], context_window)
+    context_rendered = _context_block(before, after)
+    context_section = ""
+    context_rule = ""
+    if context_rendered:
+        context_section = f"""
+
+---
+
+NARRATIVE CONTEXT — surrounding events, for SITUATING this one only. These are NOT facts of this event: never recount them as if they happened here. Use them only to explain what leads up to the event and what it brings about.
+{context_rendered}"""
+        context_rule = (
+            "\n- The NARRATIVE CONTEXT is background you may reference to situate the "
+            "event, never a source of facts to attribute to it."
+        )
 
     forbidden_names_rule = ""
     if forbidden_names:
@@ -128,8 +211,8 @@ Output ONLY a valid JSON object. No markdown fences. No explanation. No preamble
 
 ---
 
-FACTS ABOUT THIS EVENT — these are the ONLY facts you may use:
-{facts_block}
+FACTS ABOUT THIS EVENT — these are the ONLY facts you may state about the event itself:
+{facts_block}{context_section}
 
 ---
 
@@ -141,8 +224,8 @@ Tone and register:
 - Use specific, concrete language anchored in the listed facts.
 
 Content constraints:
-- Recount only this event: what happens, who is involved, where, and how it resolves.
-- Every factual claim in your output must be directly supported by one of the FACTS listed above. If you cannot point to a supporting fact, do not write the claim.
+- Do NOT merely restate the event's title or description. Situate the event: what leads up to it, what happens, who is involved, where, how it resolves, and what it brings about.
+- Every claim about THIS event must be directly supported by one of the FACTS listed above. If you cannot point to a supporting fact, do not write the claim.{context_rule}
 - Do NOT invent scenes, motives, outcomes, relationships, or characters that are not in the facts.
 - Scope is strictly this book: no sequels, no series-level information, no real-world publication or author information.
 - When referring to characters or places, use their names EXACTLY as written in the facts — do not paraphrase, alter, or approximate names.
