@@ -164,3 +164,17 @@ def test_sectioned_page_carries_relationship_index(monkeypatch):
         sections=["biography", "relationships"], max_tokens=500,
         dry_run=False, debug_dir=Path("/tmp"), book_config={})
     assert page["relationship_index"] == ["* [[Chaol]] — amoureux (ch.1→ch.55)"]
+
+
+def test_build_relation_prompt_grounds_and_requires_french():
+    entity = {"canonical_name": "Chaol", "type": "PERSON"}
+    rel = {"entity_a": "Chaol", "entity_b": "Celaena", "relationship_type": "amoureux",
+           "evolution": "Evolves from antagonism to trust.",
+           "key_moments": ["ch10: sparring"], "evidence": "He watched her fight."}
+    p = gwp.build_relation_prompt(entity, "Celaena", rel, "ToG", forbidden_names=["Nehemia"])
+    assert "Celaena" in p
+    assert "amoureux" in p
+    assert "Evolves from antagonism to trust." in p          # grounding present
+    assert "français" in p.lower() or "french" in p.lower()  # FR instruction
+    assert "### [[Celaena]]" in p                             # heading format specified
+    assert "Nehemia" in p                                     # forbidden name surfaced

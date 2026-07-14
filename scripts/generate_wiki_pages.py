@@ -305,6 +305,47 @@ def _relationship_evidence_lines(rel: dict) -> list[str]:
     return lines
 
 
+def build_relation_prompt(
+    entity: dict,
+    other: str,
+    rel: dict,
+    book_title: str,
+    forbidden_names: list[str] | None = None,
+) -> str:
+    """Prompt for a single ``### [[other]]`` French progression subsection.
+
+    Grounds on this one relation's type / evolution / key_moments / evidence and
+    requires French prose — the grounding fields are English and must be
+    reformulated, never copied verbatim.
+    """
+    name = entity["canonical_name"]
+    rtype = rel.get("relationship_type") or "relation"
+    grounding_lines = []
+    evolution = str(rel.get("evolution") or "").strip()
+    if evolution:
+        grounding_lines.append(f"    evolution: {evolution}")
+    grounding_lines.extend(_relationship_evidence_lines(rel))
+    grounding = "\n".join(grounding_lines) or "    (no extra grounding)"
+    forbidden_rule = ""
+    if forbidden_names:
+        names_list = "\n".join(f"- {n}" for n in forbidden_names)
+        forbidden_rule = (
+            "\n\nNE JAMAIS mentionner ces personnages (spoilers d'autres tomes) :\n"
+            f"{names_list}"
+        )
+    return f"""Rédige UNE sous-section wiki en français décrivant la progression de la relation entre {name} et {other} dans « {book_title} ».
+
+Type de relation : {rtype}
+Éléments d'ancrage (en anglais — À REFORMULER EN FRANÇAIS, ne jamais recopier tel quel) :
+{grounding}
+
+Contraintes :
+- Écris en français uniquement. Les éléments d'ancrage sont en anglais : traduis et reformule, ne copie aucune phrase anglaise.
+- Un seul paragraphe court, ancré uniquement sur les éléments ci-dessus. N'invente rien.
+- Commence EXACTEMENT par le titre : ### [[{other}]]
+- Ne mentionne aucun autre personnage que {name} et {other}.{forbidden_rule}"""
+
+
 def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_names: list[str] | None = None) -> str:
     name = entity["canonical_name"]
     etype = entity["type"]
