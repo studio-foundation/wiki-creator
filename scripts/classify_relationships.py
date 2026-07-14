@@ -168,7 +168,7 @@ def main() -> None:
                 if classification and not classification.get("error"):
                     classification = {
                         k: v for k, v in classification.items()
-                        if k in _KNOWN_CLASSIFICATION_KEYS
+                        if k in _KNOWN_CLASSIFICATION_KEYS and v is not None
                     }
                     result = {**pair, **classification}
                 else:
