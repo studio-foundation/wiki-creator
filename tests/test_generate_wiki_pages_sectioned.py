@@ -146,3 +146,21 @@ def test_isolate_section_none_when_only_infobox(monkeypatch):
     out = gwp._generate_one_section(entity={"canonical_name": "A"}, section="biography",
                                     book_title="B", model="m", timeout=10, max_tokens=500)
     assert out is None
+
+
+def test_sectioned_page_carries_relationship_index(monkeypatch):
+    from pathlib import Path
+    monkeypatch.setattr(gwp, "_generate_one_section", lambda **kw: "## Biographie\n\nBio.")
+    entity = {
+        "canonical_name": "Celaena", "type": "PERSON", "importance": "principal",
+        "aliases": [], "context_by_chapter": {"C01.xhtml": ["ctx"]},
+        "relationships": [
+            {"entity_a": "Celaena", "entity_b": "Chaol",
+             "relationship_type": "amoureux", "chapters": ["C01.xhtml", "C55.xhtml"]},
+        ],
+    }
+    page = gwp._run_generation_sectioned(
+        entity=entity, book_title="ToG", model="m", timeout=10,
+        sections=["biography", "relationships"], max_tokens=500,
+        dry_run=False, debug_dir=Path("/tmp"), book_config={})
+    assert page["relationship_index"] == ["* [[Chaol]] — amoureux (ch.1→ch.55)"]

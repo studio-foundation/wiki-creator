@@ -154,6 +154,17 @@ Inside `wiki-resolution`, order matters:
 - `.studio/config.yaml` and `.studio/runs/` must not be committed.
 - Never add hardcoded word lists to scripts. All vocabulary belongs in `wiki_creator/cue_words/<lang>.json` (language-wide) or the book YAML `classification` section (book-specific). No script may define a fallback vocabulary constant — if a key is absent from cue_words, degrade gracefully to an empty collection.
 - `tests/test_e2e_golden.py` chains all deterministic resolution stages on the fixture novella and compares every stage output to goldens in `tests/fixtures/e2e/golden/stages/`. Any intentional behavior change in those stages requires `make golden-update` and a review of the golden diff in the same PR. The extraction seed is committed (`golden/seed/`, regenerate with `gen_seed.py`); a `@requires_en_sm` test keeps it shape-compatible with real extraction in CI.
+- Spoiler blocks (STU-492): `wiki_export.render_page` wraps chapter-gated sections
+  in native `mw-collapsible` divs and injects a dated relationship index under the
+  Relations section. Gating is per-section via `content_units.revealed_at_chapter`
+  (the min-chapter provenance from STU-491), matched to headings by normalized
+  title. Enabled only when the book YAML sets `generation.spoiler.collapse_after_chapter: N`
+  — unset keeps output byte-identical (goldens safe). The relationship index uses
+  language-neutral fields only (names, French `relationship_type`, chapter numbers);
+  the classifier's English `evolution`/`key_moments` are never surfaced. The index
+  injects only under an exactly-`Relations` heading (an LLM-drifted heading is
+  silently skipped, same tolerance as collapsible gating). Pure logic in
+  `wiki_creator/spoiler_blocks.py`; section→heading map in `wiki_creator/sections.py`.
 
 ## Working Norms
 
