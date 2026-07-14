@@ -74,4 +74,5 @@ library/**/*.epub
 library/**/processing_output/
 library/**/wiki_inputs/
 library/**/output/
+library/**/registry.json
 .wiki_runs/
