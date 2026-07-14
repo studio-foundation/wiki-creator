@@ -104,6 +104,12 @@ def spoiler_collapse_after(book_cfg: dict) -> int | None:
     return ((book_cfg.get("generation") or {}).get("spoiler") or {}).get("collapse_after_chapter")
 
 
+def per_relation_prose_enabled(book_cfg: dict) -> bool:
+    return bool(
+        ((book_cfg.get("generation") or {}).get("relations") or {}).get("per_relation_prose")
+    )
+
+
 _SUBHEADING_RE = re.compile(r"(?m)^(===\s+.+?\s+===) *$")
 _NAME_RE = re.compile(r"\[\[([^\]|]+)")
 

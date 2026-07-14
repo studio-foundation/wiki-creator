@@ -126,3 +126,17 @@ def test_wrap_relation_unmatched_and_none_left_open():
              {"name": "Ghost", "revealed_at_chapter": 99}]
     out = wrap_relation_collapsibles(_REL_BODY, units, collapse_after=3)
     assert "mw-collapsible" not in out
+
+
+def test_per_relation_prose_enabled_reads_flag():
+    from wiki_creator.spoiler_blocks import per_relation_prose_enabled
+
+    cfg = {"generation": {"relations": {"per_relation_prose": True}}}
+    assert per_relation_prose_enabled(cfg) is True
+
+
+def test_per_relation_prose_enabled_defaults_false():
+    from wiki_creator.spoiler_blocks import per_relation_prose_enabled
+
+    assert per_relation_prose_enabled({}) is False
+    assert per_relation_prose_enabled({"generation": {}}) is False
