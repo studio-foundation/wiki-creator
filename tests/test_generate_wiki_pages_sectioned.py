@@ -178,3 +178,48 @@ def test_build_relation_prompt_grounds_and_requires_french():
     assert "français" in p.lower() or "french" in p.lower()  # FR instruction
     assert "### [[Celaena]]" in p                             # heading format specified
     assert "Nehemia" in p                                     # forbidden name surfaced
+
+
+def test_prompt_override_used_when_set():
+    item = gwp._wiki_page_item_input(entity={"canonical_name": "A"}, book_title="B",
+                                     sections=["relationships"], max_tokens=500,
+                                     prompt_override="CUSTOM PROMPT")
+    assert item["prompt"] == "CUSTOM PROMPT"
+
+
+def test_generate_one_relation_returns_prose(monkeypatch):
+    monkeypatch.setattr(gwp, "_run_wiki_page_item",
+                        lambda **kw: _fake_item("### [[Celaena]]\n\nLeur méfiance mue en respect."))
+    out = gwp._generate_one_relation(
+        entity={"canonical_name": "Chaol", "type": "PERSON"}, other="Celaena",
+        rel={"entity_a": "Chaol", "entity_b": "Celaena", "relationship_type": "amoureux"},
+        book_title="ToG", model="m", timeout=10, max_tokens=500)
+    assert out == "### [[Celaena]]\n\nLeur méfiance mue en respect."
+
+
+def test_generate_one_relation_omits_on_persistent_forbidden(monkeypatch):
+    monkeypatch.setattr(gwp, "_run_wiki_page_item",
+                        lambda **kw: _fake_item("### [[Celaena]]\n\nNehemia meurt."))
+    out = gwp._generate_one_relation(
+        entity={"canonical_name": "Chaol", "type": "PERSON"}, other="Celaena",
+        rel={"entity_a": "Chaol", "entity_b": "Celaena", "relationship_type": "amoureux"},
+        book_title="ToG", model="m", timeout=10, max_tokens=500, forbidden_names=["Nehemia"])
+    assert out is None
+
+
+def test_generate_relationships_subsections_concatenates(monkeypatch):
+    entity = {"canonical_name": "Chaol", "type": "PERSON", "aliases": [],
+              "relationships": [
+                  {"entity_a": "Chaol", "entity_b": "Celaena", "relationship_type": "amoureux",
+                   "chapters": ["ch55"]},
+                  {"entity_a": "Cain", "entity_b": "Chaol", "relationship_type": "antagoniste",
+                   "chapters": ["ch07"]},
+                  {"entity_a": "Chaol", "entity_b": "Nox", "relationship_type": None,
+                   "chapters": ["ch02"]}]}
+    monkeypatch.setattr(gwp, "_generate_one_relation",
+                        lambda **kw: f"### [[{kw['other']}]]\n\nprose {kw['other']}")
+    out = gwp._generate_relationships_subsections(
+        entity=entity, book_title="ToG", model="m", timeout=10, max_tokens=500)
+    assert out.startswith("## Relations")
+    assert "### [[Celaena]]" in out and "### [[Cain]]" in out
+    assert "Nox" not in out  # untyped relation skipped

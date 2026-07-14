@@ -28,6 +28,7 @@ from pathlib import Path
 import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+from wiki_creator.chapters import chapter_number
 from wiki_creator.lang import book_language
 from wiki_creator.page_templates import output_language, resolve_template
 from wiki_creator.paths import book_paths_from_yaml
@@ -862,6 +863,7 @@ def _wiki_page_item_input(
     language: str = "fr",
     file_path: str = "",
     grounding: dict | None = None,
+    prompt_override: str | None = None,
 ) -> dict:
     # language / forbidden_names / file_path / grounding_* feed the
     # wiki-page-validator stage inside the wiki-page-item pipeline (its
@@ -875,7 +877,7 @@ def _wiki_page_item_input(
         "language": language,
         "forbidden_names": forbidden_names or [],
         "file_path": file_path,
-        "prompt": build_prompt(entity, book_title, sections=sections, forbidden_names=forbidden_names),
+        "prompt": prompt_override or build_prompt(entity, book_title, sections=sections, forbidden_names=forbidden_names),
     }
     grounding = grounding or {}
     if grounding.get("llm"):
@@ -900,6 +902,7 @@ def _run_wiki_page_item(
     file_path: str = "",
     grounding: dict | None = None,
     runner: StudioRunner | None = None,
+    prompt_override: str | None = None,
 ) -> dict:
     item_input = _wiki_page_item_input(
         entity=entity,
@@ -910,6 +913,7 @@ def _run_wiki_page_item(
         language=language,
         file_path=file_path,
         grounding=grounding,
+        prompt_override=prompt_override,
     )
     return (runner or StudioRunner()).run_item(item_input, entity, timeout)
 
@@ -1069,6 +1073,85 @@ def _generate_one_section(
             return None
     content = content.strip()
     return content or None
+
+
+def _generate_one_relation(
+    *,
+    entity: dict,
+    other: str,
+    rel: dict,
+    book_title: str,
+    model: str,
+    timeout: int,
+    max_tokens: int,
+    forbidden_names: list[str] | None = None,
+    language: str = "fr",
+    file_path: str = "",
+    grounding: dict | None = None,
+    runner: StudioRunner | None = None,
+) -> str | None:
+    """Generate one ``### [[other]]`` French progression subsection. Returns the
+    subsection markdown, or None on error / persistent forbidden-name hit."""
+    prompt = build_relation_prompt(entity, other, rel, book_title, forbidden_names=forbidden_names)
+
+    def _once() -> dict:
+        return _run_wiki_page_item(
+            entity=entity, book_title=book_title, model=model, timeout=timeout,
+            sections=["relationships"], max_tokens=max_tokens, forbidden_names=forbidden_names,
+            language=language, file_path=file_path, grounding=grounding, runner=runner,
+            prompt_override=prompt,
+        )
+
+    result = _once()
+    if not isinstance(result, dict) or result.get("error"):
+        return None
+    content = (result.get("content") or "").strip()
+    if forbidden_names and _check_forbidden_names({"content": content, "infobox_fields": {}}, forbidden_names):
+        result = _once()
+        if not isinstance(result, dict) or result.get("error"):
+            return None
+        content = (result.get("content") or "").strip()
+        if _check_forbidden_names({"content": content, "infobox_fields": {}}, forbidden_names):
+            return None
+    return content or None
+
+
+def _generate_relationships_subsections(
+    *,
+    entity: dict,
+    book_title: str,
+    model: str,
+    timeout: int,
+    max_tokens: int,
+    forbidden_names: list[str] | None = None,
+    language: str = "fr",
+    file_path: str = "",
+    grounding: dict | None = None,
+    runner: StudioRunner | None = None,
+) -> str | None:
+    """The full ``## Relations`` block: one prose subsection per typed relationship
+    (most-recent-reveal first). None when no subsection is produced."""
+    own = {entity.get("canonical_name")} | set(entity.get("aliases") or [])
+    typed = []
+    for rel in entity.get("relationships") or []:
+        if not rel.get("relationship_type"):
+            continue
+        chapters = [n for n in (chapter_number(k) for k in rel.get("chapters") or []) if n is not None]
+        other = rel["entity_b"] if rel.get("entity_a") in own else rel["entity_a"]
+        typed.append((max(chapters) if chapters else -1, other, rel))
+    typed.sort(key=lambda t: t[0], reverse=True)
+    subs = []
+    for _, other, rel in typed:
+        block = _generate_one_relation(
+            entity=entity, other=other, rel=rel, book_title=book_title, model=model,
+            timeout=timeout, max_tokens=max_tokens, forbidden_names=forbidden_names,
+            language=language, file_path=file_path, grounding=grounding, runner=runner,
+        )
+        if block:
+            subs.append(block)
+    if not subs:
+        return None
+    return "## Relations\n\n" + "\n\n".join(subs)
 
 
 def _run_generation_for_entity(
