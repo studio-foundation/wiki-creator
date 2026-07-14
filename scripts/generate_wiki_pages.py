@@ -42,6 +42,7 @@ from wiki_creator.page_templates import output_language, resolve_template
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.provenance import content_units, relation_units
 from wiki_creator import studio_io
+from wiki_creator.entity_links import link_first_mentions
 from wiki_creator.registry import Registry, normalize_name
 from wiki_creator.sections import SECTION_TITLES as _SECTION_TITLES
 from wiki_creator.spoiler_blocks import relationship_index_lines, per_relation_prose_enabled
@@ -585,6 +586,13 @@ def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_n
                 "the character does and what happens to them across these events — not a static "
                 'portrait. Do NOT mention chapter numbers ("Chapitre N") in the prose. Do NOT '
                 "invent events, outcomes, or motives absent from the listed events."
+                "\n- Name every other character explicitly, using their exact name as written "
+                "in the events block (e.g. « Celaena Sardothien »). NEVER replace a named "
+                "character with a vague periphrasis (« la protagoniste », « une jeune femme », "
+                "« un jeune homme », « le personnage principal ») — this is an encyclopedic "
+                "article and each character has their own page, so there is no spoiler reason to "
+                "withhold a name here. Introduce each character by name at their first mention; "
+                "pronouns are fine afterwards."
                 "\n- Weight the prose by each event's \"importance\" tier: an event marked "
                 '"importance : haute" earns a full, developed treatment; "moyenne" a sentence '
                 'or two; "basse" a brief mention or a subordinate clause — never a dedicated '
@@ -1366,6 +1374,8 @@ def _run_generation_sectioned(
             language=language, file_path=file_path, grounding=grounding, runner=runner,
         )
         if block:
+            if section == "narrative_role" and sibling_canonicals:
+                block = link_first_mentions(block, sibling_canonicals)
             blocks.append(block)
             emitted.append(section)
         elif section == "biography":
