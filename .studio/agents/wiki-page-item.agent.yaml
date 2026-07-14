@@ -1,6 +1,4 @@
 name: wiki-page-item
-provider: claude-code
-model: claude-haiku-4-5
 system_prompt: |
   Respond with ONLY a valid JSON object. No markdown fences, no explanation, no other text.
 
