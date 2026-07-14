@@ -256,7 +256,19 @@ def main() -> None:
     parser.add_argument("--retries", type=int, default=3, help="Max attempts per pipeline")
     parser.add_argument("--clean", action="store_true", help="Delete outputs of restarted stages before running")
     parser.add_argument("--status", action="store_true", help="Show run status and exit")
+    parser.add_argument(
+        "--max-chapters",
+        type=int,
+        help="Subset test runs: cap extraction to the first N chapters (sets WIKI_MAX_CHAPTERS "
+        "for every stage). Combine with --restart wiki-extraction --clean to re-slice an existing run.",
+    )
     args = parser.parse_args()
+
+    if args.max_chapters is not None:
+        # Single source of truth: parse_epub reads WIKI_MAX_CHAPTERS; every stage
+        # downstream just consumes the already-truncated artifacts.
+        os.environ["WIKI_MAX_CHAPTERS"] = str(args.max_chapters)
+        print(f"[subset] limiting run to the first {args.max_chapters} chapters")
 
     if args.series:
         try:

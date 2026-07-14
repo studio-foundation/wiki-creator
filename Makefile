@@ -14,6 +14,17 @@ CLEAN ?=--clean
 #BOOK ?= library/brandon_sanderson/the_stormlight_archives/books/01-the_way_of_kings.yaml
 #BOOK ?= library/c_w_lewis/narnia/books/01-the_lion_the_witch_and_the_wardrobe.yaml
 #BOOK ?= library/j_r_r_tolkien/lord_of_the_rings/books/00-the_hobbit.yaml
+
+# Subset test runs (STU-497): cap extraction to the first N chapters so any
+# feature can be exercised end-to-end in seconds. `make run BOOK=... MAX_CHAPTERS=3`.
+# Exported here once so EVERY target (run, run-from-*, run-extraction, …) honors it —
+# parse_epub reads WIKI_MAX_CHAPTERS and truncates; all downstream stages just
+# consume the shrunk artifacts. Pair with the entity subset (ENTITY=..., below) to
+# also slice the generation axis. Unset = full run, no behavior change.
+ifdef MAX_CHAPTERS
+export WIKI_MAX_CHAPTERS := $(MAX_CHAPTERS)
+endif
+
 # Full run via orchestrator
 run:
 	python run_wiki.py --book $(BOOK)

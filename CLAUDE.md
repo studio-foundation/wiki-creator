@@ -165,6 +165,17 @@ Inside `wiki-resolution`, order matters:
   injects only under an exactly-`Relations` heading (an LLM-drifted heading is
   silently skipped, same tolerance as collapsible gating). Pure logic in
   `wiki_creator/spoiler_blocks.py`; section→heading map in `wiki_creator/sections.py`.
+- Subset test runs (STU-497): two independent axes make any feature cheap to exercise.
+  (1) Chapters — `WIKI_MAX_CHAPTERS=N` caps extraction to the first N chapters
+  (`parse_epub._env_max_chapters` → truncation, the single source of truth); every
+  downstream stage just consumes the shrunk `chapters.json`/`splits.json`, so the
+  whole pipeline runs in seconds. Front doors: `run_wiki.py --max-chapters N` (sets
+  the env for all stages) and `make run ... MAX_CHAPTERS=N` (the Makefile `export`s
+  it, so `run-extraction`/`run-from-*` honor it too). Unset = full run, no behavior
+  change (goldens safe). To re-slice an already-completed run, pair with
+  `--restart wiki-extraction --clean`. (2) Entities — `generate_wiki_pages.py
+  --entities NAME... [--force]` (STU-497/#110, `make generate-pages-entity ENTITY=...`)
+  regenerates only a slice of pages without wiping the rest.
 
 ## Working Norms
 

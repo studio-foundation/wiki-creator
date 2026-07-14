@@ -255,7 +255,16 @@ def _extract_chapter_title(soup, item, toc_titles: dict) -> str:
     return basename
 
 
-def parse_epub(file_path: str, language: str = "fr") -> dict:
+def _env_max_chapters() -> int | None:
+    """Chapter cap for subset test runs, from WIKI_MAX_CHAPTERS. Absent/empty/<=0 → None."""
+    raw = os.environ.get("WIKI_MAX_CHAPTERS", "").strip()
+    if not raw:
+        return None
+    n = int(raw)
+    return n if n > 0 else None
+
+
+def parse_epub(file_path: str, language: str = "fr", max_chapters: int | None = None) -> dict:
     import ebooklib
     from ebooklib import epub
     from bs4 import BeautifulSoup
@@ -293,6 +302,9 @@ def parse_epub(file_path: str, language: str = "fr") -> dict:
             "content": cleaned,
         })
 
+    if max_chapters is not None and max_chapters > 0:
+        chapters = chapters[:max_chapters]
+
     # Compute per-chapter POV (persisted onto each chapter) + book-level modal.
     pov_detection = annotate_pov(chapters, language=language)
 
@@ -309,7 +321,10 @@ def main():
         sys.exit(1)
 
     language = book_language(input_data)
-    result = parse_epub(file_path, language=language)
+    max_chapters = _env_max_chapters()
+    if max_chapters is not None:
+        print(f"[subset] WIKI_MAX_CHAPTERS={max_chapters}: parsing only the first {max_chapters} chapters", file=sys.stderr)
+    result = parse_epub(file_path, language=language, max_chapters=max_chapters)
     result["language"] = language
     paths = studio_io.paths_from_payload(payload)
     paths.processing.mkdir(parents=True, exist_ok=True)
