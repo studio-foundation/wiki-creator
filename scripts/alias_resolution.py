@@ -99,9 +99,7 @@ def _load_persons_full(processing_dir: Path) -> dict:
     path = processing_dir / "persons_full.json"
     if not path.exists():
         return {}
-    with open(path, encoding="utf-8") as f:
-        data = json.load(f)
-    return data.get("persons_full", {})
+    return studio_io.load_full_file(path, "persons_full")
 
 
 def _entity_names(entity: dict) -> list[str]:
@@ -120,8 +118,10 @@ def _entity_names(entity: dict) -> list[str]:
 def _gather_contexts(entity: dict, persons_full: dict) -> list[str]:
     snippets: list[str] = []
     for source_id in entity.get("source_ids", []):
-        entry = persons_full.get(source_id, {})
-        for mentions in entry.get("mentions_by_chapter", {}).values():
+        entry = persons_full.get(source_id)
+        if entry is None:
+            continue
+        for mentions in entry.mentions_by_chapter.values():
             for snippet in mentions:
                 if isinstance(snippet, str) and snippet.strip():
                     snippets.append(snippet.strip())

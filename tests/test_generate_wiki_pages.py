@@ -28,7 +28,7 @@ from wiki_creator.studio_io import extract_stage_output_from_run_payload
 def _entity() -> dict:
     return {
         "canonical_name": "Victor Grandes",
-        "importance": "secondaire",
+        "importance": "secondary",
         "type": "PERSON",
     }
 
@@ -36,7 +36,7 @@ def _entity() -> dict:
 def test_parse_response_extracts_json_wrapped_in_text():
     raw = (
         "Voici la sortie demandee.\n"
-        '{"title":"Victor Grandes","importance":"secondaire","entity_type":"PERSON",'
+        '{"title":"Victor Grandes","importance":"secondary","entity_type":"PERSON",'
         '"infobox_fields":{},"content":"## Biographie\\n\\nTexte."}\n'
         "Fin."
     )
@@ -49,20 +49,20 @@ def test_parse_response_extracts_json_wrapped_in_text():
 def test_parse_response_extracts_json_from_fenced_block():
     raw = (
         "```json\n"
-        '{"title":"Victor Grandes","importance":"secondaire","entity_type":"PERSON",'
+        '{"title":"Victor Grandes","importance":"secondary","entity_type":"PERSON",'
         '"infobox_fields":{},"content":"## Biographie\\n\\nTexte."}\n'
         "```\n"
     )
     page = parse_response(raw, _entity())
     assert page["title"] == "Victor Grandes"
-    assert page["importance"] == "secondaire"
+    assert page["importance"] == "secondary"
     assert page["content"] == "## Biographie\n\nTexte."
 
 
 def test_parse_response_ignores_trailing_text_after_fenced_json():
     raw = (
         "```json\n"
-        '{"title":"Victor Grandes","importance":"secondaire","entity_type":"PERSON",'
+        '{"title":"Victor Grandes","importance":"secondary","entity_type":"PERSON",'
         '"infobox_fields":{},"content":"## Biographie\\n\\nTexte."}\n'
         "```\n"
         "Note: generation complete.\n"
@@ -75,7 +75,7 @@ def test_parse_response_ignores_trailing_text_after_fenced_json():
 
 def test_parse_response_populates_infobox_fields_from_infobox_section_bullets():
     raw = (
-        '{"title":"Victor Grandes","importance":"secondaire","entity_type":"PERSON",'
+        '{"title":"Victor Grandes","importance":"secondary","entity_type":"PERSON",'
         '"infobox_fields":{},"content":"## Infobox\\n\\n- Nom: Victor Grandes\\n- Statut: Vivant\\n\\n## Biographie\\n\\nTexte."}'
     )
     page = parse_response(raw, _entity())
@@ -87,7 +87,7 @@ def test_parse_response_populates_infobox_fields_from_infobox_section_bullets():
 
 def test_parse_response_populates_infobox_fields_from_infobox_section_plain_lines():
     raw = (
-        '{"title":"Victor Grandes","importance":"secondaire","entity_type":"PERSON",'
+        '{"title":"Victor Grandes","importance":"secondary","entity_type":"PERSON",'
         '"infobox_fields":{},"content":"## Infobox\\n\\nNom: Victor Grandes\\nStatut: Vivant\\n\\n## Biographie\\n\\nTexte."}'
     )
     page = parse_response(raw, _entity())
@@ -99,7 +99,7 @@ def test_parse_response_populates_infobox_fields_from_infobox_section_plain_line
 
 def test_parse_response_keeps_existing_infobox_fields_when_already_present():
     raw = (
-        '{"title":"Victor Grandes","importance":"secondaire","entity_type":"PERSON",'
+        '{"title":"Victor Grandes","importance":"secondary","entity_type":"PERSON",'
         '"infobox_fields":{"nom":"Existant"},"content":"## Infobox\\n\\n- Nom: Victor Grandes\\n\\n## Biographie\\n\\nTexte."}'
     )
     page = parse_response(raw, _entity())
@@ -113,7 +113,7 @@ def test_parse_response_forces_identity_fields_from_batch_entity():
     # override whatever the LLM returned.
     entity = {
         "canonical_name": "Philippa",
-        "importance": "secondaire",
+        "importance": "secondary",
         "type": "PERSON",
     }
     raw = (
@@ -122,7 +122,7 @@ def test_parse_response_forces_identity_fields_from_batch_entity():
     )
     page = parse_response(raw, entity)
     assert page["title"] == "Philippa"
-    assert page["importance"] == "secondaire"
+    assert page["importance"] == "secondary"
     assert page["entity_type"] == "PERSON"
 
 
@@ -409,7 +409,7 @@ def test_is_page_complete_rejects_empty_or_whitespace_content():
 
 def test_parse_response_rejects_template_placeholder_leak():
     raw = (
-        '{"title":"Assassin","importance":"secondaire","entity_type":"PERSON",'
+        '{"title":"Assassin","importance":"secondary","entity_type":"PERSON",'
         '"infobox_fields":{"nom":"<si connu>"},"content":"## Infobox\\n\\n- Nom: <si connu>\\n\\n## Biographie\\n\\nTexte."}'
     )
     page = parse_response(raw, _entity())
@@ -432,7 +432,7 @@ def test_extract_stage_output_from_run_payload_reads_successful_stage_output() -
                 "status": "success",
                 "output": {
                     "title": "Victor Grandes",
-                    "importance": "secondaire",
+                    "importance": "secondary",
                     "entity_type": "PERSON",
                     "infobox_fields": {},
                     "content": "## Biographie\n\nTexte.",
@@ -445,7 +445,7 @@ def test_extract_stage_output_from_run_payload_reads_successful_stage_output() -
 
     assert output == {
         "title": "Victor Grandes",
-        "importance": "secondaire",
+        "importance": "secondary",
         "entity_type": "PERSON",
         "infobox_fields": {},
         "content": "## Biographie\n\nTexte.",
@@ -455,7 +455,7 @@ def test_extract_stage_output_from_run_payload_reads_successful_stage_output() -
 def test_run_generation_for_entity_uses_item_runner_when_not_dry(monkeypatch, tmp_path):
     entity = {
         "canonical_name": "Victor Grandes",
-        "importance": "secondaire",
+        "importance": "secondary",
         "type": "PERSON",
         "context_by_chapter": {"ch01": ["Victor entre dans la pièce."]},
     }
@@ -467,7 +467,7 @@ def test_run_generation_for_entity_uses_item_runner_when_not_dry(monkeypatch, tm
         calls.append((entity["canonical_name"], book_title, model, timeout, sections, max_tokens))
         return {
             "title": "Victor Grandes",
-            "importance": "secondaire",
+            "importance": "secondary",
             "entity_type": "PERSON",
             "infobox_fields": {},
             "content": "## Biographie\n\nTexte.",
@@ -493,7 +493,7 @@ def test_run_generation_for_entity_uses_item_runner_when_not_dry(monkeypatch, tm
 def test_run_generation_for_entity_returns_retryable_failed_stub_and_logs_on_runner_failure(monkeypatch, tmp_path):
     entity = {
         "canonical_name": "Victor Grandes",
-        "importance": "secondaire",
+        "importance": "secondary",
         "type": "PERSON",
         "context_by_chapter": {"ch01": ["Victor entre dans la pièce."]},
     }
@@ -557,7 +557,7 @@ def test_parse_response_removes_internal_artifact_keys_from_infobox():
     """Internal fields like cooccurrence_count must not appear in infobox_fields."""
     raw = json.dumps({
         "title": "Hollin",
-        "importance": "secondaire",
+        "importance": "secondary",
         "entity_type": "PERSON",
         "infobox_fields": {
             "nom": "Hollin",
@@ -568,7 +568,7 @@ def test_parse_response_removes_internal_artifact_keys_from_infobox():
     })
     page = parse_response(raw, {
         "canonical_name": "Hollin",
-        "importance": "secondaire",
+        "importance": "secondary",
         "type": "PERSON",
     })
     assert "cooccurrence_count" not in page["infobox_fields"]
@@ -959,7 +959,7 @@ def test_build_prompt_backstory_section_omitted_when_no_flashbacks():
     entity = {
         "canonical_name": "Dorian",
         "type": "PERSON",
-        "importance": "secondaire",
+        "importance": "secondary",
         "aliases": [],
         "context_by_chapter": {},
         "related_context": [],
@@ -1105,7 +1105,7 @@ def test_strip_relations_section_no_op_when_absent():
 
 def test_make_stub_page_sets_insufficient_data_flag():
     """make_stub_page with insufficient_data=True must set _insufficient_data, not _failed."""
-    entity = {"canonical_name": "Brullo", "importance": "secondaire", "type": "PERSON"}
+    entity = {"canonical_name": "Brullo", "importance": "secondary", "type": "PERSON"}
     page = make_stub_page(entity, insufficient_data=True)
     assert page.get("_insufficient_data") is True
     assert "_failed" not in page
@@ -1113,7 +1113,7 @@ def test_make_stub_page_sets_insufficient_data_flag():
 
 def test_make_stub_page_default_sets_no_flags():
     """make_stub_page() with no flags must set neither _failed nor _insufficient_data."""
-    entity = {"canonical_name": "Brullo", "importance": "secondaire", "type": "PERSON"}
+    entity = {"canonical_name": "Brullo", "importance": "secondary", "type": "PERSON"}
     page = make_stub_page(entity)
     assert "_failed" not in page
     assert "_insufficient_data" not in page
@@ -1123,7 +1123,7 @@ def test_run_generation_for_entity_sets_insufficient_data_when_no_context(tmp_pa
     """When context_by_chapter is empty, _run_generation_for_entity must return _insufficient_data stub."""
     entity = {
         "canonical_name": "Brullo",
-        "importance": "secondaire",
+        "importance": "secondary",
         "type": "PERSON",
         "context_by_chapter": {},
     }
@@ -1145,12 +1145,12 @@ def test_parse_response_warns_on_suspiciously_short_content(capsys):
     """parse_response must log a warning when content is non-empty but suspiciously short."""
     raw = json.dumps({
         "title": "Brullo",
-        "importance": "secondaire",
+        "importance": "secondary",
         "entity_type": "PERSON",
         "infobox_fields": {},
         "content": "## Biographie\n\nPersonnage mineur.",
     })
-    entity = {"canonical_name": "Brullo", "importance": "secondaire", "type": "PERSON"}
+    entity = {"canonical_name": "Brullo", "importance": "secondary", "type": "PERSON"}
     page = parse_response(raw, entity)
     assert not page.get("_failed"), "Short but non-empty content must not be marked failed"
     captured = capsys.readouterr()
@@ -1798,6 +1798,72 @@ def test_write_identity_telemetry_roundtrip(tmp_path):
     assert written == {"safety_net_triggers": {"force_identity": 1, "identity_recovery": 0}}
 
 
+# --- STU-447: validated wiki_pages.json write boundary ---
+
+from wiki_creator import studio_io
+from wiki_creator.types import WikiPage
+
+
+def test_save_writes_validated_wiki_pages_artifact(tmp_path):
+    """Disk wiki_pages.json round-trips through the WikiPage schema, wrapper preserved."""
+    output_file = str(tmp_path / "wiki_pages.json")
+    pages = [
+        {"title": "Celaena", "importance": "principal", "entity_type": "PERSON",
+         "books": ["01-throne-of-glass"], "infobox_fields": {"nom": "Celaena"},
+         "content": "## Biographie\n\nTexte."},
+        # non-PERSON success path carries run_metadata (_execute_wiki_page_item)
+        {"title": "Rifthold", "importance": "secondary", "entity_type": "PLACE",
+         "infobox_fields": {}, "content": "## Géographie\n\nTexte.",
+         "run_metadata": {"command": ["studio"], "run_id": "r1"}},
+        # identity-corrected / spoiler-rejected / stub pages omit content/infobox_fields
+        {"title": "Kaltain", "importance": "secondary", "entity_type": "PERSON",
+         "_identity_corrected": True},
+        {"title": "Arobynn", "importance": "principal", "entity_type": "PERSON",
+         "_failed": True, "_spoiler_rejected": True},
+    ]
+    _gwp._save(pages, output_file)
+
+    with open(output_file, encoding="utf-8") as f:
+        raw = json.load(f)
+    assert list(raw.keys()) == ["pages"]
+    validated = studio_io.from_dict(list[WikiPage], raw["pages"])
+    assert validated[0].title == "Celaena"
+    assert validated[1].run_metadata == {"command": ["studio"], "run_id": "r1"}
+    assert validated[2]._identity_corrected is True
+    assert validated[3]._failed is True and validated[3]._spoiler_rejected is True
+
+
+def test_save_rejects_unknown_page_key(tmp_path):
+    """An unknown key on a page dict must be rejected before it reaches disk."""
+    output_file = str(tmp_path / "wiki_pages.json")
+    pages = [
+        {"title": "Celaena", "importance": "principal", "entity_type": "PERSON",
+         "infobox_fields": {}, "content": "## Bio", "surprise": "unexpected"},
+    ]
+    with pytest.raises(TypeError):
+        _gwp._save(pages, output_file)
+
+
+def test_stray_llm_key_is_dropped_and_does_not_crash_save(tmp_path):
+    """A stray top-level key from the LLM must be dropped by parse_response so
+    the page still validates through _save (regression: WikiPage(**p) would
+    otherwise raise TypeError and brick the run on this + every rerun)."""
+    raw = json.dumps({
+        "title": "Victor Grandes", "importance": "secondary", "entity_type": "PERSON",
+        "infobox_fields": {}, "content": "## Biographie\n\nTexte.",
+        "reasoning": "chain-of-thought the model leaked", "sources": ["ch1"],
+    })
+    page = parse_response(raw, _entity())
+    assert "reasoning" not in page and "sources" not in page
+
+    output_file = str(tmp_path / "wiki_pages.json")
+    _gwp._save([page], output_file)  # must not raise
+    with open(output_file, encoding="utf-8") as f:
+        raw_disk = json.load(f)
+    validated = studio_io.from_dict(list[WikiPage], raw_disk["pages"])
+    assert validated[0].title == "Victor Grandes"
+
+
 # --- STU-449: generate_pages() public interface, runner-injected (no subprocess) ---
 
 
@@ -1867,7 +1933,8 @@ def test_generate_pages_dry_run_skips_runner(tmp_path):
 def test_generate_pages_resumes_completed_pages(tmp_path):
     output_file = tmp_path / "wiki_pages.json"
     output_file.write_text(
-        json.dumps({"pages": [{"title": "Rifthold", "content": "## Description\n\nDéjà fait."}]}),
+        json.dumps({"pages": [{"title": "Rifthold", "importance": "secondary",
+                                "entity_type": "PLACE", "content": "## Description\n\nDéjà fait."}]}),
         encoding="utf-8",
     )
     runner = _FakeRunner()

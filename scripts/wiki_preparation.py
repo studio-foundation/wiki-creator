@@ -40,6 +40,7 @@ from wiki_creator.confidence import relationship_confidence
 from wiki_creator.chapters import chapter_number
 from wiki_creator.provenance import relation_revealed_at
 from wiki_creator.registry import Registry
+from wiki_creator.types import ChapterSummary, EventBundle, RelationshipBundle
 
 BATCH_SIZE_BY_IMPORTANCE = {
     "principal": 3,   # full template ~1500 tokens × 3 = 4500 tokens — safe under 8192
@@ -48,8 +49,6 @@ BATCH_SIZE_BY_IMPORTANCE = {
 }
 # Hard cap on total context chars per batch — prevents long batches even within size limits
 MAX_BATCH_CONTEXT_CHARS = 20000
-# entity-classification outputs French importance labels; normalize to English for downstream
-_IMPORTANCE_NORMALIZE = {"secondaire": "secondary"}
 
 MAX_MENTIONS_PER_CHAPTER = 5
 MAX_CHAPTERS = 25
@@ -62,8 +61,7 @@ DEFAULT_CHAPTER_SUMMARY_MAX = 8
 
 def load_registry(path: str, key: str) -> dict:
     if os.path.exists(path):
-        with open(path, encoding="utf-8") as f:
-            return json.load(f).get(key, {})
+        return studio_io.load_full_file(path, key)
     return {}
 
 
@@ -83,13 +81,13 @@ def _registry_chain_for_entity(entity: dict, persons: dict, places: dict, orgs: 
     return ordered
 
 
-def _find_entry_for_source_id(entity: dict, source_id: str, persons: dict, places: dict, orgs: dict, events: dict) -> dict:
-    """Find source_id entry, preferring the entity's current type registry."""
+def _find_entry_for_source_id(entity: dict, source_id: str, persons: dict, places: dict, orgs: dict, events: dict):
+    """Find source_id EntityFull, preferring the entity's current type registry."""
     for registry in _registry_chain_for_entity(entity, persons, places, orgs, events):
-        entry = registry.get(source_id, {})
-        if entry:
+        entry = registry.get(source_id)
+        if entry is not None:
             return entry
-    return {}
+    return None
 
 
 def extract_context(entity: dict, persons: dict, places: dict, orgs: dict, events: dict) -> dict:
@@ -97,7 +95,9 @@ def extract_context(entity: dict, persons: dict, places: dict, orgs: dict, event
     combined: dict[str, list[str]] = {}
     for sid in entity.get("source_ids", []):
         entry = _find_entry_for_source_id(entity, sid, persons, places, orgs, events)
-        for chapter, mentions in entry.get("mentions_by_chapter", {}).items():
+        if entry is None:
+            continue
+        for chapter, mentions in entry.mentions_by_chapter.items():
             if chapter not in combined:
                 combined[chapter] = []
             combined[chapter].extend(mentions)
@@ -121,7 +121,9 @@ def get_first_seen(entity: dict, persons: dict, places: dict, orgs: dict, events
     first_seen = ""
     for sid in entity.get("source_ids", []):
         entry = _find_entry_for_source_id(entity, sid, persons, places, orgs, events)
-        fs = entry.get("first_seen", "")
+        if entry is None:
+            continue
+        fs = entry.first_seen
         if fs and (not first_seen or fs < first_seen):
             first_seen = fs
     return first_seen
@@ -323,6 +325,25 @@ def build_chapter_summary_context(
     return result
 
 
+def read_plot_events(path: Path) -> list[dict]:
+    """Validated events from events.json for the entity-events projection.
+
+    Absent or unreadable file degrades to ``[]`` (warn-and-skip); a
+    schema-drift key propagates ``ArtifactSchemaError``.
+    """
+    if not path.exists():
+        print("wiki-preparation: events.json not found — entity_events will be empty", file=sys.stderr)
+        return []
+    try:
+        bundle = studio_io.load_artifact(path, EventBundle)
+    except (OSError, json.JSONDecodeError):
+        print("wiki-preparation: events.json could not be read — entity_events will be empty", file=sys.stderr)
+        return []
+    # dict-only boundary: events_for_entity/build_entity_bundle (pure,
+    # unchanged) consume plain event dicts — validated on load above.
+    return studio_io.to_dict(bundle.events)
+
+
 def events_for_entity(canonical_name: str, events: list[dict]) -> list[dict]:
     """Events where the entity participates or that occur at the entity (PLACE),
     sorted by chapter. The channel Plot Spine projections (SP1-SP4) consume."""
@@ -467,8 +488,6 @@ def main() -> None:
     classification_output, chapter_summary_output = stage_outputs_from_payload(payload)
 
     entities = classification_output.get("entities", [])
-    for e in entities:
-        e["importance"] = _IMPORTANCE_NORMALIZE.get(e.get("importance", ""), e.get("importance", "figurant"))
     relationships = classification_output.get("relationships", [])
     narrator = classification_output.get("narrator", None)
 
@@ -483,8 +502,11 @@ def main() -> None:
     # over the unclassified relationships forwarded by the entity-classification stage.
     _rc_file = paths.processing / "relationships_classified.json"
     if _rc_file.exists():
-        with open(_rc_file, encoding="utf-8") as _f:
-            relationships = json.load(_f).get("relationships", [])
+        # dict-only boundary: batch building below spreads relationships into
+        # computed output dicts (confidence, etc.) — validated on load here.
+        relationships = studio_io.to_dict(
+            studio_io.load_artifact(_rc_file, RelationshipBundle).relationships
+        )
         print(
             f"wiki-preparation: loaded {len(relationships)} classified relationships from disk",
             file=sys.stderr,
@@ -551,8 +573,12 @@ def main() -> None:
     if not chapter_summaries:
         _cs_file = paths.processing / "chapter_summaries.json"
         if _cs_file.exists():
-            with open(_cs_file, encoding="utf-8") as _f:
-                chapter_summaries = json.load(_f).get("chapter_summaries", {})
+            _raw = json.loads(_cs_file.read_text(encoding="utf-8"))
+            # dict-only boundary: build_chapter_summary_context() below consumes
+            # plain chapter-summary dicts — validated on load here.
+            chapter_summaries = studio_io.to_dict(
+                studio_io.from_dict(dict[str, ChapterSummary], _raw.get("chapter_summaries", {}))
+            )
             print(
                 f"wiki-preparation: loaded {len(chapter_summaries)} chapter summaries from disk (stage output was empty)",
                 file=sys.stderr,
@@ -574,16 +600,7 @@ def main() -> None:
         except (OSError, json.JSONDecodeError, KeyError):
             pass
 
-    _events_path = paths.processing / "events.json"
-    plot_events: list[dict] = []
-    if _events_path.exists():
-        try:
-            with open(_events_path, encoding="utf-8") as _f:
-                plot_events = json.load(_f).get("events", [])
-        except (OSError, json.JSONDecodeError):
-            print("wiki-preparation: events.json could not be read — entity_events will be empty", file=sys.stderr)
-    else:
-        print("wiki-preparation: events.json not found — entity_events will be empty", file=sys.stderr)
+    plot_events = read_plot_events(paths.processing / "events.json")
 
     entity_bundles = [
         build_entity_bundle(

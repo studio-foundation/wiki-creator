@@ -31,8 +31,10 @@ from pathlib import Path
 
 
 import yaml
+from wiki_creator import studio_io
 from wiki_creator.paths import book_paths_from_epub
 from wiki_creator.registry import Registry
+from wiki_creator.types import ClassifiedBundle, Splits
 
 FULL_REGISTRY_FILES = (
     "persons_full.json",
@@ -40,14 +42,6 @@ FULL_REGISTRY_FILES = (
     "orgs_full.json",
     "events_full.json",
 )
-
-
-def _load_json(path: Path) -> dict:
-    if path.exists():
-        with open(path, encoding="utf-8") as f:
-            data = json.load(f)
-        return data if isinstance(data, dict) else {}
-    return {}
 
 
 def main() -> None:
@@ -72,20 +66,35 @@ def main() -> None:
     # alias_resolution merge-evidence block, so audit provenance is preserved.
     alias_output = previous_outputs.get("entity-classification") or {}
     if not alias_output.get("entities"):
-        alias_output = _load_json(paths.processing / "entities_classified.json")
+        classified_path = paths.processing / "entities_classified.json"
+        if classified_path.exists():
+            try:
+                # Registry.from_artifacts consumes raw record dicts (Do NOT change
+                # registry.py); to_dict here is a pure shape adapter after validation.
+                alias_output = studio_io.to_dict(
+                    studio_io.load_artifact(classified_path, ClassifiedBundle)
+                )
+            except json.JSONDecodeError:
+                alias_output = {}
 
-    splits = _load_json(paths.processing / "splits.json")
-    # Extraction wraps each per-type file under its json_key ("persons_full",
-    # …); unwrap it like relationship_extraction does, else no source_id ever
-    # matches and every registry mention is silently dropped. Unwrapped files
-    # (unit fixtures, older runs) keep working.
+    splits_path = paths.processing / "splits.json"
+    splits = studio_io.load_artifact(splits_path, Splits) if splits_path.exists() else Splits()
+    # load_full_file unwraps each per-type file's json_key ("persons_full", …)
+    # and validates against EntityFull, falling back to the raw payload for
+    # unwrapped fixtures/older runs — else no source_id ever matches and every
+    # registry mention is silently dropped.
     full_registries: dict = {}
     for name in FULL_REGISTRY_FILES:
-        data = _load_json(paths.processing / name)
-        inner = data.get(name.removesuffix(".json"))
-        full_registries.update(inner if isinstance(inner, dict) else data)
+        path = paths.processing / name
+        if path.exists():
+            full_registries.update(studio_io.load_full_file(path, name.removesuffix(".json")))
 
-    registry = Registry.from_artifacts(splits, alias_output, full_registries, book_id)
+    # Registry.from_artifacts consumes raw record dicts; splits/full_registries
+    # are already validated (load_artifact/load_full_file above), so to_dict
+    # here is a pure shape adapter.
+    registry = Registry.from_artifacts(
+        studio_io.to_dict(splits), alias_output, studio_io.to_dict(full_registries), book_id
+    )
     output_path = paths.processing / "registry.json"
     registry.save(output_path)
 

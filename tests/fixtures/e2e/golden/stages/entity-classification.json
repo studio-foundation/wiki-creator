@@ -12,7 +12,7 @@
    "relevant": true,
    "total_mentions": 11,
    "chapters_present": 4,
-   "importance": "secondaire"
+   "importance": "secondary"
   },
   {
    "canonical_name": "Heron",
@@ -85,7 +85,7 @@
    "relevant": true,
    "total_mentions": 10,
    "chapters_present": 4,
-   "importance": "secondaire"
+   "importance": "secondary"
   }
  ],
  "relationships": [
@@ -101,7 +101,7 @@
  ],
  "stats": {
   "principal": 0,
-  "secondaire": 2,
+  "secondary": 2,
   "figurant": 3,
   "ignored": 1,
   "thresholds_used": "auto"

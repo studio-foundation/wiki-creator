@@ -20,6 +20,22 @@ from scripts.entity_classification import (
     classify_entities,
 )
 from wiki_creator.lang import load_lang_config
+from wiki_creator.types import EntityFull
+
+
+def _pf(records: dict) -> dict:
+    """Wrap plain *_full-shaped record dicts as EntityFull, as load_full_file yields."""
+    return {
+        eid: EntityFull(
+            type=v.get("type", "PERSON"),
+            raw_mentions=v.get("raw_mentions", []),
+            first_seen=v.get("first_seen", ""),
+            mention_count=v.get("mention_count", 0),
+            mentions_by_chapter=v.get("mentions_by_chapter", {}),
+            mention_spans_by_chapter=v.get("mention_spans_by_chapter", {}),
+        )
+        for eid, v in records.items()
+    }
 
 _EN = load_lang_config("en")
 _GEO_SUFFIXES = frozenset(_EN.get("geo_suffixes", []))
@@ -30,7 +46,7 @@ _ROLE_PATTERNS = tuple(_EN.get("role_patterns", []))
 # --- Fixtures ---
 
 PERSONS_FULL = {
-    "persons_full": {
+    "persons_full": _pf({
         "entity_001": {
             "type": "PERSON",
             "raw_mentions": ["David Martín", "Martín"],
@@ -57,11 +73,11 @@ PERSONS_FULL = {
                 "ch05": ["le libraire ferma."],
             },
         },
-    }
+    })
 }
 
 PLACES_FULL = {
-    "places_full": {
+    "places_full": _pf({
         "place_001": {
             "type": "PLACE",
             "raw_mentions": ["Barcelone"],
@@ -71,10 +87,10 @@ PLACES_FULL = {
                 "ch02": ["Barcelone s'endormait."],
             },
         }
-    }
+    })
 }
 
-ORGS_FULL = {"orgs_full": {}}
+ORGS_FULL = {"orgs_full": _pf({})}
 
 
 # --- get_total_mentions ---
@@ -122,7 +138,7 @@ def test_get_total_mentions_unknown_type():
 
 # A central character whose surfaces landed in three separate extraction
 # clusters; only the junk 1-mention cluster made it into source_ids.
-NEHEMIA_PERSONS = {
+NEHEMIA_PERSONS = _pf({
     "entity_048": {  # junk cluster that source_ids points at
         "type": "PERSON",
         "raw_mentions": ["Ianticipate"],
@@ -141,7 +157,7 @@ NEHEMIA_PERSONS = {
         "raw_mentions": ["Nehemia'"],
         "mentions_by_chapter": {"C07": ["Nehemia's guards waited."]},
     },
-}
+})
 
 
 def test_get_total_mentions_source_ids_only_undercounts():
@@ -191,11 +207,11 @@ def test_classify_entities_promotes_undercounted_central_character():
         {"canonical_name": "Extra3", "type": "PERSON", "source_ids": ["e3"], "relevant": True},
     ]
     persons = dict(NEHEMIA_PERSONS)
-    persons.update({
+    persons.update(_pf({
         "e1": {"type": "PERSON", "raw_mentions": ["Extra1"], "mentions_by_chapter": {"C01": ["a"]}},
         "e2": {"type": "PERSON", "raw_mentions": ["Extra2"], "mentions_by_chapter": {"C01": ["b"]}},
         "e3": {"type": "PERSON", "raw_mentions": ["Extra3"], "mentions_by_chapter": {"C01": ["c"]}},
-    })
+    }))
     result = classify_entities(entities, persons, {}, {}, "auto")
     nehemia = next(e for e in result if e["canonical_name"] == "Nehemia")
     assert nehemia["total_mentions"] == 5
@@ -293,7 +309,7 @@ def test_assign_importance_principal():
 def test_assign_importance_secondary():
     thresholds = {"PERSON": {"principal": 90, "secondary": 40, "figurant": 10}}
     importance = assign_importance("PERSON", 50, 5, thresholds)
-    assert importance == "secondaire"
+    assert importance == "secondary"
 
 
 def test_assign_importance_figurant():
@@ -336,7 +352,7 @@ def test_classify_entities_enriches_with_importance():
     assert "importance" in martín
     assert martín["total_mentions"] == 5
     # David Martín has more mentions → higher importance than le libraire
-    importance_order = ["principal", "secondaire", "figurant", "ignored"]
+    importance_order = ["principal", "secondary", "figurant", "ignored"]
     assert importance_order.index(martín["importance"]) <= importance_order.index(libraire["importance"])
 
 
@@ -361,28 +377,28 @@ def test_classify_entities_passthrough_extra_fields():
 
 
 def test_normalize_entity_type_retags_geopolitical_name_to_place():
-    entities = {
+    entities = _pf({
         "entity_x": {
             "mentions_by_chapter": {
                 "ch01": ["She left the kingdom of Adarlan."],
                 "ch02": ["Across the country, Adarlan prepared for war."],
             }
         }
-    }
+    })
     entity = {"canonical_name": "Adarlan", "type": "PERSON", "source_ids": ["entity_x"], "aliases": []}
     new_type = _normalize_entity_type(entity, entities, {}, {}, {})
     assert new_type == "PLACE"
 
 
 def test_normalize_entity_type_keeps_person_when_context_has_generic_geo_words():
-    entities = {
+    entities = _pf({
         "entity_n": {
             "mentions_by_chapter": {
                 "ch01": ["Nehemia spoke about the kingdom and the war."],
                 "ch02": ["In the country, Nehemia sought allies."],
             }
         }
-    }
+    })
     entity = {"canonical_name": "Nehemia", "type": "PERSON", "source_ids": ["entity_n"], "aliases": []}
     new_type = _normalize_entity_type(entity, entities, {}, {}, {})
     assert new_type == "PERSON"
@@ -396,13 +412,13 @@ def test_canonicalize_role_entities_merges_unambiguous_assassin_alias():
     relationships = [
         {"entity_a": "Assassin", "entity_b": "Celaena", "cooccurrence_count": 12},
     ]
-    persons_full = {
+    persons_full = _pf({
         "e2": {
             "mentions_by_chapter": {
                 "ch01": ["I am Celaena Sardothien, Adarlan's Assassin."],
             }
         }
-    }
+    })
 
     out_entities, out_relationships, merge_map = _canonicalize_role_entities(
         entities, relationships, persons_full, {}, {}, {},
@@ -494,13 +510,13 @@ def test_canonicalize_role_entities_does_not_swallow_titled_full_name():
     relationships = [
         {"entity_a": "Captain Elias Thorn", "entity_b": "Mira Vale", "cooccurrence_count": 14},
     ]
-    persons_full = {
+    persons_full = _pf({
         "e2": {
             "mentions_by_chapter": {
                 "ch01": ["Captain Elias Thorn stood on the deck. Mira Vale walked to the rail."],
             }
         }
-    }
+    })
 
     out_entities, out_relationships, merge_map = _canonicalize_role_entities(
         entities, relationships, persons_full, {}, {}, {},
@@ -524,13 +540,13 @@ def test_canonicalize_role_entities_merges_role_surname_into_full_name():
     relationships = [
         {"entity_a": "Captain Westfall", "entity_b": "Chaol Westfall", "cooccurrence_count": 10},
     ]
-    persons_full = {
+    persons_full = _pf({
         "e2": {
             "mentions_by_chapter": {
                 "ch01": ["Captain Westfall arrived. Chaol Westfall was loyal."],
             }
         }
-    }
+    })
 
     out_entities, out_relationships, merge_map = _canonicalize_role_entities(
         entities, relationships, persons_full, {}, {}, {},
@@ -656,21 +672,21 @@ def test_normalize_entity_type_retags_place_to_person_when_source_ids_in_persons
     was extracted as PLACE, but the canonical entity has a persons_full source_id with
     many mentions.
     """
-    persons_full = {
+    persons_full = _pf({
         "entity_017": {
             "mentions_by_chapter": {
                 "ch01": ["Arobynn Hamel trained her.", "Arobynn watched from the shadows."],
                 "ch02": ["She had not seen Arobynn since the river."],
             }
         }
-    }
-    places_full = {
+    })
+    places_full = _pf({
         "entity_018": {
             "mentions_by_chapter": {
                 "ch05": ["found her half-submerged on the banks of a frozen river near Arobynn"],
             }
         }
-    }
+    })
     entity = {
         "canonical_name": "Arobynn Hamel",
         "type": "PLACE",
@@ -683,13 +699,13 @@ def test_normalize_entity_type_retags_place_to_person_when_source_ids_in_persons
 
 def test_normalize_entity_type_no_false_retag_when_persons_full_mentions_are_sparse():
     """PLACE entity with only 1 persons_full mention stays PLACE (noise, not a real person)."""
-    persons_full = {
+    persons_full = _pf({
         "entity_noise": {
             "mentions_by_chapter": {
                 "ch01": ["A figure called Arobynn passed by."],
             }
         }
-    }
+    })
     entity = {
         "canonical_name": "Arobynn",
         "type": "PLACE",
@@ -726,7 +742,7 @@ def test_is_role_entity_name_empty_role_words_returns_false():
 def test_classify_entities_empty_concept_keywords_does_not_crash():
     entities = [{"canonical_name": "Magic", "type": "OTHER", "source_ids": [], "relevant": True}]
     result = classify_entities(entities, {}, {}, {}, "auto", concept_keywords=frozenset())
-    assert result[0]["importance"] in ("principal", "secondaire", "figurant", "ignored")
+    assert result[0]["importance"] in ("principal", "secondary", "figurant", "ignored")
 
 
 # ---------------------------------------------------------------------------
@@ -1011,3 +1027,56 @@ def test_run_studio_mode_applies_corrections_file(monkeypatch, classification_tm
     result = json.loads(captured.getvalue())
     arobynn = next(e for e in result["entities"] if e["canonical_name"] == "Arobynn")
     assert arobynn["type"] == "PERSON", f"Expected PERSON, got {arobynn['type']}"
+
+
+def test_merged_entity_alias_resolution_block_round_trips_through_bundle(tmp_path):
+    """STU-285/STU-447: alias-resolution stamps an `alias_resolution` provenance
+    block onto merged PERSON entities. It flows through classify_entities'
+    `enriched = {**entity, ...}` into ClassifiedEntity(**e) and must NOT raise —
+    and must survive the entities_classified.json round-trip so write-registry's
+    resume path preserves audit provenance. The smoke fixture never merges
+    (merges_applied: 0), so this path is otherwise untested."""
+    from wiki_creator import studio_io
+    from wiki_creator.types import ClassifiedBundle, ClassifiedEntity
+
+    enriched = {
+        "canonical_name": "Celaena Sardothien",
+        "type": "PERSON",
+        "aliases": ["Lillian Gordaina"],
+        "source_ids": ["e001", "e099"],
+        "relevant": True,
+        "alias_resolution": {
+            "merged_from": ["Lillian Gordaina"],
+            "evidence": [{"method": "reveal", "confidence": "high", "snippet": "..."}],
+            "confidence": "high",
+            "method": "reveal",
+        },
+        "total_mentions": 42,
+        "chapters_present": 8,
+        "importance": "principal",
+    }
+
+    # Constructing ClassifiedEntity(**enriched) is the exact call at
+    # entity_classification.py that crashed before alias_resolution was added.
+    bundle = ClassifiedBundle(entities=[ClassifiedEntity(**enriched)])
+    path = tmp_path / "entities_classified.json"
+    studio_io.save_artifact(path, bundle, ClassifiedBundle)
+    loaded = studio_io.load_artifact(path, ClassifiedBundle)
+
+    assert loaded.entities[0].alias_resolution == enriched["alias_resolution"]
+
+
+def test_unmerged_entity_omits_alias_resolution(tmp_path):
+    """Non-merged entities carry no alias_resolution key; the optional field
+    defaults to None and still validates."""
+    from wiki_creator import studio_io
+    from wiki_creator.types import ClassifiedBundle, ClassifiedEntity
+
+    entity = ClassifiedEntity(
+        canonical_name="Chaol", type="PERSON", total_mentions=10,
+        chapters_present=4, importance="secondary",
+    )
+    path = tmp_path / "entities_classified.json"
+    studio_io.save_artifact(path, ClassifiedBundle(entities=[entity]), ClassifiedBundle)
+    loaded = studio_io.load_artifact(path, ClassifiedBundle)
+    assert loaded.entities[0].alias_resolution is None

@@ -6,51 +6,24 @@ RESOLVED_PERSON = {"canonical_name": "David Martín", "type": "PERSON",
                    "aliases": ["Martín"], "source_ids": ["e001"], "relevant": True}
 RESOLVED_PLACE  = {"canonical_name": "Barcelone", "type": "PLACE",
                    "aliases": ["Barcelona"], "source_ids": ["e040"], "relevant": True}
-SINGLE_PERSON   = {"canonical_name": "Piquillo", "type": "PERSON",
-                   "aliases": ["Piquillo"], "source_ids": ["e010"], "relevant": True}
 
 NARRATOR = {"entity": "David Martín", "pov": "first_person",
             "reliability": "reliable", "evidence": ["ch01: ..."]}
 
 ALL_STAGE_OUTPUTS = {
-    "split-clusters": {
-        "singles_resolved": [SINGLE_PERSON],
-        "PERSON": [], "PLACE": [], "ORG": [], "EVENT": [], "OTHER": [],
-    },
-    "entity-resolution-PERSON": {"entities": [RESOLVED_PERSON], "narrator": NARRATOR},
-    "entity-resolution-PLACE":  {"entities": [RESOLVED_PLACE],  "narrator": None},
-    "entity-resolution-ORG":    {"entities": [],                "narrator": None},
+    "resolve-clusters": {"entities": [RESOLVED_PERSON, RESOLVED_PLACE], "narrator": NARRATOR},
 }
 
 
-def test_all_entities_concatenated():
+def test_entities_passed_through():
     result = merge_entities(ALL_STAGE_OUTPUTS)
     names = {e["canonical_name"] for e in result["entities"]}
-    assert names == {"David Martín", "Barcelone", "Piquillo"}
+    assert names == {"David Martín", "Barcelone"}
 
 
-def test_narrator_taken_from_person_resolver():
+def test_narrator_passed_through():
     result = merge_entities(ALL_STAGE_OUTPUTS)
     assert result["narrator"] == NARRATOR
-
-
-def test_narrator_null_when_no_person_resolver():
-    outputs = {
-        "split-clusters": {"singles_resolved": [SINGLE_PERSON]},
-        "entity-resolution-PLACE": {"entities": [RESOLVED_PLACE], "narrator": None},
-    }
-    result = merge_entities(outputs)
-    assert result["narrator"] is None
-
-
-def test_missing_resolver_stage_is_skipped():
-    # ORG resolver missing entirely — should not crash
-    outputs = {
-        "split-clusters": {"singles_resolved": []},
-        "entity-resolution-PERSON": {"entities": [RESOLVED_PERSON], "narrator": None},
-    }
-    result = merge_entities(outputs)
-    assert len(result["entities"]) == 1
 
 
 def test_output_shape():
@@ -59,27 +32,16 @@ def test_output_shape():
     assert "narrator" in result
 
 
-def test_alias_resolution_output_takes_priority_when_present():
-    alias_resolved = {
-        "canonical_name": "Lillian Gordaina",
-        "type": "PERSON",
-        "aliases": ["Celaena", "Lillian Gordaina"],
-        "source_ids": ["e001", "e099"],
-        "relevant": True,
-    }
-    outputs = {
-        "resolve-clusters": {"entities": [RESOLVED_PERSON], "narrator": None},
-        "alias-resolution": {"entities": [alias_resolved], "narrator": NARRATOR},
-    }
-    result = merge_entities(outputs)
-    assert result["entities"] == [alias_resolved]
-    assert result["narrator"] == NARRATOR
-
-
 def test_empty_stage_outputs_returns_empty():
     result = merge_entities({})
     assert result["entities"] == []
     assert result["narrator"] is None
+
+
+def test_non_list_entities_warns_and_returns_empty(capsys):
+    result = merge_entities({"resolve-clusters": {"entities": "not-a-list", "narrator": None}})
+    assert result["entities"] == []
+    assert "Warning" in capsys.readouterr().err
 
 
 def test_studio_interface():
@@ -94,4 +56,4 @@ def test_studio_interface():
     assert result.returncode == 0, result.stderr
     out = json.loads(result.stdout)
     assert "entities" in out
-    assert len(out["entities"]) == 3
+    assert len(out["entities"]) == 2

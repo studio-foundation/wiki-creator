@@ -15,32 +15,32 @@ from pathlib import Path
 
 import yaml
 
+from wiki_creator import studio_io
 from wiki_creator.event_layer import build_events
 from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.registry import Registry
+from wiki_creator.types import ChapterSummary, ClassifiedBundle, Event, EventBundle, RelationshipBundle
 
 # Entity-classification importance tiers (scripts/entity_classification.py)
 # -> salience participant-importance weight (STU-483). Tiers absent here
 # (e.g. "ignored", or an entity missing from entities_classified.json)
 # default to 0.0 via dict.get.
-_IMPORTANCE_TIER_WEIGHTS = {"principal": 1.0, "secondaire": 0.6, "figurant": 0.3}
+_IMPORTANCE_TIER_WEIGHTS = {"principal": 1.0, "secondary": 0.6, "figurant": 0.3}
 
 
 def _read_participant_importance(path: Path) -> dict[str, float]:
     if not path.exists():
         return {}
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
+        bundle = studio_io.load_artifact(path, ClassifiedBundle)
+    except (OSError, json.JSONDecodeError):
         return {}
-    entities = data.get("entities", []) if isinstance(data, dict) else []
     weights: dict[str, float] = {}
-    for entity in entities:
-        name = entity.get("canonical_name")
-        tier = str(entity.get("importance", "")).strip().lower()
-        if name and tier in _IMPORTANCE_TIER_WEIGHTS:
-            weights[name] = _IMPORTANCE_TIER_WEIGHTS[tier]
+    for entity in bundle.entities:
+        weight = _IMPORTANCE_TIER_WEIGHTS.get(entity.importance)
+        if weight is not None:
+            weights[entity.canonical_name] = weight
     return weights
 
 
@@ -59,10 +59,8 @@ def run_for_processing(processing_dir: Path | str, language: str) -> list[dict]:
     action_cues = load_lang_config(language).get("action_cues", [])
     events = build_events(summaries, relationships, registry, action_cues, participant_importance)
 
-    (processing_dir / "events.json").write_text(
-        json.dumps({"events": events}, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+    bundle = EventBundle(events=[Event(**e) for e in events])
+    studio_io.save_artifact(processing_dir / "events.json", bundle, EventBundle)
     print(
         f"[events] wrote {len(events)} events to {processing_dir / 'events.json'}",
         file=sys.stderr,
@@ -74,22 +72,26 @@ def _read_summaries(path: Path) -> dict:
     if not path.exists():
         return {}
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
+        raw = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError:
         return {}
-    return data.get("chapter_summaries", data) if isinstance(data, dict) else {}
+    data = raw.get("chapter_summaries", raw) if isinstance(raw, dict) else {}
+    summaries = studio_io.from_dict(dict[str, ChapterSummary], data)
+    # dict-only boundary: build_events() (wiki_creator/event_layer.py) consumes
+    # plain chapter-summary dicts — validated on load above.
+    return studio_io.to_dict(summaries)
 
 
 def _read_relationships(path: Path) -> list[dict]:
     if not path.exists():
         return []
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
+        bundle = studio_io.load_artifact(path, RelationshipBundle)
     except json.JSONDecodeError:
         return []
-    if isinstance(data, dict):
-        return data.get("relationships", [])
-    return data if isinstance(data, list) else []
+    # dict-only boundary: build_events() (wiki_creator/event_layer.py) consumes
+    # plain relationship dicts — validated on load above.
+    return studio_io.to_dict(bundle.relationships)
 
 
 def main() -> None:

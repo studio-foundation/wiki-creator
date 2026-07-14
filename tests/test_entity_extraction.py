@@ -993,3 +993,29 @@ def test_person_with_place_dense_context_stays_person():
         },
     }
     assert _retag_entity_type_from_context(entity) == "PERSON"
+
+
+def test_full_file_drift_raises(tmp_path):
+    """A *_full.json record with an unknown key must fail validated load (STU-447)."""
+    import json
+    from wiki_creator import studio_io
+    from wiki_creator.studio_io import ArtifactSchemaError
+    p = tmp_path / "persons_full.json"
+    p.write_text(json.dumps({"persons_full": {"e1": {"type": "PERSON", "raw_mentions": [], "first_seen": "c1", "mention_count": 1, "surprise": 9}}}))
+    with pytest.raises(ArtifactSchemaError, match="surprise"):
+        studio_io.load_full_file(p, "persons_full")
+
+
+def test_full_file_spans_round_trip(tmp_path):
+    """A populated mention_spans_by_chapter round-trips through load_full_file as MentionSpan (STU-489)."""
+    import json
+    from wiki_creator import studio_io
+    from wiki_creator.types import MentionSpan
+    p = tmp_path / "persons_full.json"
+    p.write_text(json.dumps({"persons_full": {"e1": {
+        "type": "PERSON", "raw_mentions": ["Celaena"], "first_seen": "c1", "mention_count": 1,
+        "mention_spans_by_chapter": {"c1": [{"surface": "Celaena", "start": 10, "end": 17}]},
+    }}}))
+    records = studio_io.load_full_file(p, "persons_full")
+    span = records["e1"].mention_spans_by_chapter["c1"][0]
+    assert span == MentionSpan(surface="Celaena", start=10, end=17)

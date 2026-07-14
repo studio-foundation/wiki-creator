@@ -43,6 +43,7 @@ from wiki_creator.lang import load_lang_config, infer_language
 from wiki_creator.pov_attribution import attribute_pov_character
 from wiki_creator import studio_io
 from wiki_creator.chapters import is_frontmatter_chapter
+from wiki_creator.types import ChapterSummary, ClassifiedBundle
 
 _FALLBACK_BULLET = "No reliable summary available for this chapter."
 _MIN_SENTENCE_CHARS = 25
@@ -55,9 +56,8 @@ OLLAMA_URL = "http://localhost:11434"
 
 # STU-433: extractive sentence-selection bonus per entity importance tier.
 # Numeric weights only — the entity surface forms come from entity-classification
-# output, not a hardcoded vocabulary. "secondaire" is the French label emitted by
-# entity_classification.assign_importance; "secondary" is its normalized form.
-_IMPORTANCE_WEIGHTS = {"principal": 0.6, "secondary": 0.3, "secondaire": 0.3}
+# output, not a hardcoded vocabulary.
+_IMPORTANCE_WEIGHTS = {"principal": 0.6, "secondary": 0.3}
 _LLM_DEBUGGABLE_ERRORS = {
     "llm_timeout",
     "llm_http_error",
@@ -171,15 +171,22 @@ def build_entity_importance_index(
 
 
 def _load_classified_entities(path: Path) -> list[dict]:
-    """Load entities from an entities_classified.json file; [] if absent/invalid."""
+    """Load validated entities from an entities_classified.json file.
+
+    Absent or unreadable file degrades to [] (chapter-summary is a pre-step
+    of wiki-resolution, so entity-classification may not have run yet); a
+    schema-drift key propagates ArtifactSchemaError.
+    """
     if not path.exists():
         return []
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
+        bundle = studio_io.load_artifact(path, ClassifiedBundle)
     except (OSError, json.JSONDecodeError):
         return []
-    entities = data.get("entities") if isinstance(data, dict) else data
-    return entities if isinstance(entities, list) else []
+    # dict-only boundary: build_entity_importance_index (pure, shared with the
+    # in-memory previous_outputs path) consumes plain entity dicts — validated
+    # on load above.
+    return studio_io.to_dict(bundle.entities)
 
 
 def _chapter_key(chapter: dict) -> str:
@@ -587,8 +594,11 @@ def summarize_chapters(chapters: list[dict], config: ChapterSummaryConfig | None
 
 def _save_chapter_summaries(chapter_summaries: dict[str, dict], output_file: Path) -> None:
     output_file.parent.mkdir(parents=True, exist_ok=True)
+    records = {key: ChapterSummary(**summary) for key, summary in chapter_summaries.items()}
+    payload = studio_io.to_dict(records)
+    studio_io.from_dict(dict[str, ChapterSummary], payload)  # self-check: never write off-schema
     with open(output_file, "w", encoding="utf-8") as f:
-        json.dump({"chapter_summaries": chapter_summaries}, f, ensure_ascii=False, indent=2)
+        json.dump({"chapter_summaries": payload}, f, ensure_ascii=False, indent=2)
 
 
 def _load_existing_chapter_summaries(output_file: Path) -> dict[str, dict]:

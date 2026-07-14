@@ -105,7 +105,7 @@ def render_page(page: dict, labels: dict, collapse_after: int | None = None) -> 
 
     infobox = make_infobox_call(entity_type, page.get("infobox_fields", {}))
     cats = category_tags(
-        entity_type, page.get("importance", "secondaire"), labels, page.get("books")
+        entity_type, page.get("importance", "secondary"), labels, page.get("books")
     )
     page_content = infobox + "\n\n" + body
     if cats:

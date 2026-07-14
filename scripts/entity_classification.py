@@ -17,11 +17,11 @@ Output (stdout):
   {
     "entities": [{ ...same fields..., "total_mentions": int, "chapters_present": int, "importance": str }],
     "relationships": [...passthrough...],
-    "stats": { "principal": int, "secondaire": int, "figurant": int, "ignored": int, "thresholds_used": str },
+    "stats": { "principal": int, "secondary": int, "figurant": int, "ignored": int, "thresholds_used": str },
     "narrator": ...passthrough...
   }
 
-importance values: "principal" | "secondaire" | "figurant" | "ignored"
+importance values: "principal" | "secondary" | "figurant" | "ignored"
 
 Standalone test:
   python scripts/entity_classification.py --test
@@ -39,6 +39,7 @@ import yaml
 from wiki_creator import studio_io
 from wiki_creator.lang import load_lang_config, infer_language
 from wiki_creator.registry import normalize_name as _normalize_name
+from wiki_creator.types import ClassifiedBundle, ClassifiedEntity, Relationship
 
 _VALID_TYPES = {"PERSON", "PLACE", "ORG", "EVENT", "OTHER"}
 
@@ -68,7 +69,7 @@ def build_surface_index(*registries: dict) -> dict[str, list[dict]]:
     for reg in registries:
         for entry in (reg or {}).values():
             seen_keys: set[str] = set()
-            for raw in entry.get("raw_mentions") or []:
+            for raw in entry.raw_mentions or []:
                 key = _surface_key(raw)
                 if key and key not in seen_keys:
                     seen_keys.add(key)
@@ -76,9 +77,9 @@ def build_surface_index(*registries: dict) -> dict[str, list[dict]]:
     return index
 
 
-def _count_entry(entry: dict, chapters: set[str]) -> int:
+def _count_entry(entry, chapters: set[str]) -> int:
     total = 0
-    for ch, mentions in entry.get("mentions_by_chapter", {}).items():
+    for ch, mentions in entry.mentions_by_chapter.items():
         total += len(mentions)
         if mentions:
             chapters.add(ch)
@@ -112,14 +113,14 @@ def get_total_mentions(
     counted: set[int] = set()
     for sid in entity.get("source_ids", []):
         # Primary lookup by current type, fallback across registries for retagged entities.
-        entry = type_to_registry.get(entity.get("type", ""), {}).get(sid, {})
-        if not entry:
+        entry = type_to_registry.get(entity.get("type", ""), {}).get(sid)
+        if entry is None:
             for alt in ("PERSON", "PLACE", "ORG", "EVENT"):
-                candidate = type_to_registry.get(alt, {}).get(sid, {})
-                if candidate:
+                candidate = type_to_registry.get(alt, {}).get(sid)
+                if candidate is not None:
                     entry = candidate
                     break
-        if entry and id(entry) not in counted:
+        if entry is not None and id(entry) not in counted:
             counted.add(id(entry))
             total += _count_entry(entry, chapters)
 
@@ -211,7 +212,7 @@ def assign_importance(
     if total_mentions >= t["principal"]:
         return "principal"
     elif total_mentions >= t["secondary"]:
-        return "secondaire"
+        return "secondary"
     elif total_mentions >= t["figurant"]:
         return "figurant"
     else:
@@ -320,9 +321,9 @@ def _collect_context_sentences(
     for sid in entity.get("source_ids", []):
         for reg in registries:
             entry = reg.get(sid)
-            if not entry:
+            if entry is None:
                 continue
-            for chapter_mentions in entry.get("mentions_by_chapter", {}).values():
+            for chapter_mentions in entry.mentions_by_chapter.values():
                 for sentence in chapter_mentions:
                     snippets.append(sentence)
                     if len(snippets) >= max_sentences:
@@ -395,7 +396,7 @@ def _normalize_entity_type(
         persons_mention_count = sum(
             sum(
                 len(v) if isinstance(v, list) else 1
-                for v in persons_full.get(sid, {}).get("mentions_by_chapter", {}).values()
+                for v in persons_full[sid].mentions_by_chapter.values()
             )
             for sid in entity.get("source_ids", [])
             if sid in persons_full
@@ -678,8 +679,7 @@ def _load_entity_files(processing_dir: Path) -> tuple[dict, dict, dict, dict]:
     def load(name: str, key: str) -> dict:
         p = processing_dir / name
         if p.exists():
-            with open(p, encoding="utf-8") as f:
-                return json.load(f).get(key, {})
+            return studio_io.load_full_file(p, key)
         return {}
 
     return (
@@ -800,22 +800,33 @@ def run_studio_mode() -> None:
     from collections import Counter
     importance_counts = Counter(e["importance"] for e in enriched)
 
+    stats = {
+        "principal": importance_counts.get("principal", 0),
+        "secondary": importance_counts.get("secondary", 0),
+        "figurant": importance_counts.get("figurant", 0),
+        "ignored": importance_counts.get("ignored", 0),
+        "thresholds_used": "auto" if thresholds_config == "auto" else "explicit",
+    }
+
     output = {
         "entities": enriched,
         "relationships": relationships,
-        "stats": {
-            "principal": importance_counts.get("principal", 0),
-            "secondaire": importance_counts.get("secondaire", 0),
-            "figurant": importance_counts.get("figurant", 0),
-            "ignored": importance_counts.get("ignored", 0),
-            "thresholds_used": "auto" if thresholds_config == "auto" else "explicit",
-        },
+        "stats": stats,
         "narrator": narrator,
     }
 
+    # save_artifact's field order (canonical_name, type, total_mentions, ...)
+    # differs from `enriched`'s insertion order (source fields first, tiering
+    # fields appended), so stdout keeps the raw `output` dict — the validated
+    # bundle only governs the on-disk artifact.
+    bundle = ClassifiedBundle(
+        entities=[ClassifiedEntity(**e) for e in enriched],
+        relationships=[Relationship(**r) for r in relationships],
+        stats=stats,
+        narrator=narrator,
+    )
     paths.processing.mkdir(parents=True, exist_ok=True)
-    with open(paths.processing / "entities_classified.json", "w", encoding="utf-8") as _f:
-        json.dump(output, _f, ensure_ascii=False)
+    studio_io.save_artifact(paths.processing / "entities_classified.json", bundle, ClassifiedBundle)
 
     json.dump(output, sys.stdout, ensure_ascii=False)
 

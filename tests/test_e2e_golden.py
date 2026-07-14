@@ -225,12 +225,12 @@ def test_relationship_extraction_finds_protagonist_edge(chain_run):
 def test_classification_assigns_importance_tiers(chain_run):
     entities = chain_run["outputs"]["entity-classification"]["entities"]
     assert entities
-    valid = {"principal", "secondaire", "figurant", "ignored"}
+    valid = {"principal", "secondary", "figurant", "ignored"}
     for entity in entities:
         assert entity.get("importance") in valid, entity
     protagonists = {
         e["canonical_name"] for e in entities
-        if e["importance"] in {"principal", "secondaire"}
+        if e["importance"] in {"principal", "secondary"}
     }
     # Both protagonists must survive classification as distinct entities —
     # 'Captain Elias Thorn' being swallowed into Mira Vale by role

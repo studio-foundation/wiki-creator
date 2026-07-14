@@ -19,12 +19,23 @@ from pathlib import Path
 import yaml
 
 
+from wiki_creator import studio_io
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.registry import Registry
 from wiki_creator.relationship_fold import fold_relationships
+from wiki_creator.types import Relationship, RelationshipBundle
 from scripts.relationship_extraction import (
     _run_studio_classifier_item,
     _should_classify_pair,
+)
+
+
+# Fields the LLM classifier is allowed to contribute to a relationship dict
+# (relationship-classifier-item.contract.yaml required_fields ∩ Relationship).
+# Everything else the freeform LLM JSON might carry (reasoning, notes, …) is
+# dropped so {**pair, **classification} can only produce a valid Relationship.
+_KNOWN_CLASSIFICATION_KEYS = frozenset(
+    {"relationship_type", "direction", "evolution", "key_moments", "evidence"}
 )
 
 
@@ -50,8 +61,13 @@ def _load_done_keys(output_path: Path) -> tuple[set[tuple[str, str]], list[dict]
 
 
 def _save(output_path: Path, base: dict, classified: list[dict]) -> None:
-    out = {**base, "relationships": classified}
-    output_path.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
+    bundle = RelationshipBundle(
+        entities=base.get("entities", []),
+        relationships=[Relationship(**r) for r in classified],
+        stats=base.get("stats", {}),
+        narrator=base.get("narrator"),
+    )
+    studio_io.save_artifact(output_path, bundle, RelationshipBundle)
 
 
 def main() -> None:
@@ -76,7 +92,12 @@ def main() -> None:
         print(f"[ERROR] Input not found: {input_path}", file=sys.stderr)
         sys.exit(1)
 
-    data = json.loads(input_path.read_text(encoding="utf-8"))
+    # dict-only boundary: the incremental per-pair classify/resume loop below
+    # merges LLM classification dicts into relationship dicts (_load_done_keys/
+    # _save stay dict-based for interrupted-run tolerance) — validated on load
+    # here, converted back to plain dicts for that loop.
+    bundle = studio_io.load_artifact(input_path, RelationshipBundle)
+    data = studio_io.to_dict(bundle)
     relationships = data.get("relationships", [])
     entity_types = {e["canonical_name"]: e.get("type", "") for e in data.get("entities", [])}
     base = {k: v for k, v in data.items() if k != "relationships"}
@@ -145,6 +166,10 @@ def main() -> None:
                     additional_context="",
                 )
                 if classification and not classification.get("error"):
+                    classification = {
+                        k: v for k, v in classification.items()
+                        if k in _KNOWN_CLASSIFICATION_KEYS
+                    }
                     result = {**pair, **classification}
                 else:
                     print(

@@ -1,6 +1,11 @@
 """Tests for scripts/split_clusters.py."""
 import sys, os, json, subprocess
+
+import pytest
+
 from scripts.split_clusters import split_clusters
+from wiki_creator import studio_io
+from wiki_creator.types import Splits
 
 
 MULTI_PERSON = {
@@ -110,3 +115,37 @@ def test_studio_interface():
     out = json.loads(result.stdout)
     assert "singles_resolved" in out
     assert "PERSON" in out
+
+
+def test_main_writes_validated_splits_artifact(tmp_path):
+    """Integration: disk splits.json round-trips through the Splits schema."""
+    epub = tmp_path / "library" / "author" / "series" / "books" / "01-book.epub"
+    processing = tmp_path / "library" / "author" / "series" / "processing_output" / "01-book"
+    payload = json.dumps({
+        "additional_context": f"file_path: {epub}\n",
+        "previous_outputs": {
+            "entity-clustering": {"clusters": [MULTI_PERSON, SINGLE_PERSON]}
+        },
+    })
+    result = subprocess.run(
+        [sys.executable, "scripts/split_clusters.py"],
+        input=payload, capture_output=True, text=True, timeout=10,
+    )
+    assert result.returncode == 0, result.stderr
+
+    splits_path = processing / "splits.json"
+    assert splits_path.exists()
+    splits = studio_io.load_artifact(splits_path, Splits)
+    assert splits.PERSON[0].canonical_candidate == "David Martín"
+    assert splits.singles_resolved[0].canonical_name == "Piquillo"
+
+
+def test_splits_artifact_drift_raises(tmp_path):
+    """An unknown top-level key on splits.json must be rejected."""
+    path = tmp_path / "splits.json"
+    path.write_text(json.dumps({
+        "singles_resolved": [], "PERSON": [], "PLACE": [], "ORG": [],
+        "EVENT": [], "OTHER": [], "stats": {}, "surprise": "unexpected",
+    }), encoding="utf-8")
+    with pytest.raises(studio_io.ArtifactSchemaError):
+        studio_io.load_artifact(path, Splits)

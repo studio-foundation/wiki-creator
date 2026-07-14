@@ -33,6 +33,9 @@ def _artifacts() -> tuple[dict, dict, dict]:
             {
                 "canonical_name": "Crown Prince",
                 "type": "PERSON",
+                "total_mentions": 1,
+                "chapters_present": 1,
+                "importance": "principal",
                 "aliases": ["Crown Prince"],
                 "source_ids": ["e_crown_prince"],
                 "relevant": True,
@@ -40,11 +43,15 @@ def _artifacts() -> tuple[dict, dict, dict]:
             {
                 "canonical_name": "Perrington",
                 "type": "PERSON",
+                "total_mentions": 2,
+                "chapters_present": 1,
+                "importance": "principal",
                 "aliases": ["Duke Perrington", "Perrington"],
                 "source_ids": ["e_perrington"],
                 "relevant": True,
             },
         ],
+        "relationships": [],
         "narrator": None,
         "stats": {"merges_applied": 0},
     }

@@ -8,6 +8,22 @@ from pathlib import Path
 
 from scripts.alias_resolution import resolve_aliases, detect_named_aliases, _pick_snippets, make_ollama_confirmer
 from wiki_creator.lang import load_lang_config
+from wiki_creator.types import EntityFull
+
+
+def _pf(records: dict) -> dict:
+    """Wrap plain *_full-shaped record dicts as EntityFull, as load_full_file yields."""
+    return {
+        eid: EntityFull(
+            type=v.get("type", "PERSON"),
+            raw_mentions=v.get("raw_mentions", []),
+            first_seen=v.get("first_seen", ""),
+            mention_count=v.get("mention_count", 0),
+            mentions_by_chapter=v.get("mentions_by_chapter", {}),
+            mention_spans_by_chapter=v.get("mention_spans_by_chapter", {}),
+        )
+        for eid, v in records.items()
+    }
 
 _EN_CFG = load_lang_config("en")
 _EN_PATTERN_TEMPLATES = tuple(_EN_CFG.get("alias_pattern_templates", ()))
@@ -46,17 +62,17 @@ def test_non_person_entities_pass_through_unchanged():
 
 
 def test_passthrough_when_no_alias_evidence_exists():
-    persons_full = {
+    persons_full = _pf({
         "entity_001": {"mentions_by_chapter": {"ch01": ["Celaena entered the room."]}},
         "entity_002": {"mentions_by_chapter": {"ch01": ["Lillian watched the door."]}},
-    }
+    })
     result = resolve_aliases([PERSON_A, PERSON_B], persons_full=persons_full)
     assert [e["canonical_name"] for e in result["entities"]] == ["Celaena", "Lillian Gordaina"]
     assert result["stats"]["merges_applied"] == 0
 
 
 def test_explicit_alias_pattern_merges_person_entities():
-    persons_full = {
+    persons_full = _pf({
         "entity_001": {
             "mentions_by_chapter": {
                 "ch03": ["Celaena smiled. You may call me Lillian Gordaina, she said."],
@@ -67,7 +83,7 @@ def test_explicit_alias_pattern_merges_person_entities():
                 "ch03": ["You may call me Lillian Gordaina, she said."],
             }
         },
-    }
+    })
     result = resolve_aliases([PERSON_A, PERSON_B], persons_full=persons_full, pattern_templates=_EN_PATTERN_TEMPLATES)
     assert len(result["entities"]) == 1
     merged = result["entities"][0]
@@ -79,7 +95,7 @@ def test_explicit_alias_pattern_merges_person_entities():
 
 
 def test_medium_confidence_pair_requires_llm_confirmation():
-    persons_full = {
+    persons_full = _pf({
         "entity_001": {
             "mentions_by_chapter": {
                 "ch05": ["Celaena, hidden under another name, stepped forward."],
@@ -90,7 +106,7 @@ def test_medium_confidence_pair_requires_llm_confirmation():
                 "ch05": ["The court whispered that Lillian Gordaina was another name entirely."],
             }
         },
-    }
+    })
     no_llm = resolve_aliases([PERSON_A, PERSON_B], persons_full=persons_full, reveal_words=_EN_REVEAL_WORDS)
     assert len(no_llm["entities"]) == 2
     assert no_llm["stats"]["llm_attempts"] == 0
@@ -107,10 +123,10 @@ def test_medium_confidence_pair_requires_llm_confirmation():
 
 
 def test_llm_errors_degrade_gracefully():
-    persons_full = {
+    persons_full = _pf({
         "entity_001": {"mentions_by_chapter": {"ch05": ["Celaena used another name."]}},
         "entity_002": {"mentions_by_chapter": {"ch05": ["Lillian Gordaina was that other name."]}},
-    }
+    })
 
     def boom(_candidate):
         raise RuntimeError("llm unavailable")
@@ -131,9 +147,17 @@ def test_script_stdin_contract_reads_registry_from_processing_dir(tmp_path: Path
     persons_full = {
         "persons_full": {
             "entity_001": {
+                "type": "PERSON",
+                "raw_mentions": ["Celaena"],
+                "first_seen": "ch03",
+                "mention_count": 1,
                 "mentions_by_chapter": {"ch03": ["Celaena said: you may call me Lillian Gordaina."]},
             },
             "entity_002": {
+                "type": "PERSON",
+                "raw_mentions": ["Lillian"],
+                "first_seen": "ch03",
+                "mention_count": 1,
                 "mentions_by_chapter": {"ch03": ["You may call me Lillian Gordaina."]},
             },
         }
@@ -246,14 +270,14 @@ def test_pick_snippets_prioritises_canonical_name():
         "aliases": ["Celaena"],
         "source_ids": ["e1"],
     }
-    persons_full = {
+    persons_full = _pf({
         "e1": {
             "mentions_by_chapter": {
                 "ch01": ["Someone entered.", "Celaena smiled.", "A guard stood."],
                 "ch02": ["Celaena ran.", "Another person spoke."],
             }
         }
-    }
+    })
     snippets = _pick_snippets(entity, persons_full, n=3)
     assert len(snippets) == 3
     # Snippets containing the name come first
@@ -267,13 +291,13 @@ def test_pick_snippets_falls_back_when_name_not_in_any_snippet():
         "aliases": [],
         "source_ids": ["e2"],
     }
-    persons_full = {
+    persons_full = _pf({
         "e2": {
             "mentions_by_chapter": {
                 "ch01": ["Someone appeared.", "A figure moved."],
             }
         }
-    }
+    })
     snippets = _pick_snippets(entity, persons_full, n=3)
     assert len(snippets) == 2  # only 2 available
 
@@ -298,10 +322,10 @@ _ENTITY_B = {
     "type": "PERSON",
     "relevant": True,
 }
-_PERSONS_FULL_LLM = {
+_PERSONS_FULL_LLM = _pf({
     "e1": {"mentions_by_chapter": {"ch01": ["Celaena walked in."]}},
     "e2": {"mentions_by_chapter": {"ch01": ["Lillian watched her."]}},
-}
+})
 
 
 def _mock_ollama_response(payload: dict) -> mock.MagicMock:
@@ -661,10 +685,10 @@ def test_resolve_aliases_accepts_pattern_templates_kwarg():
 
 
 def test_pattern_templates_empty_means_no_pattern_merges():
-    persons_full = {
+    persons_full = _pf({
         "entity_001": {"mentions_by_chapter": {"ch01": ["You may call me Lillian Gordaina."]}},
         "entity_002": {"mentions_by_chapter": {}},
-    }
+    })
     result = resolve_aliases(
         [PERSON_A, PERSON_B],
         persons_full=persons_full,
@@ -744,10 +768,10 @@ def test_pick_canonical_name_keeps_frequency_when_no_pure_title():
         "aliases": ["Aelin"],
         "source_ids": ["e2"],
     }
-    persons_full = {
+    persons_full = _pf({
         "e1": {"mentions_by_chapter": {"ch01": ["Celaena Celaena Celaena walked in."]}},
         "e2": {"mentions_by_chapter": {"ch01": ["Aelin smiled."]}},
-    }
+    })
     canonical = _pick_canonical_name(celaena, aelin, persons_full=persons_full, role_words=["captain"])
     assert canonical == "Celaena"  # higher frequency
 
@@ -981,7 +1005,7 @@ def test_detect_pure_title_in_context_master_brullo():
         "aliases": ["Master"],
         "source_ids": ["e_master"],
     }
-    persons_full = {
+    persons_full = _pf({
         "e_master": {
             "mentions_by_chapter": {
                 "ch05": [
@@ -995,7 +1019,7 @@ def test_detect_pure_title_in_context_master_brullo():
                 "ch05": ["Brullo watched the competitors."]
             }
         },
-    }
+    })
     result = _detect_pure_title_in_context(brullo, master, persons_full, role_words=["master"])
     assert result is not None
     assert result["method"] == "pure_title"
@@ -1007,14 +1031,14 @@ def test_detect_pure_title_in_context_no_match_when_name_absent_from_context():
     from scripts.alias_resolution import _detect_pure_title_in_context
     brullo = {"canonical_name": "Brullo", "aliases": ["Brullo"], "source_ids": ["e_brullo"]}
     master = {"canonical_name": "Master", "aliases": ["Master"], "source_ids": ["e_master"]}
-    persons_full = {
+    persons_full = _pf({
         "e_master": {
             "mentions_by_chapter": {"ch05": ["The Master stood silently."]}
         },
         "e_brullo": {
             "mentions_by_chapter": {"ch05": ["Brullo watched the competitors."]}
         },
-    }
+    })
     result = _detect_pure_title_in_context(brullo, master, persons_full, role_words=["master"])
     assert result is None
 
@@ -1041,7 +1065,7 @@ def test_detect_pure_title_in_context_multi_word_phrase_title():
         "aliases": ["Crown Prince"],
         "source_ids": ["e_crown_prince"],
     }
-    persons_full = {
+    persons_full = _pf({
         "e_crown_prince": {
             "mentions_by_chapter": {
                 "ch01": [
@@ -1053,7 +1077,7 @@ def test_detect_pure_title_in_context_multi_word_phrase_title():
         "e_dorian": {
             "mentions_by_chapter": {"ch01": ["Dorian Havilliard offered her a deal."]}
         },
-    }
+    })
     result = _detect_pure_title_in_context(
         dorian, crown_prince, persons_full, role_words=["crown prince", "prince", "king"]
     )
@@ -1076,7 +1100,7 @@ def test_detect_pure_title_in_context_finds_apposition_in_proper_entity_snippets
         "aliases": ["Crown Prince"],
         "source_ids": ["e_crown_prince"],
     }
-    persons_full = {
+    persons_full = _pf({
         # Title entity's own snippets contain only the conjunction sentence — correctly rejected.
         "e_crown_prince": {
             "mentions_by_chapter": {
@@ -1093,7 +1117,7 @@ def test_detect_pure_title_in_context_finds_apposition_in_proper_entity_snippets
                 ]
             }
         },
-    }
+    })
     result = _detect_pure_title_in_context(
         dorian, crown_prince, persons_full,
         role_words=["crown prince", "prince"],
@@ -1119,7 +1143,7 @@ def test_detect_pure_title_in_context_no_match_when_names_in_different_sentences
         "aliases": ["Crown Prince"],
         "source_ids": ["e_crown_prince"],
     }
-    persons_full = {
+    persons_full = _pf({
         "e_crown_prince": {
             "mentions_by_chapter": {
                 "ch07": [
@@ -1132,7 +1156,7 @@ def test_detect_pure_title_in_context_no_match_when_names_in_different_sentences
         "e_cain": {
             "mentions_by_chapter": {"ch07": ["Cain flexed his muscles."]}
         },
-    }
+    })
     result = _detect_pure_title_in_context(
         cain, crown_prince, persons_full, role_words=["crown prince", "prince"]
     )
@@ -1156,7 +1180,7 @@ def test_resolve_aliases_pure_title_auto_merges_without_llm():
         "source_ids": ["e_master"],
         "relevant": True,
     }
-    persons_full = {
+    persons_full = _pf({
         "e_master": {
             "mentions_by_chapter": {
                 "ch05": [
@@ -1168,7 +1192,7 @@ def test_resolve_aliases_pure_title_auto_merges_without_llm():
         "e_brullo": {
             "mentions_by_chapter": {"ch05": ["Brullo watched the competitors."]}
         },
-    }
+    })
     result = resolve_aliases(
         [brullo, master],
         persons_full=persons_full,
@@ -1220,7 +1244,7 @@ def test_resolve_aliases_merges_crown_prince_without_phrase_in_role_words():
         "source_ids": ["e_crown_prince"],
         "relevant": True,
     }
-    persons_full = {
+    persons_full = _pf({
         "e_dorian": {
             "mentions_by_chapter": {
                 "ch02": [
@@ -1234,7 +1258,7 @@ def test_resolve_aliases_merges_crown_prince_without_phrase_in_role_words():
                 "ch05": ["The Crown Prince strode from the court."]
             }
         },
-    }
+    })
     result = resolve_aliases(
         [dorian, crown_prince],
         persons_full=persons_full,
@@ -1270,7 +1294,7 @@ def test_detect_pure_title_in_context_no_match_when_title_and_name_conjoined():
         "aliases": ["Perrington", "Duke Perrington"],
         "source_ids": ["e_perrington"],
     }
-    persons_full = {
+    persons_full = _pf({
         "e_crown_prince": {
             "mentions_by_chapter": {
                 "ch02": [
@@ -1282,7 +1306,7 @@ def test_detect_pure_title_in_context_no_match_when_title_and_name_conjoined():
         "e_perrington": {
             "mentions_by_chapter": {"ch02": ["Perrington scowled at the competitors."]}
         },
-    }
+    })
     result = _detect_pure_title_in_context(
         crown_prince, perrington, persons_full,
         role_words=["crown prince", "prince", "duke"],
@@ -1309,7 +1333,7 @@ def test_resolve_aliases_does_not_merge_conjoined_title_and_name():
         "source_ids": ["e_perrington"],
         "relevant": True,
     }
-    persons_full = {
+    persons_full = _pf({
         "e_crown_prince": {
             "mentions_by_chapter": {
                 "ch02": [
@@ -1321,7 +1345,7 @@ def test_resolve_aliases_does_not_merge_conjoined_title_and_name():
         "e_perrington": {
             "mentions_by_chapter": {"ch02": ["Perrington scowled at the competitors."]}
         },
-    }
+    })
     result = resolve_aliases(
         [crown_prince, perrington],
         persons_full=persons_full,
@@ -1340,12 +1364,12 @@ def test_detect_pure_title_in_context_matches_apposition_with_connectors():
     from scripts.alias_resolution import _detect_pure_title_in_context
     brullo = {"canonical_name": "Brullo", "aliases": ["Brullo"], "source_ids": ["e_brullo"]}
     master = {"canonical_name": "Master", "aliases": ["Master"], "source_ids": ["e_master"]}
-    persons_full = {
+    persons_full = _pf({
         "e_master": {
             "mentions_by_chapter": {"ch05": ["Brullo — the Master — nodded at Celaena."]}
         },
         "e_brullo": {"mentions_by_chapter": {"ch05": ["Brullo watched."]}},
-    }
+    })
     result = _detect_pure_title_in_context(
         brullo, master, persons_full,
         role_words=["master"], connective_words=["the", "a", "an"],
@@ -1419,11 +1443,11 @@ def test_detect_pure_title_in_context_no_match_when_sentences_split_by_curly_quo
         "Celaena paused in the doorway, then looked back at Philippa."
     )
     # persons_full must be a dict keyed by source_id, with mentions_by_chapter
-    persons_full = {
+    persons_full = _pf({
         "entity_crown_prince": {
             "mentions_by_chapter": {"ch01": [snippet]},
         },
-    }
+    })
     crown_prince = {
         "canonical_name": "Crown Prince",
         "type": "PERSON",
@@ -1590,8 +1614,8 @@ def _person(idx, name, source_id):
 
 def _persons_full(mapping):
     # mapping: source_id -> list[str] context sentences
-    return {sid: {"mentions_by_chapter": {"c1": ctxs}, "mention_count": len(ctxs)}
-            for sid, ctxs in mapping.items()}
+    return _pf({sid: {"mentions_by_chapter": {"c1": ctxs}, "mention_count": len(ctxs)}
+                for sid, ctxs in mapping.items()})
 
 
 def test_judge_none_is_backward_compatible():
@@ -1619,8 +1643,8 @@ def test_embedding_veto_blocks_ambiguous_merge():
     pf = _persons_full({"s0": ["Dorian smiled warmly."], "s1": ["Perrington schemed coldly."]})
     reveal = ("revealed",)
     # Force a reveal signal by giving both a shared reveal context.
-    pf["s0"]["mentions_by_chapter"]["c1"].append("revealed Dorian Perrington")
-    pf["s1"]["mentions_by_chapter"]["c1"].append("revealed Dorian Perrington")
+    pf["s0"].mentions_by_chapter["c1"].append("revealed Dorian Perrington")
+    pf["s1"].mentions_by_chapter["c1"].append("revealed Dorian Perrington")
     backend = _StubBackend({"dorian": [1.0, 0.0, 0.0], "perrington": [0.0, 1.0, 0.0],
                             "revealed": [0.0, 0.0, 1.0]})
     judge = EmbeddingJudge(backend, propose_threshold=0.86, veto_threshold=0.80)

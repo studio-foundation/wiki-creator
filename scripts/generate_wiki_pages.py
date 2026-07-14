@@ -16,6 +16,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import json
 import os
 import re
@@ -39,6 +40,13 @@ from wiki_creator.sections import SECTION_TITLES as _SECTION_TITLES
 from wiki_creator.spoiler_blocks import relationship_index_lines, per_relation_prose_enabled
 from wiki_creator.synopsis import event_lines
 from wiki_creator.tome_labels import appearance_label
+from wiki_creator.types import WikiPage
+
+# STU-447: pages are persisted via WikiPage(**page); a stray top-level key from
+# the LLM would make that raise TypeError and brick the run (the poisoned dict is
+# reloaded unvalidated on rerun). parse_response drops unknown keys against this
+# set so only WikiPage-shaped dicts ever reach _save.
+_KNOWN_PAGE_KEYS = {f.name for f in dataclasses.fields(WikiPage)}
 
 DEFAULT_NUM_PREDICT = 1024
 
@@ -1527,7 +1535,7 @@ def parse_response(raw: str, entity: dict) -> dict:
                 f"    [WARN] Contenu très court pour {entity['canonical_name']} ({content_len} chars) — vérifier la sortie LLM",
                 file=sys.stderr,
             )
-        return page
+        return {k: v for k, v in page.items() if k in _KNOWN_PAGE_KEYS}
     except json.JSONDecodeError:
         print(f"    [WARN] JSON parse failed for {entity['canonical_name']}, using stub", file=sys.stderr)
         return make_stub_page(entity)
@@ -1816,11 +1824,18 @@ def _write_identity_telemetry(processing_dir: Path) -> None:
 
 def _save(pages: list[dict], output_file: str) -> None:
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
+    validated = studio_io.to_dict([WikiPage(**p) for p in pages])
+    studio_io.from_dict(list[WikiPage], validated)  # self-check: never write off-schema
     with open(output_file, "w", encoding="utf-8") as f:
-        json.dump({"pages": pages}, f, ensure_ascii=False, indent=2)
+        json.dump({"pages": validated}, f, ensure_ascii=False, indent=2)
 
 
 def _load_existing(output_file: str) -> list[dict]:
+    # Intentionally unvalidated: this is the resume-on-crash reader for the
+    # incremental generation loop below (needs to tolerate a partial/legacy
+    # file on disk) — matches chapter_summary.py's
+    # _load_existing_chapter_summaries precedent. _save() above re-validates
+    # on every write, so a corrupt entry never survives past the next save.
     if os.path.exists(output_file):
         try:
             with open(output_file, encoding="utf-8") as f:

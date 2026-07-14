@@ -5,16 +5,35 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 from scripts.wiki_preparation import (
-    _IMPORTANCE_NORMALIZE,
     build_chapter_summary_context,
     build_entity_bundle,
     events_for_entity,
     extract_context,
     filter_relationships,
+    read_plot_events,
     stage_outputs_from_payload,
     write_batches,
 )
+from wiki_creator import studio_io
+from wiki_creator.types import EntityFull
+
+
+def _pf(records: dict) -> dict:
+    """Wrap plain *_full-shaped record dicts as EntityFull, as load_full_file yields."""
+    return {
+        eid: EntityFull(
+            type=v.get("type", "PERSON"),
+            raw_mentions=v.get("raw_mentions", []),
+            first_seen=v.get("first_seen", ""),
+            mention_count=v.get("mention_count", 0),
+            mentions_by_chapter=v.get("mentions_by_chapter", {}),
+            mention_spans_by_chapter=v.get("mention_spans_by_chapter", {}),
+        )
+        for eid, v in records.items()
+    }
 
 
 def _registries():
@@ -63,15 +82,7 @@ def _registries():
             },
         },
     }
-    return persons, {}, {}, {}
-
-
-def test_importance_normalize_maps_secondaire_to_secondary():
-    """Regression: STU-316 – French 'secondaire' from classification must normalize to 'secondary'."""
-    assert _IMPORTANCE_NORMALIZE["secondaire"] == "secondary"
-    # Other values pass through unchanged
-    assert _IMPORTANCE_NORMALIZE.get("principal", "principal") == "principal"
-    assert _IMPORTANCE_NORMALIZE.get("figurant", "figurant") == "figurant"
+    return _pf(persons), {}, {}, {}
 
 
 def test_build_entity_bundle_builds_sorted_limited_related_context():
@@ -104,13 +115,13 @@ def test_build_entity_bundle_builds_sorted_limited_related_context():
         "Nehemia": {
             "canonical_name": "Nehemia",
             "type": "PERSON",
-            "importance": "secondaire",
+            "importance": "secondary",
             "source_ids": ["p5"],
         },
         "Cain": {
             "canonical_name": "Cain",
             "type": "PERSON",
-            "importance": "secondaire",
+            "importance": "secondary",
             "source_ids": ["p6"],
         },
         "Nox": {
@@ -493,7 +504,7 @@ def test_build_entity_bundle_skips_chapter_summary_context_for_non_person():
     entity = {
         "canonical_name": "Adarlan",
         "type": "PLACE",
-        "importance": "secondaire",
+        "importance": "secondary",
         "source_ids": [],
     }
     entities_by_name = {"Adarlan": entity}
@@ -522,7 +533,7 @@ def test_build_entity_bundle_skips_chapter_summary_context_for_non_person():
 
 def test_build_entity_bundle_limits_chapter_summary_context_size():
     persons, places, orgs, events = _registries()
-    persons["p1"]["mentions_by_chapter"] = {
+    persons["p1"].mentions_by_chapter = {
         f"ch{i:02d}": [f"Dorian mention {i}."] for i in range(1, 13)
     }
     entity = {
@@ -649,7 +660,7 @@ def test_main_injects_chapter_id_to_title_from_epub_data(tmp_path: Path, monkeyp
         json.dumps({
             "chapter_summaries": {
                 "The Glass Castle": {
-                    "chapter_id": None,
+                    "chapter_id": "",
                     "chapter_title": "The Glass Castle",
                     "summary_bullets": ["Celaena enters the castle."],
                     "temporal_context": "present",
@@ -685,10 +696,11 @@ def test_main_injects_chapter_id_to_title_from_epub_data(tmp_path: Path, monkeyp
     persons_data = {
         "persons_full": {
             "p1": {
-                "canonical_name": "Celaena",
-                "mentions_by_chapter": {"chapter_01.xhtml": ["She stepped inside."]},
+                "type": "PERSON",
+                "raw_mentions": ["Celaena"],
                 "first_seen": "chapter_01.xhtml",
-                "source_ids": ["p1"],
+                "mention_count": 1,
+                "mentions_by_chapter": {"chapter_01.xhtml": ["She stepped inside."]},
             }
         }
     }
@@ -739,6 +751,7 @@ def test_main_falls_back_to_disk_when_chapter_summary_stage_output_is_empty(tmp_
             "chapter_summaries": {
                 "ch01": {
                     "chapter_id": "ch01",
+                    "chapter_title": "Chapter 1",
                     "summary_bullets": ["Celaena arrives at the castle."],
                     "temporal_context": "present",
                 }
@@ -880,9 +893,10 @@ def test_main_binds_identity_from_registry(tmp_path: Path, monkeypatch):
     for name in ("persons_full", "places_full", "orgs_full", "events_full"):
         (processing / f"{name}.json").write_text(json.dumps({name: {}}), encoding="utf-8")
     persons_data = {"persons_full": {"p1": {
-        "canonical_name": "Celaena Sardothien",
+        "type": "PERSON",
+        "raw_mentions": ["Celaena Sardothien"],
         "mentions_by_chapter": {"ch01": ["She stepped inside."]},
-        "first_seen": "ch01", "source_ids": ["p1"],
+        "first_seen": "ch01", "mention_count": 1,
     }}}
     (processing / "persons_full.json").write_text(json.dumps(persons_data), encoding="utf-8")
 
@@ -938,3 +952,22 @@ def test_entity_events_filtered_by_canonical_name():
     assert [e["event_id"] for e in got] == ["e_ch12_0"]
     got_place = events_for_entity("Rifthold", events)
     assert [e["event_id"] for e in got_place] == ["e_ch12_0"]
+
+
+def test_read_plot_events_absent_warns_and_skips(tmp_path):
+    """STU-447: absent events.json degrades to [] (warn-and-skip), no raise."""
+    assert read_plot_events(tmp_path / "events.json") == []
+
+
+def test_read_plot_events_rejects_schema_drift(tmp_path):
+    """STU-447: an unknown key on an events.json event propagates ArtifactSchemaError."""
+    path = tmp_path / "events.json"
+    path.write_text(json.dumps({
+        "events": [
+            {"event_id": "e_ch1_0", "chapter": 1, "description": "freed",
+             "participants": [], "places": [], "outcome": None, "salience": 0.1,
+             "source_bullets": [], "surprise": "unexpected"}
+        ]
+    }), encoding="utf-8")
+    with pytest.raises(studio_io.ArtifactSchemaError):
+        read_plot_events(path)

@@ -3,7 +3,18 @@ import pathlib
 import subprocess
 import sys
 
-from wiki_creator.types import EntityRegistryEntry, EntityRegistry, ExtractedRelationship
+from wiki_creator.types import (
+    ChapterSummary,
+    ClassifiedEntity,
+    Event,
+    EventBundle,
+    EntityFull,
+    MentionSpan,
+    Relationship,
+    SplitCluster,
+    SplitSingle,
+    Splits,
+)
 
 
 def test_studio_mode_missing_entities():
@@ -22,43 +33,66 @@ def test_studio_mode_missing_entities():
     assert "error" in out
 
 
-def test_entity_registry_entry_has_required_fields():
-    entry = EntityRegistryEntry(
-        raw_mentions=["Alice"],
+def test_entity_full_construction():
+    e = EntityFull(type="PERSON", raw_mentions=["Celaena"], first_seen="ch1", mention_count=3)
+    assert e.mentions_by_chapter == {}
+    assert e.mention_spans_by_chapter == {}
+
+
+def test_mention_span_fields():
+    m = MentionSpan(surface="Celaena", start=10, end=17)
+    assert m.surface == "Celaena"
+    assert m.end - m.start == 7
+
+
+def test_split_single_defaults():
+    s = SplitSingle(canonical_name="Celaena", type="PERSON")
+    assert s.aliases == []
+    assert s.source_ids == []
+    assert s.relevant is True
+
+
+def test_split_cluster_defaults():
+    c = SplitCluster(type="PERSON", canonical_candidate="Celaena")
+    assert c.entity_ids == []
+    assert c.all_mentions == []
+    assert c.entity_count == 0
+
+
+def test_splits_container_defaults():
+    splits = Splits()
+    assert splits.singles_resolved == []
+    assert splits.PERSON == []
+    assert splits.pov_detection is None
+
+
+def test_classified_entity_importance_literal():
+    c = ClassifiedEntity(
+        canonical_name="Celaena",
         type="PERSON",
-        first_seen="ch01",
-        mentions_by_chapter={"ch01": ["Alice walked into the room."]},
+        total_mentions=40,
+        chapters_present=10,
+        importance="principal",
     )
-    assert entry.raw_mentions == ["Alice"]
-    assert entry.first_seen == "ch01"
-    assert "ch01" in entry.mentions_by_chapter
+    assert c.importance == "principal"
 
 
-def test_entity_registry_wraps_entries():
-    entry = EntityRegistryEntry(raw_mentions=["Alice"], type="PERSON", first_seen="ch01", mentions_by_chapter={})
-    registry = EntityRegistry(entities={"entity_001": entry})
-    assert "entity_001" in registry.entities
-
-
-def test_extracted_relationship_fields():
-    rel = ExtractedRelationship(
-        entity_a="David Martín",
-        entity_b="Pedro Vidal",
-        cooccurrence_count=45,
-        chapters=["ch01", "ch03"],
-        sample_contexts=["Vidal tendit le manuscrit à Martín..."],
-    )
-    assert rel.entity_a == "David Martín"
-    assert rel.cooccurrence_count == 45
-    assert rel.relationship_type is None
-    assert rel.direction is None
-    assert rel.evolution is None
-    assert rel.key_moments == []
-    assert rel.entity_b == "Pedro Vidal"
-    assert rel.chapters == ["ch01", "ch03"]
-    assert rel.sample_contexts == ["Vidal tendit le manuscrit à Martín..."]
-
-
-def test_extracted_relationship_has_evidence_field():
-    r = ExtractedRelationship(entity_a="A", entity_b="B", cooccurrence_count=1)
+def test_relationship_has_evidence_field():
+    r = Relationship(entity_a="A", entity_b="B", cooccurrence_count=1)
     assert r.evidence is None
+    assert r.key_moments == []
+
+
+def test_chapter_summary_pov_defaults():
+    cs = ChapterSummary(chapter_id="ch01", chapter_title="Chapter One")
+    assert cs.temporal_context == "present"
+    assert cs.pov == "unknown"
+    assert cs.pov_character is None
+    assert cs.pov_character_source == "none"
+
+
+def test_event_and_bundle_construction():
+    ev = Event(chapter=1, description="Celaena escapes", event_id="e_ch1_0")
+    bundle = EventBundle(events=[ev])
+    assert bundle.events[0].event_id == "e_ch1_0"
+    assert bundle.events[0].participants == []
