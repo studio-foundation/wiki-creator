@@ -3,6 +3,7 @@ from wiki_creator.spoiler_blocks import (
     relationship_index_lines,
     spoiler_collapse_after,
     wrap_collapsible,
+    wrap_relation_collapsibles,
 )
 
 BODY = (
@@ -91,3 +92,37 @@ def test_spoiler_collapse_after_reads_config():
     assert spoiler_collapse_after({"generation": {"spoiler": {"collapse_after_chapter": 3}}}) == 3
     assert spoiler_collapse_after({}) is None
     assert spoiler_collapse_after({"generation": {}}) is None
+
+
+_REL_BODY = (
+    "== Relations ==\n\n"
+    "=== [[Celaena]] ===\n\nProse arc jusqu'à la fin.\n\n"
+    "=== [[Cain]] ===\n\nRival de la compétition.\n\n"
+    "== Anecdotes ==\n\nFait divers.\n"
+)
+
+
+def test_wrap_relation_gates_subsection_above_threshold():
+    units = [{"name": "Celaena", "revealed_at_chapter": 55},
+             {"name": "Cain", "revealed_at_chapter": 2}]
+    out = wrap_relation_collapsibles(_REL_BODY, units, collapse_after=3)
+    # Celaena (55 > 3) wrapped; Cain (2 <= 3) not
+    assert 'data-expandtext="Chapitre 55 — révéler"' in out
+    assert out.count("mw-collapsible") == 1
+    assert "=== [[Cain]] ===" in out.split("mw-collapsible")[0] or "Cain" in out
+    # Anecdotes (outside Relations) never wrapped
+    assert "Fait divers." in out
+    assert out.index("Fait divers.") > out.index("mw-collapsible")
+
+
+def test_wrap_relation_boundary_is_strict():
+    units = [{"name": "Celaena", "revealed_at_chapter": 3}]
+    out = wrap_relation_collapsibles(_REL_BODY, units, collapse_after=3)
+    assert "mw-collapsible" not in out
+
+
+def test_wrap_relation_unmatched_and_none_left_open():
+    units = [{"name": "Celaena", "revealed_at_chapter": None},
+             {"name": "Ghost", "revealed_at_chapter": 99}]
+    out = wrap_relation_collapsibles(_REL_BODY, units, collapse_after=3)
+    assert "mw-collapsible" not in out

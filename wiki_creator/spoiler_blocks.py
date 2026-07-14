@@ -102,3 +102,57 @@ def inject_relationship_index(body: str, lines: list[str]) -> str:
 
 def spoiler_collapse_after(book_cfg: dict) -> int | None:
     return ((book_cfg.get("generation") or {}).get("spoiler") or {}).get("collapse_after_chapter")
+
+
+_SUBHEADING_RE = re.compile(r"(?m)^(===\s+.+?\s+===) *$")
+_NAME_RE = re.compile(r"\[\[([^\]|]+)")
+
+
+def _split_subsections(section_body: str) -> list[str]:
+    """Split a section's wikitext into [pre, '=== H ===...', ...] sub-blocks."""
+    parts = _SUBHEADING_RE.split(section_body)
+    blocks = [parts[0]]
+    for heading, content in zip(parts[1::2], parts[2::2]):
+        blocks.append(f"{heading.strip()}{content}")
+    return blocks
+
+
+def _subheading_name(block: str) -> str | None:
+    m = _SUBHEADING_RE.match(block.strip())
+    if not m:
+        return None
+    n = _NAME_RE.search(m.group(1))
+    return n.group(1).strip() if n else None
+
+
+def wrap_relation_collapsibles(body: str, relation_units: list[dict], collapse_after: int) -> str:
+    """Wrap each ``=== [[Name]] ===`` subsection of the Relations section whose
+    relation is revealed after ``collapse_after`` in an mw-collapsible div.
+
+    Matching is by the normalized name inside ``[[ ]]`` against ``relation_units``.
+    Subsections with no match, a ``None`` chapter, or a chapter ``<= collapse_after``
+    are left untouched — same leave-open default as ``wrap_collapsible``.
+    """
+    chapter_by_name = {_norm(u["name"]): u.get("revealed_at_chapter") for u in relation_units}
+    blocks = _split_sections(body)
+    out = [blocks[0]]
+    for block in blocks[1:]:
+        heading = _heading_of(block)
+        if not heading or _norm(heading) != _RELATIONS_TITLE:
+            out.append(block)
+            continue
+        subs = _split_subsections(block)
+        wrapped = [subs[0]]
+        for sub in subs[1:]:
+            name = _subheading_name(sub)
+            chapter = chapter_by_name.get(_norm(name)) if name else None
+            if chapter is not None and chapter > collapse_after:
+                wrapped.append(
+                    f'<div class="mw-collapsible mw-collapsed" '
+                    f'data-expandtext="Chapitre {chapter} — révéler" '
+                    f'data-collapsetext="Masquer">\n{sub.rstrip()}\n</div>\n'
+                )
+            else:
+                wrapped.append(sub)
+        out.append("".join(wrapped))
+    return "".join(out)
