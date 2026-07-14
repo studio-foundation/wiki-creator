@@ -731,7 +731,6 @@ def test_build_prompt_sample_context_is_fallback_only():
         ),
         _relationship(
             "Chaol Westfall", 45,
-            relationship_type=None,
             sample_contexts=[long_context],
         ),
     ])
@@ -741,6 +740,20 @@ def test_build_prompt_sample_context_is_fallback_only():
     # relation without evidence: gets the fallback context, truncated
     assert 'context: "Chaol regarda Celaena traverser la salle.' in prompt
     assert long_context not in prompt
+
+
+def test_build_prompt_omits_untyped_relations():
+    """Untyped relations never reach the writer prompt — no metric-name fallback (STU-501)."""
+    entity = _entity_with_relationships("principal", [
+        _relationship("Chaol Westfall", 90, relationship_type="allié"),
+        _relationship("Xavier", 80, relationship_type=None),
+        _relationship("Brullo", 70, relationship_type="null"),
+    ])
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"])
+    assert "co-occurrence" not in prompt
+    assert "related_entity: Xavier" not in prompt
+    assert "related_entity: Brullo" not in prompt
+    assert "related_entity: Chaol Westfall" in prompt
 
 
 def test_build_prompt_relationship_enrichment_budget_by_importance():

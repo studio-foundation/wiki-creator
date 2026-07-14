@@ -10,6 +10,7 @@ just normalizes and folds it to one ``revealed_at_chapter`` per unit.
 from __future__ import annotations
 
 from wiki_creator.chapters import chapter_number
+from wiki_creator.relationship_types import usable_relationship_type
 
 
 def _min_chapter(keys) -> int | None:
@@ -66,7 +67,7 @@ def relation_units(entity: dict) -> list[dict]:
     own = {entity.get("canonical_name")} | set(entity.get("aliases") or [])
     rows = []
     for rel in entity.get("relationships") or []:
-        if not rel.get("relationship_type"):
+        if not usable_relationship_type(rel.get("relationship_type")):
             continue
         chapters = [n for n in (chapter_number(k) for k in rel.get("chapters") or []) if n is not None]
         if not chapters:
