@@ -164,3 +164,105 @@ def test_sectioned_page_carries_relationship_index(monkeypatch):
         sections=["biography", "relationships"], max_tokens=500,
         dry_run=False, debug_dir=Path("/tmp"), book_config={})
     assert page["relationship_index"] == ["* [[Chaol]] — amoureux (ch.1→ch.55)"]
+
+
+def test_build_relation_prompt_grounds_and_requires_french():
+    entity = {"canonical_name": "Chaol", "type": "PERSON"}
+    rel = {"entity_a": "Chaol", "entity_b": "Celaena", "relationship_type": "amoureux",
+           "evolution": "Evolves from antagonism to trust.",
+           "key_moments": ["ch10: sparring"], "evidence": "He watched her fight."}
+    p = gwp.build_relation_prompt(entity, "Celaena", rel, "ToG", forbidden_names=["Nehemia"])
+    assert "Celaena" in p
+    assert "amoureux" in p
+    assert "Evolves from antagonism to trust." in p          # grounding present
+    assert "français" in p.lower() or "french" in p.lower()  # FR instruction
+    assert "### [[Celaena]]" in p                             # heading format specified
+    assert "Nehemia" in p                                     # forbidden name surfaced
+
+
+def test_prompt_override_used_when_set():
+    item = gwp._wiki_page_item_input(entity={"canonical_name": "A"}, book_title="B",
+                                     sections=["relationships"], max_tokens=500,
+                                     prompt_override="CUSTOM PROMPT")
+    assert item["prompt"] == "CUSTOM PROMPT"
+
+
+def test_generate_one_relation_returns_prose(monkeypatch):
+    monkeypatch.setattr(gwp, "_run_wiki_page_item",
+                        lambda **kw: _fake_item("### [[Celaena]]\n\nLeur méfiance mue en respect."))
+    out = gwp._generate_one_relation(
+        entity={"canonical_name": "Chaol", "type": "PERSON"}, other="Celaena",
+        rel={"entity_a": "Chaol", "entity_b": "Celaena", "relationship_type": "amoureux"},
+        book_title="ToG", model="m", timeout=10, max_tokens=500)
+    assert out == "### [[Celaena]]\n\nLeur méfiance mue en respect."
+
+
+def test_generate_one_relation_omits_on_persistent_forbidden(monkeypatch):
+    monkeypatch.setattr(gwp, "_run_wiki_page_item",
+                        lambda **kw: _fake_item("### [[Celaena]]\n\nNehemia meurt."))
+    out = gwp._generate_one_relation(
+        entity={"canonical_name": "Chaol", "type": "PERSON"}, other="Celaena",
+        rel={"entity_a": "Chaol", "entity_b": "Celaena", "relationship_type": "amoureux"},
+        book_title="ToG", model="m", timeout=10, max_tokens=500, forbidden_names=["Nehemia"])
+    assert out is None
+
+
+def test_generate_relationships_subsections_concatenates(monkeypatch):
+    entity = {"canonical_name": "Chaol", "type": "PERSON", "aliases": [],
+              "relationships": [
+                  {"entity_a": "Chaol", "entity_b": "Celaena", "relationship_type": "amoureux",
+                   "chapters": ["ch55"]},
+                  {"entity_a": "Cain", "entity_b": "Chaol", "relationship_type": "antagoniste",
+                   "chapters": ["ch07"]},
+                  {"entity_a": "Chaol", "entity_b": "Nox", "relationship_type": None,
+                   "chapters": ["ch02"]}]}
+    monkeypatch.setattr(gwp, "_generate_one_relation",
+                        lambda **kw: f"### [[{kw['other']}]]\n\nprose {kw['other']}")
+    out = gwp._generate_relationships_subsections(
+        entity=entity, book_title="ToG", model="m", timeout=10, max_tokens=500)
+    assert out.startswith("## Relations")
+    assert "### [[Celaena]]" in out and "### [[Cain]]" in out
+    assert "Nox" not in out  # untyped relation skipped
+
+
+def test_sectioned_per_relation_prose_when_enabled(monkeypatch):
+    entity = _entity(rels=[
+        {"entity_a": "Chaol", "entity_b": "Celaena", "relationship_type": "amoureux",
+         "chapters": ["ch55"]},
+        {"entity_a": "Cain", "entity_b": "Chaol", "relationship_type": "antagoniste",
+         "chapters": ["ch07"]}])
+    def fake(**kw):
+        sec = kw["sections"][0]
+        if sec == "relationships" and kw.get("prompt_override"):
+            other = "Celaena" if "Celaena" in kw["prompt_override"] else "Cain"
+            return _fake_item(f"### [[{other}]]\n\nprose {other}")
+        return _fake_item(f"## {sec}\n\ntext")
+    monkeypatch.setattr(gwp, "_run_wiki_page_item", fake)
+    from pathlib import Path
+    cfg = {"generation": {"relations": {"per_relation_prose": True}}}
+    page = gwp._run_generation_sectioned(
+        entity=entity, book_title="ToG", model="m", timeout=10,
+        sections=["infobox", "biography", "relationships", "references"],
+        max_tokens=500, dry_run=False, debug_dir=Path("/tmp"), book_config=cfg)
+    assert "## Relations\n\n### [[Celaena]]" in page["content"]
+    assert "### [[Cain]]" in page["content"]
+    assert page["relation_units"] == [
+        {"name": "Celaena", "revealed_at_chapter": 55},
+        {"name": "Cain", "revealed_at_chapter": 7}]
+    # relationships excluded from content_units; index dropped
+    assert all(u["section"] != "relationships" for u in page["content_units"])
+    assert page["relationship_index"] == []
+
+
+def test_sectioned_per_relation_off_keeps_single_block(monkeypatch):
+    entity = _entity(rels=[{"entity_a": "Chaol", "entity_b": "Celaena",
+                            "relationship_type": "amoureux", "chapters": ["ch55"]}])
+    _sectioned(monkeypatch, {"relationships": "## Relations\n\nProse unique."})
+    from pathlib import Path
+    page = gwp._run_generation_sectioned(
+        entity=entity, book_title="ToG", model="m", timeout=10,
+        sections=["infobox", "biography", "relationships", "references"],
+        max_tokens=500, dry_run=False, debug_dir=Path("/tmp"), book_config={})
+    assert "Prose unique." in page["content"]
+    assert "relation_units" not in page
+    assert page["relationship_index"]  # STU-492 index still built

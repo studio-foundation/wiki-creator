@@ -23,6 +23,7 @@ from wiki_creator.paths import BookPaths
 from wiki_creator import studio_io
 from wiki_creator.spoiler_blocks import (
     wrap_collapsible,
+    wrap_relation_collapsibles,
     inject_relationship_index,
     spoiler_collapse_after,
 )
@@ -88,9 +89,15 @@ def render_page(page: dict, labels: dict, collapse_after: int | None = None) -> 
     title = page["title"]
     entity_type = page.get("entity_type", "PERSON")
     body = convert(page.get("content", ""))
-    body = inject_relationship_index(body, page.get("relationship_index") or [])
-    if collapse_after is not None:
-        body = wrap_collapsible(body, page.get("content_units") or [], collapse_after)
+    relation_units = page.get("relation_units")
+    if relation_units:
+        if collapse_after is not None:
+            body = wrap_collapsible(body, page.get("content_units") or [], collapse_after)
+            body = wrap_relation_collapsibles(body, relation_units, collapse_after)
+    else:
+        body = inject_relationship_index(body, page.get("relationship_index") or [])
+        if collapse_after is not None:
+            body = wrap_collapsible(body, page.get("content_units") or [], collapse_after)
     filename = page_filename(title) + ".wiki"
 
     if entity_type == "SYNOPSIS":
