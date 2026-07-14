@@ -5,6 +5,7 @@ from wiki_creator.synopsis import (
     SYNOPSIS_TITLE,
     build_synopsis_prompt,
     event_lines,
+    salience_label,
     select_events,
 )
 
@@ -90,6 +91,28 @@ def test_event_lines_includes_informative_outcome():
 
 def test_event_lines_skips_blank_descriptions():
     assert event_lines([_event(1, "  ")]) == []
+
+
+def test_event_lines_omits_salience_by_default():
+    (line,) = event_lines([_event(1, "a beat", salience=0.9)])
+    assert "importance" not in line
+
+
+def test_event_lines_includes_salience_tier_when_requested():
+    (high,) = event_lines([_event(12, "climax", salience=0.8)], include_salience=True)
+    (mid,) = event_lines([_event(6, "middle", salience=0.4)], include_salience=True)
+    (low,) = event_lines([_event(1, "minor", salience=0.1)], include_salience=True)
+    assert "importance : haute" in high
+    assert "importance : moyenne" in mid
+    assert "importance : basse" in low
+
+
+def test_salience_label_thresholds():
+    assert salience_label(0.6) == "haute"
+    assert salience_label(0.59) == "moyenne"
+    assert salience_label(0.35) == "moyenne"
+    assert salience_label(0.34) == "basse"
+    assert salience_label(0.0) == "basse"
 
 
 # --- build_synopsis_prompt ---

@@ -300,7 +300,7 @@ def _has_backstory(entity: dict) -> bool:
 def _narrative_role_block(entity: dict) -> str:
     """Grounding block of the character's arc through the plot, or "" when the
     entity isn't a PERSON or has no participant events."""
-    lines = event_lines(_narrative_events(entity))
+    lines = event_lines(_narrative_events(entity), include_salience=True)
     if not lines:
         return ""
     name = entity.get("canonical_name", "")
@@ -582,6 +582,10 @@ def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_n
                 "the character does and what happens to them across these events — not a static "
                 'portrait. Do NOT mention chapter numbers ("Chapitre N") in the prose. Do NOT '
                 "invent events, outcomes, or motives absent from the listed events."
+                "\n- Weight the prose by each event's \"importance\" tier: an event marked "
+                '"importance : haute" earns a full, developed treatment; "moyenne" a sentence '
+                'or two; "basse" a brief mention or a subordinate clause — never a dedicated '
+                "paragraph. Spend words in proportion to narrative importance, not evenly."
             )
         else:
             narrative_role_rule = (

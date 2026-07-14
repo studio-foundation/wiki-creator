@@ -49,10 +49,24 @@ def select_events(
     return selected
 
 
-def event_lines(events: list[dict]) -> list[str]:
+# Salience is a continuous [0,1] score (event_layer._salience); the writer needs
+# a discrete signal it can act on when deciding how much prose to spend. The 0.6
+# cut mirrors the EVENT-page threshold (generate_event_pages default), 0.35 is a
+# lone turning-point cue (event_layer._CUE_WEIGHT).
+def salience_label(value: float) -> str:
+    if value >= 0.6:
+        return "haute"
+    if value >= 0.35:
+        return "moyenne"
+    return "basse"
+
+
+def event_lines(events: list[dict], include_salience: bool = False) -> list[str]:
     """One grounding line per event: ``[Chapitre N] description (personnages :
     … — lieux : …)``. The ``outcome`` is only appended when it adds information
-    beyond the description.
+    beyond the description. With ``include_salience``, each line also carries a
+    French salience tier (``importance : haute|moyenne|basse``) so the writer can
+    weight prose proportionally.
     """
     lines: list[str] = []
     for event in events or []:
@@ -70,6 +84,10 @@ def event_lines(events: list[dict]) -> list[str]:
         outcome = str(event.get("outcome") or "").strip()
         if outcome and outcome != description:
             details.append("issue : " + outcome)
+        if include_salience:
+            details.append(
+                "importance : " + salience_label(float(event.get("salience", 0.0)))
+            )
         if details:
             line += " (" + " — ".join(details) + ")"
         lines.append(line)

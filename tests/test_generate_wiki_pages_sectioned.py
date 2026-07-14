@@ -88,6 +88,22 @@ def test_sectioned_calls_once_per_content_section_and_assembles(monkeypatch):
     assert page["infobox_fields"]["titles"] == "Captain"
 
 
+def test_narrative_role_prompt_carries_salience_tiers_and_rule():
+    """STU-503: the arc block tags each event with its salience tier and the rule
+    tells the writer to spend prose proportionally."""
+    entity = _entity()
+    entity["entity_events"] = [
+        {"chapter": 1, "description": "voyage Endovier vers Rifthold",
+         "participants": ["Chaol"], "salience": 0.2},
+        {"chapter": 12, "description": "duel final", "participants": ["Chaol"],
+         "salience": 0.85},
+    ]
+    p = gwp.build_prompt(entity, "ToG", sections=["narrative_role"])
+    assert "importance : basse" in p      # low-salience travel beat
+    assert "importance : haute" in p      # climax
+    assert "proportion" in p.lower()
+
+
 def test_sectioned_page_carries_content_units(monkeypatch):
     """STU-491: page output tags each emitted section with its reveal chapter."""
     entity = _entity(rels=[{"chapters": ["ch03", "ch02"]}])
