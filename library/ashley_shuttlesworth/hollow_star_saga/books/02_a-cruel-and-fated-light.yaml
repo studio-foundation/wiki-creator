@@ -1,0 +1,147 @@
+description: |
+  Build a wiki for "A Cruel and Fated Light" by Ashley Shuttlesworth,
+  book 2 of the Hollow Star Saga.
+  Parse the book, extract all named entities (characters, locations, organizations, events),
+  resolve aliases, and generate Markdown wiki pages for each entity.
+
+file_path: library/ashley_shuttlesworth/hollow_star_saga/books/02_a-cruel-and-fated-light.epub
+spacy_model: en_core_web_lg
+coref: false
+workers: 8
+novel_summary: |
+  In the wake of the alchemical conspiracy exposed in Toronto, the faerie Courts are thrown into
+  turmoil and the ambitious Riadne Lysterne tightens her grip on power. Arlo Jarsdel, now aware
+  of the strength of her own magic, is pulled deeper into court politics and the trials that will
+  decide her fate, while her feelings for the immortal Nausicaä complicate everything. Vehan
+  Lysterne must reckon with his mother's schemes and his growing bond with Aurelian, whose loyalty
+  is torn between the prince he loves and the resistance quietly forming against the crown. As the
+  four allies chase the truth behind the philosopher's stone and the gods watching from above, the
+  fated light of prophecy draws them toward a confrontation none of them are ready for.
+
+# Entity importance classification — 'auto' uses percentile distribution
+# Override with explicit values if the auto-detected tiers are wrong for your book
+#
+# Absolute pre-filter applied before clustering/classification:
+# entities with total mentions below this value are dropped early.
+min_mentions_absolute: 3
+thresholds: auto
+# Example explicit config (uncomment to use):
+# thresholds:
+#   characters:
+#     principal: { min_mentions: 50, min_chapters: 15 }
+#     secondary: { min_mentions: 10, min_chapters: 3 }
+#     figurant: { min_mentions: 3 }
+#     ignored_below: 3
+#   locations:
+#     major: { min_mentions: 20, min_chapters: 5 }
+#     minor: { min_mentions: 3 }
+#   organizations:
+#     major: { min_mentions: 10 }
+#     minor: { min_mentions: 3 }
+
+generation:
+  chapter_summary:
+    mode: llm
+    max_bullets: 8
+    llm_fallback_to_extractive: true
+    llm_model: qwen2.5
+    llm_timeout_seconds: 45
+  chapter_summary_max_chapters_per_entity: 20
+  principal:
+    sections: [infobox, biography, personality, physical, powers, relationships, trivia, references]
+    sections_by_type:
+      PLACE: [infobox, biography, physical, relationships, trivia, references]
+      ORG: [infobox, biography, relationships, references]
+      EVENT: [infobox, biography, relationships, references]
+    max_tokens_per_page: 2000
+  secondary:
+    sections: [infobox, biography, relationships, references]
+    max_tokens_per_page: 800
+  figurant:
+    sections: [infobox, biography]
+    max_tokens_per_page: 200
+
+export:
+  categories:
+    language: en
+    labels:
+      persons: Characters
+      principal: Main Characters
+      secondary: Secondary Characters
+      locations: Locations
+      organizations: Organizations
+
+classification:
+  concept_keywords:
+    - alchemy
+    - alchemical
+    - philosopher's stone
+    - philosophers stone
+    - cauldron
+    - magic
+    - cascade
+    - cascades
+    - the sight
+    - spell
+    - spells
+    - ley line
+    - ley lines
+    - egress
+  role_words:
+    - fae
+    - faerie
+    - faeries
+    - prince
+    - princess
+    - king
+    - queen
+    - ironborn
+    - lesidhe
+    - lesserfae
+    - fury
+    - furies
+    - immortal
+    - seelie
+    - unseelie
+    - changeling
+    - alchemist
+    - god
+    - goddess
+  role_patterns:
+    - '\b[a-z][a-z''\- ]*prince\b'
+    - '\b[a-z][a-z''\- ]*queen\b'
+
+entity_overrides:
+  Toronto:
+    force_type: PLACE
+  Nevada:
+    force_type: PLACE
+  Las Vegas:
+    force_type: PLACE
+  Faerie:
+    force_type: PLACE
+  Seelie:
+    force_type: ORG
+  UnSeelie:
+    force_type: ORG
+
+validation:
+  series: The Hollow Star Saga
+  forbidden_series:
+    - A Court of Thorns and Roses
+    - The Folk of the Air
+    - The Iron Fey
+    - Wicked Lovely
+    - The Mortal Instruments
+
+# Semantic embedding disambiguation (STU-468). Opt-in, defaults OFF.
+# NOTE: the STU-468 eval falsified the centroid-cosine approach on single-book
+# data (same/different pairs are not separable — topic/setting dominates the
+# embedding). Kept as inert infrastructure; do NOT enable without a working
+# representation. See docs/superpowers/specs/2026-07-12-embedding-disambiguation-EVAL-RESULTS.md
+embedding_disambiguation:
+  enabled: false
+  model: intfloat/multilingual-e5-small
+  device: null              # null = auto (cuda if available, else cpu)
+  propose_threshold: 0.86   # placeholder — no viable threshold exists on current data
+  veto_threshold: 0.80
