@@ -141,6 +141,39 @@ def test_sectioned_omits_failed_optional_section(monkeypatch):
     assert "powers" not in page["content"]              # failed OPT section omitted
 
 
+def test_narrative_role_prompt_forbids_periphrasis():
+    """STU-500: the arc writer must name entities, never substitute a vague
+    periphrasis for a character that has its own page."""
+    entity = _entity()
+    entity["entity_events"] = [
+        {"chapter": 3, "description": "rencontre",
+         "participants": ["Chaol", "Celaena Sardothien"], "salience": 0.8},
+    ]
+    p = gwp.build_prompt(entity, "ToG", sections=["narrative_role"])
+    assert "periphrasis" in p.lower()
+    assert "la protagoniste" in p
+
+
+def test_sectioned_narrative_role_wikilinks_first_mention(monkeypatch):
+    """STU-500: the first bare mention of a sibling entity in the arc section is
+    wikilinked deterministically, even when the LLM emits a plain name."""
+    entity = _entity()
+    entity["entity_events"] = [{"chapter": 3, "participants": ["Chaol"]}]
+    _sectioned(monkeypatch, {
+        "biography": "## Biographie\n\nBio.",
+        "narrative_role": "## Rôle dans le récit\n\nChaol forme Celaena Sardothien.",
+    })
+    from pathlib import Path
+    page = gwp._run_generation_sectioned(
+        entity=entity, book_title="ToG", model="m", timeout=10,
+        sections=["biography", "narrative_role"], max_tokens=500,
+        dry_run=False, debug_dir=Path("/tmp"), book_config={},
+        sibling_canonicals={"Celaena Sardothien"})
+    assert "[[Celaena Sardothien]]" in page["content"]
+    # Only the arc section is linkified — the subject's own name is not self-linked.
+    assert "[[Chaol]]" not in page["content"]
+
+
 def test_isolate_section_drops_leaked_infobox(monkeypatch):
     leaked = "## Infobox\n\n- Nom: X\n\n## Biographie\n\nBio réelle."
     monkeypatch.setattr(gwp, "_run_wiki_page_item", lambda **kw: _fake_item(leaked))
