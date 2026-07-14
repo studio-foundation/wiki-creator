@@ -19,6 +19,7 @@ from scripts.generate_wiki_pages import (
     build_prompt,
     generate_pages,
     generation_profile,
+    load_batch_files,
     make_stub_page,
     parse_response,
 )
@@ -1943,3 +1944,96 @@ def test_generate_pages_resumes_completed_pages(tmp_path):
     assert runner.run_calls == []  # already-done page not regenerated
     assert [p["title"] for p in pages] == ["Rifthold"]
     assert "Déjà fait." in pages[0]["content"]
+
+
+# --- STU-497: small-dataset subset re-run (--entities / --force) ---
+
+
+def _named_place_batch(name):
+    entity = {
+        "canonical_name": name,
+        "importance": "secondary",
+        "type": "PLACE",
+        "context_by_chapter": {"C01": [f"{name}."]},
+    }
+    return [("batch_00.json", {"batch_id": "batch_00", "entities": [entity]})]
+
+
+def _seed_pages(output_file, titles):
+    output_file.write_text(
+        json.dumps({"pages": [
+            {"title": t, "importance": "secondary", "entity_type": "PLACE",
+             "content": f"## Description\n\nPage originale de {t}."}
+            for t in titles
+        ]}),
+        encoding="utf-8",
+    )
+
+
+def test_generate_pages_force_regenerates_only_target_preserves_others(tmp_path):
+    output_file = tmp_path / "wiki_pages.json"
+    _seed_pages(output_file, ["Rifthold", "Endovier", "Orynth"])
+    runner = _FakeRunner()
+    config = _config(tmp_path)
+    config.force = True
+
+    pages = generate_pages(_named_place_batch("Rifthold"), config, runner)
+
+    assert runner.run_calls == ["Rifthold"]  # only the target regenerated
+
+    by_title = {p["title"]: p for p in pages}
+    assert set(by_title) == {"Rifthold", "Endovier", "Orynth"}
+    # target replaced by the runner's fresh output
+    assert "Rifthold est un lieu." in by_title["Rifthold"]["content"]
+    # untargeted pages preserved verbatim from the seed
+    assert by_title["Endovier"]["content"] == "## Description\n\nPage originale de Endovier."
+    assert by_title["Orynth"]["content"] == "## Description\n\nPage originale de Orynth."
+
+    saved = json.loads(output_file.read_text(encoding="utf-8"))
+    assert {p["title"] for p in saved["pages"]} == {"Rifthold", "Endovier", "Orynth"}
+
+
+def test_generate_pages_without_force_skips_already_done_target(tmp_path):
+    output_file = tmp_path / "wiki_pages.json"
+    _seed_pages(output_file, ["Rifthold", "Endovier"])
+    runner = _FakeRunner()
+
+    pages = generate_pages(_named_place_batch("Rifthold"), _config(tmp_path), runner)
+
+    assert runner.run_calls == []  # already done, not regenerated without --force
+    by_title = {p["title"]: p for p in pages}
+    assert by_title["Rifthold"]["content"] == "## Description\n\nPage originale de Rifthold."
+
+
+def test_load_batch_files_entity_filter_is_case_insensitive(tmp_path):
+    d = tmp_path / "wiki_inputs"
+    d.mkdir()
+    (d / "batch_00.json").write_text(
+        json.dumps({"batch_id": "b0", "entities": [
+            {"canonical_name": "Celaena Sardothien", "importance": "principal"},
+            {"canonical_name": "Dorian", "importance": "principal"},
+        ]}),
+        encoding="utf-8",
+    )
+
+    batches = load_batch_files(str(d), None, ["celaena sardothien"])
+
+    names = [e["canonical_name"] for _, b in batches for e in b["entities"]]
+    assert names == ["Celaena Sardothien"]
+
+
+def test_load_batch_files_entity_and_importance_filters_are_anded(tmp_path):
+    d = tmp_path / "wiki_inputs"
+    d.mkdir()
+    (d / "batch_00.json").write_text(
+        json.dumps({"batch_id": "b0", "entities": [
+            {"canonical_name": "Celaena Sardothien", "importance": "principal"},
+            {"canonical_name": "Brullo", "importance": "figurant"},
+        ]}),
+        encoding="utf-8",
+    )
+
+    # name matches Brullo but importance filter excludes figurant → empty
+    batches = load_batch_files(str(d), ["principal"], ["Brullo"])
+
+    assert batches == []

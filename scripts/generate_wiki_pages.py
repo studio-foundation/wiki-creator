@@ -11,6 +11,13 @@ Usage:
     python scripts/generate_wiki_pages.py --book library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml --model llama3:8b
     python scripts/generate_wiki_pages.py --book library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml --importance principal secondary
     python scripts/generate_wiki_pages.py --book library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml --dry-run
+
+Subset re-run (regenerate a few pages without touching the rest):
+    python scripts/generate_wiki_pages.py --book <book.yaml> --entities "Celaena Sardothien" --force
+    python scripts/generate_wiki_pages.py --book <book.yaml> --importance principal --force
+Existing pages for entities outside the filter are preserved verbatim. --force
+regenerates the targeted entities even if already done; without it, already-done
+pages are skipped. A filter that matches nothing exits without writing.
 """
 
 from __future__ import annotations
@@ -1541,21 +1548,31 @@ def parse_response(raw: str, entity: dict) -> dict:
         return make_stub_page(entity)
 
 
-def load_batch_files(wiki_inputs_dir: str, importance_filter: list[str] | None) -> list[tuple[str, dict]]:
-    """Load all batch files from wiki_inputs_dir, optionally filtering by importance."""
+def load_batch_files(
+    wiki_inputs_dir: str,
+    importance_filter: list[str] | None,
+    entity_filter: list[str] | None = None,
+) -> list[tuple[str, dict]]:
+    """Load all batch files from wiki_inputs_dir, optionally filtering by
+    importance and/or canonical_name (case-insensitive). Both filters are ANDed."""
     if not os.path.isdir(wiki_inputs_dir):
         print(f"[ERROR] {wiki_inputs_dir}/ not found. Run wiki-preparation first.", file=sys.stderr)
         sys.exit(1)
 
+    names = {n.strip().lower() for n in entity_filter} if entity_filter else None
     batch_files = sorted(f for f in os.listdir(wiki_inputs_dir) if f.endswith(".json"))
     result = []
     for fname in batch_files:
         path = os.path.join(wiki_inputs_dir, fname)
         with open(path, encoding="utf-8") as f:
             batch = json.load(f)
+        entities = batch.get("entities", [])
         if importance_filter:
-            batch["entities"] = [e for e in batch.get("entities", []) if e.get("importance") in importance_filter]
-        if batch.get("entities"):
+            entities = [e for e in entities if e.get("importance") in importance_filter]
+        if names is not None:
+            entities = [e for e in entities if e.get("canonical_name", "").strip().lower() in names]
+        batch["entities"] = entities
+        if entities:
             result.append((path, batch))
     return result
 
@@ -1615,6 +1632,7 @@ class GenerationConfig:
     grounding: dict = field(default_factory=dict)
     book_config: dict | None = None
     identity_registry: Registry | None = None
+    force: bool = False
 
 
 def generate_pages(
@@ -1631,6 +1649,21 @@ def generate_pages(
 
     # Resume: keep already-generated complete pages, regenerate failed/empty.
     all_pages = [p for p in _load_existing(config.output_file) if not p.get("_failed") and _is_page_complete(p)]
+
+    # --force: evict ONLY the targeted entities (those present in the filtered
+    # batches) so they regenerate; every other existing page rides through
+    # untouched and is re-saved verbatim.
+    if config.force:
+        targets = {
+            e.get("canonical_name", "")
+            for _, batch in batches
+            for e in batch.get("entities", [])
+        }
+        evicted = sorted(p["title"] for p in all_pages if p["title"] in targets)
+        all_pages = [p for p in all_pages if p["title"] not in targets]
+        if evicted:
+            print(f"[generate-wiki-pages] Force — regenerating {len(evicted)} existing page(s): {evicted}", file=sys.stderr)
+
     done_titles = {p["title"] for p in all_pages}
     if done_titles:
         print(f"[generate-wiki-pages] Resuming — {len(done_titles)} pages already done", file=sys.stderr)
@@ -1729,8 +1762,17 @@ def main() -> None:
     parser.add_argument("--timeout", type=int, default=120, help="Timeout per entity (seconds)")
     parser.add_argument("--importance", nargs="+", choices=["principal", "secondary", "figurant"],
                         help="Only process entities of these importance levels")
+    parser.add_argument("--entities", nargs="+",
+                        help="Only process entities with these canonical names (case-insensitive)")
+    parser.add_argument("--force", action="store_true",
+                        help="Regenerate targeted entities even if already done "
+                             "(requires --entities and/or --importance)")
     parser.add_argument("--dry-run", action="store_true", help="Skip LLM calls, output stubs only")
     args = parser.parse_args()
+
+    if args.force and not (args.entities or args.importance):
+        parser.error("--force requires --entities and/or --importance "
+                     "(refuse to force-regenerate the whole book)")
 
     book_paths = book_paths_from_yaml(args.book)
     book_cfg = load_book_config(args.book)
@@ -1753,9 +1795,16 @@ def main() -> None:
     if identity_registry is None:
         print("[generate-wiki-pages] registry.json not found — identity from batch artifact", file=sys.stderr)
 
-    batches = load_batch_files(str(book_paths.wiki_inputs), args.importance)
+    batches = load_batch_files(str(book_paths.wiki_inputs), args.importance, args.entities)
     if not batches:
-        print("[WARN] No batch files found or all batches empty after filter.", file=sys.stderr)
+        # A filtered run that matches nothing must NOT wipe the existing file —
+        # exit without saving. Only the unfiltered "no batches at all" case
+        # writes an empty result (fresh/empty book).
+        if args.importance or args.entities:
+            print("[generate-wiki-pages] Filter matched zero entities — nothing to do, "
+                  "existing pages left untouched.", file=sys.stderr)
+            return
+        print("[WARN] No batch files found or all batches empty.", file=sys.stderr)
         _save([], str(book_paths.processing / "wiki_pages.json"))
         return
 
@@ -1776,6 +1825,7 @@ def main() -> None:
         grounding=grounding_cfg,
         book_config=book_cfg,
         identity_registry=identity_registry,
+        force=args.force,
     )
 
     pages = generate_pages(batches, config, StudioRunner())
