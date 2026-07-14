@@ -48,3 +48,23 @@ def content_units(sections, entity: dict) -> list[dict]:
         for s in sections
         if s not in ("infobox", "references")
     ]
+
+
+def relation_units(entity: dict) -> list[dict]:
+    """One ``{name, revealed_at_chapter}`` row per typed relationship.
+
+    ``name`` = the pair's other entity; ``revealed_at_chapter`` = ``max`` over
+    the relation's chapters (last chapter of the arc — the gating key). Typed
+    relationships with at least one resolvable chapter only; empty when none.
+    """
+    own = {entity.get("canonical_name")} | set(entity.get("aliases") or [])
+    rows = []
+    for rel in entity.get("relationships") or []:
+        if not rel.get("relationship_type"):
+            continue
+        chapters = [n for n in (chapter_number(k) for k in rel.get("chapters") or []) if n is not None]
+        if not chapters:
+            continue
+        other = rel["entity_b"] if rel.get("entity_a") in own else rel["entity_a"]
+        rows.append({"name": other, "revealed_at_chapter": max(chapters)})
+    return rows

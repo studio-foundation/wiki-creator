@@ -56,3 +56,35 @@ def test_content_units_skips_infobox_and_references():
     entity = {"context_by_chapter": {"chapter_2": []}}
     units = content_units(["infobox", "biography", "references"], entity)
     assert units == [{"section": "biography", "revealed_at_chapter": 2}]
+
+
+from wiki_creator.provenance import relation_units
+
+
+def _rel_entity():
+    return {
+        "canonical_name": "Chaol",
+        "aliases": ["Captain Westfall"],
+        "relationships": [
+            {"entity_a": "Chaol", "entity_b": "Celaena",
+             "relationship_type": "amoureux", "chapters": ["ch01", "ch55"]},
+            {"entity_a": "Cain", "entity_b": "Captain Westfall",
+             "relationship_type": "antagoniste", "chapters": ["ch07"]},
+            {"entity_a": "Chaol", "entity_b": "Dorian",
+             "relationship_type": None, "chapters": ["ch02"]},
+            {"entity_a": "Chaol", "entity_b": "Nox",
+             "relationship_type": "ami", "chapters": []},
+        ],
+    }
+
+
+def test_relation_units_uses_max_chapter_and_other_name():
+    units = relation_units(_rel_entity())
+    assert units == [
+        {"name": "Celaena", "revealed_at_chapter": 55},
+        {"name": "Cain", "revealed_at_chapter": 7},
+    ]
+
+
+def test_relation_units_empty_when_no_typed_with_chapters():
+    assert relation_units({"canonical_name": "X", "relationships": []}) == []
