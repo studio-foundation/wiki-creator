@@ -153,6 +153,61 @@ def test_parse_epub_content_is_cleaned(tmp_path):
     assert "Sentence" in ch_content
 
 
+def _three_chapter_epub(tmp_path):
+    import ebooklib  # noqa: F401
+    from ebooklib import epub
+
+    book = epub.EpubBook()
+    book.set_title("Test Book")
+    book.set_language("fr")
+    spine = []
+    for i in range(1, 4):
+        uid = f"ch{i}"
+        item = epub.EpubHtml(uid=uid, title=f"Chapter {i}", file_name=f"{uid}.xhtml", lang="fr")
+        item.set_content(("<html><body><p>" + f"Chapitre {i}. " * 30 + "</p></body></html>").encode())
+        book.add_item(item)
+        spine.append((uid, True))
+    book.spine = spine
+    book.add_item(epub.EpubNcx())
+    book.add_item(epub.EpubNav())
+    path = str(tmp_path / "test.epub")
+    epub.write_epub(path, book)
+    return path
+
+
+def test_parse_epub_max_chapters_truncates(tmp_path):
+    """max_chapters keeps only the first N chapters (subset test runs)."""
+    from scripts.parse_epub import parse_epub
+    epub_path = _three_chapter_epub(tmp_path)
+    assert len(parse_epub(epub_path)["chapters"]) == 3
+    result = parse_epub(epub_path, max_chapters=2)
+    assert len(result["chapters"]) == 2
+    assert [c["id"] for c in result["chapters"]] == ["ch1", "ch2"]
+
+
+def test_parse_epub_max_chapters_none_and_zero_keep_all(tmp_path):
+    """None or a non-positive cap is a no-op — the full book is parsed."""
+    from scripts.parse_epub import parse_epub
+    epub_path = _three_chapter_epub(tmp_path)
+    assert len(parse_epub(epub_path, max_chapters=None)["chapters"]) == 3
+    assert len(parse_epub(epub_path, max_chapters=0)["chapters"]) == 3
+
+
+def test_env_max_chapters(monkeypatch):
+    """WIKI_MAX_CHAPTERS parsing: absent/empty/<=0 → None, positive → int."""
+    from scripts.parse_epub import _env_max_chapters
+    monkeypatch.delenv("WIKI_MAX_CHAPTERS", raising=False)
+    assert _env_max_chapters() is None
+    monkeypatch.setenv("WIKI_MAX_CHAPTERS", "")
+    assert _env_max_chapters() is None
+    monkeypatch.setenv("WIKI_MAX_CHAPTERS", "0")
+    assert _env_max_chapters() is None
+    monkeypatch.setenv("WIKI_MAX_CHAPTERS", "-1")
+    assert _env_max_chapters() is None
+    monkeypatch.setenv("WIKI_MAX_CHAPTERS", "3")
+    assert _env_max_chapters() == 3
+
+
 def test_clean_lettrine_space_joined():
     """Une lettre majuscule isolée suivie d'un espace et d'un mot en minuscule
     est joinée (artefact lettrine HTML : 'P edro' → 'Pedro').
