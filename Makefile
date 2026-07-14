@@ -2,6 +2,7 @@
         test-extraction test-clustering test-relationships classify-relationships classify-relationships-dry \
         run-events generate-synopsis generate-synopsis-dry \
         generate-event-pages generate-event-pages-dry \
+        generate-pages generate-pages-dry generate-pages-primary generate-pages-entity \
         test test-coref test-coref-parallel \
         smoke golden golden-update \
         clean
@@ -47,6 +48,14 @@ generate-pages:
 
 generate-pages-dry:
 	python scripts/generate_wiki_pages.py --book $(BOOK) --dry-run
+
+# Subset re-run (STU-497): regenerate only a slice, preserve every other page.
+generate-pages-primary:
+	python scripts/generate_wiki_pages.py --book $(BOOK) --importance principal --force
+
+# ENTITY required, e.g. make generate-pages-entity ENTITY="Celaena Sardothien"
+generate-pages-entity:
+	python scripts/generate_wiki_pages.py --book $(BOOK) --entities "$(ENTITY)" --force
 
 generate-synopsis:
 	python scripts/generate_book_synopsis.py --book $(BOOK)
