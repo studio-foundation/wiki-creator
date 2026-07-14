@@ -35,6 +35,16 @@ def test_resolve_person_narrative_role_secondary_and_principal_only():
     assert "narrative_role" not in [s.token for s in figurant.sections()]
 
 
+def test_resolve_person_backstory_secondary_and_principal_only():
+    """STU-493: the 'Avant les événements du livre' flashback section is OPT for
+    PERSON at secondary/principal — figurants stay minimal."""
+    for importance in ("secondary", "principal"):
+        rt = pt.resolve_template("PERSON", importance)
+        assert "backstory" in [s.token for s in rt.sections()]
+    figurant = pt.resolve_template("PERSON", "figurant")
+    assert "backstory" not in [s.token for s in figurant.sections()]
+
+
 def test_resolve_place_events_available_at_every_tier():
     """STU-480 (SP2): the 'événements' section (Event Layer, SP0) is OPT for
     PLACE at all tiers — even a figurant place can host a narratively

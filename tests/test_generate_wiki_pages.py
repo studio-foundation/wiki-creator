@@ -910,8 +910,8 @@ def test_label_chapter_key(key, expected):
     assert _label_chapter_key(key) == expected
 
 
-def test_build_prompt_puts_flashback_chapters_in_backstory_block():
-    entity = {
+def _celaena_with_flashback() -> dict:
+    return {
         "canonical_name": "Celaena",
         "type": "PERSON",
         "importance": "principal",
@@ -932,18 +932,30 @@ def test_build_prompt_puts_flashback_chapters_in_backstory_block():
             },
         ],
     }
-    prompt = build_prompt(entity, "Throne of Glass", ["## Biographie", "## Relations"])
-    assert "## Chapter summary context" in prompt
-    assert "She arrived at the castle." in prompt
+
+
+def test_build_prompt_backstory_block_and_rule_when_backstory_section():
+    """STU-493: generating the backstory section surfaces the flashback context
+    block plus a writing rule for the "Avant les événements du livre" section."""
+    prompt = build_prompt(_celaena_with_flashback(), "Throne of Glass", ["backstory"])
     assert "## Backstory context" in prompt
     assert "Five years earlier" in prompt
-    backstory_start = prompt.index("## Backstory context")
-    present_start = prompt.index("## Chapter summary context")
-    assert present_start < backstory_start
-    assert prompt.index("She arrived at the castle.") < backstory_start
+    assert 'Write a "## Avant les événements du livre" section grounded ONLY in the' in prompt
+    assert 'Do NOT include a "## Avant les événements du livre" section' not in prompt
 
 
-def test_build_prompt_omits_backstory_block_when_no_flashbacks():
+def test_build_prompt_backstory_gated_to_its_own_section():
+    """STU-493: flashback content never leaks into other PERSON section prompts —
+    present and flashback bullets are not mixed in the biography prompt."""
+    prompt = build_prompt(_celaena_with_flashback(), "Throne of Glass", ["biography"])
+    assert "## Chapter summary context" in prompt
+    assert "She arrived at the castle." in prompt
+    assert "## Backstory context" not in prompt
+    assert "Five years earlier" not in prompt
+    assert "Avant les événements du livre" not in prompt
+
+
+def test_build_prompt_backstory_section_omitted_when_no_flashbacks():
     entity = {
         "canonical_name": "Dorian",
         "type": "PERSON",
@@ -960,9 +972,19 @@ def test_build_prompt_omits_backstory_block_when_no_flashbacks():
             },
         ],
     }
-    prompt = build_prompt(entity, "Throne of Glass", ["## Biographie"])
+    prompt = build_prompt(entity, "Throne of Glass", ["backstory"])
     assert "## Backstory context" not in prompt
-    assert "Dorian met Chaol" in prompt
+    assert 'Do NOT include a "## Avant les événements du livre" section' in prompt
+
+
+def test_has_backstory_detects_flashback_chapters():
+    import scripts.generate_wiki_pages as gwp
+
+    assert gwp._has_backstory(_celaena_with_flashback()) is True
+    assert gwp._has_backstory({"chapter_summary_context": []}) is False
+    assert gwp._has_backstory(
+        {"chapter_summary_context": [{"chapter_key": "ch01", "temporal_context": "present"}]}
+    ) is False
 
 
 def test_build_prompt_references_constraint_present():

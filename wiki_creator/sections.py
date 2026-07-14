@@ -5,6 +5,7 @@ from __future__ import annotations
 SECTION_TITLES: dict[str, str] = {
     "infobox": "Infobox",
     "biography": "Biographie",
+    "backstory": "Avant les événements du livre",
     "personality": "Personnalité",
     "physical": "Description physique",
     "powers": "Pouvoirs",
