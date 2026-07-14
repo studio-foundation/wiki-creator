@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 
 from wiki_creator.chapters import chapter_number
+from wiki_creator.relationship_types import usable_relationship_type
 from wiki_creator.sections import SECTION_TITLES
 
 _HEADING_RE = re.compile(r"(?m)^(==\s+.+?\s+==) *$")
@@ -69,7 +70,7 @@ def relationship_index_lines(entity: dict) -> list[str]:
     own = {entity.get("canonical_name")} | set(entity.get("aliases") or [])
     rows = []
     for rel in entity.get("relationships") or []:
-        rtype = rel.get("relationship_type")
+        rtype = usable_relationship_type(rel.get("relationship_type"))
         if not rtype:
             continue
         chapters = [c for c in (chapter_number(k) for k in rel.get("chapters") or []) if c is not None]

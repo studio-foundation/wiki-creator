@@ -176,6 +176,17 @@ Inside `wiki-resolution`, order matters:
   `--restart wiki-extraction --clean`. (2) Entities — `generate_wiki_pages.py
   --entities NAME... [--force]` (STU-497/#110, `make generate-pages-entity ENTITY=...`)
   regenerates only a slice of pages without wiping the rest.
+- Untyped relations never render (STU-501): a relationship with no usable
+  `relationship_type` is **omitted** from every reader-facing surface — the dated
+  relationship index, per-relation prose, and the writer prompt. No neutral
+  placeholder, no metric name. "Usable" is decided in one place,
+  `wiki_creator/relationship_types.usable_relationship_type`, which rejects `None`,
+  empty, and the sentinel strings `null`/`none` (the classifier can emit JSON null
+  as a literal string, and previously the writer prompt filled the gap with the raw
+  co-occurrence metric label, which the LLM then echoed verbatim). All render sites
+  route through this helper (`spoiler_blocks`, `provenance.relation_units`,
+  `confidence`, `generate_wiki_pages` prompt builders). This is a rendering fix,
+  independent of classification correctness (STU-495/476).
 
 ## Working Norms
 

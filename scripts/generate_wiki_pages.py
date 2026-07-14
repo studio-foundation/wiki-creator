@@ -45,6 +45,7 @@ from wiki_creator import studio_io
 from wiki_creator.registry import Registry, normalize_name
 from wiki_creator.sections import SECTION_TITLES as _SECTION_TITLES
 from wiki_creator.spoiler_blocks import relationship_index_lines, per_relation_prose_enabled
+from wiki_creator.relationship_types import usable_relationship_type
 from wiki_creator.synopsis import event_lines
 from wiki_creator.tome_labels import appearance_label
 from wiki_creator.types import WikiPage
@@ -345,7 +346,7 @@ def build_relation_prompt(
     reformulated, never copied verbatim.
     """
     name = entity["canonical_name"]
-    rtype = rel.get("relationship_type") or "relation"
+    rtype = usable_relationship_type(rel.get("relationship_type")) or "relation"
     grounding_lines = []
     evolution = str(rel.get("evolution") or "").strip()
     if evolution:
@@ -418,7 +419,9 @@ def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_n
         other = b if a == name else a
         if not other:
             continue
-        rtype = r.get("relationship_type") or "co-occurrence fréquente"
+        rtype = usable_relationship_type(r.get("relationship_type"))
+        if not rtype:
+            continue
         direction = r.get("direction") or ""
         evolution = r.get("evolution") or ""
         count = r.get("cooccurrence_count", 0)
@@ -1188,7 +1191,7 @@ def _generate_relationships_subsections(
     own = {entity.get("canonical_name")} | set(entity.get("aliases") or [])
     typed = []
     for rel in entity.get("relationships") or []:
-        if not rel.get("relationship_type"):
+        if not usable_relationship_type(rel.get("relationship_type")):
             continue
         chapters = [n for n in (chapter_number(k) for k in rel.get("chapters") or []) if n is not None]
         other = rel["entity_b"] if rel.get("entity_a") in own else rel["entity_a"]

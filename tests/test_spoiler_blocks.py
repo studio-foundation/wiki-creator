@@ -70,6 +70,18 @@ def test_relationship_index_lines_empty_when_no_typed():
     assert relationship_index_lines({"canonical_name": "X", "relationships": []}) == []
 
 
+def test_relationship_index_lines_excludes_null_sentinel():
+    """The classifier's literal ``"null"`` string must not surface (STU-501)."""
+    entity = {
+        "canonical_name": "Celaena Sardothien",
+        "relationships": [
+            {"entity_a": "Celaena Sardothien", "entity_b": "King of Adarlan",
+             "relationship_type": "null", "chapters": ["C10.xhtml", "C52.xhtml"]},
+        ],
+    }
+    assert relationship_index_lines(entity) == []
+
+
 REL_BODY = "== Biographie ==\n\nBio.\n\n== Relations ==\n\nProse FR.\n"
 
 

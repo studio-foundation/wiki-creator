@@ -12,6 +12,8 @@ with no textual evidence) is NOT an explicit fact — it degrades to ``inferred`
 """
 from __future__ import annotations
 
+from wiki_creator.relationship_types import usable_relationship_type
+
 EXPLICIT = "explicit"
 INFERRED = "inferred"
 INTERPRETATION = "interpretation"
@@ -25,7 +27,7 @@ def relationship_confidence(rel: dict) -> str:
     Everything else (no classified type, or a type without grounding) is
     ``inferred``.
     """
-    rtype = str(rel.get("relationship_type") or "").strip()
+    rtype = usable_relationship_type(rel.get("relationship_type"))
     evidence = str(rel.get("evidence") or "").strip()
     if rtype and evidence:
         return EXPLICIT
