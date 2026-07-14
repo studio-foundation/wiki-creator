@@ -180,3 +180,40 @@ def test_render_page_collapses_late_sections_when_configured():
     assert content.index("mw-collapsible") < content.index("Évolution")
     assert "== Biographie ==" in content                # ch.1 <= 5 stays open
     assert "mw-collapsible mw-collapsed\">\n== Biographie" not in content
+
+
+# --- STU-494: per-relation subsection collapsibles ---
+
+
+def test_render_page_per_relation_collapsibles():
+    page = {
+        "title": "Chaol",
+        "entity_type": "PERSON",
+        "importance": "principal",
+        "infobox_fields": {},
+        "content": ("## Relations\n\n"
+                    "### [[Celaena]]\n\nProse arc.\n\n"
+                    "### [[Cain]]\n\nRival.\n"),
+        "relation_units": [{"name": "Celaena", "revealed_at_chapter": 55},
+                           {"name": "Cain", "revealed_at_chapter": 2}],
+        "relationship_index": [],
+    }
+    from scripts.wiki_export import render_page
+    _, out = render_page(page, LABELS, collapse_after=3)
+    assert 'data-expandtext="Chapitre 55 — révéler"' in out  # Celaena gated
+    assert out.count("mw-collapsible") == 1                   # Cain (2<=3) not gated
+    assert "''Évolution :''" not in out                       # dated index dropped
+
+
+def test_render_page_per_relation_no_collapse_config():
+    page = {
+        "title": "Chaol", "entity_type": "PERSON", "importance": "principal",
+        "infobox_fields": {},
+        "content": "## Relations\n\n### [[Celaena]]\n\nProse.\n",
+        "relation_units": [{"name": "Celaena", "revealed_at_chapter": 55}],
+        "relationship_index": [],
+    }
+    from scripts.wiki_export import render_page
+    _, out = render_page(page, LABELS, collapse_after=None)
+    assert "=== [[Celaena]] ===" in out
+    assert "mw-collapsible" not in out
