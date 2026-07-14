@@ -37,6 +37,8 @@ from wiki_creator.character_graph import CharacterGraph
 from wiki_creator.facts import extract_titles
 from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator.confidence import relationship_confidence
+from wiki_creator.chapters import chapter_number
+from wiki_creator.provenance import relation_revealed_at
 from wiki_creator.registry import Registry
 from wiki_creator.types import ChapterSummary, EventBundle, RelationshipBundle
 
@@ -311,6 +313,7 @@ def build_chapter_summary_context(
             continue
         result.append({
             "chapter_key": chapter_key,
+            "revealed_at_chapter": chapter_number(chapter_key),
             "summary_bullets": bullets,
             "temporal_context": summary.get("temporal_context", "unknown"),
             "pov": summary.get("pov", "unknown"),
@@ -345,7 +348,8 @@ def events_for_entity(canonical_name: str, events: list[dict]) -> list[dict]:
     """Events where the entity participates or that occur at the entity (PLACE),
     sorted by chapter. The channel Plot Spine projections (SP1-SP4) consume."""
     hits = [
-        e for e in events
+        {**e, "revealed_at_chapter": chapter_number(e.get("chapter"))}
+        for e in events
         if canonical_name in e.get("participants", [])
         or canonical_name in e.get("places", [])
     ]
@@ -386,7 +390,7 @@ def build_entity_bundle(
         "first_seen": get_first_seen(entity, persons, places, orgs, events),
         "context_by_chapter": context_by_chapter,
         "relationships": [
-            {**r, "confidence": relationship_confidence(r)}
+            {**r, "confidence": relationship_confidence(r), "revealed_at_chapter": relation_revealed_at(r)}
             for r in filter_relationships(canonical_name, relationships, aliases=entity.get("aliases"))
         ],
         "indirect_relationships": [

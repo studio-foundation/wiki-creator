@@ -5,16 +5,19 @@ import json
 import pytest
 
 from scripts.generate_wiki_pages import (
+    GenerationConfig,
     _check_forbidden_names,
     _contains_template_placeholder,
     _force_correct_identity,
     _is_page_complete,
+    _narrative_events,
     _nom_matches_identity,
     _print_generation_summary,
     _rejection_is_identity_only,
     _run_generation_for_entity,
     _strip_relations_section,
     build_prompt,
+    generate_pages,
     generation_profile,
     make_stub_page,
     parse_response,
@@ -283,6 +286,86 @@ def test_build_prompt_ignores_entity_events_for_non_place_types():
     assert "Événements" not in prompt
 
 
+def _celaena_with_arc():
+    return {
+        "canonical_name": "Celaena Sardothien",
+        "importance": "principal",
+        "type": "PERSON",
+        "aliases": [],
+        "context_by_chapter": {},
+        "entity_events": [
+            {"chapter": 3, "description": "Celaena arrive au château de verre", "participants": ["Celaena Sardothien"], "salience": 0.4},
+            {"chapter": 12, "description": "Celaena affronte Cain lors de l'épreuve finale", "participants": ["Celaena Sardothien", "Cain"], "outcome": "Celaena vainc Cain", "salience": 0.9},
+            {"chapter": 13, "description": "Celaena est couronnée Champion du Roi", "participants": ["Celaena Sardothien"], "outcome": "Celaena est couronnée", "salience": 0.85},
+        ],
+    }
+
+
+def test_build_prompt_includes_narrative_role_block_and_rule_for_person():
+    """STU-479 (SP1): PERSON pages generating the narrative_role section get a
+    grounding block + writing rule for events.json entries where they participate."""
+    prompt = build_prompt(
+        _celaena_with_arc(),
+        "Throne of Glass",
+        sections=["narrative_role"],
+    )
+
+    assert "## Événements où Celaena Sardothien participe (ordre chronologique)" in prompt
+    assert "épreuve finale" in prompt
+    assert "est couronnée Champion du Roi" in prompt
+    assert 'Write a "## Rôle dans le récit" section grounded ONLY in the' in prompt
+    assert 'Do NOT include a "## Rôle dans le récit" section' not in prompt
+
+
+def test_build_prompt_narrative_role_events_ordered_chronologically():
+    """Salience selects which beats survive the cap; the prompt lists them by
+    chapter so the arc reads in order (climax kept even though it sits late)."""
+    prompt = build_prompt(_celaena_with_arc(), "Throne of Glass", sections=["narrative_role"])
+    arrive = prompt.index("arrive au château")
+    duel = prompt.index("épreuve finale")
+    crown = prompt.index("couronnée Champion")
+    assert arrive < duel < crown
+
+
+def test_build_prompt_narrative_role_gated_to_its_own_section():
+    """The arc block never leaks into other PERSON section prompts (biography)."""
+    prompt = build_prompt(_celaena_with_arc(), "Throne of Glass", sections=["biography"])
+    assert "## Événements où Celaena Sardothien participe" not in prompt
+    assert "Rôle dans le récit" not in prompt
+
+
+def test_build_prompt_person_without_events_omits_narrative_block():
+    entity = {
+        "canonical_name": "Perrington",
+        "importance": "secondary",
+        "type": "PERSON",
+        "aliases": [],
+        "context_by_chapter": {},
+        "entity_events": [],
+    }
+    prompt = build_prompt(entity, "Throne of Glass", sections=["narrative_role"])
+    assert "## Événements où" not in prompt
+    assert 'Do NOT include a "## Rôle dans le récit" section' in prompt
+
+
+def test_narrative_events_caps_by_salience_then_orders_by_chapter():
+    events = [
+        {"chapter": c, "description": f"beat {c}", "salience": s}
+        for c, s in [(1, 0.1), (5, 0.9), (2, 0.2), (50, 0.95), (3, 0.15)]
+    ]
+    entity = {"type": "PERSON", "canonical_name": "X", "entity_events": events}
+    import scripts.generate_wiki_pages as gwp
+
+    picked = gwp._narrative_events({**entity})
+    chapters = [e["chapter"] for e in picked]
+    assert chapters == sorted(chapters)  # chronological
+
+
+def test_narrative_events_empty_for_non_person():
+    entity = {"type": "PLACE", "entity_events": [{"chapter": 1, "description": "x", "salience": 1.0}]}
+    assert _narrative_events(entity) == []
+
+
 def test_generation_profile_prefers_sections_by_type_override():
     cfg = {
         "principal": {
@@ -380,7 +463,7 @@ def test_run_generation_for_entity_uses_item_runner_when_not_dry(monkeypatch, tm
     calls = []
 
     def fake_runner(*, entity, book_title, model, timeout, sections, max_tokens,
-                    forbidden_names=None, language="fr", file_path="", grounding=None):
+                    forbidden_names=None, language="fr", file_path="", grounding=None, runner=None):
         calls.append((entity["canonical_name"], book_title, model, timeout, sections, max_tokens))
         return {
             "title": "Victor Grandes",
@@ -827,8 +910,8 @@ def test_label_chapter_key(key, expected):
     assert _label_chapter_key(key) == expected
 
 
-def test_build_prompt_puts_flashback_chapters_in_backstory_block():
-    entity = {
+def _celaena_with_flashback() -> dict:
+    return {
         "canonical_name": "Celaena",
         "type": "PERSON",
         "importance": "principal",
@@ -849,18 +932,30 @@ def test_build_prompt_puts_flashback_chapters_in_backstory_block():
             },
         ],
     }
-    prompt = build_prompt(entity, "Throne of Glass", ["## Biographie", "## Relations"])
-    assert "## Chapter summary context" in prompt
-    assert "She arrived at the castle." in prompt
+
+
+def test_build_prompt_backstory_block_and_rule_when_backstory_section():
+    """STU-493: generating the backstory section surfaces the flashback context
+    block plus a writing rule for the "Avant les événements du livre" section."""
+    prompt = build_prompt(_celaena_with_flashback(), "Throne of Glass", ["backstory"])
     assert "## Backstory context" in prompt
     assert "Five years earlier" in prompt
-    backstory_start = prompt.index("## Backstory context")
-    present_start = prompt.index("## Chapter summary context")
-    assert present_start < backstory_start
-    assert prompt.index("She arrived at the castle.") < backstory_start
+    assert 'Write a "## Avant les événements du livre" section grounded ONLY in the' in prompt
+    assert 'Do NOT include a "## Avant les événements du livre" section' not in prompt
 
 
-def test_build_prompt_omits_backstory_block_when_no_flashbacks():
+def test_build_prompt_backstory_gated_to_its_own_section():
+    """STU-493: flashback content never leaks into other PERSON section prompts —
+    present and flashback bullets are not mixed in the biography prompt."""
+    prompt = build_prompt(_celaena_with_flashback(), "Throne of Glass", ["biography"])
+    assert "## Chapter summary context" in prompt
+    assert "She arrived at the castle." in prompt
+    assert "## Backstory context" not in prompt
+    assert "Five years earlier" not in prompt
+    assert "Avant les événements du livre" not in prompt
+
+
+def test_build_prompt_backstory_section_omitted_when_no_flashbacks():
     entity = {
         "canonical_name": "Dorian",
         "type": "PERSON",
@@ -877,9 +972,19 @@ def test_build_prompt_omits_backstory_block_when_no_flashbacks():
             },
         ],
     }
-    prompt = build_prompt(entity, "Throne of Glass", ["## Biographie"])
+    prompt = build_prompt(entity, "Throne of Glass", ["backstory"])
     assert "## Backstory context" not in prompt
-    assert "Dorian met Chaol" in prompt
+    assert 'Do NOT include a "## Avant les événements du livre" section' in prompt
+
+
+def test_has_backstory_detects_flashback_chapters():
+    import scripts.generate_wiki_pages as gwp
+
+    assert gwp._has_backstory(_celaena_with_flashback()) is True
+    assert gwp._has_backstory({"chapter_summary_context": []}) is False
+    assert gwp._has_backstory(
+        {"chapter_summary_context": [{"chapter_key": "ch01", "temporal_context": "present"}]}
+    ) is False
 
 
 def test_build_prompt_references_constraint_present():
@@ -1757,3 +1862,84 @@ def test_stray_llm_key_is_dropped_and_does_not_crash_save(tmp_path):
         raw_disk = json.load(f)
     validated = studio_io.from_dict(list[WikiPage], raw_disk["pages"])
     assert validated[0].title == "Victor Grandes"
+
+
+# --- STU-449: generate_pages() public interface, runner-injected (no subprocess) ---
+
+
+class _FakeRunner:
+    """Fake StudioRunner: returns a canned page per entity, records calls, and
+    never shells out. Proves generate_pages() is testable without a subprocess."""
+
+    def __init__(self):
+        self.run_calls = []
+
+    def run_item(self, item_input, entity, timeout):
+        self.run_calls.append(entity["canonical_name"])
+        return {
+            "title": entity["canonical_name"],
+            "importance": entity.get("importance", ""),
+            "entity_type": entity.get("type", ""),
+            "infobox_fields": {},
+            "content": f"## Description\n\n{entity['canonical_name']} est un lieu.",
+            "run_metadata": {},
+        }
+
+    def load_stage_output(self, run_id, stage):  # pragma: no cover - unused here
+        return None
+
+
+def _place_batch():
+    entity = {
+        "canonical_name": "Rifthold",
+        "importance": "secondary",
+        "type": "PLACE",
+        "context_by_chapter": {"C01": ["Rifthold, la capitale."]},
+    }
+    return [("batch_00.json", {"batch_id": "batch_00", "entities": [entity]})]
+
+
+def _config(tmp_path) -> GenerationConfig:
+    return GenerationConfig(
+        book_title="Mon Livre",
+        generation_cfg={},
+        output_file=str(tmp_path / "wiki_pages.json"),
+        debug_dir=tmp_path / "debug",
+    )
+
+
+def test_generate_pages_uses_runner_and_saves(tmp_path):
+    runner = _FakeRunner()
+    pages = generate_pages(_place_batch(), _config(tmp_path), runner)
+
+    assert runner.run_calls == ["Rifthold"]
+    assert [p["title"] for p in pages] == ["Rifthold"]
+    assert "Rifthold est un lieu." in pages[0]["content"]
+
+    saved = json.loads((tmp_path / "wiki_pages.json").read_text(encoding="utf-8"))
+    assert [p["title"] for p in saved["pages"]] == ["Rifthold"]
+
+
+def test_generate_pages_dry_run_skips_runner(tmp_path):
+    runner = _FakeRunner()
+    config = _config(tmp_path)
+    config.dry_run = True
+    pages = generate_pages(_place_batch(), config, runner)
+
+    assert runner.run_calls == []
+    assert [p["title"] for p in pages] == ["Rifthold"]
+
+
+def test_generate_pages_resumes_completed_pages(tmp_path):
+    output_file = tmp_path / "wiki_pages.json"
+    output_file.write_text(
+        json.dumps({"pages": [{"title": "Rifthold", "importance": "secondary",
+                                "entity_type": "PLACE", "content": "## Description\n\nDéjà fait."}]}),
+        encoding="utf-8",
+    )
+    runner = _FakeRunner()
+    pages = generate_pages(_place_batch(), _config(tmp_path), runner)
+
+    assert runner.run_calls == []  # already-done page not regenerated
+    assert [p["title"] for p in pages] == ["Rifthold"]
+    assert "Déjà fait." in pages[0]["content"]

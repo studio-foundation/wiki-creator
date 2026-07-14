@@ -141,3 +141,98 @@ def test_render_page_tome_two_only_entity_lacks_tome_one_category():
     _, content = render_page(page, _LABELS_WITH_TOMES)
     assert "[[Category:Personnages du Tome 2]]" in content
     assert "[[Category:Personnages du Tome 1]]" not in content
+
+
+# --- STU-492: mw-collapsible sections + relations index ---
+
+
+def _page():
+    return {
+        "title": "Celaena", "entity_type": "PERSON", "importance": "principal",
+        "content": "## Biographie\n\nBio.\n\n## Relations\n\nProse.",
+        "infobox_fields": {"nom": "Celaena"},
+        "content_units": [
+            {"section": "biography", "revealed_at_chapter": 1},
+            {"section": "relationships", "revealed_at_chapter": 20},
+        ],
+        "relationship_index": ["* [[Chaol]] — amoureux (ch.1→ch.55)"],
+    }
+
+
+LABELS = {"persons": "Personnages", "principal": "Personnages principaux",
+          "secondary": "Personnages secondaires", "locations": "Lieux",
+          "organizations": "Organisations", "events": "Événements",
+          "persons_by_tome": "Personnages du Tome {n}", "locations_by_tome": "Lieux du Tome {n}",
+          "organizations_by_tome": "Organisations du Tome {n}"}
+
+
+def test_render_page_off_by_default_no_collapsible_but_index_present():
+    _, content = render_page(_page(), LABELS)
+    assert "mw-collapsible" not in content              # feature off
+    assert "''Évolution :''" in content                # index always injected
+    assert "* [[Chaol]] — amoureux (ch.1→ch.55)" in content
+
+
+def test_render_page_collapses_late_sections_when_configured():
+    _, content = render_page(_page(), LABELS, collapse_after=5)
+    # Relations revealed ch.20 > 5 → wrapped; index rides inside it
+    assert 'data-expandtext="Chapitre 20 — révéler"' in content
+    assert content.index("mw-collapsible") < content.index("Évolution")
+    assert "== Biographie ==" in content                # ch.1 <= 5 stays open
+    assert "mw-collapsible mw-collapsed\">\n== Biographie" not in content
+
+
+# --- STU-494: per-relation subsection collapsibles ---
+
+
+def test_render_page_per_relation_collapsibles():
+    page = {
+        "title": "Chaol",
+        "entity_type": "PERSON",
+        "importance": "principal",
+        "infobox_fields": {},
+        "content": ("## Relations\n\n"
+                    "### [[Celaena]]\n\nProse arc.\n\n"
+                    "### [[Cain]]\n\nRival.\n"),
+        "relation_units": [{"name": "Celaena", "revealed_at_chapter": 55},
+                           {"name": "Cain", "revealed_at_chapter": 2}],
+        "relationship_index": [],
+    }
+    from scripts.wiki_export import render_page
+    _, out = render_page(page, LABELS, collapse_after=3)
+    assert 'data-expandtext="Chapitre 55 — révéler"' in out  # Celaena gated
+    assert out.count("mw-collapsible") == 1                   # Cain (2<=3) not gated
+    assert "''Évolution :''" not in out                       # dated index dropped
+
+
+def test_render_page_per_relation_no_collapse_config():
+    page = {
+        "title": "Chaol", "entity_type": "PERSON", "importance": "principal",
+        "infobox_fields": {},
+        "content": "## Relations\n\n### [[Celaena]]\n\nProse.\n",
+        "relation_units": [{"name": "Celaena", "revealed_at_chapter": 55}],
+        "relationship_index": [],
+    }
+    from scripts.wiki_export import render_page
+    _, out = render_page(page, LABELS, collapse_after=None)
+    assert "=== [[Celaena]] ===" in out
+    assert "mw-collapsible" not in out
+
+
+def test_render_page_per_relation_still_gates_non_relationship_sections():
+    page = {
+        "title": "Chaol",
+        "entity_type": "PERSON",
+        "importance": "principal",
+        "infobox_fields": {},
+        "content": ("## Biographie\n\nBio tardive.\n\n## Relations\n\n"
+                    "### [[Celaena]]\n\nProse.\n"),
+        "content_units": [{"section": "biography", "revealed_at_chapter": 40}],
+        "relation_units": [{"name": "Celaena", "revealed_at_chapter": 55}],
+        "relationship_index": [],
+    }
+    from scripts.wiki_export import render_page
+    _, out = render_page(page, LABELS, collapse_after=3)
+    assert 'data-expandtext="Chapitre 40 — révéler"' in out  # Biographie gated
+    assert "Chapitre 55" in out                              # Celaena gated
+    assert out.count("mw-collapsible") == 2

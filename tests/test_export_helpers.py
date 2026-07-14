@@ -165,9 +165,32 @@ def test_main_page_content_contains_title():
     assert "Category:Lieux" in content
 
 
+def test_infobox_template_event():
+    content = infobox_template_content("EVENT")
+    assert "{{{name}}}" in content
+    assert "{{{participants|}}}" in content
+    assert "{{{chapitre|}}}" in content
+
+
 def test_infobox_template_unsupported_type_raises():
     with pytest.raises(ValueError, match="No infobox template"):
-        infobox_template_content("EVENT")
+        infobox_template_content("OTHER")
+
+
+def test_category_tags_event():
+    labels = {"events": "Événements"}
+    assert category_tags("EVENT", "principal", labels) == ["[[Category:Événements]]"]
+
+
+def test_main_page_lists_events_when_present():
+    labels = {"persons": "Personnages", "locations": "Lieux", "organizations": "Organisations"}
+    pages = [
+        {"title": "Celaena", "importance": "principal", "entity_type": "PERSON"},
+        {"title": "Le duel final", "importance": "principal", "entity_type": "EVENT"},
+    ]
+    content = main_page_content("Throne of Glass", "Sarah J. Maas", pages, labels)
+    assert "== Événements ==" in content
+    assert "[[Le duel final]]" in content
 
 
 def test_main_page_links_synopsis_when_present():

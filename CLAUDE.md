@@ -79,6 +79,7 @@ library/sarah_j_maas/throne-of-glass/output/01-throne-of-glass/
 - [scripts/wiki_preparation.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/wiki_preparation.py): batch generation
 - [scripts/generate_wiki_pages.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_wiki_pages.py): standalone generation (shells out to `studio run wiki-page-item` per entity)
 - [scripts/generate_book_synopsis.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_book_synopsis.py): book synopsis page from `events.json` (SP4/STU-482), writes `book_synopsis.json`; pure logic in `wiki_creator/synopsis.py`
+- [scripts/generate_event_pages.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_event_pages.py): one `EVENT` page per high-salience event from `events.json` (SP3/STU-481), writes `event_pages.json`; pure logic in `wiki_creator/event_pages.py`
 - [scripts/wiki_export.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/wiki_export.py): Markdown -> wikitext
 - [scripts/resolve_clusters.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/resolve_clusters.py): resolves NER clusters
 - [scripts/merge_entities.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/merge_entities.py): merges cluster outputs into unified entity list
@@ -123,6 +124,7 @@ Inside `wiki-resolution`, order matters:
 - `split_clusters.py`, `relationship_extraction.py`, and `verify_entity_types.py` are intentionally tolerant of missing `file_path` in unit-test mode.
 - `generate_wiki_pages.py` must run after `wiki-preparation`; it consumes `wiki_inputs/<slug>/batch_*.json`.
 - `generate_book_synopsis.py` (SP4) consumes `events.json` (SP0) and writes `processing_output/<slug>/book_synopsis.json`; `load_wiki_pages.py` appends that page to the export flow and `wiki_export.py` renders it at the wiki root (`Synopsis.wiki`, no infobox/categories, `entity_type: SYNOPSIS`). If `events.json` is absent, the stage warns and skips — it never fails the run.
+- `generate_event_pages.py` (SP3/STU-481) consumes `events.json` (SP0) and writes `processing_output/<slug>/event_pages.json` — one `EVENT` page per event with `salience >= threshold` (default 0.6) that has ≥1 participant. Title and infobox `{participants, lieu, chapitre, issue}` are built deterministically from the event; the writer LLM only authors the `## Déroulement` prose (grounded, spoiler-safe via forbidden_names). `load_wiki_pages.py` appends the pages; `wiki_export.py` renders each under `output/wiki/events/` with `Infobox_event` + `[[Category:Événements]]`. Thresholds are configurable via book YAML `generation.event_pages` (`salience_threshold`, `max_pages`, `max_tokens`). Absent/empty `events.json` warns and skips — never fails the run. Titles are the full event description (grounded, unique) — LLM-named events are a possible fast-follow.
 - `classify_relationships.py` (pre-step to `wiki-preparation`) folds the co-occurrence graph onto canonical entities via `registry.alias_table()` before classifying (STU-435). The graph is built at mention level (pre alias-resolution), so surface forms of one entity (`Chaol Westfall` / `Captain Westfall`) are collapsed, counts summed, `chapters`/`sample_contexts` unioned — one classification per canonical pair. Requires `registry.json` (written by `write-registry`); degrades to unfolded edges if absent. Fold logic is pure in `wiki_creator/relationship_fold.py`.
 - Mention offsets (STU-489): extraction persists `mention_spans_by_chapter` in
   `*_full.json` — one `{surface, start, end}` per occurrence (uncapped, unlike the
@@ -139,10 +141,30 @@ Inside `wiki-resolution`, order matters:
   `entity_clustering.py` and `alias_resolution.py` seed tome N's resolution from it
   (`Registry.load_seed_table`) — absent/unreadable series registry degrades to unseeded.
   Re-running a tome replaces its mention contribution (idempotent); prior tomes are never re-resolved.
+- Series orchestration (STU-487): `run_wiki.py --series library/<author>/<series>`
+  (`make run-series SERIES=...`) runs every tome under `books/` in reading order,
+  one full pipeline per tome. Tome order comes from the numeric filename prefix
+  (`wiki_creator/series.py`, reuses `tome_labels.tome_number` — `04.5_` sorts
+  between `04_` and `05_`; non-numbered tomes sort last). No series manifest.
+  Accumulation/seeding are already wired per-tome (write-registry accumulates,
+  clustering/alias seed from the series registry), so series mode is a pure
+  sequential loop — each tome must finish before the next seeds from it. Per-tome
+  run state (`.wiki_runs/`) is reused, so a re-run skips already-completed tomes.
 - `workers` in relationship/coref config directly impact RAM usage.
 - `.studio/config.yaml` and `.studio/runs/` must not be committed.
 - Never add hardcoded word lists to scripts. All vocabulary belongs in `wiki_creator/cue_words/<lang>.json` (language-wide) or the book YAML `classification` section (book-specific). No script may define a fallback vocabulary constant — if a key is absent from cue_words, degrade gracefully to an empty collection.
 - `tests/test_e2e_golden.py` chains all deterministic resolution stages on the fixture novella and compares every stage output to goldens in `tests/fixtures/e2e/golden/stages/`. Any intentional behavior change in those stages requires `make golden-update` and a review of the golden diff in the same PR. The extraction seed is committed (`golden/seed/`, regenerate with `gen_seed.py`); a `@requires_en_sm` test keeps it shape-compatible with real extraction in CI.
+- Spoiler blocks (STU-492): `wiki_export.render_page` wraps chapter-gated sections
+  in native `mw-collapsible` divs and injects a dated relationship index under the
+  Relations section. Gating is per-section via `content_units.revealed_at_chapter`
+  (the min-chapter provenance from STU-491), matched to headings by normalized
+  title. Enabled only when the book YAML sets `generation.spoiler.collapse_after_chapter: N`
+  — unset keeps output byte-identical (goldens safe). The relationship index uses
+  language-neutral fields only (names, French `relationship_type`, chapter numbers);
+  the classifier's English `evolution`/`key_moments` are never surfaced. The index
+  injects only under an exactly-`Relations` heading (an LLM-drifted heading is
+  silently skipped, same tolerance as collapsible gating). Pure logic in
+  `wiki_creator/spoiler_blocks.py`; section→heading map in `wiki_creator/sections.py`.
 
 ## Working Norms
 
@@ -151,3 +173,54 @@ Inside `wiki-resolution`, order matters:
 - Use `apply_patch` for manual edits.
 - Do not assume docs are current; verify against `Makefile`, pipeline YAML, and tests.
 - Before claiming a fix, rerun the relevant tests and ideally `pytest -q`.
+
+## Personal Working Style — Ariane
+
+Portable working style (mirrors `~/.claude/CLAUDE.md`, duplicated here so Claude Code web has it without the machine-global file).
+
+### Collaboration Model
+
+I give direction (a ticket, a bug report, a priority). You do the work — code, tests, lint, commits. **Act, don't ask for permission** on reversible, expected steps: running tests, linting, type-checking, committing, pushing to a branch you're already working on. If something fails, fix and retry without asking first.
+
+Only stop and ask for: irreversible/destructive actions (force-push, history rewrite on a shared branch, deleting something not yours), major architectural decisions, or a genuinely ambiguous requirement — and even then, state your assumption and let me correct it rather than opening with a question when a reasonable default exists. Terse output — no recap of what was just done, no "veux-tu que je…", no unsolicited "next steps" list.
+
+### Code Philosophy
+
+- **Simplicity first.** Minimum code that solves the problem. No speculative abstraction, no unrequested config/flexibility, no error handling for scenarios that can't happen. If it could be a third the size, rewrite it — ask "would a senior engineer call this overcomplicated?"
+- **Surgical changes.** Touch only what the task requires. Don't refactor adjacent code, don't restyle to your own taste — match existing convention even if you'd choose differently. Every changed line should trace to the request.
+- **Remove over add, fix the root cause.** Default bias is deletion, not accumulation. Disproportionate machinery for a small win means the *approach* is wrong, not that it needs tidying. When you see defensive/validation/dedup scaffolding, ask "why does this need to exist?" — if the answer is "to paper over X," undo X; don't harden the band-aid.
+- **Comments: default to none.** Write one only when the code cannot say the *why* itself — a hidden constraint, a non-obvious invariant, a workaround for a specific bug. Never explain *what* the code does. One clause per fact, no connective prose.
+
+### Git Workflow
+
+- **Commit small and often** — one logical change per commit (new function, bug fix, refactor, test). Don't batch unrelated fixes into one commit.
+- Commit trailer: `Co-Authored-By: <model name> <noreply@anthropic.com>` — derive the name from the model actually running the session, never hardcode a version string that goes stale.
+
+### Presenting Trade-offs
+
+When there are 2+ options to choose between (architecture picks, "swap A for B", design decisions), use a side-by-side pros/cons layout, not narrative paragraphs:
+
+```
+**Option A**
+- ✅ <pro>
+- ❌ <con — and how to mitigate, if cheap>
+
+**Option B**
+- ✅ <pro>
+- ❌ <con>
+
+**My take:** <one-line recommendation + why>
+```
+
+One fact per bullet line, always close with a recommendation. (Doesn't apply to a single-finding go/skip approval — that stays one line.)
+
+### Language
+
+Chat replies in French (native thinking language). Everything that leaves the chat — code, comments, commit messages, PR/MR descriptions, docs, READMEs, tickets, skills, config files, any file another person might read — is **English**, no exceptions. Default to English proactively for any written artifact.
+
+### Decision-Making Style
+
+I'm AuDHD. Two things that help:
+
+1. **Externalize criteria, don't rely on "feel."** When proposing how to split work, cut scope, or classify effort, list the concrete criteria so I can verify against them.
+2. **Don't interrupt hyperfocus with unsolicited "are you sure" checks.** If I'm clearly executing on a plan, stay out of the way. Surface concerns before I start or after a natural checkpoint, not mid-flow.

@@ -13,6 +13,8 @@ Usage:
     python scripts/generate_wiki_pages.py --book library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml --dry-run
 """
 
+from __future__ import annotations
+
 import argparse
 import dataclasses
 import json
@@ -21,16 +23,21 @@ import re
 import subprocess
 import sys
 import tempfile
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+from wiki_creator.chapters import chapter_number
 from wiki_creator.lang import book_language
 from wiki_creator.page_templates import output_language, resolve_template
 from wiki_creator.paths import book_paths_from_yaml
+from wiki_creator.provenance import content_units, relation_units
 from wiki_creator import studio_io
 from wiki_creator.registry import Registry, normalize_name
+from wiki_creator.sections import SECTION_TITLES as _SECTION_TITLES
+from wiki_creator.spoiler_blocks import relationship_index_lines, per_relation_prose_enabled
 from wiki_creator.synopsis import event_lines
 from wiki_creator.tome_labels import appearance_label
 from wiki_creator.types import WikiPage
@@ -47,17 +54,6 @@ _DEFAULT_SECTIONS_BY_IMPORTANCE = {
     "principal": ["infobox", "biography", "personality", "physical", "powers", "relationships", "trivia", "references"],
     "secondary": ["infobox", "biography", "relationships", "references"],
     "figurant": ["infobox", "biography"],
-}
-_SECTION_TITLES = {
-    "infobox": "Infobox",
-    "biography": "Biographie",
-    "personality": "Personnalité",
-    "physical": "Description physique",
-    "powers": "Pouvoirs",
-    "relationships": "Relations",
-    "trivia": "Anecdotes",
-    "events": "Événements",
-    "references": "Références",
 }
 _INTERNAL_INFOBOX_KEYS = frozenset({
     "cooccurrence_count",
@@ -198,6 +194,8 @@ SECTION_DEFINITIONS = {
     "PERSON": {
         "Infobox": "Champs factuels clés : nom, alias, rôle, affiliation, statut. Omets les champs inconnus.",
         "Biographie": "Qui est ce personnage et quel est son rôle dans le monde. Les événements servent de contexte, pas de liste chronologique.",
+        "Avant les événements du livre": "Le passé du personnage révélé en flashback, avant le récit présent du livre. Prose ancrée uniquement sur le contexte de backstory. Ne pas répéter la biographie présente.",
+        "Rôle dans le récit": "Arc chronologique du personnage à travers l'intrigue, en prose, ancré uniquement sur les événements listés.",
         "Personnalité": "Traits observés avec ancrage textuel. Évite les adjectifs génériques sans preuve. Montre les contradictions ou tensions internes si elles existent.",
         "Description physique": "Détails physiques confirmés par le texte uniquement. Concis.",
         "Pouvoirs": "Capacités ou compétences distinctives. Si aucun pouvoir magique, décris les compétences pratiques.",
@@ -262,6 +260,47 @@ def _place_events_block(entity: dict) -> str:
     return "## Events at this place\n" + "\n".join(f"  {line}" for line in lines)
 
 
+# SP1 (STU-479): "Arc perso" projection over the Event Layer (events.json, SP0)
+# — events_for_entity() in wiki_preparation.py filters events where the PERSON
+# participates into entity["entity_events"]. The arc's climax beats (couronnement,
+# duel) sit late in the book, so cap by salience (not chapter order, which would
+# drop the ending) then re-sort chronologically for the prompt.
+_MAX_PERSON_EVENTS = 18
+
+
+def _narrative_events(entity: dict) -> list[dict]:
+    """The character's most salient participant events, in chronological order.
+    Empty for non-PERSON entities or when SP0 produced no events for them."""
+    if entity.get("type") != "PERSON":
+        return []
+    events = entity.get("entity_events") or []
+    top = sorted(
+        events,
+        key=lambda e: (-float(e.get("salience", 0.0)), int(e.get("chapter", 0))),
+    )[:_MAX_PERSON_EVENTS]
+    return sorted(top, key=lambda e: int(e.get("chapter", 0)))
+
+
+def _has_backstory(entity: dict) -> bool:
+    """True when the entity has any flashback-tagged chapter summary (STU-271),
+    i.e. backstory content to surface under its own section (STU-493)."""
+    return any(
+        s.get("temporal_context") == "flashback"
+        for s in entity.get("chapter_summary_context") or []
+    )
+
+
+def _narrative_role_block(entity: dict) -> str:
+    """Grounding block of the character's arc through the plot, or "" when the
+    entity isn't a PERSON or has no participant events."""
+    lines = event_lines(_narrative_events(entity))
+    if not lines:
+        return ""
+    name = entity.get("canonical_name", "")
+    header = f"## Événements où {name} participe (ordre chronologique)"
+    return header + "\n" + "\n".join(f"  {line}" for line in lines)
+
+
 def _relationship_evidence_lines(rel: dict) -> list[str]:
     """Grounding sub-lines for one relation: verbatim evidence, key moments,
     and — only when evidence is absent — a truncated sample context fallback."""
@@ -283,6 +322,47 @@ def _relationship_evidence_lines(rel: dict) -> list[str]:
                 snippet = snippet[:_SAMPLE_CONTEXT_MAX_CHARS].rstrip() + "…"
             lines.append(f'    context: "{snippet}"')
     return lines
+
+
+def build_relation_prompt(
+    entity: dict,
+    other: str,
+    rel: dict,
+    book_title: str,
+    forbidden_names: list[str] | None = None,
+) -> str:
+    """Prompt for a single ``### [[other]]`` French progression subsection.
+
+    Grounds on this one relation's type / evolution / key_moments / evidence and
+    requires French prose — the grounding fields are English and must be
+    reformulated, never copied verbatim.
+    """
+    name = entity["canonical_name"]
+    rtype = rel.get("relationship_type") or "relation"
+    grounding_lines = []
+    evolution = str(rel.get("evolution") or "").strip()
+    if evolution:
+        grounding_lines.append(f"    evolution: {evolution}")
+    grounding_lines.extend(_relationship_evidence_lines(rel))
+    grounding = "\n".join(grounding_lines) or "    (no extra grounding)"
+    forbidden_rule = ""
+    if forbidden_names:
+        names_list = "\n".join(f"- {n}" for n in forbidden_names)
+        forbidden_rule = (
+            "\n\nNE JAMAIS mentionner ces personnages (spoilers d'autres tomes) :\n"
+            f"{names_list}"
+        )
+    return f"""Rédige UNE sous-section wiki en français décrivant la progression de la relation entre {name} et {other} dans « {book_title} ».
+
+Type de relation : {rtype}
+Éléments d'ancrage (en anglais — À REFORMULER EN FRANÇAIS, ne jamais recopier tel quel) :
+{grounding}
+
+Contraintes :
+- Écris en français uniquement. Les éléments d'ancrage sont en anglais : traduis et reformule, ne copie aucune phrase anglaise.
+- Un seul paragraphe court, ancré uniquement sur les éléments ci-dessus. N'invente rien.
+- Commence EXACTEMENT par le titre : ### [[{other}]]
+- Ne mentionne aucun autre personnage que {name} et {other}.{forbidden_rule}"""
 
 
 def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_names: list[str] | None = None) -> str:
@@ -401,10 +481,23 @@ def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_n
         if backstory_lines
         else ""
     )
-    chapter_summary_block = present_block + ("\n\n" + backstory_block if backstory_block else "")
+    # STU-493: flashback backstory is its own section — surface it (and only it)
+    # when the backstory section is being generated, never mixed into biography.
+    chapter_summary_block = present_block
+    backstory_section = (
+        f"\n\n{backstory_block}" if backstory_block and "backstory" in sections else ""
+    )
 
     place_events_block = _place_events_block(entity)
     place_events_section = f"\n\n{place_events_block}" if place_events_block else ""
+
+    # SP1: only surface the arc block when the narrative_role section is the one
+    # being generated (PERSON is section-scoped — one section per prompt), so it
+    # never leaks into the biography/personality prompts.
+    narrative_role_block = (
+        _narrative_role_block(entity) if "narrative_role" in sections else ""
+    )
+    narrative_role_section = f"\n\n{narrative_role_block}" if narrative_role_block else ""
 
     # --- Paramètres de génération ---
     alias_str = ", ".join(a for a in aliases if a != name) or "none"
@@ -472,6 +565,37 @@ def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_n
                 '\n- Do NOT include a "## Événements" section: no narrative events are available for this place.'
             )
 
+    narrative_role_rule = ""
+    if etype == "PERSON" and "narrative_role" in sections:
+        if narrative_role_block:
+            narrative_role_rule = (
+                '\n- Write a "## Rôle dans le récit" section grounded ONLY in the '
+                f'"Événements où {name} participe" block above: retrace the character\'s '
+                "arc through the plot in chronological order, in flowing prose. Describe what "
+                "the character does and what happens to them across these events — not a static "
+                'portrait. Do NOT mention chapter numbers ("Chapitre N") in the prose. Do NOT '
+                "invent events, outcomes, or motives absent from the listed events."
+            )
+        else:
+            narrative_role_rule = (
+                '\n- Do NOT include a "## Rôle dans le récit" section: no narrative events are available for this character.'
+            )
+
+    backstory_rule = ""
+    if etype == "PERSON" and "backstory" in sections:
+        if backstory_block:
+            backstory_rule = (
+                '\n- Write a "## Avant les événements du livre" section grounded ONLY in the '
+                '"Backstory context" block above: recount what happened to the character before '
+                "the book's present-day narrative, as revealed through flashbacks, in flowing prose. "
+                "Do NOT repeat the present-day biography. Do NOT mention chapter numbers "
+                '("Chapitre N") in the prose. Do NOT invent events absent from the backstory block.'
+            )
+        else:
+            backstory_rule = (
+                '\n- Do NOT include a "## Avant les événements du livre" section: no flashback backstory is available for this character.'
+            )
+
     return f"""This is a fictional world. The following excerpts are the ONLY authoritative source of truth. Ignore any prior knowledge you have of this book, series, or author.
 
 You are writing a wiki page for a fictional novel called "{book_title}".
@@ -499,7 +623,7 @@ Typed relationships (use these directly for the ## Relations section):
 {relationships_block if relationships_block else "  (no typed relationships available)"}{indirect_section}
 
 Chapter summaries (orientation context — lower priority than excerpts):
-{chapter_summary_block}{place_events_section}
+{chapter_summary_block}{place_events_section}{narrative_role_section}{backstory_section}
 
 ---
 
@@ -520,7 +644,7 @@ Content constraints:
 - Do NOT invent plot details, relationships, abilities, or physical traits not supported by excerpts.
 - Do NOT turn cooccurrence between entities into narrative causality.
 - Confidence markers: each relationship carries a "confidence" tag. State "explicit" relationships as fact (direct affirmation). Phrase "inferred" and "interpretation" relationships tentatively ("semble", "suggère", "pourrait indiquer") — never as established fact. Indirect relationships listed as "inferred: true" are interpretation: mention them only with such hedged phrasing, if at all.
-- When referring to related entities or characters, use their name EXACTLY as written in the excerpts or relationships list — do not paraphrase, alter, or approximate names.{place_events_rule}
+- When referring to related entities or characters, use their name EXACTLY as written in the excerpts or relationships list — do not paraphrase, alter, or approximate names.{place_events_rule}{narrative_role_rule}{backstory_rule}
 - If information is insufficient for a section, omit that section entirely.
 - Do NOT write "information not available", "not mentioned in excerpts", or any similar phrase. Omit instead.
 - Omit infobox fields entirely if their value is unknown.
@@ -696,11 +820,12 @@ def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> No
 _IDENTITY_ERROR_MARKERS = ("≠ entité demandée", "ne correspond pas à l'entité")
 
 
-def _rejection_is_identity_only(run_id: str) -> bool:
+def _rejection_is_identity_only(run_id: str, runner: StudioRunner | None = None) -> bool:
     """True iff the validator rejected the run and *every* error it reported is
     an identity error. Guards against smuggling a page past grounding/language
     validators when we recover it."""
-    vout = studio_io.load_studio_stage_output(str(run_id), "wiki-page-validator")
+    runner = runner or StudioRunner()
+    vout = runner.load_stage_output(str(run_id), "wiki-page-validator")
     errors = (vout or {}).get("errors") or []
     return bool(errors) and all(
         any(marker in str(e) for marker in _IDENTITY_ERROR_MARKERS) for e in errors
@@ -708,16 +833,18 @@ def _rejection_is_identity_only(run_id: str) -> bool:
 
 
 def _recover_identity_rejected_page(
-    *, entity: dict, item_result: dict, sibling_canonicals: set[str] | None = None
+    *, entity: dict, item_result: dict, sibling_canonicals: set[str] | None = None,
+    runner: StudioRunner | None = None,
 ) -> dict | None:
     """Recover a PERSON page from an identity-only rejected run and force-correct
     its identity fields. Returns the kept page, or None if not recoverable."""
     if entity.get("type") != "PERSON":
         return None
+    runner = runner or StudioRunner()
     run_id = str((item_result.get("run_metadata") or {}).get("run_id") or "").strip()
-    if not run_id or not _rejection_is_identity_only(run_id):
+    if not run_id or not _rejection_is_identity_only(run_id, runner):
         return None
-    recovered = studio_io.load_studio_stage_output(run_id, "wiki-page-item")
+    recovered = runner.load_stage_output(run_id, "wiki-page-item")
     if not isinstance(recovered, dict):
         return None
     page = parse_response(json.dumps(recovered, ensure_ascii=False), entity)
@@ -774,6 +901,7 @@ def _wiki_page_item_input(
     language: str = "fr",
     file_path: str = "",
     grounding: dict | None = None,
+    prompt_override: str | None = None,
 ) -> dict:
     # language / forbidden_names / file_path / grounding_* feed the
     # wiki-page-validator stage inside the wiki-page-item pipeline (its
@@ -787,7 +915,7 @@ def _wiki_page_item_input(
         "language": language,
         "forbidden_names": forbidden_names or [],
         "file_path": file_path,
-        "prompt": build_prompt(entity, book_title, sections=sections, forbidden_names=forbidden_names),
+        "prompt": prompt_override or build_prompt(entity, book_title, sections=sections, forbidden_names=forbidden_names),
     }
     grounding = grounding or {}
     if grounding.get("llm"):
@@ -811,6 +939,8 @@ def _run_wiki_page_item(
     language: str = "fr",
     file_path: str = "",
     grounding: dict | None = None,
+    runner: StudioRunner | None = None,
+    prompt_override: str | None = None,
 ) -> dict:
     item_input = _wiki_page_item_input(
         entity=entity,
@@ -821,8 +951,9 @@ def _run_wiki_page_item(
         language=language,
         file_path=file_path,
         grounding=grounding,
+        prompt_override=prompt_override,
     )
-    return _execute_wiki_page_item(item_input, entity, timeout)
+    return (runner or StudioRunner()).run_item(item_input, entity, timeout)
 
 
 def _execute_wiki_page_item(item_input: dict, entity: dict, timeout: int) -> dict:
@@ -922,6 +1053,18 @@ def _execute_wiki_page_item(item_input: dict, entity: dict, timeout: int) -> dic
     }
 
 
+class StudioRunner:
+    """Every Studio touchpoint of the generation path behind one injectable
+    interface: a fake makes generate_pages() testable without a subprocess, and
+    the seam prepares the M4 fan-out (STU-449)."""
+
+    def run_item(self, item_input: dict, entity: dict, timeout: int) -> dict:
+        return _execute_wiki_page_item(item_input, entity, timeout)
+
+    def load_stage_output(self, run_id: str, stage: str) -> dict | None:
+        return studio_io.load_studio_stage_output(run_id, stage)
+
+
 def _generate_one_section(
     *,
     entity: dict,
@@ -934,15 +1077,26 @@ def _generate_one_section(
     language: str = "fr",
     file_path: str = "",
     grounding: dict | None = None,
+    runner: StudioRunner | None = None,
 ) -> str | None:
     """Generate a single section via a scoped wiki-page-item call. Returns the
     section's content block, or None on error / persistent forbidden-name hit."""
+
+    # SP1: the arc section is data-gated — skip the LLM call entirely when SP0
+    # produced no participant events, rather than prompting it to hallucinate one.
+    if section == "narrative_role" and not _narrative_events(entity):
+        return None
+
+    # STU-493: the backstory section is data-gated — skip the LLM call when the
+    # character has no flashback-tagged chapter summaries.
+    if section == "backstory" and not _has_backstory(entity):
+        return None
 
     def _once() -> dict:
         return _run_wiki_page_item(
             entity=entity, book_title=book_title, model=model, timeout=timeout,
             sections=[section], max_tokens=max_tokens, forbidden_names=forbidden_names,
-            language=language, file_path=file_path, grounding=grounding,
+            language=language, file_path=file_path, grounding=grounding, runner=runner,
         )
 
     result = _once()
@@ -964,6 +1118,85 @@ def _generate_one_section(
     return content or None
 
 
+def _generate_one_relation(
+    *,
+    entity: dict,
+    other: str,
+    rel: dict,
+    book_title: str,
+    model: str,
+    timeout: int,
+    max_tokens: int,
+    forbidden_names: list[str] | None = None,
+    language: str = "fr",
+    file_path: str = "",
+    grounding: dict | None = None,
+    runner: StudioRunner | None = None,
+) -> str | None:
+    """Generate one ``### [[other]]`` French progression subsection. Returns the
+    subsection markdown, or None on error / persistent forbidden-name hit."""
+    prompt = build_relation_prompt(entity, other, rel, book_title, forbidden_names=forbidden_names)
+
+    def _once() -> dict:
+        return _run_wiki_page_item(
+            entity=entity, book_title=book_title, model=model, timeout=timeout,
+            sections=["relationships"], max_tokens=max_tokens, forbidden_names=forbidden_names,
+            language=language, file_path=file_path, grounding=grounding, runner=runner,
+            prompt_override=prompt,
+        )
+
+    result = _once()
+    if not isinstance(result, dict) or result.get("error"):
+        return None
+    content = (result.get("content") or "").strip()
+    if forbidden_names and _check_forbidden_names({"content": content, "infobox_fields": {}}, forbidden_names):
+        result = _once()
+        if not isinstance(result, dict) or result.get("error"):
+            return None
+        content = (result.get("content") or "").strip()
+        if _check_forbidden_names({"content": content, "infobox_fields": {}}, forbidden_names):
+            return None
+    return content or None
+
+
+def _generate_relationships_subsections(
+    *,
+    entity: dict,
+    book_title: str,
+    model: str,
+    timeout: int,
+    max_tokens: int,
+    forbidden_names: list[str] | None = None,
+    language: str = "fr",
+    file_path: str = "",
+    grounding: dict | None = None,
+    runner: StudioRunner | None = None,
+) -> str | None:
+    """The full ``## Relations`` block: one prose subsection per typed relationship
+    (most-recent-reveal first). None when no subsection is produced."""
+    own = {entity.get("canonical_name")} | set(entity.get("aliases") or [])
+    typed = []
+    for rel in entity.get("relationships") or []:
+        if not rel.get("relationship_type"):
+            continue
+        chapters = [n for n in (chapter_number(k) for k in rel.get("chapters") or []) if n is not None]
+        other = rel["entity_b"] if rel.get("entity_a") in own else rel["entity_a"]
+        typed.append((max(chapters) if chapters else -1, other, rel))
+    typed.sort(key=lambda t: t[0], reverse=True)
+    subs = []
+    for _, other, rel in typed:
+        block = _generate_one_relation(
+            entity=entity, other=other, rel=rel, book_title=book_title, model=model,
+            timeout=timeout, max_tokens=max_tokens, forbidden_names=forbidden_names,
+            language=language, file_path=file_path, grounding=grounding, runner=runner,
+        )
+        if block:
+            subs.append(block)
+    if not subs:
+        return None
+    return "## Relations\n\n" + "\n\n".join(subs)
+
+
 def _run_generation_for_entity(
     *,
     entity: dict,
@@ -980,6 +1213,7 @@ def _run_generation_for_entity(
     grounding: dict | None = None,
     sibling_canonicals: set[str] | None = None,
     book_config: dict | None = None,
+    runner: StudioRunner | None = None,
 ) -> dict:
     if not entity.get("context_by_chapter", {}):
         return make_stub_page(entity, insufficient_data=True)
@@ -997,16 +1231,20 @@ def _run_generation_for_entity(
         language=language,
         file_path=file_path,
         grounding=grounding,
+        runner=runner,
     )
     if isinstance(item_result, dict) and item_result.get("error"):
         recovered = _recover_identity_rejected_page(
             entity=entity,
             item_result=item_result,
             sibling_canonicals=sibling_canonicals,
+            runner=runner,
         )
         _save_generation_debug_artifact(debug_dir, entity, item_result)
         if recovered is not None:
             _record_safety_net("identity_recovery")
+            recovered["content_units"] = content_units(sections, entity)
+            recovered["relationship_index"] = relationship_index_lines(entity)
             _bind_batch_fields(recovered, entity, book_config)
             print(" ⚠ identity-corrected from rejected run", file=sys.stderr, end="", flush=True)
             return recovered
@@ -1032,6 +1270,7 @@ def _run_generation_for_entity(
                 language=language,
                 file_path=file_path,
                 grounding=grounding,
+                runner=runner,
             )
             if isinstance(item_result, dict) and item_result.get("error"):
                 _save_generation_debug_artifact(debug_dir, entity, item_result)
@@ -1056,6 +1295,8 @@ def _run_generation_for_entity(
         print(" ⚠ nom force-corrected", file=sys.stderr, end="", flush=True)
 
     if isinstance(item_result, dict) and "content" in item_result:
+        item_result["content_units"] = content_units(sections, entity)
+        item_result["relationship_index"] = relationship_index_lines(entity)
         _bind_batch_fields(item_result, entity, book_config)
 
     return item_result
@@ -1077,6 +1318,7 @@ def _run_generation_sectioned(
     grounding: dict | None = None,
     sibling_canonicals: set[str] | None = None,
     book_config: dict | None = None,
+    runner: StudioRunner | None = None,
 ) -> dict:
     if not entity.get("context_by_chapter", {}):
         return make_stub_page(entity, insufficient_data=True)
@@ -1084,15 +1326,34 @@ def _run_generation_sectioned(
         return make_stub_page(entity)
 
     content_sections = [s for s in sections if s not in ("infobox", "references")]
+    per_relation = (
+        entity.get("type") == "PERSON"
+        and per_relation_prose_enabled(book_config or {})
+        and bool(relation_units(entity))
+    )
     blocks: list[str] = []
+    emitted: list[str] = []
     for section in content_sections:
+        if section == "relationships" and per_relation:
+            block = _generate_relationships_subsections(
+                entity=entity, book_title=book_title, model=model, timeout=timeout,
+                max_tokens=max_tokens, forbidden_names=forbidden_names,
+                language=language, file_path=file_path, grounding=grounding, runner=runner,
+            )
+            if block:
+                blocks.append(block)
+                # NOTE: 'relationships' deliberately NOT appended to `emitted`
+                # so it is excluded from content_units — per-relation gating
+                # (relation_units) replaces whole-section gating.
+            continue
         block = _generate_one_section(
             entity=entity, section=section, book_title=book_title, model=model,
             timeout=timeout, max_tokens=max_tokens, forbidden_names=forbidden_names,
-            language=language, file_path=file_path, grounding=grounding,
+            language=language, file_path=file_path, grounding=grounding, runner=runner,
         )
         if block:
             blocks.append(block)
+            emitted.append(section)
         elif section == "biography":
             _save_generation_debug_artifact(debug_dir, entity, {"error": "biography_failed"})
             return make_stub_page(entity, failed=True)
@@ -1111,7 +1372,12 @@ def _run_generation_sectioned(
         "books": list(entity.get("books") or []),
         "infobox_fields": {},
         "content": _assemble_section_blocks(blocks),
+        "content_units": content_units(emitted, entity),
+        "relationship_index": relationship_index_lines(entity),
     }
+    if per_relation:
+        page["relation_units"] = relation_units(entity)
+        page["relationship_index"] = []
     if entity.get("type") == "PERSON" and _force_correct_identity(
         page, entity, sibling_canonicals
     ):
@@ -1136,6 +1402,7 @@ def _run_generation(
     grounding: dict | None = None,
     sibling_canonicals: set[str] | None = None,
     book_config: dict | None = None,
+    runner: StudioRunner | None = None,
 ) -> dict:
     """Route generation by entity type.
 
@@ -1167,6 +1434,7 @@ def _run_generation(
         grounding=grounding,
         sibling_canonicals=sibling_canonicals,
         book_config=book_config,
+        runner=runner,
     )
 
 
@@ -1330,61 +1598,40 @@ def generation_profile(config: dict, importance: str, entity_type: str | None = 
     return sections, max_tokens
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--book", required=True,
-        help="Path to book yaml, e.g. library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml",
-    )
-    parser.add_argument("--model", default=os.environ.get("WIKI_MODEL", "qwen2.5"), help="Ollama model")
-    parser.add_argument("--timeout", type=int, default=120, help="Timeout per entity (seconds)")
-    parser.add_argument("--importance", nargs="+", choices=["principal", "secondary", "figurant"],
-                        help="Only process entities of these importance levels")
-    parser.add_argument("--dry-run", action="store_true", help="Skip LLM calls, output stubs only")
-    args = parser.parse_args()
+@dataclass
+class GenerationConfig:
+    """Run-constant inputs to generate_pages(). Per-entity values (sections,
+    max_tokens, sibling_canonicals) are derived inside the loop."""
+    book_title: str
+    generation_cfg: dict
+    output_file: str
+    debug_dir: Path
+    model: str = "qwen2.5"
+    timeout: int = 120
+    dry_run: bool = False
+    forbidden_names: list[str] = field(default_factory=list)
+    language: str = "fr"
+    file_path: str = ""
+    grounding: dict = field(default_factory=dict)
+    book_config: dict | None = None
+    identity_registry: Registry | None = None
 
+
+def generate_pages(
+    batches: list[tuple[str, dict]],
+    config: GenerationConfig,
+    runner: StudioRunner | None = None,
+) -> list[dict]:
+    """Generate a wiki page for every entity across `batches`, saving to
+    config.output_file after each page (so an interrupted run resumes), and
+    return the full page list. All Studio interaction goes through `runner`,
+    so this is exercisable with a fake runner and no subprocess."""
+    runner = runner or StudioRunner()
     _reset_safety_net_telemetry()
-    book_paths = book_paths_from_yaml(args.book)
-    output_file = str(book_paths.processing / "wiki_pages.json")
-    wiki_inputs_dir = str(book_paths.wiki_inputs)
-    book_cfg = load_book_config(args.book)
-    generation_cfg = book_cfg.get("generation", {})
-    validation_cfg = book_cfg.get("validation", {})
-    forbidden_names = validation_cfg.get("forbidden_names", [])
-    if forbidden_names:
-        print(f"[generate-wiki-pages] Forbidden names active: {forbidden_names}", file=sys.stderr)
-    book_lang = book_language(book_cfg)
-    book_file_path = book_cfg.get("file_path", "")
-    grounding_cfg = validation_cfg.get("grounding", {}) or {}
-    if grounding_cfg.get("llm"):
-        print(
-            f"[generate-wiki-pages] LLM grounding active "
-            f"(model: {grounding_cfg.get('llm_model', 'mistral:7b-instruct')})",
-            file=sys.stderr,
-        )
 
-    book_title = load_book_title(str(book_paths.processing / "epub_data.json"))
-    batches = load_batch_files(wiki_inputs_dir, args.importance)
-
-    # STU-443 (pas 4): generation's identity binding consults the registry, the
-    # single source of truth, instead of trusting the identity carried by the
-    # batch artifact. None → registry absent, keep the batch identity as-is.
-    identity_registry = Registry.load_from_processing(book_paths.processing)
-    if identity_registry is None:
-        print("[generate-wiki-pages] registry.json not found — identity from batch artifact", file=sys.stderr)
-
-    if not batches:
-        print("[WARN] No batch files found or all batches empty after filter.", file=sys.stderr)
-        _save([], output_file)
-        return
-
-    total_entities = sum(len(b["entities"]) for _, b in batches)
-    print(f"[generate-wiki-pages] {total_entities} entities across {len(batches)} batches | model={args.model}", file=sys.stderr)
-
-    # Load existing pages to resume interrupted runs
-    all_pages = [p for p in _load_existing(output_file) if not p.get("_failed") and _is_page_complete(p)]
+    # Resume: keep already-generated complete pages, regenerate failed/empty.
+    all_pages = [p for p in _load_existing(config.output_file) if not p.get("_failed") and _is_page_complete(p)]
     done_titles = {p["title"] for p in all_pages}
-    debug_dir = book_paths.processing / "wiki_page_item_debug"
     if done_titles:
         print(f"[generate-wiki-pages] Resuming — {len(done_titles)} pages already done", file=sys.stderr)
 
@@ -1392,9 +1639,9 @@ def main() -> None:
         for path, batch in batches:
             batch_id = batch.get("batch_id", os.path.basename(path))
             entities = batch.get("entities", [])
-            if identity_registry is not None:
+            if config.identity_registry is not None:
                 for e in entities:
-                    identity_registry.bind_identity(e)
+                    config.identity_registry.bind_identity(e)
             print(f"\n[{batch_id}] {len(entities)} entities", file=sys.stderr)
             batch_canonicals = {
                 e.get("canonical_name", "") for e in entities if e.get("canonical_name")
@@ -1413,21 +1660,21 @@ def main() -> None:
                     print(f"  [STUB] {name} (no context)", file=sys.stderr)
                     page = make_stub_page(entity)
                     all_pages.append(page)
-                    _save(all_pages, output_file)
+                    _save(all_pages, config.output_file)
                     done_titles.add(name)
                     continue
 
-                if args.dry_run:
+                if config.dry_run:
                     print(f"  [DRY]  {name}", file=sys.stderr)
                     page = make_stub_page(entity)
                     all_pages.append(page)
-                    _save(all_pages, output_file)
+                    _save(all_pages, config.output_file)
                     done_titles.add(name)
                     continue
 
                 print(f"  [GEN]  {name} ({importance})", file=sys.stderr, end="", flush=True)
                 try:
-                    sections, max_tokens = generation_profile(generation_cfg, importance, entity.get("type"))
+                    sections, max_tokens = generation_profile(config.generation_cfg, importance, entity.get("type"))
                     typed_rels = entity.get("relationships", [])
                     if (
                         entity.get("type") == "PERSON"
@@ -1437,22 +1684,23 @@ def main() -> None:
                         sections = list(sections) + ["relationships"]
                     page = _run_generation(
                         entity=entity,
-                        book_title=book_title,
-                        model=args.model,
-                        timeout=args.timeout,
+                        book_title=config.book_title,
+                        model=config.model,
+                        timeout=config.timeout,
                         sections=sections,
                         max_tokens=max_tokens,
-                        dry_run=args.dry_run,
-                        debug_dir=debug_dir,
-                        forbidden_names=forbidden_names,
-                        language=book_lang,
-                        file_path=book_file_path,
-                        grounding=grounding_cfg,
+                        dry_run=config.dry_run,
+                        debug_dir=config.debug_dir,
+                        forbidden_names=config.forbidden_names,
+                        language=config.language,
+                        file_path=config.file_path,
+                        grounding=config.grounding,
                         sibling_canonicals=batch_canonicals - {name},
-                        book_config=book_cfg,
+                        book_config=config.book_config,
+                        runner=runner,
                     )
                     all_pages.append(page)
-                    _save(all_pages, output_file)
+                    _save(all_pages, config.output_file)
                     if not page.get("_failed"):
                         done_titles.add(name)
                         print(" ✓", file=sys.stderr)
@@ -1462,11 +1710,76 @@ def main() -> None:
                     print(f" ✗ {e}", file=sys.stderr)
                     page = make_stub_page(entity, failed=True)
                     all_pages.append(page)
-                    _save(all_pages, output_file)
+                    _save(all_pages, config.output_file)
                     # Do NOT add to done_titles — will be retried on next run
     except KeyboardInterrupt:
         print(f"\n[generate-wiki-pages] Interrupted — {len(all_pages)} pages saved", file=sys.stderr)
-    _print_generation_summary(all_pages)
+
+    _save(all_pages, config.output_file)
+    return all_pages
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--book", required=True,
+        help="Path to book yaml, e.g. library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml",
+    )
+    parser.add_argument("--model", default=os.environ.get("WIKI_MODEL", "qwen2.5"), help="Ollama model")
+    parser.add_argument("--timeout", type=int, default=120, help="Timeout per entity (seconds)")
+    parser.add_argument("--importance", nargs="+", choices=["principal", "secondary", "figurant"],
+                        help="Only process entities of these importance levels")
+    parser.add_argument("--dry-run", action="store_true", help="Skip LLM calls, output stubs only")
+    args = parser.parse_args()
+
+    book_paths = book_paths_from_yaml(args.book)
+    book_cfg = load_book_config(args.book)
+    validation_cfg = book_cfg.get("validation", {})
+    forbidden_names = validation_cfg.get("forbidden_names", [])
+    if forbidden_names:
+        print(f"[generate-wiki-pages] Forbidden names active: {forbidden_names}", file=sys.stderr)
+    grounding_cfg = validation_cfg.get("grounding", {}) or {}
+    if grounding_cfg.get("llm"):
+        print(
+            f"[generate-wiki-pages] LLM grounding active "
+            f"(model: {grounding_cfg.get('llm_model', 'mistral:7b-instruct')})",
+            file=sys.stderr,
+        )
+
+    # STU-443 (pas 4): generation's identity binding consults the registry, the
+    # single source of truth, instead of trusting the identity carried by the
+    # batch artifact. None → registry absent, keep the batch identity as-is.
+    identity_registry = Registry.load_from_processing(book_paths.processing)
+    if identity_registry is None:
+        print("[generate-wiki-pages] registry.json not found — identity from batch artifact", file=sys.stderr)
+
+    batches = load_batch_files(str(book_paths.wiki_inputs), args.importance)
+    if not batches:
+        print("[WARN] No batch files found or all batches empty after filter.", file=sys.stderr)
+        _save([], str(book_paths.processing / "wiki_pages.json"))
+        return
+
+    total_entities = sum(len(b["entities"]) for _, b in batches)
+    print(f"[generate-wiki-pages] {total_entities} entities across {len(batches)} batches | model={args.model}", file=sys.stderr)
+
+    config = GenerationConfig(
+        book_title=load_book_title(str(book_paths.processing / "epub_data.json")),
+        generation_cfg=book_cfg.get("generation", {}),
+        output_file=str(book_paths.processing / "wiki_pages.json"),
+        debug_dir=book_paths.processing / "wiki_page_item_debug",
+        model=args.model,
+        timeout=args.timeout,
+        dry_run=args.dry_run,
+        forbidden_names=forbidden_names,
+        language=book_language(book_cfg),
+        file_path=book_cfg.get("file_path", ""),
+        grounding=grounding_cfg,
+        book_config=book_cfg,
+        identity_registry=identity_registry,
+    )
+
+    pages = generate_pages(batches, config, StudioRunner())
+    _print_generation_summary(pages)
     _write_identity_telemetry(book_paths.processing)
 
 

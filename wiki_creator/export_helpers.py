@@ -13,8 +13,8 @@ def page_filename(canonical_name: str) -> str:
 
 
 # Per-tome category label key (in the `labels` dict) for each entity type that
-# gets one (STU-486). EVENT/OTHER are intentionally absent — the pipeline does
-# not generate wiki pages for those types (cf. md2wiki._TEMPLATE_NAMES).
+# gets one (STU-486). EVENT is absent — event pages carry a single flat
+# category, not per-tome provenance (cf. md2wiki._TEMPLATE_NAMES).
 _TOME_LABEL_KEYS = {
     "PERSON": "persons_by_tome",
     "PLACE": "locations_by_tome",
@@ -40,6 +40,8 @@ def category_tags(
         tags.append(f"[[Category:{labels['locations']}]]")
     elif entity_type == "ORG":
         tags.append(f"[[Category:{labels['organizations']}]]")
+    elif entity_type == "EVENT":
+        tags.append(f"[[Category:{labels.get('events', 'Événements')}]]")
 
     tome_key = _TOME_LABEL_KEYS.get(entity_type)
     if tome_key:
@@ -106,6 +108,21 @@ _INFOBOX_TEMPLATES = {
 | '''Première mention''' || {{{first_seen|}}}
 |}
 </includeonly>""",
+    "EVENT": """\
+<includeonly>
+{| class="infobox"
+|-
+! colspan="2" | {{{name}}}
+|-
+| '''Participants''' || {{{participants|}}}
+|-
+| '''Lieu''' || {{{lieu|}}}
+|-
+| '''Chapitre''' || {{{chapitre|}}}
+|-
+| '''Issue''' || {{{issue|}}}
+|}
+</includeonly>""",
 }
 
 
@@ -121,6 +138,7 @@ def main_page_content(book_title: str, author: str, pages: list[dict], labels: d
     persons = [p for p in pages if p["entity_type"] == "PERSON"]
     places = [p for p in pages if p["entity_type"] == "PLACE"]
     orgs = [p for p in pages if p["entity_type"] == "ORG"]
+    events = [p for p in pages if p["entity_type"] == "EVENT"]
     synopsis = next((p for p in pages if p.get("entity_type") == "SYNOPSIS"), None)
 
     principals = [p for p in persons if p["importance"] == "principal"][:8]
@@ -152,6 +170,10 @@ def main_page_content(book_title: str, author: str, pages: list[dict], labels: d
     ]
     for p in major_places:
         lines.append(f"* [[{p['title']}]]")
+    if events:
+        lines += ["", "== Événements ==", ]
+        for p in events:
+            lines.append(f"* [[{p['title']}]]")
     lines += [
         "",
         "== Navigation ==",

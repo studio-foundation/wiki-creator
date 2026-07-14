@@ -148,7 +148,7 @@ def test_generation_profile_principal_person_uses_base_template_order():
     # (relationships before personality). Pins that sections are template-sourced.
     sections, _ = gwp.generation_profile({}, "principal", "PERSON")
     assert sections == [
-        "infobox", "biography", "relationships", "personality",
+        "infobox", "biography", "backstory", "narrative_role", "relationships", "personality",
         "physical", "powers", "trivia", "references",
     ]
 

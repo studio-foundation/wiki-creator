@@ -89,6 +89,9 @@ def test_rich_place_produces_non_empty_page(monkeypatch, tmp_path):
     assert page["content"].strip()
     assert "Géographie" in page["content"]
     assert "Culture" in page["content"]
+    # STU-491: single-shot path tags each content section with its reveal chapter
+    units = {u["section"]: u["revealed_at_chapter"] for u in page["content_units"]}
+    assert units == {"biography": 1, "physical": 1}
 
 
 def test_failed_stub_message_distinct_from_insufficient():

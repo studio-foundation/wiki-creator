@@ -157,6 +157,12 @@ class WikiPage:
     # for every non-PERSON entity (PERSON pages are built fresh, section by
     # section, and never carry this key). Free-form: shape is producer telemetry.
     run_metadata: dict | None = None
+    # Per-section revelation provenance (STU-491/492/493): generate_wiki_pages.py
+    # stamps these onto pages after generation; wiki_export/spoiler_blocks consume
+    # them to gate spoiler sections. Free-form lists, absent on stub/failed pages.
+    content_units: list | None = None
+    relation_units: list | None = None
+    relationship_index: list | None = None
 
 
 @dataclass
