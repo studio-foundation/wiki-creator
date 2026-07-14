@@ -32,11 +32,11 @@ from wiki_creator.chapters import chapter_number
 from wiki_creator.lang import book_language
 from wiki_creator.page_templates import output_language, resolve_template
 from wiki_creator.paths import book_paths_from_yaml
-from wiki_creator.provenance import content_units
+from wiki_creator.provenance import content_units, relation_units
 from wiki_creator import studio_io
 from wiki_creator.registry import Registry, normalize_name
 from wiki_creator.sections import SECTION_TITLES as _SECTION_TITLES
-from wiki_creator.spoiler_blocks import relationship_index_lines
+from wiki_creator.spoiler_blocks import relationship_index_lines, per_relation_prose_enabled
 from wiki_creator.synopsis import event_lines
 from wiki_creator.tome_labels import appearance_label
 
@@ -1283,9 +1283,26 @@ def _run_generation_sectioned(
         return make_stub_page(entity)
 
     content_sections = [s for s in sections if s not in ("infobox", "references")]
+    per_relation = (
+        entity.get("type") == "PERSON"
+        and per_relation_prose_enabled(book_config or {})
+        and bool(relation_units(entity))
+    )
     blocks: list[str] = []
     emitted: list[str] = []
     for section in content_sections:
+        if section == "relationships" and per_relation:
+            block = _generate_relationships_subsections(
+                entity=entity, book_title=book_title, model=model, timeout=timeout,
+                max_tokens=max_tokens, forbidden_names=forbidden_names,
+                language=language, file_path=file_path, grounding=grounding, runner=runner,
+            )
+            if block:
+                blocks.append(block)
+                # NOTE: 'relationships' deliberately NOT appended to `emitted`
+                # so it is excluded from content_units — per-relation gating
+                # (relation_units) replaces whole-section gating.
+            continue
         block = _generate_one_section(
             entity=entity, section=section, book_title=book_title, model=model,
             timeout=timeout, max_tokens=max_tokens, forbidden_names=forbidden_names,
@@ -1315,6 +1332,9 @@ def _run_generation_sectioned(
         "content_units": content_units(emitted, entity),
         "relationship_index": relationship_index_lines(entity),
     }
+    if per_relation:
+        page["relation_units"] = relation_units(entity)
+        page["relationship_index"] = []
     if entity.get("type") == "PERSON" and _force_correct_identity(
         page, entity, sibling_canonicals
     ):

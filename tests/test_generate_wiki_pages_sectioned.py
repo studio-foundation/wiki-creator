@@ -223,3 +223,46 @@ def test_generate_relationships_subsections_concatenates(monkeypatch):
     assert out.startswith("## Relations")
     assert "### [[Celaena]]" in out and "### [[Cain]]" in out
     assert "Nox" not in out  # untyped relation skipped
+
+
+def test_sectioned_per_relation_prose_when_enabled(monkeypatch):
+    entity = _entity(rels=[
+        {"entity_a": "Chaol", "entity_b": "Celaena", "relationship_type": "amoureux",
+         "chapters": ["ch55"]},
+        {"entity_a": "Cain", "entity_b": "Chaol", "relationship_type": "antagoniste",
+         "chapters": ["ch07"]}])
+    def fake(**kw):
+        sec = kw["sections"][0]
+        if sec == "relationships" and kw.get("prompt_override"):
+            other = "Celaena" if "Celaena" in kw["prompt_override"] else "Cain"
+            return _fake_item(f"### [[{other}]]\n\nprose {other}")
+        return _fake_item(f"## {sec}\n\ntext")
+    monkeypatch.setattr(gwp, "_run_wiki_page_item", fake)
+    from pathlib import Path
+    cfg = {"generation": {"relations": {"per_relation_prose": True}}}
+    page = gwp._run_generation_sectioned(
+        entity=entity, book_title="ToG", model="m", timeout=10,
+        sections=["infobox", "biography", "relationships", "references"],
+        max_tokens=500, dry_run=False, debug_dir=Path("/tmp"), book_config=cfg)
+    assert "## Relations\n\n### [[Celaena]]" in page["content"]
+    assert "### [[Cain]]" in page["content"]
+    assert page["relation_units"] == [
+        {"name": "Celaena", "revealed_at_chapter": 55},
+        {"name": "Cain", "revealed_at_chapter": 7}]
+    # relationships excluded from content_units; index dropped
+    assert all(u["section"] != "relationships" for u in page["content_units"])
+    assert page["relationship_index"] == []
+
+
+def test_sectioned_per_relation_off_keeps_single_block(monkeypatch):
+    entity = _entity(rels=[{"entity_a": "Chaol", "entity_b": "Celaena",
+                            "relationship_type": "amoureux", "chapters": ["ch55"]}])
+    _sectioned(monkeypatch, {"relationships": "## Relations\n\nProse unique."})
+    from pathlib import Path
+    page = gwp._run_generation_sectioned(
+        entity=entity, book_title="ToG", model="m", timeout=10,
+        sections=["infobox", "biography", "relationships", "references"],
+        max_tokens=500, dry_run=False, debug_dir=Path("/tmp"), book_config={})
+    assert "Prose unique." in page["content"]
+    assert "relation_units" not in page
+    assert page["relationship_index"]  # STU-492 index still built
