@@ -103,6 +103,7 @@ def generate_event_page(
     max_tokens: int,
     language: str,
     file_path: str,
+    all_events: list[dict] | None = None,
     timeout: int = 120,
     dry_run: bool = False,
 ) -> dict:
@@ -110,7 +111,7 @@ def generate_event_page(
     if dry_run:
         return _stub_page(title, event)
 
-    prompt = build_event_prompt(event, title, book_title, forbidden_names)
+    prompt = build_event_prompt(event, title, book_title, forbidden_names, all_events)
     item_input = {
         "title": title,
         "importance": EVENT_IMPORTANCE,
@@ -218,6 +219,7 @@ def run_for_processing(
                 max_tokens=max_tokens,
                 language=language,
                 file_path=file_path,
+                all_events=events,
                 timeout=timeout,
                 dry_run=dry_run,
             )
