@@ -53,7 +53,7 @@ def wrap_collapsible(body: str, content_units: list[dict], collapse_after: int) 
             out.append(
                 f'<div class="mw-collapsible mw-collapsed" '
                 f'data-expandtext="Chapitre {chapter} — révéler" '
-                f'data-collapsetext="Masquer">\n{block}\n</div>'
+                f'data-collapsetext="Masquer">\n{block}\n</div>\n'
             )
         else:
             out.append(block)

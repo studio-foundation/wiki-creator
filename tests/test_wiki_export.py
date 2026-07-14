@@ -217,3 +217,22 @@ def test_render_page_per_relation_no_collapse_config():
     _, out = render_page(page, LABELS, collapse_after=None)
     assert "=== [[Celaena]] ===" in out
     assert "mw-collapsible" not in out
+
+
+def test_render_page_per_relation_still_gates_non_relationship_sections():
+    page = {
+        "title": "Chaol",
+        "entity_type": "PERSON",
+        "importance": "principal",
+        "infobox_fields": {},
+        "content": ("## Biographie\n\nBio tardive.\n\n## Relations\n\n"
+                    "### [[Celaena]]\n\nProse.\n"),
+        "content_units": [{"section": "biography", "revealed_at_chapter": 40}],
+        "relation_units": [{"name": "Celaena", "revealed_at_chapter": 55}],
+        "relationship_index": [],
+    }
+    from scripts.wiki_export import render_page
+    _, out = render_page(page, LABELS, collapse_after=3)
+    assert 'data-expandtext="Chapitre 40 — révéler"' in out  # Biographie gated
+    assert "Chapitre 55" in out                              # Celaena gated
+    assert out.count("mw-collapsible") == 2

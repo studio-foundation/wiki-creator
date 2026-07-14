@@ -92,6 +92,7 @@ def render_page(page: dict, labels: dict, collapse_after: int | None = None) -> 
     relation_units = page.get("relation_units")
     if relation_units:
         if collapse_after is not None:
+            body = wrap_collapsible(body, page.get("content_units") or [], collapse_after)
             body = wrap_relation_collapsibles(body, relation_units, collapse_after)
     else:
         body = inject_relationship_index(body, page.get("relationship_index") or [])
