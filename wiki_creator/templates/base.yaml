@@ -12,6 +12,7 @@ entity_types:
       - {token: titles,      group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
     sections:
       - {token: biography,      group: section, provenance: llm-prose,      obligation: MIN, tiers: [figurant, secondary, principal]}
+      - {token: backstory,      group: section, provenance: llm-prose,      obligation: OPT, tiers: [secondary, principal]}
       - {token: narrative_role, group: section, provenance: llm-prose,      obligation: OPT, tiers: [secondary, principal]}
       - {token: relationships, group: section, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
       - {token: personality,   group: section, provenance: llm-prose,      obligation: OPT, tiers: [principal]}
@@ -75,6 +76,7 @@ labels:
   leaders:       {en: Leaders,     fr: Leaders}
   infobox:       {en: Infobox,     fr: Infobox}
   biography:     {en: Biography,   fr: Biographie}
+  backstory:     {en: "Before the events of the book", fr: "Avant les événements du livre"}
   relationships: {en: Relationships, fr: Relations}
   personality:   {en: Personality, fr: Personnalité}
   physical:      {en: Appearance,  fr: "Description physique"}

@@ -33,6 +33,12 @@ def section_revealed_at(section: str, entity: dict) -> int | None:
         return _min_chapter(c for r in rels for c in (r.get("chapters") or []))
     if section == "narrative_role":
         return _min_chapter(e.get("chapter") for e in entity.get("entity_events") or [])
+    if section == "backstory":
+        return _min_chapter(
+            s.get("chapter_key")
+            for s in entity.get("chapter_summary_context") or []
+            if s.get("temporal_context") == "flashback"
+        )
     keys = list(entity.get("context_by_chapter") or {})
     keys += [s.get("chapter_key") for s in entity.get("chapter_summary_context") or []]
     return _min_chapter(keys)

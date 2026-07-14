@@ -44,6 +44,20 @@ class TestSectionRevealedAt:
     def test_narrative_role_uses_events(self):
         assert section_revealed_at("narrative_role", self._entity()) == 2
 
+    def test_backstory_uses_first_flashback_chapter(self):
+        entity = {
+            "chapter_summary_context": [
+                {"chapter_key": "chapter_2", "temporal_context": "present"},
+                {"chapter_key": "chapter_8", "temporal_context": "flashback"},
+                {"chapter_key": "chapter_5", "temporal_context": "flashback"},
+            ],
+        }
+        assert section_revealed_at("backstory", entity) == 5
+
+    def test_backstory_none_without_flashback(self):
+        entity = {"chapter_summary_context": [{"chapter_key": "chapter_2", "temporal_context": "present"}]}
+        assert section_revealed_at("backstory", entity) is None
+
     def test_prose_section_uses_context_and_summaries(self):
         assert section_revealed_at("biography", self._entity()) == 2
 

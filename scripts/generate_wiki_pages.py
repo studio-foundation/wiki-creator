@@ -185,6 +185,7 @@ SECTION_DEFINITIONS = {
     "PERSON": {
         "Infobox": "Champs factuels clés : nom, alias, rôle, affiliation, statut. Omets les champs inconnus.",
         "Biographie": "Qui est ce personnage et quel est son rôle dans le monde. Les événements servent de contexte, pas de liste chronologique.",
+        "Avant les événements du livre": "Le passé du personnage révélé en flashback, avant le récit présent du livre. Prose ancrée uniquement sur le contexte de backstory. Ne pas répéter la biographie présente.",
         "Rôle dans le récit": "Arc chronologique du personnage à travers l'intrigue, en prose, ancré uniquement sur les événements listés.",
         "Personnalité": "Traits observés avec ancrage textuel. Évite les adjectifs génériques sans preuve. Montre les contradictions ou tensions internes si elles existent.",
         "Description physique": "Détails physiques confirmés par le texte uniquement. Concis.",
@@ -269,6 +270,15 @@ def _narrative_events(entity: dict) -> list[dict]:
         key=lambda e: (-float(e.get("salience", 0.0)), int(e.get("chapter", 0))),
     )[:_MAX_PERSON_EVENTS]
     return sorted(top, key=lambda e: int(e.get("chapter", 0)))
+
+
+def _has_backstory(entity: dict) -> bool:
+    """True when the entity has any flashback-tagged chapter summary (STU-271),
+    i.e. backstory content to surface under its own section (STU-493)."""
+    return any(
+        s.get("temporal_context") == "flashback"
+        for s in entity.get("chapter_summary_context") or []
+    )
 
 
 def _narrative_role_block(entity: dict) -> str:
@@ -421,7 +431,12 @@ def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_n
         if backstory_lines
         else ""
     )
-    chapter_summary_block = present_block + ("\n\n" + backstory_block if backstory_block else "")
+    # STU-493: flashback backstory is its own section — surface it (and only it)
+    # when the backstory section is being generated, never mixed into biography.
+    chapter_summary_block = present_block
+    backstory_section = (
+        f"\n\n{backstory_block}" if backstory_block and "backstory" in sections else ""
+    )
 
     place_events_block = _place_events_block(entity)
     place_events_section = f"\n\n{place_events_block}" if place_events_block else ""
@@ -516,6 +531,21 @@ def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_n
                 '\n- Do NOT include a "## Rôle dans le récit" section: no narrative events are available for this character.'
             )
 
+    backstory_rule = ""
+    if etype == "PERSON" and "backstory" in sections:
+        if backstory_block:
+            backstory_rule = (
+                '\n- Write a "## Avant les événements du livre" section grounded ONLY in the '
+                '"Backstory context" block above: recount what happened to the character before '
+                "the book's present-day narrative, as revealed through flashbacks, in flowing prose. "
+                "Do NOT repeat the present-day biography. Do NOT mention chapter numbers "
+                '("Chapitre N") in the prose. Do NOT invent events absent from the backstory block.'
+            )
+        else:
+            backstory_rule = (
+                '\n- Do NOT include a "## Avant les événements du livre" section: no flashback backstory is available for this character.'
+            )
+
     return f"""This is a fictional world. The following excerpts are the ONLY authoritative source of truth. Ignore any prior knowledge you have of this book, series, or author.
 
 You are writing a wiki page for a fictional novel called "{book_title}".
@@ -543,7 +573,7 @@ Typed relationships (use these directly for the ## Relations section):
 {relationships_block if relationships_block else "  (no typed relationships available)"}{indirect_section}
 
 Chapter summaries (orientation context — lower priority than excerpts):
-{chapter_summary_block}{place_events_section}{narrative_role_section}
+{chapter_summary_block}{place_events_section}{narrative_role_section}{backstory_section}
 
 ---
 
@@ -564,7 +594,7 @@ Content constraints:
 - Do NOT invent plot details, relationships, abilities, or physical traits not supported by excerpts.
 - Do NOT turn cooccurrence between entities into narrative causality.
 - Confidence markers: each relationship carries a "confidence" tag. State "explicit" relationships as fact (direct affirmation). Phrase "inferred" and "interpretation" relationships tentatively ("semble", "suggère", "pourrait indiquer") — never as established fact. Indirect relationships listed as "inferred: true" are interpretation: mention them only with such hedged phrasing, if at all.
-- When referring to related entities or characters, use their name EXACTLY as written in the excerpts or relationships list — do not paraphrase, alter, or approximate names.{place_events_rule}{narrative_role_rule}
+- When referring to related entities or characters, use their name EXACTLY as written in the excerpts or relationships list — do not paraphrase, alter, or approximate names.{place_events_rule}{narrative_role_rule}{backstory_rule}
 - If information is insufficient for a section, omit that section entirely.
 - Do NOT write "information not available", "not mentioned in excerpts", or any similar phrase. Omit instead.
 - Omit infobox fields entirely if their value is unknown.
@@ -1002,6 +1032,11 @@ def _generate_one_section(
     # SP1: the arc section is data-gated — skip the LLM call entirely when SP0
     # produced no participant events, rather than prompting it to hallucinate one.
     if section == "narrative_role" and not _narrative_events(entity):
+        return None
+
+    # STU-493: the backstory section is data-gated — skip the LLM call when the
+    # character has no flashback-tagged chapter summaries.
+    if section == "backstory" and not _has_backstory(entity):
         return None
 
     def _once() -> dict:
