@@ -360,6 +360,38 @@
     "von"
   ],
   "elision_prefixes": [],
+  "title_prefixes": [
+    "mr.",
+    "mrs.",
+    "ms.",
+    "dr.",
+    "dr"
+  ],
+  "masculine_titles": [
+    "mr."
+  ],
+  "feminine_titles": [
+    "mrs.",
+    "ms."
+  ],
+  "geographic_keywords": [
+    "street",
+    "avenue",
+    "boulevard",
+    "square",
+    "district",
+    "city",
+    "church",
+    "cathedral",
+    "cemetery",
+    "station",
+    "market",
+    "bridge",
+    "tower",
+    "castle",
+    "palace",
+    "hotel"
+  ],
   "editorial_stance_markers": {
     "meta_narrative": [
       "novel",
