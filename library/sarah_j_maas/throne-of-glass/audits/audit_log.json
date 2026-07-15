@@ -622,5 +622,39 @@
       "STU-471: Crown Prince ≠ Dorian (false split, page fantôme + Dorian rétrogradé figurant)",
       "STU-473: King of Adarlan + Adarlan avalés dans Celaena (cluster_jw false merge, GT-confirmé)"
     ]
+  },
+  {
+    "run": 19,
+    "date": "2026-07-14",
+    "pages_generated": 30,
+    "infobox_pct": 100,
+    "lang_fr_pct": 100,
+    "alias_duplicates": 0,
+    "hallucinations": 0,
+    "gt_violations": [],
+    "coverage": {
+      "batch_entities": 30,
+      "pages_generated": 30,
+      "missing": [],
+      "failed": [],
+      "filtered_before_batch": 1
+    },
+    "weak_entities": [
+      "PERSON entities pulled down by relationship recall (STU-495/496): typed 24%, key_moments 30%, evolution non-generic 14%"
+    ],
+    "regression": {
+      "prefixed_keys": "✅",
+      "epub_ids": "✅",
+      "entity_type_null": "✅",
+      "alias_duplicates": "✅",
+      "cross_serie": "✅",
+      "evolution_quality": "⚠️",
+      "temporal_context": "✅",
+      "ground_truth": "✅"
+    },
+    "verdict": "Best run to date: 0 GT violations (18→0), 100% infobox/FR, 0 _failed, full 30/30 coverage. Relationship recall still low (24% typed) — STU-495/496. New: non-PERSON type misclassification Wyrd/Red Desert (STU-498).",
+    "new_issues": [
+      "STU-498: entity-classification wrong type Wyrd->PLACE, Red Desert->EVENT (bug)"
+    ]
   }
 ]
