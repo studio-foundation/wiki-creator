@@ -179,6 +179,15 @@ def slot_label(token, lang, base=None) -> str:
     return token.replace("_", " ").title()
 
 
+def chrome_label(key, lang, base=None) -> str:
+    """Localized reader-facing export chrome string (base.yaml ``chrome``), e.g.
+    the spoiler collapsible controls. Returns the raw template — callers that
+    interpolate (``reveal`` carries ``{chapter}``) format it themselves."""
+    raw = base if base is not None else load_base_template()
+    entry = (raw.get("chrome") or {}).get(key) or {}
+    return entry.get(lang) or entry.get("fr") or str(key)
+
+
 def language_name(lang, base=None) -> str:
     """English display name of a language code, for the (English) prompt
     scaffolding — e.g. ``language_name("fr") == "French"``."""

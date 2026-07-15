@@ -105,6 +105,12 @@ labels:
 language_names:
   fr: French
   en: English
+# STU-510: reader-facing export chrome (spoiler collapsible controls, relationship
+# index label). Localized like the rest of the output, never hardcoded in Python.
+chrome:
+  reveal:    {fr: "Chapitre {chapter} — révéler", en: "Chapter {chapter} — reveal"}
+  collapse:  {fr: "Masquer", en: "Hide"}
+  evolution: {fr: "Évolution :", en: "Evolution:"}
 length_by_tier:
   principal: "4 to 6 paragraphs total across all sections."
   secondary: "1 to 2 paragraphs for the main section. Keep all other sections brief."

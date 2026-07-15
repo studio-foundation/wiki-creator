@@ -105,7 +105,7 @@ def test_run_live_writes_page_with_references(tmp_path, monkeypatch):
     assert page["infobox_fields"] == {}
     assert "run_metadata" not in page
     # the writer prompt is anchored in the events
-    assert "[Chapitre 12] Celaena defeats Cain" in captured["item_input"]["prompt"]
+    assert "[Chapter 12] Celaena defeats Cain" in captured["item_input"]["prompt"]
     assert captured["item_input"]["title"] == SYNOPSIS_TITLE
     data = json.loads((tmp_path / "book_synopsis.json").read_text(encoding="utf-8"))
     assert data["page"] == page

@@ -55,38 +55,39 @@ def select_events(
 # lone turning-point cue (event_layer._CUE_WEIGHT).
 def salience_label(value: float) -> str:
     if value >= 0.6:
-        return "haute"
+        return "high"
     if value >= 0.35:
-        return "moyenne"
-    return "basse"
+        return "medium"
+    return "low"
 
 
 def event_lines(events: list[dict], include_salience: bool = False) -> list[str]:
-    """One grounding line per event: ``[Chapitre N] description (personnages :
-    … — lieux : …)``. The ``outcome`` is only appended when it adds information
+    """One grounding line per event: ``[Chapter N] description (participants:
+    … — places: …)``. The ``outcome`` is only appended when it adds information
     beyond the description. With ``include_salience``, each line also carries a
-    French salience tier (``importance : haute|moyenne|basse``) so the writer can
-    weight prose proportionally.
+    salience tier (``importance: high|medium|low``) so the writer can weight
+    prose proportionally. These are prompt-grounding labels only (never rendered
+    output), so they stay in English regardless of the wiki's output language.
     """
     lines: list[str] = []
     for event in events or []:
         description = str(event.get("description", "")).strip()
         if not description:
             continue
-        line = f"[Chapitre {event.get('chapter', '?')}] {description}"
+        line = f"[Chapter {event.get('chapter', '?')}] {description}"
         details: list[str] = []
         participants = [str(p) for p in event.get("participants") or [] if p]
         if participants:
-            details.append("personnages : " + ", ".join(participants))
+            details.append("participants: " + ", ".join(participants))
         places = [str(p) for p in event.get("places") or [] if p]
         if places:
-            details.append("lieux : " + ", ".join(places))
+            details.append("places: " + ", ".join(places))
         outcome = str(event.get("outcome") or "").strip()
         if outcome and outcome != description:
-            details.append("issue : " + outcome)
+            details.append("outcome: " + outcome)
         if include_salience:
             details.append(
-                "importance : " + salience_label(float(event.get("salience", 0.0)))
+                "importance: " + salience_label(float(event.get("salience", 0.0)))
             )
         if details:
             line += " (" + " — ".join(details) + ")"

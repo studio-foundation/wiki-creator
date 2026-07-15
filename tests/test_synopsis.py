@@ -72,21 +72,21 @@ def test_event_lines_formats_chapter_and_details():
                participants=["Cain", "Celaena Sardothien"], places=["Rifthold"]),
     ]
     (line,) = event_lines(events)
-    assert line.startswith("[Chapitre 12] Celaena affronte Cain")
-    assert "personnages : Cain, Celaena Sardothien" in line
-    assert "lieux : Rifthold" in line
+    assert line.startswith("[Chapter 12] Celaena affronte Cain")
+    assert "participants: Cain, Celaena Sardothien" in line
+    assert "places: Rifthold" in line
 
 
 def test_event_lines_omits_empty_details_and_redundant_outcome():
     events = [_event(2, "a quiet scene", outcome="a quiet scene")]
     (line,) = event_lines(events)
-    assert line == "[Chapitre 2] a quiet scene"
+    assert line == "[Chapter 2] a quiet scene"
 
 
 def test_event_lines_includes_informative_outcome():
     events = [_event(12, "the final duel", outcome="Celaena wins despite the poison")]
     (line,) = event_lines(events)
-    assert "issue : Celaena wins despite the poison" in line
+    assert "outcome: Celaena wins despite the poison" in line
 
 
 def test_event_lines_skips_blank_descriptions():
@@ -102,17 +102,17 @@ def test_event_lines_includes_salience_tier_when_requested():
     (high,) = event_lines([_event(12, "climax", salience=0.8)], include_salience=True)
     (mid,) = event_lines([_event(6, "middle", salience=0.4)], include_salience=True)
     (low,) = event_lines([_event(1, "minor", salience=0.1)], include_salience=True)
-    assert "importance : haute" in high
-    assert "importance : moyenne" in mid
-    assert "importance : basse" in low
+    assert "importance: high" in high
+    assert "importance: medium" in mid
+    assert "importance: low" in low
 
 
 def test_salience_label_thresholds():
-    assert salience_label(0.6) == "haute"
-    assert salience_label(0.59) == "moyenne"
-    assert salience_label(0.35) == "moyenne"
-    assert salience_label(0.34) == "basse"
-    assert salience_label(0.0) == "basse"
+    assert salience_label(0.6) == "high"
+    assert salience_label(0.59) == "medium"
+    assert salience_label(0.35) == "medium"
+    assert salience_label(0.34) == "low"
+    assert salience_label(0.0) == "low"
 
 
 # --- build_synopsis_prompt ---
@@ -122,7 +122,7 @@ def test_prompt_contains_events_and_book_title():
     events = [_event(1, "Celaena is freed from Endovier", participants=["Celaena Sardothien"])]
     prompt = build_synopsis_prompt(events, "Throne of Glass")
     assert "Throne of Glass" in prompt
-    assert "[Chapitre 1] Celaena is freed from Endovier" in prompt
+    assert "[Chapter 1] Celaena is freed from Endovier" in prompt
     assert "## Synopsis" in prompt
 
 

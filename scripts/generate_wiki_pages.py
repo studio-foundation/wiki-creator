@@ -197,18 +197,16 @@ def _has_backstory(entity: dict) -> bool:
     )
 
 
-def _narrative_role_block(entity: dict, lang: str = "fr") -> str:
+def _narrative_role_block(entity: dict) -> str:
     """Grounding block of the character's arc through the plot, or "" when the
-    entity isn't a PERSON or has no participant events."""
+    entity isn't a PERSON or has no participant events. Prompt-grounding only
+    (never rendered), so the header stays English like the other grounding
+    labels, regardless of the wiki's output language."""
     lines = event_lines(_narrative_events(entity), include_salience=True)
     if not lines:
         return ""
     name = entity.get("canonical_name", "")
-    header = (
-        f"## Events in which {name} participates (chronological order)"
-        if lang == "en"
-        else f"## Événements où {name} participe (ordre chronologique)"
-    )
+    header = f"## Events in which {name} participates (chronological order)"
     return header + "\n" + "\n".join(f"  {line}" for line in lines)
 
 
@@ -419,7 +417,7 @@ def build_prompt(
     # being generated (PERSON is section-scoped — one section per prompt), so it
     # never leaks into the biography/personality prompts.
     narrative_role_block = (
-        _narrative_role_block(entity, lang) if "narrative_role" in sections else ""
+        _narrative_role_block(entity) if "narrative_role" in sections else ""
     )
     narrative_role_section = f"\n\n{narrative_role_block}" if narrative_role_block else ""
 
@@ -462,7 +460,7 @@ def build_prompt(
         relations_rule = (
             f'- For PERSON entities: ALWAYS include a "## {relations_title}" section when "relationships" is in the sections list AND typed relationships are provided above. Do not skip it.\n'
             f'- Each "## {relations_title}" entry must use this format: "**[[related_entity]]** — [relationship_type]. [evolution if available]"\n'
-            '- NEVER print cooccurrence_count, a mention count, or "mentions communes" in the output. cooccurrence_count is an internal ranking metric only — it must not appear in reader-facing text.'
+            '- NEVER print cooccurrence_count or any raw mention/cooccurrence count in the output. cooccurrence_count is an internal ranking metric only — it must not appear in reader-facing text.'
         )
         if rels_enriched:
             relations_rule += (
@@ -480,7 +478,7 @@ def build_prompt(
             place_events_rule = (
                 f'\n- Include a "## {events_title}" section grounded ONLY in the "Events at this place" block above: '
                 "describe what actually happens here — the events themselves, not just the geography or architecture. "
-                'Do NOT mention chapter numbers ("Chapitre N") in the prose.'
+                "Do NOT mention chapter numbers in the prose."
             )
         else:
             place_events_rule = (
@@ -503,18 +501,17 @@ def build_prompt(
                 "events block above: retrace the character's "
                 "arc through the plot in chronological order, in flowing prose. Describe what "
                 "the character does and what happens to them across these events — not a static "
-                'portrait. Do NOT mention chapter numbers ("Chapitre N") in the prose. Do NOT '
+                "portrait. Do NOT mention chapter numbers in the prose. Do NOT "
                 "invent events, outcomes, or motives absent from the listed events."
                 "\n- Name every other character explicitly, using their exact name as written "
-                "in the events block (e.g. « Celaena Sardothien »). NEVER replace a named "
-                "character with a vague periphrasis (« la protagoniste », « une jeune femme », "
-                "« un jeune homme », « le personnage principal ») — this is an encyclopedic "
-                "article and each character has their own page, so there is no spoiler reason to "
-                "withhold a name here. Introduce each character by name at their first mention; "
-                "pronouns are fine afterwards."
+                "in the events block. NEVER replace a named character with a vague periphrasis "
+                "(e.g. \"the protagonist\", \"a young woman\", \"the main character\") — this is "
+                "an encyclopedic article and each character has their own page, so there is no "
+                "spoiler reason to withhold a name here. Introduce each character by name at "
+                "their first mention; pronouns are fine afterwards."
                 "\n- Weight the prose by each event's \"importance\" tier: an event marked "
-                '"importance : haute" earns a full, developed treatment; "moyenne" a sentence '
-                'or two; "basse" a brief mention or a subordinate clause — never a dedicated '
+                '"importance: high" earns a full, developed treatment; "medium" a sentence '
+                'or two; "low" a brief mention or a subordinate clause — never a dedicated '
                 "paragraph. Spend words in proportion to narrative importance, not evenly."
             )
         else:
@@ -531,7 +528,7 @@ def build_prompt(
                 '"Backstory context" block above: recount what happened to the character before '
                 "the book's present-day narrative, as revealed through flashbacks, in flowing prose. "
                 "Do NOT repeat the present-day biography. Do NOT mention chapter numbers "
-                '("Chapitre N") in the prose. Do NOT invent events absent from the backstory block.'
+                "in the prose. Do NOT invent events absent from the backstory block."
             )
         else:
             backstory_rule = (
@@ -576,7 +573,7 @@ WRITING RULES (follow strictly):
 Tone and register:
 - Write in encyclopedic {lang_name}. Neutral, precise, factual.
 - Describe what the entity IS before describing what happens to it.
-- When a chapter summary is tagged with a subjective POV, attribute contested claims to that viewpoint ("selon X", "du point de vue de X") rather than stating them as fact.
+- When a chapter summary is tagged with a subjective POV, attribute contested claims to that viewpoint ("according to X", "from X's point of view") rather than stating them as fact.
 - Use specific, concrete language. Avoid generic adjectives without textual evidence.
 - If aliases exist, introduce them naturally in the biography ("also known as X", "born Y").
 - Use ONLY aliases listed in "Known aliases" above. Do NOT infer or invent aliases from context.
@@ -585,7 +582,7 @@ Content constraints:
 - Chapter summaries serve as orientation only. Direct excerpts take priority.
 - Do NOT invent plot details, relationships, abilities, or physical traits not supported by excerpts.
 - Do NOT turn cooccurrence between entities into narrative causality.
-- Confidence markers: each relationship carries a "confidence" tag. State "explicit" relationships as fact (direct affirmation). Phrase "inferred" and "interpretation" relationships tentatively ("semble", "suggère", "pourrait indiquer") — never as established fact. Indirect relationships listed as "inferred: true" are interpretation: mention them only with such hedged phrasing, if at all.
+- Confidence markers: each relationship carries a "confidence" tag. State "explicit" relationships as fact (direct affirmation). Phrase "inferred" and "interpretation" relationships tentatively ("seems", "suggests", "could indicate") — never as established fact. Indirect relationships listed as "inferred: true" are interpretation: mention them only with such hedged phrasing, if at all.
 - When referring to related entities or characters, use their name EXACTLY as written in the excerpts or relationships list — do not paraphrase, alter, or approximate names.{place_events_rule}{narrative_role_rule}{backstory_rule}
 - If information is insufficient for a section, omit that section entirely.
 - Do NOT write "information not available", "not mentioned in excerpts", or any similar phrase. Omit instead.
