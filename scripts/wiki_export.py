@@ -12,6 +12,7 @@ from pathlib import Path
 
 import yaml
 
+from wiki_creator.editorial_stance import EditorialStance, editorial_stance
 from wiki_creator.md2wiki import convert, make_infobox_call
 from wiki_creator.export_helpers import (
     page_filename,
@@ -74,7 +75,12 @@ def _filter_exportable_pages(pages: list[dict]) -> list[dict]:
     return exportable
 
 
-def render_page(page: dict, labels: dict, collapse_after: int | None = None) -> tuple[str, str]:
+def render_page(
+    page: dict,
+    labels: dict,
+    collapse_after: int | None = None,
+    stance: EditorialStance | None = None,
+) -> tuple[str, str]:
     """(path relative to the wiki dir, wikitext content) for one page.
 
     Entity pages keep the infobox + body + categories layout in their type
@@ -86,6 +92,7 @@ def render_page(page: dict, labels: dict, collapse_after: int | None = None) -> 
     are wrapped in native mw-collapsible blocks. ``collapse_after=None`` keeps the
     output byte-identical to pre-STU-492.
     """
+    stance = stance or EditorialStance()
     title = page["title"]
     entity_type = page.get("entity_type", "PERSON")
     body = convert(page.get("content", ""))
@@ -105,7 +112,8 @@ def render_page(page: dict, labels: dict, collapse_after: int | None = None) -> 
 
     infobox = make_infobox_call(entity_type, page.get("infobox_fields", {}))
     cats = category_tags(
-        entity_type, page.get("importance", "secondary"), labels, page.get("books")
+        entity_type, page.get("importance", "secondary"), labels, page.get("books"),
+        expose_importance_tier=stance.expose_importance_tier,
     )
     page_content = infobox + "\n\n" + body
     if cats:
@@ -115,7 +123,8 @@ def render_page(page: dict, labels: dict, collapse_after: int | None = None) -> 
 
 
 def _load_book_config(payload: dict) -> dict:
-    """Read the book YAML (generation.spoiler lives there) from additional_context."""
+    """Read the book YAML (generation.spoiler / generation.editorial_stance live
+    there) from additional_context."""
     ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
     file_path = ctx.get("file_path")
     if not file_path:
@@ -136,7 +145,9 @@ def main() -> None:
     prev = payload["previous_outputs"]
 
     paths = studio_io.paths_from_payload(payload)
-    collapse_after = spoiler_collapse_after(_load_book_config(payload))
+    book_cfg = _load_book_config(payload)
+    collapse_after = spoiler_collapse_after(book_cfg)
+    stance = editorial_stance(book_cfg)
 
     gate_error = _copyright_gate(prev)
     if gate_error is not None:
@@ -196,7 +207,7 @@ def main() -> None:
 
     # Write entity pages (and the synopsis page at the wiki root, if present)
     for page in pages:
-        rel_path, page_content = render_page(page, labels, collapse_after)
+        rel_path, page_content = render_page(page, labels, collapse_after, stance)
         path = wiki_dir / rel_path
         path.write_text(page_content, encoding="utf-8")
         files_written += 1
@@ -207,7 +218,10 @@ def main() -> None:
     files_written += 1
 
     # Write Main_Page.wiki
-    main_content = main_page_content(book_title, author, pages, labels)
+    main_content = main_page_content(
+        book_title, author, pages, labels,
+        expose_pipeline_metadata=stance.expose_pipeline_metadata,
+    )
     (wiki_dir / "Main_Page.wiki").write_text(main_content, encoding="utf-8")
     files_written += 1
 
