@@ -1,30 +1,35 @@
 #!/usr/bin/env python3
 """Stage: wiki-page-validator (script executor)
 
-Valide la page générée par wiki-page-item.
-Checks structurels (toutes importances) : langue, IDs EPUB, clés infobox,
-ancrage série, noms/séries interdits, cohérence identitaire (grounding v1).
-Checks de grounding :
-  - déterministe (toutes importances) : noms propres absents des extraits
-    source (wiki_creator/grounding.py)
-  - LLM optionnel (principal/secondary, opt-in via grounding_llm) :
-    vérification claim-par-claim via Ollama — même contrat JSON que
-    .studio/agents/wiki-page-validator.agent.yaml ; skip silencieux si
-    Ollama indisponible.
+Validates the page produced by wiki-page-item.
+Structural checks (all importances): language, EPUB IDs, infobox keys,
+series anchoring, forbidden names/series, identity coherence (grounding v1).
+Grounding checks:
+  - deterministic (all importances): proper nouns absent from the source
+    excerpts (wiki_creator/grounding.py)
+  - optional LLM (principal/secondary, opt-in via grounding_llm):
+    claim-by-claim verification via Ollama — same JSON contract as
+    .studio/agents/wiki-page-validator.agent.yaml; silent skip if Ollama
+    is unavailable.
+
+Every error carries a stable neutral `code` (language-independent) plus a
+localized `message` (base.yaml `validator.errors`, follows output_language).
+generate_wiki_pages matches identity recovery on the codes, never the prose.
 
 Input (Studio stdin):
-  previous_outputs["wiki-page-item"]: page générée
-  additional_context: YAML avec title (canonical_name), language, file_path,
-  series, forbidden_series, forbidden_names, prompt (extraits source),
+  previous_outputs["wiki-page-item"]: generated page
+  additional_context: YAML with title (canonical_name), language, file_path,
+  series, forbidden_series, forbidden_names, prompt (source excerpts),
   grounding_llm (bool), grounding_llm_model
 
 Output (stdout):
-  { "valid": bool, "errors": [...], "feedback": str }
+  { "valid": bool, "errors": [...], "error_codes": [...], "feedback": str }
 """
 import json
 import os
 import re
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 import yaml
@@ -32,11 +37,23 @@ import yaml
 from wiki_creator.grounding import find_ungrounded_names
 from wiki_creator.lang import load_lang_config
 from wiki_creator.llm import ollama
-from wiki_creator.page_templates import language_name
+from wiki_creator.page_templates import language_name, slot_label, validator_message
 from wiki_creator.registry import normalize_name as _normalize_name
 
 
-def check_language_fr(page: dict) -> list[str]:
+@dataclass(frozen=True)
+class ValidationError:
+    """A validator failure: a stable neutral ``code`` for cross-component
+    matching, plus a localized reader-facing ``message``."""
+    code: str
+    message: str
+
+
+def _err(code: str, lang: str, **params) -> ValidationError:
+    return ValidationError(code, f"❌ {validator_message(code, lang, **params)}")
+
+
+def check_language_fr(page: dict, lang: str = "fr") -> list[ValidationError]:
     """Detect English contamination in a page that must be French.
 
     Marker vocabulary comes from cue_words/en.json (language_id_markers) —
@@ -46,61 +63,61 @@ def check_language_fr(page: dict) -> list[str]:
     content = page.get("content", "").lower()
     hits = [m for m in markers if m in content]
     if hits:
-        return [f"❌ Contenu en anglais détecté (marqueurs : {', '.join(hits[:3])})"]
+        return [_err("language_contamination", lang, markers=", ".join(hits[:3]))]
     return []
 
 
-def check_epub_ids(page: dict) -> list[str]:
+def check_epub_ids(page: dict, lang: str = "fr") -> list[ValidationError]:
     content = page.get("content", "")
     if ".xhtml" in content:
-        return ["❌ ID EPUB dans le contenu (ex: C07.xhtml)"]
+        return [_err("epub_id", lang)]
     return []
 
 
-def check_infobox_keys(page: dict) -> list[str]:
+def check_infobox_keys(page: dict, lang: str = "fr") -> list[ValidationError]:
     ib = page.get("infobox_fields", {})
     bad = [k for k in ib if k.startswith("- ")]
     if bad:
-        return [f"❌ Clé infobox préfixée par '- ' : {bad[0]}"]
+        return [_err("infobox_key_prefix", lang, key=bad[0])]
     return []
 
 
-def check_series_anchor(page: dict, meta: dict) -> list[str]:
+def check_series_anchor(page: dict, meta: dict, lang: str = "fr") -> list[ValidationError]:
     series = meta.get("series", "")
     if not series:
         return []
     first_para = (page.get("content", "") + "\n").split("\n")[0]
     if series.lower() not in first_para.lower():
-        return [f"❌ Le titre de série '{series}' est absent du premier paragraphe"]
+        return [_err("series_anchor_missing", lang, series=series)]
     return []
 
 
-def check_forbidden_series(page: dict, meta: dict) -> list[str]:
+def check_forbidden_series(page: dict, meta: dict, lang: str = "fr") -> list[ValidationError]:
     forbidden = meta.get("forbidden_series", [])
     if not forbidden:
         return []
     haystack = page.get("content", "") + str(page.get("infobox_fields", {}))
     hits = [kw for kw in forbidden if kw.lower() in haystack.lower()]
     if hits:
-        return [f"❌ Hallucination cross-série détectée : {hits[0]}"]
+        return [_err("forbidden_series", lang, hit=hits[0])]
     return []
 
 
-def check_forbidden_names(page: dict, meta: dict) -> list[str]:
+def check_forbidden_names(page: dict, meta: dict, lang: str = "fr") -> list[ValidationError]:
     forbidden = meta.get("forbidden_names", [])
     if not forbidden:
         return []
     haystack = page.get("content", "") + str(page.get("infobox_fields", {}))
     hits = [name for name in forbidden if name.lower() in haystack.lower()]
     if hits:
-        return [f"❌ Spoiler détecté (nom interdit) : {hits[0]}"]
+        return [_err("forbidden_name", lang, name=hits[0])]
     return []
 
 
 _IDENTITY_INFOBOX_KEYS = {"nom", "name", "titre", "title", "nom complet", "full name"}
 
 
-def check_identity_match(page: dict, meta: dict) -> list[str]:
+def check_identity_match(page: dict, meta: dict, lang: str = "fr") -> list[ValidationError]:
     """Grounding v1 — the page must describe the entity it was asked for.
 
     Catches identity confusions observed in real runs (page 'Verin' with
@@ -122,24 +139,20 @@ def check_identity_match(page: dict, meta: dict) -> list[str]:
 
     page_title = str(page.get("title", ""))
     if page_title and not matches(page_title):
-        errors.append(
-            f"❌ Titre de page '{page_title}' ≠ entité demandée '{expected}'"
-        )
+        errors.append(_err("identity_title_mismatch", lang, page_title=page_title, expected=expected))
 
     for key, value in (page.get("infobox_fields") or {}).items():
         if _normalize_name(str(key)) in _IDENTITY_INFOBOX_KEYS and not matches(str(value)):
-            errors.append(
-                f"❌ Infobox '{key}: {value}' ne correspond pas à l'entité '{expected}'"
-            )
+            errors.append(_err("identity_infobox_mismatch", lang, key=key, value=value, expected=expected))
     return errors
 
 
-def check_ungrounded_names(page: dict, meta: dict) -> list[str]:
-    """Grounding déterministe — noms propres inventés.
+def check_ungrounded_names(page: dict, meta: dict, lang: str = "fr") -> list[ValidationError]:
+    """Deterministic grounding — invented proper nouns.
 
-    Le prompt de génération (meta['prompt']) contient tout ce que le writer
-    avait le droit de savoir. Un nom propre de la page absent de ce prompt
-    est une invention (contamination cross-livre, personnage halluciné).
+    The generation prompt (meta['prompt']) contains everything the writer was
+    allowed to know. A page proper noun absent from that prompt is an invention
+    (cross-book contamination, hallucinated character).
     """
     source = meta.get("prompt", "")
     if not source:
@@ -152,38 +165,40 @@ def check_ungrounded_names(page: dict, meta: dict) -> list[str]:
         source,
         language=meta.get("language", "fr"),
     )
-    return [f"❌ Nom non ancré dans les extraits source : {n}" for n in names]
+    return [_err("ungrounded_name", lang, name=n) for n in names]
 
 
 _GROUNDING_IMPORTANCES = {"principal", "secondary"}
 _MAX_REPORTED_CLAIMS = 5
 
-# Same contract as .studio/agents/wiki-page-validator.agent.yaml (the agent
-# variant of this check) — keep the two in sync.
+# Prompt scaffolding stays English (STU-510/STU-517); only the language-anchoring
+# directive follows output_language. The .studio/agents/wiki-page-validator.agent.yaml
+# variant of this check keeps the same JSON contract (grounded / ungrounded_claims).
 _GROUNDING_PROMPT_TEMPLATE = """Respond with ONLY a valid JSON object. No markdown fences, no explanation.
 
-Tu es un validateur de pages wiki pour un roman.
+You are a wiki-page validator for a novel.
 
-Les extraits source ci-dessous sont la seule vérité autorisée :
+The source excerpts below are the only allowed truth:
 ---
 {source}
 ---
 
-Page wiki à vérifier :
+Wiki page to verify:
 ---
 {page_content}
 ---
 
-Pour chaque affirmation factuelle de la page (rôles, relations, événements,
-morts, titres), vérifie qu'elle est directement ancrée dans les extraits.
-N'utilise aucune connaissance externe sur le livre ou l'auteur.
-Les noms propres seuls ne sont pas des affirmations — ignore-les.
+For every factual claim in the page (roles, relationships, events, deaths,
+titles), check that it is directly grounded in the excerpts.
+Use no external knowledge about the book or the author.
+Bare proper nouns are not claims — ignore them.
+Write each claim description in {claim_language}.
 
-Retourne exactement :
+Return exactly:
 {{"grounded": true, "ungrounded_claims": []}}
-ou
-{{"grounded": false, "ungrounded_claims": ["description courte", ...]}}
-(au maximum {max_claims} claims)
+or
+{{"grounded": false, "ungrounded_claims": ["short description", ...]}}
+(at most {max_claims} claims)
 """
 
 
@@ -204,13 +219,13 @@ def _parse_grounding_response(raw: str) -> list[str]:
     return [str(c) for c in claims[:_MAX_REPORTED_CLAIMS] if str(c).strip()]
 
 
-def check_grounding_llm(page: dict, meta: dict) -> list[str]:
-    """Grounding LLM — vérification claim-par-claim via Ollama (opt-in).
+def check_grounding_llm(page: dict, meta: dict, lang: str = "fr") -> list[ValidationError]:
+    """LLM grounding — claim-by-claim verification via Ollama (opt-in).
 
-    Attrape les faits inventés sur des noms légitimes (ex : mort d'un
-    personnage qui survit dans le livre), hors de portée de la couche
-    déterministe. Dégradation gracieuse : sans Ollama, le check est sauté
-    avec un avertissement stderr — jamais d'échec de stage.
+    Catches invented facts about legitimate names (e.g. the death of a
+    character who survives in the book), beyond the deterministic layer's
+    reach. Graceful degradation: without Ollama the check is skipped with a
+    stderr warning — never a stage failure.
     """
     if not meta.get("grounding_llm"):
         return []
@@ -233,6 +248,7 @@ def check_grounding_llm(page: dict, meta: dict) -> list[str]:
     prompt = _GROUNDING_PROMPT_TEMPLATE.format(
         source=source,
         page_content=content,
+        claim_language=language_name(lang),
         max_claims=_MAX_REPORTED_CLAIMS,
     )
     raw = ollama.generate(
@@ -247,12 +263,15 @@ def check_grounding_llm(page: dict, meta: dict) -> list[str]:
         return []
 
     claims = _parse_grounding_response(raw)
-    return [f"❌ Affirmation non ancrée dans les extraits source : {c}" for c in claims]
+    return [_err("ungrounded_claim", lang, claim=c) for c in claims]
 
 
-def check_references_book_title(page: dict, allowed_book_titles: list[str]) -> list[str]:
+def check_references_book_title(
+    page: dict, allowed_book_titles: list[str], lang: str = "fr"
+) -> list[ValidationError]:
     content = page.get("content", "")
-    match = re.search(r"##\s*Références(.*?)(?=\n##|\Z)", content, re.IGNORECASE | re.DOTALL)
+    heading = re.escape(slot_label("references", lang))
+    match = re.search(rf"##\s*{heading}(.*?)(?=\n##|\Z)", content, re.IGNORECASE | re.DOTALL)
     if not match:
         return []
     block = match.group(1)
@@ -262,7 +281,7 @@ def check_references_book_title(page: dict, allowed_book_titles: list[str]) -> l
     errors = []
     for title in found:
         if title.lower() not in allowed_lower:
-            errors.append(f"❌ Titre non autorisé dans Références : '{title}'")
+            errors.append(_err("unauthorized_reference_title", lang, title=title))
     return errors
 
 
@@ -284,32 +303,36 @@ def _load_allowed_book_titles(meta: dict) -> list[str]:
 
 
 def validate_page(page: dict, meta: dict) -> dict:
-    errors: list[str] = []
+    lang = meta.get("language", "fr")
+    errors: list[ValidationError] = []
     # The FR-contamination check only applies to French books; the book
     # language comes from the item input (default 'fr', historical corpus).
-    if meta.get("language", "fr") == "fr":
-        errors += check_language_fr(page)
-    errors += check_epub_ids(page)
-    errors += check_identity_match(page, meta)
-    errors += check_infobox_keys(page)
-    errors += check_series_anchor(page, meta)
-    errors += check_forbidden_series(page, meta)
-    errors += check_forbidden_names(page, meta)
-    errors += check_ungrounded_names(page, meta)
-    errors += check_grounding_llm(page, meta)
+    if lang == "fr":
+        errors += check_language_fr(page, lang)
+    errors += check_epub_ids(page, lang)
+    errors += check_identity_match(page, meta, lang)
+    errors += check_infobox_keys(page, lang)
+    errors += check_series_anchor(page, meta, lang)
+    errors += check_forbidden_series(page, meta, lang)
+    errors += check_forbidden_names(page, meta, lang)
+    errors += check_ungrounded_names(page, meta, lang)
+    errors += check_grounding_llm(page, meta, lang)
     allowed_book_titles = _load_allowed_book_titles(meta)
     if allowed_book_titles:
-        errors += check_references_book_title(page, allowed_book_titles)
+        errors += check_references_book_title(page, allowed_book_titles, lang)
+    messages = [e.message for e in errors]
     return {
         "valid": len(errors) == 0,
-        "errors": errors,
-        "feedback": build_feedback(errors, meta.get("language", "fr")) if errors else "",
+        "errors": messages,
+        "error_codes": [e.code for e in errors],
+        "feedback": build_feedback(messages, lang) if errors else "",
     }
 
 
 def build_feedback(errors: list[str], lang: str = "fr") -> str:
     """Retry feedback for the writer. Scaffolding stays English (STU-510); only
-    the write-in-language directive follows ``lang`` (STU-514)."""
+    the write-in-language directive follows ``lang`` (STU-514). The error lines it
+    interpolates are already localized to ``lang`` (STU-517)."""
     lines = "\n".join(f"- {e}" for e in errors)
     lang_name = language_name(lang)
     return (

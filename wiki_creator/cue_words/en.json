@@ -387,5 +387,9 @@
       "publisher",
       "edition"
     ]
-  }
+  },
+  "placeholder_markers": [
+    "if known",
+    "content in english based only on the excerpts"
+  ]
 }

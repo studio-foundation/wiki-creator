@@ -51,6 +51,7 @@ OPTIONAL_KEYS = frozenset(
         "elision_prefixes",
         "first_person_artifact_tails",
         "language_id_markers",
+        "placeholder_markers",
     }
 )
 

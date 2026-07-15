@@ -1662,7 +1662,8 @@ def test_recovers_and_corrects_on_identity_only_rejection(monkeypatch, tmp_path)
     def fake_stage_output(run_id, stage_name):
         if stage_name == "wiki-page-validator":
             return {"valid": False,
-                    "errors": ["❌ Infobox 'nom: Kaltain' ne correspond pas à l'entité 'Verin'"]}
+                    "errors": ["❌ Infobox 'nom: Kaltain' ne correspond pas à l'entité 'Verin'"],
+                    "error_codes": ["identity_infobox_mismatch"]}
         return {
             "title": "Verin",
             "importance": "secondary",
@@ -1765,9 +1766,10 @@ def test_non_person_success_page_not_touched(monkeypatch, tmp_path):
 
 
 def test_rejection_is_identity_only(monkeypatch):
+    # Matching is on neutral codes (STU-517), not the localized prose.
     monkeypatch.setattr(
         "scripts.generate_wiki_pages.studio_io.load_studio_stage_output",
-        lambda run_id, stage: {"errors": ["❌ Infobox 'nom: X' ne correspond pas à l'entité 'Y'"]},
+        lambda run_id, stage: {"error_codes": ["identity_infobox_mismatch"]},
     )
     assert _rejection_is_identity_only("r1") is True
 
@@ -1775,10 +1777,7 @@ def test_rejection_is_identity_only(monkeypatch):
 def test_rejection_is_identity_only_false_when_mixed(monkeypatch):
     monkeypatch.setattr(
         "scripts.generate_wiki_pages.studio_io.load_studio_stage_output",
-        lambda run_id, stage: {"errors": [
-            "❌ Infobox 'nom: X' ne correspond pas à l'entité 'Y'",
-            "❌ Nom non ancré dans les extraits source : Z",
-        ]},
+        lambda run_id, stage: {"error_codes": ["identity_infobox_mismatch", "ungrounded_name"]},
     )
     assert _rejection_is_identity_only("r1") is False
 
@@ -1831,7 +1830,8 @@ def test_identity_recovery_trigger_is_counted(monkeypatch, tmp_path):
     def fake_stage_output(run_id, stage_name):
         if stage_name == "wiki-page-validator":
             return {"valid": False,
-                    "errors": ["❌ Infobox 'nom: Kaltain' ne correspond pas à l'entité 'Verin'"]}
+                    "errors": ["❌ Infobox 'nom: Kaltain' ne correspond pas à l'entité 'Verin'"],
+                    "error_codes": ["identity_infobox_mismatch"]}
         return {"title": "Verin", "importance": "secondary", "entity_type": "PERSON",
                 "infobox_fields": {"nom": "Kaltain"}, "content": "## Biographie\n\nVerin est un lord."}
 

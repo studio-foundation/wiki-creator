@@ -379,5 +379,9 @@
       "édition",
       "maison d'édition"
     ]
-  }
+  },
+  "placeholder_markers": [
+    "si connu",
+    "contenu en français basé uniquement sur les extraits"
+  ]
 }

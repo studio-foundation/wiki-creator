@@ -289,6 +289,22 @@ stubs:
   # localized "course" heading.
   event_failed:  {fr: "Échec technique de la génération.", en: "Technical failure while generating this page."}
   event_dry_run: {fr: "Page d'événement non générée (dry-run).", en: "Event page not generated (dry run)."}
+# STU-517: wiki-page-validator error messages, localized. Each error also carries
+# a stable neutral `code` (see scripts/wiki_page_validator.py) that generate_wiki_pages
+# matches on for identity-only recovery — the prose here is free to be reworded.
+validator:
+  errors:
+    language_contamination:    {fr: "Contenu en anglais détecté (marqueurs : {markers})", en: "English content detected (markers: {markers})"}
+    epub_id:                   {fr: "ID EPUB dans le contenu (ex: C07.xhtml)", en: "EPUB ID in the content (e.g. C07.xhtml)"}
+    infobox_key_prefix:        {fr: "Clé infobox préfixée par '- ' : {key}", en: "Infobox key prefixed with '- ': {key}"}
+    series_anchor_missing:     {fr: "Le titre de série '{series}' est absent du premier paragraphe", en: "The series title '{series}' is missing from the first paragraph"}
+    forbidden_series:          {fr: "Hallucination cross-série détectée : {hit}", en: "Cross-series hallucination detected: {hit}"}
+    forbidden_name:            {fr: "Spoiler détecté (nom interdit) : {name}", en: "Spoiler detected (forbidden name): {name}"}
+    identity_title_mismatch:   {fr: "Titre de page '{page_title}' ≠ entité demandée '{expected}'", en: "Page title '{page_title}' ≠ requested entity '{expected}'"}
+    identity_infobox_mismatch: {fr: "Infobox '{key}: {value}' ne correspond pas à l'entité '{expected}'", en: "Infobox '{key}: {value}' does not match entity '{expected}'"}
+    ungrounded_name:           {fr: "Nom non ancré dans les extraits source : {name}", en: "Name not grounded in the source excerpts: {name}"}
+    ungrounded_claim:          {fr: "Affirmation non ancrée dans les extraits source : {claim}", en: "Statement not grounded in the source excerpts: {claim}"}
+    unauthorized_reference_title: {fr: "Titre non autorisé dans Références : '{title}'", en: "Unauthorized title in References: '{title}'"}
 length_by_tier:
   principal: "4 to 6 paragraphs total across all sections."
   secondary: "1 to 2 paragraphs for the main section. Keep all other sections brief."
