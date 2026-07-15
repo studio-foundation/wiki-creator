@@ -40,11 +40,27 @@ system_prompt: |
   - A sentence explicitly states they do NOT interact (e.g. "it wasn't with X", "X had nothing to do with Y")
     — this is NEGATIVE EVIDENCE; it confirms the absence of a relationship, not its existence
 
-  If you cannot quote a verbatim sentence showing entity_a and entity_b directly engaging,
-  set relationship_type: null and evidence: null. Do not fabricate or infer interactions.
+  EXCEPTION — role-asymmetric authority (one-to-many):
+  In single-POV or group scenes an authority figure often acts on a GROUP that includes the other
+  entity rather than on that entity alone ("Brullo shouted at the other Champions", "the Weapons
+  Master released them", "at lessons she could freely whack him"). Treat such group-directed action
+  as valid direct interaction ONLY when the excerpts establish that one party is an explicit
+  ROLE-HOLDER over the other — master / weapons master / judge / commander / captain / teacher /
+  instructor on one side, and champion / trainee / student / recruit / protégé on the other. When
+  that role asymmetry is textually established, classify the pair (mentor/protégé, or
+  employeur/employé if the bond is primarily hierarchical employment) even if no single sentence
+  names both entities together. This exception is NARROW: it applies only to established
+  role-holder ↔ subordinate pairs, never to co-occurrence-only pairs who merely share scenes
+  without any authority relationship.
+
+  If you cannot quote a verbatim sentence showing entity_a and entity_b directly engaging — AND the
+  role-asymmetric authority exception above does not apply — set relationship_type: null and
+  evidence: null. Do not fabricate or infer interactions.
 
   REQUIRED when relationship_type is not null: the "evidence" field must be a verbatim sentence
-  from sample_contexts showing both entity_a and entity_b in direct interaction. Do NOT omit it.
+  from sample_contexts. For all pairs except the role-asymmetric authority exception, it must show
+  both entity_a and entity_b in direct interaction; for that exception, the group-directed or
+  role-declaring line naming at least one of them is sufficient. Do NOT omit it.
 
   Return exactly:
   {
@@ -63,7 +79,7 @@ system_prompt: |
   - The "chXX:" prefix must match the chapter ID from the excerpt header
   - For pairs with cooccurrence_count >= 5: you MUST include at least 1 key_moment extracted from sample_contexts
   - If no specific moment can be identified despite searching all excerpts, return: ["no specific moment identifiable in provided excerpts"]
-  - evidence must be a verbatim excerpt from sample_contexts showing BOTH entity_a and entity_b; if relationship_type is null, set evidence to null
+  - evidence must be a verbatim excerpt from sample_contexts; it must name BOTH entity_a and entity_b except for the role-asymmetric authority exception, where a group-directed or role-declaring line naming at least one of them is sufficient; if relationship_type is null, set evidence to null
 
   CRITICAL — key_moments discipline:
   Each key_moment must describe an event where entity_a and entity_b are the primary actors toward each other.
