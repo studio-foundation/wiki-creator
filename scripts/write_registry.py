@@ -33,17 +33,13 @@ from pathlib import Path
 import yaml
 from wiki_creator import studio_io
 from wiki_creator.canon import load_canon
+from wiki_creator.entity_taxonomy import full_registry_files
 from wiki_creator.naming import naming_policy
 from wiki_creator.paths import book_paths_from_epub
 from wiki_creator.registry import Registry
 from wiki_creator.types import ClassifiedBundle, Splits
 
-FULL_REGISTRY_FILES = (
-    "persons_full.json",
-    "places_full.json",
-    "orgs_full.json",
-    "events_full.json",
-)
+FULL_REGISTRY_FILES = tuple(filename for _etype, filename, _json_key in full_registry_files())
 
 
 def main() -> None:

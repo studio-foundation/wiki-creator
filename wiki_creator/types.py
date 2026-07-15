@@ -1,7 +1,33 @@
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Final, Literal
 
-ENTITY_TYPE = Literal["PERSON", "PLACE", "ORG", "EVENT", "OTHER"]
+# STU-505: base.yaml#entity_types is the single authority for the vocabulary, so
+# ENTITY_TYPE is a plain `str` (any declared type is a valid value at runtime).
+# FROZEN_ENTITY_TYPES is a static snapshot kept for reference and drift
+# detection; _assert_taxonomy_in_sync() checks it against base.yaml at import.
+ENTITY_TYPE = str
+FROZEN_ENTITY_TYPE = Literal[
+    "PERSON", "PLACE", "ORG", "EVENT", "FACTION", "OTHER", "SYNOPSIS", "COLLATION"
+]
+FROZEN_ENTITY_TYPES: Final[tuple[str, ...]] = (
+    "PERSON", "PLACE", "ORG", "EVENT", "FACTION", "OTHER", "SYNOPSIS", "COLLATION",
+)
+
+
+def _assert_taxonomy_in_sync() -> None:
+    """Fail fast if the frozen snapshot drifts from base.yaml#entity_types."""
+    from wiki_creator.entity_taxonomy import declared_types
+
+    declared = set(declared_types())
+    if declared != set(FROZEN_ENTITY_TYPES):
+        raise ValueError(
+            "types.FROZEN_ENTITY_TYPES is out of sync with base.yaml#entity_types: "
+            f"declared={sorted(declared)} frozen={sorted(FROZEN_ENTITY_TYPES)}"
+        )
+
+
+_assert_taxonomy_in_sync()
+
 IMPORTANCE = Literal["principal", "secondary", "figurant", "ignored"]
 TEMPORAL = Literal["present", "flashback", "mixed", "unknown"]
 
@@ -60,12 +86,11 @@ class SplitCluster:
 
 @dataclass
 class Splits:
+    # STU-505: per-type multi-clusters live under `by_type`, keyed by entity
+    # type, so a new resolution type needs no field here — the key set follows
+    # base.yaml#entity_types (entity_taxonomy.resolution_types()).
     singles_resolved: list[SplitSingle] = field(default_factory=list)
-    PERSON: list[SplitCluster] = field(default_factory=list)
-    PLACE: list[SplitCluster] = field(default_factory=list)
-    ORG: list[SplitCluster] = field(default_factory=list)
-    EVENT: list[SplitCluster] = field(default_factory=list)
-    OTHER: list[SplitCluster] = field(default_factory=list)
+    by_type: dict[str, list[SplitCluster]] = field(default_factory=dict)
     stats: dict = field(default_factory=dict)
     pov_detection: dict | None = None
 

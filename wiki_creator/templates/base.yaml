@@ -1,6 +1,43 @@
 version: 1
 entity_types:
+  # STU-505: each type is the single authority for its NER labels and export
+  # routing. `ner_labels` maps the (stock + custom fantasy-NER) labels this type
+  # absorbs; a type with no `ner_labels` is generation-only (SYNOPSIS, COLLATION)
+  # or the untyped fallback (OTHER). `export` holds what the presentation layer
+  # needs — no Python table restates any of this.
   PERSON:
+    ner_labels: [PER, PERSON]
+    export:
+      subdir: characters
+      full_key: persons
+      infobox_template: Infobox character
+      category_key: persons
+      category_default: Personnages
+      importance_categories: true
+      tome_label_key: persons_by_tome
+      infobox_source: |-
+        <includeonly>
+        {| class="infobox"
+        |-
+        ! colspan="2" | {{{name}}}
+        |-
+        | '''Aussi connu comme''' || {{{aliases|}}}
+        |-
+        | '''Titre(s)''' || {{{titles|}}}
+        |-
+        | '''Statut''' || {{{status|}}}
+        |-
+        | '''Espèce/Race''' || {{{species|}}}
+        |-
+        | '''Occupation''' || {{{occupation|}}}
+        |-
+        | '''Résidence''' || {{{residence|}}}
+        |-
+        | '''Affiliation''' || {{{affiliation|}}}
+        |-
+        | '''Première apparition''' || {{{first_seen|}}}
+        |}
+        </includeonly>
     infobox:
       - {token: nom,         group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: type,        group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
@@ -21,6 +58,29 @@ entity_types:
       - {token: trivia,        group: section, provenance: llm-prose,      obligation: OPT, tiers: [principal]}
       - {token: references,    group: section, provenance: extracted-fact, obligation: MIN, fallback: none, tiers: [figurant, secondary, principal]}
   PLACE:
+    ner_labels: [LOC, GPE, FAC, PLACE]
+    export:
+      subdir: locations
+      full_key: places
+      infobox_template: Infobox location
+      category_key: locations
+      category_default: Lieux
+      tome_label_key: locations_by_tome
+      infobox_source: |-
+        <includeonly>
+        {| class="infobox"
+        |-
+        ! colspan="2" | {{{name}}}
+        |-
+        | '''Type''' || {{{type|}}}
+        |-
+        | '''Localisation''' || {{{location|}}}
+        |-
+        | '''Première mention''' || {{{first_seen|}}}
+        |-
+        | '''Résidents notables''' || {{{residents|}}}
+        |}
+        </includeonly>
     infobox:
       - {token: nom,         group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: type,        group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
@@ -34,6 +94,31 @@ entity_types:
       - {token: trivia,        group: section, provenance: llm-prose,      obligation: OPT, tiers: [principal]}
       - {token: references,    group: section, provenance: extracted-fact, obligation: MIN, fallback: none, tiers: [figurant, secondary, principal]}
   ORG:
+    ner_labels: [ORG, NORP]
+    export:
+      subdir: organizations
+      full_key: orgs
+      infobox_template: Infobox organization
+      category_key: organizations
+      category_default: Organisations
+      tome_label_key: organizations_by_tome
+      infobox_source: |-
+        <includeonly>
+        {| class="infobox"
+        |-
+        ! colspan="2" | {{{name}}}
+        |-
+        | '''Type''' || {{{type|}}}
+        |-
+        | '''Leader(s)''' || {{{leaders|}}}
+        |-
+        | '''Membres notables''' || {{{members|}}}
+        |-
+        | '''Siège''' || {{{headquarters|}}}
+        |-
+        | '''Première mention''' || {{{first_seen|}}}
+        |}
+        </includeonly>
     infobox:
       - {token: nom,     group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: type,    group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
@@ -44,6 +129,28 @@ entity_types:
       - {token: relationships, group: section, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
       - {token: references,    group: section, provenance: extracted-fact, obligation: MIN, fallback: none, tiers: [figurant, secondary, principal]}
   EVENT:
+    ner_labels: [EVENT]
+    export:
+      subdir: events
+      full_key: events
+      infobox_template: Infobox event
+      category_key: events
+      category_default: Événements
+      infobox_source: |-
+        <includeonly>
+        {| class="infobox"
+        |-
+        ! colspan="2" | {{{name}}}
+        |-
+        | '''Participants''' || {{{participants|}}}
+        |-
+        | '''Lieu''' || {{{lieu|}}}
+        |-
+        | '''Chapitre''' || {{{chapitre|}}}
+        |-
+        | '''Issue''' || {{{issue|}}}
+        |}
+        </includeonly>
     infobox:
       - {token: nom,  group: infobox, provenance: batch-bound, obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: type, group: infobox, provenance: batch-bound, obligation: MIN, tiers: [figurant, secondary, principal]}
@@ -52,13 +159,48 @@ entity_types:
       - {token: biography,     group: section, provenance: llm-prose,      obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: relationships, group: section, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
       - {token: references,    group: section, provenance: extracted-fact, obligation: MIN, fallback: none, tiers: [figurant, secondary, principal]}
-  # Templateless, but declared: all three reach real output, and this file is
-  # the authority for the vocabulary. Real templates belong to STU-505.
-  #   OTHER     — ENTITY_TYPE fallback (types.py); exports into characters/
-  #   SYNOPSIS  — book synopsis page (STU-482); body-only, no infobox
-  #   COLLATION — collective page for a collated tier (STU-511); body-only,
-  #               built deterministically by wiki_preparation, never by an LLM
+  # FACTION (STU-505): first-order now that the taxonomy carries it. The custom
+  # fantasy-NER model emits FACTION; before STU-505 the extractor retagged it to
+  # ORG because the frozen Literal downstream refused to carry it.
+  FACTION:
+    ner_labels: [FACTION]
+    export:
+      subdir: factions
+      full_key: factions
+      infobox_template: Infobox faction
+      category_key: factions
+      category_default: Factions
+      infobox_source: |-
+        <includeonly>
+        {| class="infobox"
+        |-
+        ! colspan="2" | {{{name}}}
+        |-
+        | '''Type''' || {{{type|}}}
+        |-
+        | '''Chef(s)''' || {{{leaders|}}}
+        |-
+        | '''Membres notables''' || {{{members|}}}
+        |-
+        | '''Première mention''' || {{{first_seen|}}}
+        |}
+        </includeonly>
+    infobox:
+      - {token: nom,     group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
+      - {token: type,    group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
+      - {token: apparition, group: infobox, provenance: batch-bound, obligation: OPT, tiers: [figurant, secondary, principal]}
+      - {token: leaders, group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
+    sections:
+      - {token: biography,     group: section, provenance: llm-prose,      obligation: MIN, tiers: [figurant, secondary, principal]}
+      - {token: relationships, group: section, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
+      - {token: references,    group: section, provenance: extracted-fact, obligation: MIN, fallback: none, tiers: [figurant, secondary, principal]}
+  # Templateless, declared for the vocabulary. OTHER is the untyped NER fallback
+  # (exports into characters/, no infobox template); SYNOPSIS (STU-482) and
+  # COLLATION (STU-511) are generation-only pseudo-types, body-only, no infobox,
+  # so they carry no `ner_labels` and never enter resolution.
   OTHER:
+    export:
+      subdir: characters
     infobox: []
     sections: []
   SYNOPSIS:

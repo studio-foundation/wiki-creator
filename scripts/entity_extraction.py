@@ -34,6 +34,7 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 from wiki_creator import studio_io
 from wiki_creator.chapters import is_frontmatter_chapter
+from wiki_creator.entity_taxonomy import full_registry_files, ner_label_map, ner_types
 from wiki_creator.lang import infer_language as _infer_lang, load_lang_config as _load_lang_config
 from wiki_creator.nlp.loader import (
     ensure_sentencizer as _ensure_sentencizer,
@@ -107,23 +108,12 @@ def _warn_if_no_pos_tagger(nlp) -> None:
             file=sys.stderr,
         )
 
-# Map every NER label we can type to its canonical entity type. Covers both
-# standard spaCy models (PER/LOC/GPE/FAC/ORG/NORP/PERSON) and the project's
-# custom fantasy-NER model (wiki-ner-en: PERSON/PLACE/FACTION/ORG/EVENT).
-LABEL_TO_TYPE = {
-    "PER": "PERSON",
-    "PERSON": "PERSON",
-    "LOC": "PLACE",
-    "GPE": "PLACE",
-    "FAC": "PLACE",
-    "PLACE": "PLACE",
-    "ORG": "ORG",
-    "NORP": "ORG",
-    # FACTION → ORG: downstream type vocabulary is frozen to
-    # PERSON/PLACE/ORG/EVENT/OTHER (wiki_creator/types.py).
-    "FACTION": "ORG",
-    "EVENT": "EVENT",
-}
+# Map every NER label we can type to its canonical entity type. The authority is
+# base.yaml#entity_types ``ner_labels`` (STU-505) — covers both standard spaCy
+# models (PER/LOC/GPE/FAC/ORG/NORP/PERSON) and the custom fantasy-NER model
+# (wiki-ner-en: PERSON/PLACE/FACTION/ORG/EVENT). FACTION is first-order now: it
+# is no longer retagged to ORG.
+LABEL_TO_TYPE = ner_label_map()
 
 # Stock-model labels we deliberately do NOT extract. Kept explicit so the
 # load-time audit (_audit_ner_labels) can tell "intentionally dropped"
@@ -630,10 +620,10 @@ def split_by_type(entities_full: dict) -> dict[str, dict]:
     """
     Partition entities_full by entity type.
 
-    Returns a dict with keys "PERSON", "PLACE", "ORG", "EVENT".
-    Entities with other types (e.g. "OTHER") are silently dropped.
+    Returns a dict keyed by each NER type (entity_taxonomy.ner_types()).
+    Entities of any other type (e.g. "OTHER") are silently dropped.
     """
-    result: dict[str, dict] = {"PERSON": {}, "PLACE": {}, "ORG": {}, "EVENT": {}}
+    result: dict[str, dict] = {t: {} for t in ner_types()}
     for entity_id, entity in entities_full.items():
         t = entity.get("type", "OTHER")
         if t in result:
@@ -688,12 +678,7 @@ def run_test_mode() -> None:
 
     by_type = split_by_type(entities)
     print("\nPer-type file sizes (chars):")
-    for type_key, (filename, json_key) in [
-        ("PERSON", ("persons_full.json", "persons_full")),
-        ("PLACE", ("places_full.json", "places_full")),
-        ("ORG", ("orgs_full.json", "orgs_full")),
-        ("EVENT", ("events_full.json", "events_full")),
-    ]:
+    for type_key, filename, json_key in full_registry_files():
         size = len(json.dumps({json_key: by_type[type_key]}, ensure_ascii=False))
         print(f"  {filename}: {size} chars ({len(by_type[type_key])} entities)")
 
@@ -760,13 +745,7 @@ def main() -> None:
     paths = studio_io.paths_from_payload(payload)
     paths.processing.mkdir(parents=True, exist_ok=True)
     by_type = split_by_type(entities_full)
-    type_files = {
-        "PERSON": ("persons_full.json", "persons_full"),
-        "PLACE": ("places_full.json", "places_full"),
-        "ORG": ("orgs_full.json", "orgs_full"),
-        "EVENT": ("events_full.json", "events_full"),
-    }
-    for type_key, (filename, json_key) in type_files.items():
+    for type_key, filename, json_key in full_registry_files():
         records = {eid: EntityFull(**rec) for eid, rec in by_type[type_key].items()}
         payload = studio_io.to_dict(records)
         studio_io.from_dict(dict[str, EntityFull], payload)  # self-check: never write off-schema

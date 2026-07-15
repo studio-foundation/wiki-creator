@@ -21,11 +21,7 @@ def _book_tree(tmp_path: Path) -> tuple[Path, Path]:
 def _artifacts() -> tuple[dict, dict, dict]:
     splits = {
         "singles_resolved": [],
-        "PERSON": [],
-        "PLACE": [],
-        "ORG": [],
-        "EVENT": [],
-        "OTHER": [],
+        "by_type": {},
         "stats": {},
     }
     alias_output = {

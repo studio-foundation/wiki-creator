@@ -322,6 +322,28 @@ Inside `wiki-resolution`, order matters:
   canon today. `later_tome_overrides` is a boolean; STU-488 (the real consumer)
   wants "trace both with provenance rather than overwrite", so it will need to
   widen to an enum.
+- Unified entity taxonomy (STU-505): `base.yaml#entity_types` is the single
+  authority for the type vocabulary AND its routing. Each type declares
+  `ner_labels` (the stock+custom NER labels it absorbs) and an `export` block
+  (`subdir`, `full_key`, `infobox_template`, `infobox_source`, `category_key`,
+  `category_default`, `importance_categories`, `tome_label_key`) — the data the
+  five old Python tables (`types.py` Literal, `entity_extraction.LABEL_TO_TYPE`,
+  `export_helpers._INFOBOX_TEMPLATES`, `wiki_export._SUBDIR`,
+  `md2wiki._TEMPLATE_NAMES`) encoded separately. All consumers read it via
+  `wiki_creator/entity_taxonomy.py`; adding a type is a `base.yaml` edit, no
+  `.py` touched. `FACTION` is first-order now (`ner_labels: [FACTION]`) — the
+  extractor no longer retags it to `ORG`. `types.ENTITY_TYPE` is a plain `str`;
+  `FROZEN_ENTITY_TYPES` is a snapshot checked against `base.yaml` at import
+  (`_assert_taxonomy_in_sync` raises on drift). `entity_taxonomy.resolution_types()`
+  (NER types + `OTHER`) drives every per-type bucket — `Splits.by_type` is a
+  dict keyed by it (was five named fields), so `splits.json`/`split-clusters`
+  output nests clusters under `by_type`. `SYNOPSIS`/`COLLATION` stay declared as
+  generation-only pseudo-types (no `ner_labels`, never enter resolution). The
+  STU-504 `entity-type-declared` validator reads the same keys, so a run using a
+  type absent from `base.yaml` fails. Mention-count refinement in
+  `entity_classification.get_total_mentions` still threads only PERSON/PLACE/ORG/
+  EVENT full-registries; a FACTION entity's counts come from the surface index,
+  not its `*_full.json` — a possible fast-follow.
 
 ## Working Norms
 

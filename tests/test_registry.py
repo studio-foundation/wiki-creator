@@ -240,11 +240,7 @@ def _run16_artifacts() -> tuple[dict, dict, dict]:
     Mirrors tests/test_alias_resolution.py:1248."""
     splits = {
         "singles_resolved": [],
-        "PERSON": [],
-        "PLACE": [],
-        "ORG": [],
-        "EVENT": [],
-        "OTHER": [],
+        "by_type": {"PERSON": [], "PLACE": [], "ORG": [], "EVENT": [], "OTHER": []},
         "stats": {},
     }
     alias_output = {
@@ -328,7 +324,7 @@ def test_from_artifacts_unclustered_alias_gets_extraction_grouping():
 
 def test_from_artifacts_clustered_alias_gets_cluster_jw():
     splits, alias_output, persons_full = _run16_artifacts()
-    splits["PERSON"].append(
+    splits["by_type"]["PERSON"].append(
         {
             "canonical_candidate": "Perrington",
             "type": "PERSON",

@@ -57,34 +57,38 @@
    "relevant": true
   }
  ],
- "PERSON": [
-  {
-   "cluster_id": "cluster_001",
-   "type": "PERSON",
-   "canonical_candidate": "Captain Elias Thorn",
-   "all_mentions": [
-    "Captain Elias Thorn",
-    "Elias Thorn"
-   ],
-   "entity_ids": [
-    "entity_001",
-    "entity_005"
-   ],
-   "first_seen": "chapter_0",
-   "entity_count": 2,
-   "total_mentions": 10
-  }
- ],
- "PLACE": [],
- "ORG": [],
- "EVENT": [],
- "OTHER": [],
+ "by_type": {
+  "PERSON": [
+   {
+    "cluster_id": "cluster_001",
+    "type": "PERSON",
+    "canonical_candidate": "Captain Elias Thorn",
+    "all_mentions": [
+     "Captain Elias Thorn",
+     "Elias Thorn"
+    ],
+    "entity_ids": [
+     "entity_001",
+     "entity_005"
+    ],
+    "first_seen": "chapter_0",
+    "entity_count": 2,
+    "total_mentions": 10
+   }
+  ],
+  "PLACE": [],
+  "ORG": [],
+  "EVENT": [],
+  "FACTION": [],
+  "OTHER": []
+ },
  "stats": {
   "singles": 5,
   "multi_PERSON": 1,
   "multi_PLACE": 0,
   "multi_ORG": 0,
   "multi_EVENT": 0,
+  "multi_FACTION": 0,
   "multi_OTHER": 0
  },
  "pov_detection": {

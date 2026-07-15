@@ -35,9 +35,8 @@ from pathlib import Path
 import yaml
 
 
+from wiki_creator.entity_taxonomy import resolution_types
 from wiki_creator.lang import load_lang_config
-
-ENTITY_TYPES = ("PERSON", "PLACE", "ORG", "EVENT", "OTHER")
 
 
 def _default_noise_words() -> frozenset[str]:
@@ -82,8 +81,9 @@ def resolve(splits: dict, noise_words: frozenset[str] = _NOISE_WORDS) -> dict:
     entities.extend(splits.get("singles_resolved", []))
 
     # Multi-clusters: one cluster = one entity, no LLM needed
-    for entity_type in ENTITY_TYPES:
-        clusters = splits.get(entity_type, [])
+    by_type = splits.get("by_type") or {}
+    for entity_type in resolution_types():
+        clusters = by_type.get(entity_type, [])
         if not isinstance(clusters, list):
             print(f"Warning: {entity_type} is not a list, skipping", file=sys.stderr)
             continue

@@ -12,13 +12,13 @@ from pathlib import Path
 
 import yaml
 
+from wiki_creator import entity_taxonomy
 from wiki_creator.editorial_stance import EditorialStance, editorial_stance
 from wiki_creator.md2wiki import convert, make_infobox_call
 from wiki_creator.export_helpers import (
     page_filename,
     category_tags,
     index_limits,
-    infobox_template_content,
     main_page_content,
 )
 from wiki_creator.page_templates import output_language
@@ -30,14 +30,6 @@ from wiki_creator.spoiler_blocks import (
     inject_relationship_index,
     spoiler_collapse_after,
 )
-
-_SUBDIR = {
-    "PERSON": "characters",
-    "PLACE": "locations",
-    "ORG": "organizations",
-    "EVENT": "events",
-}
-
 
 def _load_epub_data(paths: BookPaths) -> dict:
     """Fallback: read epub metadata directly from disk."""
@@ -121,7 +113,7 @@ def render_page(
     page_content = infobox + "\n\n" + body
     if cats:
         page_content += "\n\n" + "\n".join(cats)
-    subdir = _SUBDIR.get(entity_type, "characters")
+    subdir = entity_taxonomy.subdir(entity_type)
     return f"{subdir}/{filename}", page_content
 
 
@@ -177,12 +169,8 @@ def main() -> None:
     wiki_dir = paths.output
     labels_cfg = export_cfg.get("categories", {}).get("labels", {})
     labels = {
-        "persons": labels_cfg.get("persons", "Personnages"),
         "principal": labels_cfg.get("principal", "Personnages principaux"),
         "secondary": labels_cfg.get("secondary", "Personnages secondaires"),
-        "locations": labels_cfg.get("locations", "Lieux"),
-        "organizations": labels_cfg.get("organizations", "Organisations"),
-        "events": labels_cfg.get("events", "Événements"),
         # Per-tome categories (STU-486): "{n}" is filled with the tome number.
         "persons_by_tome": labels_cfg.get("persons_by_tome", "Personnages du Tome {n}"),
         "locations_by_tome": labels_cfg.get("locations_by_tome", "Lieux du Tome {n}"),
@@ -190,23 +178,28 @@ def main() -> None:
             "organizations_by_tome", "Organisations du Tome {n}"
         ),
     }
+    # Per-type category labels come from base.yaml defaults (STU-505), overridable
+    # by the book YAML's export.categories.labels.
+    for etype in entity_taxonomy.declared_types():
+        cat_key = entity_taxonomy.category_key(etype)
+        if cat_key and cat_key not in labels:
+            labels[cat_key] = labels_cfg.get(cat_key) or entity_taxonomy.category_default(etype)
 
     # Create directories
     (wiki_dir / "templates").mkdir(parents=True, exist_ok=True)
-    for subdir in _SUBDIR.values():
+    for subdir in entity_taxonomy.subdirs():
         (wiki_dir / subdir).mkdir(exist_ok=True)
 
     files_written = 0
 
-    # Write infobox templates
-    for entity_type, template_name in [
-        ("PERSON", "Infobox_character"),
-        ("PLACE", "Infobox_location"),
-        ("ORG", "Infobox_organization"),
-        ("EVENT", "Infobox_event"),
-    ]:
-        path = wiki_dir / "templates" / f"{template_name}.wiki"
-        path.write_text(infobox_template_content(entity_type), encoding="utf-8")
+    # Write infobox templates (one per declared type with an infobox source)
+    for entity_type in entity_taxonomy.declared_types():
+        source = entity_taxonomy.infobox_source(entity_type)
+        template_name = entity_taxonomy.infobox_template_name(entity_type)
+        if not source or not template_name:
+            continue
+        path = wiki_dir / "templates" / f"{template_name.replace(' ', '_')}.wiki"
+        path.write_text(source, encoding="utf-8")
         files_written += 1
 
     # Write entity pages (and the synopsis page at the wiki root, if present)

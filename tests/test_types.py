@@ -62,7 +62,7 @@ def test_split_cluster_defaults():
 def test_splits_container_defaults():
     splits = Splits()
     assert splits.singles_resolved == []
-    assert splits.PERSON == []
+    assert splits.by_type == {}
     assert splits.pov_detection is None
 
 
