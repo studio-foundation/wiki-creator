@@ -162,6 +162,44 @@ Inside `wiki-resolution`, order matters:
   (classification), not collision rustines, so removing them needs a real spaCy
   run to verify — left in place.
 
+- Dropcaps (STU-519): word-splitting markup is rejoined in `parse_epub` by
+  `_flatten_inline_markup` — inline tags (`span`, `em`, `sup`, `a`, …) are
+  unwrapped and `soup.smooth()` merges the adjacent strings, *before*
+  `get_text(separator="\n")` can turn a tag edge into a word boundary. That is the
+  only correct place: once the text is flat, a dropcap fragment (`P`+`edro`) and a
+  real one-letter word (`A`+`silvery`) are indistinguishable — no regex and no
+  lexical-frequency check separates them (`wordfreq` scores `ove` and `ather` as
+  valid English, so it misses `M`+`ove` / `F`+`ather`, the library's only real
+  dropcaps). The old `clean_chapter_text` step 5b regex merged *any* isolated
+  capital + lowercase word and was pure corruption: 7361 distinct bogus tokens
+  across the 16 EPUBs (`Asilvery` — NER-tagged PLACE and eligible for a wiki page —
+  plus `Smajuscule`, `Aà`). Only two markup shapes in the library actually split a
+  word, both span-based: Eragon's small-caps chapter openers
+  (`D<span>ISCOVERY</span>`) and Hollow Star's `f_dropcapital`.
+  `first_person_artifact_tails` (`entity_extraction.py`, kills `Iwould`/`Ihave`) is
+  NOT dead — it now catches only genuine source typos (throne-of-glass has one real
+  `Isay`), which is what it was reduced to, not what it was written for. Note
+  `ebooklib` pretty-prints XHTML on `write_epub`, inserting whitespace between
+  sibling spans — an epub round-trip in a test cannot reproduce real dropcap markup,
+  so test `_flatten_inline_markup` on the markup string directly.
+- `clean_chapter_text` is audited, not accumulated (STU-519): every step was
+  disabled in turn and the whole library re-parsed to see what it actually did.
+  Five of ten did nothing. Three were deleted because they are **unreachable** given
+  the function's only production caller (`get_text(separator="\n", strip=True)` over
+  BS4-parsed HTML): `html.unescape` (html.parser resolves charrefs at parse time —
+  and on already-unescaped text it would eat a literal `&nbsp;` an author wrote),
+  and the two paragraph steps (that `get_text` returns `"\n".join` of non-empty
+  stripped strings, so `\n\n` cannot occur — which also means **chapter text has no
+  paragraph structure at all**, filed as STU-523; restoring it moves every STU-489
+  mention offset). Two more are inert on this corpus (NFC, ligatures: 0/1102) but
+  kept — they are not structurally unreachable, another publisher plausibly ships
+  NFD or `ﬁ`. Two were deleted as **actively harmful** band-aids over the markup
+  split `_flatten_inline_markup` now fixes at the root: `Àla`→`À la` only ever undid
+  step 5b's own damage and broke the real toponym `Plaza dels Àngels` into
+  `À ngels`; the `I 'll`→`I'll` repair had one genuine target (an inline split, now
+  fixed upstream) against two corruptions of Eldest dialect (`I 'ope` → `I'ope`).
+  When a step here looks dead, measure before deleting — and when it looks alive,
+  check it is not just undoing a neighbour.
 - `entity_extraction.py` keys chapter mentions by chapter ID, not chapter title.
 - `merge_entities.py` passes through only the current `resolve-clusters` output shape (runs before `alias-resolution` per the STU-276 pipeline order; STU-447 dropped the older `split-clusters` + `entity-resolution-*` compat branch and a vestigial `alias-resolution` priority check that predated STU-276 and never fired in production).
 - `split_clusters.py`, `relationship_extraction.py`, and `verify_entity_types.py` are intentionally tolerant of missing `file_path` in unit-test mode.

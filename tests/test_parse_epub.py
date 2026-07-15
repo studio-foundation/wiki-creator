@@ -99,16 +99,22 @@ def test_clean_isolated_newline_replaced_by_space():
 
 
 def test_clean_isolated_newline_mid_word():
-    """Single \\n between a capital letter and a lowercase word is a lettrine artefact.
-    After \\n→space (step 3) and then lettrine join (step 3b), 'I\\nntéressant' → 'Intéressant'.
+    """A single \\n is a separator, not a word boundary: it becomes a space.
+
+    Word-splitting inline markup is rejoined upstream by _flatten_inline_markup,
+    so clean_chapter_text never sees a fragment (STU-519).
     """
-    assert clean_chapter_text("I\nntéressant") == "Intéressant"
+    assert clean_chapter_text("I\nntéressant") == "I ntéressant"
 
 
-def test_clean_double_newline_preserved():
-    """Double \\n\\n (paragraph break) is preserved."""
-    result = clean_chapter_text("Paragraph one.\n\nParagraph two.")
-    assert result == "Paragraph one.\n\nParagraph two."
+def test_chapter_text_carries_no_paragraph_structure():
+    """get_text(separator="\\n", strip=True) joins non-empty strings, so \\n\\n
+    can never reach clean_chapter_text and every \\n flattens to a space.
+
+    Restoring paragraph breaks is STU-523 — it shifts every STU-489 mention offset.
+    """
+    body = "<p>Paragraph one.</p><p>Paragraph two.</p>"
+    assert _text_of(body) == "Paragraph one. Paragraph two."
 
 
 def test_clean_multiple_spaces_normalized():
@@ -121,23 +127,15 @@ def test_clean_leading_trailing_whitespace_stripped():
     assert clean_chapter_text("  hello world  ") == "hello world"
 
 
-def test_clean_html_entities_amp():
-    """&amp; is unescaped to &."""
-    assert clean_chapter_text("AT&amp;T") == "AT&T"
+def test_html_entities_are_resolved_by_the_parser():
+    """html.parser resolves charrefs at parse time (convert_charrefs default).
 
-
-def test_clean_html_mdash():
-    """&mdash; is unescaped to the em dash character."""
-    result = clean_chapter_text("word&mdash;word")
-    assert "\u2014" in result  # em dash U+2014
-
-
-def test_clean_html_nbsp_handled():
-    """&nbsp; est converti en espace standard (pas en \\xa0)."""
-    result = clean_chapter_text("hello&nbsp;world")
-    assert "&nbsp;" not in result
-    assert "\xa0" not in result  # doit être normalisé, pas laissé comme \xa0
-    assert result == "hello world"
+    clean_chapter_text therefore never saw an entity — its own html.unescape()
+    call was unreachable. &nbsp; still arrives as \\xa0 and needs normalizing.
+    """
+    result = _text_of("<p>AT&amp;T word&mdash;word hello&nbsp;world</p>")
+    assert result == "AT&T word\u2014word hello world"
+    assert "\xa0" not in result
 
 
 def test_clean_xa0_normalized_to_space():
@@ -217,6 +215,67 @@ def test_parse_epub_content_is_cleaned(tmp_path):
     assert "Sentence" in ch_content
 
 
+def _text_of(body: str) -> str:
+    """Run the parse_epub text pipeline over one chapter body, as parse_epub does."""
+    from bs4 import BeautifulSoup
+    from scripts.parse_epub import _flatten_inline_markup
+
+    soup = BeautifulSoup(f"<html><body>{body}</body></html>", "html.parser")
+    _flatten_inline_markup(soup)
+    return clean_chapter_text(soup.get_text(separator="\n", strip=True))
+
+
+def test_flatten_inline_markup_rejoins_dropcap_span(tmp_path):
+    """A dropcap letter in its own span belongs to the word that follows (STU-519).
+
+    Markup copied from a-cruel-and-fated-light.epub: the dropcap and the rest of
+    the word are sibling spans, which get_text(separator="\\n") would split.
+    """
+    body = (
+        '<p class="p_CIT"><span class="f_dropcapital">M</span>'
+        '<span class="f_ITAL">ove</span>'
+        '<span class="f_CIT">, screamed a voice.</span></p>'
+    )
+    assert _text_of(body) == "Move, screamed a voice."
+
+
+def test_flatten_inline_markup_rejoins_small_caps_heading():
+    """Small-caps chapter openers split the same way (01_eragon.epub)."""
+    body = '<h1 class="chapter">D<span class="small1">ISCOVERY</span></h1>'
+    assert _text_of(body) == "DISCOVERY"
+
+
+def test_flatten_inline_markup_keeps_block_level_boundaries():
+    """Flattening inline markup must not glue adjacent block elements together."""
+    body = "<p>First paragraph ends here</p><p>Second paragraph starts here</p>"
+    assert _text_of(body) == "First paragraph ends here Second paragraph starts here"
+
+
+def test_parse_epub_flattens_inline_markup(tmp_path):
+    """parse_epub wires _flatten_inline_markup in before extracting text."""
+    from ebooklib import epub
+    from scripts.parse_epub import parse_epub
+
+    book = epub.EpubBook()
+    book.set_title("Test Book")
+    book.set_language("en")
+
+    item = epub.EpubHtml(uid="chap", title="Chapter", file_name="chap.xhtml", lang="en")
+    body = '<h1>D<span class="small1">ISCOVERY</span></h1><p>' + "Padding. " * 30 + "</p>"
+    item.set_content(f"<html><body>{body}</body></html>".encode())
+
+    book.add_item(item)
+    book.spine = [("chap", True)]
+    book.add_item(epub.EpubNcx())
+    book.add_item(epub.EpubNav())
+
+    epub_path = str(tmp_path / "test.epub")
+    epub.write_epub(epub_path, book)
+
+    content = parse_epub(epub_path, language="en")["chapters"][0]["content"]
+    assert content.startswith("DISCOVERY")
+
+
 def _three_chapter_epub(tmp_path):
     import ebooklib  # noqa: F401
     from ebooklib import epub
@@ -272,25 +331,17 @@ def test_env_max_chapters(monkeypatch):
     assert _env_max_chapters() == 3
 
 
-def test_clean_lettrine_space_joined():
-    """Une lettre majuscule isolée suivie d'un espace et d'un mot en minuscule
-    est joinée (artefact lettrine HTML : 'P edro' → 'Pedro').
+def test_clean_keeps_one_letter_words_separate():
+    """A one-letter word followed by a real word is never merged (STU-519).
+
+    The old lettrine regex collapsed "A silvery" → "Asilvery", a plausible-looking
+    toponym the NER then tagged as a PLACE. Dropcaps are rejoined at the HTML level
+    instead — see test_parse_epub_dropcap_span_rejoins_its_word.
     """
-    assert clean_chapter_text("P edro Vidal") == "Pedro Vidal"
-    assert clean_chapter_text("L orca") == "Lorca"
-    assert clean_chapter_text("B arcelone") == "Barcelone"
-
-
-def test_clean_lettrine_does_not_affect_abbreviations():
-    """M. Pedro, Dr. House etc. ne sont pas modifiés (point après la lettre)."""
-    assert clean_chapter_text("M. Pedro") == "M. Pedro"
-    assert clean_chapter_text("Dr. House") == "Dr. House"
-
-
-def test_clean_lettrine_with_newline_separator():
-    """BeautifulSoup produces 'P\\nedro' for <span>P</span>edro — must also be joined."""
-    assert clean_chapter_text("P\nedro Vidal") == "Pedro Vidal"
-    assert clean_chapter_text("L\norca") == "Lorca"
+    assert clean_chapter_text("A silvery cloud drifted") == "A silvery cloud drifted"
+    assert clean_chapter_text("A brooding mist") == "A brooding mist"
+    assert clean_chapter_text("A hunting knife") == "A hunting knife"
+    assert clean_chapter_text("I would go") == "I would go"
 
 
 def test_clean_unicode_nfc_normalization():
@@ -335,11 +386,15 @@ def test_clean_extended_apostrophe_variants():
     assert clean_chapter_text("I\u2032ve seen it") == "I've seen it"
 
 
-def test_clean_rejoins_spaced_i_contractions():
-    """Split English I-contractions are repaired before downstream NER."""
-    assert clean_chapter_text("I 'll go now.") == "I'll go now."
-    assert clean_chapter_text("I ’ve seen this.") == "I've seen this."
-    assert clean_chapter_text("I  'd rather wait.") == "I'd rather wait."
+def test_clean_keeps_dialect_elision_intact():
+    """A space before an elided-h word is the author's, not damage (STU-519).
+
+    The old I-contraction repair rewrote Eldest's "I 'ope" (a character dropping
+    his aitches) to "I'ope". Its only genuine target, Inheritance's "I 'll insult",
+    was an inline-markup split now fixed by _flatten_inline_markup.
+    """
+    assert clean_chapter_text("But I 'ope you and the girl") == "But I 'ope you and the girl"
+    assert clean_chapter_text("I'll go now.") == "I'll go now."
 
 
 def test_clean_guillemets_normalisés():
@@ -347,15 +402,13 @@ def test_clean_guillemets_normalisés():
     assert clean_chapter_text("\u00abBonjour\u00bb") == '"Bonjour"'
 
 
-def test_clean_a_grave_artifact():
-    """'Àla', 'Àson', 'Àsa' artifacts get spaces re-inserted."""
-    assert clean_chapter_text("Àla fin") == "À la fin"
-    assert clean_chapter_text("Àson tour") == "À son tour"
-    assert clean_chapter_text("Àsa place") == "À sa place"
+def test_clean_keeps_a_grave_proper_nouns_intact():
+    """A word starting with À is never split (STU-519).
 
-
-def test_clean_a_grave_does_not_alter_correct_text():
-    """'À la' with proper spacing is preserved (not double-spaced)."""
+    The old 'Àla' → 'À la' rule only ever undid step 5b's own damage; its one
+    effect on real text was breaking "Plaza dels Àngels" into "À ngels".
+    """
+    assert clean_chapter_text("la Plaza dels Àngels, siège") == "la Plaza dels Àngels, siège"
     assert clean_chapter_text("À la maison") == "À la maison"
 
 
