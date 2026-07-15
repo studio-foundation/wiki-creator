@@ -219,6 +219,7 @@ def main() -> None:
     main_content = main_page_content(
         book_title, author, pages, labels, principals_shown, places_shown,
         expose_pipeline_metadata=stance.expose_pipeline_metadata,
+        lang=lang,
     )
     (wiki_dir / "Main_Page.wiki").write_text(main_content, encoding="utf-8")
     files_written += 1

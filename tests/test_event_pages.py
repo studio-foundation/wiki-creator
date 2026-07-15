@@ -108,6 +108,17 @@ def test_prompt_contains_facts_title_and_book():
     assert "## Déroulement" in prompt
 
 
+def test_prompt_localizes_heading_and_directive_by_lang():
+    event = _event(1, "a beat", participants=["Celaena"])
+    fr = build_event_prompt(event, "a beat", "TOG", lang="fr")
+    assert "## Déroulement" in fr and "in French" in fr
+    en = build_event_prompt(event, "a beat", "TOG", lang="en")
+    assert "## Course of events" in en and "in English" in en
+    assert "Déroulement" not in en
+    # grounding labels stay English regardless of output language (STU-510 split)
+    assert "Characters: Celaena" in fr and "Characters: Celaena" in en
+
+
 def test_prompt_declares_event_identity_contract():
     prompt = build_event_prompt(_event(1, "x"), "x", "TOG")
     assert f'"importance": "{EVENT_IMPORTANCE}"' in prompt
@@ -164,8 +175,8 @@ def test_prompt_injects_narrative_context_and_situate_rule():
     ]
     prompt = build_event_prompt(events[1], "Celaena arrives at the castle", "TOG", events=events)
     assert "NARRATIVE CONTEXT" in prompt
-    assert "Juste avant" in prompt and "Celaena is freed from Endovier" in prompt
-    assert "Juste après" in prompt and "Celaena wins the final duel" in prompt
+    assert "Just before" in prompt and "Celaena is freed from Endovier" in prompt
+    assert "Just after" in prompt and "Celaena wins the final duel" in prompt
     assert "Do NOT merely restate" in prompt
 
 

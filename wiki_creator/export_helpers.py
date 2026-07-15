@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from wiki_creator import entity_taxonomy
+from wiki_creator.page_templates import chrome_label, slot_label
 from wiki_creator.tome_labels import tome_number
 
 
@@ -94,11 +95,16 @@ def main_page_content(
     principals_shown: int = DEFAULT_PRINCIPALS_SHOWN,
     places_shown: int = DEFAULT_PLACES_SHOWN,
     expose_pipeline_metadata: bool = True,
+    lang: str = "fr",
 ) -> str:
     """Generate Main_Page.wiki content from pipeline data.
 
     ``expose_pipeline_metadata`` (STU-507): the page counts describe the run, not
-    the fiction — False drops the Statistiques block."""
+    the fiction — False drops the Statistiques block.
+
+    Headings, navigation link text and statistics labels follow ``lang`` (the
+    wiki's ``output_language``, STU-514) — only the ``[[:Category:X]]`` targets
+    stay on the separate ``export.categories`` axis carried by ``labels``."""
     persons = [p for p in pages if p["entity_type"] == "PERSON"]
     places = [p for p in pages if p["entity_type"] == "PLACE"]
     orgs = [p for p in pages if p["entity_type"] == "ORG"]
@@ -120,41 +126,41 @@ def main_page_content(
     ]
     if synopsis is not None:
         lines += [
-            "== Synopsis ==",
-            f"* [[{synopsis['title']}|Synopsis du livre]]",
+            f"== {chrome_label('synopsis', lang)} ==",
+            f"* [[{synopsis['title']}|{chrome_label('synopsis_link', lang)}]]",
             "",
         ]
     lines += [
-        "== Personnages principaux ==",
+        f"== {chrome_label('main_characters', lang)} ==",
     ]
     for p in principals:
         lines.append(f"* [[{p['title']}]]")
     lines += [
         "",
-        "== Lieux importants ==",
+        f"== {chrome_label('main_locations', lang)} ==",
     ]
     for p in major_places:
         lines.append(f"* [[{p['title']}]]")
     if events:
-        lines += ["", "== Événements ==", ]
+        lines += ["", f"== {slot_label('events', lang)} ==", ]
         for p in events:
             lines.append(f"* [[{p['title']}]]")
     lines += [
         "",
-        "== Navigation ==",
-        f"* [[:Category:{persons_label}|Tous les personnages]]",
-        f"* [[:Category:{locations_label}|Tous les lieux]]",
-        f"* [[:Category:{orgs_label}|Toutes les organisations]]",
+        f"== {chrome_label('navigation', lang)} ==",
+        f"* [[:Category:{persons_label}|{chrome_label('all_characters', lang)}]]",
+        f"* [[:Category:{locations_label}|{chrome_label('all_locations', lang)}]]",
+        f"* [[:Category:{orgs_label}|{chrome_label('all_organizations', lang)}]]",
     ]
     # Collective pages (STU-511) carry no category — Navigation is their only entry point.
     lines += [f"* [[{p['title']}]]" for p in collations]
     if expose_pipeline_metadata:
         lines += [
             "",
-            "== Statistiques ==",
-            f"* {len(pages)} pages wiki",
-            f"* {len(persons)} personnages",
-            f"* {len(places)} lieux",
-            f"* {len(orgs)} organisations",
+            f"== {chrome_label('statistics', lang)} ==",
+            f"* {len(pages)} {chrome_label('stat_pages', lang)}",
+            f"* {len(persons)} {chrome_label('stat_characters', lang)}",
+            f"* {len(places)} {chrome_label('stat_locations', lang)}",
+            f"* {len(orgs)} {chrome_label('stat_organizations', lang)}",
         ]
     return "\n".join(lines)

@@ -1,6 +1,8 @@
 """STU-508: post-generation editorial-stance consolidation is advisory, single
 pass, section-aware, and reports page/deviation/quote — never just a score."""
 
+import pytest
+
 from wiki_creator.consolidation import (
     build_report,
     format_summary,
@@ -8,6 +10,7 @@ from wiki_creator.consolidation import (
     scan_pages,
 )
 from wiki_creator.editorial_stance import EditorialStance
+from wiki_creator.lang import LangPackError
 
 
 def _page(content, title="Celaena", entity_type="PERSON"):
@@ -100,9 +103,9 @@ def test_empty_input_is_clean_report():
     assert "No editorial-stance drift" in format_summary(report)
 
 
-def test_missing_vocabulary_degrades_to_no_findings():
-    # An unknown language has no cue_words file → load_lang_config falls back to
-    # 'en'; a language with no markers key would yield nothing. Assert the scan
-    # never raises and returns a list.
+def test_unknown_language_raises_loudly():
+    # An unsupported language has no cue_words file → load_lang_config fails
+    # loudly (STU-451) instead of silently scanning with English markers.
     stance = EditorialStance(mode="in_universe", hybrid_exceptions=frozenset())
-    assert isinstance(scan_pages([_page("le roman")], stance, "xx"), list)
+    with pytest.raises(LangPackError):
+        scan_pages([_page("le roman")], stance, "xx")

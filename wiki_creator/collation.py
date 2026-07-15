@@ -17,6 +17,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from wiki_creator.page_templates import chrome_label
+
 DEFAULT_MODE = "dedicated"
 MODES = ("dedicated", "collective", "drop")
 
@@ -33,12 +35,7 @@ _DEFAULT_TITLE_LABEL_KEY = "minor_other"
 
 # Deliberately not the `secondary` category labels: a collective page holds the
 # tier below. A page title colliding with a category name reads as a bug.
-_DEFAULT_TITLE_LABELS = {
-    "minor_persons": "Personnages mineurs",
-    "minor_locations": "Lieux mineurs",
-    "minor_organizations": "Organisations mineures",
-    "minor_other": "Autres entités mineures",
-}
+_TITLE_LABEL_ORDER = ("minor_persons", "minor_locations", "minor_organizations", "minor_other")
 
 
 @dataclass
@@ -66,10 +63,11 @@ def collation_config(book_cfg: dict) -> dict[str, TierCollation]:
     return config
 
 
-def collation_labels(export_cfg: dict) -> dict[str, str]:
-    """Collective page titles from ``export.categories.labels``, French defaults."""
+def collation_labels(export_cfg: dict, lang: str = "fr") -> dict[str, str]:
+    """Collective page titles: ``export.categories.labels`` override the
+    ``lang``-localized base.yaml defaults (STU-514)."""
     labels = ((export_cfg or {}).get("categories") or {}).get("labels") or {}
-    return {key: labels.get(key, default) for key, default in _DEFAULT_TITLE_LABELS.items()}
+    return {key: labels.get(key) or chrome_label(key, lang) for key in _TITLE_LABEL_ORDER}
 
 
 def _promoted(entity: dict, events: list[dict], threshold: float | None) -> bool:
@@ -104,20 +102,20 @@ def partition_by_collation(
     return dedicated, collective, dropped
 
 
-def _entry(entity: dict) -> str:
+def _entry(entity: dict, lang: str = "fr") -> str:
     """One collective-page entry. Every line is a fact the classification
     artifact already carries; no LLM."""
     lines = [f"## {entity.get('canonical_name', '')}"]
     aliases = [str(a) for a in entity.get("aliases") or [] if a]
     if aliases:
-        lines.append(f"*Alias : {', '.join(aliases)}*")
+        lines.append(f"*{chrome_label('collation_aliases', lang).format(aliases=', '.join(aliases))}*")
     mentions = entity.get("total_mentions", 0)
     chapters = entity.get("chapters_present", 0)
-    lines.append(f"Mentionné {mentions} fois dans {chapters} chapitre(s).")
+    lines.append(chrome_label("collation_mentions", lang).format(mentions=mentions, chapters=chapters))
     return "\n\n".join(lines)
 
 
-def collective_pages(entities: list[dict], labels: dict[str, str]) -> list[dict]:
+def collective_pages(entities: list[dict], labels: dict[str, str], lang: str = "fr") -> list[dict]:
     """One page per title key, entries ordered by canonical name.
 
     Grouped by title, not by entity type: EVENT and OTHER share ``minor_other``,
@@ -129,7 +127,7 @@ def collective_pages(entities: list[dict], labels: dict[str, str]) -> list[dict]
         by_key.setdefault(key, []).append(entity)
 
     pages = []
-    for key in _DEFAULT_TITLE_LABELS:
+    for key in _TITLE_LABEL_ORDER:
         group = by_key.get(key)
         if not group:
             continue
@@ -140,7 +138,7 @@ def collective_pages(entities: list[dict], labels: dict[str, str]) -> list[dict]
                 "importance": COLLATION_IMPORTANCE,
                 "entity_type": COLLATION_ENTITY_TYPE,
                 "infobox_fields": {},
-                "content": "\n\n".join(_entry(e) for e in group),
+                "content": "\n\n".join(_entry(e, lang) for e in group),
             }
         )
     return pages

@@ -1,6 +1,15 @@
+import json
+
 import pytest
 
-from wiki_creator.lang import book_language, infer_language, load_lang_config
+from wiki_creator.lang import (
+    OPTIONAL_KEYS,
+    REQUIRED_KEYS,
+    LangPackError,
+    book_language,
+    infer_language,
+    load_lang_config,
+)
 
 
 def test_infer_language_fr():
@@ -25,9 +34,47 @@ def test_load_lang_config_en_has_existing_keys():
     assert "place_cue_words" in cfg
 
 
-def test_load_lang_config_unknown_falls_back_to_en():
-    cfg = load_lang_config("xx")
-    assert "place_cue_words" in cfg  # falls back to en.json
+def test_load_lang_config_unknown_raises():
+    with pytest.raises(LangPackError) as exc:
+        load_lang_config("xx")
+    msg = str(exc.value)
+    assert "xx" in msg
+    assert "docs/lang-packs.md" in msg  # actionable pointer
+
+
+def test_load_lang_config_unknown_opt_in_fallback():
+    cfg = load_lang_config("xx", allow_en_fallback=True)
+    assert "place_cue_words" in cfg  # explicit opt-in falls back to en.json
+
+
+def test_shipped_packs_satisfy_required_keys():
+    for code in ("en", "fr"):
+        cfg = load_lang_config(code)
+        assert REQUIRED_KEYS <= cfg.keys()
+
+
+def test_required_and_optional_keys_are_disjoint():
+    assert REQUIRED_KEYS.isdisjoint(OPTIONAL_KEYS)
+
+
+def test_load_lang_config_missing_required_key_raises(tmp_path, monkeypatch):
+    import wiki_creator.lang as lang
+
+    pack = {k: [] for k in REQUIRED_KEYS if k != "pronouns"}
+    (tmp_path / "zz.json").write_text(json.dumps(pack), encoding="utf-8")
+    monkeypatch.setattr(lang, "_CUE_WORDS_DIR", tmp_path)
+    with pytest.raises(LangPackError) as exc:
+        load_lang_config("zz")
+    assert "pronouns" in str(exc.value)
+
+
+def test_load_lang_config_malformed_json_raises(tmp_path, monkeypatch):
+    import wiki_creator.lang as lang
+
+    (tmp_path / "zz.json").write_text("{ not json", encoding="utf-8")
+    monkeypatch.setattr(lang, "_CUE_WORDS_DIR", tmp_path)
+    with pytest.raises(LangPackError):
+        load_lang_config("zz")
 
 
 def test_load_lang_config_en_has_new_keys():

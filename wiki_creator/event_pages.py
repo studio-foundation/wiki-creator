@@ -7,6 +7,8 @@ synopsis.py pure-module pattern.
 """
 from __future__ import annotations
 
+from wiki_creator.page_templates import language_name, slot_label
+
 EVENT_ENTITY_TYPE = "EVENT"
 EVENT_IMPORTANCE = "principal"
 
@@ -85,20 +87,20 @@ def _facts_block(event: dict) -> str:
     lines: list[str] = []
     description = str(event.get("description", "")).strip()
     if description:
-        lines.append(f"Événement : {description}")
+        lines.append(f"Event: {description}")
     participants = [str(p) for p in event.get("participants") or [] if p]
     if participants:
-        lines.append("Personnages : " + ", ".join(participants))
+        lines.append("Characters: " + ", ".join(participants))
     places = [str(p) for p in event.get("places") or [] if p]
     if places:
-        lines.append("Lieux : " + ", ".join(places))
+        lines.append("Places: " + ", ".join(places))
     outcome = str(event.get("outcome") or "").strip()
     if outcome and outcome != description:
-        lines.append("Issue : " + outcome)
+        lines.append("Outcome: " + outcome)
     for bullet in event.get("source_bullets") or []:
         text = str(bullet).strip()
         if text and text != description:
-            lines.append(f"Source : {text}")
+            lines.append(f"Source: {text}")
     return "\n".join(f"  {line}" for line in lines) if lines else "  (no facts available)"
 
 
@@ -136,25 +138,25 @@ def neighbor_context(
 
 
 def _context_line(event: dict) -> str:
-    """One background line for a neighbouring event: ``description (personnages
-    : … — lieux : …)``."""
+    """One background line for a neighbouring event: ``description (characters:
+    … — places: …)``."""
     description = str(event.get("description", "")).strip()
     if not description:
         return ""
     details: list[str] = []
     participants = [str(p) for p in event.get("participants") or [] if p]
     if participants:
-        details.append("personnages : " + ", ".join(participants))
+        details.append("characters: " + ", ".join(participants))
     places = [str(p) for p in event.get("places") or [] if p]
     if places:
-        details.append("lieux : " + ", ".join(places))
+        details.append("places: " + ", ".join(places))
     return description + (f" ({' — '.join(details)})" if details else "")
 
 
 def _context_block(before: list[dict], after: list[dict]) -> str:
     """Rendered read-only context, or ``""`` when there is nothing to situate."""
     sections: list[str] = []
-    for label, group in (("Juste avant", before), ("Juste après", after)):
+    for label, group in (("Just before", before), ("Just after", after)):
         lines = [f"  - {line}" for e in group if (line := _context_line(e))]
         if lines:
             sections.append(f"{label} :\n" + "\n".join(lines))
@@ -168,6 +170,7 @@ def build_event_prompt(
     forbidden_names: list[str] | None = None,
     events: list[dict] | None = None,
     context_window: int = DEFAULT_CONTEXT_WINDOW,
+    lang: str = "fr",
 ) -> str:
     """Anchored writer prompt for one event page.
 
@@ -176,8 +179,13 @@ def build_event_prompt(
     ONLY authorized source of truth — spoiler safety is inherited from the
     Event Layer, which is bounded to the current book. Title and infobox are
     built deterministically by the caller; the writer only authors prose.
+
+    Scaffolding and grounding labels stay English; the output-anchoring section
+    heading and the write-in-language directive follow ``lang`` (STU-514/510).
     """
     facts_block = _facts_block(event)
+    lang_name = language_name(lang)
+    heading = slot_label("course", lang)
 
     before, after = neighbor_context(event, events or [], context_window)
     context_rendered = _context_block(before, after)
@@ -219,8 +227,8 @@ FACTS ABOUT THIS EVENT — these are the ONLY facts you may state about the even
 WRITING RULES (follow strictly):
 
 Tone and register:
-- Write in encyclopedic French. Neutral, precise, factual.
-- Flowing prose in paragraphs — no bullet lists, no headings other than the single "## Déroulement" heading.
+- Write in encyclopedic {lang_name}. Neutral, precise, factual.
+- Flowing prose in paragraphs — no bullet lists, no headings other than the single "## {heading}" heading.
 - Use specific, concrete language anchored in the listed facts.
 
 Content constraints:
@@ -230,15 +238,15 @@ Content constraints:
 - Scope is strictly this book: no sequels, no series-level information, no real-world publication or author information.
 - When referring to characters or places, use their names EXACTLY as written in the facts — do not paraphrase, alter, or approximate names.
 - Never mention chapters or chapter numbers in your output.
-- Do NOT include a ## Références section — it is added automatically.
+- Do NOT include a ## {slot_label("references", lang)} section — it is added automatically.
 
 Structure:
-- The "content" field must contain a single "## Déroulement" heading followed by 1 to 3 paragraphs.
+- The "content" field must contain a single "## {heading}" heading followed by 1 to 3 paragraphs.
 - Keep infobox_fields empty: the infobox is added automatically.{forbidden_names_rule}
 
 ---
 
-REMINDER: Write ALL content in French. Source facts may be in English — your output must always be in French regardless.
+REMINDER: Write ALL content in {lang_name}. Source facts may be in another language — your output must always be in {lang_name} regardless.
 
 Output this JSON object:
 {{
