@@ -4,7 +4,7 @@
         generate-event-pages generate-event-pages-dry consolidate-stance \
         generate-pages generate-pages-dry generate-pages-primary generate-pages-entity \
         test test-coref test-coref-parallel \
-        smoke golden golden-update \
+        smoke golden golden-update eval-relationships \
         clean
 
 #BOOK ?= library/carlos-ruiz-zafon/el-cementerio-de-los-libros-olvidados/books/02-le-jeu-de-lange.yaml
@@ -147,6 +147,10 @@ golden:  ## Golden regression run: chained resolution stages vs committed golden
 
 golden-update:  ## Regenerate goldens after an INTENTIONAL behavior change, then review the diff
 	UPDATE_GOLDENS=1 python -m pytest tests/test_e2e_golden.py -q
+
+eval-relationships:  ## Score the relationship classifier against the hand-labelled gold fixture (STU-499). PREDICTIONS=<file> to score offline, else --run (needs studio/LLM)
+	python scripts/eval_relationship_classifier.py \
+		$(if $(PREDICTIONS),--predictions $(PREDICTIONS),--run --book $(BOOK))
 
 clean:  ## Remove generated files (keeps .gitkeep sentinels)
 	@SERIES_DIR=$$(python -c "from wiki_creator.paths import book_paths_from_yaml; p = book_paths_from_yaml('$(BOOK)'); print(p.processing.parent.parent)"); \

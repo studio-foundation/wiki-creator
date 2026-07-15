@@ -1,0 +1,154 @@
+# Hand-labelled relationship-classifier gold fixture — Throne of Glass, book 1 (STU-499).
+#
+# Each pair carries the gold typing plus a few representative scene excerpts
+# (sample_contexts) so the harness can feed the live classifier without a full
+# extraction run. `expected` is either a single relationship type, a list of
+# equally-correct types for a genuinely ambiguous pair (first = primary, used
+# for the per-class confusion), or `null` for the must-stay-null cases that
+# guard against hallucinated relations.
+#
+# Coverage targets (from the milestone audit, 2026-07-14):
+#   - typed pairs across ami / amoureux / allié / mentor-protégé / antagoniste /
+#     employeur-employé
+#   - STU-495 one-to-many authority (Brullo↔Celaena): group-directed evidence
+#   - STU-496 structural / faction pairs with no dyadic scene (Perrington↔King,
+#     Brullo↔King)
+#   - hallucination guard: pure co-occurrence at court must stay null
+#     (Westfall↔Kaltain — the canonical false-positive)
+book: throne-of-glass
+tome: "01"
+
+pairs:
+  # --- should classify -----------------------------------------------------
+  - entity_a: Celaena
+    entity_b: Chaol
+    expected: [ami, allié]
+    cooccurrence_count: 48
+    note: Captain of the Guard oversees the King's Champion; sparring and trust build into friendship.
+    sample_contexts:
+      - "Chaol led Celaena down to the training hall each dawn, and though she mocked him, she never once slipped away from his side."
+      - "\"You fight well,\" Chaol admitted, lowering his sword. Celaena grinned at the captain, wiping blood from her lip."
+      - "She trusted Chaol — and that, more than anything, frightened her."
+
+  - entity_a: Celaena
+    entity_b: Dorian
+    expected: [amoureux, ami]
+    cooccurrence_count: 41
+    note: Crown Prince and his Champion; flirtation deepens into romance across the book.
+    sample_contexts:
+      - "Dorian leaned closer, and Celaena felt her breath catch. \"You are the most insufferable woman I have ever met,\" the prince murmured, smiling."
+      - "They read together in the library until dawn, Dorian's hand brushing hers over the pages."
+      - "\"I want you to be happy,\" Dorian told her, and Celaena did not know what to say."
+
+  - entity_a: Celaena
+    entity_b: Nehemia
+    expected: [ami, allié]
+    cooccurrence_count: 33
+    note: Princess of Eyllwe and Celaena become close confidantes.
+    sample_contexts:
+      - "Nehemia sat with Celaena for hours, teaching her the marks of the Wyrd, the two of them laughing like sisters."
+      - "\"You are my friend,\" Nehemia said fiercely, gripping Celaena's hand. \"And I do not abandon my friends.\""
+
+  - entity_a: Celaena
+    entity_b: Nox
+    expected: [allié, ami]
+    cooccurrence_count: 18
+    note: Fellow Champion and thief; they watch each other's backs during the competition.
+    sample_contexts:
+      - "Nox slid into the seat beside Celaena at the Champions' table. \"Stick with me,\" he whispered, \"and we'll both survive this.\""
+      - "When the others sneered, Nox alone nodded at Celaena across the training yard."
+
+  - entity_a: Brullo
+    entity_b: Celaena
+    expected: mentor/protégé
+    cooccurrence_count: 14
+    note: >-
+      Weapons Master over the Champions — STU-495 one-to-many authority: the
+      evidence is group-directed ("the Champions") and names only the role-holder,
+      but the master/trainee asymmetry is textually established.
+    sample_contexts:
+      - "Brullo barked orders at the Champions, drilling them until their arms shook."
+      - "\"The Weapons Master says you've the makings of a killer,\" Chaol reported. Celaena only shrugged; Brullo's grudging respect meant little to her."
+      - "At weapons lessons Brullo drove the recruits through the same forms a hundred times."
+
+  - entity_a: Cain
+    entity_b: Celaena
+    expected: antagoniste
+    cooccurrence_count: 22
+    note: Rival Champion; open hostility escalating to a duel.
+    sample_contexts:
+      - "Cain sneered down at Celaena. \"When they pit us against each other, assassin, I'll enjoy breaking you.\""
+      - "Celaena met Cain's glare across the arena, hatred coiling tight in her chest."
+      - "Cain struck, and Celaena barely turned the blade; the two Champions circled like wolves."
+
+  - entity_a: Dorian
+    entity_b: Chaol
+    expected: [ami, allié]
+    cooccurrence_count: 27
+    note: Prince and Captain are lifelong best friends.
+    sample_contexts:
+      - "Dorian clapped Chaol on the shoulder. \"You worry too much, my friend,\" the prince laughed."
+      - "Chaol had guarded Dorian since they were boys; he would take a blade for the prince without a thought."
+
+  - entity_a: Celaena
+    entity_b: Arobynn
+    expected: [mentor/protégé, employeur/employé]
+    cooccurrence_count: 9
+    note: Arobynn Hamel, King of the Assassins, trained and owned Celaena — authority relation from backstory.
+    sample_contexts:
+      - "Arobynn had taught Celaena everything — how to hold a blade, how to pick a lock, how to kill without leaving a trace."
+      - "She still flinched at the memory of Arobynn's punishments; the King of the Assassins had made her what she was."
+
+  # --- structural / faction, no dyadic scene (STU-496) ---------------------
+  - entity_a: Perrington
+    entity_b: King
+    expected: [employeur/employé, allié]
+    cooccurrence_count: 12
+    note: >-
+      STU-496 structural/faction: Duke Perrington serves the King of Adarlan.
+      They share the court but the excerpts show no two-way dyadic exchange — the
+      hierarchy is stated, not staged.
+    sample_contexts:
+      - "Duke Perrington bowed low before the King of Adarlan, ever the loyal servant of the crown."
+      - "Perrington carried out the King's will across the conquered territories without question."
+
+  - entity_a: Brullo
+    entity_b: King
+    expected: [employeur/employé, allié]
+    cooccurrence_count: 6
+    note: >-
+      STU-496 structural: Brullo runs the King's competition on the crown's
+      orders; a role/employment tie with no direct scene between them.
+    sample_contexts:
+      - "The King had appointed Brullo to forge his Champions, and the Weapons Master served that command."
+      - "Brullo answered to the crown; every drill in the training hall was the King's design."
+
+  # --- must stay null: pure co-occurrence, hallucination guard -------------
+  - entity_a: Westfall
+    entity_b: Kaltain
+    expected: null
+    cooccurrence_count: 7
+    note: >-
+      The canonical false-positive. Chaol Westfall and the schemer Kaltain
+      Rompier share court scenes but never interact; the gate must return null.
+    sample_contexts:
+      - "Kaltain swept into the ballroom on Perrington's arm, her eyes fixed on the prince. Across the hall, Westfall stood at his post by the doors."
+      - "The captain watched the crowd. Kaltain laughed too loudly at something the duke had said."
+
+  - entity_a: Nehemia
+    entity_b: Kaltain
+    expected: null
+    cooccurrence_count: 5
+    note: Both are court women present at the same functions; no interaction between them.
+    sample_contexts:
+      - "Nehemia held herself apart from the Adarlanian court. Kaltain, for her part, sneered at the foreign princess from across the room."
+      - "At the banquet Kaltain plotted her ascent while Nehemia quietly studied the assembled lords."
+
+  - entity_a: Cain
+    entity_b: Kaltain
+    expected: null
+    cooccurrence_count: 4
+    note: Both antagonist-aligned and both drawn into Perrington's schemes, but they never share a direct exchange.
+    sample_contexts:
+      - "Cain trained in the yard below while Kaltain took the shadow-worm's whispers in her chambers."
+      - "Perrington used them both — Cain in the arena, Kaltain at court — though the two never spoke."
