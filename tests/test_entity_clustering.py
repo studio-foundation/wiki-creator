@@ -13,6 +13,9 @@ from scripts.entity_clustering import (
     extract_leading_titles,
     has_conflicting_gender_title,
     extract_surname_and_firstname,
+    load_title_prefixes,
+    load_masculine_titles,
+    load_feminine_titles,
 )
 
 
@@ -37,7 +40,8 @@ def test_tokenize_strips_inspecteur():
     assert tokenize_name("inspecteur Grandes") == ["grandes"]
 
 def test_tokenize_strips_don():
-    assert tokenize_name("Don Quijote") == ["quijote"]
+    # Spanish honorifics come from es.json (STU-452), not a hardcoded default.
+    assert tokenize_name("Don Quijote", load_title_prefixes("es")) == ["quijote"]
 
 def test_tokenize_keeps_full_name():
     assert tokenize_name("David Martín") == ["david", "martín"]
@@ -261,7 +265,13 @@ def test_gender_conflict_madame_vs_monsieur():
     assert has_conflicting_gender_title("Madame Dupont", "Monsieur Dupont") is True
 
 def test_gender_conflict_senora_vs_senor():
-    assert has_conflicting_gender_title("Señora Ramos", "Señor Ramos") is True
+    # Spanish gendered honorifics are loaded from es.json (STU-452).
+    assert has_conflicting_gender_title(
+        "Señora Ramos", "Señor Ramos",
+        load_title_prefixes("es"),
+        load_masculine_titles("es"),
+        load_feminine_titles("es"),
+    ) is True
 
 def test_gender_conflict_reversed():
     assert has_conflicting_gender_title("M. Vidal", "Mme Vidal") is True
@@ -274,6 +284,29 @@ def test_no_gender_conflict_no_title():
 
 def test_no_gender_conflict_mme_vs_no_title():
     assert has_conflicting_gender_title("Mme Vidal", "Pedro Vidal") is False
+
+
+# --- Spanish gendered titles loaded from es.json (STU-452) ---
+
+def test_load_masculine_titles_extends_with_spanish():
+    masc = load_masculine_titles("es")
+    assert {"don", "señor"} <= masc
+    assert {"m.", "monsieur"} <= masc  # French base kept
+
+
+def test_load_feminine_titles_extends_with_spanish():
+    fem = load_feminine_titles("es")
+    assert {"doña", "señora", "señorita"} <= fem
+    assert {"mme", "madame"} <= fem  # French base kept
+
+
+def test_load_gender_titles_no_language_is_base():
+    from scripts.entity_clustering import MASCULINE_TITLES, FEMININE_TITLES
+    assert load_masculine_titles(None) == MASCULINE_TITLES
+    assert load_feminine_titles(None) == FEMININE_TITLES
+    # Spanish honorifics are not in the hardcoded base anymore.
+    assert "señor" not in MASCULINE_TITLES
+    assert "doña" not in FEMININE_TITLES
 
 
 # --- should_cluster with Rule 1 ---
@@ -350,7 +383,7 @@ def test_build_clusters_mme_vidal_separated_from_m():
         "e_vidal": {"type": "PERSON", "raw_mentions": ["Vidal"], "first_seen": "ch01"},
         "e_don":   {"type": "PERSON", "raw_mentions": ["Don Pedro"], "first_seen": "ch03"},
     }
-    clusters, unclustered = build_clusters(entities)
+    clusters, unclustered = build_clusters(entities, language="es")
 
     all_items = list(clusters) + [
         {"cluster_id": f"unc_{eid}", "entity_ids": [eid]}
@@ -377,7 +410,9 @@ def test_build_clusters_pedro_vidal_aliases_stay_together():
         "e_vidal": {"type": "PERSON", "raw_mentions": ["Vidal"], "first_seen": "ch01"},
         "e_m":     {"type": "PERSON", "raw_mentions": ["M. Vidal"], "first_seen": "ch02"},
     }
-    clusters, unclustered = build_clusters(entities)
+    # Spanish "Don" honorific is stripped via es.json (STU-452); French base titles
+    # (M.) are always present, so an es book handles both.
+    clusters, unclustered = build_clusters(entities, language="es")
     assert len(clusters) == 1, f"Expected 1 cluster, got {len(clusters)}: {[c['entity_ids'] for c in clusters]}"
     assert set(clusters[0]["entity_ids"]) == {"e_pedro", "e_don", "e_vidal", "e_m"}
 

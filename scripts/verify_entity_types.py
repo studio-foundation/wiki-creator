@@ -29,13 +29,15 @@ import yaml
 from wiki_creator import studio_io
 from wiki_creator.llm import ollama
 
-# Keywords that indicate a genuine geographic entity — skip LLM for these
+# Base keywords that indicate a genuine geographic entity — skip LLM for these.
+# Language-specific place nouns (Spanish calle/plaza/barrio, …) are NOT hardcoded
+# here: they come from cue_words/<lang>.json `place_cue_words` via
+# load_geographic_keywords (STU-452).
 GEOGRAPHIC_KEYWORDS = frozenset({
     "rue", "avenue", "boulevard", "place", "quartier", "ville",
     "église", "eglise", "cathédrale", "cathedrale", "cimetière",
     "cimetiere", "gare", "marché", "marche", "pont", "tour",
     "château", "chateau", "palais", "hotel", "hôtel",
-    "calle", "plaza", "barrio",  # Spanish geographic terms
 })
 
 DEFAULT_MODEL = "mistral:7b-instruct"
@@ -46,10 +48,23 @@ TYPE_TO_KEY = {
 }
 
 
-def is_obvious_geographic(name: str) -> bool:
+def load_geographic_keywords(language: str | None = None) -> frozenset[str]:
+    """Return GEOGRAPHIC_KEYWORDS extended with `place_cue_words` from cue_words/{lang}.json."""
+    if not language:
+        return GEOGRAPHIC_KEYWORDS
+    try:
+        from wiki_creator.lang import load_lang_config
+        lang_cfg = load_lang_config(language)
+        return GEOGRAPHIC_KEYWORDS | frozenset(w.lower() for w in lang_cfg.get("place_cue_words", []))
+    except Exception as exc:
+        print(f"Warning: could not load cue_words for language {language!r}: {exc}", file=sys.stderr)
+        return GEOGRAPHIC_KEYWORDS
+
+
+def is_obvious_geographic(name: str, geographic_keywords: frozenset[str] = GEOGRAPHIC_KEYWORDS) -> bool:
     """Return True if the canonical name contains a geographic keyword."""
     tokens = name.lower().split()
-    return bool(set(tokens) & GEOGRAPHIC_KEYWORDS)
+    return bool(set(tokens) & geographic_keywords)
 
 
 def load_context_for_cluster(
@@ -145,6 +160,7 @@ def verify_clusters(
     clusters: list[dict],
     model: str = DEFAULT_MODEL,
     type_files: dict[str, str] | None = None,
+    geographic_keywords: frozenset[str] = GEOGRAPHIC_KEYWORDS,
 ) -> list[dict]:
     """
     Identify and return corrections for clusters that should be reclassified.
@@ -158,7 +174,7 @@ def verify_clusters(
             continue
 
         name = cluster.get("canonical_candidate", "")
-        if not name or is_obvious_geographic(name):
+        if not name or is_obvious_geographic(name, geographic_keywords):
             continue
 
         entity_ids = cluster.get("entity_ids", [])
@@ -210,8 +226,17 @@ def main() -> None:
             "ORG":   str(paths.processing / "orgs_full.json"),
         }
 
+    from wiki_creator.lang import book_language
+    try:
+        language = book_language(input_data)
+    except Exception:
+        language = None
+    geographic_keywords = load_geographic_keywords(language)
+
     model = input_data.get("ollama_model", DEFAULT_MODEL)
-    corrections = verify_clusters(clusters, model=model, type_files=type_files)
+    corrections = verify_clusters(
+        clusters, model=model, type_files=type_files, geographic_keywords=geographic_keywords
+    )
     corrected_clusters = apply_corrections(clusters, corrections)
 
     # Persist corrections for wiki-resolution restarts (STU-302)
