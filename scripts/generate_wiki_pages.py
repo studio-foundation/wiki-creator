@@ -756,6 +756,8 @@ def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> No
 
 # Kept in sync with check_identity_match in scripts/wiki_page_validator.py:
 # these are the only validator errors that identity confusion produces.
+# STU-517: this substring coupling on the validator's French prose is fragile —
+# to be replaced by a language-neutral error code when the validator is localized.
 _IDENTITY_ERROR_MARKERS = ("≠ entité demandée", "ne correspond pas à l'entité")
 
 
