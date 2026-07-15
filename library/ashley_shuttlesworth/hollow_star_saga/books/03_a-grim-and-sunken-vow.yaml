@@ -21,22 +21,21 @@ novel_summary: |
 # entities with total mentions below this value are dropped early.
 min_mentions_absolute: 3
 
-# Entity importance tiers. Omit the whole block to take the defaults shown below.
-# strategy: percentile cuts thresholds from THIS book's own distribution, so tiers
-# are not comparable across tomes; absolute uses fixed counts, stable in a series.
-#
-# notability:
-#   strategy: percentile
-#   percentiles: { principal: 0.90, secondary: 0.60, figurant: 0.10 }
-#   min_entities_for_percentile: 4   # under this many entities of a type, percentiles are meaningless
-#   fallback_absolute: { principal: 20, secondary: 10, figurant: 3 }
-#   per_type:                        # keys are entity types, not domain nouns
-#     EVENT: { strategy: absolute, principal: 5, secondary: 2, figurant: 1 }
-#     PERSON:
-#       strategy: absolute
-#       principal: { min_mentions: 50, min_chapters: 15 }   # a tier needs BOTH gates
-#       secondary: { min_mentions: 10, min_chapters: 3 }
-#       figurant: { min_mentions: 3 }
+# Entity importance tiers (STU-513). strategy: absolute — the cuts below are the
+# 0.90/0.60/0.10 percentiles of the SERIES-POOLED mention distribution, not this
+# tome's own, so a given mention count means the same tier in every tome. Under
+# the percentile default the same character could rank LOWER while being
+# mentioned MORE (4 such inversions across the series); a global cut makes
+# that impossible by construction.
+# EVENT/OTHER take fallback_absolute: too few samples (0 EVENT pooled over the
+# whole series) to cut a threshold from, and on this series the type holds only
+# misclassifications.
+notability:
+  strategy: absolute
+  fallback_absolute: { principal: 40, secondary: 10, figurant: 3 }
+  per_type:
+    PLACE: { principal: 13, secondary: 8, figurant: 3 }
+    ORG: { principal: 9, secondary: 4, figurant: 3 }
 
 generation:
   chapter_summary:
