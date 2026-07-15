@@ -5,6 +5,8 @@ import sys
 import os
 from pathlib import Path
 
+import pytest
+
 
 def _write_epub(path: Path, title: str) -> None:
     """Minimal readable EPUB: one chapter over MIN_CHAPTER_CHARS."""
@@ -450,12 +452,13 @@ def test_detect_pov_english_thought_markers_third_limited():
     assert result["pov"] == "third_limited"
 
 
-def test_detect_pov_unknown_language_degrades_gracefully():
-    # Unknown language falls back to en.json (load_lang_config behavior);
-    # detection still returns a well-formed result.
-    result = detect_pov("Ein Schiff segelte über das Meer.", language="de")
-    assert result["pov"] in {"omniscient", "third_limited", "first_person"}
-    assert "confidence" in result
+def test_detect_pov_unknown_language_raises_loudly():
+    # An unsupported language fails loudly at the first stage (STU-451) rather
+    # than silently detecting POV with English cue-words.
+    from wiki_creator.lang import LangPackError
+
+    with pytest.raises(LangPackError):
+        detect_pov("Ein Schiff segelte über das Meer.", language="de")
 
 
 from scripts.parse_epub import annotate_pov
