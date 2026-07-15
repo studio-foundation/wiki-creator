@@ -84,7 +84,7 @@ class GlinerNer:
     def _load(self):
         if self._model is None:
             import torch
-            from gliner import GLiNER  # type: ignore[import-untyped]  # ships no py.typed
+            from gliner import GLiNER
 
             device = "cuda" if torch.cuda.is_available() else "cpu"
             self._model = GLiNER.from_pretrained(self.model_name).to(device)
