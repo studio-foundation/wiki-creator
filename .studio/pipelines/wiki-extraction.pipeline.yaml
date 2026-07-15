@@ -13,6 +13,18 @@ stages:
       include:
         - input
 
+  - name: section-filter
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/section_filter.py
+    contract: section-filter
+    timeout_ms: 360000
+    context:
+      include:
+        - input
+        - previous_stage_output
+
   - name: entity-extraction
     kind: extraction
     executor: script

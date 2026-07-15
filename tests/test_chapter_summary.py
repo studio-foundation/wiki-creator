@@ -84,13 +84,13 @@ def test_summarize_chapters_uses_title_as_chapter_key():
     assert "x02" in summaries
 
 
-def test_summarize_chapters_excludes_frontmatter_and_metadata_entries():
+def test_summarize_chapters_excludes_tagged_frontmatter_entries():
     chapters = [
-        {"id": "sinopsis.xhtml", "title": "sinopsis.xhtml", "content": "Synopsis content."},
-        {"id": "info.xhtml", "title": "info.xhtml", "content": "Metadata content."},
-        {"id": "dedicatoria.xhtml", "title": "dedicatoria.xhtml", "content": "Dedication content."},
-        {"id": "acknowledgements.xhtml", "title": "Acknowledgements", "content": "Thanks to many people."},
-        {"id": "autor.xhtml", "title": "Author", "content": "Author bio."},
+        {"id": "sinopsis.xhtml", "title": "sinopsis.xhtml", "frontmatter": True, "content": "Synopsis content."},
+        {"id": "info.xhtml", "title": "info.xhtml", "frontmatter": True, "content": "Metadata content."},
+        {"id": "dedicatoria.xhtml", "title": "dedicatoria.xhtml", "frontmatter": True, "content": "Dedication content."},
+        {"id": "acknowledgements.xhtml", "title": "Acknowledgements", "frontmatter": True, "content": "Thanks to many people."},
+        {"id": "autor.xhtml", "title": "Author", "frontmatter": True, "content": "Author bio."},
         {"id": "ch01", "title": "Chapter 1", "content": "Celaena enters the castle and meets Dorian."},
     ]
 
