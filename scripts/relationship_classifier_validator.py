@@ -25,6 +25,11 @@ _GENERIC_EVOLUTIONS = {
     "relation stable",
 }
 
+# Role-asymmetric authority relations (STU-495): in single-POV / group scenes the
+# evidence is group-directed and often names only one party, so a single literal name
+# in evidence is sufficient for these types.
+_ROLE_ASYMMETRIC_TYPES = {"mentor/protégé", "employeur/employé"}
+
 
 def parse_payload(payload: dict) -> tuple[dict, dict]:
     prev = payload.get("previous_outputs", {})
@@ -65,10 +70,17 @@ def check_evidence_contains_both_names(clf: dict, meta: dict) -> list[str]:
             f"'{entity_a}' et '{entity_b}'"
         ]
 
-    missing = []
-    for name in (entity_a, entity_b):
-        if name and name.lower() not in evidence_lower:
-            missing.append(name)
+    present = [n for n in (entity_a, entity_b) if n and n.lower() in evidence_lower]
+    missing = [n for n in (entity_a, entity_b) if n and n.lower() not in evidence_lower]
+
+    if rt in _ROLE_ASYMMETRIC_TYPES:
+        if not present and (entity_a or entity_b):
+            return [
+                f"❌ evidence ne mentionne ni '{entity_a}' ni '{entity_b}' — "
+                f"fournis l'extrait verbatim (souvent une action dirigée vers un groupe) "
+                f"qui atteste la relation d'autorité"
+            ]
+        return []
 
     if missing:
         return [

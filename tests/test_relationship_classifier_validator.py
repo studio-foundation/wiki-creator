@@ -113,6 +113,40 @@ def test_check_evidence_missing_from_clf_fails():
     assert errors != []
 
 
+# ---------------------------------------------------------------------------
+# STU-495: role-asymmetric authority relations accept single-name evidence
+# ---------------------------------------------------------------------------
+
+def test_check_evidence_asymmetric_accepts_only_role_holder():
+    """mentor/protégé evidence naming only the role-holder (group-directed) passes."""
+    clf = {"relationship_type": "mentor/protégé", "evidence": "Brullo shouted at the other Champions."}
+    meta = {"entity_a": "Brullo", "entity_b": "Celaena"}
+    assert check_evidence_contains_both_names(clf, meta) == []
+
+
+def test_check_evidence_asymmetric_accepts_only_subordinate():
+    """employeur/employé evidence naming only the subordinate passes."""
+    clf = {"relationship_type": "employeur/employé", "evidence": "At lessons Celaena could freely whack him."}
+    meta = {"entity_a": "Brullo", "entity_b": "Celaena"}
+    assert check_evidence_contains_both_names(clf, meta) == []
+
+
+def test_check_evidence_asymmetric_fails_when_neither_named():
+    """Asymmetric evidence naming neither entity still fails."""
+    clf = {"relationship_type": "mentor/protégé", "evidence": "The recruits trained all morning."}
+    meta = {"entity_a": "Brullo", "entity_b": "Celaena"}
+    errors = check_evidence_contains_both_names(clf, meta)
+    assert errors != []
+
+
+def test_check_evidence_symmetric_still_requires_both():
+    """Non-asymmetric types (e.g. ami) still require both names."""
+    clf = {"relationship_type": "ami", "evidence": "Brullo shouted at the other Champions."}
+    meta = {"entity_a": "Brullo", "entity_b": "Celaena"}
+    errors = check_evidence_contains_both_names(clf, meta)
+    assert errors != []
+
+
 # STU-287: null relationship_type is a valid response (no direct interaction)
 
 def test_null_relationship_type_is_valid():
