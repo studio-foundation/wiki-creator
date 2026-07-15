@@ -53,7 +53,9 @@ TYPE_FILES = {
 
 
 def _sentences(text: str) -> list[str]:
-    return [s.strip() for s in re.split(r"(?<=\.)\s+", text) if s.strip()]
+    # A paragraph break ends a sentence even with no period — a chapter heading
+    # has none, and doc.sents would not run it into the paragraph below.
+    return [s.strip() for s in re.split(r"(?<=\.)\s+|\n{2,}", text) if s.strip()]
 
 
 def _context(sentences: list[str], char_pos: int, text: str) -> str:
@@ -131,7 +133,8 @@ def main() -> None:
 
     # Chapter text comes from the parser, never from a second reconstruction of
     # the fixtures here: they carry markup (dropcap spans, entities, a ligature)
-    # whose text form only parse_epub knows (STU-524).
+    # whose text form only parse_epub knows (STU-524), and the \n\n block
+    # structure it emits (STU-523). Offsets are seeded against that exact text.
     with tempfile.TemporaryDirectory() as tmp:
         epub_path = test_e2e_smoke._build_smoke_epub(Path(tmp))
         ctx = yaml.safe_dump({"file_path": str(epub_path), "language": "en"})

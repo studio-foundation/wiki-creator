@@ -21,22 +21,22 @@
     "chapter_0": [
      {
       "surface": "Port Saffron",
-      "start": 171,
-      "end": 183
+      "start": 172,
+      "end": 184
      }
     ],
     "chapter_1": [
      {
       "surface": "Port Saffron",
-      "start": 92,
-      "end": 104
+      "start": 93,
+      "end": 105
      }
     ],
     "chapter_3": [
      {
       "surface": "Port Saffron",
-      "start": 422,
-      "end": 434
+      "start": 423,
+      "end": 435
      }
     ]
    },
@@ -51,7 +51,7 @@
    "first_seen": "chapter_2",
    "mentions_by_chapter": {
     "chapter_2": [
-     "Warehouse Nine That night Mira Vale found the junior clerk drinking alone in the café. Mira Vale asked careful questions and bought careful answers.",
+     "Warehouse Nine That night Mira Vale found the junior clerk drinking alone in the café.",
      "Mira Vale asked careful questions and bought careful answers. Warehouse nine held the cargo of the Heron, the clerk admitted at last. Mira Vale smiled, paid the keeper, and slipped back into the dark.",
      "By the old wall on the 9th pier, Captain Elias Thorn waited with two lanterns and a crowbar. \"Warehouse nine,\" Mira Vale whispered. Elias Thorn nodded once and picked up the iron bar."
     ]
@@ -65,13 +65,13 @@
      },
      {
       "surface": "Warehouse nine",
-      "start": 149,
-      "end": 163
+      "start": 150,
+      "end": 164
      },
      {
       "surface": "Warehouse nine",
-      "start": 382,
-      "end": 396
+      "start": 383,
+      "end": 397
      }
     ]
    },

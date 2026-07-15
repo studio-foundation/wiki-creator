@@ -169,7 +169,7 @@ def test_parse_epub_survives_publisher_markup(parse_result):
     """
     text = " ".join(ch["content"] for ch in parse_result["chapters"])
     assert "Captain Elias Thorn stood" in text          # dropcap sibling spans
-    assert "North The Heron slipped" in text            # small-caps opener
+    assert "North\n\nThe Heron slipped" in text         # small-caps opener
     assert "the 9th pier" in text                       # superscript ordinal
     assert '"There," Mira Vale said' in text            # inline tag before punctuation
     assert "coast—harbor masters, tax men & brokers" in text  # &mdash; &amp;

@@ -23,12 +23,12 @@ def fastcoref_available() -> bool:
 
 requires_en_sm = pytest.mark.skipif(
     not spacy_model_available("en_core_web_sm"),
-    reason="requires spaCy model en_core_web_sm (python -m spacy download en_core_web_sm)",
+    reason="requires spaCy model en_core_web_sm (pip install -e '.[dev]')",
 )
 
 requires_fr_lg = pytest.mark.skipif(
     not spacy_model_available("fr_core_news_lg"),
-    reason="requires spaCy model fr_core_news_lg (python -m spacy download fr_core_news_lg)",
+    reason="requires spaCy model fr_core_news_lg (pip install -e '.[models]')",
 )
 
 requires_es_sm = pytest.mark.skipif(

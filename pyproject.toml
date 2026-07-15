@@ -31,6 +31,17 @@ dev = [
     "mypy>=1.0",
     "types-networkx",
     "types-PyYAML",
+    # The NER-dependent tests need a real pipeline; the small model is enough
+    # and keeps a dev install light. Without it they skip (tests/_markers.py).
+    "en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl",
+]
+# The spaCy models the library's books declare. Not on PyPI, so nothing pulls
+# them transitively and a book whose model is absent silently runs a smaller
+# sibling instead (STU-522). Pinned to wheels built for spaCy 3.8: a spaCy minor
+# bump fails this install rather than resolving to a mismatched model.
+models = [
+    "en_core_web_lg @ https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.8.0/en_core_web_lg-3.8.0-py3-none-any.whl",
+    "fr_core_news_lg @ https://github.com/explosion/spacy-models/releases/download/fr_core_news_lg-3.8.0/fr_core_news_lg-3.8.0-py3-none-any.whl",
 ]
 # Coreference resolution (scripts/relationship_extraction.py, opt-in via
 # `coref: true` in the book YAML). Kept out of core deps: pulls torch and
@@ -56,6 +67,11 @@ Homepage = "https://github.com/studio-foundation/wiki-creator"
 # both (STU-521).
 module = ["gliner.*", "torch.*"]
 ignore_missing_imports = true
+
+[tool.hatch.metadata]
+# The spaCy models in the `dev` and `models` extras are wheel URLs, not PyPI
+# names — hatchling rejects a direct reference without this (STU-522).
+allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 # `scripts` is packaged too: pipeline stage executors import sibling stages
