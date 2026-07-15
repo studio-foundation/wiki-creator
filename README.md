@@ -28,9 +28,10 @@ The workflow is split into four Studio pipelines, each with structurally validat
 
 - Python 3.11+
 - [Studio CLI](https://github.com/studio-foundation/studio) installed from source
-- A spaCy model matching your book's language:
-  - French books: `python -m spacy download fr_core_news_lg`
-  - English books: `python -m spacy download en_core_web_sm`
+- The spaCy models the books declare — installed by the `models` extra below
+  (`en_core_web_lg`, `fr_core_news_lg`; ~1 GB). Skipping it does not fail the
+  run: a missing model falls back to a smaller sibling of the same language and
+  warns, so the book runs on a model it did not declare.
 
 > **Language support:** the pipeline is French-first — page generation and
 > validation target French output by default. Set a top-level `language:` key
@@ -43,7 +44,7 @@ The workflow is split into four Studio pipelines, each with structurally validat
 ```bash
 git clone https://github.com/studio-foundation/wiki-creator.git
 cd wiki-creator
-pip install -e .
+pip install -e ".[models]"
 # Optional: coreference resolution support (pulls torch, large download)
 pip install -e ".[coref]"
 studio config set provider anthropic --api-key $ANTHROPIC_API_KEY
