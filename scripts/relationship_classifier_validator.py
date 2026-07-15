@@ -30,6 +30,12 @@ _GENERIC_EVOLUTIONS = {
 # in evidence is sufficient for these types.
 _ROLE_ASYMMETRIC_TYPES = {"mentor/protégé", "employeur/employé"}
 
+# Structural relationships (STU-496): pairs that never share a dyadic scene (rival
+# Champions, institutional employer, mediated narrator-attributed killer). The
+# classifier flags them with evidence_kind == "structural"; their evidence is a
+# role/institution/causation line that may name only one party, like the asymmetric case.
+_STRUCTURAL_EVIDENCE_KIND = "structural"
+
 
 def parse_payload(payload: dict) -> tuple[dict, dict]:
     prev = payload.get("previous_outputs", {})
@@ -73,12 +79,17 @@ def check_evidence_contains_both_names(clf: dict, meta: dict) -> list[str]:
     present = [n for n in (entity_a, entity_b) if n and n.lower() in evidence_lower]
     missing = [n for n in (entity_a, entity_b) if n and n.lower() not in evidence_lower]
 
-    if rt in _ROLE_ASYMMETRIC_TYPES:
+    is_structural = clf.get("evidence_kind") == _STRUCTURAL_EVIDENCE_KIND
+    if is_structural or rt in _ROLE_ASYMMETRIC_TYPES:
         if not present and (entity_a or entity_b):
+            reason = (
+                "atteste le rôle/l'institution/la causation structurelle"
+                if is_structural
+                else "atteste la relation d'autorité (souvent une action dirigée vers un groupe)"
+            )
             return [
                 f"❌ evidence ne mentionne ni '{entity_a}' ni '{entity_b}' — "
-                f"fournis l'extrait verbatim (souvent une action dirigée vers un groupe) "
-                f"qui atteste la relation d'autorité"
+                f"fournis l'extrait verbatim qui {reason}"
             ]
         return []
 

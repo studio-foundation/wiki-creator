@@ -32,11 +32,43 @@ from scripts.relationship_extraction import (
 
 # Fields the LLM classifier is allowed to contribute to a relationship dict
 # (relationship-classifier-item.contract.yaml required_fields ∩ Relationship).
-# Everything else the freeform LLM JSON might carry (reasoning, notes, …) is
-# dropped so {**pair, **classification} can only produce a valid Relationship.
+# Everything else the freeform LLM JSON might carry (reasoning, notes,
+# evidence_kind, …) is dropped so {**pair, **classification} can only produce a
+# valid Relationship.
 _KNOWN_CLASSIFICATION_KEYS = frozenset(
     {"relationship_type", "direction", "evolution", "key_moments", "evidence"}
 )
+
+# STU-496: how many per-entity role/status excerpts to surface to the classifier.
+_MAX_ROLE_CONTEXTS = 6
+
+
+def _entity_role_contexts(
+    registry: Registry, max_per_entity: int = _MAX_ROLE_CONTEXTS
+) -> dict[str, list[str]]:
+    """Per-entity context sentences that establish role/status/faction (STU-496).
+
+    Structural pairs (rival Champions, institutional employer, mediated killer)
+    never share a dyadic scene, so the classifier needs each entity's own
+    role-establishing excerpts. The first mention usually introduces the
+    character with their title/role, so the earliest context is always kept;
+    the rest are sampled evenly across the entity's mentions.
+    """
+    out: dict[str, list[str]] = {}
+    for rec in registry.entities:
+        seen: set[str] = set()
+        contexts: list[str] = []
+        for mention in rec.mentions:
+            sentence = (mention.context or "").strip()
+            if sentence and sentence not in seen:
+                seen.add(sentence)
+                contexts.append(sentence)
+        if len(contexts) <= max_per_entity:
+            out[rec.canonical_name] = contexts
+        else:
+            step = len(contexts) / max_per_entity
+            out[rec.canonical_name] = [contexts[int(i * step)] for i in range(max_per_entity)]
+    return out
 
 
 def _load_done_keys(output_path: Path) -> tuple[set[tuple[str, str]], list[dict]]:
@@ -109,12 +141,14 @@ def main() -> None:
     # collapses them so each canonical pair is classified exactly once, on the
     # summed cooccurrence signal instead of two weak fragments.
     registry_path = book_paths.processing / "registry.json"
+    role_contexts: dict[str, list[str]] = {}
     if registry_path.exists():
         registry = Registry.load(registry_path)
         before = len(relationships)
         relationships = fold_relationships(relationships, registry)
         # Registry types are refined (post entity-classification) — prefer them.
         entity_types = {rec.canonical_name: rec.entity_type for rec in registry.entities}
+        role_contexts = _entity_role_contexts(registry)
         print(
             f"[classify-relationships] Folded {before} surface edges into "
             f"{len(relationships)} canonical pairs via registry.alias_table()",
@@ -123,7 +157,7 @@ def main() -> None:
     else:
         print(
             f"[classify-relationships] registry.json not found ({registry_path}) — "
-            "classifying unfolded surface edges",
+            "classifying unfolded surface edges, no role contexts (STU-496)",
             file=sys.stderr,
         )
 
@@ -164,6 +198,8 @@ def main() -> None:
                     pair,
                     novel_summary=novel_summary,
                     additional_context="",
+                    role_contexts_a=role_contexts.get(pair.get("entity_a", ""), []),
+                    role_contexts_b=role_contexts.get(pair.get("entity_b", ""), []),
                 )
                 if classification and not classification.get("error"):
                     classification = {

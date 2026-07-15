@@ -1019,14 +1019,25 @@ def _run_studio_classifier_item(
     *,
     novel_summary: str,
     additional_context: str,
+    role_contexts_a: list[str] | None = None,
+    role_contexts_b: list[str] | None = None,
     timeout_seconds: int = 120,
 ) -> dict:
-    """Invoke Studio to classify one relationship pair via relationship-classifier-item pipeline."""
+    """Invoke Studio to classify one relationship pair via relationship-classifier-item pipeline.
+
+    ``role_contexts_a``/``role_contexts_b`` (STU-496) are per-entity excerpts that
+    establish each entity's role/status/faction. They let the classifier type a
+    structurally-related pair that never shares a dyadic scene (rival Champions,
+    institutional employer, narrator-attributed mediated causation) without
+    inventing a fake dyadic quote. Empty ⇒ interaction-grounded classification only.
+    """
     item_input = {
         "entity_a": rel["entity_a"],
         "entity_b": rel["entity_b"],
         "cooccurrence_count": rel.get("cooccurrence_count", 0),
         "sample_contexts": rel.get("sample_contexts", []),
+        "role_contexts_a": role_contexts_a or [],
+        "role_contexts_b": role_contexts_b or [],
         "novel_summary": novel_summary or "",
     }
 
