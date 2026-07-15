@@ -1,0 +1,6 @@
+# Heavy, dev-machine-only. The pipeline does not depend on these.
+gliner==0.2.27
+torch
+# spaCy and anthropic come from the repo's own pyproject (pip install -e ".[dev]").
+# spaCy models install separately:
+#   python -m spacy download en_core_web_sm
