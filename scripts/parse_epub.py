@@ -17,6 +17,7 @@ from pathlib import Path
 import yaml
 
 # Ensure project root is importable when running as `python scripts/parse_epub.py`.
+from wiki_creator.canon import resolve_book_source
 from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator import studio_io
 
@@ -324,7 +325,10 @@ def main():
     max_chapters = _env_max_chapters()
     if max_chapters is not None:
         print(f"[subset] WIKI_MAX_CHAPTERS={max_chapters}: parsing only the first {max_chapters} chapters", file=sys.stderr)
-    result = parse_epub(file_path, language=language, max_chapters=max_chapters)
+    # file_path anchors identity (it derives every output path); the series canon
+    # policy decides which source is actually read.
+    source_path = resolve_book_source(file_path)
+    result = parse_epub(str(source_path), language=language, max_chapters=max_chapters)
     result["language"] = language
     paths = studio_io.paths_from_payload(payload)
     paths.processing.mkdir(parents=True, exist_ok=True)

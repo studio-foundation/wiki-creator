@@ -3,7 +3,69 @@ import json
 import subprocess
 import sys
 import os
+from pathlib import Path
 
+
+def _write_epub(path: Path, title: str) -> None:
+    """Minimal readable EPUB: one chapter over MIN_CHAPTER_CHARS."""
+    from ebooklib import epub
+
+    book = epub.EpubBook()
+    book.set_identifier(title)
+    book.set_title(title)
+    book.set_language("en")
+    chapter = epub.EpubHtml(title="One", file_name="ch1.xhtml", lang="en")
+    chapter.content = "<html><body><h1>One</h1><p>" + ("word " * 60) + "</p></body></html>"
+    book.add_item(chapter)
+    book.toc = (chapter,)
+    book.spine = [chapter]
+    book.add_item(epub.EpubNcx())
+    book.add_item(epub.EpubNav())
+    path.parent.mkdir(parents=True, exist_ok=True)
+    epub.write_epub(str(path), book)
+
+
+def _run_parse(file_path: Path) -> dict:
+    result = subprocess.run(
+        [sys.executable, "scripts/parse_epub.py"],
+        input=json.dumps({"additional_context": f"file_path: {file_path}\nlanguage: en\n"}),
+        capture_output=True,
+        text=True,
+        cwd=os.path.join(os.path.dirname(__file__), ".."),
+    )
+    assert result.returncode == 0, result.stderr
+    return json.loads(result.stdout)
+
+
+def test_parse_epub_reads_the_source_the_canon_declares(tmp_path):
+    """STU-512 wiring: canon.yaml decides which file the stage reads, not file_path.
+
+    file_path anchors identity; the canon declares a different file for the same
+    tome. Unwire resolve_book_source in main() and this test fails.
+    """
+    series = tmp_path / "library" / "author" / "series"
+    anchor = series / "books" / "01-book.epub"
+    _write_epub(anchor, "DECOY — file_path won")
+    _write_epub(series / "books" / "canonical.epub", "CANON SOURCE")
+    (series / "canon.yaml").write_text(
+        "canon:\n"
+        "  primary_source: epub\n"
+        "  sources:\n"
+        "    - id: canonical\n"
+        "      type: epub\n"
+        "      book: 01-book\n"
+        "      path: books/canonical.epub\n",
+        encoding="utf-8",
+    )
+
+    assert _run_parse(anchor)["title"] == "CANON SOURCE"
+
+
+def test_parse_epub_without_canon_reads_file_path(tmp_path):
+    """No canon.yaml → historical behavior, byte-identical."""
+    anchor = tmp_path / "library" / "author" / "series" / "books" / "01-book.epub"
+    _write_epub(anchor, "THE ONLY SOURCE")
+    assert _run_parse(anchor)["title"] == "THE ONLY SOURCE"
 
 
 def test_parse_epub_missing_file_path():
