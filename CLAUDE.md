@@ -249,6 +249,33 @@ Inside `wiki-resolution`, order matters:
   meaningless and `fallback_absolute` is used instead. Defaults reproduce the old
   percentile behavior exactly; the only golden change was the stat rename
   `thresholds_used: auto` → `strategy_used: percentile`.
+- Absolute notability on the multi-tome series (STU-513): `inheritance` and
+  `hollow_star_saga` pin `strategy: absolute`; every other book keeps the
+  percentile default. The cuts are the 0.90/0.60/0.10 percentiles of the
+  **series-pooled** mention distribution (inheritance PERSON `41/9/3` from 527
+  entities over 6 tomes; hollow_star_saga `40/10/3` from 280 over 4), so a
+  mention count means the same tier in every tome. `PLACE`/`ORG` get `per_type`
+  cuts because their distributions differ from PERSON's (inheritance PLACE
+  `48/16/3`, ORG `63/6/3`); `EVENT`/`OTHER` take `fallback_absolute` — 7 pooled
+  EVENT entities across 6 tomes is too few to cut a threshold from, and on this
+  series every one of them is a misclassification (`Katrina`, a PERSON).
+  The metric that justifies the change is **inversions** — the same character
+  ranked LOWER in the tome where it is mentioned MORE. Percentile produced 11
+  in inheritance (`Elva` 52 mentions → `secondary` vs 12 → `principal`) and 4 in
+  hollow_star_saga; absolute produces 0 by construction. Tier *changes* are not
+  the defect and must not be "fixed": Brom goes 128 mentions → 6 between tomes
+  because he dies, and dropping to `figurant` is correct. Absolute cannot reach
+  zero tier changes at comparable mention counts either (19 → 7 in inheritance)
+  — a step function always has a boundary, and two close counts can straddle it.
+  `04.5_tales-of-alagaesia` is an anthology (top character peaks at 29 mentions
+  where the novels reach 310) and takes the series cuts like every other tome,
+  which leaves it `0/5/41` on PERSON — no principal page. Exempting it to
+  `percentile` was tried and reverted: its own p90 sits at 8, so it promoted
+  entities the novels rank lower and **re-introduced 9 inversions**, all against
+  it (`Angela` 12 mentions → `principal` there vs 40 → `secondary` in
+  `04_inheritance`). Nothing is lost by not exempting it — those characters hold
+  their principal pages from the tomes where they carry the story, and STU-488
+  (one accumulated entity across tomes) needs the tomes to agree on a tier.
 - `classify_relationships.py` (pre-step to `wiki-preparation`) folds the co-occurrence graph onto canonical entities via `registry.alias_table()` before classifying (STU-435). The graph is built at mention level (pre alias-resolution), so surface forms of one entity (`Chaol Westfall` / `Captain Westfall`) are collapsed, counts summed, `chapters`/`sample_contexts` unioned — one classification per canonical pair. Requires `registry.json` (written by `write-registry`); degrades to unfolded edges if absent. Fold logic is pure in `wiki_creator/relationship_fold.py`.
 - Mention offsets (STU-489): extraction persists `mention_spans_by_chapter` in
   `*_full.json` — one `{surface, start, end}` per occurrence (uncapped, unlike the
