@@ -68,6 +68,7 @@ from wiki_creator.paths import book_paths_from_yaml, BookPaths
 from wiki_creator.lang import load_lang_config, infer_language
 from wiki_creator.llm import ollama
 from wiki_creator.nlp.loader import load_spacy_model
+from wiki_creator.page_templates import relationship_definitions
 from wiki_creator import studio_io
 
 
@@ -1030,6 +1031,10 @@ def _run_studio_classifier_item(
     structurally-related pair that never shares a dyadic scene (rival Champions,
     institutional employer, narrator-attributed mediated causation) without
     inventing a fake dyadic quote. Empty ⇒ interaction-grounded classification only.
+
+    The type vocabulary travels with the payload (STU-477) rather than sitting in the
+    agent prompt: it is injected here, the one point both callers cross, so no caller can
+    dispatch a pair without one.
     """
     item_input = {
         "entity_a": rel["entity_a"],
@@ -1039,6 +1044,7 @@ def _run_studio_classifier_item(
         "role_contexts_a": role_contexts_a or [],
         "role_contexts_b": role_contexts_b or [],
         "novel_summary": novel_summary or "",
+        "relationship_types": relationship_definitions(),
     }
 
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".yaml", delete=False) as tmp:
