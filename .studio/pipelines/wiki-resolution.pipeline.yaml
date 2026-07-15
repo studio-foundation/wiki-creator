@@ -51,6 +51,10 @@ stages:
     runtime: python
     script: scripts/alias_resolution.py
     contract: alias-resolution
+    # Alias detection is pairwise over the tome's entities, so its cost grows
+    # with the square of the entity count. The 30s default fits the fixture
+    # novella and dies on any real book (Eldest, 195 entities, needs >30s).
+    timeout_ms: 1800000
     context:
       include:
         - input
