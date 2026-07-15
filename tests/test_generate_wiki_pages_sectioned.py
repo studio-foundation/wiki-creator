@@ -1,4 +1,5 @@
 import scripts.generate_wiki_pages as gwp
+from wiki_creator.editorial_stance import GROUNDING_BLOCK, EditorialStance
 
 
 def test_assemble_joins_nonempty_blocks_with_blank_line():
@@ -315,3 +316,29 @@ def test_sectioned_per_relation_off_keeps_single_block(monkeypatch):
     assert "Prose unique." in page["content"]
     assert "relation_units" not in page
     assert page["relationship_index"]  # STU-492 index still built
+
+
+def test_build_prompt_separates_grounding_from_stance():
+    """STU-507: the two blocks are independent — switching posture must not be
+    able to weaken 'invent nothing'."""
+    entity = _entity()
+    in_universe = gwp.build_prompt(
+        entity, "Throne of Glass", sections=["infobox", "biography"],
+        stance=EditorialStance(mode="in_universe"),
+    )
+    out_of_universe = gwp.build_prompt(
+        entity, "Throne of Glass", sections=["infobox", "biography"],
+        stance=EditorialStance(mode="out_of_universe"),
+    )
+    for prompt in (in_universe, out_of_universe):
+        assert GROUNDING_BLOCK in prompt
+    assert "EDITORIAL STANCE — in-universe" in in_universe
+    assert "EDITORIAL STANCE — out-of-universe" in out_of_universe
+
+
+def test_build_prompt_omits_references_rule_when_section_is_not_generated():
+    entity = _entity()
+    with_refs = gwp.build_prompt(entity, "Throne of Glass", sections=["infobox", "references"])
+    without = gwp.build_prompt(entity, "Throne of Glass", sections=["infobox", "biography"])
+    assert "## Références section must list ONLY" in with_refs
+    assert "Références" not in without

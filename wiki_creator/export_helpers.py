@@ -23,19 +23,24 @@ _TOME_LABEL_KEYS = {
 
 
 def category_tags(
-    entity_type: str, importance: str, labels: dict, books: list[str] | None = None
+    entity_type: str,
+    importance: str,
+    labels: dict,
+    books: list[str] | None = None,
+    expose_importance_tier: bool = True,
 ) -> list[str]:
     """Return list of [[Category:X]] tags for a page, including one per-tome
     provenance category (STU-486) per entry in ``books`` (EntityRecord.books).
     ``books`` empty/omitted → no per-tome categories (registry absent or
-    pre-multi-tome artifact)."""
+    pre-multi-tome artifact).
+
+    ``expose_importance_tier`` (STU-507): the tier is a pipeline ranking, not a
+    fact of the fiction — False drops the principal/secondary categories."""
     tags = []
     if entity_type == "PERSON":
         tags.append(f"[[Category:{labels['persons']}]]")
-        if importance == "principal":
-            tags.append(f"[[Category:{labels['principal']}]]")
-        elif importance == "secondary":
-            tags.append(f"[[Category:{labels['secondary']}]]")
+        if expose_importance_tier and importance in ("principal", "secondary"):
+            tags.append(f"[[Category:{labels[importance]}]]")
     elif entity_type == "PLACE":
         tags.append(f"[[Category:{labels['locations']}]]")
     elif entity_type == "ORG":
@@ -164,8 +169,12 @@ def main_page_content(
     labels: dict | None = None,
     principals_shown: int = DEFAULT_PRINCIPALS_SHOWN,
     places_shown: int = DEFAULT_PLACES_SHOWN,
+    expose_pipeline_metadata: bool = True,
 ) -> str:
-    """Generate Main_Page.wiki content from pipeline data."""
+    """Generate Main_Page.wiki content from pipeline data.
+
+    ``expose_pipeline_metadata`` (STU-507): the page counts describe the run, not
+    the fiction — False drops the Statistiques block."""
     persons = [p for p in pages if p["entity_type"] == "PERSON"]
     places = [p for p in pages if p["entity_type"] == "PLACE"]
     orgs = [p for p in pages if p["entity_type"] == "ORG"]
@@ -215,12 +224,13 @@ def main_page_content(
     ]
     # Collective pages (STU-511) carry no category — Navigation is their only entry point.
     lines += [f"* [[{p['title']}]]" for p in collations]
-    lines += [
-        "",
-        "== Statistiques ==",
-        f"* {len(pages)} pages wiki",
-        f"* {len(persons)} personnages",
-        f"* {len(places)} lieux",
-        f"* {len(orgs)} organisations",
-    ]
+    if expose_pipeline_metadata:
+        lines += [
+            "",
+            "== Statistiques ==",
+            f"* {len(pages)} pages wiki",
+            f"* {len(persons)} personnages",
+            f"* {len(places)} lieux",
+            f"* {len(orgs)} organisations",
+        ]
     return "\n".join(lines)
