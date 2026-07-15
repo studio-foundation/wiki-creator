@@ -28,8 +28,8 @@ def test_load_gold_parses_fixture():
     assert len(gold) >= 10
     by_pair = {gp.key: gp for gp in gold}
     chaol = by_pair[re.pair_key("Celaena", "Chaol")]
-    assert chaol.primary == "ami"
-    assert "allié" in chaol.acceptable
+    assert chaol.primary == "strained_friendship"
+    assert "budding_attraction" in chaol.acceptable
     assert chaol.expects_relation and not chaol.expects_null
 
     westfall = by_pair[re.pair_key("Westfall", "Kaltain")]
@@ -40,7 +40,7 @@ def test_load_gold_parses_fixture():
 def test_load_gold_single_expected_becomes_one_element_tuple():
     gold = re.load_gold(FIXTURE)
     cain = next(gp for gp in gold if gp.key == re.pair_key("Cain", "Celaena"))
-    assert cain.acceptable == ("antagoniste",)
+    assert cain.acceptable == ("antagonist",)
 
 
 # ------------------------------------------------------- predictions parsing

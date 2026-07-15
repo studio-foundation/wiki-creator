@@ -213,7 +213,7 @@ def test_sectioned_page_carries_relationship_index(monkeypatch):
         entity=entity, book_title="ToG", model="m", timeout=10,
         sections=["biography", "relationships"], max_tokens=500,
         dry_run=False, debug_dir=Path("/tmp"), book_config={})
-    assert page["relationship_index"] == ["* [[Chaol]] — amoureux (ch.1→ch.55)"]
+    assert page["relationship_index"] == ["* [[Chaol]] — Amoureux (ch.1→ch.55)"]
 
 
 def test_build_relation_prompt_grounds_and_requires_french():

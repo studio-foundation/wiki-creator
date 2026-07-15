@@ -7,14 +7,24 @@
 # for the per-class confusion), or `null` for the must-stay-null cases that
 # guard against hallucinated relations.
 #
+# Types are the canonical tokens declared in wiki_creator/templates/base.yaml
+# (`relationships.enum`), the single authority the classifier prompt and the
+# validator both read (STU-477).
+#
 # Coverage targets (from the milestone audit, 2026-07-14):
-#   - typed pairs across ami / amoureux / allié / mentor-protégé / antagoniste /
-#     employeur-employé
+#   - typed pairs across friend / romance / ally / mentor / antagonist / employment
+#   - STU-477 graduated middle ground: strained_friendship (Celaena↔Chaol),
+#     budding_attraction (Celaena↔Dorian) — the ami→amoureux jump the audit flagged
 #   - STU-495 one-to-many authority (Brullo↔Celaena): group-directed evidence
 #   - STU-496 structural / faction pairs with no dyadic scene (Perrington↔King,
 #     Brullo↔King)
 #   - hallucination guard: pure co-occurrence at court must stay null
 #     (Westfall↔Kaltain — the canonical false-positive)
+#
+# NOT covered: friendly_rivalry and wary_alliance. Both types exist in base.yaml
+# but no Throne-of-Glass book-1 pair in this fixture attests them, and inventing
+# excerpts to exercise a type would score the classifier against fiction rather
+# than the novel. Add coverage when a real run surfaces a pair that fits.
 book: throne-of-glass
 tome: "01"
 
@@ -22,9 +32,14 @@ pairs:
   # --- should classify -----------------------------------------------------
   - entity_a: Celaena
     entity_b: Chaol
-    expected: [ami, allié]
+    expected: [strained_friendship, budding_attraction]
     cooccurrence_count: 48
-    note: Captain of the Guard oversees the King's Champion; sparring and trust build into friendship.
+    note: >-
+      STU-477, the audit's headline case. Captain of the Guard and the King's
+      Champion: the excerpts show trust AND the fear of that trust, a charge no
+      plain friendship explains. `friend` is deliberately NOT acceptable here — it
+      is the under-read this issue exists to close; `romance` would spoil the
+      book-2 arc.
     sample_contexts:
       - "Chaol led Celaena down to the training hall each dawn, and though she mocked him, she never once slipped away from his side."
       - "\"You fight well,\" Chaol admitted, lowering his sword. Celaena grinned at the captain, wiping blood from her lip."
@@ -32,9 +47,13 @@ pairs:
 
   - entity_a: Celaena
     entity_b: Dorian
-    expected: [amoureux, ami]
+    expected: [budding_attraction, romance]
     cooccurrence_count: 41
-    note: Crown Prince and his Champion; flirtation deepens into romance across the book.
+    note: >-
+      Crown Prince and his Champion. Scored on the excerpts provided, not the
+      whole book: they show the pull (caught breath, brushing hands) but nothing
+      declared or reciprocated aloud, which is budding_attraction. `romance` stays
+      acceptable — the book's arc does consummate it.
     sample_contexts:
       - "Dorian leaned closer, and Celaena felt her breath catch. \"You are the most insufferable woman I have ever met,\" the prince murmured, smiling."
       - "They read together in the library until dawn, Dorian's hand brushing hers over the pages."
@@ -42,7 +61,7 @@ pairs:
 
   - entity_a: Celaena
     entity_b: Nehemia
-    expected: [ami, allié]
+    expected: [friend, ally]
     cooccurrence_count: 33
     note: Princess of Eyllwe and Celaena become close confidantes.
     sample_contexts:
@@ -51,7 +70,7 @@ pairs:
 
   - entity_a: Celaena
     entity_b: Nox
-    expected: [allié, ami]
+    expected: [ally, friend]
     cooccurrence_count: 18
     note: Fellow Champion and thief; they watch each other's backs during the competition.
     sample_contexts:
@@ -60,7 +79,7 @@ pairs:
 
   - entity_a: Brullo
     entity_b: Celaena
-    expected: mentor/protégé
+    expected: mentor
     cooccurrence_count: 14
     note: >-
       Weapons Master over the Champions — STU-495 one-to-many authority: the
@@ -73,7 +92,7 @@ pairs:
 
   - entity_a: Cain
     entity_b: Celaena
-    expected: antagoniste
+    expected: antagonist
     cooccurrence_count: 22
     note: Rival Champion; open hostility escalating to a duel.
     sample_contexts:
@@ -83,7 +102,7 @@ pairs:
 
   - entity_a: Dorian
     entity_b: Chaol
-    expected: [ami, allié]
+    expected: [friend, ally]
     cooccurrence_count: 27
     note: Prince and Captain are lifelong best friends.
     sample_contexts:
@@ -92,7 +111,7 @@ pairs:
 
   - entity_a: Celaena
     entity_b: Arobynn
-    expected: [mentor/protégé, employeur/employé]
+    expected: [mentor, employment]
     cooccurrence_count: 9
     note: Arobynn Hamel, King of the Assassins, trained and owned Celaena — authority relation from backstory.
     sample_contexts:
@@ -102,7 +121,7 @@ pairs:
   # --- structural / faction, no dyadic scene (STU-496) ---------------------
   - entity_a: Perrington
     entity_b: King
-    expected: [employeur/employé, allié]
+    expected: [employment, ally]
     cooccurrence_count: 12
     note: >-
       STU-496 structural/faction: Duke Perrington serves the King of Adarlan.
@@ -114,7 +133,7 @@ pairs:
 
   - entity_a: Brullo
     entity_b: King
-    expected: [employeur/employé, allié]
+    expected: [employment, ally]
     cooccurrence_count: 6
     note: >-
       STU-496 structural: Brullo runs the King's competition on the crown's

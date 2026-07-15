@@ -58,12 +58,26 @@ def _entity():
 
 
 def test_relationship_index_lines_content_and_order():
+    # The fixture carries pre-STU-477 French strings: they resolve through the enum's
+    # `legacy` map and render as the localized label, so old artifacts stay readable.
     lines = relationship_index_lines(_entity())
     # untyped (Ghost) and chapter-less (NoChap) excluded
     assert lines == [
-        "* [[Cain]] — antagoniste (ch.7)",          # reveal ch.7, most recent first
-        "* [[Chaol]] — amoureux (ch.1→ch.55)",      # reveal ch.1
+        "* [[Cain]] — Antagoniste (ch.7)",          # reveal ch.7, most recent first
+        "* [[Chaol]] — Amoureux (ch.1→ch.55)",      # reveal ch.1
     ]
+
+
+def test_relationship_index_lines_localizes_canonical_token():
+    entity = {
+        "canonical_name": "Celaena",
+        "relationships": [
+            {"entity_a": "Celaena", "entity_b": "Chaol",
+             "relationship_type": "strained_friendship", "chapters": ["C01.xhtml"]},
+        ],
+    }
+    assert relationship_index_lines(entity, "fr") == ["* [[Chaol]] — Amitié tendue (ch.1)"]
+    assert relationship_index_lines(entity, "en") == ["* [[Chaol]] — Strained friendship (ch.1)"]
 
 
 def test_relationship_index_lines_empty_when_no_typed():
