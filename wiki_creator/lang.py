@@ -52,6 +52,8 @@ OPTIONAL_KEYS = frozenset(
         "first_person_artifact_tails",
         "language_id_markers",
         "placeholder_markers",
+        "masculine_titles",
+        "feminine_titles",
     }
 )
 
@@ -61,6 +63,7 @@ OPTIONAL_KEYS = frozenset(
 _LANG_MODEL_PREFIXES = {
     "fr": ("fr_core_news_", "fr_dep_news_"),
     "en": ("en_core_web_",),
+    "es": ("es_core_news_",),
 }
 
 

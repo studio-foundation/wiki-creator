@@ -21,6 +21,11 @@ def test_infer_language_en():
     assert infer_language("en_core_web_lg") == "en"
 
 
+def test_infer_language_es():
+    assert infer_language("es_core_news_lg") == "es"
+    assert infer_language("es_core_news_sm") == "es"
+
+
 def test_infer_language_non_standard_returns_none():
     # Local paths and community models carry no language signal (STU-453).
     assert infer_language("") is None
@@ -48,9 +53,28 @@ def test_load_lang_config_unknown_opt_in_fallback():
 
 
 def test_shipped_packs_satisfy_required_keys():
-    for code in ("en", "fr"):
+    for code in ("en", "fr", "es"):
         cfg = load_lang_config(code)
         assert REQUIRED_KEYS <= cfg.keys()
+
+
+def test_es_pack_repatriated_spanish_snippets():
+    """STU-452: the Spanish snippets formerly hardcoded in scripts now live in es.json."""
+    cfg = load_lang_config("es")
+    # entity_clustering TITLE_PREFIXES honorifics
+    for w in ("don", "doña", "señor", "señora", "señorita"):
+        assert w in cfg["person_cue_words"], f"missing honorific: {w}"
+    # entity_clustering gendered title sets
+    assert "don" in cfg["masculine_titles"] and "señor" in cfg["masculine_titles"]
+    assert "doña" in cfg["feminine_titles"] and "señora" in cfg["feminine_titles"]
+    # verify_entity_types GEOGRAPHIC_KEYWORDS
+    for w in ("calle", "plaza", "barrio"):
+        assert w in cfg["place_cue_words"], f"missing place noun: {w}"
+
+
+def test_es_pack_only_declares_known_keys():
+    cfg = load_lang_config("es")
+    assert set(cfg.keys()) <= (REQUIRED_KEYS | OPTIONAL_KEYS)
 
 
 def test_required_and_optional_keys_are_disjoint():

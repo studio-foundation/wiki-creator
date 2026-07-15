@@ -23,6 +23,22 @@ def test_spacy_model_candidates_for_french_adds_lg_and_sm_fallback():
     ]
 
 
+def test_spacy_model_candidates_for_spanish_adds_lg_and_sm_fallback():
+    assert spacy_model_candidates("es_core_news_md") == [
+        "es_core_news_md",
+        "es_core_news_lg",
+        "es_core_news_sm",
+    ]
+
+
+def test_spacy_model_candidates_spanish_non_standard_gets_generic_fallback():
+    assert spacy_model_candidates("models/wiki-ner-es/model-best", "es") == [
+        "models/wiki-ner-es/model-best",
+        "es_core_news_lg",
+        "es_core_news_sm",
+    ]
+
+
 def test_spacy_model_candidates_dedupes():
     assert spacy_model_candidates("en_core_web_sm") == ["en_core_web_sm"]
 
