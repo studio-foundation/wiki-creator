@@ -249,7 +249,10 @@ def _load_cue_words(language: str) -> dict[str, frozenset[str]]:
 # POS tags that disqualify a span from being a named entity.
 # Capitalized verb/adjective/adverb at sentence start is a common false positive
 # in French dialogue (e.g. "— Regarde", "— Avez-vous", "— Sériez-vous").
-_BAD_POS: frozenset[str] = frozenset({"VERB", "AUX", "ADJ", "ADV"})
+# PRON: a zero-shot NER asked for `person name` types a sentence-initial "She" as
+# PERSON (STU-521), and no other filter catches it — it is capitalised, over 3
+# chars, and far too frequent for min_mentions to drop.
+_BAD_POS: frozenset[str] = frozenset({"VERB", "AUX", "ADJ", "ADV", "PRON"})
 
 
 def _is_valid_span(span) -> bool:
