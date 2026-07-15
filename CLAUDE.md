@@ -166,6 +166,27 @@ Inside `wiki-resolution`, order matters:
   clustering/alias seed from the series registry), so series mode is a pure
   sequential loop — each tome must finish before the next seeds from it. Per-tome
   run state (`.wiki_runs/`) is reused, so a re-run skips already-completed tomes.
+- Collation (STU-511): a tier can trade its dedicated pages for one collective
+  page, or none at all. Book YAML `generation.collation.<tier>.mode` =
+  `dedicated` (default, pre-STU-511 behavior) | `collective` | `drop`, with
+  `promote_if.appears_in_event_salience_above: N` keeping an entity dedicated
+  when it takes part in an event more salient than `N` (participants **or**
+  places, matching `events_for_entity`). `wiki_preparation.py` partitions right
+  after identity binding — collated entities never reach a batch, so they cost
+  no LLM call — and writes one deterministic `COLLATION` page per entity type to
+  `processing_output/<slug>/collation_pages.json` (rewritten every run, deleted
+  when empty, so flipping back to `dedicated` can't resurrect stale pages).
+  Entries are name + aliases + mention/chapter counts, zero LLM; prose entries
+  are a possible fast-follow. `load_wiki_pages.py` appends the pages,
+  `wiki_export.py` renders them at the wiki root body-only (like `SYNOPSIS`) and
+  `main_page_content` links them under Navigation — they carry no category, so
+  that link is their only entry point. Titles come from
+  `export.categories.labels.{minor_persons,minor_locations,minor_organizations,minor_other}`.
+  Pure logic in `wiki_creator/collation.py`; `COLLATION` is declared in
+  `templates/base.yaml`, the STU-504 page-type vocabulary.
+- `export.index.{principals_shown, places_shown}` sizes the Main_Page showcase
+  lists (STU-511, was `[:8]`/`[:5]` hardcoded in `export_helpers.py`). `0` empties
+  a section; absent/negative/unparseable falls back to the 8/5 defaults.
 - `workers` in relationship/coref config directly impact RAM usage.
 - `.studio/config.yaml` and `.studio/runs/` must not be committed.
 - Never add hardcoded word lists to scripts. All vocabulary belongs in `wiki_creator/cue_words/<lang>.json` (language-wide) or the book YAML `classification` section (book-specific). No script may define a fallback vocabulary constant — if a key is absent from cue_words, degrade gracefully to an empty collection.

@@ -138,11 +138,37 @@ def infobox_template_content(entity_type: str) -> str:
     return _INFOBOX_TEMPLATES[entity_type]
 
 
+# An editorial choice, so it belongs in book YAML `export.index`, not in a
+# slice (STU-511).
+DEFAULT_PRINCIPALS_SHOWN = 8
+DEFAULT_PLACES_SHOWN = 5
+
+
+def index_limits(export_cfg: dict | None) -> tuple[int, int]:
+    """(principals_shown, places_shown) from `export.index`. 0 empties a
+    section; a negative or unparseable value falls back to the default."""
+    cfg = (export_cfg or {}).get("index") or {}
+
+    def _limit(key: str, default: int) -> int:
+        try:
+            value = int(cfg.get(key, default))
+        except (TypeError, ValueError):
+            return default
+        return value if value >= 0 else default
+
+    return (
+        _limit("principals_shown", DEFAULT_PRINCIPALS_SHOWN),
+        _limit("places_shown", DEFAULT_PLACES_SHOWN),
+    )
+
+
 def main_page_content(
     book_title: str,
     author: str,
     pages: list[dict],
     labels: dict | None = None,
+    principals_shown: int = DEFAULT_PRINCIPALS_SHOWN,
+    places_shown: int = DEFAULT_PLACES_SHOWN,
     expose_pipeline_metadata: bool = True,
 ) -> str:
     """Generate Main_Page.wiki content from pipeline data.
@@ -154,9 +180,10 @@ def main_page_content(
     orgs = [p for p in pages if p["entity_type"] == "ORG"]
     events = [p for p in pages if p["entity_type"] == "EVENT"]
     synopsis = next((p for p in pages if p.get("entity_type") == "SYNOPSIS"), None)
+    collations = [p for p in pages if p.get("entity_type") == "COLLATION"]
 
-    principals = [p for p in persons if p["importance"] == "principal"][:8]
-    major_places = [p for p in places if p["importance"] == "principal"][:5]
+    principals = [p for p in persons if p["importance"] == "principal"][:principals_shown]
+    major_places = [p for p in places if p["importance"] == "principal"][:places_shown]
 
     persons_label = labels.get("persons", "Personnages") if labels else "Personnages"
     locations_label = labels.get("locations", "Lieux") if labels else "Lieux"
@@ -195,6 +222,8 @@ def main_page_content(
         f"* [[:Category:{locations_label}|Tous les lieux]]",
         f"* [[:Category:{orgs_label}|Toutes les organisations]]",
     ]
+    # Collective pages (STU-511) carry no category — Navigation is their only entry point.
+    lines += [f"* [[{p['title']}]]" for p in collations]
     if expose_pipeline_metadata:
         lines += [
             "",

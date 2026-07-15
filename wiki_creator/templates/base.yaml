@@ -52,14 +52,19 @@ entity_types:
       - {token: biography,     group: section, provenance: llm-prose,      obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: relationships, group: section, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
       - {token: references,    group: section, provenance: extracted-fact, obligation: MIN, fallback: none, tiers: [figurant, secondary, principal]}
-  # Templateless, but declared: both reach real output, and this file is the
-  # authority for the vocabulary. Real templates belong to STU-505.
-  #   OTHER    — ENTITY_TYPE fallback (types.py); exports into characters/
-  #   SYNOPSIS — book synopsis page (STU-482); body-only, no infobox
+  # Templateless, but declared: all three reach real output, and this file is
+  # the authority for the vocabulary. Real templates belong to STU-505.
+  #   OTHER     — ENTITY_TYPE fallback (types.py); exports into characters/
+  #   SYNOPSIS  — book synopsis page (STU-482); body-only, no infobox
+  #   COLLATION — collective page for a collated tier (STU-511); body-only,
+  #               built deterministically by wiki_preparation, never by an LLM
   OTHER:
     infobox: []
     sections: []
   SYNOPSIS:
+    infobox: []
+    sections: []
+  COLLATION:
     infobox: []
     sections: []
 relationships:

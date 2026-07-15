@@ -43,16 +43,19 @@ def _read_pages(path: Path) -> list[WikiPage]:
     return studio_io.from_dict(list[WikiPage], raw.get("pages", []))
 
 
-def _load_event_pages(processing_dir) -> list[dict]:
-    """Per-event wiki pages from event_pages.json (SP3, STU-481), minus any that
-    failed generation. Empty list when the artifact is absent or unreadable."""
-    path = Path(processing_dir) / "event_pages.json"
+def _load_extra_pages(processing_dir, filename: str, label: str) -> list[dict]:
+    """Wiki pages from a sibling artifact's `pages` array, minus any that failed
+    generation. Empty list when the artifact is absent or unreadable.
+
+    Serves event_pages.json (SP3, STU-481) and collation_pages.json (STU-511).
+    """
+    path = Path(processing_dir) / filename
     if not path.exists():
         return []
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
-        print(f"[load-wiki-pages] Could not read {path} — skipping event pages", file=sys.stderr)
+        print(f"[load-wiki-pages] Could not read {path} — skipping {label}", file=sys.stderr)
         return []
     pages = data.get("pages") if isinstance(data, dict) else None
     if not isinstance(pages, list):
@@ -98,10 +101,14 @@ def main() -> None:
             f"[load-wiki-pages] Added synopsis page '{synopsis.get('title', '')}'",
             file=sys.stderr,
         )
-    event_pages = _load_event_pages(paths.processing)
+    event_pages = _load_extra_pages(paths.processing, "event_pages.json", "event pages")
     if event_pages:
         output_pages.extend(event_pages)
         print(f"[load-wiki-pages] Added {len(event_pages)} event page(s)", file=sys.stderr)
+    collation_pages = _load_extra_pages(paths.processing, "collation_pages.json", "collation pages")
+    if collation_pages:
+        output_pages.extend(collation_pages)
+        print(f"[load-wiki-pages] Added {len(collation_pages)} collective page(s)", file=sys.stderr)
     print(f"[load-wiki-pages] Loaded {len(output_pages)} pages from {output_file}", file=sys.stderr)
     json.dump({"pages": output_pages}, sys.stdout, ensure_ascii=False)
 

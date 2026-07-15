@@ -971,3 +971,128 @@ def test_read_plot_events_rejects_schema_drift(tmp_path):
     }), encoding="utf-8")
     with pytest.raises(studio_io.ArtifactSchemaError):
         read_plot_events(path)
+
+
+# --- STU-511: collation ---
+
+import scripts.wiki_preparation as wp
+
+
+def _collation_paths(tmp_path: Path):
+    processing = tmp_path / "processing_output"
+    wiki_inputs = tmp_path / "wiki_inputs"
+    processing.mkdir(parents=True)
+    wiki_inputs.mkdir(parents=True)
+
+    class _FakePaths:
+        pass
+
+    _FakePaths.processing = processing
+    _FakePaths.wiki_inputs = wiki_inputs
+    _FakePaths.series_character_graph = processing / "series_character_graph.json"
+    return _FakePaths
+
+
+def test_write_collation_pages_writes_artifact(tmp_path: Path):
+    paths = _collation_paths(tmp_path)
+    entities = [{"canonical_name": "Cain", "type": "PERSON", "importance": "figurant",
+                 "total_mentions": 3, "chapters_present": 1, "aliases": []}]
+    wp.write_collation_pages(entities, {}, paths)
+    data = json.loads((paths.processing / "collation_pages.json").read_text(encoding="utf-8"))
+    assert [p["entity_type"] for p in data["pages"]] == ["COLLATION"]
+    assert "## Cain" in data["pages"][0]["content"]
+
+
+def test_write_collation_pages_removes_a_stale_artifact(tmp_path: Path):
+    paths = _collation_paths(tmp_path)
+    stale = paths.processing / "collation_pages.json"
+    stale.write_text(json.dumps({"pages": [{"title": "Personnages mineurs"}]}), encoding="utf-8")
+    assert wp.write_collation_pages([], {}, paths) == []
+    assert not stale.exists()
+
+
+def _run_main_with(monkeypatch, paths, book_cfg, entities, relationships=()):
+    for name in ("persons_full", "places_full", "orgs_full", "events_full"):
+        (paths.processing / f"{name}.json").write_text(json.dumps({name: {}}), encoding="utf-8")
+    monkeypatch.setattr(wp.studio_io, "paths_from_payload", lambda _payload: paths)
+    monkeypatch.setattr(wp, "load_book_config_from_payload", lambda _payload: book_cfg)
+    payload = {"additional_context": "file_path: fake.epub", "all_stage_outputs": {
+        "entity-classification": {"entities": entities, "relationships": list(relationships),
+                                  "narrator": None}}}
+    stdin_backup, stdout_backup = sys.stdin, sys.stdout
+    try:
+        sys.stdin = io.StringIO(json.dumps(payload))
+        sys.stdout = io.StringIO()
+        wp.main()
+        return json.loads(sys.stdout.getvalue())
+    finally:
+        sys.stdin, sys.stdout = stdin_backup, stdout_backup
+
+
+def _classified(name, importance):
+    return {"canonical_name": name, "type": "PERSON", "importance": importance,
+            "source_ids": [], "relevant": True, "aliases": [],
+            "total_mentions": 3, "chapters_present": 1}
+
+
+def test_main_keeps_figurants_in_batches_without_collation_config(monkeypatch, tmp_path: Path):
+    paths = _collation_paths(tmp_path)
+    out = _run_main_with(monkeypatch, paths, {}, [_classified("Cain", "figurant")])
+    assert out["total_entities"] == 1
+    assert not (paths.processing / "collation_pages.json").exists()
+
+
+def test_main_collates_figurants_off_the_batches(monkeypatch, tmp_path: Path):
+    paths = _collation_paths(tmp_path)
+    book_cfg = {"generation": {"collation": {"figurant": {"mode": "collective"}}}}
+    out = _run_main_with(
+        monkeypatch, paths, book_cfg,
+        [_classified("Cain", "figurant"), _classified("Celaena", "principal")],
+    )
+    assert out["total_entities"] == 1
+    batch = json.loads(next(paths.wiki_inputs.glob("batch_*.json")).read_text(encoding="utf-8"))
+    assert [e["canonical_name"] for e in batch["entities"]] == ["Celaena"]
+    pages = json.loads((paths.processing / "collation_pages.json").read_text(encoding="utf-8"))["pages"]
+    assert "## Cain" in pages[0]["content"]
+
+
+def test_main_promotes_a_salient_figurant_back_to_a_dedicated_page(monkeypatch, tmp_path: Path):
+    paths = _collation_paths(tmp_path)
+    (paths.processing / "events.json").write_text(json.dumps({"events": [
+        {"event_id": "e_ch1_0", "chapter": 1, "description": "duel", "participants": ["Cain"],
+         "places": [], "outcome": None, "salience": 0.9, "source_bullets": []}
+    ]}), encoding="utf-8")
+    book_cfg = {"generation": {"collation": {"figurant": {
+        "mode": "collective", "promote_if": {"appears_in_event_salience_above": 0.7}}}}}
+    out = _run_main_with(monkeypatch, paths, book_cfg, [_classified("Cain", "figurant")])
+    assert out["total_entities"] == 1
+    assert not (paths.processing / "collation_pages.json").exists()
+
+
+def test_collated_entities_still_feed_their_neighbours_related_context(monkeypatch, tmp_path: Path):
+    """Losing a dedicated page must not cost the neighbours the related-context
+    a collated entity contributes — it stays in entities_by_name."""
+    paths = _collation_paths(tmp_path)
+    book_cfg = {"generation": {"collation": {"figurant": {"mode": "collective"}}}}
+    _run_main_with(
+        monkeypatch, paths, book_cfg,
+        [_classified("Celaena", "principal"), _classified("Cain", "figurant")],
+        relationships=[{"entity_a": "Celaena", "entity_b": "Cain", "cooccurrence_count": 4}],
+    )
+    batch = json.loads(next(paths.wiki_inputs.glob("batch_*.json")).read_text(encoding="utf-8"))
+    related = batch["entities"][0]["related_context"]
+    assert [r["related_name"] for r in related] == ["Cain"]
+    assert related[0]["related_type"] == "PERSON"   # resolved via entities_by_name
+
+
+def test_dropped_entities_are_gone_from_related_context(monkeypatch, tmp_path: Path):
+    """mode=drop means gone from the wiki — including as a neighbour's context."""
+    paths = _collation_paths(tmp_path)
+    book_cfg = {"generation": {"collation": {"figurant": {"mode": "drop"}}}}
+    _run_main_with(
+        monkeypatch, paths, book_cfg,
+        [_classified("Celaena", "principal"), _classified("Cain", "figurant")],
+        relationships=[{"entity_a": "Celaena", "entity_b": "Cain", "cooccurrence_count": 4}],
+    )
+    batch = json.loads(next(paths.wiki_inputs.glob("batch_*.json")).read_text(encoding="utf-8"))
+    assert batch["entities"][0]["related_context"][0]["related_type"] is None
