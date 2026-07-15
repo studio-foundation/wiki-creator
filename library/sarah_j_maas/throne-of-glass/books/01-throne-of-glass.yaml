@@ -88,6 +88,7 @@ export:
 
 classification:
   concept_keywords:
+    - wyrd
     - wyrdmark
     - wyrdmarks
     - magic
