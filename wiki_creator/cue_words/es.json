@@ -324,6 +324,37 @@
     "los",
     "y"
   ],
+  "title_prefixes": [
+    "don",
+    "doña",
+    "señor",
+    "señora",
+    "señorita",
+    "fray",
+    "sor",
+    "dr.",
+    "dr",
+    "el",
+    "los",
+    "las"
+  ],
+  "geographic_keywords": [
+    "calle",
+    "plaza",
+    "barrio",
+    "avenida",
+    "paseo",
+    "iglesia",
+    "catedral",
+    "cementerio",
+    "estación",
+    "mercado",
+    "puente",
+    "torre",
+    "castillo",
+    "palacio",
+    "hotel"
+  ],
   "masculine_titles": [
     "don",
     "señor"
