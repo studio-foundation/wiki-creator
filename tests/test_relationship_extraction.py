@@ -229,10 +229,13 @@ def test_resolve_coref_device_picks_cuda_when_available(monkeypatch):
 
 def test_coref_forces_single_worker_on_gpu(monkeypatch, capsys):
     """On GPU, workers>1 is forced to 1 (a single card can't hold N×590M in VRAM)."""
+    import sys
     import scripts.relationship_extraction as rel
     monkeypatch.setattr(rel, "_resolve_coref_device", lambda explicit=None: "cuda")
-    # Sequential path will try to load fastcoref and fall back to the heuristic;
-    # stub the fallback so the test stays light and deterministic.
+    # Sequential path loads fastcoref for real wherever it is installed; hide it
+    # so the forced-to-1 run falls back to the stubbed heuristic instead of the
+    # 590M model on a GPU (STU-530).
+    monkeypatch.setitem(sys.modules, "fastcoref", None)
     monkeypatch.setattr(rel, "enrich_mentions_with_coref", lambda chapters, entities, m: m)
     entities = [{"canonical_name": "Alice", "type": "PERSON", "aliases": [], "relevant": True}]
     chapters = {"ch01": "Alice walked. She smiled."}
@@ -363,8 +366,11 @@ def test_parallel_merge_matches_direct_process_chapters():
             return [simulated_worker_results.get(item[0], []) for item in items]
 
     mentions = {"David Martín": {}, "Pedro Vidal": {}}
+    # device="cpu" is load-bearing: auto-detect picks CUDA on a GPU host, which
+    # forces workers=1 (STU-466) and takes the sequential path — FakeExecutor is
+    # never constructed and the real model runs instead (STU-530).
     with patch("concurrent.futures.ProcessPoolExecutor", return_value=FakeExecutor()):
-        result = rel.enrich_mentions_with_fastcoref(chapters, entities, mentions, workers=2)
+        result = rel.enrich_mentions_with_fastcoref(chapters, entities, mentions, workers=2, device="cpu")
 
     # Verify the expected sentences are present (from simulated worker results)
     dm_sentences = result.get("David Martín", {}).get("ch01", [])
