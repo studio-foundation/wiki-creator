@@ -34,8 +34,14 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 from wiki_creator import studio_io
 from wiki_creator.chapters import is_frontmatter_chapter
-from wiki_creator.entity_taxonomy import full_registry_files, ner_label_map, ner_types
+from wiki_creator.entity_taxonomy import (
+    full_registry_files,
+    gliner_label_map,
+    ner_label_map,
+    ner_types,
+)
 from wiki_creator.lang import book_language as _book_language, load_lang_config as _load_lang_config
+from wiki_creator.ner import ner_config as _ner_config
 from wiki_creator.nlp.loader import (
     ensure_sentencizer as _ensure_sentencizer,
     load_spacy_model_with_fallback as _load_spacy_model_with_fallback,
@@ -209,7 +215,10 @@ def _load_cue_words(language: str) -> dict[str, frozenset[str]]:
 # POS tags that disqualify a span from being a named entity.
 # Capitalized verb/adjective/adverb at sentence start is a common false positive
 # in French dialogue (e.g. "— Regarde", "— Avez-vous", "— Sériez-vous").
-_BAD_POS: frozenset[str] = frozenset({"VERB", "AUX", "ADJ", "ADV"})
+# PRON: a zero-shot NER asked for `person name` types a sentence-initial "She" as
+# PERSON (STU-521), and no other filter catches it — it is capitalised, over 3
+# chars, and far too frequent for min_mentions to drop.
+_BAD_POS: frozenset[str] = frozenset({"VERB", "AUX", "ADJ", "ADV", "PRON"})
 
 
 def _is_valid_span(span) -> bool:
@@ -682,6 +691,15 @@ def main() -> None:
     if loaded_model != spacy_model:
         print(f"[WARN] spaCy model '{spacy_model}' not available; using '{loaded_model}'", file=sys.stderr)
     _ensure_sentencizer(nlp)
+
+    # GLiNER takes over the `ner` slot, so every audit below still introspects
+    # whatever will actually produce the entities (STU-521).
+    ner = _ner_config(input_data)
+    if ner.uses_gliner:
+        from wiki_creator.nlp.gliner_ner import attach as _attach_gliner
+
+        _attach_gliner(nlp, gliner_label_map(), model=ner.model, threshold=ner.threshold)
+
     _log_pipeline(nlp, loaded_model)
     _audit_ner_labels(nlp)
     _warn_if_no_pos_tagger(nlp)

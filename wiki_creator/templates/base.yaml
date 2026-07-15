@@ -5,8 +5,16 @@ entity_types:
   # absorbs; a type with no `ner_labels` is generation-only (SYNOPSIS, COLLATION)
   # or the untyped fallback (OTHER). `export` holds what the presentation layer
   # needs — no Python table restates any of this.
+  #
+  # STU-521: `gliner_label` is the natural-language label the GLiNER backend asks
+  # for to populate this type — with a zero-shot extractor the type vocabulary is
+  # a prompt, not a training run. The wording is load-bearing (it moved FACTION 15
+  # points in STU-470), so these are selected by `research/ner-eval/sweep_labels.py`
+  # rather than guessed: re-run the sweep before changing one. A type with no
+  # `gliner_label` is never asked for.
   PERSON:
     ner_labels: [PER, PERSON]
+    gliner_label: person name
     export:
       subdir: characters
       full_key: persons
@@ -59,6 +67,7 @@ entity_types:
       - {token: references,    group: section, provenance: extracted-fact, obligation: MIN, fallback: none, tiers: [figurant, secondary, principal]}
   PLACE:
     ner_labels: [LOC, GPE, FAC, PLACE]
+    gliner_label: place name
     export:
       subdir: locations
       full_key: places
@@ -95,6 +104,7 @@ entity_types:
       - {token: references,    group: section, provenance: extracted-fact, obligation: MIN, fallback: none, tiers: [figurant, secondary, principal]}
   ORG:
     ner_labels: [ORG, NORP]
+    gliner_label: "kingdom, empire, or government"
     export:
       subdir: organizations
       full_key: orgs
@@ -130,6 +140,7 @@ entity_types:
       - {token: references,    group: section, provenance: extracted-fact, obligation: MIN, fallback: none, tiers: [figurant, secondary, principal]}
   EVENT:
     ner_labels: [EVENT]
+    gliner_label: event
     export:
       subdir: events
       full_key: events
@@ -164,6 +175,7 @@ entity_types:
   # ORG because the frozen Literal downstream refused to carry it.
   FACTION:
     ner_labels: [FACTION]
+    gliner_label: "people, race, or order"
     export:
       subdir: factions
       full_key: factions

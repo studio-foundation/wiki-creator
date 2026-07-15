@@ -38,10 +38,24 @@ dev = [
 coref = [
     "fastcoref>=2.1",
 ]
+# GLiNER zero-shot NER (scripts/entity_extraction.py, opt-in per book via
+# `ner.backend: gliner`). An extra rather than a core dep for the same reason as
+# coref: it pulls torch (STU-521).
+gliner = [
+    "gliner>=0.2.13",
+]
 embeddings = ["sentence-transformers>=3"]  # numpy comes transitively via spaCy
 
 [project.urls]
 Homepage = "https://github.com/studio-foundation/wiki-creator"
+
+[[tool.mypy.overrides]]
+# The gliner extra is absent in CI (which installs only [dev]) and neither
+# package ships py.typed, so the same import raises import-not-found there and
+# import-untyped locally. Ignoring the module rather than the error code covers
+# both (STU-521).
+module = ["gliner.*", "torch.*"]
+ignore_missing_imports = true
 
 [tool.hatch.build.targets.wheel]
 # `scripts` is packaged too: pipeline stage executors import sibling stages

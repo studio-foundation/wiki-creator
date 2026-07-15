@@ -5,8 +5,13 @@ description: |
   resolve aliases, and generate Markdown wiki pages for each entity.
 
 file_path: library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.epub
-spacy_model: models/wiki-ner-en/model-best
-language: en  # required: spacy_model is a local path, language cannot be inferred (STU-453)
+# spacy_model now only tokenizes, tags and splits sentences; GLiNER finds the
+# entities (STU-521). The tagger matters: wiki-ner-en had none, so this book's
+# POS span filters had never once run.
+spacy_model: en_core_web_lg
+language: en
+ner:
+  backend: gliner
 coref: true
 use_llm: true
 classify: false  # classification handled by scripts/classify_relationships.py (pre-step in run_wiki.py)

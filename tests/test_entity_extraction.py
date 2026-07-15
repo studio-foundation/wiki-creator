@@ -950,6 +950,16 @@ def test_is_valid_span_rejects_verb_when_pos_available(nlp):
     assert _is_valid_span(span) is False
 
 
+@requires_en_sm
+def test_is_valid_span_rejects_capitalised_pronoun(nlp):
+    """A zero-shot NER asked for `person name` types a sentence-initial "She" as
+    PERSON, and it clears the other filters: capitalised, 3 chars, and repeated
+    often enough to survive min_mentions. POS is what actually knows (STU-521)."""
+    doc = nlp("She was escorted to Endovier.")
+    span = Span(doc, 0, 1, label="PERSON")  # "She", pos_ == PRON
+    assert _is_valid_span(span) is False
+
+
 def test_is_valid_span_skips_pos_check_without_tagger():
     """Tagger-less model (e.g. wiki-ner-en): POS filter is an explicit no-op (STU-439)."""
     blank = spacy.blank("en")

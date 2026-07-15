@@ -121,6 +121,33 @@ Inside `wiki-resolution`, order matters:
 
 ## Gotchas
 
+- GLiNER NER backend (STU-521): the book YAML `ner` block picks who finds the
+  entities — `backend: spacy` (default, pre-STU-521 behavior) | `gliner`, plus
+  `model`/`threshold`. Pure config in `wiki_creator/ner.py`; an unknown backend
+  or key **raises** rather than degrading, because a backend silently falling
+  back is the STU-470 bug itself. **spaCy does not go away**: it still tokenizes,
+  tags and splits sentences (`_is_valid_span` needs POS, the extractor needs
+  `doc.sents`), so `spacy_model` keeps its meaning — GLiNER replaces the *entity*
+  step only. `wiki_creator/nlp/gliner_ner.py` does it as a spaCy component
+  registered in the **`ner` pipe slot** and exposing `.labels`, so `log_pipeline`
+  /`_audit_ner_labels`/`_warn_if_no_pos_tagger` introspect it with no GLiNER
+  branch. It emits **taxonomy types as spaCy labels** (not the natural-language
+  labels it asked for): `base.yaml` declares each type's own name among its
+  `ner_labels`, so `ner_label_map` types them to themselves and all six
+  downstream filters are untouched — the same trick wiki-ner-en relied on. That
+  assumption is invisible and load-bearing (drop `PERSON` from PERSON's
+  `ner_labels` and GLiNER silently extracts nothing); a test pins it. Labels live
+  in `base.yaml#entity_types.<TYPE>.gliner_label` — the type vocabulary is a
+  prompt now, so adding `ARTIFACT` is a YAML edit, not a retrain. Wording is
+  load-bearing and swept, not guessed (`research/ner-eval/sweep_labels.py`,
+  jointly on typing F1 — re-run it before changing a label). Chapters exceed
+  GLiNER's window, so text is cut into sentence-aligned windows that are verbatim
+  `doc.text` slices: STU-489 persists mention offsets into the chapter text, so a
+  window that didn't map back exactly would corrupt them. `gliner` is an optional
+  extra (it pulls torch, like `coref`). `throne-of-glass` is the only book flipped
+  and was the only wiki-ner-en consumer, which is why its 0.105 detection F1 on an
+  unseen book stayed invisible; `models/wiki-ner-en` is retired (gitignored, so
+  the flip *is* the retirement). EVENT ships with no accuracy claim (n=2 gold).
 - Non-standard spaCy models (STU-453): `lang.infer_language` returns `fr`/`en`
   only for stock-model name prefixes (`fr_core_news_`/`fr_dep_news_`/
   `en_core_web_`) and `None` for anything else — a local path
