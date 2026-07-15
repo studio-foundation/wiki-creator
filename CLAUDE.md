@@ -4,13 +4,14 @@
 
 - Repo: `wiki-creator-by-studio`
 - Purpose: extract entities from EPUB novels, classify them, generate wiki pages, export wikitext
-- Current verified state on 2026-07-13: `pytest -q` => `1113 passed, 37 skipped`
-  (skips = tests needing optional spaCy models or the `coref` extra; see `tests/_markers.py`)
+- Current verified state on 2026-07-15: `pytest -q` => `1604 passed, 1 skipped`
+  (skip count depends on which optional models/extras are installed; see `tests/_markers.py`)
 
 ## Commands
 
 ```bash
-pip install -e ".[dev]"
+pip install -e ".[dev]"      # test suite: carries en_core_web_sm
+pip install -e ".[models]"   # to run a book: the lg models the books declare (~1 GB)
 pytest -q
 mypy wiki_creator/
 
@@ -121,6 +122,20 @@ Inside `wiki-resolution`, order matters:
 
 ## Gotchas
 
+- spaCy models are extras, not a manual download (STU-522): `pip install -e
+  ".[models]"` installs the models the books declare (`en_core_web_lg`,
+  `fr_core_news_lg`) as pinned wheel URLs. Models are not PyPI deps, so nothing
+  used to install them: 14 of 15 books declared `en_core_web_lg` and ran the
+  `en_core_web_sm` fallback (with a `[WARN]`) on every machine that followed the
+  README, and CI shelled out to `spacy download`. `[dev]` now carries
+  `en_core_web_sm` — the test suite's model — so a fresh clone reproduces the
+  documented `pytest -q` state with no tribal step. The wheels pin spaCy 3.8: a
+  spaCy minor bump fails the install instead of resolving a mismatched model.
+  The loader fallback is deliberately untouched — it exists so a local path or a
+  community model can degrade (STU-453) — so skipping `[models]` still warns and
+  runs rather than failing. `tests/test_spacy_model_extras.py` pins that every
+  stock model a book declares is installed by an extra; a new book declaring an
+  uninstalled model fails it.
 - GLiNER NER backend (STU-521): the book YAML `ner` block picks who finds the
   entities — `backend: spacy` (default, pre-STU-521 behavior) | `gliner`, plus
   `model`/`threshold`. Pure config in `wiki_creator/ner.py`; an unknown backend
@@ -216,9 +231,8 @@ Inside `wiki-resolution`, order matters:
   BS4-parsed HTML): `html.unescape` (html.parser resolves charrefs at parse time —
   and on already-unescaped text it would eat a literal `&nbsp;` an author wrote),
   and the two paragraph steps (that `get_text` returns `"\n".join` of non-empty
-  stripped strings, so `\n\n` cannot occur — which also means **chapter text has no
-  paragraph structure at all**, filed as STU-523; restoring it moves every STU-489
-  mention offset). Two more are inert on this corpus (NFC, ligatures: 0/1102) but
+  stripped strings, so `\n\n` could not occur — chapter text had no paragraph
+  structure at all; STU-523 restored it, see below). Two more are inert on this corpus (NFC, ligatures: 0/1102) but
   kept — they are not structurally unreachable, another publisher plausibly ships
   NFD or `ﬁ`. Two were deleted as **actively harmful** band-aids over the markup
   split `_flatten_inline_markup` now fixes at the root: `Àla`→`À la` only ever undid
@@ -227,6 +241,27 @@ Inside `wiki-resolution`, order matters:
   fixed upstream) against two corruptions of Eldest dialect (`I 'ope` → `I'ope`).
   When a step here looks dead, measure before deleting — and when it looks alive,
   check it is not just undoing a neighbour.
+- Paragraph structure (STU-523): `chapters.json` content carries block boundaries
+  as `\n\n`. `get_text(separator="\n", strip=True)` drops whitespace-only strings,
+  so a break cannot ride on whitespace: `_mark_paragraph_breaks` inserts a NUL
+  (`_PARAGRAPH_MARK`) after every `_BLOCK_TAGS` element and `clean_chapter_text`
+  turns each run of marks into one `\n\n`. Three constraints are load-bearing and
+  each has a test. (1) The mark goes *after* the tag, not inside it, so
+  `_extract_chapter_title`'s `heading.get_text()` stays clean. (2) It runs *after*
+  `_flatten_inline_markup` — both mutate the same tree, and marking a tag about to
+  be unwrapped strands its mark mid-word (STU-519). (3) Marks come from markup
+  only, never from source whitespace, so the blank lines pretty-printed XHTML
+  sprinkles inside a `<p>` are not paragraph breaks. `<br>` is deliberately not a
+  block tag: it is a soft line break (verse, addresses) and stays a space.
+  Every `\n\n` is +1 char over the space it replaced, so **it shifts every STU-489
+  mention offset** — the seed (`gen_seed.py`, which rebuilds the chapter text
+  itself and must mirror parse_epub's joining) and the goldens were regenerated.
+  Offsets survived because every consumer is self-consistent: extraction computes
+  them from the same text, `Mention.window` and `gliner_ner.windows` slice
+  `doc.text` verbatim. `research/ner-eval/chunking.py` still splits on `\s+` and
+  is paragraph-blind — it is eval scaffolding for the retired `wiki-ner-en`, so it
+  was left alone; paragraph-aware chunking and dialogue attribution are the
+  follow-ups this unblocks.
 - Section filtering (STU-529): what counts as front/back matter is **classified**,
   not matched. The two `chapters.py` frozensets are gone; `is_frontmatter_chapter`
   is a dict lookup on a `frontmatter: true` tag, and the `section-filter` stage
@@ -384,6 +419,14 @@ Inside `wiki-resolution`, order matters:
   route through this helper (`spoiler_blocks`, `provenance.relation_units`,
   `confidence`, `generate_wiki_pages` prompt builders). This is a rendering fix,
   independent of classification correctness (STU-495/476).
+  That "all render sites" claim was false on one path until STU-528:
+  `character_graph.indirect_relationships` built `path_edge_types` with its own
+  `or "co-occurrence"` fallback, so the metric label reached the writer prompt
+  (`path: friend → co-occurrence`) for every indirect relation with an untyped hop.
+  It routes through the helper now, and an untyped hop **drops the whole indirect
+  relation**, not just the hop — a path is nothing but its edge types, so a hole
+  leaves the LLM to fill it. The target itself isn't dropped: the next fully-typed
+  simple path to it is used if there is one.
 - Editorial stance (STU-507): whether pages speak from inside the fiction is
   **declared** in the book YAML (`generation.editorial_stance`), not inherited
   from anti-hallucination prompting. `wiki_creator/editorial_stance.py` holds the

@@ -16,17 +16,12 @@ jobs:
           python-version: "3.11"
           cache: pip
 
-      # click is imported by spaCy's CLI (spacy download) but no longer
-      # arrives transitively: typer >= 0.26 dropped its click dependency
-      # while spacy 3.8 still does `from click import NoSuchOption`.
-      - name: Install package with dev dependencies
-        run: pip install -e ".[dev]" "click>=8"
-
-      # Small English model — enough for the NER-dependent tests.
-      # Tests needing fr_core_news_lg (~570 MB) or the coref extra skip
+      # [dev] carries en_core_web_sm, so the NER-dependent tests run here.
+      # The [models] extra (~1 GB of lg models) is a run-time need, not a test
+      # one; tests needing fr_core_news_lg or the coref/gliner extras skip
       # cleanly (see tests/_markers.py) to keep CI fast.
-      - name: Install spaCy model
-        run: python -m spacy download en_core_web_sm
+      - name: Install package with dev dependencies
+        run: pip install -e ".[dev]"
 
       - name: Type-check
         run: python -m mypy wiki_creator/

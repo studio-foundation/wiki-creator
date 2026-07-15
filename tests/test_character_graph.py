@@ -60,6 +60,33 @@ def test_indirect_relationship_confidence_is_interpretation():
     assert r.confidence == "interpretation"
 
 
+def _typed_graph(*edges: tuple[str, str, object]) -> CharacterGraph:
+    g = CharacterGraph()
+    for a, b, rel_type in edges:
+        for name in (a, b):
+            g.add_character(name, {"importance": "major", "aliases": [], "books": ["b"]})
+        g.add_interaction(a, b, {"relationship_type": rel_type, "cooccurrence_count": 50,
+                                 "chapter_weights": {}, "sample_contexts": [],
+                                 "evolution": "", "books": ["b"]})
+    return g
+
+
+@pytest.mark.parametrize("untyped", [None, "", "null", "none"])
+def test_indirect_relationship_dropped_when_a_hop_is_untyped(untyped):
+    """STU-528: no 'co-occurrence' fallback — an untyped hop drops the whole path."""
+    g = _typed_graph(("A", "B", "friend"), ("B", "C", untyped))
+    assert g.indirect_relationships("A") == []
+
+
+def test_indirect_relationship_falls_back_to_a_fully_typed_path():
+    g = _typed_graph(
+        ("A", "B", "friend"), ("B", "D", None),
+        ("A", "C", "ally"), ("C", "D", "rival"),
+    )
+    indirect = g.indirect_relationships("A")
+    assert [(r.via, r.path_edge_types) for r in indirect] == [(["C"], ["ally", "rival"])]
+
+
 def test_indirect_relationships_two_hop():
     g = CharacterGraph.from_json(_load_fixture("minimal_graph.json"))
     # Nehemia and Cain are not directly connected; both connect via Celaena
