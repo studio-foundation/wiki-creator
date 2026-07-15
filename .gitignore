@@ -76,3 +76,6 @@ library/**/wiki_inputs/
 library/**/output/
 library/**/registry.json
 .wiki_runs/
+
+# Scratch audits at repo root; per-book audit logs under library/ stay tracked
+/audits/
