@@ -1,0 +1,40 @@
+# Canon policy for the Hollow Star Saga series (STU-515).
+#
+# One EPUB per tome, sovereign de facto — nothing to arbitrate within a tome
+# today. This file writes that rule down before a second source of truth on the
+# same content (scripts/scrape_fandom.py, currently LoRA-dataset only) is ever
+# wired into wiki generation.
+#
+# later_tome_overrides: false keeps the historical cross-tome rule (an earlier
+# tome wins a conflicting entity_type, warning only). Byte-identical output.
+#
+# Consumed by scripts/parse_epub.py (resolves which source is read) and
+# scripts/write_registry.py (arbitrates cross-tome Registry.accumulate).
+canon:
+  primary_source: epub
+  sources:
+    - id: epub_en_hollow_star_saga_01
+      type: epub
+      book: 01_a-dark-and-hollow-star
+      path: books/01_a-dark-and-hollow-star.epub
+      authority: 100
+    - id: epub_en_hollow_star_saga_02
+      type: epub
+      book: 02_a-cruel-and-fated-light
+      path: books/02_a-cruel-and-fated-light.epub
+      authority: 100
+    - id: epub_en_hollow_star_saga_03
+      type: epub
+      book: 03_a-grim-and-sunken-vow
+      path: books/03_a-grim-and-sunken-vow.epub
+      authority: 100
+    - id: epub_en_hollow_star_saga_04
+      type: epub
+      book: 04_a-wild-and-ruined-song
+      path: books/04_a-wild-and-ruined-song.epub
+      authority: 100
+  conflict_resolution:
+    strategy: highest_authority  # highest_authority | primary_wins | flag_for_review
+    on_unresolved: flag          # flag (warn, fall back to primary) | fail (raise)
+  cross_tome:
+    later_tome_overrides: false
