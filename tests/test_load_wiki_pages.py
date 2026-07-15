@@ -1,14 +1,16 @@
 """Tests for load_wiki_pages.py — _failed page filtering at pipeline entry point."""
+import io
 import json
 import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 from wiki_creator import studio_io
 from wiki_creator.types import WikiPage
 
-from scripts.load_wiki_pages import _filter_failed_pages, _read_pages
+from scripts.load_wiki_pages import _filter_failed_pages, _read_pages, main
 
 
 def _page(**overrides) -> WikiPage:
@@ -131,3 +133,35 @@ def test_load_collation_pages_reads_artifact(tmp_path):
 
 def test_load_collation_pages_absent(tmp_path):
     assert _load_extra_pages(tmp_path, "collation_pages.json", "collation pages") == []
+
+
+def _run_main(tmp_path, monkeypatch, capsys, naming_cfg=None):
+    """Drive load_wiki_pages.main end-to-end with two homonym pages."""
+    processing = tmp_path / "library" / "a" / "s" / "processing_output" / "01"
+    processing.mkdir(parents=True)
+    (processing / "wiki_pages.json").write_text(json.dumps({"pages": [
+        {"title": "Adarlan", "entity_type": "PERSON", "importance": "principal",
+         "infobox_fields": {}, "content": "## Bio\n\nKing."},
+        {"title": "Adarlan", "entity_type": "PLACE", "importance": "principal",
+         "infobox_fields": {}, "content": "## Bio\n\nKingdom."},
+    ]}), encoding="utf-8")
+    cfg = {
+        "file_path": str(tmp_path / "library" / "a" / "s" / "books" / "01.epub"),
+        "export": {"categories": {"labels": {"persons": "Characters", "locations": "Locations"}}},
+    }
+    if naming_cfg is not None:
+        cfg["naming"] = naming_cfg
+    payload = {"additional_context": yaml.safe_dump(cfg)}
+    monkeypatch.setattr(sys, "stdin", io.StringIO(json.dumps(payload)))
+    main()
+    return json.loads(capsys.readouterr().out)["pages"]
+
+
+def test_main_disambiguates_cross_type_homonyms(tmp_path, monkeypatch, capsys):
+    titles = {p["title"] for p in _run_main(tmp_path, monkeypatch, capsys)}
+    assert titles == {"Adarlan (Characters)", "Adarlan (Locations)"}
+
+
+def test_main_merge_policy_leaves_titles_untouched(tmp_path, monkeypatch, capsys):
+    pages = _run_main(tmp_path, monkeypatch, capsys, naming_cfg={"collision_policy": "merge"})
+    assert [p["title"] for p in pages] == ["Adarlan", "Adarlan"]
