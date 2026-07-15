@@ -76,35 +76,35 @@
      "start": 26,
      "end": 35,
      "raw_label": null,
-     "context": "Warehouse Nine That night Mira Vale found the junior clerk drinking alone. Mira Vale asked careful questions and bought careful answers.",
+     "context": "Warehouse Nine That night Mira Vale found the junior clerk drinking alone in the café. Mira Vale asked careful questions and bought careful answers.",
      "book_id": "smoke-novella"
     },
     {
      "surface": "Mira Vale",
      "chapter_id": "chapter_2",
      "source": "ner",
-     "start": 75,
-     "end": 84,
+     "start": 87,
+     "end": 96,
      "raw_label": null,
-     "context": "Warehouse Nine That night Mira Vale found the junior clerk drinking alone. Mira Vale asked careful questions and bought careful answers. Warehouse nine held the cargo of the Heron, the clerk admitted at last.",
+     "context": "Warehouse Nine That night Mira Vale found the junior clerk drinking alone in the café. Mira Vale asked careful questions and bought careful answers. Warehouse nine held the cargo of the Heron, the clerk admitted at last.",
      "book_id": "smoke-novella"
     },
     {
      "surface": "Mira Vale",
      "chapter_id": "chapter_2",
      "source": "ner",
-     "start": 209,
-     "end": 218,
+     "start": 221,
+     "end": 230,
      "raw_label": null,
-     "context": "Warehouse nine held the cargo of the Heron, the clerk admitted at last. Mira Vale smiled, paid the keeper, and slipped back into the dark. By the old wall, Captain Elias Thorn waited with two lanterns and a crowbar.",
+     "context": "Warehouse nine held the cargo of the Heron, the clerk admitted at last. Mira Vale smiled, paid the keeper, and slipped back into the dark. By the old wall on the 9th pier, Captain Elias Thorn waited with two lanterns and a crowbar.",
      "book_id": "smoke-novella"
     },
     {
      "surface": "Mira Vale",
      "chapter_id": "chapter_2",
      "source": "ner",
-     "start": 371,
-     "end": 380,
+     "start": 399,
+     "end": 408,
      "raw_label": null,
      "context": null,
      "book_id": "smoke-novella"
@@ -116,17 +116,17 @@
      "start": 106,
      "end": 115,
      "raw_label": null,
-     "context": "North The Heron slipped her moorings before the dawn bells rang. Captain Elias Thorn held the wheel while Mira Vale watched the lights shrink behind them, the recovered cargo lashed tight below. The Salt Guild would write its angry letters to every port on the coast.",
+     "context": "North The Heron slipped her moorings before the dawn bells rang. Captain Elias Thorn held the wheel while Mira Vale watched the lights shrink behind them, the recovered cargo lashed tight below. The Salt Guild would write its angry letters to every port on the coast—harbor masters, tax men & brokers alike.",
      "book_id": "smoke-novella"
     },
     {
      "surface": "Mira Vale",
      "chapter_id": "chapter_3",
      "source": "ner",
-     "start": 268,
-     "end": 277,
+     "start": 308,
+     "end": 317,
      "raw_label": null,
-     "context": "The Salt Guild would write its angry letters to every port on the coast. Mira Vale looked north and said nothing. Elias Thorn smiled at the open water and set the course past the shoals.",
+     "context": "The Salt Guild would write its angry letters to every port on the coast—harbor masters, tax men & brokers alike. Mira Vale looked north and said nothing. Elias Thorn smiled at the open water and set the course past the shoals.",
      "book_id": "smoke-novella"
     }
    ],
@@ -182,8 +182,8 @@
      "surface": "Port Saffron",
      "chapter_id": "chapter_3",
      "source": "ner",
-     "start": 382,
-     "end": 394,
+     "start": 422,
+     "end": 434,
      "raw_label": null,
      "context": "Elias Thorn smiled at the open water and set the course past the shoals. Port Saffron sank back into the fog it had come from.",
      "book_id": "smoke-novella"
@@ -230,7 +230,7 @@
      "start": 199,
      "end": 209,
      "raw_label": null,
-     "context": "Captain Elias Thorn held the wheel while Mira Vale watched the lights shrink behind them, the recovered cargo lashed tight below. The Salt Guild would write its angry letters to every port on the coast. Mira Vale looked north and said nothing.",
+     "context": "Captain Elias Thorn held the wheel while Mira Vale watched the lights shrink behind them, the recovered cargo lashed tight below. The Salt Guild would write its angry letters to every port on the coast—harbor masters, tax men & brokers alike. Mira Vale looked north and said nothing.",
      "book_id": "smoke-novella"
     }
    ],
@@ -256,15 +256,15 @@
      "start": 0,
      "end": 14,
      "raw_label": null,
-     "context": "Warehouse Nine That night Mira Vale found the junior clerk drinking alone. Mira Vale asked careful questions and bought careful answers.",
+     "context": "Warehouse Nine That night Mira Vale found the junior clerk drinking alone in the café. Mira Vale asked careful questions and bought careful answers.",
      "book_id": "smoke-novella"
     },
     {
      "surface": "Warehouse nine",
      "chapter_id": "chapter_2",
      "source": "ner",
-     "start": 137,
-     "end": 151,
+     "start": 149,
+     "end": 163,
      "raw_label": null,
      "context": "Mira Vale asked careful questions and bought careful answers. Warehouse nine held the cargo of the Heron, the clerk admitted at last. Mira Vale smiled, paid the keeper, and slipped back into the dark.",
      "book_id": "smoke-novella"
@@ -273,10 +273,10 @@
      "surface": "Warehouse nine",
      "chapter_id": "chapter_2",
      "source": "ner",
-     "start": 354,
-     "end": 368,
+     "start": 382,
+     "end": 396,
      "raw_label": null,
-     "context": "By the old wall, Captain Elias Thorn waited with two lanterns and a crowbar. \"Warehouse nine,\" Mira Vale whispered. Elias Thorn nodded once and picked up the iron bar.",
+     "context": "By the old wall on the 9th pier, Captain Elias Thorn waited with two lanterns and a crowbar. \"Warehouse nine,\" Mira Vale whispered. Elias Thorn nodded once and picked up the iron bar.",
      "book_id": "smoke-novella"
     }
    ],
@@ -321,10 +321,10 @@
      "surface": "Captain Elias Thorn",
      "chapter_id": "chapter_2",
      "source": "ner",
-     "start": 293,
-     "end": 312,
+     "start": 321,
+     "end": 340,
      "raw_label": null,
-     "context": "Mira Vale smiled, paid the keeper, and slipped back into the dark. By the old wall, Captain Elias Thorn waited with two lanterns and a crowbar. \"Warehouse nine,\" Mira Vale whispered.",
+     "context": "Mira Vale smiled, paid the keeper, and slipped back into the dark. By the old wall on the 9th pier, Captain Elias Thorn waited with two lanterns and a crowbar. \"Warehouse nine,\" Mira Vale whispered.",
      "book_id": "smoke-novella"
     },
     {
@@ -334,7 +334,7 @@
      "start": 65,
      "end": 84,
      "raw_label": null,
-     "context": "North The Heron slipped her moorings before the dawn bells rang. Captain Elias Thorn held the wheel while Mira Vale watched the lights shrink behind them, the recovered cargo lashed tight below. The Salt Guild would write its angry letters to every port on the coast.",
+     "context": "North The Heron slipped her moorings before the dawn bells rang. Captain Elias Thorn held the wheel while Mira Vale watched the lights shrink behind them, the recovered cargo lashed tight below. The Salt Guild would write its angry letters to every port on the coast—harbor masters, tax men & brokers alike.",
      "book_id": "smoke-novella"
     },
     {
@@ -381,8 +381,8 @@
      "surface": "Elias Thorn",
      "chapter_id": "chapter_2",
      "source": "ner",
-     "start": 392,
-     "end": 403,
+     "start": 420,
+     "end": 431,
      "raw_label": null,
      "context": "\"Warehouse nine,\" Mira Vale whispered. Elias Thorn nodded once and picked up the iron bar.",
      "book_id": "smoke-novella"
@@ -391,8 +391,8 @@
      "surface": "Elias Thorn",
      "chapter_id": "chapter_3",
      "source": "ner",
-     "start": 309,
-     "end": 320,
+     "start": 349,
+     "end": 360,
      "raw_label": null,
      "context": "Mira Vale looked north and said nothing. Elias Thorn smiled at the open water and set the course past the shoals. Port Saffron sank back into the fog it had come from.",
      "book_id": "smoke-novella"

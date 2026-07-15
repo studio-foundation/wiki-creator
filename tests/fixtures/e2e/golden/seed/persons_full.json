@@ -14,10 +14,10 @@
      "Mira Vale waited on a bench while the clerks argued behind tall doors. Captain Elias Thorn came out an hour later with empty hands. \"Confiscated,\" Elias Thorn said."
     ],
     "chapter_2": [
-     "Mira Vale smiled, paid the keeper, and slipped back into the dark. By the old wall, Captain Elias Thorn waited with two lanterns and a crowbar. \"Warehouse nine,\" Mira Vale whispered."
+     "Mira Vale smiled, paid the keeper, and slipped back into the dark. By the old wall on the 9th pier, Captain Elias Thorn waited with two lanterns and a crowbar. \"Warehouse nine,\" Mira Vale whispered."
     ],
     "chapter_3": [
-     "North The Heron slipped her moorings before the dawn bells rang. Captain Elias Thorn held the wheel while Mira Vale watched the lights shrink behind them, the recovered cargo lashed tight below. The Salt Guild would write its angry letters to every port on the coast."
+     "North The Heron slipped her moorings before the dawn bells rang. Captain Elias Thorn held the wheel while Mira Vale watched the lights shrink behind them, the recovered cargo lashed tight below. The Salt Guild would write its angry letters to every port on the coast—harbor masters, tax men & brokers alike."
     ]
    },
    "mention_spans_by_chapter": {
@@ -38,8 +38,8 @@
     "chapter_2": [
      {
       "surface": "Captain Elias Thorn",
-      "start": 293,
-      "end": 312
+      "start": 321,
+      "end": 340
      }
     ],
     "chapter_3": [
@@ -70,13 +70,13 @@
      "\"Every crate.\" Mira Vale looked at the granite hall for a long moment. Then Mira Vale whispered the beginning of a plan, and Elias Thorn laughed for the first time in days."
     ],
     "chapter_2": [
-     "Warehouse Nine That night Mira Vale found the junior clerk drinking alone. Mira Vale asked careful questions and bought careful answers.",
-     "Warehouse Nine That night Mira Vale found the junior clerk drinking alone. Mira Vale asked careful questions and bought careful answers. Warehouse nine held the cargo of the Heron, the clerk admitted at last.",
-     "Warehouse nine held the cargo of the Heron, the clerk admitted at last. Mira Vale smiled, paid the keeper, and slipped back into the dark. By the old wall, Captain Elias Thorn waited with two lanterns and a crowbar."
+     "Warehouse Nine That night Mira Vale found the junior clerk drinking alone in the café. Mira Vale asked careful questions and bought careful answers.",
+     "Warehouse Nine That night Mira Vale found the junior clerk drinking alone in the café. Mira Vale asked careful questions and bought careful answers. Warehouse nine held the cargo of the Heron, the clerk admitted at last.",
+     "Warehouse nine held the cargo of the Heron, the clerk admitted at last. Mira Vale smiled, paid the keeper, and slipped back into the dark. By the old wall on the 9th pier, Captain Elias Thorn waited with two lanterns and a crowbar."
     ],
     "chapter_3": [
-     "North The Heron slipped her moorings before the dawn bells rang. Captain Elias Thorn held the wheel while Mira Vale watched the lights shrink behind them, the recovered cargo lashed tight below. The Salt Guild would write its angry letters to every port on the coast.",
-     "The Salt Guild would write its angry letters to every port on the coast. Mira Vale looked north and said nothing. Elias Thorn smiled at the open water and set the course past the shoals."
+     "North The Heron slipped her moorings before the dawn bells rang. Captain Elias Thorn held the wheel while Mira Vale watched the lights shrink behind them, the recovered cargo lashed tight below. The Salt Guild would write its angry letters to every port on the coast—harbor masters, tax men & brokers alike.",
+     "The Salt Guild would write its angry letters to every port on the coast—harbor masters, tax men & brokers alike. Mira Vale looked north and said nothing. Elias Thorn smiled at the open water and set the course past the shoals."
     ]
    },
    "mention_spans_by_chapter": {
@@ -122,18 +122,18 @@
      },
      {
       "surface": "Mira Vale",
-      "start": 75,
-      "end": 84
+      "start": 87,
+      "end": 96
      },
      {
       "surface": "Mira Vale",
-      "start": 209,
-      "end": 218
+      "start": 221,
+      "end": 230
      },
      {
       "surface": "Mira Vale",
-      "start": 371,
-      "end": 380
+      "start": 399,
+      "end": 408
      }
     ],
     "chapter_3": [
@@ -144,8 +144,8 @@
      },
      {
       "surface": "Mira Vale",
-      "start": 268,
-      "end": 277
+      "start": 308,
+      "end": 317
      }
     ]
    },
@@ -201,15 +201,15 @@
     "chapter_2": [
      {
       "surface": "Elias Thorn",
-      "start": 392,
-      "end": 403
+      "start": 420,
+      "end": 431
      }
     ],
     "chapter_3": [
      {
       "surface": "Elias Thorn",
-      "start": 309,
-      "end": 320
+      "start": 349,
+      "end": 360
      }
     ]
    },

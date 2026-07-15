@@ -5,8 +5,8 @@ The golden chain (tests/test_e2e_golden.py) starts downstream of NER: it needs
 a frozen entity-extraction output for the smoke novella (tests/fixtures/e2e/).
 Real extraction requires a spaCy model, which is not available everywhere the
 suite runs, so the seed is committed. This script rebuilds it deterministically
-from the novella text with a longest-match scanner over a fixed inventory of
-the novella's proper nouns — mimicking the shapes documented in
+from the novella text — as parse_epub returns it — with a longest-match scanner
+over a fixed inventory of the novella's proper nouns, mimicking the shapes documented in
 scripts/entity_extraction.py (registry keyed by lowercased surface form,
 mentions_by_chapter capped at 3 contexts of sentence ±1, uncapped
 mention_spans_by_chapter offsets per occurrence, per-type full files).
@@ -21,14 +21,18 @@ this seed honest against real extraction output in CI.
 import importlib.util
 import json
 import re
+import sys
+import tempfile
 from pathlib import Path
+
+import yaml
 
 SEED_DIR = Path(__file__).resolve().parent / "seed"
 TESTS_DIR = Path(__file__).resolve().parents[3]
 
 # The novella's proper nouns, longest-first so "Captain Elias Thorn" consumes
 # its span before "Elias Thorn" can match inside it. This is fixture data tied
-# to tests/fixtures/e2e/ch0*.txt, not pipeline vocabulary.
+# to tests/fixtures/e2e/ch0*.xhtml, not pipeline vocabulary.
 INVENTORY = [
     ("Captain Elias Thorn", "PERSON"),
     ("Elias Thorn", "PERSON"),
@@ -120,28 +124,20 @@ def build_seed(chapters: list[dict]) -> dict:
 
 
 def main() -> None:
+    sys.path.insert(0, str(TESTS_DIR))
     spec = importlib.util.spec_from_file_location("test_e2e_smoke", TESTS_DIR / "test_e2e_smoke.py")
     test_e2e_smoke = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(test_e2e_smoke)
-    CHAPTER_TITLES, FIXTURE_DIR = test_e2e_smoke.CHAPTER_TITLES, test_e2e_smoke.FIXTURE_DIR
 
-    # Same ids and content parse_epub derives from the smoke EPUB: ebooklib
-    # item ids, and the chapter <h1> title prepended to the paragraph text.
-    chapters = [
-        {
-            "id": f"chapter_{i}",
-            "title": title,
-            "content": title + " " + " ".join(
-                (FIXTURE_DIR / f"ch{i + 1:02d}.txt")
-                .read_text(encoding="utf-8")
-                .strip()
-                .split("\n\n")
-            ),
-        }
-        for i, title in enumerate(CHAPTER_TITLES)
-    ]
+    # Chapter text comes from the parser, never from a second reconstruction of
+    # the fixtures here: they carry markup (dropcap spans, entities, a ligature)
+    # whose text form only parse_epub knows (STU-524).
+    with tempfile.TemporaryDirectory() as tmp:
+        epub_path = test_e2e_smoke._build_smoke_epub(Path(tmp))
+        ctx = yaml.safe_dump({"file_path": str(epub_path), "language": "en"})
+        parse_result = test_e2e_smoke._run_stage("parse_epub.py", {"additional_context": ctx})
 
-    entities_full = build_seed(chapters)
+    entities_full = build_seed(parse_result["chapters"])
     full_only = {"mentions_by_chapter", "mention_spans_by_chapter"}
     entities_for_resolution = {
         eid: {k: v for k, v in e.items() if k not in full_only}
