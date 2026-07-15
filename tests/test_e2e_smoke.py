@@ -7,15 +7,21 @@ exercises the extraction stages against an actual EPUB file.
 
 Tier 1 (always runs): EPUB build + scripts/parse_epub.py.
 Tier 2 (skips without en_core_web_sm): scripts/entity_extraction.py.
+
+The chapters are committed XHTML (fixtures/e2e/ch0*.xhtml), not prose this
+module wraps in tags: a fixture the test authors can only contain the markup
+the parser already expects, which is why 1500 green tests never saw STU-519
+(STU-524).
 """
 import json
 import subprocess
 import sys
+import unicodedata
+import zipfile
 from pathlib import Path
 
 import pytest
 import yaml
-from ebooklib import epub
 
 from _markers import requires_en_sm
 
@@ -24,40 +30,97 @@ FIXTURE_DIR = Path(__file__).parent / "fixtures" / "e2e"
 
 CHAPTER_TITLES = ["Harbor Fog", "The Granite Hall", "Warehouse Nine", "North"]
 
+BOOK_TITLE = "The Salt Guild Ledger"
+BOOK_AUTHOR = "Wiki Creator Fixtures"
+
+_CONTAINER = """<?xml version="1.0" encoding="utf-8"?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+  <rootfiles>
+    <rootfile full-path="EPUB/content.opf" media-type="application/oebps-package+xml"/>
+  </rootfiles>
+</container>
+"""
+
+_OPF = """<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="id">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:identifier id="id">smoke-novella</dc:identifier>
+    <dc:title>{title}</dc:title>
+    <dc:creator>{author}</dc:creator>
+    <dc:language>en</dc:language>
+  </metadata>
+  <manifest>
+    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
+{manifest}
+  </manifest>
+  <spine toc="ncx">
+{spine}
+  </spine>
+</package>
+"""
+
+_NCX = """<?xml version="1.0" encoding="utf-8"?>
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
+  <head><meta name="dtb:uid" content="smoke-novella"/></head>
+  <docTitle><text>{title}</text></docTitle>
+  <navMap>
+{nav_points}
+  </navMap>
+</ncx>
+"""
+
 
 def _build_smoke_epub(tmp_path: Path) -> Path:
-    """Build a small EPUB from the committed fixture chapters.
+    """Zip the committed fixture chapters into an EPUB, byte-for-byte.
+
+    Written as a raw zip on purpose: ebooklib's `write_epub` pretty-prints
+    XHTML, inserting whitespace between sibling elements — which turns a
+    dropcap's `<span>M</span><span>ove</span>` into two real words and destroys
+    the very shapes these fixtures exist to carry (STU-524). The fixture must
+    represent a publisher's file, not ebooklib's serializer output.
 
     Layout matches what book_paths_from_epub expects:
     <series>/books/<slug>.epub → outputs under <series>/processing_output/<slug>/.
     """
-    book = epub.EpubBook()
-    book.set_identifier("smoke-novella")
-    book.set_title("The Salt Guild Ledger")
-    book.set_language("en")
-    book.add_author("Wiki Creator Fixtures")
+    names = [f"ch{i:02d}" for i in range(1, len(CHAPTER_TITLES) + 1)]
+    ids = [f"chapter_{i}" for i in range(len(CHAPTER_TITLES))]
 
-    items = []
-    for i, title in enumerate(CHAPTER_TITLES, start=1):
-        text = (FIXTURE_DIR / f"ch{i:02d}.txt").read_text(encoding="utf-8")
-        item = epub.EpubHtml(
-            title=title, file_name=f"ch{i:02d}.xhtml", lang="en"
-        )
-        item.set_content(f"<h1>{title}</h1>" + "".join(
-            f"<p>{para}</p>" for para in text.strip().split("\n\n")
-        ))
-        book.add_item(item)
-        items.append(item)
-
-    book.toc = items
-    book.add_item(epub.EpubNcx())
-    book.add_item(epub.EpubNav())
-    book.spine = ["nav"] + items
+    opf = _OPF.format(
+        title=BOOK_TITLE,
+        author=BOOK_AUTHOR,
+        manifest="\n".join(
+            f'    <item id="{i}" href="{n}.xhtml" media-type="application/xhtml+xml"/>'
+            for i, n in zip(ids, names)
+        ),
+        spine="\n".join(f'    <itemref idref="{i}"/>' for i in ids),
+    )
+    ncx = _NCX.format(
+        title=BOOK_TITLE,
+        nav_points="\n".join(
+            f'    <navPoint id="np_{k}" playOrder="{k + 1}">'
+            f"<navLabel><text>{t}</text></navLabel>"
+            f'<content src="{n}.xhtml"/></navPoint>'
+            for k, (t, n) in enumerate(zip(CHAPTER_TITLES, names))
+        ),
+    )
 
     books_dir = tmp_path / "smoke-series" / "books"
     books_dir.mkdir(parents=True)
     epub_path = books_dir / "smoke-novella.epub"
-    epub.write_epub(str(epub_path), book)
+    with zipfile.ZipFile(epub_path, "w", zipfile.ZIP_DEFLATED) as z:
+        # The mimetype entry must be first and stored uncompressed.
+        z.writestr(
+            zipfile.ZipInfo("mimetype"), "application/epub+zip",
+            compress_type=zipfile.ZIP_STORED,
+        )
+        z.writestr("META-INF/container.xml", _CONTAINER)
+        z.writestr("EPUB/content.opf", opf)
+        z.writestr("EPUB/toc.ncx", ncx)
+        for name in names:
+            z.writestr(
+                f"EPUB/{name}.xhtml",
+                (FIXTURE_DIR / f"{name}.xhtml").read_bytes(),
+            )
     return epub_path
 
 
@@ -95,6 +158,25 @@ def test_parse_epub_extracts_all_chapters(parse_result):
     assert len(contents) == len(CHAPTER_TITLES)
     assert any("Elias Thorn" in c for c in contents)
     assert any("Port Saffron" in c for c in contents)
+
+
+def test_parse_epub_survives_publisher_markup(parse_result):
+    """Each shape the fixture chapters carry, asserted on the parsed text.
+
+    The goldens already cover this, but a golden diff is a wall of JSON; these
+    name the shape that broke. Every one is drawn from the real library and was
+    (or would have been) mis-parsed before STU-519 — see fixtures/e2e/*.xhtml.
+    """
+    text = " ".join(ch["content"] for ch in parse_result["chapters"])
+    assert "Captain Elias Thorn stood" in text          # dropcap sibling spans
+    assert "North\n\nThe Heron slipped" in text         # small-caps opener
+    assert "the 9th pier" in text                       # superscript ordinal
+    assert '"There," Mira Vale said' in text            # inline tag before punctuation
+    assert "coast—harbor masters, tax men & brokers" in text  # &mdash; &amp;
+    assert "came out an hour later" in text             # &nbsp;
+    assert "the fish market" in text                    # ﬁ ligature
+    assert "in the café" in text                        # NFD → NFC
+    assert unicodedata.is_normalized("NFC", text)
 
 
 def test_parse_epub_reports_language_and_pov(parse_result):

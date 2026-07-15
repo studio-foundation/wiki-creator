@@ -94,7 +94,7 @@
  "pov_detection": {
   "pov": "omniscient",
   "first_person_count": 0,
-  "total_tokens": 314,
+  "total_tokens": 327,
   "confidence": "high"
  }
 }
