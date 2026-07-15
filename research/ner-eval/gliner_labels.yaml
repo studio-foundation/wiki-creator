@@ -2,26 +2,46 @@
 #
 # GLiNER is asked for entities by natural-language label, so the label wording is
 # a real variable, not a formality: STU-401 found "personne" beat "nom de personne"
-# and "prénom" outright. Sweeping is how the arm is given its fair shot — pinning
-# one guessed label per type would measure our phrasing, not the model.
+# and "prénom" outright, and STU-470 moved FACTION 15 points with a rephrase.
+# Sweeping is how the arm is given its fair shot — pinning one guessed label per
+# type would measure our phrasing, not the model.
+#
+# The first entry per type is STU-470's selection: `sweep_labels.py` starts its
+# coordinate ascent there, so the sweep can only improve on the shipped baseline.
+#
+# FACTION and ORG carry the most candidates on purpose — they are the weakest
+# typing rows (0.726 / 0.792) and the ones STU-470 swept only coarsely. They are
+# also the two that compete hardest with their neighbours: a "race or order" is a
+# group of people (PERSON) and a "kingdom" is a place (PLACE).
 #
 # Data, not code: adding a candidate is an edit here.
 PERSON:
   - person
   - character
   - person name
+  - named individual
+  - individual person or creature
 PLACE:
-  - place
   - location
+  - place
   - place name
+  - geographic location or settlement
+  - city, region, or landmark
 ORG:
+  - formal organization or kingdom
   - organization
   - kingdom
-  - formal organization or kingdom
+  - kingdom, empire, or government
+  - political entity or institution
+  - formal institution or governing body
 FACTION:
+  - people, race, or order
   - faction
   - group of people
-  - people, race, or order
+  - race or species
+  - race, tribe, or order of people
+  - fantasy race or organized faction
+  - collective group, race, or order
 EVENT:
   - event
   - named event
