@@ -14,7 +14,7 @@ from scripts.entity_extraction import (
     _audit_ner_labels,
     _is_valid_span, _warn_if_no_pos_tagger,
 )
-from wiki_creator.chapters import FRONTMATTER_ID_PATTERNS, is_frontmatter_chapter as _is_frontmatter_chapter
+from wiki_creator.chapters import is_frontmatter_chapter as _is_frontmatter_chapter
 
 
 from _markers import requires_en_sm, requires_fr_lg
@@ -108,25 +108,6 @@ def test_no_raw_chapter_content_in_registry(nlp):
                 assert ctx != content, (
                     f"Context must not be the full chapter text. Got: {ctx!r}"
                 )
-
-
-def test_frontmatter_detection_matches_author_or_ack_titles():
-    assert _is_frontmatter_chapter({"id": "author.xhtml", "title": "Author"}) is True
-    assert _is_frontmatter_chapter({"id": "misc.xhtml", "title": "Acknowledgements"}) is True
-    assert _is_frontmatter_chapter({"id": "c01.xhtml", "title": "Chapter 1"}) is False
-
-
-@pytest.mark.parametrize(
-    "chapter",
-    [
-        {"id": "sinopsis.xhtml", "title": "sinopsis.xhtml"},
-        {"id": "info.xhtml", "title": "info.xhtml"},
-        {"id": "dedicatoria.xhtml", "title": "dedicatoria.xhtml"},
-        {"id": "autor.xhtml", "title": "Author"},
-    ],
-)
-def test_frontmatter_detection_matches_localized_metadata_chapters(chapter):
-    assert _is_frontmatter_chapter(chapter) is True
 
 
 def test_entity_ids_are_sequential(nlp):
@@ -429,16 +410,10 @@ def test_is_valid_mention_accepts_valid_names():
 # --- Frontmatter chapter skip tests ---
 
 
-def test_frontmatter_patterns_exist():
-    """The module must export a frozenset of lowercase frontmatter patterns."""
-    assert isinstance(FRONTMATTER_ID_PATTERNS, (set, frozenset))
-    assert "titlepage" in FRONTMATTER_ID_PATTERNS
-
-
-def test_skips_titlepage_chapter(nlp):
-    """Entities from a Titlepage.xhtml chapter must not appear in the registry."""
+def test_skips_tagged_frontmatter_chapter(nlp):
+    """Entities from a section the filter tagged must not appear in the registry."""
     chapters = [
-        {"id": "Titlepage.xhtml", "title": "Title Page",
+        {"id": "Titlepage.xhtml", "title": "Title Page", "frontmatter": True,
          "content": "Harry Potter is a renowned wizard from England."},
         {"id": "ch01", "title": "Chapter 1",
          "content": "Harry Potter walked through London on a cold morning."},
@@ -450,26 +425,28 @@ def test_skips_titlepage_chapter(nlp):
         )
 
 
-def test_skips_cover_chapter(nlp):
-    """Chapter IDs that include 'cover' are also frontmatter."""
+def test_tagged_chapter_yields_no_entities(nlp):
     chapters = [
-        {"id": "cover.xhtml", "title": "Cover",
+        {"id": "cover.xhtml", "title": "Cover", "frontmatter": True,
          "content": "Alice Liddell discovered a magical land called Wonderland."},
     ]
     result = extract_entities(chapters, nlp)
     assert result["entities"] == {}, (
-        f"Cover chapter should produce no entities, got: {result['entities']}"
+        f"Tagged chapter should produce no entities, got: {result['entities']}"
     )
 
 
-def test_non_frontmatter_chapter_not_skipped(nlp):
-    """Normal chapter IDs must still be processed."""
+def test_untagged_chapter_not_skipped(nlp):
+    """A section the filter did not tag is narrative, whatever its id looks like.
+
+    `cover.xhtml` used to be skipped on its id alone — the mechanism this replaces.
+    """
     chapters = [
-        {"id": "chapter01.xhtml", "title": "Chapter 1",
+        {"id": "cover.xhtml", "title": "Cover",
          "content": "Alice walked into London and met Harry Potter."},
     ]
     result = extract_entities(chapters, nlp)
-    assert result["entities"] != {}, "Normal chapter should not be skipped"
+    assert result["entities"] != {}, "Untagged chapter should not be skipped"
 
 
 # --- split_by_type tests ---

@@ -1,0 +1,9 @@
+name: section-filter-item
+version: 1
+schema:
+  required_fields:
+    - drop
+# drop: list of {id: string, reason: string} — the sections to exclude from the narrative.
+# An empty list is valid and means every section belongs to the work.
+# Ids absent from the input are discarded by the caller (parse_epub.py), not rejected here:
+# a hallucinated id maps to no section and must not fail a run.

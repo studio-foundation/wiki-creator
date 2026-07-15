@@ -262,6 +262,30 @@ Inside `wiki-resolution`, order matters:
   is paragraph-blind — it is eval scaffolding for the retired `wiki-ner-en`, so it
   was left alone; paragraph-aware chunking and dialogue attribution are the
   follow-ups this unblocks.
+- Section filtering (STU-529): what counts as front/back matter is **classified**,
+  not matched. The two `chapters.py` frozensets are gone; `is_frontmatter_chapter`
+  is a dict lookup on a `frontmatter: true` tag, and the `section-filter` stage
+  (`scripts/section_filter.py`, between `epub-parse` and `entity-extraction`) sets
+  it from one `studio run section-filter-item` per book. They were tuned on the 16
+  library EPUBs and failed silently elsewhere — the wiki-ner-en shape (STU-521) one
+  layer down; they also leaked 11 sections titled `Copyright`/`Dedication`/`Contents`
+  because those words were only in the *ID* set while real EPUBs use opaque ids
+  (`cop`, `ded`, `id_4`). Four things are load-bearing. (1) **The stage is not inside
+  `parse_epub`** — extraction stays deterministic/offline, and `make golden`/`make
+  smoke` are LLM-free *by construction*, not by mocking; move the call into
+  `parse_epub` and both need an API key. (2) **The `opening` snippet** (200 chars,
+  `section_filter.OPENING_CHARS`) — with only `id | title | chars` the model cannot
+  tell Murtagh's in-world `Argument` ("Behold, the land of Alagaësia") from a
+  marketing synopsis and drops both; it decides on one axis, inside vs outside the
+  fiction (the STU-507 `editorial_stance` lens). Way of Kings' `index_split_001.html`
+  is ACKNOWLEDGMENTS, not a chapter — judging by title and length alone gets it
+  backwards. (3) **Bias toward keep**: every failure path (missing CLI, timeout,
+  unparseable verdict, hallucinated id) keeps every section and warns. A false keep
+  is one visible junk entity; a false drop deletes a real chapter silently, in a book
+  we will never read. (4) **The cache is keyed on the rows themselves**
+  (`processing_output/<slug>/section_filter.json`), so `WIKI_MAX_CHAPTERS` can't
+  replay a verdict made for a different section list. It is tags, never removal —
+  `chapters.json` stays complete and the STU-489 offsets don't move.
 - `entity_extraction.py` keys chapter mentions by chapter ID, not chapter title.
 - `merge_entities.py` passes through only the current `resolve-clusters` output shape (runs before `alias-resolution` per the STU-276 pipeline order; STU-447 dropped the older `split-clusters` + `entity-resolution-*` compat branch and a vestigial `alias-resolution` priority check that predated STU-276 and never fired in production).
 - `split_clusters.py`, `relationship_extraction.py`, and `verify_entity_types.py` are intentionally tolerant of missing `file_path` in unit-test mode.

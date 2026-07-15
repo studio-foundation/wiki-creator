@@ -1,0 +1,10 @@
+name: section-filter
+version: 1
+schema:
+  required_fields:
+    - title
+    - chapters
+    - pov_detection
+# Re-emits the epub-parse payload with `frontmatter: true` set on the sections that
+# are not part of the work, so entity-extraction's previous_stage_output keeps its shape.
+# Sections are tagged, never removed: chapters.json must stay complete.

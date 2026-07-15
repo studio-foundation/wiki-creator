@@ -1,0 +1,14 @@
+name: section-filter-item
+description: Classify EPUB sections as narrative or front/back matter — one call per book
+version: 1
+
+stages:
+  - name: section-filter-item
+    kind: analysis
+    agent: section-filter
+    contract: section-filter-item
+    ralph:
+      max_attempts: 3
+    context:
+      include:
+        - input
