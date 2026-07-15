@@ -54,29 +54,22 @@ from wiki_creator.registry import Registry, normalize_name as normalize_for_comp
 
 # --- Configuration ---
 
-# Base title prefixes. Language-specific honorifics (Spanish don/señor/…) are NOT
-# hardcoded here — they come from cue_words/<lang>.json `person_cue_words` via
-# load_title_prefixes (STU-452).
-TITLE_PREFIXES = frozenset({
-    # French
-    "m.", "mr.", "mrs.", "mme", "mme.", "mlle", "mlle.",
-    "monsieur", "madame", "mademoiselle",
-    "père", "frère", "sœur", "saint", "sainte",
-    "inspecteur", "commissaire", "capitaine", "colonel", "général",
-    "professeur", "maître", "docteur",
-    # Generic
-    "dr.", "dr", "le", "la", "les", "el", "los", "las",
-})
+# Title prefixes to strip before name comparison. No vocabulary is hardcoded here
+# (STU-518): the leading honorifics/particles/articles live in
+# cue_words/<lang>.json `title_prefixes`, unioned with `person_cue_words` (which
+# also carries strippable titles like "king"/"roi"). Unknown language → empty set.
+TITLE_PREFIXES: frozenset[str] = frozenset()
 
 def load_title_prefixes(language: str | None = None) -> frozenset[str]:
-    """Return TITLE_PREFIXES extended with person_cue_words from cue_words/{lang}.json."""
+    """Return the language's `title_prefixes` unioned with its `person_cue_words`."""
     if not language:
         return TITLE_PREFIXES
     try:
         from wiki_creator.lang import load_lang_config
         lang_cfg = load_lang_config(language)
-        extra = frozenset(w.lower() for w in lang_cfg.get("person_cue_words", []))
-        return TITLE_PREFIXES | extra
+        prefixes = frozenset(w.lower() for w in lang_cfg.get("title_prefixes", []))
+        person_cues = frozenset(w.lower() for w in lang_cfg.get("person_cue_words", []))
+        return prefixes | person_cues
     except Exception as exc:
         import logging
         logging.warning("load_title_prefixes: could not load cue_words for language %r: %s", language, exc)
@@ -106,11 +99,11 @@ JW_THRESHOLD = 0.92  # Jaro-Winkler threshold for orthographic variant matching
 # Tie-break order when a cluster spans multiple types (STU-505: from base.yaml).
 TYPE_PRECEDENCE = resolution_types()
 
-# Base gender-discriminating title sets. Language-specific gendered honorifics
-# (Spanish señor/don, señora/doña) are loaded from cue_words/<lang>.json via
-# load_masculine_titles / load_feminine_titles (STU-452), not hardcoded here.
-MASCULINE_TITLES = frozenset({"m.", "mr.", "monsieur"})
-FEMININE_TITLES = frozenset({"mme", "mme.", "madame"})
+# Gender-discriminating title sets, loaded from cue_words/<lang>.json
+# `masculine_titles` / `feminine_titles` (STU-452, STU-518) — no hardcoded
+# vocabulary here. Unknown language → empty sets (gender rule simply never fires).
+MASCULINE_TITLES: frozenset[str] = frozenset()
+FEMININE_TITLES: frozenset[str] = frozenset()
 
 
 def load_masculine_titles(language: str | None = None) -> frozenset[str]:
@@ -476,7 +469,7 @@ def build_clusters(
             # Pick the mention with the most substantive tokens (after title stripping)
             # "David Martín" > "Monsieur Martín" (2 real tokens vs 1)
             def canonical_score(mention):
-                tokens = tokenize_name(mention)
+                tokens = tokenize_name(mention, title_prefixes)
                 return (len(tokens), len(" ".join(tokens)))
 
             canonical = max(all_mentions, key=canonical_score)
@@ -531,7 +524,12 @@ def _apply_seed_unions(
             union(anchor_eid, eid)
 
 
-def _make_cluster(cluster_id: str, eids: list[str], entities: dict) -> dict:
+def _make_cluster(
+    cluster_id: str,
+    eids: list[str],
+    entities: dict,
+    title_prefixes: frozenset[str] = TITLE_PREFIXES,
+) -> dict:
     """Build a cluster dict from a list of entity IDs."""
     if not eids:
         raise ValueError(f"Cannot create cluster {cluster_id} with empty entity list")
@@ -549,7 +547,7 @@ def _make_cluster(cluster_id: str, eids: list[str], entities: dict) -> dict:
         total_mentions += _entity_weight(entity)
 
     def canonical_score(mention):
-        tokens = tokenize_name(mention)
+        tokens = tokenize_name(mention, title_prefixes)
         return (len(tokens), len(" ".join(tokens)))
 
     canonical = max(all_mentions, key=canonical_score) if all_mentions else eids[0]
@@ -653,7 +651,7 @@ def split_conflicting_first_names(
                 sorted_groups[0][1].extend(eid for eid, _gender in bare_surname_eids)
 
             for _firsts_set, eids in sorted_groups:
-                new_clusters.append(_make_cluster(next_cluster_id(), eids, entities))
+                new_clusters.append(_make_cluster(next_cluster_id(), eids, entities, title_prefixes))
 
             break  # handle one surname conflict per cluster
 
@@ -664,7 +662,7 @@ def split_conflicting_first_names(
                     continue
                 orphan_eids = [eid for _, eid in other_entries]
                 if orphan_eids:
-                    new_clusters.append(_make_cluster(next_cluster_id(), orphan_eids, entities))
+                    new_clusters.append(_make_cluster(next_cluster_id(), orphan_eids, entities, title_prefixes))
 
         if not split_happened:
             # Check for gender conflict among bare-surname entities when no
@@ -687,11 +685,11 @@ def split_conflicting_first_names(
                 masc_group = masc_eids + full_name_eids + neutral_eids
                 fem_group = fem_eids
                 split_happened = True
-                new_clusters.append(_make_cluster(next_cluster_id(), masc_group, entities))
-                new_clusters.append(_make_cluster(next_cluster_id(), fem_group, entities))
+                new_clusters.append(_make_cluster(next_cluster_id(), masc_group, entities, title_prefixes))
+                new_clusters.append(_make_cluster(next_cluster_id(), fem_group, entities, title_prefixes))
             else:
                 # No conflict found — re-assign a fresh cluster_id for consistency
-                new_clusters.append(_make_cluster(next_cluster_id(), cluster["entity_ids"], entities))
+                new_clusters.append(_make_cluster(next_cluster_id(), cluster["entity_ids"], entities, title_prefixes))
 
     return new_clusters, unclustered
 
@@ -744,7 +742,7 @@ def run_test_mode() -> None:
     for c in clusters:
         print(
             f"  {c['cluster_id']} [{c['type']}] "
-            f"({c['entity_count']} entités, first_seen={c['first_seen']}, total_mentions={c['total_mentions']})"
+            f"({c['entity_count']} entities, first_seen={c['first_seen']}, total_mentions={c['total_mentions']})"
         )
         print(f"    canonical: {c['canonical_candidate']}")
         print(f"    mentions:  {c['all_mentions']}")
@@ -828,7 +826,7 @@ def run_live_mode(*, book_yaml: str | None = None) -> None:
     multi = [c for c in all_clusters if c["entity_count"] > 1]
 
     print(f"=== LIVE CLUSTERING — {latest} ===\n")
-    print(f"Top 20 clusters (multi-entités, par total_mentions) :\n")
+    print(f"Top 20 clusters (multi-entity, by total_mentions):\n")
     for c in multi[:20]:
         print(
             f"  {c['cluster_id']} [{c['type']}] "

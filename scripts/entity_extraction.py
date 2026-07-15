@@ -144,45 +144,6 @@ FIRST_PERSON_ARTIFACT_TAILS_EN: frozenset[str] = frozenset(
     _en_lang_cfg.get("first_person_artifact_tails", [])
 )
 
-_DEFAULT_CUE_WORDS = {
-    "en": {
-        "place_cue_words": [
-            "city", "town", "capital", "kingdom", "continent", "country",
-            "castle", "palace", "camp", "mine", "mines", "forest", "woods",
-            "river", "sea", "port", "harbor", "street", "road", "avenue",
-        ],
-        "person_cue_words": [
-            "prince", "princess", "king", "queen", "duke", "lady", "lord",
-            "captain", "sir", "mr", "mrs", "miss",
-        ],
-        "place_prepositions": [
-            "in", "at", "from", "to", "into", "through", "within", "inside", "outside",
-        ],
-        "event_suffixes": [
-            "ball", "festival", "feast", "ceremony", "celebration",
-            "prayer", "prayers", "blessing", "blessings", "morning", "night", "eve",
-        ],
-    },
-    "fr": {
-        "place_cue_words": [
-            "ville", "royaume", "continent", "pays", "château", "chateau", "palais",
-            "camp", "mine", "forêt", "foret", "rivière", "riviere", "mer",
-            "port", "rue", "route", "avenue",
-        ],
-        "person_cue_words": [
-            "prince", "princesse", "roi", "reine", "duc", "dame", "seigneur",
-            "capitaine", "sir", "monsieur", "madame", "mademoiselle",
-        ],
-        "place_prepositions": [
-            "dans", "à", "a", "de", "depuis", "vers", "au", "aux", "en",
-        ],
-        "event_suffixes": [
-            "bal", "festival", "fête", "fete", "cérémonie", "ceremonie",
-            "célébration", "celebration", "prières", "prieres", "bénédiction",
-            "benediction", "matin", "nuit", "veille",
-        ],
-    },
-}
 
 
 def _resolve_cue_words_language(default_language: str, override: str | None) -> str:
@@ -208,9 +169,14 @@ def _resolve_cue_words_language(default_language: str, override: str | None) -> 
 
 
 def _load_single_cue_words_file(language: str) -> dict[str, frozenset[str]]:
-    """Load one cue-word JSON file with fallback to defaults."""
+    """Load one cue-word JSON file; degrade to empty lists if unreadable.
+
+    The JSON packs (cue_words/<lang>.json) are the single source of truth — there
+    is no hardcoded fallback vocabulary (STU-518); a missing/broken file yields
+    empty cue-word sets rather than a stale Python copy.
+    """
     path = CUE_WORDS_DIR / f"{language}.json"
-    data = _DEFAULT_CUE_WORDS.get(language, {})
+    data: dict = {}
     try:
         with open(path, encoding="utf-8") as f:
             data = json.load(f)
@@ -426,22 +392,21 @@ def _retag_entity_type_from_context(
 
 def _truncate_span(span):
     """
-    Tronque un span spaCy au dernier token qui ressemble à un nom propre.
+    Truncate a spaCy span at the last token that looks like a proper noun.
 
-    Un token est considéré "propre" si son texte commence par une majuscule
-    (is_title) ou si son POS tag est PROPN.
+    A token is "proper" if its text is title-cased (is_title) or its POS tag is
+    PROPN. If no token is proper (degenerate case), return the full span.
 
-    Si aucun token n'est propre (cas dégénéré), retourne le span complet.
-    Retourne un span (pas un texte) pour que start_char/end_char restent
-    disponibles — les offsets de mention sont persistés (STU-489).
+    Returns a span (not text) so start_char/end_char stay available — mention
+    offsets are persisted (STU-489).
 
-    Exemples :
+    Examples:
       "Barcelone de ténèbres" → "Barcelone"
       "Victor Grandes me sourit" → "Victor Grandes"
-      "Victor Hugo" → "Victor Hugo" (inchangé)
+      "Victor Hugo" → "Victor Hugo" (unchanged)
     """
     tokens = list(span)
-    last_proper = 0  # fallback : 0 → on retournera le span complet si aucun propre
+    last_proper = 0  # fallback: 0 → return the full span if none is proper
     for i in range(len(tokens) - 1, -1, -1):
         if tokens[i].is_title or tokens[i].pos_ == "PROPN":
             last_proper = i + 1

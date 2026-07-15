@@ -77,6 +77,27 @@ def test_es_pack_only_declares_known_keys():
     assert set(cfg.keys()) <= (REQUIRED_KEYS | OPTIONAL_KEYS)
 
 
+def test_packs_only_declare_known_keys():
+    for code in ("en", "fr", "es"):
+        cfg = load_lang_config(code)
+        unknown = set(cfg.keys()) - (REQUIRED_KEYS | OPTIONAL_KEYS)
+        assert not unknown, f"{code}.json declares unknown key(s): {unknown}"
+
+
+def test_detection_vocabulary_is_in_the_packs_not_python():
+    """STU-518: title/gender/geographic vocab lives in the packs, per language."""
+    fr = load_lang_config("fr")
+    en = load_lang_config("en")
+    # French honorifics + translated-works Spanish ones.
+    assert {"monsieur", "inspecteur", "don"} <= set(fr["title_prefixes"])
+    assert "monsieur" in fr["masculine_titles"] and "madame" in fr["feminine_titles"]
+    assert {"rue", "église"} <= set(fr["geographic_keywords"])
+    # English pack carries its own (no French leaking in).
+    assert "mr." in en["title_prefixes"]
+    assert {"church", "street"} <= set(en["geographic_keywords"])
+    assert "monsieur" not in set(en["title_prefixes"])
+
+
 def test_required_and_optional_keys_are_disjoint():
     assert REQUIRED_KEYS.isdisjoint(OPTIONAL_KEYS)
 
