@@ -13,8 +13,19 @@ import json
 import sys
 from pathlib import Path
 
+import yaml
+
 from wiki_creator import studio_io
+from wiki_creator.naming import disambiguate_page_titles, naming_policy
 from wiki_creator.types import WikiPage
+
+# entity_type → export label key, for the disambiguator's {type_label}.
+_TYPE_LABEL_KEYS = {
+    "PERSON": "persons",
+    "PLACE": "locations",
+    "ORG": "organizations",
+    "EVENT": "events",
+}
 
 
 def _load_synopsis_page(processing_dir) -> dict | None:
@@ -110,6 +121,21 @@ def main() -> None:
         output_pages.extend(collation_pages)
         print(f"[load-wiki-pages] Added {len(collation_pages)} collective page(s)", file=sys.stderr)
     print(f"[load-wiki-pages] Loaded {len(output_pages)} pages from {output_file}", file=sys.stderr)
+
+    # STU-506: keep the flat MediaWiki title namespace collision-free. Two
+    # different-type homonyms (a PERSON and a PLACE both named "X") now reach
+    # export as distinct pages; disambiguate their titles so page_filename stays
+    # unique (checked by the unique-page-title validator).
+    cfg = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    labels_cfg = (cfg.get("export", {}).get("categories", {}) or {}).get("labels", {}) or {}
+    type_labels = {
+        etype: labels_cfg[key]
+        for etype, key in _TYPE_LABEL_KEYS.items()
+        if labels_cfg.get(key)
+    }
+    for old, new in disambiguate_page_titles(output_pages, naming_policy(cfg), type_labels):
+        print(f"[load-wiki-pages] Disambiguated title '{old}' → '{new}'", file=sys.stderr)
+
     json.dump({"pages": output_pages}, sys.stdout, ensure_ascii=False)
 
 
