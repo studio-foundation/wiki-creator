@@ -1019,6 +1019,33 @@ def test_build_prompt_references_constraint_present():
     assert 'must list ONLY "Throne of Glass"' in prompt
 
 
+def test_build_prompt_localizes_titles_briefs_and_directive_in_english():
+    """STU-510: lang='en' routes section titles, few-shot, briefs, and the
+    write-in-<language> directive to English; French drops out entirely."""
+    entity = {
+        "canonical_name": "Celaena",
+        "type": "PERSON",
+        "importance": "principal",
+        "aliases": [],
+        "context_by_chapter": {"C01.xhtml": ["She fought."]},
+    }
+    en = build_prompt(entity, "Throne of Glass",
+                      sections=["infobox", "biography", "personality", "references"], lang="en")
+    assert "Write ALL content in English" in en
+    assert "encyclopedic English" in en
+    assert "## Biography" in en                      # few-shot heading, English
+    assert "Who this character is" in en             # biography brief, English
+    assert 'The ## References section must list' in en
+    assert "Biographie" not in en                    # no French titles leak
+    assert "français" not in en.lower()
+
+    fr = build_prompt(entity, "Throne of Glass",
+                      sections=["infobox", "biography", "personality", "references"])
+    assert "Write ALL content in French" in fr
+    assert "## Biographie" in fr                      # French default preserved
+    assert "Qui est ce personnage" in fr
+
+
 # --- STU-291: generation summary log ---
 
 def test_print_generation_summary_reports_counts(capsys):

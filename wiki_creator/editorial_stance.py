@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from wiki_creator.sections import SECTION_TITLES
+from wiki_creator.page_templates import slot_label
 
 MODES = ("in_universe", "out_of_universe", "hybrid")
 
@@ -74,14 +74,14 @@ class EditorialStance:
             return False
         return key in self.hybrid_exceptions
 
-    def prompt_block(self, sections: list[str] | None = None) -> str:
+    def prompt_block(self, sections: list[str] | None = None, lang: str = "fr") -> str:
         """``sections`` = what this call actually writes; the hybrid exception line
         names only the exceptions among them, so a section-scoped prompt never
         advertises a section it is not generating."""
         lines = [f"EDITORIAL STANCE — {self.mode.replace('_', '-')}:", _MODE_RULES[self.mode]]
         if self.mode == "hybrid":
             allowed = [
-                SECTION_TITLES[s]
+                slot_label(s, lang)
                 for s, key in OUT_OF_UNIVERSE_SECTIONS.items()
                 if key in self.hybrid_exceptions
                 and (sections is None or s in sections)

@@ -109,7 +109,8 @@ def load_pipeline_outputs(wiki_pages_path: Path, batch_dir: Path) -> list[dict]:
     if not wiki_pages_path or not wiki_pages_path.exists():
         return []
 
-    from scripts.generate_wiki_pages import build_prompt, SECTION_DEFINITIONS
+    from scripts.generate_wiki_pages import build_prompt
+    from wiki_creator.page_templates import resolve_template
 
     with open(wiki_pages_path) as f:
         pages_data = json.load(f)
@@ -141,8 +142,7 @@ def load_pipeline_outputs(wiki_pages_path: Path, batch_dir: Path) -> list[dict]:
         entity.setdefault("type", entity_type)
         entity.setdefault("importance", importance)
 
-        section_defs = SECTION_DEFINITIONS.get(entity_type, SECTION_DEFINITIONS["PERSON"])
-        sections = list(section_defs.keys())
+        sections = resolve_template(entity_type, importance).section_tokens() or ["infobox", "biography"]
 
         instruction = build_prompt(entity, "Unknown", sections)
 

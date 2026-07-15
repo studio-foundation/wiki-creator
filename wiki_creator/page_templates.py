@@ -179,13 +179,51 @@ def slot_label(token, lang, base=None) -> str:
     return token.replace("_", " ").title()
 
 
+def language_name(lang, base=None) -> str:
+    """English display name of a language code, for the (English) prompt
+    scaffolding — e.g. ``language_name("fr") == "French"``."""
+    raw = base if base is not None else load_base_template()
+    names = raw.get("language_names") or {}
+    return names.get(lang, str(lang))
+
+
+def length_guide(tier, base=None) -> str:
+    """Per-tier prose length guide. Single source (base.yaml ``length_by_tier``):
+    no longer a hardcoded Python restatement of the per-tier length that could
+    drift from ``max_tokens_per_page`` (STU-510)."""
+    raw = base if base is not None else load_base_template()
+    guides = raw.get("length_by_tier") or {}
+    return guides.get(tier) or guides.get("figurant") or "1 short paragraph only."
+
+
+def section_brief(entity_type, token, lang, base=None) -> str | None:
+    """Localized writing brief for one (entity_type, section token), or None when
+    none is declared. Unknown types fall back to PERSON (STU-510)."""
+    raw = base if base is not None else load_base_template()
+    briefs = raw.get("briefs") or {}
+    etype = str(entity_type).upper()
+    by_type = briefs.get(etype) or briefs.get("PERSON") or {}
+    entry = by_type.get(token)
+    if not entry:
+        return None
+    return entry.get(lang) or entry.get("fr")
+
+
+def few_shot_example(lang, base=None) -> dict:
+    """Localized few-shot tone/format example (base.yaml ``few_shot``)."""
+    raw = base if base is not None else load_base_template()
+    examples = raw.get("few_shot") or {}
+    return examples.get(lang) or examples.get("fr") or {}
+
+
 def output_language(book_config) -> str:
+    """Language of the generated wiki (titles + prose). Defaults to French, the
+    historical output language of this corpus; a book opts into another language
+    via ``generation.output_language``. Deliberately independent of
+    ``export.categories.language`` (category-label language is a separate axis —
+    conflating them is the STU-510 silent-incoherence bug)."""
     cfg = book_config or {}
     gen = cfg.get("generation", {}) if isinstance(cfg.get("generation"), dict) else {}
     if gen.get("output_language"):
         return str(gen["output_language"])
-    export = cfg.get("export", {}) if isinstance(cfg.get("export"), dict) else {}
-    cats = export.get("categories", {}) if isinstance(export.get("categories"), dict) else {}
-    if cats.get("language"):
-        return str(cats["language"])
-    return "en"
+    return "fr"

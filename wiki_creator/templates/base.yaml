@@ -100,3 +100,151 @@ labels:
   narrative_role: {en: "Narrative role", fr: "Rôle dans le récit"}
   events:        {en: Events,      fr: Événements}
   references:    {en: References,  fr: Références}
+# STU-510: language display names for the (English) prompt scaffolding, and the
+# per-tier prose length guide — previously hardcoded in generate_wiki_pages.py.
+language_names:
+  fr: French
+  en: English
+length_by_tier:
+  principal: "4 to 6 paragraphs total across all sections."
+  secondary: "1 to 2 paragraphs for the main section. Keep all other sections brief."
+  figurant: "1 short paragraph only. Use only the most relevant section."
+# STU-510: per-section writing briefs, keyed by entity_type then section token,
+# localized. Extracted from the SECTION_DEFINITIONS f-strings. OTHER falls back
+# to PERSON (as the old SECTION_DEFINITIONS.get(etype, ...["PERSON"]) did).
+briefs:
+  PERSON:
+    infobox:        {fr: "Champs factuels clés : nom, alias, rôle, affiliation, statut. Omets les champs inconnus.", en: "Key factual fields: name, aliases, role, affiliation, status. Omit unknown fields."}
+    biography:      {fr: "Qui est ce personnage et quel est son rôle dans le monde. Les événements servent de contexte, pas de liste chronologique.", en: "Who this character is and their role in the world. Events serve as context, not a chronological list."}
+    backstory:      {fr: "Le passé du personnage révélé en flashback, avant le récit présent du livre. Prose ancrée uniquement sur le contexte de backstory. Ne pas répéter la biographie présente.", en: "The character's past revealed in flashback, before the book's present-day narrative. Prose grounded only in the backstory context. Do not repeat the present-day biography."}
+    narrative_role: {fr: "Arc chronologique du personnage à travers l'intrigue, en prose, ancré uniquement sur les événements listés.", en: "The character's chronological arc through the plot, in prose, grounded only in the listed events."}
+    personality:    {fr: "Traits observés avec ancrage textuel. Évite les adjectifs génériques sans preuve. Montre les contradictions ou tensions internes si elles existent.", en: "Observed traits with textual grounding. Avoid generic adjectives without evidence. Show internal contradictions or tensions where they exist."}
+    physical:       {fr: "Détails physiques confirmés par le texte uniquement. Concis.", en: "Physical details confirmed by the text only. Concise."}
+    powers:         {fr: "Capacités ou compétences distinctives. Si aucun pouvoir magique, décris les compétences pratiques.", en: "Distinctive abilities or skills. If no magical power, describe practical skills."}
+    relationships:  {fr: "Une entrée en gras par relation significative, suivie d'une description de la nature du lien. Format: **Nom** — description.", en: "One bold entry per significant relationship, followed by a description of the nature of the bond. Format: **Name** — description."}
+    trivia:         {fr: "Faits spécifiques et concrets qui ne rentrent pas dans les autres sections. Pas de re-résumé de la biographie.", en: "Specific, concrete facts that do not fit the other sections. No re-summary of the biography."}
+  PLACE:
+    infobox:        {fr: "Nom, type de lieu, région/pays, statut (actif, ruiné, etc.). Omets les champs inconnus.", en: "Name, place type, region/country, status (active, ruined, etc.). Omit unknown fields."}
+    biography:      {fr: "Ce qu'est ce lieu, où il se trouve, à quoi il ressemble d'après les extraits.", en: "What this place is, where it is, and what it looks like according to the excerpts."}
+    physical:       {fr: "Détails physiques et géographiques du lieu confirmés par le texte.", en: "Physical and geographic details of the place confirmed by the text."}
+    events:         {fr: "Ce qui se passe à cet endroit — les événements narratifs qui s'y déroulent, ancrés sur le bloc « Events at this place » ci-dessus. Ne pas se limiter à la géographie ou à l'architecture.", en: "What happens at this place — the narrative events occurring here, grounded in the 'Events at this place' block above. Do not limit yourself to geography or architecture."}
+    relationships:  {fr: "Groupes ou personnages associés à ce lieu.", en: "Groups or characters associated with this place."}
+    trivia:         {fr: "Détails spécifiques qui ne rentrent pas ailleurs.", en: "Specific details that do not fit elsewhere."}
+  ORG:
+    infobox:        {fr: "Nom, type d'organisation, affiliation, statut. Omets les champs inconnus.", en: "Name, organization type, affiliation, status. Omit unknown fields."}
+    biography:      {fr: "Ce qu'est cette organisation, son rôle et ses objectifs d'après les extraits.", en: "What this organization is, its role and objectives according to the excerpts."}
+    relationships:  {fr: "Personnages affiliés mentionnés dans le texte.", en: "Affiliated characters mentioned in the text."}
+  EVENT:
+    infobox:        {fr: "Nom, type d'événement, lieu, période si mentionnée. Omets les champs inconnus.", en: "Name, event type, location, time period if mentioned. Omit unknown fields."}
+    biography:      {fr: "Ce qu'est cet événement et son importance dans le récit.", en: "What this event is and its importance in the narrative."}
+    relationships:  {fr: "Personnages impliqués.", en: "Characters involved."}
+# STU-510: few-shot tone/format example, localized. Extracted from the
+# FEW_SHOT_EXAMPLE dict in generate_wiki_pages.py. A single PERSON/principal
+# example, used regardless of entity type (as before).
+few_shot:
+  fr:
+    title: "John Doe"
+    importance: principal
+    entity_type: PERSON
+    infobox_fields:
+      nom: "John Doe"
+      nom complet: "Jonathan Aldric Doe"
+      alias: "Le Fantôme, Jay"
+      rôle: "Espion de la Couronne, ancien soldat"
+      affiliation: "La Guilde des Ombres (ancienne), Couronne d'Arenell"
+      statut: "Actif"
+    content: |-
+      ## Infobox
+
+      - Nom: John Doe
+      - Nom complet: Jonathan Aldric Doe
+      - Alias: Le Fantôme, Jay
+      - Rôle: Espion de la Couronne, ancien soldat
+      - Affiliation: La Guilde des Ombres (ancienne), Couronne d'Arenell
+      - Statut: Actif
+
+      ## Biographie
+
+      John Doe, né Jonathan Aldric Doe, est un espion au service de la Couronne d'Arenell. Ancien soldat reconverti après la chute de la forteresse de Veldrath, il opère sous le pseudonyme **Le Fantôme** dans les cercles criminels de la capitale. Sa double identité — homme de cour le jour, informateur la nuit — lui permet d'infiltrer des réseaux que les services officiels du roi ne peuvent atteindre.
+
+      Après la trahison de son ancien commandant lors du siège de Veldrath, Doe a rompu avec l'armée régulière et disparu pendant trois ans. Il réapparaît à Arenell sous une fausse identité marchande, avant d'être recruté par la conseillère Mira Vayne pour des missions que le Conseil préfère nier.
+
+      ## Personnalité
+
+      Doe est méthodique et difficile à lire. Il parle peu, observe beaucoup, et donne rarement son opinion sans qu'on la lui demande. Ceux qui le côtoient décrivent une loyauté sélective : il honore ses engagements à la lettre, mais ne s'investit pas au-delà de ce qui a été convenu. Sous cette froideur calculée affleure parfois un humour sec, surtout dans les situations les plus tendues.
+
+      Son rapport à la violence est pragmatique — ni enthousiaste ni réticent. Il considère les moyens selon leur efficacité, ce qui le met régulièrement en friction avec les idéalistes de son entourage.
+
+      ## Description physique
+
+      Grand, brun, avec une cicatrice linéaire qui part du coin de l'œil gauche jusqu'à la mâchoire — séquelle d'un interrogatoire à Veldrath. Il s'habille de façon à ne pas attirer l'attention : teintes sombres, coupes fonctionnelles, aucun bijou. Seul détail invariable : une chevalière en argent terne à l'annulaire droit, dont l'origine n'est jamais expliquée.
+
+      ## Pouvoirs et compétences
+
+      Doe ne possède aucune magie. Ses compétences sont entièrement acquises : infiltration, déguisement, combat rapproché, et une mémoire quasi photographique des visages et des plans d'architecture. Il parle couramment quatre langues, dont le dialecte du Sud qu'il utilise pour ses couvertures marchandes.
+
+      ## Relations
+
+      **[[Mira Vayne]]** — mentor/protégé. Sa recruteuse et supérieure directe ; leur relation est professionnelle, teintée d'une méfiance mutuelle que ni l'un ni l'autre ne cherche vraiment à dissoudre.
+
+      **[[Lira]]** — allié. Une informante de la Guilde des Ombres avec qui Doe a partagé une mission à Veldrath.
+
+      **[[Le Commandant Arek]]** — antagoniste. L'ancien supérieur dont la trahison à Veldrath a redéfini la trajectoire de Doe.
+
+      ## Anecdotes
+
+      - Le surnom "Le Fantôme" lui a été donné par les membres de la Guilde, non par ses alliés de la Couronne.
+      - Sa couverture marchande implique un commerce de tissus importés du Sud — un choix qui justifie ses déplacements fréquents entre les provinces.
+  en:
+    title: "John Doe"
+    importance: principal
+    entity_type: PERSON
+    infobox_fields:
+      name: "John Doe"
+      full name: "Jonathan Aldric Doe"
+      aliases: "The Ghost, Jay"
+      role: "Crown spy, former soldier"
+      affiliation: "The Shadow Guild (former), Crown of Arenell"
+      status: "Active"
+    content: |-
+      ## Infobox
+
+      - Name: John Doe
+      - Full name: Jonathan Aldric Doe
+      - Aliases: The Ghost, Jay
+      - Role: Crown spy, former soldier
+      - Affiliation: The Shadow Guild (former), Crown of Arenell
+      - Status: Active
+
+      ## Biography
+
+      John Doe, born Jonathan Aldric Doe, is a spy in the service of the Crown of Arenell. A former soldier who reinvented himself after the fall of the fortress of Veldrath, he operates under the alias **The Ghost** in the criminal circles of the capital. His double identity — courtier by day, informant by night — lets him infiltrate networks the king's official services cannot reach.
+
+      After the betrayal of his former commander during the siege of Veldrath, Doe broke with the regular army and vanished for three years. He resurfaces in Arenell under a false merchant identity, before being recruited by councillor Mira Vayne for missions the Council prefers to deny.
+
+      ## Personality
+
+      Doe is methodical and hard to read. He speaks little, observes much, and rarely offers his opinion unasked. Those around him describe a selective loyalty: he honors his commitments to the letter, but invests nothing beyond what was agreed. Beneath this calculated coldness a dry humor sometimes surfaces, especially in the tensest situations.
+
+      His relationship to violence is pragmatic — neither eager nor reluctant. He weighs means by their effectiveness, which regularly puts him at odds with the idealists around him.
+
+      ## Appearance
+
+      Tall, dark-haired, with a linear scar running from the corner of his left eye to his jaw — a legacy of an interrogation at Veldrath. He dresses so as not to draw attention: dark tones, functional cuts, no jewelry. The one constant detail: a dull silver signet ring on his right ring finger, whose origin is never explained.
+
+      ## Powers and skills
+
+      Doe has no magic. His skills are entirely acquired: infiltration, disguise, close combat, and a near-photographic memory for faces and architectural plans. He speaks four languages fluently, including the Southern dialect he uses for his merchant covers.
+
+      ## Relationships
+
+      **[[Mira Vayne]]** — mentor. His recruiter and direct superior; their relationship is professional, tinged with a mutual wariness neither truly seeks to dissolve.
+
+      **[[Lira]]** — ally. A Shadow Guild informant with whom Doe shared a mission at Veldrath.
+
+      **[[Commander Arek]]** — antagonist. The former superior whose betrayal at Veldrath redefined Doe's trajectory.
+
+      ## Trivia
+
+      - The nickname "The Ghost" was given to him by Guild members, not by his Crown allies.
+      - His merchant cover involves a trade in fabrics imported from the South — a choice that justifies his frequent travels between provinces.

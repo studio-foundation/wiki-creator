@@ -19,11 +19,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 MAIN_REPO = PROJECT_ROOT.parents[1]  # the main repo root (batch files live there)
 
 from scripts.generate_wiki_pages import (
-    SECTION_DEFINITIONS,
     _DEFAULT_SECTIONS_BY_IMPORTANCE,
-    _SECTION_TITLES,
     build_prompt,
 )
+from wiki_creator.page_templates import slot_label
 
 BOOK_TITLE = "Throne of Glass"
 
@@ -368,7 +367,7 @@ def load_entity(batch_dir: Path, name: str) -> dict:
 def get_sections(entity: dict) -> list[str]:
     importance = entity["importance"]
     section_keys = _DEFAULT_SECTIONS_BY_IMPORTANCE.get(importance, ["infobox", "biography"])
-    return [_SECTION_TITLES.get(k, k) for k in section_keys]
+    return [slot_label(k, "fr") for k in section_keys]
 
 
 def validate_example(example: dict, idx: int) -> list[str]:
@@ -402,9 +401,8 @@ def main():
         entity = load_entity(batch_dir, name)
         importance = entity["importance"]
         section_keys = _DEFAULT_SECTIONS_BY_IMPORTANCE.get(importance, ["infobox", "biography"])
-        section_titles = [_SECTION_TITLES.get(k, k) for k in section_keys]
 
-        instruction = build_prompt(entity, BOOK_TITLE, section_titles)
+        instruction = build_prompt(entity, BOOK_TITLE, section_keys)
         gold = GOLD_OUTPUTS[name]
         output_json = json.dumps(gold, ensure_ascii=False)
 
