@@ -356,6 +356,12 @@ def _normalize_entity_type(
 
     if lowered in _concept:
         return "OTHER"
+    # A landform noun in the name is a strong PLACE signal regardless of the
+    # current type: "Red Desert" mis-tagged EVENT, "White Fang Mountains" a
+    # bare-name PERSON — a bounded happening is never named by a geo suffix.
+    name_tokens = set(re.split(r"[\s'\-]+", lowered))
+    if name_tokens & _geo_sfx:
+        return "PLACE"
     if lowered in {"samhuinn", "yulemas"}:
         return "EVENT"
 
@@ -370,9 +376,6 @@ def _normalize_entity_type(
 
     # Conservative PERSON retag: only with explicit geopolitical evidence.
     if current_type == "PERSON":
-        name_tokens = set(re.split(r"[\s'\-]+", lowered))
-        if name_tokens & _geo_sfx:
-            return "PLACE"
         geo_patterns = (
             rf"\b(?:kingdom|country|continent|empire)\s+of\s+{re.escape(lowered)}\b",
             rf"\b(?:royaume|pays|continent|empire)\s+(?:d'|de )?{re.escape(lowered)}\b",

@@ -669,6 +669,30 @@ def test_normalize_geo_suffix_single_word_place():
     assert new_type == "PLACE"
 
 
+def test_normalize_geo_suffix_retags_event_to_place():
+    """Name token 'desert' is a geo-suffix → EVENT mis-tag retags to PLACE (STU-498, Red Desert)."""
+    entity = {
+        "canonical_name": "Red Desert",
+        "type": "EVENT",
+        "source_ids": [],
+        "aliases": [],
+    }
+    new_type = _normalize_entity_type(entity, {}, {}, {}, {}, geo_suffixes=_GEO_SUFFIXES)
+    assert new_type == "PLACE"
+
+
+def test_normalize_concept_name_retags_place_to_other():
+    """A concept keyword in the name → OTHER, even when NER mis-tagged it PLACE (STU-498, Wyrd)."""
+    entity = {
+        "canonical_name": "Wyrd",
+        "type": "PLACE",
+        "source_ids": [],
+        "aliases": [],
+    }
+    new_type = _normalize_entity_type(entity, {}, {}, {}, {}, concept_keywords=frozenset({"wyrd"}))
+    assert new_type == "OTHER"
+
+
 def test_normalize_no_false_positive_on_plain_person_name():
     """Name with no geo-suffix tokens stays PERSON."""
     entity = {
