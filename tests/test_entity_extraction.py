@@ -9,7 +9,7 @@ from scripts.entity_extraction import (
     extract_entities, extract_context, split_entities, split_by_type,
     KEPT_LABELS, LABEL_TO_TYPE, _is_valid_mention, _truncate_mention,
     _get_min_mentions_absolute, filter_entities_by_min_mentions,
-    _retag_entity_type_from_context, _infer_cue_words_language,
+    _retag_entity_type_from_context,
     _resolve_cue_words_language, _load_cue_words,
     _audit_ner_labels,
     _is_valid_span, _warn_if_no_pos_tagger,
@@ -232,15 +232,19 @@ def test_retags_org_or_place_to_person_from_context(name, source_type, contexts)
     assert _retag_entity_type_from_context(entity) == "PERSON"
 
 
-def test_infer_cue_words_language_from_spacy_model():
-    assert _infer_cue_words_language("fr_core_news_lg") == "fr"
-    assert _infer_cue_words_language("fr_core_news_sm") == "fr"
-    assert _infer_cue_words_language("en_core_web_sm") == "en"
+def test_resolve_cue_words_language_auto_uses_book_language():
+    # "auto"/None fall back to the resolved book language, not model-name inference.
+    assert _resolve_cue_words_language("fr", "auto") == "fr"
+    assert _resolve_cue_words_language("en", None) == "en"
 
 
-def test_resolve_cue_words_language_auto():
-    assert _resolve_cue_words_language("fr_core_news_lg", "auto") == "fr"
-    assert _resolve_cue_words_language("en_core_web_sm", None) == "en"
+def test_resolve_cue_words_language_explicit_override_wins():
+    assert _resolve_cue_words_language("fr", "en") == "en"
+    assert _resolve_cue_words_language("en", "all") == "all"
+
+
+def test_resolve_cue_words_language_invalid_falls_back_to_book_language():
+    assert _resolve_cue_words_language("fr", "klingon") == "fr"
 
 
 def test_load_cue_words_all_merges_languages():
