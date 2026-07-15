@@ -25,6 +25,11 @@ ifdef MAX_CHAPTERS
 export WIKI_MAX_CHAPTERS := $(MAX_CHAPTERS)
 endif
 
+# `pip install -e .` pins one absolute checkout on sys.path for the whole interpreter,
+# and a spawned script's own dir outranks cwd — so from a git worktree every target below
+# would import wiki_creator from the INSTALLED checkout, not this one. Prepend this tree.
+export PYTHONPATH := $(CURDIR)$(if $(PYTHONPATH),:$(PYTHONPATH))
+
 # Full run via orchestrator
 run:
 	python run_wiki.py --book $(BOOK)
