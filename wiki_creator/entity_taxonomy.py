@@ -31,6 +31,28 @@ def ner_label_map(base: dict | None = None) -> dict[str, str]:
     return out
 
 
+def gliner_label_map(base: dict | None = None) -> dict[str, str]:
+    """{natural-language label: entity_type} for the GLiNER backend (STU-521).
+
+    The inverse of how it reads in `base.yaml`, because that is what GLiNER is
+    handed: a list of labels to ask for, and it echoes the label back on each
+    entity. Two types declaring the same label would silently collapse into one,
+    so that raises.
+    """
+    out: dict[str, str] = {}
+    for etype, spec in _types(base).items():
+        label = (spec or {}).get("gliner_label")
+        if not label:
+            continue
+        if label in out:
+            raise ValueError(
+                f"base.yaml#entity_types: gliner_label {label!r} declared by both "
+                f"{out[label]} and {etype}; GLiNER could not tell them apart"
+            )
+        out[label] = etype
+    return out
+
+
 def ner_types(base: dict | None = None) -> tuple[str, ...]:
     """Types produced directly by the NER model (those with ``ner_labels``), in
     declaration order. These get a per-type ``*_full.json`` mention registry."""
