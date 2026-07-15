@@ -4,6 +4,7 @@ import sys
 import os
 
 import pytest
+import yaml
 from scripts.entity_classification import (
     _apply_entity_overrides,
     _apply_llm_type_corrections,
@@ -1209,3 +1210,9 @@ def test_classify_entities_defaults_match_no_config():
     assert classify_entities(entities, persons, {}, {}) == classify_entities(
         entities, persons, {}, {}, notability={}
     )
+
+
+def test_notability_present_but_empty_yields_defaults():
+    """`notability:` with no body parses to None, not {} — must not crash."""
+    assert yaml.safe_load("notability:\n").get("notability") is None
+    assert compute_thresholds(_MENTIONS, None) == compute_thresholds(_MENTIONS)

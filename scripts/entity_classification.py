@@ -719,7 +719,7 @@ def run_studio_mode() -> None:
 
     additional_ctx = payload.get("additional_context", "")
     book_input = yaml.safe_load(additional_ctx) if additional_ctx else {}
-    notability = book_input.get("notability", {})
+    notability = book_input.get("notability") or {}
     entity_overrides = book_input.get("entity_overrides", {})
 
     # Language-specific keyword sets from cue_words JSON
