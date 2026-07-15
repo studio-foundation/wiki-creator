@@ -241,7 +241,7 @@ def test_build_prompt_includes_place_events_block_and_rule():
 
     assert "## Events at this place" in prompt
     assert "épreuve finale du tournoi" in prompt
-    assert "personnages : Celaena Sardothien, Cain" in prompt
+    assert "participants: Celaena Sardothien, Cain" in prompt
     assert 'Include a "## Événements" section grounded ONLY in the "Events at this place" block above' in prompt
     assert 'Do NOT include a "## Événements" section' not in prompt
 
@@ -311,7 +311,7 @@ def test_build_prompt_includes_narrative_role_block_and_rule_for_person():
         sections=["narrative_role"],
     )
 
-    assert "## Événements où Celaena Sardothien participe (ordre chronologique)" in prompt
+    assert "## Events in which Celaena Sardothien participates (chronological order)" in prompt
     assert "épreuve finale" in prompt
     assert "est couronnée Champion du Roi" in prompt
     assert 'Write a "## Rôle dans le récit" section grounded ONLY in the' in prompt
@@ -331,7 +331,7 @@ def test_build_prompt_narrative_role_events_ordered_chronologically():
 def test_build_prompt_narrative_role_gated_to_its_own_section():
     """The arc block never leaks into other PERSON section prompts (biography)."""
     prompt = build_prompt(_celaena_with_arc(), "Throne of Glass", sections=["biography"])
-    assert "## Événements où Celaena Sardothien participe" not in prompt
+    assert "## Events in which Celaena Sardothien participates" not in prompt
     assert "Rôle dans le récit" not in prompt
 
 
@@ -345,7 +345,7 @@ def test_build_prompt_person_without_events_omits_narrative_block():
         "entity_events": [],
     }
     prompt = build_prompt(entity, "Throne of Glass", sections=["narrative_role"])
-    assert "## Événements où" not in prompt
+    assert "## Events in which" not in prompt
     assert 'Do NOT include a "## Rôle dans le récit" section' in prompt
 
 
@@ -1017,6 +1017,33 @@ def test_build_prompt_references_constraint_present():
     prompt = build_prompt(entity, book_title="Throne of Glass", sections=["infobox", "biography", "references"])
     assert "Throne of Glass" in prompt
     assert 'must list ONLY "Throne of Glass"' in prompt
+
+
+def test_build_prompt_localizes_titles_briefs_and_directive_in_english():
+    """STU-510: lang='en' routes section titles, few-shot, briefs, and the
+    write-in-<language> directive to English; French drops out entirely."""
+    entity = {
+        "canonical_name": "Celaena",
+        "type": "PERSON",
+        "importance": "principal",
+        "aliases": [],
+        "context_by_chapter": {"C01.xhtml": ["She fought."]},
+    }
+    en = build_prompt(entity, "Throne of Glass",
+                      sections=["infobox", "biography", "personality", "references"], lang="en")
+    assert "Write ALL content in English" in en
+    assert "encyclopedic English" in en
+    assert "## Biography" in en                      # few-shot heading, English
+    assert "Who this character is" in en             # biography brief, English
+    assert 'The ## References section must list' in en
+    assert "Biographie" not in en                    # no French titles leak
+    assert "français" not in en.lower()
+
+    fr = build_prompt(entity, "Throne of Glass",
+                      sections=["infobox", "biography", "personality", "references"])
+    assert "Write ALL content in French" in fr
+    assert "## Biographie" in fr                      # French default preserved
+    assert "Qui est ce personnage" in fr
 
 
 # --- STU-291: generation summary log ---

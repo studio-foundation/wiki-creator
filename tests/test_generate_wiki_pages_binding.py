@@ -55,13 +55,21 @@ def test_bind_batch_fields_sets_apparition_infobox_field():
     )
 
 
-def test_bind_batch_fields_apparition_defaults_to_english_language():
-    # page_templates.output_language() falls back to "en" absent config —
-    # same default the rest of the infobox/category pipeline already uses.
+def test_bind_batch_fields_apparition_defaults_to_french_language():
+    # STU-510: output_language() defaults to French (the corpus's output
+    # language); English is opt-in via generation.output_language.
     entity = {"canonical_name": "Verin", "type": "PERSON", "importance": "secondary",
               "aliases": [], "books": ["01-a"]}
     page = {"infobox_fields": {}}
     gwp._bind_batch_fields(page, entity, {})
+    assert page["infobox_fields"]["apparition"] == "Apparaît au tome 1"
+
+
+def test_bind_batch_fields_apparition_english_when_output_language_en():
+    entity = {"canonical_name": "Verin", "type": "PERSON", "importance": "secondary",
+              "aliases": [], "books": ["01-a"]}
+    page = {"infobox_fields": {}}
+    gwp._bind_batch_fields(page, entity, {"generation": {"output_language": "en"}})
     assert page["infobox_fields"]["apparition"] == "Appears in book 1"
 
 

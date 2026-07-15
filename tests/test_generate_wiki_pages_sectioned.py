@@ -100,8 +100,8 @@ def test_narrative_role_prompt_carries_salience_tiers_and_rule():
          "salience": 0.85},
     ]
     p = gwp.build_prompt(entity, "ToG", sections=["narrative_role"])
-    assert "importance : basse" in p      # low-salience travel beat
-    assert "importance : haute" in p      # climax
+    assert "importance: low" in p      # low-salience travel beat
+    assert "importance: high" in p      # climax
     assert "proportion" in p.lower()
 
 
@@ -152,7 +152,7 @@ def test_narrative_role_prompt_forbids_periphrasis():
     ]
     p = gwp.build_prompt(entity, "ToG", sections=["narrative_role"])
     assert "periphrasis" in p.lower()
-    assert "la protagoniste" in p
+    assert "the protagonist" in p
 
 
 def test_sectioned_narrative_role_wikilinks_first_mention(monkeypatch):

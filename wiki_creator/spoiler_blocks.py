@@ -10,8 +10,8 @@ from __future__ import annotations
 import re
 
 from wiki_creator.chapters import chapter_number
+from wiki_creator.page_templates import chrome_label, slot_label
 from wiki_creator.relationship_types import usable_relationship_type
-from wiki_creator.sections import SECTION_TITLES
 
 _HEADING_RE = re.compile(r"(?m)^(==\s+.+?\s+==) *$")
 
@@ -34,15 +34,15 @@ def _heading_of(block: str) -> str | None:
     return m.group(1) if m else None
 
 
-def wrap_collapsible(body: str, content_units: list[dict], collapse_after: int) -> str:
+def wrap_collapsible(body: str, content_units: list[dict], collapse_after: int, lang: str = "fr") -> str:
     """Wrap each section revealed after ``collapse_after`` in an mw-collapsible div.
 
-    Matching is by normalized heading title (via SECTION_TITLES), so it is robust
+    Matching is by normalized heading title (via ``slot_label``), so it is robust
     to LLM heading drift and to a leading Infobox block. Sections with no matching
     unit, a ``None`` chapter, or a chapter ``<= collapse_after`` are left untouched.
     """
     chapter_by_title = {
-        _norm(SECTION_TITLES.get(u["section"], u["section"])): u.get("revealed_at_chapter")
+        _norm(slot_label(u["section"], lang)): u.get("revealed_at_chapter")
         for u in content_units
     }
     blocks = _split_sections(body)
@@ -51,10 +51,12 @@ def wrap_collapsible(body: str, content_units: list[dict], collapse_after: int) 
         heading = _heading_of(block)
         chapter = chapter_by_title.get(_norm(heading)) if heading else None
         if chapter is not None and chapter > collapse_after:
+            expand = chrome_label("reveal", lang).format(chapter=chapter)
+            collapse = chrome_label("collapse", lang)
             out.append(
                 f'<div class="mw-collapsible mw-collapsed" '
-                f'data-expandtext="Chapitre {chapter} — révéler" '
-                f'data-collapsetext="Masquer">\n{block}\n</div>\n'
+                f'data-expandtext="{expand}" '
+                f'data-collapsetext="{collapse}">\n{block}\n</div>\n'
             )
         else:
             out.append(block)
@@ -84,18 +86,20 @@ def relationship_index_lines(entity: dict) -> list[str]:
     return [line for _, line in rows]
 
 
-_RELATIONS_TITLE = _norm(SECTION_TITLES["relationships"])
+def _relations_title(lang: str) -> str:
+    return _norm(slot_label("relationships", lang))
 
 
-def inject_relationship_index(body: str, lines: list[str]) -> str:
-    """Append an ''Évolution :'' index sub-block at the end of the Relations section."""
+def inject_relationship_index(body: str, lines: list[str], lang: str = "fr") -> str:
+    """Append a localized ''Evolution'' index sub-block at the end of the Relations section."""
     if not lines:
         return body
+    relations_title = _relations_title(lang)
     blocks = _split_sections(body)
     for i, block in enumerate(blocks[1:], start=1):
         heading = _heading_of(block)
-        if heading and _norm(heading) == _RELATIONS_TITLE:
-            sub = "''Évolution :''\n" + "\n".join(lines)
+        if heading and _norm(heading) == relations_title:
+            sub = f"''{chrome_label('evolution', lang)}''\n" + "\n".join(lines)
             blocks[i] = f"{block.rstrip()}\n\n{sub}\n"
             return "".join(blocks)
     return body
@@ -132,7 +136,7 @@ def _subheading_name(block: str) -> str | None:
     return n.group(1).strip() if n else None
 
 
-def wrap_relation_collapsibles(body: str, relation_units: list[dict], collapse_after: int) -> str:
+def wrap_relation_collapsibles(body: str, relation_units: list[dict], collapse_after: int, lang: str = "fr") -> str:
     """Wrap each ``=== [[Name]] ===`` subsection of the Relations section whose
     relation is revealed after ``collapse_after`` in an mw-collapsible div.
 
@@ -140,12 +144,13 @@ def wrap_relation_collapsibles(body: str, relation_units: list[dict], collapse_a
     Subsections with no match, a ``None`` chapter, or a chapter ``<= collapse_after``
     are left untouched — same leave-open default as ``wrap_collapsible``.
     """
+    relations_title = _relations_title(lang)
     chapter_by_name = {_norm(u["name"]): u.get("revealed_at_chapter") for u in relation_units}
     blocks = _split_sections(body)
     out = [blocks[0]]
     for block in blocks[1:]:
         heading = _heading_of(block)
-        if not heading or _norm(heading) != _RELATIONS_TITLE:
+        if not heading or _norm(heading) != relations_title:
             out.append(block)
             continue
         subs = _split_subsections(block)
@@ -154,10 +159,12 @@ def wrap_relation_collapsibles(body: str, relation_units: list[dict], collapse_a
             name = _subheading_name(sub)
             chapter = chapter_by_name.get(_norm(name)) if name else None
             if chapter is not None and chapter > collapse_after:
+                expand = chrome_label("reveal", lang).format(chapter=chapter)
+                collapse = chrome_label("collapse", lang)
                 wrapped.append(
                     f'<div class="mw-collapsible mw-collapsed" '
-                    f'data-expandtext="Chapitre {chapter} — révéler" '
-                    f'data-collapsetext="Masquer">\n{sub.rstrip()}\n</div>\n'
+                    f'data-expandtext="{expand}" '
+                    f'data-collapsetext="{collapse}">\n{sub.rstrip()}\n</div>\n'
                 )
             else:
                 wrapped.append(sub)

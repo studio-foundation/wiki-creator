@@ -38,14 +38,20 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 from wiki_creator.chapters import chapter_number
 from wiki_creator.editorial_stance import GROUNDING_BLOCK, EditorialStance, editorial_stance
-from wiki_creator.lang import book_language
-from wiki_creator.page_templates import output_language, resolve_template
+from wiki_creator.page_templates import (
+    few_shot_example,
+    language_name,
+    length_guide,
+    output_language,
+    resolve_template,
+    section_brief,
+    slot_label,
+)
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.provenance import content_units, relation_units
 from wiki_creator import studio_io
 from wiki_creator.entity_links import link_first_mentions
 from wiki_creator.registry import Registry, normalize_name
-from wiki_creator.sections import SECTION_TITLES as _SECTION_TITLES
 from wiki_creator.spoiler_blocks import relationship_index_lines, per_relation_prose_enabled
 from wiki_creator.relationship_types import usable_relationship_type
 from wiki_creator.synopsis import event_lines
@@ -84,38 +90,22 @@ _PLACEHOLDER_PATTERNS = (
 )
 
 
-def _content_template_for_sections(sections: list[str]) -> str:
-    blocks = []
-    for section in sections:
-        title = _SECTION_TITLES.get(section, section.replace("_", " ").title())
-        if section == "infobox":
-            blocks.append(
-                f"## {title}\\n\\n"
-                "- Nom: Inconnu\\n"
-                "- Rôle: Inconnu\\n"
-                "- Affiliation: Inconnue"
-            )
-        else:
-            blocks.append(f"## {title}\\n\\nInformations non disponibles dans les extraits fournis.")
-    return "\\n\\n".join(blocks)
-
-
 def _assemble_section_blocks(blocks: list[str]) -> str:
     """Join non-empty section markdown blocks with a blank line."""
     return "\n\n".join(b.strip() for b in blocks if b and b.strip())
 
 
-def _references_block(book_title: str) -> str:
+def _references_block(book_title: str, lang: str = "fr") -> str:
     """Deterministic References section — lists only the book title (no LLM)."""
-    return f"## {_SECTION_TITLES['references']}\n\n- {book_title}"
+    return f"## {slot_label('references', lang)}\n\n- {book_title}"
 
 
-def _isolate_section(content: str, section: str) -> str | None:
+def _isolate_section(content: str, section: str, lang: str = "fr") -> str | None:
     """Return only the requested section's markdown block from a single-section
     generation, dropping any leaked foreign blocks (e.g. a ## Infobox echoed from
     the few-shot). If the model returned just the body with no heading, wrap it
     under the section's title. Returns None if nothing usable remains."""
-    title = _SECTION_TITLES.get(section, section.replace("_", " ").title())
+    title = slot_label(section, lang)
     text = (content or "").strip()
     if not text:
         return None
@@ -137,104 +127,11 @@ def _isolate_section(content: str, section: str) -> str | None:
     for norm, block in blocks:
         if norm == title.lower():
             return block
-    non_infobox = [blk for norm, blk in blocks if norm != _SECTION_TITLES["infobox"].lower()]
+    non_infobox = [blk for norm, blk in blocks if norm != slot_label("infobox", lang).lower()]
     if len(non_infobox) == 1:
         return non_infobox[0]
     return None
 
-
-FEW_SHOT_EXAMPLE = {
-    "title": "John Doe",
-    "importance": "principal",
-    "entity_type": "PERSON",
-    "infobox_fields": {
-        "nom": "John Doe",
-        "nom complet": "Jonathan Aldric Doe",
-        "alias": "Le Fantôme, Jay",
-        "rôle": "Espion de la Couronne, ancien soldat",
-        "affiliation": "La Guilde des Ombres (ancienne), Couronne d'Arenell",
-        "statut": "Actif",
-    },
-    "content": (
-        "## Infobox\n\n"
-        "- Nom: John Doe\n"
-        "- Nom complet: Jonathan Aldric Doe\n"
-        "- Alias: Le Fantôme, Jay\n"
-        "- Rôle: Espion de la Couronne, ancien soldat\n"
-        "- Affiliation: La Guilde des Ombres (ancienne), Couronne d'Arenell\n"
-        "- Statut: Actif\n\n"
-        "## Biographie\n\n"
-        "John Doe, né Jonathan Aldric Doe, est un espion au service de la Couronne d'Arenell. "
-        "Ancien soldat reconverti après la chute de la forteresse de Veldrath, il opère sous le pseudonyme "
-        "**Le Fantôme** dans les cercles criminels de la capitale. Sa double identité — homme de cour le jour, "
-        "informateur la nuit — lui permet d'infiltrer des réseaux que les services officiels du roi ne peuvent atteindre.\n\n"
-        "Après la trahison de son ancien commandant lors du siège de Veldrath, Doe a rompu avec l'armée régulière "
-        "et disparu pendant trois ans. Il réapparaît à Arenell sous une fausse identité marchande, avant d'être "
-        "recruté par la conseillère Mira Vayne pour des missions que le Conseil préfère nier.\n\n"
-        "## Personnalité\n\n"
-        "Doe est méthodique et difficile à lire. Il parle peu, observe beaucoup, et donne rarement son opinion "
-        "sans qu'on la lui demande. Ceux qui le côtoient décrivent une loyauté sélective : il honore ses engagements "
-        "à la lettre, mais ne s'investit pas au-delà de ce qui a été convenu. Sous cette froideur calculée affleure "
-        "parfois un humour sec, surtout dans les situations les plus tendues.\n\n"
-        "Son rapport à la violence est pragmatique — ni enthousiaste ni réticent. Il considère les moyens selon "
-        "leur efficacité, ce qui le met régulièrement en friction avec les idéalistes de son entourage.\n\n"
-        "## Description physique\n\n"
-        "Grand, brun, avec une cicatrice linéaire qui part du coin de l'œil gauche jusqu'à la mâchoire — "
-        "séquelle d'un interrogatoire à Veldrath. Il s'habille de façon à ne pas attirer l'attention : teintes "
-        "sombres, coupes fonctionnelles, aucun bijou. Seul détail invariable : une chevalière en argent terne "
-        "à l'annulaire droit, dont l'origine n'est jamais expliquée.\n\n"
-        "## Pouvoirs et compétences\n\n"
-        "Doe ne possède aucune magie. Ses compétences sont entièrement acquises : infiltration, déguisement, "
-        "combat rapproché, et une mémoire quasi photographique des visages et des plans d'architecture. "
-        "Il parle couramment quatre langues, dont le dialecte du Sud qu'il utilise pour ses couvertures marchandes.\n\n"
-        "## Relations\n\n"
-        "**[[Mira Vayne]]** — mentor/protégé. Sa recruteuse et supérieure directe ; "
-        "leur relation est professionnelle, teintée d'une méfiance mutuelle que ni l'un ni l'autre ne cherche vraiment à dissoudre.\n\n"
-        "**[[Lira]]** — allié. Une informante de la Guilde des Ombres avec qui Doe a partagé une mission à Veldrath.\n\n"
-        "**[[Le Commandant Arek]]** — antagoniste. L'ancien supérieur dont la trahison à Veldrath a redéfini la trajectoire de Doe.\n\n"
-        "## Anecdotes\n\n"
-        "- Le surnom \"Le Fantôme\" lui a été donné par les membres de la Guilde, non par ses alliés de la Couronne.\n"
-        "- Sa couverture marchande implique un commerce de tissus importés du Sud — un choix qui justifie "
-        "ses déplacements fréquents entre les provinces."
-    ),
-}
-
-# Définitions des sections par entity_type
-SECTION_DEFINITIONS = {
-    "PERSON": {
-        "Infobox": "Champs factuels clés : nom, alias, rôle, affiliation, statut. Omets les champs inconnus.",
-        "Biographie": "Qui est ce personnage et quel est son rôle dans le monde. Les événements servent de contexte, pas de liste chronologique.",
-        "Avant les événements du livre": "Le passé du personnage révélé en flashback, avant le récit présent du livre. Prose ancrée uniquement sur le contexte de backstory. Ne pas répéter la biographie présente.",
-        "Rôle dans le récit": "Arc chronologique du personnage à travers l'intrigue, en prose, ancré uniquement sur les événements listés.",
-        "Personnalité": "Traits observés avec ancrage textuel. Évite les adjectifs génériques sans preuve. Montre les contradictions ou tensions internes si elles existent.",
-        "Description physique": "Détails physiques confirmés par le texte uniquement. Concis.",
-        "Pouvoirs": "Capacités ou compétences distinctives. Si aucun pouvoir magique, décris les compétences pratiques.",
-        "Relations": "Une entrée en gras par relation significative, suivie d'une description de la nature du lien. Format: **Nom** — description.",
-        "Anecdotes": "Faits spécifiques et concrets qui ne rentrent pas dans les autres sections. Pas de re-résumé de la biographie.",
-    },
-    "PLACE": {
-        "Infobox": "Nom, type de lieu, région/pays, statut (actif, ruiné, etc.). Omets les champs inconnus.",
-        "Description": "Ce qu'est ce lieu, où il se trouve, à quoi il ressemble d'après les extraits.",
-        "Histoire": "Événements passés liés à ce lieu mentionnés dans le texte.",
-        "Événements": "Ce qui se passe à cet endroit — les événements narratifs qui s'y déroulent, ancrés sur le bloc \"Events at this place\" ci-dessus. Ne pas se limiter à la géographie ou à l'architecture.",
-        "Habitants et factions": "Groupes ou personnages associés à ce lieu.",
-        "Anecdotes": "Détails spécifiques qui ne rentrent pas ailleurs.",
-    },
-    "ORG": {
-        "Infobox": "Nom, type d'organisation, affiliation, statut. Omets les champs inconnus.",
-        "Description": "Ce qu'est cette organisation, son rôle et ses objectifs d'après les extraits.",
-        "Membres notables": "Personnages affiliés mentionnés dans le texte.",
-        "Histoire": "Événements impliquant cette organisation.",
-        "Anecdotes": "Détails spécifiques qui ne rentrent pas ailleurs.",
-    },
-    "EVENT": {
-        "Infobox": "Nom, type d'événement, lieu, période si mentionnée. Omets les champs inconnus.",
-        "Description": "Ce qu'est cet événement et son importance dans le récit.",
-        "Déroulement": "Ce qui se passe lors de cet événement d'après les extraits.",
-        "Participants": "Personnages impliqués.",
-        "Anecdotes": "Détails spécifiques qui ne rentrent pas ailleurs.",
-    },
-}
 
 def _label_chapter_key(key: str) -> str:
     """Convert EPUB file IDs like C25.xhtml to readable labels like Chapter 25."""
@@ -302,12 +199,14 @@ def _has_backstory(entity: dict) -> bool:
 
 def _narrative_role_block(entity: dict) -> str:
     """Grounding block of the character's arc through the plot, or "" when the
-    entity isn't a PERSON or has no participant events."""
+    entity isn't a PERSON or has no participant events. Prompt-grounding only
+    (never rendered), so the header stays English like the other grounding
+    labels, regardless of the wiki's output language."""
     lines = event_lines(_narrative_events(entity), include_salience=True)
     if not lines:
         return ""
     name = entity.get("canonical_name", "")
-    header = f"## Événements où {name} participe (ordre chronologique)"
+    header = f"## Events in which {name} participates (chronological order)"
     return header + "\n" + "\n".join(f"  {line}" for line in lines)
 
 
@@ -340,15 +239,17 @@ def build_relation_prompt(
     rel: dict,
     book_title: str,
     forbidden_names: list[str] | None = None,
+    lang: str = "fr",
 ) -> str:
-    """Prompt for a single ``### [[other]]`` French progression subsection.
+    """Prompt for a single ``### [[other]]`` progression subsection, in the wiki's
+    output language.
 
-    Grounds on this one relation's type / evolution / key_moments / evidence and
-    requires French prose — the grounding fields are English and must be
-    reformulated, never copied verbatim.
+    Grounds on this one relation's type / evolution / key_moments / evidence. The
+    grounding fields are English and must be reformulated, never copied verbatim.
     """
     name = entity["canonical_name"]
     rtype = usable_relationship_type(rel.get("relationship_type")) or "relation"
+    lang_name = language_name(lang)
     grounding_lines = []
     evolution = str(rel.get("evolution") or "").strip()
     if evolution:
@@ -359,20 +260,20 @@ def build_relation_prompt(
     if forbidden_names:
         names_list = "\n".join(f"- {n}" for n in forbidden_names)
         forbidden_rule = (
-            "\n\nNE JAMAIS mentionner ces personnages (spoilers d'autres tomes) :\n"
+            f"\n\nNEVER mention these characters (spoilers from other books):\n"
             f"{names_list}"
         )
-    return f"""Rédige UNE sous-section wiki en français décrivant la progression de la relation entre {name} et {other} dans « {book_title} ».
+    return f"""Write ONE wiki subsection in {lang_name} describing the progression of the relationship between {name} and {other} in "{book_title}".
 
-Type de relation : {rtype}
-Éléments d'ancrage (en anglais — À REFORMULER EN FRANÇAIS, ne jamais recopier tel quel) :
+Relationship type: {rtype}
+Grounding elements (in English — REFORMULATE in {lang_name}, never copy verbatim):
 {grounding}
 
-Contraintes :
-- Écris en français uniquement. Les éléments d'ancrage sont en anglais : traduis et reformule, ne copie aucune phrase anglaise.
-- Un seul paragraphe court, ancré uniquement sur les éléments ci-dessus. N'invente rien.
-- Commence EXACTEMENT par le titre : ### [[{other}]]
-- Ne mentionne aucun autre personnage que {name} et {other}.{forbidden_rule}"""
+Constraints:
+- Write in {lang_name} only. The grounding elements are in English: translate and reformulate, do not copy any English phrase.
+- A single short paragraph, grounded only in the elements above. Invent nothing.
+- Start EXACTLY with the title: ### [[{other}]]
+- Do not mention any character other than {name} and {other}.{forbidden_rule}"""
 
 
 def build_prompt(
@@ -381,8 +282,10 @@ def build_prompt(
     sections: list[str],
     forbidden_names: list[str] | None = None,
     stance: EditorialStance | None = None,
+    lang: str = "fr",
 ) -> str:
     stance = stance or EditorialStance()
+    lang_name = language_name(lang)
     name = entity["canonical_name"]
     etype = entity["type"]
     importance = entity["importance"]
@@ -521,24 +424,20 @@ def build_prompt(
     # --- Paramètres de génération ---
     alias_str = ", ".join(a for a in aliases if a != name) or "none"
 
-    length_guide = {
-        "principal": "4 to 6 paragraphs total across all sections.",
-        "secondary": "1 to 2 paragraphs for the main section. Keep all other sections brief.",
-        "figurant": "1 short paragraph only. Use only the most relevant section.",
-    }.get(importance, "1 short paragraph only.")
+    length_hint = length_guide(importance)
 
     sections_str = ", ".join(sections)
 
-    # Définitions des sections pour ce type d'entité
-    section_defs = SECTION_DEFINITIONS.get(etype, SECTION_DEFINITIONS["PERSON"])
+    # Section writing briefs, localized (base.yaml `briefs`), keyed by token.
     section_def_lines = "\n".join(
-        f"  - {sec}: {desc}"
-        for sec, desc in section_defs.items()
-        if sec in sections
+        f"  - {slot_label(token, lang)}: {brief}"
+        for token in sections
+        for brief in [section_brief(etype, token, lang)]
+        if brief
     )
 
-    # Few-shot example serialisé
-    few_shot_json = json.dumps(FEW_SHOT_EXAMPLE, ensure_ascii=False, indent=2)
+    # Few-shot example serialised, in the output language.
+    few_shot_json = json.dumps(few_shot_example(lang), ensure_ascii=False, indent=2)
 
     indirect_section = ""
     if entity.get("importance") == "major" and len(indirect_rels) >= 2 and indirect_block:
@@ -554,88 +453,91 @@ def build_prompt(
             f"Any output containing a forbidden name will be rejected."
         )
 
+    relations_title = slot_label("relationships", lang)
     has_typed_rels = bool(relationships_block)
     rels_in_sections = "relationships" in sections
     if rels_in_sections and has_typed_rels:
         relations_rule = (
-            '- For PERSON entities: ALWAYS include a "## Relations" section when "relationships" is in the sections list AND typed relationships are provided above. Do not skip it.\n'
-            '- Each "## Relations" entry must use this format: "**[[related_entity]]** — [relationship_type]. [evolution if available]"\n'
-            '- NEVER print cooccurrence_count, a mention count, or "mentions communes" in the output. cooccurrence_count is an internal ranking metric only — it must not appear in reader-facing text.'
+            f'- For PERSON entities: ALWAYS include a "## {relations_title}" section when "relationships" is in the sections list AND typed relationships are provided above. Do not skip it.\n'
+            f'- Each "## {relations_title}" entry must use this format: "**[[related_entity]]** — [relationship_type]. [evolution if available]"\n'
+            '- NEVER print cooccurrence_count or any raw mention/cooccurrence count in the output. cooccurrence_count is an internal ranking metric only — it must not appear in reader-facing text.'
         )
         if rels_enriched:
             relations_rule += (
-                '\n- Anchor each "## Relations" entry in the evidence quotes, key moments, and contexts provided above: '
+                f'\n- Anchor each "## {relations_title}" entry in the evidence quotes, key moments, and contexts provided above: '
                 "cite or closely paraphrase these grounded facts instead of paraphrasing the abstract relationship_type. "
                 "Do NOT invent moments that are not listed."
             )
     else:
-        relations_rule = "- Do NOT include a ## Relations section in the content field. No relationships data is available for this entity."
+        relations_rule = f"- Do NOT include a ## {relations_title} section in the content field. No relationships data is available for this entity."
 
+    events_title = slot_label("events", lang)
     place_events_rule = ""
     if etype == "PLACE":
         if place_events_block:
             place_events_rule = (
-                '\n- Include a "## Événements" section grounded ONLY in the "Events at this place" block above: '
+                f'\n- Include a "## {events_title}" section grounded ONLY in the "Events at this place" block above: '
                 "describe what actually happens here — the events themselves, not just the geography or architecture. "
-                'Do NOT mention chapter numbers ("Chapitre N") in the prose.'
+                "Do NOT mention chapter numbers in the prose."
             )
         else:
             place_events_rule = (
-                '\n- Do NOT include a "## Événements" section: no narrative events are available for this place.'
+                f'\n- Do NOT include a "## {events_title}" section: no narrative events are available for this place.'
             )
 
     references_rule = ""
     if "references" in sections:
         references_rule = (
-            f'\n- The ## {_SECTION_TITLES["references"]} section must list ONLY "{book_title}". '
+            f'\n- The ## {slot_label("references", lang)} section must list ONLY "{book_title}". '
             "Do not add any other book, volume, or series title."
         )
 
+    narrative_role_title = slot_label("narrative_role", lang)
     narrative_role_rule = ""
     if etype == "PERSON" and "narrative_role" in sections:
         if narrative_role_block:
             narrative_role_rule = (
-                '\n- Write a "## Rôle dans le récit" section grounded ONLY in the '
-                f'"Événements où {name} participe" block above: retrace the character\'s '
+                f'\n- Write a "## {narrative_role_title}" section grounded ONLY in the '
+                "events block above: retrace the character's "
                 "arc through the plot in chronological order, in flowing prose. Describe what "
                 "the character does and what happens to them across these events — not a static "
-                'portrait. Do NOT mention chapter numbers ("Chapitre N") in the prose. Do NOT '
+                "portrait. Do NOT mention chapter numbers in the prose. Do NOT "
                 "invent events, outcomes, or motives absent from the listed events."
                 "\n- Name every other character explicitly, using their exact name as written "
-                "in the events block (e.g. « Celaena Sardothien »). NEVER replace a named "
-                "character with a vague periphrasis (« la protagoniste », « une jeune femme », "
-                "« un jeune homme », « le personnage principal ») — this is an encyclopedic "
-                "article and each character has their own page, so there is no spoiler reason to "
-                "withhold a name here. Introduce each character by name at their first mention; "
-                "pronouns are fine afterwards."
+                "in the events block. NEVER replace a named character with a vague periphrasis "
+                "(e.g. \"the protagonist\", \"a young woman\", \"the main character\") — this is "
+                "an encyclopedic article and each character has their own page, so there is no "
+                "spoiler reason to withhold a name here. Introduce each character by name at "
+                "their first mention; pronouns are fine afterwards."
                 "\n- Weight the prose by each event's \"importance\" tier: an event marked "
-                '"importance : haute" earns a full, developed treatment; "moyenne" a sentence '
-                'or two; "basse" a brief mention or a subordinate clause — never a dedicated '
+                '"importance: high" earns a full, developed treatment; "medium" a sentence '
+                'or two; "low" a brief mention or a subordinate clause — never a dedicated '
                 "paragraph. Spend words in proportion to narrative importance, not evenly."
             )
         else:
             narrative_role_rule = (
-                '\n- Do NOT include a "## Rôle dans le récit" section: no narrative events are available for this character.'
+                f'\n- Do NOT include a "## {narrative_role_title}" section: no narrative events are available for this character.'
             )
 
+    backstory_title = slot_label("backstory", lang)
     backstory_rule = ""
     if etype == "PERSON" and "backstory" in sections:
         if backstory_block:
             backstory_rule = (
-                '\n- Write a "## Avant les événements du livre" section grounded ONLY in the '
+                f'\n- Write a "## {backstory_title}" section grounded ONLY in the '
                 '"Backstory context" block above: recount what happened to the character before '
                 "the book's present-day narrative, as revealed through flashbacks, in flowing prose. "
                 "Do NOT repeat the present-day biography. Do NOT mention chapter numbers "
-                '("Chapitre N") in the prose. Do NOT invent events absent from the backstory block.'
+                "in the prose. Do NOT invent events absent from the backstory block."
             )
         else:
             backstory_rule = (
-                '\n- Do NOT include a "## Avant les événements du livre" section: no flashback backstory is available for this character.'
+                f'\n- Do NOT include a "## {backstory_title}" section: no flashback backstory is available for this character.'
             )
 
     return f"""{GROUNDING_BLOCK}
 
-{stance.prompt_block(sections)}
+{stance.prompt_block(sections, lang)}
 
 You are writing a wiki page for a fictional novel called "{book_title}".
 Output ONLY a valid JSON object. No markdown fences. No explanation. No preamble.
@@ -669,9 +571,9 @@ Chapter summaries (orientation context — lower priority than excerpts):
 WRITING RULES (follow strictly):
 
 Tone and register:
-- Write in encyclopedic French. Neutral, precise, factual.
+- Write in encyclopedic {lang_name}. Neutral, precise, factual.
 - Describe what the entity IS before describing what happens to it.
-- When a chapter summary is tagged with a subjective POV, attribute contested claims to that viewpoint ("selon X", "du point de vue de X") rather than stating them as fact.
+- When a chapter summary is tagged with a subjective POV, attribute contested claims to that viewpoint ("according to X", "from X's point of view") rather than stating them as fact.
 - Use specific, concrete language. Avoid generic adjectives without textual evidence.
 - If aliases exist, introduce them naturally in the biography ("also known as X", "born Y").
 - Use ONLY aliases listed in "Known aliases" above. Do NOT infer or invent aliases from context.
@@ -680,7 +582,7 @@ Content constraints:
 - Chapter summaries serve as orientation only. Direct excerpts take priority.
 - Do NOT invent plot details, relationships, abilities, or physical traits not supported by excerpts.
 - Do NOT turn cooccurrence between entities into narrative causality.
-- Confidence markers: each relationship carries a "confidence" tag. State "explicit" relationships as fact (direct affirmation). Phrase "inferred" and "interpretation" relationships tentatively ("semble", "suggère", "pourrait indiquer") — never as established fact. Indirect relationships listed as "inferred: true" are interpretation: mention them only with such hedged phrasing, if at all.
+- Confidence markers: each relationship carries a "confidence" tag. State "explicit" relationships as fact (direct affirmation). Phrase "inferred" and "interpretation" relationships tentatively ("seems", "suggests", "could indicate") — never as established fact. Indirect relationships listed as "inferred: true" are interpretation: mention them only with such hedged phrasing, if at all.
 - When referring to related entities or characters, use their name EXACTLY as written in the excerpts or relationships list — do not paraphrase, alter, or approximate names.{place_events_rule}{narrative_role_rule}{backstory_rule}
 - If information is insufficient for a section, omit that section entirely.
 - Do NOT write "information not available", "not mentioned in excerpts", or any similar phrase. Omit instead.
@@ -688,8 +590,8 @@ Content constraints:
 
 Structure:
 - Use exactly these sections in this order: {sections_str}.
-- Target length: {length_guide}
-- The "Infobox" section must use this format: one bullet per field, "- Key: Value".
+- Target length: {length_hint}
+- The "{slot_label("infobox", lang)}" section must use this format: one bullet per field, "- Key: Value".
 {relations_rule}
 - infobox_fields keys must be plain strings — no leading "- " or "* ". Correct: {{"nom": "X"}}, Wrong: {{"- nom": "X"}}.
 - Context labels like [Chapter N] are internal references — never mention them in your output.{references_rule}
@@ -700,7 +602,7 @@ Section definitions for type {etype}:
 
 ---
 
-REMINDER: Write ALL content in French. Source excerpts may be in English — your output must always be in French regardless.
+REMINDER: Write ALL content in {lang_name}. Source excerpts may be in another language — your output must always be in {lang_name} regardless.
 
 Output this JSON object:
 {{
@@ -954,7 +856,7 @@ def _wiki_page_item_input(
         "file_path": file_path,
         "prompt": prompt_override or build_prompt(
             entity, book_title, sections=sections,
-            forbidden_names=forbidden_names, stance=stance,
+            forbidden_names=forbidden_names, stance=stance, lang=language,
         ),
     }
     grounding = grounding or {}
@@ -1146,14 +1048,14 @@ def _generate_one_section(
     result = _once()
     if not isinstance(result, dict) or result.get("error"):
         return None
-    content = _isolate_section(result.get("content") or "", section) or ""
+    content = _isolate_section(result.get("content") or "", section, language) or ""
     if section == "relationships" and not entity.get("relationships"):
         content = _strip_relations_section(content)
     if forbidden_names and _check_forbidden_names({"content": content, "infobox_fields": {}}, forbidden_names):
         result = _once()
         if not isinstance(result, dict) or result.get("error"):
             return None
-        content = _isolate_section(result.get("content") or "", section) or ""
+        content = _isolate_section(result.get("content") or "", section, language) or ""
         if section == "relationships" and not entity.get("relationships"):
             content = _strip_relations_section(content)
         if _check_forbidden_names({"content": content, "infobox_fields": {}}, forbidden_names):
@@ -1179,7 +1081,7 @@ def _generate_one_relation(
 ) -> str | None:
     """Generate one ``### [[other]]`` French progression subsection. Returns the
     subsection markdown, or None on error / persistent forbidden-name hit."""
-    prompt = build_relation_prompt(entity, other, rel, book_title, forbidden_names=forbidden_names)
+    prompt = build_relation_prompt(entity, other, rel, book_title, forbidden_names=forbidden_names, lang=language)
 
     def _once() -> dict:
         return _run_wiki_page_item(
@@ -1414,7 +1316,7 @@ def _run_generation_sectioned(
         return make_stub_page(entity, failed=True)
 
     if "references" in sections:
-        blocks.append(_references_block(book_title))
+        blocks.append(_references_block(book_title, language))
 
     page = {
         "title": entity["canonical_name"],
@@ -1866,7 +1768,7 @@ def main() -> None:
         timeout=args.timeout,
         dry_run=args.dry_run,
         forbidden_names=forbidden_names,
-        language=book_language(book_cfg),
+        language=output_language(book_cfg),
         file_path=book_cfg.get("file_path", ""),
         grounding=grounding_cfg,
         book_config=book_cfg,
