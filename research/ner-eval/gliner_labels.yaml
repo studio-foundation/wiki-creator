@@ -1,0 +1,28 @@
+# Candidate natural-language labels per taxonomy type, swept against the gold.
+#
+# GLiNER is asked for entities by natural-language label, so the label wording is
+# a real variable, not a formality: STU-401 found "personne" beat "nom de personne"
+# and "prénom" outright. Sweeping is how the arm is given its fair shot — pinning
+# one guessed label per type would measure our phrasing, not the model.
+#
+# Data, not code: adding a candidate is an edit here.
+PERSON:
+  - person
+  - character
+  - person name
+PLACE:
+  - place
+  - location
+  - place name
+ORG:
+  - organization
+  - kingdom
+  - formal organization or kingdom
+FACTION:
+  - faction
+  - group of people
+  - people, race, or order
+EVENT:
+  - event
+  - named event
+  - battle or historical event
