@@ -76,7 +76,7 @@ def test_run_live_builds_page_with_deterministic_infobox_and_references(tmp_path
 
     page = pages[0]
     assert page["title"] == "Celaena defeats Cain"
-    assert "## Références" in page["content"]
+    assert "## References" in page["content"]  # localized to output language (STU-514)
     assert "- Throne of Glass" in page["content"]
     # infobox is deterministic, not authored by the LLM
     assert page["infobox_fields"]["participants"] == "Cain, Celaena Sardothien"
@@ -131,7 +131,7 @@ def test_duplicate_titles_are_disambiguated(tmp_path, monkeypatch):
                         lambda item_input, entity, timeout: _page_result())
     pages = gep.run_for_processing(tmp_path, book_cfg={}, language="en")
     titles = [p["title"] for p in pages]
-    assert titles == ["A duel", "A duel (chapitre 8)"]
+    assert titles == ["A duel", "A duel (chapter 8)"]
 
 
 def test_same_chapter_duplicate_titles_stay_unique(tmp_path, monkeypatch):
@@ -147,4 +147,4 @@ def test_same_chapter_duplicate_titles_stay_unique(tmp_path, monkeypatch):
     pages = gep.run_for_processing(tmp_path, book_cfg={}, language="en")
     titles = [p["title"] for p in pages]
     assert len(set(titles)) == len(titles)  # all unique despite identical description+chapter
-    assert titles == ["A duel", "A duel (chapitre 5)", "A duel (chapitre 5, #2)"]
+    assert titles == ["A duel", "A duel (chapter 5)", "A duel (chapter 5, #2)"]

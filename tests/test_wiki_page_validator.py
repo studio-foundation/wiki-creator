@@ -168,7 +168,10 @@ def test_build_feedback_formats_instructions():
     errors = ["❌ Langue anglaise", "❌ ID EPUB"]
     feedback = build_feedback(errors)
     assert "Langue anglaise" in feedback
-    assert "corrige" in feedback.lower() or "régénère" in feedback.lower()
+    assert "regenerate" in feedback.lower() or "fixing" in feedback.lower()
+    # write-in-language directive follows the page language (STU-514)
+    assert "French" in build_feedback(errors, "fr")
+    assert "English" in build_feedback(errors, "en")
 
 
 def test_check_references_book_title_passes_correct_title():
