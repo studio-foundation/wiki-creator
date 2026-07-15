@@ -107,14 +107,38 @@ def test_clean_isolated_newline_mid_word():
     assert clean_chapter_text("I\nntéressant") == "I ntéressant"
 
 
-def test_chapter_text_carries_no_paragraph_structure():
-    """get_text(separator="\\n", strip=True) joins non-empty strings, so \\n\\n
-    can never reach clean_chapter_text and every \\n flattens to a space.
-
-    Restoring paragraph breaks is STU-523 — it shifts every STU-489 mention offset.
-    """
+def test_chapter_text_carries_paragraph_structure():
+    """Block boundaries survive extraction as \\n\\n (STU-523)."""
     body = "<p>Paragraph one.</p><p>Paragraph two.</p>"
-    assert _text_of(body) == "Paragraph one. Paragraph two."
+    assert _text_of(body) == "Paragraph one.\n\nParagraph two."
+
+
+def test_paragraph_break_is_one_blank_line_however_deep_the_nesting():
+    """A <p> inside a <div> marks two boundaries at the same spot — one break."""
+    body = "<div><p>One.</p></div><div><p>Two.</p></div>"
+    assert _text_of(body) == "One.\n\nTwo."
+
+
+def test_headings_and_list_items_are_paragraph_boundaries():
+    body = "<h1>Title</h1><ul><li>First</li><li>Second</li></ul><blockquote>Quote</blockquote>"
+    assert _text_of(body) == "Title\n\nFirst\n\nSecond\n\nQuote"
+
+
+def test_br_is_a_soft_break_not_a_paragraph_break():
+    """<br> separates verse lines inside one paragraph; it stays a space."""
+    body = "<p>Roses are red<br/>Violets are blue</p><p>Next paragraph.</p>"
+    assert _text_of(body) == "Roses are red Violets are blue\n\nNext paragraph."
+
+
+def test_source_whitespace_inside_a_paragraph_is_not_a_paragraph_break():
+    """Pretty-printed XHTML puts blank lines anywhere; only markup marks breaks."""
+    body = "<p>One half\n\n   of a sentence.</p>\n\n\n<p>Next.</p>"
+    assert _text_of(body) == "One half of a sentence.\n\nNext."
+
+
+def test_paragraph_mark_never_survives_into_the_output():
+    from scripts.parse_epub import _PARAGRAPH_MARK
+    assert _PARAGRAPH_MARK not in _text_of("<p>One.</p><div><p>Two.</p></div>")
 
 
 def test_clean_multiple_spaces_normalized():
@@ -187,8 +211,6 @@ def test_parse_epub_content_is_cleaned(tmp_path):
     book.set_language("fr")
 
     item = epub.EpubHtml(uid="chap", title="Chapter", file_name="chap.xhtml", lang="fr")
-    # Multiple <p> tags: BS4's get_text(separator="\\n") will insert \\n between them.
-    # After clean_chapter_text, those isolated \\n become spaces.
     # Total content long enough to pass the 100-char filter.
     sentences = ["Sentence " + str(i) + " with some words." for i in range(10)]
     p_tags = "".join(f"<p>{s}</p>" for s in sentences)
@@ -215,13 +237,73 @@ def test_parse_epub_content_is_cleaned(tmp_path):
     assert "Sentence" in ch_content
 
 
+def test_short_chapter_filter_ignores_paragraph_structure(tmp_path):
+    """The 100-char bar measures prose, not \\n\\n (STU-523).
+
+    Ten 9-char paragraphs: 99 chars of prose, but 108 once the nine breaks are
+    counted. Counting them lets a page clear the bar on structure alone — which
+    is exactly how seven boilerplate pages entered 01_eragon.epub at 99 -> 107.
+    """
+    from ebooklib import epub
+    from scripts.parse_epub import parse_epub
+
+    book = epub.EpubBook()
+    book.set_title("Test Book")
+    book.set_language("en")
+
+    item = epub.EpubHtml(uid="chap", title="Chapter", file_name="chap.xhtml", lang="en")
+    paragraphs = ["Copyright"] * 10
+    item.set_content(f"<html><body>{''.join(f'<p>{p}</p>' for p in paragraphs)}</body></html>".encode())
+
+    book.add_item(item)
+    book.spine = [("chap", True)]
+    book.add_item(epub.EpubNcx())
+    book.add_item(epub.EpubNav())
+
+    epub_path = str(tmp_path / "test.epub")
+    epub.write_epub(epub_path, book)
+
+    assert parse_epub(epub_path)["chapters"] == []
+
+
+def test_parse_epub_preserves_paragraph_breaks(tmp_path):
+    """The STU-523 contract, asserted on a real EPUB rather than a synthetic string.
+
+    Held only at the markup level, this contract rotted undetected for the whole
+    life of the old clean_chapter_text paragraph steps.
+    """
+    from ebooklib import epub
+    from scripts.parse_epub import parse_epub
+
+    book = epub.EpubBook()
+    book.set_title("Test Book")
+    book.set_language("en")
+
+    item = epub.EpubHtml(uid="chap", title="Chapter", file_name="chap.xhtml", lang="en")
+    paragraphs = [f"Paragraph {i} runs long enough to clear the chapter filter." for i in range(5)]
+    body = "".join(f"<p>{p}</p>" for p in paragraphs)
+    item.set_content(f"<html><body><h1>Chapter One</h1>{body}</body></html>".encode())
+
+    book.add_item(item)
+    book.spine = [("chap", True)]
+    book.add_item(epub.EpubNcx())
+    book.add_item(epub.EpubNav())
+
+    epub_path = str(tmp_path / "test.epub")
+    epub.write_epub(epub_path, book)
+
+    content = parse_epub(epub_path)["chapters"][0]["content"]
+    assert content.split("\n\n") == ["Chapter One", *paragraphs]
+
+
 def _text_of(body: str) -> str:
     """Run the parse_epub text pipeline over one chapter body, as parse_epub does."""
     from bs4 import BeautifulSoup
-    from scripts.parse_epub import _flatten_inline_markup
+    from scripts.parse_epub import _flatten_inline_markup, _mark_paragraph_breaks
 
     soup = BeautifulSoup(f"<html><body>{body}</body></html>", "html.parser")
     _flatten_inline_markup(soup)
+    _mark_paragraph_breaks(soup)
     return clean_chapter_text(soup.get_text(separator="\n", strip=True))
 
 
@@ -248,7 +330,7 @@ def test_flatten_inline_markup_rejoins_small_caps_heading():
 def test_flatten_inline_markup_keeps_block_level_boundaries():
     """Flattening inline markup must not glue adjacent block elements together."""
     body = "<p>First paragraph ends here</p><p>Second paragraph starts here</p>"
-    assert _text_of(body) == "First paragraph ends here Second paragraph starts here"
+    assert _text_of(body) == "First paragraph ends here\n\nSecond paragraph starts here"
 
 
 def test_parse_epub_flattens_inline_markup(tmp_path):
