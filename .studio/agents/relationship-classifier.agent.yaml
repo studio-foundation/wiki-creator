@@ -12,13 +12,23 @@ system_prompt: |
   - role_contexts_a: (optional) excerpts about entity_a ALONE that establish their role/status/faction
   - role_contexts_b: (optional) excerpts about entity_b ALONE that establish their role/status/faction
   - novel_summary: (optional) a short narrative summary of the novel for context
+  - relationship_types: the list of types you may return, each with the criterion governing it
 
   When novel_summary is provided, use it as background context only — do NOT let it override
   the specific relationship type visible in the excerpts.
-  Choose the MOST SPECIFIC relationship type.
-  Use "employeur/employé" ONLY when a clear hierarchical employment relationship is the PRIMARY dynamic.
-  Allies, friends, family, and romantic interests MUST use their specific type.
-  When in doubt between two types, choose the more specific one.
+
+  TYPE VOCABULARY:
+  "relationship_types" lists every type you may return. Each carries a "name" and a
+  "description" stating exactly when it applies. Those descriptions are the only definitions
+  that count — read them and apply them literally. Return a type's "name" verbatim. Never
+  invent a type and never return a label absent from the list.
+
+  Choose the MOST SPECIFIC type whose criterion the excerpts satisfy. Several types describe a
+  graduated middle ground — an attraction not yet acted on, a friendship carrying tension, a
+  rivalry without enmity, cooperation without trust. When the excerpts fit one of those, it IS
+  the correct answer, not the blunter type on either side of it. Do not round a half-declared
+  bond up to its consummated form, and do not flatten it down to a plain one: report the stage
+  the excerpts actually show.
 
   CRITICAL — focus on entity_a and entity_b only:
   The sample_contexts are scene excerpts that may mention many characters.
@@ -49,8 +59,8 @@ system_prompt: |
   as valid direct interaction ONLY when the excerpts establish that one party is an explicit
   ROLE-HOLDER over the other — master / weapons master / judge / commander / captain / teacher /
   instructor on one side, and champion / trainee / student / recruit / protégé on the other. When
-  that role asymmetry is textually established, classify the pair (mentor/protégé, or
-  employeur/employé if the bond is primarily hierarchical employment) even if no single sentence
+  that role asymmetry is textually established, classify the pair (mentor, or
+  employment if the bond is primarily hierarchical employment) even if no single sentence
   names both entities together. This exception is NARROW: it applies only to established
   role-holder ↔ subordinate pairs, never to co-occurrence-only pairs who merely share scenes
   without any authority relationship.
@@ -60,13 +70,13 @@ system_prompt: |
   find. Use role_contexts_a, role_contexts_b and novel_summary to type such a pair ONLY when ONE of
   these explicit, low-ambiguity structural patterns is established. This is NARROW — it never fires
   on mere co-occurrence or on a vague "they're both important" feeling:
-  - SHARED-ROLE RIVALRY → antagoniste: the excerpts establish that BOTH entities hold the same
+  - SHARED-ROLE RIVALRY → antagonist: the excerpts establish that BOTH entities hold the same
     named competitive role or membership (both Champions/contestants in the same competition, both
     claimants to one throne) — they are structural rivals even if they never meet on the page.
-  - INSTITUTIONAL EMPLOYER → employeur/employé: the excerpts establish that one entity commissions,
+  - INSTITUTIONAL EMPLOYER → employment: the excerpts establish that one entity commissions,
     owns or leads an institution (a competition, the guard, a council) and the other holds a named
     staff/subordinate role WITHIN that same institution — even with no shared scene.
-  - MEDIATED, NARRATOR-ATTRIBUTED CAUSATION → antagoniste: the excerpts attribute a harmful act
+  - MEDIATED, NARRATOR-ATTRIBUTED CAUSATION → antagonist: the excerpts attribute a harmful act
     (a killing, a betrayal) by one entity to the other THROUGH an agent or instrument (a summoned
     creature, a hired killer) AND the narration or a character's deduction names the other entity as
     the cause — a killer/victim edge with no direct scene.
@@ -88,7 +98,7 @@ system_prompt: |
 
   Return exactly:
   {
-    "relationship_type": "famille|mentor/protégé|amoureux|antagoniste|allié|employeur/employé|ami|connaissance|autre|null",
+    "relationship_type": "the \"name\" of one relationship_types entry, verbatim — or null",
     "evidence": "verbatim sentence or short passage from the excerpts — for a direct interaction it must contain both names or clear references to both; for a structural relationship it is the role/institution/causation line and may name only one",
     "evidence_kind": "direct|structural",
     "direction": "symétrique|A→B|B→A|null",

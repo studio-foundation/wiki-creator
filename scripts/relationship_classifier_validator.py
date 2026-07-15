@@ -12,13 +12,8 @@ Output (stdout):
 """
 import json
 import sys
-from pathlib import Path
 
-
-_VALID_TYPES = {
-    "famille", "mentor/protégé", "amoureux", "antagoniste",
-    "allié", "employeur/employé", "ami", "connaissance", "autre",
-}
+from wiki_creator.page_templates import relationship_tokens
 
 _GENERIC_EVOLUTIONS = {
     "relation stable dans les extraits fournis",
@@ -28,7 +23,7 @@ _GENERIC_EVOLUTIONS = {
 # Role-asymmetric authority relations (STU-495): in single-POV / group scenes the
 # evidence is group-directed and often names only one party, so a single literal name
 # in evidence is sufficient for these types.
-_ROLE_ASYMMETRIC_TYPES = {"mentor/protégé", "employeur/employé"}
+_ROLE_ASYMMETRIC_TYPES = {"mentor", "employment"}
 
 # Structural relationships (STU-496): pairs that never share a dyadic scene (rival
 # Champions, institutional employer, mediated narrator-attributed killer). The
@@ -48,7 +43,7 @@ def check_relationship_type_valid(clf: dict) -> list[str]:
     rt = clf.get("relationship_type")
     if rt is None:
         return []  # null = co-occurrence sans interaction directe attestée, réponse valide
-    if rt not in _VALID_TYPES:
+    if rt not in relationship_tokens():
         return [f"❌ relationship_type invalide ou hors taxonomie : '{rt}'"]
     return []
 
@@ -132,7 +127,7 @@ def build_feedback(errors: list[str]) -> str:
         "La classification précédente contient les erreurs suivantes. Régénère-la :\n"
         f"{lines}\n\n"
         "Rappels : utilise uniquement les types autorisés "
-        "(famille|mentor/protégé|amoureux|antagoniste|allié|employeur/employé|ami|connaissance|autre). "
+        f"({'|'.join(relationship_tokens())}). "
         "evolution doit décrire une évolution observable dans les extraits, pas une phrase générique. "
         "evidence doit être un extrait verbatim de sample_contexts montrant les deux personnages "
         "en interaction directe — ce champ est obligatoire quand relationship_type n'est pas null."

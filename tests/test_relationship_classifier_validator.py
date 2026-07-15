@@ -7,7 +7,7 @@ from scripts.relationship_classifier_validator import (
 
 
 def test_check_relationship_type_valid_passes():
-    clf = {"relationship_type": "ami", "direction": "symétrique", "evolution": "ils se rapprochent.", "key_moments": ["ch01: rencontre"]}
+    clf = {"relationship_type": "friend", "direction": "symétrique", "evolution": "ils se rapprochent.", "key_moments": ["ch01: rencontre"]}
     assert check_relationship_type_valid(clf) == []
 
 
@@ -18,32 +18,32 @@ def test_check_relationship_type_valid_unknown():
 
 
 def test_check_evolution_not_generic_detects_filler():
-    clf = {"relationship_type": "ami", "evolution": "relation stable dans les extraits fournis"}
+    clf = {"relationship_type": "friend", "evolution": "relation stable dans les extraits fournis"}
     errors = check_evolution_not_generic(clf)
     assert errors != []
 
 
 def test_check_evolution_not_generic_passes():
-    clf = {"relationship_type": "ami", "evolution": "Leur méfiance mutuelle se transforme en respect."}
+    clf = {"relationship_type": "friend", "evolution": "Leur méfiance mutuelle se transforme en respect."}
     assert check_evolution_not_generic(clf) == []
 
 
 def test_check_evolution_null_passes():
     """evolution: null est explicitement autorisé quand aucune évolution n'est observable."""
-    clf = {"relationship_type": "ami", "evolution": None}
+    clf = {"relationship_type": "friend", "evolution": None}
     assert check_evolution_not_generic(clf) == []
 
 
 def test_check_evolution_empty_string_fails():
     """evolution: empty string should fail validation."""
-    clf = {"relationship_type": "ami", "evolution": ""}
+    clf = {"relationship_type": "friend", "evolution": ""}
     errors = check_evolution_not_generic(clf)
     assert errors != []
 
 
 def test_validate_classification_valid():
     clf = {
-        "relationship_type": "ami",
+        "relationship_type": "friend",
         "direction": "symétrique",
         "evolution": "Leur complicité grandit au fil des chapitres.",
         "key_moments": ["ch03: ils s'entraînent ensemble"],
@@ -70,14 +70,14 @@ def test_validate_classification_invalid():
 
 def test_check_evidence_contains_both_names_passes():
     """Evidence that names both entities passes validation."""
-    clf = {"relationship_type": "ami", "evidence": "Chaol escorted Celaena to the training grounds."}
+    clf = {"relationship_type": "friend", "evidence": "Chaol escorted Celaena to the training grounds."}
     meta = {"entity_a": "Celaena", "entity_b": "Chaol"}
     assert check_evidence_contains_both_names(clf, meta) == []
 
 
 def test_check_evidence_missing_entity_b_fails():
     """Evidence that only mentions entity_a must fail."""
-    clf = {"relationship_type": "ami", "evidence": "Celaena défiant un adversaire en solitaire."}
+    clf = {"relationship_type": "friend", "evidence": "Celaena défiant un adversaire en solitaire."}
     meta = {"entity_a": "Celaena", "entity_b": "Elena"}
     errors = check_evidence_contains_both_names(clf, meta)
     assert errors != []
@@ -85,7 +85,7 @@ def test_check_evidence_missing_entity_b_fails():
 
 def test_check_evidence_missing_entity_a_fails():
     """Evidence that only mentions entity_b must fail."""
-    clf = {"relationship_type": "ami", "evidence": "Elena apparut dans un couloir sombre."}
+    clf = {"relationship_type": "friend", "evidence": "Elena apparut dans un couloir sombre."}
     meta = {"entity_a": "Celaena", "entity_b": "Elena"}
     errors = check_evidence_contains_both_names(clf, meta)
     assert errors != []
@@ -93,7 +93,7 @@ def test_check_evidence_missing_entity_a_fails():
 
 def test_check_evidence_is_case_insensitive():
     """Name matching in evidence must be case-insensitive."""
-    clf = {"relationship_type": "ami", "evidence": "CHAOL et celaena s'entraînèrent."}
+    clf = {"relationship_type": "friend", "evidence": "CHAOL et celaena s'entraînèrent."}
     meta = {"entity_a": "Celaena", "entity_b": "Chaol"}
     assert check_evidence_contains_both_names(clf, meta) == []
 
@@ -107,7 +107,7 @@ def test_check_evidence_null_relationship_type_skips_evidence_check():
 
 def test_check_evidence_missing_from_clf_fails():
     """If evidence is absent (or empty) but relationship_type is non-null, must fail."""
-    clf = {"relationship_type": "ami", "evidence": None}
+    clf = {"relationship_type": "friend", "evidence": None}
     meta = {"entity_a": "Celaena", "entity_b": "Chaol"}
     errors = check_evidence_contains_both_names(clf, meta)
     assert errors != []
@@ -118,30 +118,30 @@ def test_check_evidence_missing_from_clf_fails():
 # ---------------------------------------------------------------------------
 
 def test_check_evidence_asymmetric_accepts_only_role_holder():
-    """mentor/protégé evidence naming only the role-holder (group-directed) passes."""
-    clf = {"relationship_type": "mentor/protégé", "evidence": "Brullo shouted at the other Champions."}
+    """mentor evidence naming only the role-holder (group-directed) passes."""
+    clf = {"relationship_type": "mentor", "evidence": "Brullo shouted at the other Champions."}
     meta = {"entity_a": "Brullo", "entity_b": "Celaena"}
     assert check_evidence_contains_both_names(clf, meta) == []
 
 
 def test_check_evidence_asymmetric_accepts_only_subordinate():
-    """employeur/employé evidence naming only the subordinate passes."""
-    clf = {"relationship_type": "employeur/employé", "evidence": "At lessons Celaena could freely whack him."}
+    """employment evidence naming only the subordinate passes."""
+    clf = {"relationship_type": "employment", "evidence": "At lessons Celaena could freely whack him."}
     meta = {"entity_a": "Brullo", "entity_b": "Celaena"}
     assert check_evidence_contains_both_names(clf, meta) == []
 
 
 def test_check_evidence_asymmetric_fails_when_neither_named():
     """Asymmetric evidence naming neither entity still fails."""
-    clf = {"relationship_type": "mentor/protégé", "evidence": "The recruits trained all morning."}
+    clf = {"relationship_type": "mentor", "evidence": "The recruits trained all morning."}
     meta = {"entity_a": "Brullo", "entity_b": "Celaena"}
     errors = check_evidence_contains_both_names(clf, meta)
     assert errors != []
 
 
 def test_check_evidence_symmetric_still_requires_both():
-    """Non-asymmetric types (e.g. ami) still require both names."""
-    clf = {"relationship_type": "ami", "evidence": "Brullo shouted at the other Champions."}
+    """Non-asymmetric types (e.g. friend) still require both names."""
+    clf = {"relationship_type": "friend", "evidence": "Brullo shouted at the other Champions."}
     meta = {"entity_a": "Brullo", "entity_b": "Celaena"}
     errors = check_evidence_contains_both_names(clf, meta)
     assert errors != []
@@ -152,9 +152,9 @@ def test_check_evidence_symmetric_still_requires_both():
 # ---------------------------------------------------------------------------
 
 def test_check_evidence_structural_rivalry_accepts_one_name():
-    """Structural rivalry (antagoniste) with a role line naming only one party passes."""
+    """Structural rivalry (antagonist) with a role line naming only one party passes."""
     clf = {
-        "relationship_type": "antagoniste",
+        "relationship_type": "antagonist",
         "evidence_kind": "structural",
         "evidence": "Xavier—the thief from Melisande, a Champion.",
     }
@@ -163,9 +163,9 @@ def test_check_evidence_structural_rivalry_accepts_one_name():
 
 
 def test_check_evidence_structural_mediated_causation_accepts_one_name():
-    """Mediated killer/victim (antagoniste) grounded on a narrator-attributed line passes."""
+    """Mediated killer/victim (antagonist) grounded on a narrator-attributed line passes."""
     clf = {
-        "relationship_type": "antagoniste",
+        "relationship_type": "antagonist",
         "evidence_kind": "structural",
         "evidence": "Cain was a demon-summoning psychopath.",
     }
@@ -176,7 +176,7 @@ def test_check_evidence_structural_mediated_causation_accepts_one_name():
 def test_check_evidence_structural_fails_when_neither_named():
     """Structural evidence naming neither entity still fails — must ground to a real quote."""
     clf = {
-        "relationship_type": "antagoniste",
+        "relationship_type": "antagonist",
         "evidence_kind": "structural",
         "evidence": "The competition claimed another victim.",
     }
@@ -184,9 +184,9 @@ def test_check_evidence_structural_fails_when_neither_named():
     assert check_evidence_contains_both_names(clf, meta) != []
 
 
-def test_check_evidence_antagoniste_without_structural_flag_requires_both():
-    """antagoniste is NOT asymmetric: absent the structural flag, both names required (guard)."""
-    clf = {"relationship_type": "antagoniste", "evidence": "Xavier—the thief from Melisande."}
+def test_check_evidence_antagonist_without_structural_flag_requires_both():
+    """antagonist is NOT asymmetric: absent the structural flag, both names required (guard)."""
+    clf = {"relationship_type": "antagonist", "evidence": "Xavier—the thief from Melisande."}
     meta = {"entity_a": "Celaena", "entity_b": "Xavier"}
     assert check_evidence_contains_both_names(clf, meta) != []
 
@@ -222,7 +222,7 @@ def test_validate_classification_valid_when_type_is_null():
 def test_validate_classification_invalid_when_evidence_lacks_entity():
     """validate_classification fails when evidence doesn't mention both entities."""
     clf = {
-        "relationship_type": "ami",
+        "relationship_type": "friend",
         "direction": "symétrique",
         "evolution": "Leur complicité grandit.",
         "key_moments": ["ch01: rencontre"],

@@ -221,17 +221,96 @@ entity_types:
   COLLATION:
     infobox: []
     sections: []
+# STU-477: the single authority for the relationship-classifier's type vocabulary.
+# `description` is the application criterion injected into the classifier prompt —
+# prompt scaffolding, so English regardless of the wiki's output language (STU-510).
+# `labels` are reader-facing and localized; `legacy` maps the French surface strings
+# earlier runs emitted onto the canonical token.
 relationships:
   enum:
-    family:       {legacy: [famille],            labels: {en: Family,       fr: Famille}}
-    mentor:       {legacy: ["mentor/protégé"],   labels: {en: Mentor,       fr: "Mentor/protégé"}}
-    romance:      {legacy: [amoureux],           labels: {en: Romance,      fr: Amoureux}}
-    antagonist:   {legacy: [antagoniste],        labels: {en: Antagonist,   fr: Antagoniste}}
-    ally:         {legacy: [allié],              labels: {en: Ally,         fr: Allié}}
-    employment:   {legacy: ["employeur/employé"], labels: {en: Employment,  fr: "Employeur/employé"}}
-    friend:       {legacy: [ami],                labels: {en: Friend,       fr: Ami}}
-    acquaintance: {legacy: [connaissance],       labels: {en: Acquaintance, fr: Connaissance}}
-    other:        {legacy: [autre],              labels: {en: Other,        fr: Autre}}
+    family:
+      legacy: [famille]
+      labels: {en: Family, fr: Famille}
+      description: >-
+        Kinship by blood, marriage or adoption. Applies whenever the text establishes
+        the kin tie, whether the bond is warm or hostile.
+    mentor:
+      legacy: ["mentor/protégé"]
+      labels: {en: Mentor, fr: "Mentor/protégé"}
+      description: >-
+        One party trains, guides or instructs the other, and that teaching is the
+        primary dynamic rather than an incidental scene.
+    romance:
+      legacy: [amoureux]
+      labels: {en: Romance, fr: Amoureux}
+      description: >-
+        A romantic or sexual bond the text makes EXPLICIT — declared, reciprocated or
+        consummated on the page. Mutual pull that is only felt and never acted on is
+        budding_attraction, not romance.
+    budding_attraction:
+      labels: {en: Budding attraction, fr: "Attirance naissante"}
+      description: >-
+        Signs of mutual romantic interest not yet explicit or consummated: a noticed
+        look, a caught breath, deflected flirtation, a reaction the character does not
+        name. Use when the excerpts show the pull but neither party has declared or
+        acted on it. Prefer over romance while the bond stays deniable, and over friend
+        when the text marks a charge no friendship explains.
+    strained_friendship:
+      labels: {en: Strained friendship, fr: "Amitié tendue"}
+      description: >-
+        An established friendly bond carrying an unresolved tension — duty against
+        loyalty, an unspoken attraction, a withheld truth. Use when the excerpts show
+        BOTH the trust and the friction, so that friend alone would undersell the strain.
+    friendly_rivalry:
+      labels: {en: Friendly rivalry, fr: "Rivalité amicale"}
+      description: >-
+        The parties compete against each other without real hostility — sparring,
+        contests, needling. Use when the competition is genuine but mutual regard
+        survives it; antagonist requires actual enmity.
+    wary_alliance:
+      labels: {en: Wary alliance, fr: "Alliance méfiante"}
+      description: >-
+        The parties cooperate toward a shared goal while withholding trust — a pact of
+        convenience, a truce, collaboration under watch. Use when ally would overstate
+        the trust and antagonist would overstate the enmity.
+    antagonist:
+      legacy: [antagoniste]
+      labels: {en: Antagonist, fr: Antagoniste}
+      description: >-
+        The parties work against each other with real enmity — opposed goals, harm done
+        or intended. Competition without hostility is friendly_rivalry.
+    ally:
+      legacy: [allié]
+      labels: {en: Ally, fr: Allié}
+      description: >-
+        The parties act toward a shared goal with established mutual trust. Cooperation
+        that withholds trust is wary_alliance.
+    employment:
+      legacy: ["employeur/employé"]
+      labels: {en: Employment, fr: "Employeur/employé"}
+      description: >-
+        A hierarchical employment or service bond — one party engages, commands or pays
+        the other — and it is the PRIMARY dynamic. Never use it as a catch-all for
+        allies, friends, family or romantic interests, which take their own type.
+    friend:
+      legacy: [ami]
+      labels: {en: Friend, fr: Ami}
+      description: >-
+        A bond of mutual affection and trust with no unresolved tension and no romantic
+        charge. When the excerpts mark either, use strained_friendship or
+        budding_attraction instead.
+    acquaintance:
+      legacy: [connaissance]
+      labels: {en: Acquaintance, fr: Connaissance}
+      description: >-
+        The parties know each other and interact directly, but the excerpts establish no
+        stronger bond. Requires a direct interaction — mere co-occurrence stays null.
+    other:
+      legacy: [autre]
+      labels: {en: Other, fr: Autre}
+      description: >-
+        A directly-attested relationship no other type fits. Last resort: exhaust every
+        other type first, and prefer null over other when no bond is attested at all.
 labels:
   nom:           {en: Name,        fr: Nom}
   type:          {en: Type,        fr: Type}

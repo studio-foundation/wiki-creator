@@ -10,7 +10,12 @@ from __future__ import annotations
 import re
 
 from wiki_creator.chapters import chapter_number
-from wiki_creator.page_templates import chrome_label, slot_label
+from wiki_creator.page_templates import (
+    canonical_relationship,
+    chrome_label,
+    relationship_label,
+    slot_label,
+)
 from wiki_creator.relationship_types import usable_relationship_type
 
 _HEADING_RE = re.compile(r"(?m)^(==\s+.+?\s+==) *$")
@@ -63,11 +68,13 @@ def wrap_collapsible(body: str, content_units: list[dict], collapse_after: int, 
     return "".join(out)
 
 
-def relationship_index_lines(entity: dict) -> list[str]:
+def relationship_index_lines(entity: dict, lang: str = "fr") -> list[str]:
     """Dated index line per typed relationship, most-recent-reveal first.
 
-    Language-neutral: entity names + the French relationship_type enum + chapter
-    numbers only. The English evolution/key_moments fields are never surfaced.
+    Surfaces entity names + the localized relationship type + chapter numbers only.
+    The English evolution/key_moments fields are never surfaced. The classifier emits
+    canonical tokens (STU-477); a token is rendered through its ``lang`` label, and a
+    French string from a pre-STU-477 artifact resolves via the enum's ``legacy`` map.
     """
     own = {entity.get("canonical_name")} | set(entity.get("aliases") or [])
     rows = []
@@ -75,6 +82,8 @@ def relationship_index_lines(entity: dict) -> list[str]:
         rtype = usable_relationship_type(rel.get("relationship_type"))
         if not rtype:
             continue
+        token = canonical_relationship(rtype)
+        rtype = relationship_label(token, lang) if token else rtype
         chapters = [c for c in (chapter_number(k) for k in rel.get("chapters") or []) if c is not None]
         if not chapters:
             continue
