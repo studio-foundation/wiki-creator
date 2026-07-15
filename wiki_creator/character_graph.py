@@ -6,6 +6,7 @@ from dataclasses import asdict, dataclass, field
 import networkx as nx
 
 from wiki_creator.confidence import INTERPRETATION
+from wiki_creator.relationship_types import usable_relationship_type
 
 
 @dataclass
@@ -148,6 +149,7 @@ class CharacterGraph:
                 via = path[1:-1]
                 edge_types: list[str] = []
                 strength = 1.0
+                untyped_hop = False
 
                 for i in range(len(path) - 1):
                     a, b = path[i], path[i + 1]
@@ -157,9 +159,16 @@ class CharacterGraph:
                         edge_data = dict(self._g.edges[b, a])
                     else:
                         edge_data = {}
-                    edge_types.append(edge_data.get("relationship_type") or "co-occurrence")
+                    hop_type = usable_relationship_type(edge_data.get("relationship_type"))
+                    if hop_type is None:
+                        untyped_hop = True
+                        break
+                    edge_types.append(hop_type)
                     count = edge_data.get("cooccurrence_count", 0)
                     strength *= count / max_count
+
+                if untyped_hop:
+                    continue  # a path is its edge types; one hole makes it unreadable (STU-528)
 
                 if strength < 0.1:
                     break  # no stronger path will be found for this target via this route
