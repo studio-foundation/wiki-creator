@@ -37,6 +37,7 @@ import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 from wiki_creator.chapters import chapter_number
+from wiki_creator.editorial_stance import GROUNDING_BLOCK, EditorialStance, editorial_stance
 from wiki_creator.lang import book_language
 from wiki_creator.page_templates import output_language, resolve_template
 from wiki_creator.paths import book_paths_from_yaml
@@ -374,7 +375,14 @@ Contraintes :
 - Ne mentionne aucun autre personnage que {name} et {other}.{forbidden_rule}"""
 
 
-def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_names: list[str] | None = None) -> str:
+def build_prompt(
+    entity: dict,
+    book_title: str,
+    sections: list[str],
+    forbidden_names: list[str] | None = None,
+    stance: EditorialStance | None = None,
+) -> str:
+    stance = stance or EditorialStance()
     name = entity["canonical_name"]
     etype = entity["type"]
     importance = entity["importance"]
@@ -576,6 +584,13 @@ def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_n
                 '\n- Do NOT include a "## Événements" section: no narrative events are available for this place.'
             )
 
+    references_rule = ""
+    if "references" in sections:
+        references_rule = (
+            f'\n- The ## {_SECTION_TITLES["references"]} section must list ONLY "{book_title}". '
+            "Do not add any other book, volume, or series title."
+        )
+
     narrative_role_rule = ""
     if etype == "PERSON" and "narrative_role" in sections:
         if narrative_role_block:
@@ -618,7 +633,9 @@ def build_prompt(entity: dict, book_title: str, sections: list[str], forbidden_n
                 '\n- Do NOT include a "## Avant les événements du livre" section: no flashback backstory is available for this character.'
             )
 
-    return f"""This is a fictional world. The following excerpts are the ONLY authoritative source of truth. Ignore any prior knowledge you have of this book, series, or author.
+    return f"""{GROUNDING_BLOCK}
+
+{stance.prompt_block(sections)}
 
 You are writing a wiki page for a fictional novel called "{book_title}".
 Output ONLY a valid JSON object. No markdown fences. No explanation. No preamble.
@@ -660,8 +677,6 @@ Tone and register:
 - Use ONLY aliases listed in "Known aliases" above. Do NOT infer or invent aliases from context.
 
 Content constraints:
-- Every factual claim in your output must be directly supported by one of the GROUNDING EXCERPTS provided above. If you cannot point to a supporting excerpt, do not write the claim.
-- Real-world publication dates and author information are strictly forbidden.
 - Chapter summaries serve as orientation only. Direct excerpts take priority.
 - Do NOT invent plot details, relationships, abilities, or physical traits not supported by excerpts.
 - Do NOT turn cooccurrence between entities into narrative causality.
@@ -677,8 +692,7 @@ Structure:
 - The "Infobox" section must use this format: one bullet per field, "- Key: Value".
 {relations_rule}
 - infobox_fields keys must be plain strings — no leading "- " or "* ". Correct: {{"nom": "X"}}, Wrong: {{"- nom": "X"}}.
-- Context labels like [Chapter N] are internal references — never mention them in your output.
-- The ## Références section must list ONLY "{book_title}". Do not add any other book, volume, or series title.
+- Context labels like [Chapter N] are internal references — never mention them in your output.{references_rule}
 - infobox_fields must contain ONLY wiki-relevant fields (name, role, affiliation, etc.). Do NOT include internal data fields such as cooccurrence_count, entity_type, importance, or any metadata.
 
 Section definitions for type {etype}:
@@ -924,6 +938,7 @@ def _wiki_page_item_input(
     file_path: str = "",
     grounding: dict | None = None,
     prompt_override: str | None = None,
+    stance: EditorialStance | None = None,
 ) -> dict:
     # language / forbidden_names / file_path / grounding_* feed the
     # wiki-page-validator stage inside the wiki-page-item pipeline (its
@@ -937,7 +952,10 @@ def _wiki_page_item_input(
         "language": language,
         "forbidden_names": forbidden_names or [],
         "file_path": file_path,
-        "prompt": prompt_override or build_prompt(entity, book_title, sections=sections, forbidden_names=forbidden_names),
+        "prompt": prompt_override or build_prompt(
+            entity, book_title, sections=sections,
+            forbidden_names=forbidden_names, stance=stance,
+        ),
     }
     grounding = grounding or {}
     if grounding.get("llm"):
@@ -963,6 +981,7 @@ def _run_wiki_page_item(
     grounding: dict | None = None,
     runner: StudioRunner | None = None,
     prompt_override: str | None = None,
+    stance: EditorialStance | None = None,
 ) -> dict:
     item_input = _wiki_page_item_input(
         entity=entity,
@@ -974,6 +993,7 @@ def _run_wiki_page_item(
         file_path=file_path,
         grounding=grounding,
         prompt_override=prompt_override,
+        stance=stance,
     )
     return (runner or StudioRunner()).run_item(item_input, entity, timeout)
 
@@ -1100,6 +1120,7 @@ def _generate_one_section(
     file_path: str = "",
     grounding: dict | None = None,
     runner: StudioRunner | None = None,
+    stance: EditorialStance | None = None,
 ) -> str | None:
     """Generate a single section via a scoped wiki-page-item call. Returns the
     section's content block, or None on error / persistent forbidden-name hit."""
@@ -1119,6 +1140,7 @@ def _generate_one_section(
             entity=entity, book_title=book_title, model=model, timeout=timeout,
             sections=[section], max_tokens=max_tokens, forbidden_names=forbidden_names,
             language=language, file_path=file_path, grounding=grounding, runner=runner,
+            stance=stance,
         )
 
     result = _once()
@@ -1242,6 +1264,7 @@ def _run_generation_for_entity(
     if dry_run:
         return make_stub_page(entity)
 
+    stance = editorial_stance(book_config or {})
     item_result = _run_wiki_page_item(
         entity=entity,
         book_title=book_title,
@@ -1250,6 +1273,7 @@ def _run_generation_for_entity(
         sections=sections,
         max_tokens=max_tokens,
         forbidden_names=forbidden_names,
+        stance=stance,
         language=language,
         file_path=file_path,
         grounding=grounding,
@@ -1289,6 +1313,7 @@ def _run_generation_for_entity(
                 sections=sections,
                 max_tokens=max_tokens,
                 forbidden_names=forbidden_names,
+                stance=stance,
                 language=language,
                 file_path=file_path,
                 grounding=grounding,
@@ -1347,6 +1372,7 @@ def _run_generation_sectioned(
     if dry_run:
         return make_stub_page(entity)
 
+    stance = editorial_stance(book_config or {})
     content_sections = [s for s in sections if s not in ("infobox", "references")]
     per_relation = (
         entity.get("type") == "PERSON"
@@ -1372,6 +1398,7 @@ def _run_generation_sectioned(
             entity=entity, section=section, book_title=book_title, model=model,
             timeout=timeout, max_tokens=max_tokens, forbidden_names=forbidden_names,
             language=language, file_path=file_path, grounding=grounding, runner=runner,
+            stance=stance,
         )
         if block:
             if section == "narrative_role" and sibling_canonicals:
@@ -1621,6 +1648,8 @@ def generation_profile(config: dict, importance: str, entity_type: str | None = 
         sections = _DEFAULT_SECTIONS_BY_IMPORTANCE.get(
             importance, _DEFAULT_SECTIONS_BY_IMPORTANCE["figurant"]
         )
+    stance = editorial_stance({"generation": config})
+    sections = [s for s in sections if stance.allows_section(s)]
 
     max_tokens = profile.get("max_tokens_per_page", DEFAULT_NUM_PREDICT)
     try:

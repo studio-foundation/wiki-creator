@@ -187,6 +187,25 @@ Inside `wiki-resolution`, order matters:
   route through this helper (`spoiler_blocks`, `provenance.relation_units`,
   `confidence`, `generate_wiki_pages` prompt builders). This is a rendering fix,
   independent of classification correctness (STU-495/476).
+- Editorial stance (STU-507): whether pages speak from inside the fiction is
+  **declared** in the book YAML (`generation.editorial_stance`), not inherited
+  from anti-hallucination prompting. `wiki_creator/editorial_stance.py` holds the
+  vocabulary (`mode: in_universe | out_of_universe | hybrid`,
+  `hybrid_exceptions`, `expose_pipeline_metadata`, `expose_importance_tier`,
+  `forbid_author_mentions`); an unknown mode or exception key raises rather than
+  degrading — a silently wrong posture is the bug this closes. Grounding and
+  stance are two separate prompt blocks: `GROUNDING_BLOCK` (unconditional, "the
+  excerpts are the only truth") and `EditorialStance.prompt_block(sections)`
+  (posture only), so switching to `out_of_universe` cannot weaken grounding. The
+  four out-of-universe surfaces are each gated by one key: `## Références` and
+  `## Rôle dans le récit` via `allows_section` (filtered in `generation_profile`,
+  so the section is never generated *and* never mentioned in the prompt), the
+  Main_Page `== Statistiques ==` block via `expose_pipeline_metadata`, and the
+  importance-tier categories via `expose_importance_tier` (both threaded from
+  `wiki_export.main`). Defaults reproduce the pre-STU-507 posture (hybrid, both
+  exceptions, metadata and tier exposed) — an unconfigured book is unchanged.
+  Inter-page tone coherence is not contractable per page (INV-08); it belongs to
+  the consolidation pass (STU-508).
 
 ## Working Norms
 

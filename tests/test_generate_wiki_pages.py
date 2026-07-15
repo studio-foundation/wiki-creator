@@ -464,7 +464,8 @@ def test_run_generation_for_entity_uses_item_runner_when_not_dry(monkeypatch, tm
     calls = []
 
     def fake_runner(*, entity, book_title, model, timeout, sections, max_tokens,
-                    forbidden_names=None, language="fr", file_path="", grounding=None, runner=None):
+                    forbidden_names=None, language="fr", file_path="", grounding=None, runner=None,
+                    stance=None):
         calls.append((entity["canonical_name"], book_title, model, timeout, sections, max_tokens))
         return {
             "title": "Victor Grandes",
