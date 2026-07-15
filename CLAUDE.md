@@ -22,6 +22,7 @@ make generate-pages
 make generate-pages-dry
 make generate-synopsis
 make generate-synopsis-dry
+make consolidate-stance
 make pages-export
 make run-generation
 make run-from-resolution
@@ -80,6 +81,7 @@ library/sarah_j_maas/throne-of-glass/output/01-throne-of-glass/
 - [scripts/generate_wiki_pages.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_wiki_pages.py): standalone generation (shells out to `studio run wiki-page-item` per entity)
 - [scripts/generate_book_synopsis.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_book_synopsis.py): book synopsis page from `events.json` (SP4/STU-482), writes `book_synopsis.json`; pure logic in `wiki_creator/synopsis.py`
 - [scripts/generate_event_pages.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_event_pages.py): one `EVENT` page per high-salience event from `events.json` (SP3/STU-481), writes `event_pages.json`; pure logic in `wiki_creator/event_pages.py`
+- [scripts/consolidate_editorial_stance.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/consolidate_editorial_stance.py): post-generation editorial-stance consolidation pass (STU-508), writes `editorial_stance_report.json`; pure logic in `wiki_creator/consolidation.py`
 - [scripts/wiki_export.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/wiki_export.py): Markdown -> wikitext
 - [scripts/resolve_clusters.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/resolve_clusters.py): resolves NER clusters
 - [scripts/merge_entities.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/merge_entities.py): merges cluster outputs into unified entity list
@@ -268,6 +270,26 @@ Inside `wiki-resolution`, order matters:
   exceptions, metadata and tier exposed) — an unconfigured book is unchanged.
   Inter-page tone coherence is not contractable per page (INV-08); it belongs to
   the consolidation pass (STU-508).
+
+- Editorial-stance consolidation (STU-508): a single post-generation pass
+  (`consolidate_editorial_stance.py`, last `wiki-generation` pre-step in
+  `run_wiki.py`; `make consolidate-stance`) scans every generated page
+  (`wiki_pages`/`book_synopsis`/`event_pages`/`collation_pages`, `_failed`
+  skipped) for register that contradicts the declared `editorial_stance.mode`
+  (STU-507) and writes an advisory drift report to
+  `processing_output/<slug>/editorial_stance_report.json` plus a readable
+  stderr summary (page → deviation → short quote, not just a score). **Advisory
+  only** — `status: non_binary_advisory`, never fails the run (INV-08: tone is
+  not per-page contractable). Deterministic, **zero LLM** — the Fable frugality
+  constraint (one pass, not a verifier per page) holds by construction; marker
+  vocabulary lives in `cue_words/<lang>.json` (`editorial_stance_markers`, three
+  buckets: `meta_narrative`/`reader_address`/`author`), absent → no findings.
+  Detection is tied to stance semantics, not heuristic: `meta_narrative` +
+  `reader_address` are flagged by the in-universe rule (everywhere in
+  `in_universe`; outside the hybrid exception sections in `hybrid` — matched by
+  localized heading via `slot_label`; never in `out_of_universe`), `author`
+  whenever `forbid_author_mentions` regardless of mode/section. Pure logic in
+  `wiki_creator/consolidation.py`.
 - Canon policy (STU-512): `library/<author>/<series>/canon.yaml` declares which
   source is authoritative for a series — `primary_source`, a `sources` list
   (`id`/`type`/`path`/`book`/`authority`), `conflict_resolution` (`strategy`:
