@@ -17,6 +17,10 @@ import unicodedata
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from wiki_creator.naming import NamingPolicy
 
 from wiki_creator.entity_taxonomy import resolution_types
 
@@ -427,7 +431,12 @@ class Registry:
 
     def validate(self) -> None:
         seen_ids: set[str] = set()
-        owners: dict[str, str] = {}
+        # Ownership is keyed by (casefold alias, entity_type): invariant 1 is
+        # "an alias belongs to exactly one entity OF A GIVEN TYPE" (STU-506).
+        # Two different-type homonyms (a PERSON and a PLACE both named "X") are
+        # accepted by policy — they coexist, disambiguated at the title layer,
+        # instead of being silently merged into one false entity.
+        owners: dict[tuple[str, str], str] = {}
         for record in self.entities:
             if record.entity_id in seen_ids:
                 raise ValueError(f"duplicate entity_id '{record.entity_id}'")
@@ -439,12 +448,12 @@ class Registry:
                     f"'{record.canonical_name}' not in aliases of '{record.entity_id}'"
                 )
             for alias in record.aliases:
-                key = alias.casefold()
+                key = (alias.casefold(), record.entity_type)
                 owner = owners.get(key)
                 if owner is not None and owner != record.entity_id:
                     raise ValueError(
-                        f"invariant 1 violated: alias '{alias}' belongs to "
-                        f"both '{owner}' and '{record.entity_id}'"
+                        f"invariant 1 violated: alias '{alias}' ({record.entity_type}) "
+                        f"belongs to both '{owner}' and '{record.entity_id}'"
                     )
                 owners[key] = record.entity_id
 
@@ -580,6 +589,7 @@ class Registry:
         alias_output: dict | None,
         full_registries: dict | None = None,
         book_id: str | None = None,
+        policy: "NamingPolicy | None" = None,
     ) -> "Registry":
         """Rebuild the registry from existing artifacts (pas 1 — read only).
 
@@ -591,7 +601,13 @@ class Registry:
         book_id: provenance stamp (STU-484). When set, every mention carries it
             and every record lists it in ``books`` / ``first_book``; None leaves
             the provenance fields empty (single-book, pre-multi-tome behaviour).
+        policy: name-collision policy (STU-506). Defaults to the safe posture
+            (different-type homonyms never merge). ``collision_policy: merge``
+            or ``merge_requires_same_type: false`` restores the legacy fold.
         """
+        from wiki_creator.naming import NamingPolicy
+
+        policy = policy or NamingPolicy()
         splits = splits or {}
         full = full_registries or {}
         entities_raw = [
@@ -699,8 +715,10 @@ class Registry:
                 )
             )
 
-        records = _merge_duplicate_canonicals(records, decisions, mention_counts, warnings)
-        _resolve_alias_collisions(records, decisions, mention_counts, warnings)
+        records = _merge_duplicate_canonicals(
+            records, decisions, mention_counts, warnings, policy
+        )
+        _resolve_alias_collisions(records, decisions, mention_counts, warnings, policy)
 
         referenced: set[str] = set()
         for record in records:
@@ -770,16 +788,42 @@ def _merge_duplicate_canonicals(
     decisions: dict[str, MergeDecision],
     mention_counts: dict[str, int],
     warnings: list[str],
+    policy: "NamingPolicy",
 ) -> list[EntityRecord]:
     """Artifacts occasionally carry two entities with the same canonical name;
-    fold the later into the first so invariant 1 can hold (deterministic)."""
-    by_canonical: dict[str, EntityRecord] = {}
+    fold the later into the first so invariant 1 can hold (deterministic).
+
+    The merge key is ``(canonical, entity_type)`` under the STU-506 default:
+    a PERSON and a PLACE homonym coexist instead of collapsing into one false
+    entity. ``collision_policy: merge`` (or ``merge_requires_same_type: false``)
+    keys on the name alone (legacy fold); ``collision_policy: fail`` raises the
+    moment two different-type homonyms are seen."""
+    by_canonical: dict[object, EntityRecord] = {}
+    first_by_name: dict[str, EntityRecord] = {}
     kept: list[EntityRecord] = []
     for record in records:
-        key = record.canonical_name.casefold()
+        name_key = record.canonical_name.casefold()
+        key: object = name_key if policy.merges_cross_type else (name_key, record.entity_type)
+
+        homonym = first_by_name.get(name_key)
+        if homonym is not None and homonym.entity_type != record.entity_type and not policy.merges_cross_type:
+            if policy.fails_on_collision:
+                raise ValueError(
+                    f"name collision: '{record.canonical_name}' is both "
+                    f"{homonym.entity_type} ('{homonym.entity_id}') and "
+                    f"{record.entity_type} ('{record.entity_id}') "
+                    "(naming.collision_policy: fail)"
+                )
+            warnings.append(
+                f"name collision: '{record.canonical_name}' kept as distinct "
+                f"{homonym.entity_type} ('{homonym.entity_id}') and "
+                f"{record.entity_type} ('{record.entity_id}')"
+            )
+
         first = by_canonical.get(key)
         if first is None:
             by_canonical[key] = record
+            first_by_name.setdefault(name_key, record)
             kept.append(record)
             continue
         warnings.append(
@@ -822,36 +866,54 @@ def _merge_duplicate_canonicals(
     return kept
 
 
+def _arbitrate(
+    claimants: list[EntityRecord],
+    alias_cf: str,
+    order: tuple[str, ...],
+    mention_counts: dict[str, int],
+) -> EntityRecord:
+    """Pick the entity that keeps a contested alias, applying the
+    ``alias_arbitration`` criteria in priority order (STU-506). ``claimants`` is
+    in artifact order, so ``first_seen`` is a no-op tie-break; stable sorts
+    applied from lowest to highest priority leave the winner first."""
+    ranked = list(claimants)
+    for criterion in reversed(order):
+        if criterion == "canonical_owner":
+            ranked.sort(key=lambda r: r.canonical_name.casefold() != alias_cf)
+        elif criterion == "mention_count":
+            ranked.sort(key=lambda r: -mention_counts.get(r.entity_id, 0))
+        # "first_seen" == artifact order, already the incoming order
+    return ranked[0]
+
+
 def _resolve_alias_collisions(
     records: list[EntityRecord],
     decisions: dict[str, MergeDecision],
     mention_counts: dict[str, int],
     warnings: list[str],
+    policy: "NamingPolicy",
 ) -> None:
-    """Invariant 1 pre-pass: an alias claimed by several entities stays with
-    its canonical owner, else the highest mention_count, else artifact order."""
-    claims: dict[str, list[EntityRecord]] = {}
+    """Invariant 1 pre-pass: within a single entity_type, an alias claimed by
+    several entities stays with the arbitration winner (canonical owner, then
+    mention_count, then artifact order — configurable via alias_arbitration).
+    Cross-type claimants are left alone: a shared surface across types is a
+    legitimate homonym (STU-506), resolved at the title layer, not here."""
+    claims: dict[tuple[str, str], list[EntityRecord]] = {}
     for record in records:
         for alias in record.aliases:
-            bucket = claims.setdefault(alias.casefold(), [])
+            bucket = claims.setdefault((alias.casefold(), record.entity_type), [])
             if not bucket or bucket[-1] is not record:
                 bucket.append(record)
 
-    for key, claimants in claims.items():
+    for (alias_cf, _etype), claimants in claims.items():
         if len(claimants) < 2:
             continue
-        canonical_owners = [
-            r for r in claimants if r.canonical_name.casefold() == key
-        ]
-        if canonical_owners:
-            winner = canonical_owners[0]  # unique after duplicate-canonical merge
-        else:
-            winner = max(claimants, key=lambda r: mention_counts.get(r.entity_id, 0))
+        winner = _arbitrate(claimants, alias_cf, policy.alias_arbitration, mention_counts)
         for loser in claimants:
             if loser is winner:
                 continue
-            dropped = [a for a in loser.aliases if a.casefold() == key]
-            loser.aliases = [a for a in loser.aliases if a.casefold() != key]
+            dropped = [a for a in loser.aliases if a.casefold() == alias_cf]
+            loser.aliases = [a for a in loser.aliases if a.casefold() != alias_cf]
             dropped_slugs = {entity_slug(a) for a in dropped}
             still_needed = {entity_slug(a) for a in loser.aliases}
             loser.decisions = [

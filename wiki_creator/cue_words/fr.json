@@ -343,5 +343,41 @@
     "s'",
     "t'",
     "qu'"
-  ]
+  ],
+  "editorial_stance_markers": {
+    "meta_narrative": [
+      "roman",
+      "chapitre",
+      "chapitres",
+      "narration",
+      "narrateur",
+      "narratrice",
+      "protagoniste",
+      "récit",
+      "intrigue",
+      "saga",
+      "tome",
+      "prologue",
+      "épilogue"
+    ],
+    "reader_address": [
+      "lecteur",
+      "lectrice",
+      "lecteurs",
+      "lectrices"
+    ],
+    "author": [
+      "auteur",
+      "autrice",
+      "auteure",
+      "romancier",
+      "romancière",
+      "publié",
+      "publiée",
+      "publication",
+      "éditeur",
+      "édition",
+      "maison d'édition"
+    ]
+  }
 }

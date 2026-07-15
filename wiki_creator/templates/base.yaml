@@ -253,6 +253,11 @@ chrome:
   reveal:    {fr: "Chapitre {chapter} — révéler", en: "Chapter {chapter} — reveal"}
   collapse:  {fr: "Masquer", en: "Hide"}
   evolution: {fr: "Évolution :", en: "Evolution:"}
+# STU-516: reader-facing stub-page bodies, rendered as-is in the wiki when an
+# entity's page cannot be generated. Localized like the rest of the output.
+stubs:
+  failed:       {fr: "Échec technique de la génération pour cette entité.", en: "Technical failure while generating this entity."}
+  insufficient: {fr: "Informations insuffisantes disponibles pour cette entité.", en: "Insufficient information available for this entity."}
 length_by_tier:
   principal: "4 to 6 paragraphs total across all sections."
   secondary: "1 to 2 paragraphs for the main section. Keep all other sections brief."

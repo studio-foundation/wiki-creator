@@ -92,6 +92,7 @@ PRE_STEPS: dict[str, list[list[str]]] = {
         ["python", "scripts/generate_wiki_pages.py", "--book"],
         ["python", "scripts/generate_book_synopsis.py", "--book"],
         ["python", "scripts/generate_event_pages.py", "--book"],
+        ["python", "scripts/consolidate_editorial_stance.py", "--book"],
     ],
 }
 

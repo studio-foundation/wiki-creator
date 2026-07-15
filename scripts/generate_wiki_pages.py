@@ -46,6 +46,7 @@ from wiki_creator.page_templates import (
     resolve_template,
     section_brief,
     slot_label,
+    stub_content,
 )
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.provenance import content_units, relation_units
@@ -421,7 +422,7 @@ def build_prompt(
     )
     narrative_role_section = f"\n\n{narrative_role_block}" if narrative_role_block else ""
 
-    # --- Paramètres de génération ---
+    # --- Generation parameters ---
     alias_str = ", ".join(a for a in aliases if a != name) or "none"
 
     length_hint = length_guide(importance)
@@ -755,6 +756,8 @@ def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> No
 
 # Kept in sync with check_identity_match in scripts/wiki_page_validator.py:
 # these are the only validator errors that identity confusion produces.
+# STU-517: this substring coupling on the validator's French prose is fragile —
+# to be replaced by a language-neutral error code when the validator is localized.
 _IDENTITY_ERROR_MARKERS = ("≠ entité demandée", "ne correspond pas à l'entité")
 
 
@@ -772,7 +775,7 @@ def _rejection_is_identity_only(run_id: str, runner: StudioRunner | None = None)
 
 def _recover_identity_rejected_page(
     *, entity: dict, item_result: dict, sibling_canonicals: set[str] | None = None,
-    runner: StudioRunner | None = None,
+    runner: StudioRunner | None = None, lang: str = "fr",
 ) -> dict | None:
     """Recover a PERSON page from an identity-only rejected run and force-correct
     its identity fields. Returns the kept page, or None if not recoverable."""
@@ -785,7 +788,7 @@ def _recover_identity_rejected_page(
     recovered = runner.load_stage_output(run_id, "wiki-page-item")
     if not isinstance(recovered, dict):
         return None
-    page = parse_response(json.dumps(recovered, ensure_ascii=False), entity)
+    page = parse_response(json.dumps(recovered, ensure_ascii=False), entity, lang=lang)
     if page.get("_failed"):
         return None
     _force_correct_identity(page, entity, sibling_canonicals)
@@ -796,18 +799,16 @@ def _recover_identity_rejected_page(
 # STU-465: a technical generation failure and a genuine data famine are
 # distinct conditions. Keep their stub content distinct so `_failed` pages are
 # not mislabelled with an "insufficient data" message that masks a real failure.
-_STUB_CONTENT_FAILED = "## Biographie\n\n*Échec technique de la génération pour cette entité.*"
-_STUB_CONTENT_INSUFFICIENT = "## Biographie\n\n*Informations insuffisantes disponibles pour cette entité.*"
-
-
-def make_stub_page(entity: dict, failed: bool = False, insufficient_data: bool = False) -> dict:
+def make_stub_page(
+    entity: dict, failed: bool = False, insufficient_data: bool = False, lang: str = "fr"
+) -> dict:
     page = {
         "title": entity["canonical_name"],
         "importance": entity["importance"],
         "entity_type": entity["type"],
         "books": list(entity.get("books") or []),
         "infobox_fields": {},
-        "content": _STUB_CONTENT_FAILED if failed else _STUB_CONTENT_INSUFFICIENT,
+        "content": stub_content("failed" if failed else "insufficient", lang),
     }
     if failed:
         page["_failed"] = True
@@ -984,7 +985,7 @@ def _execute_wiki_page_item(item_input: dict, entity: dict, timeout: int) -> dic
             "run_metadata": run_metadata,
         }
 
-    page = parse_response(json.dumps(payload, ensure_ascii=False), entity)
+    page = parse_response(json.dumps(payload, ensure_ascii=False), entity, lang=item_input.get("language", "fr"))
     if page.get("_failed"):
         return {
             "error": "studio_invalid_output",
@@ -1162,9 +1163,9 @@ def _run_generation_for_entity(
     runner: StudioRunner | None = None,
 ) -> dict:
     if not entity.get("context_by_chapter", {}):
-        return make_stub_page(entity, insufficient_data=True)
+        return make_stub_page(entity, insufficient_data=True, lang=language)
     if dry_run:
-        return make_stub_page(entity)
+        return make_stub_page(entity, lang=language)
 
     stance = editorial_stance(book_config or {})
     item_result = _run_wiki_page_item(
@@ -1187,6 +1188,7 @@ def _run_generation_for_entity(
             item_result=item_result,
             sibling_canonicals=sibling_canonicals,
             runner=runner,
+            lang=language,
         )
         _save_generation_debug_artifact(debug_dir, entity, item_result)
         if recovered is not None:
@@ -1196,7 +1198,7 @@ def _run_generation_for_entity(
             _bind_batch_fields(recovered, entity, book_config)
             print(" ⚠ identity-corrected from rejected run", file=sys.stderr, end="", flush=True)
             return recovered
-        return make_stub_page(entity, failed=True)
+        return make_stub_page(entity, failed=True, lang=language)
     typed_rels = entity.get("relationships", [])
     if isinstance(item_result, dict) and "content" in item_result:
         if "relationships" not in sections or not typed_rels:
@@ -1223,14 +1225,14 @@ def _run_generation_for_entity(
             )
             if isinstance(item_result, dict) and item_result.get("error"):
                 _save_generation_debug_artifact(debug_dir, entity, item_result)
-                return make_stub_page(entity, failed=True)
+                return make_stub_page(entity, failed=True, lang=language)
             if isinstance(item_result, dict) and "content" in item_result:
                 if "relationships" not in sections or not typed_rels:
                     item_result["content"] = _strip_relations_section(item_result["content"] or "")
             hits = _check_forbidden_names(item_result, forbidden_names)
             if hits:
                 print(f" ✗ spoiler persists ({', '.join(hits)})", file=sys.stderr, end="", flush=True)
-                page = make_stub_page(entity, failed=True)
+                page = make_stub_page(entity, failed=True, lang=language)
                 page["_spoiler_rejected"] = True
                 return page
 
@@ -1241,7 +1243,7 @@ def _run_generation_for_entity(
         and _force_correct_identity(item_result, entity, sibling_canonicals)
     ):
         _record_safety_net("force_identity")
-        print(" ⚠ nom force-corrected", file=sys.stderr, end="", flush=True)
+        print(" ⚠ name force-corrected", file=sys.stderr, end="", flush=True)
 
     if isinstance(item_result, dict) and "content" in item_result:
         item_result["content_units"] = content_units(sections, entity)
@@ -1270,9 +1272,9 @@ def _run_generation_sectioned(
     runner: StudioRunner | None = None,
 ) -> dict:
     if not entity.get("context_by_chapter", {}):
-        return make_stub_page(entity, insufficient_data=True)
+        return make_stub_page(entity, insufficient_data=True, lang=language)
     if dry_run:
-        return make_stub_page(entity)
+        return make_stub_page(entity, lang=language)
 
     stance = editorial_stance(book_config or {})
     content_sections = [s for s in sections if s not in ("infobox", "references")]
@@ -1309,11 +1311,11 @@ def _run_generation_sectioned(
             emitted.append(section)
         elif section == "biography":
             _save_generation_debug_artifact(debug_dir, entity, {"error": "biography_failed"})
-            return make_stub_page(entity, failed=True)
+            return make_stub_page(entity, failed=True, lang=language)
         # else: OPT section omitted
 
     if not blocks:
-        return make_stub_page(entity, failed=True)
+        return make_stub_page(entity, failed=True, lang=language)
 
     if "references" in sections:
         blocks.append(_references_block(book_title, language))
@@ -1359,10 +1361,10 @@ def _run_generation(
 ) -> dict:
     """Route generation by entity type.
 
-    PERSON uses section-scoped prose (slice E): the few-shot trains stable French
-    section titles ("Biographie", "Personnalité"…) that `_isolate_section` can
-    extract cleanly. PLACE/ORG/EVENT are article-shaped — the model titles them
-    itself (Géographie, Histoire, Culture…) and returns several blocks per page.
+    PERSON uses section-scoped prose (slice E): the few-shot trains stable
+    section titles that `_isolate_section` can extract cleanly. PLACE/ORG/EVENT
+    are article-shaped — the model titles the sections itself and returns several
+    blocks per page.
     Sectioned isolation would then discard that valid content as a false
     `biography_failed` (STU-465), so non-PERSON types use single-shot generation
     which keeps the model's multi-section article as-is.
@@ -1443,7 +1445,7 @@ def _extract_infobox_fields_from_content(content: str) -> dict[str, str]:
     return fields
 
 
-def parse_response(raw: str, entity: dict) -> dict:
+def parse_response(raw: str, entity: dict, lang: str = "fr") -> dict:
     raw = raw.strip()
     decoder = json.JSONDecoder()
     page = None
@@ -1472,7 +1474,7 @@ def parse_response(raw: str, entity: dict) -> dict:
         page.setdefault("content", "")
         if not _is_page_complete(page):
             print(f"    [WARN] Empty content for {entity['canonical_name']}, using failed stub", file=sys.stderr)
-            return make_stub_page(entity, failed=True)
+            return make_stub_page(entity, failed=True, lang=lang)
         if not page["infobox_fields"] and page["content"]:
             page["infobox_fields"] = _extract_infobox_fields_from_content(page["content"])
         page["infobox_fields"] = _clean_infobox_fields(page["infobox_fields"])
@@ -1481,17 +1483,17 @@ def parse_response(raw: str, entity: dict) -> dict:
                 f"    [WARN] Placeholder/template leak for {entity['canonical_name']}, using failed stub",
                 file=sys.stderr,
             )
-            return make_stub_page(entity, failed=True)
+            return make_stub_page(entity, failed=True, lang=lang)
         content_len = len(page["content"].strip())
         if content_len < _MIN_CONTENT_CHARS_WARNING:
             print(
-                f"    [WARN] Contenu très court pour {entity['canonical_name']} ({content_len} chars) — vérifier la sortie LLM",
+                f"    [WARN] Very short content for {entity['canonical_name']} ({content_len} chars) — check the LLM output",
                 file=sys.stderr,
             )
         return {k: v for k, v in page.items() if k in _KNOWN_PAGE_KEYS}
     except json.JSONDecodeError:
         print(f"    [WARN] JSON parse failed for {entity['canonical_name']}, using stub", file=sys.stderr)
-        return make_stub_page(entity)
+        return make_stub_page(entity, lang=lang)
 
 
 def load_batch_files(
@@ -1639,7 +1641,7 @@ def generate_pages(
 
                 if not context:
                     print(f"  [STUB] {name} (no context)", file=sys.stderr)
-                    page = make_stub_page(entity)
+                    page = make_stub_page(entity, lang=config.language)
                     all_pages.append(page)
                     _save(all_pages, config.output_file)
                     done_titles.add(name)
@@ -1647,7 +1649,7 @@ def generate_pages(
 
                 if config.dry_run:
                     print(f"  [DRY]  {name}", file=sys.stderr)
-                    page = make_stub_page(entity)
+                    page = make_stub_page(entity, lang=config.language)
                     all_pages.append(page)
                     _save(all_pages, config.output_file)
                     done_titles.add(name)
@@ -1689,7 +1691,7 @@ def generate_pages(
                         print(" ⚠ fallback stub", file=sys.stderr)
                 except Exception as e:
                     print(f" ✗ {e}", file=sys.stderr)
-                    page = make_stub_page(entity, failed=True)
+                    page = make_stub_page(entity, failed=True, lang=config.language)
                     all_pages.append(page)
                     _save(all_pages, config.output_file)
                     # Do NOT add to done_titles — will be retried on next run
@@ -1790,7 +1792,7 @@ def _print_generation_summary(pages: list[dict], file=None) -> None:
     succeeded = len(pages) - len(failed) - len(insufficient)
     print(
         f"\n[generate-wiki-pages] Done — {len(pages)} total, {succeeded} succeeded, "
-        f"{len(failed)} failed, {len(insufficient)} données insuffisantes",
+        f"{len(failed)} failed, {len(insufficient)} insufficient data",
         file=file,
     )
     for p in failed:
@@ -1800,15 +1802,15 @@ def _print_generation_summary(pages: list[dict], file=None) -> None:
     print(
         f"[generate-wiki-pages] identity safety nets — force_identity: "
         f"{_SAFETY_NET_TRIGGERS.get('force_identity', 0)}, identity_recovery: "
-        f"{_SAFETY_NET_TRIGGERS.get('identity_recovery', 0)} (0/0 ⇒ retirable, spec §3.5 pas 4)",
+        f"{_SAFETY_NET_TRIGGERS.get('identity_recovery', 0)} (0/0 ⇒ removable, spec §3.5 step 4)",
         file=file,
     )
 
 
 def _write_identity_telemetry(processing_dir: Path) -> None:
     """Durable per-run record of identity safety-net triggers. The milestone M1
-    exit criterion ('les safety nets STU-318/319 ne se déclenchent plus') is
-    checked by reading these across consecutive validation runs (spec §3.5 pas 4)."""
+    exit criterion ('the STU-318/319 safety nets no longer trigger') is checked
+    by reading these across consecutive validation runs (spec §3.5 step 4)."""
     path = processing_dir / "identity_telemetry.json"
     try:
         path.parent.mkdir(parents=True, exist_ok=True)

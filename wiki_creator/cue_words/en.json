@@ -359,5 +359,33 @@
     "van",
     "von"
   ],
-  "elision_prefixes": []
+  "elision_prefixes": [],
+  "editorial_stance_markers": {
+    "meta_narrative": [
+      "novel",
+      "chapter",
+      "chapters",
+      "narration",
+      "narrator",
+      "protagonist",
+      "storyline",
+      "saga",
+      "prologue",
+      "epilogue"
+    ],
+    "reader_address": [
+      "the reader",
+      "readers",
+      "dear reader"
+    ],
+    "author": [
+      "the author",
+      "the novelist",
+      "the writer",
+      "published",
+      "publication",
+      "publisher",
+      "edition"
+    ]
+  }
 }

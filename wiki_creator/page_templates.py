@@ -188,6 +188,16 @@ def chrome_label(key, lang, base=None) -> str:
     return entry.get(lang) or entry.get("fr") or str(key)
 
 
+def stub_content(kind, lang, base=None) -> str:
+    """Localized reader-facing stub page body (base.yaml ``stubs``). ``kind`` is
+    ``failed`` or ``insufficient``. Rendered under the biography heading."""
+    raw = base if base is not None else load_base_template()
+    heading = slot_label("biography", lang, raw)
+    entry = (raw.get("stubs") or {}).get(kind) or {}
+    message = entry.get(lang) or entry.get("fr") or ""
+    return f"## {heading}\n\n*{message}*"
+
+
 def language_name(lang, base=None) -> str:
     """English display name of a language code, for the (English) prompt
     scaffolding — e.g. ``language_name("fr") == "French"``."""

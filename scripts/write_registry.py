@@ -34,6 +34,7 @@ import yaml
 from wiki_creator import studio_io
 from wiki_creator.canon import load_canon
 from wiki_creator.entity_taxonomy import full_registry_files
+from wiki_creator.naming import naming_policy
 from wiki_creator.paths import book_paths_from_epub
 from wiki_creator.registry import Registry
 from wiki_creator.types import ClassifiedBundle, Splits
@@ -90,7 +91,8 @@ def main() -> None:
     # are already validated (load_artifact/load_full_file above), so to_dict
     # here is a pure shape adapter.
     registry = Registry.from_artifacts(
-        studio_io.to_dict(splits), alias_output, studio_io.to_dict(full_registries), book_id
+        studio_io.to_dict(splits), alias_output, studio_io.to_dict(full_registries),
+        book_id, policy=naming_policy(ctx),
     )
     output_path = paths.processing / "registry.json"
     registry.save(output_path)

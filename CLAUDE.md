@@ -22,6 +22,7 @@ make generate-pages
 make generate-pages-dry
 make generate-synopsis
 make generate-synopsis-dry
+make consolidate-stance
 make pages-export
 make run-generation
 make run-from-resolution
@@ -80,6 +81,7 @@ library/sarah_j_maas/throne-of-glass/output/01-throne-of-glass/
 - [scripts/generate_wiki_pages.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_wiki_pages.py): standalone generation (shells out to `studio run wiki-page-item` per entity)
 - [scripts/generate_book_synopsis.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_book_synopsis.py): book synopsis page from `events.json` (SP4/STU-482), writes `book_synopsis.json`; pure logic in `wiki_creator/synopsis.py`
 - [scripts/generate_event_pages.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_event_pages.py): one `EVENT` page per high-salience event from `events.json` (SP3/STU-481), writes `event_pages.json`; pure logic in `wiki_creator/event_pages.py`
+- [scripts/consolidate_editorial_stance.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/consolidate_editorial_stance.py): post-generation editorial-stance consolidation pass (STU-508), writes `editorial_stance_report.json`; pure logic in `wiki_creator/consolidation.py`
 - [scripts/wiki_export.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/wiki_export.py): Markdown -> wikitext
 - [scripts/resolve_clusters.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/resolve_clusters.py): resolves NER clusters
 - [scripts/merge_entities.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/merge_entities.py): merges cluster outputs into unified entity list
@@ -118,6 +120,30 @@ Inside `wiki-resolution`, order matters:
 - `build_chapter_summary_context` propagates `temporal_context` to the context dict
 
 ## Gotchas
+
+- Name-collision policy (STU-506): `registry.py::_merge_duplicate_canonicals`
+  used to fold two entities on `canonical_name.casefold()` alone — a PERSON and
+  a PLACE homonym became one false entity. Policy is now declared in the book
+  YAML `naming` block (pure logic in `wiki_creator/naming.py`):
+  `collision_policy: disambiguate` (default) | `merge` (legacy fold) | `fail`
+  (raise on cross-type homonym), `merge_requires_same_type` (default true — puts
+  `entity_type` in the merge key so homonyms coexist), `disambiguator.template`
+  (`"{name} ({type_label})"`) and `alias_arbitration.order` (`[canonical_owner,
+  mention_count, first_seen]`). Invariant 1 went from "true by construction" to
+  "true by policy": `Registry.validate()` keys alias ownership on
+  `(casefold, entity_type)`, so two records with the same `canonical_name` and
+  different types validate; `_resolve_alias_collisions` buckets per type and
+  arbitrates via the configured order. `from_artifacts(..., policy=)` defaults to
+  the safe posture (goldens unchanged — the fixture has no cross-type homonym);
+  `write_registry.py` passes `naming_policy(book_cfg)`. Title disambiguation runs
+  once in `load_wiki_pages.py` (the `wiki-page` stage the `unique-page-title`
+  validator checks and export renders): different-type pages that would share a
+  `page_filename` get the type label appended, so the flat MediaWiki namespace
+  stays collision-free. Scope is `from_artifacts` only — cross-tome type
+  arbitration in `Registry.accumulate` is governed by the STU-512 canon policy,
+  not this one. The 11 Throne-of-Glass `entity_overrides` are `force_type`
+  (classification), not collision rustines, so removing them needs a real spaCy
+  run to verify — left in place.
 
 - `entity_extraction.py` keys chapter mentions by chapter ID, not chapter title.
 - `merge_entities.py` passes through only the current `resolve-clusters` output shape (runs before `alias-resolution` per the STU-276 pipeline order; STU-447 dropped the older `split-clusters` + `entity-resolution-*` compat branch and a vestigial `alias-resolution` priority check that predated STU-276 and never fired in production).
@@ -244,6 +270,26 @@ Inside `wiki-resolution`, order matters:
   exceptions, metadata and tier exposed) — an unconfigured book is unchanged.
   Inter-page tone coherence is not contractable per page (INV-08); it belongs to
   the consolidation pass (STU-508).
+
+- Editorial-stance consolidation (STU-508): a single post-generation pass
+  (`consolidate_editorial_stance.py`, last `wiki-generation` pre-step in
+  `run_wiki.py`; `make consolidate-stance`) scans every generated page
+  (`wiki_pages`/`book_synopsis`/`event_pages`/`collation_pages`, `_failed`
+  skipped) for register that contradicts the declared `editorial_stance.mode`
+  (STU-507) and writes an advisory drift report to
+  `processing_output/<slug>/editorial_stance_report.json` plus a readable
+  stderr summary (page → deviation → short quote, not just a score). **Advisory
+  only** — `status: non_binary_advisory`, never fails the run (INV-08: tone is
+  not per-page contractable). Deterministic, **zero LLM** — the Fable frugality
+  constraint (one pass, not a verifier per page) holds by construction; marker
+  vocabulary lives in `cue_words/<lang>.json` (`editorial_stance_markers`, three
+  buckets: `meta_narrative`/`reader_address`/`author`), absent → no findings.
+  Detection is tied to stance semantics, not heuristic: `meta_narrative` +
+  `reader_address` are flagged by the in-universe rule (everywhere in
+  `in_universe`; outside the hybrid exception sections in `hybrid` — matched by
+  localized heading via `slot_label`; never in `out_of_universe`), `author`
+  whenever `forbid_author_mentions` regardless of mode/section. Pure logic in
+  `wiki_creator/consolidation.py`.
 - Canon policy (STU-512): `library/<author>/<series>/canon.yaml` declares which
   source is authoritative for a series — `primary_source`, a `sources` list
   (`id`/`type`/`path`/`book`/`authority`), `conflict_resolution` (`strategy`:
