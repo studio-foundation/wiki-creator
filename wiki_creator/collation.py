@@ -126,18 +126,26 @@ def _entry(entity: dict) -> str:
 
 
 def collective_pages(entities: list[dict], labels: dict[str, str]) -> list[dict]:
-    """One page per entity type, entries ordered by canonical name."""
-    by_type: dict[str, list[dict]] = {}
+    """One page per title key, entries ordered by canonical name.
+
+    Grouping is by title and not by entity type: the types without a title key
+    of their own (EVENT, OTHER) share ``minor_other``, and two pages with the
+    same title would collide in the flat wiki namespace.
+    """
+    by_key: dict[str, list[dict]] = {}
     for entity in entities:
-        by_type.setdefault(entity.get("type", "OTHER"), []).append(entity)
+        key = _TITLE_LABEL_KEYS.get(entity.get("type", "OTHER"), _DEFAULT_TITLE_LABEL_KEY)
+        by_key.setdefault(key, []).append(entity)
 
     pages = []
-    for entity_type in sorted(by_type):
-        group = sorted(by_type[entity_type], key=lambda e: str(e.get("canonical_name", "")).casefold())
-        title_key = _TITLE_LABEL_KEYS.get(entity_type, _DEFAULT_TITLE_LABEL_KEY)
+    for key, default_title in _DEFAULT_TITLE_LABELS.items():
+        group = by_key.get(key)
+        if not group:
+            continue
+        group = sorted(group, key=lambda e: str(e.get("canonical_name", "")).casefold())
         pages.append(
             {
-                "title": labels.get(title_key, _DEFAULT_TITLE_LABELS[title_key]),
+                "title": labels.get(key, default_title),
                 "importance": COLLATION_IMPORTANCE,
                 "entity_type": COLLATION_ENTITY_TYPE,
                 "infobox_fields": {},

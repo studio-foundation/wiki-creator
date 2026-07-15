@@ -99,6 +99,18 @@ def test_collective_pages_group_by_entity_type_and_sort_entries():
     assert "Mentionné 4 fois dans 2 chapitre(s)." in persons["content"]
 
 
+def test_collective_pages_never_emit_two_pages_with_the_same_title():
+    """The types with no title key of their own share one page — a duplicate
+    title would collide in the flat wiki namespace (validate_unique_page_title)."""
+    pages = collective_pages(
+        [_entity("Le duel", entity_type="EVENT"), _entity("Wyrdmarks", entity_type="OTHER")],
+        collation_labels({}),
+    )
+    assert [p["title"] for p in pages] == ["Autres entités mineures"]
+    assert "## Le duel" in pages[0]["content"]
+    assert "## Wyrdmarks" in pages[0]["content"]
+
+
 def test_collective_pages_titles_come_from_export_labels():
     pages = collective_pages(
         [_entity("Verin")],
