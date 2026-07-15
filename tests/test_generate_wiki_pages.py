@@ -1161,6 +1161,18 @@ def test_make_stub_page_default_sets_no_flags():
     assert "_insufficient_data" not in page
 
 
+def test_make_stub_page_content_follows_lang():
+    """STU-516: stub content is localized — an `en` book yields English stubs,
+    `fr` stays byte-identical to the historical constants."""
+    entity = {"canonical_name": "Brullo", "importance": "secondary", "type": "PERSON"}
+    en_failed = make_stub_page(entity, failed=True, lang="en")
+    assert en_failed["content"] == "## Biography\n\n*Technical failure while generating this entity.*"
+    en_insufficient = make_stub_page(entity, insufficient_data=True, lang="en")
+    assert en_insufficient["content"] == "## Biography\n\n*Insufficient information available for this entity.*"
+    fr_failed = make_stub_page(entity, failed=True)
+    assert fr_failed["content"] == "## Biographie\n\n*Échec technique de la génération pour cette entité.*"
+
+
 def test_run_generation_for_entity_sets_insufficient_data_when_no_context(tmp_path):
     """When context_by_chapter is empty, _run_generation_for_entity must return _insufficient_data stub."""
     entity = {
