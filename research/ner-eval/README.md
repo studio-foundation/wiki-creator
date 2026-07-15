@@ -54,6 +54,36 @@ In a fresh worktree, symlink them from the main checkout and add them to
     # 5. Report (recommendation.md is inlined; results.md is generated)
     python report.py
 
+## Label selection (STU-521)
+
+`results.md` answers which *arm* wins. Once GLiNER won, the question became which
+*labels* to ship, and `runners/run_gliner.py`'s sweep does not answer that: it
+asks each candidate alone and ranks it on detection recall, while deployment asks
+every label at once, where they compete for the same spans.
+
+`sweep_labels.py` scores each candidate in a full run with the other types'
+current labels present, on typing F1, by coordinate ascent from STU-470's
+selection:
+
+    python sweep_labels.py          # ~8 min on an RTX 3060, needs corpus + gold
+
+It moved every row (macro 0.840 -> 0.866, micro 0.891 -> 0.903):
+
+| type | STU-470 | joint sweep | selected label |
+|---|---|---|---|
+| PERSON | 0.938 | 0.942 | `person name` |
+| PLACE | 0.809 | 0.849 | `place name` |
+| ORG | 0.792 | 0.920 | `kingdom, empire, or government` |
+| FACTION | 0.726 | 0.753 | `people, race, or order` |
+
+Read ORG's +13 with care: n=26 gold spans, the noisiest row in the table.
+FACTION — the row that motivated the switch — held its STU-470 label against six
+candidates.
+
+The winners live in `base.yaml#entity_types.<TYPE>.gliner_label`, not here;
+`gliner_labels.yaml` is only the candidate list. Same caveat as STU-470: labels
+are selected on the gold they are scored against, so these are mildly optimistic.
+
 ## Tests
 
     pytest tests/ -q
