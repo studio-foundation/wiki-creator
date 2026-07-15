@@ -188,3 +188,20 @@ def test_extracted_fact_value_titles_and_unknown():
     assert gwp._extracted_fact_value({"titles": ["Captain", "Duke"]}, "titles") == "Captain, Duke"
     assert gwp._extracted_fact_value({"titles": []}, "titles") is None
     assert gwp._extracted_fact_value({"affiliation": "X"}, "affiliation") is None
+
+
+def test_generation_profile_in_universe_drops_out_of_universe_sections():
+    """STU-507: Références and Rôle dans le récit speak from outside the fiction —
+    an in-universe book never generates them."""
+    config = {"editorial_stance": {"mode": "in_universe"}}
+    sections, _ = gwp.generation_profile(config, "principal", "PERSON")
+    assert "references" not in sections
+    assert "narrative_role" not in sections
+    assert "biography" in sections
+
+
+def test_generation_profile_hybrid_keeps_only_declared_exceptions():
+    config = {"editorial_stance": {"mode": "hybrid", "hybrid_exceptions": ["references_section"]}}
+    sections, _ = gwp.generation_profile(config, "principal", "PERSON")
+    assert "references" in sections
+    assert "narrative_role" not in sections

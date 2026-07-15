@@ -208,3 +208,28 @@ def test_main_page_omits_synopsis_section_when_absent():
     pages = [{"title": "Celaena", "importance": "principal", "entity_type": "PERSON"}]
     content = main_page_content("Throne of Glass", "Sarah J. Maas", pages, labels)
     assert "== Synopsis ==" not in content
+
+
+def test_category_tags_omit_importance_tier_when_stance_hides_it():
+    """STU-507: the tier is a pipeline ranking — publishing it as a reader
+    category is a stance decision, not a default."""
+    labels = {
+        "persons": "Personnages",
+        "principal": "Personnages principaux",
+        "secondary": "Personnages secondaires",
+        "locations": "Lieux",
+        "organizations": "Organisations",
+    }
+    tags = category_tags("PERSON", "principal", labels, expose_importance_tier=False)
+    assert tags == ["[[Category:Personnages]]"]
+
+
+def test_main_page_omits_run_stats_when_stance_hides_pipeline_metadata():
+    labels = {"persons": "Personnages", "locations": "Lieux", "organizations": "Organisations"}
+    pages = [{"title": "Celaena", "importance": "principal", "entity_type": "PERSON"}]
+    content = main_page_content(
+        "Throne of Glass", "Sarah J. Maas", pages, labels, expose_pipeline_metadata=False
+    )
+    assert "== Statistiques ==" not in content
+    assert "pages wiki" not in content
+    assert "== Navigation ==" in content

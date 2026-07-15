@@ -43,6 +43,13 @@ thresholds: auto
 #     minor: { min_mentions: 3 }
 
 generation:
+  # STU-507: the posture is declared, not inherited from anti-hallucination prompting.
+  editorial_stance:
+    mode: hybrid                # in_universe | out_of_universe | hybrid
+    hybrid_exceptions: [references_section, narrative_role_section]
+    expose_pipeline_metadata: true
+    expose_importance_tier: true
+    forbid_author_mentions: true
   chapter_summary:
     mode: llm
     max_bullets: 8
