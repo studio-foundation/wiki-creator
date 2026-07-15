@@ -152,6 +152,14 @@ def relationship_tokens(base=None) -> list[str]:
     return list(_rel_enum(base).keys())
 
 
+def relationship_definitions(base=None) -> list[dict[str, str]]:
+    """Type vocabulary + application criterion, injected into the classifier prompt (STU-477)."""
+    return [
+        {"name": token, "description": (spec.get("description") or "").strip()}
+        for token, spec in _rel_enum(base).items()
+    ]
+
+
 def canonical_relationship(value, base=None):
     if not value:
         return None
