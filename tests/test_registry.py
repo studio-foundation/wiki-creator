@@ -523,6 +523,71 @@ def test_from_artifacts_alias_collision_canonical_wins():
     registry.validate()
 
 
+def _homonym_artifacts():
+    """Two entities named 'Adarlan' — a PERSON and a PLACE (the STU-473 shape)."""
+    splits = {"PERSON": [], "PLACE": [], "ORG": [], "EVENT": [], "OTHER": []}
+    alias_output = {
+        "entities": [
+            {"canonical_name": "Adarlan", "type": "PERSON", "aliases": ["Adarlan"],
+             "source_ids": [], "relevant": True},
+            {"canonical_name": "Adarlan", "type": "PLACE", "aliases": ["Adarlan"],
+             "source_ids": [], "relevant": True},
+        ],
+    }
+    return splits, alias_output
+
+
+def test_different_type_homonyms_are_not_merged_by_default():
+    from wiki_creator.registry import Registry
+
+    splits, alias_output = _homonym_artifacts()
+    registry = Registry.from_artifacts(splits, alias_output)
+    kinds = sorted((r.canonical_name, r.entity_type) for r in registry.entities)
+    assert kinds == [("Adarlan", "PERSON"), ("Adarlan", "PLACE")]
+    # entity_ids stay unique, and the coexistence is validated + traced
+    assert len({r.entity_id for r in registry.entities}) == 2
+    registry.validate()
+    assert any("name collision" in w for w in registry.warnings)
+
+
+def test_validate_accepts_same_name_different_type():
+    from wiki_creator.registry import Registry
+
+    splits, alias_output = _homonym_artifacts()
+    Registry.from_artifacts(splits, alias_output).validate()  # must not raise
+
+
+def test_collision_policy_merge_restores_legacy_fold():
+    from wiki_creator.naming import NamingPolicy
+    from wiki_creator.registry import Registry
+
+    splits, alias_output = _homonym_artifacts()
+    registry = Registry.from_artifacts(
+        splits, alias_output, policy=NamingPolicy(collision_policy="merge")
+    )
+    assert len(registry.entities) == 1  # PERSON + PLACE folded into one
+    registry.validate()
+
+
+def test_collision_policy_fail_raises_on_cross_type_homonym():
+    from wiki_creator.naming import NamingPolicy
+    from wiki_creator.registry import Registry
+
+    splits, alias_output = _homonym_artifacts()
+    with pytest.raises(ValueError, match="name collision"):
+        Registry.from_artifacts(splits, alias_output, policy=NamingPolicy(collision_policy="fail"))
+
+
+def test_same_type_duplicate_canonicals_still_merge():
+    from wiki_creator.registry import Registry
+
+    splits, alias_output = _homonym_artifacts()
+    alias_output["entities"][1]["type"] = "PERSON"  # now both PERSON
+    registry = Registry.from_artifacts(splits, alias_output)
+    assert len(registry.entities) == 1
+    registry.validate()
+
+
 def test_from_artifacts_tolerates_missing_optional_inputs():
     _, alias_output, _ = _run16_artifacts()
     registry = Registry.from_artifacts(None, alias_output, None)

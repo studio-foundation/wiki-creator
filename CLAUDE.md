@@ -119,6 +119,30 @@ Inside `wiki-resolution`, order matters:
 
 ## Gotchas
 
+- Name-collision policy (STU-506): `registry.py::_merge_duplicate_canonicals`
+  used to fold two entities on `canonical_name.casefold()` alone — a PERSON and
+  a PLACE homonym became one false entity. Policy is now declared in the book
+  YAML `naming` block (pure logic in `wiki_creator/naming.py`):
+  `collision_policy: disambiguate` (default) | `merge` (legacy fold) | `fail`
+  (raise on cross-type homonym), `merge_requires_same_type` (default true — puts
+  `entity_type` in the merge key so homonyms coexist), `disambiguator.template`
+  (`"{name} ({type_label})"`) and `alias_arbitration.order` (`[canonical_owner,
+  mention_count, first_seen]`). Invariant 1 went from "true by construction" to
+  "true by policy": `Registry.validate()` keys alias ownership on
+  `(casefold, entity_type)`, so two records with the same `canonical_name` and
+  different types validate; `_resolve_alias_collisions` buckets per type and
+  arbitrates via the configured order. `from_artifacts(..., policy=)` defaults to
+  the safe posture (goldens unchanged — the fixture has no cross-type homonym);
+  `write_registry.py` passes `naming_policy(book_cfg)`. Title disambiguation runs
+  once in `load_wiki_pages.py` (the `wiki-page` stage the `unique-page-title`
+  validator checks and export renders): different-type pages that would share a
+  `page_filename` get the type label appended, so the flat MediaWiki namespace
+  stays collision-free. Scope is `from_artifacts` only — cross-tome type
+  arbitration in `Registry.accumulate` is governed by the STU-512 canon policy,
+  not this one. The 11 Throne-of-Glass `entity_overrides` are `force_type`
+  (classification), not collision rustines, so removing them needs a real spaCy
+  run to verify — left in place.
+
 - `entity_extraction.py` keys chapter mentions by chapter ID, not chapter title.
 - `merge_entities.py` passes through only the current `resolve-clusters` output shape (runs before `alias-resolution` per the STU-276 pipeline order; STU-447 dropped the older `split-clusters` + `entity-resolution-*` compat branch and a vestigial `alias-resolution` priority check that predated STU-276 and never fired in production).
 - `split_clusters.py`, `relationship_extraction.py`, and `verify_entity_types.py` are intentionally tolerant of missing `file_path` in unit-test mode.
