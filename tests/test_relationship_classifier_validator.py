@@ -147,6 +147,50 @@ def test_check_evidence_symmetric_still_requires_both():
     assert errors != []
 
 
+# ---------------------------------------------------------------------------
+# STU-496: structural relationships (evidence_kind=structural) accept one-name evidence
+# ---------------------------------------------------------------------------
+
+def test_check_evidence_structural_rivalry_accepts_one_name():
+    """Structural rivalry (antagoniste) with a role line naming only one party passes."""
+    clf = {
+        "relationship_type": "antagoniste",
+        "evidence_kind": "structural",
+        "evidence": "Xavier—the thief from Melisande, a Champion.",
+    }
+    meta = {"entity_a": "Celaena", "entity_b": "Xavier"}
+    assert check_evidence_contains_both_names(clf, meta) == []
+
+
+def test_check_evidence_structural_mediated_causation_accepts_one_name():
+    """Mediated killer/victim (antagoniste) grounded on a narrator-attributed line passes."""
+    clf = {
+        "relationship_type": "antagoniste",
+        "evidence_kind": "structural",
+        "evidence": "Cain was a demon-summoning psychopath.",
+    }
+    meta = {"entity_a": "Cain", "entity_b": "Xavier"}
+    assert check_evidence_contains_both_names(clf, meta) == []
+
+
+def test_check_evidence_structural_fails_when_neither_named():
+    """Structural evidence naming neither entity still fails — must ground to a real quote."""
+    clf = {
+        "relationship_type": "antagoniste",
+        "evidence_kind": "structural",
+        "evidence": "The competition claimed another victim.",
+    }
+    meta = {"entity_a": "Cain", "entity_b": "Xavier"}
+    assert check_evidence_contains_both_names(clf, meta) != []
+
+
+def test_check_evidence_antagoniste_without_structural_flag_requires_both():
+    """antagoniste is NOT asymmetric: absent the structural flag, both names required (guard)."""
+    clf = {"relationship_type": "antagoniste", "evidence": "Xavier—the thief from Melisande."}
+    meta = {"entity_a": "Celaena", "entity_b": "Xavier"}
+    assert check_evidence_contains_both_names(clf, meta) != []
+
+
 # STU-287: null relationship_type is a valid response (no direct interaction)
 
 def test_null_relationship_type_is_valid():

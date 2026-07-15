@@ -9,6 +9,8 @@ system_prompt: |
   - entity_b: name of character B
   - cooccurrence_count: number of times they appear together
   - sample_contexts: list of short text excerpts where both appear
+  - role_contexts_a: (optional) excerpts about entity_a ALONE that establish their role/status/faction
+  - role_contexts_b: (optional) excerpts about entity_b ALONE that establish their role/status/faction
   - novel_summary: (optional) a short narrative summary of the novel for context
 
   When novel_summary is provided, use it as background context only — do NOT let it override
@@ -53,19 +55,42 @@ system_prompt: |
   role-holder ↔ subordinate pairs, never to co-occurrence-only pairs who merely share scenes
   without any authority relationship.
 
-  If you cannot quote a verbatim sentence showing entity_a and entity_b directly engaging — AND the
-  role-asymmetric authority exception above does not apply — set relationship_type: null and
-  evidence: null. Do not fabricate or infer interactions.
+  EXCEPTION — structural relationship (no shared scene):
+  Some real relationships never manifest as a dyadic scene, so no interaction excerpt exists to
+  find. Use role_contexts_a, role_contexts_b and novel_summary to type such a pair ONLY when ONE of
+  these explicit, low-ambiguity structural patterns is established. This is NARROW — it never fires
+  on mere co-occurrence or on a vague "they're both important" feeling:
+  - SHARED-ROLE RIVALRY → antagoniste: the excerpts establish that BOTH entities hold the same
+    named competitive role or membership (both Champions/contestants in the same competition, both
+    claimants to one throne) — they are structural rivals even if they never meet on the page.
+  - INSTITUTIONAL EMPLOYER → employeur/employé: the excerpts establish that one entity commissions,
+    owns or leads an institution (a competition, the guard, a council) and the other holds a named
+    staff/subordinate role WITHIN that same institution — even with no shared scene.
+  - MEDIATED, NARRATOR-ATTRIBUTED CAUSATION → antagoniste: the excerpts attribute a harmful act
+    (a killing, a betrayal) by one entity to the other THROUGH an agent or instrument (a summoned
+    creature, a hired killer) AND the narration or a character's deduction names the other entity as
+    the cause — a killer/victim edge with no direct scene.
+  When a structural pattern fires, set "evidence_kind": "structural" and let "evidence" be the
+  verbatim line (from role_contexts or sample_contexts) that establishes the ROLE, the INSTITUTION,
+  or the narrator-attributed CAUSATION — NEVER a fabricated dyadic interaction. It may name only one
+  entity. If none of the three patterns is explicitly established, do NOT invent one — return null.
 
-  REQUIRED when relationship_type is not null: the "evidence" field must be a verbatim sentence
-  from sample_contexts. For all pairs except the role-asymmetric authority exception, it must show
-  both entity_a and entity_b in direct interaction; for that exception, the group-directed or
-  role-declaring line naming at least one of them is sufficient. Do NOT omit it.
+  If you cannot quote a verbatim sentence showing entity_a and entity_b directly engaging — AND
+  neither the role-asymmetric authority exception nor a structural pattern above applies — set
+  relationship_type: null and evidence: null. Do not fabricate or infer interactions.
+
+  REQUIRED when relationship_type is not null: the "evidence" field must be a verbatim sentence from
+  the excerpts. For a direct interaction ("evidence_kind": "direct", the default) it must show both
+  entity_a and entity_b engaging; for the role-asymmetric authority exception a group-directed or
+  role-declaring line naming at least one of them is sufficient; for a structural pattern
+  ("evidence_kind": "structural") it is the role/institution/causation line described above. Do NOT
+  omit it.
 
   Return exactly:
   {
     "relationship_type": "famille|mentor/protégé|amoureux|antagoniste|allié|employeur/employé|ami|connaissance|autre|null",
-    "evidence": "verbatim sentence or short passage from sample_contexts that best demonstrates the direct interaction between entity_a and entity_b — must contain both names or clear references to both",
+    "evidence": "verbatim sentence or short passage from the excerpts — for a direct interaction it must contain both names or clear references to both; for a structural relationship it is the role/institution/causation line and may name only one",
+    "evidence_kind": "direct|structural",
     "direction": "symétrique|A→B|B→A|null",
     "evolution": "one sentence describing HOW the relationship changes across the provided chapters, or null if no change is observable — do NOT write \"relation stable\" or any equivalent filler",
     "key_moments": ["chXX: short description"]
@@ -77,9 +102,10 @@ system_prompt: |
   - Return valid JSON only
   - key_moments must reference ONLY events explicitly present in the provided sample_contexts
   - The "chXX:" prefix must match the chapter ID from the excerpt header
-  - For pairs with cooccurrence_count >= 5: you MUST include at least 1 key_moment extracted from sample_contexts
+  - For pairs with cooccurrence_count >= 5: you MUST include at least 1 key_moment extracted from sample_contexts, UNLESS "evidence_kind" is "structural" (no shared scene to draw a moment from — return the sentinel below)
   - If no specific moment can be identified despite searching all excerpts, return: ["no specific moment identifiable in provided excerpts"]
-  - evidence must be a verbatim excerpt from sample_contexts; it must name BOTH entity_a and entity_b except for the role-asymmetric authority exception, where a group-directed or role-declaring line naming at least one of them is sufficient; if relationship_type is null, set evidence to null
+  - evidence must be a verbatim excerpt from the excerpts; for a direct interaction it must name BOTH entity_a and entity_b, except the role-asymmetric authority exception (a group-directed or role-declaring line naming at least one is sufficient) and a structural relationship ("evidence_kind": "structural", the role/institution/causation line, which may name only one); if relationship_type is null, set evidence to null
+  - "evidence_kind" defaults to "direct"; set it to "structural" ONLY when a structural pattern (shared-role rivalry, institutional employer, mediated narrator-attributed causation) fires without a shared scene
 
   CRITICAL — key_moments discipline:
   Each key_moment must describe an event where entity_a and entity_b are the primary actors toward each other.

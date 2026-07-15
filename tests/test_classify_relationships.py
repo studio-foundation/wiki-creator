@@ -5,8 +5,13 @@ from pathlib import Path
 import pytest
 
 import scripts.classify_relationships as clf
-from scripts.classify_relationships import _load_done_keys, _save
+from scripts.classify_relationships import (
+    _entity_role_contexts,
+    _load_done_keys,
+    _save,
+)
 from wiki_creator import studio_io
+from wiki_creator.registry import EntityRecord, Mention, Registry
 from wiki_creator.types import RelationshipBundle
 
 
@@ -96,6 +101,50 @@ def test_stray_llm_key_does_not_crash_save(tmp_path, monkeypatch):
     assert rel.relationship_type == "allies"
     assert rel.evidence == "they train together"
     assert not hasattr(rel, "reasoning")
+
+
+# ---------------------------------------------------------------------------
+# STU-496: per-entity role contexts surfaced to the classifier
+# ---------------------------------------------------------------------------
+
+def _rec(name, contexts):
+    return EntityRecord(
+        entity_id=name.lower(),
+        canonical_name=name,
+        entity_type="PERSON",
+        mentions=[Mention(surface=name, chapter_id="ch01", context=c) for c in contexts],
+    )
+
+
+def test_entity_role_contexts_collects_distinct_sentences():
+    registry = Registry(entities=[
+        _rec("Xavier", ["Xavier—the thief from Melisande.", "Xavier was a Champion."]),
+    ])
+    ctx = _entity_role_contexts(registry)
+    assert ctx["Xavier"] == ["Xavier—the thief from Melisande.", "Xavier was a Champion."]
+
+
+def test_entity_role_contexts_dedupes_and_keeps_first():
+    registry = Registry(entities=[
+        _rec("Brullo", ["Brullo the Weapons Master.", "Brullo the Weapons Master.", "He drilled them."]),
+    ])
+    ctx = _entity_role_contexts(registry)
+    assert ctx["Brullo"][0] == "Brullo the Weapons Master."
+    assert ctx["Brullo"] == ["Brullo the Weapons Master.", "He drilled them."]
+
+
+def test_entity_role_contexts_samples_when_over_cap():
+    many = [f"context {i}" for i in range(20)]
+    registry = Registry(entities=[_rec("Celaena", many)])
+    ctx = _entity_role_contexts(registry, max_per_entity=6)
+    assert len(ctx["Celaena"]) == 6
+    assert ctx["Celaena"][0] == "context 0"  # first mention (introduction) always kept
+
+
+def test_entity_role_contexts_ignores_empty_context():
+    registry = Registry(entities=[_rec("Cain", ["", "  ", "Cain the demon-summoner."])])
+    ctx = _entity_role_contexts(registry)
+    assert ctx["Cain"] == ["Cain the demon-summoner."]
 
 
 def test_dry_run_with_missing_book_exits_nonzero():
