@@ -4,13 +4,14 @@
 
 - Repo: `wiki-creator-by-studio`
 - Purpose: extract entities from EPUB novels, classify them, generate wiki pages, export wikitext
-- Current verified state on 2026-07-13: `pytest -q` => `1113 passed, 37 skipped`
-  (skips = tests needing optional spaCy models or the `coref` extra; see `tests/_markers.py`)
+- Current verified state on 2026-07-15: `pytest -q` => `1604 passed, 1 skipped`
+  (skip count depends on which optional models/extras are installed; see `tests/_markers.py`)
 
 ## Commands
 
 ```bash
-pip install -e ".[dev]"
+pip install -e ".[dev]"      # test suite: carries en_core_web_sm
+pip install -e ".[models]"   # to run a book: the lg models the books declare (~1 GB)
 pytest -q
 mypy wiki_creator/
 
@@ -121,6 +122,20 @@ Inside `wiki-resolution`, order matters:
 
 ## Gotchas
 
+- spaCy models are extras, not a manual download (STU-522): `pip install -e
+  ".[models]"` installs the models the books declare (`en_core_web_lg`,
+  `fr_core_news_lg`) as pinned wheel URLs. Models are not PyPI deps, so nothing
+  used to install them: 14 of 15 books declared `en_core_web_lg` and ran the
+  `en_core_web_sm` fallback (with a `[WARN]`) on every machine that followed the
+  README, and CI shelled out to `spacy download`. `[dev]` now carries
+  `en_core_web_sm` — the test suite's model — so a fresh clone reproduces the
+  documented `pytest -q` state with no tribal step. The wheels pin spaCy 3.8: a
+  spaCy minor bump fails the install instead of resolving a mismatched model.
+  The loader fallback is deliberately untouched — it exists so a local path or a
+  community model can degrade (STU-453) — so skipping `[models]` still warns and
+  runs rather than failing. `tests/test_spacy_model_extras.py` pins that every
+  stock model a book declares is installed by an extra; a new book declaring an
+  uninstalled model fails it.
 - GLiNER NER backend (STU-521): the book YAML `ner` block picks who finds the
   entities — `backend: spacy` (default, pre-STU-521 behavior) | `gliner`, plus
   `model`/`threshold`. Pure config in `wiki_creator/ner.py`; an unknown backend
