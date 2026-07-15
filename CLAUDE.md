@@ -360,6 +360,14 @@ Inside `wiki-resolution`, order matters:
   route through this helper (`spoiler_blocks`, `provenance.relation_units`,
   `confidence`, `generate_wiki_pages` prompt builders). This is a rendering fix,
   independent of classification correctness (STU-495/476).
+  That "all render sites" claim was false on one path until STU-528:
+  `character_graph.indirect_relationships` built `path_edge_types` with its own
+  `or "co-occurrence"` fallback, so the metric label reached the writer prompt
+  (`path: friend → co-occurrence`) for every indirect relation with an untyped hop.
+  It routes through the helper now, and an untyped hop **drops the whole indirect
+  relation**, not just the hop — a path is nothing but its edge types, so a hole
+  leaves the LLM to fill it. The target itself isn't dropped: the next fully-typed
+  simple path to it is used if there is one.
 - Editorial stance (STU-507): whether pages speak from inside the fiction is
   **declared** in the book YAML (`generation.editorial_stance`), not inherited
   from anti-hallucination prompting. `wiki_creator/editorial_stance.py` holds the
