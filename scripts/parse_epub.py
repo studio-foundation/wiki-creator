@@ -7,7 +7,6 @@ Input:  { "file_path": "/path/to/book.epub" }
 Output: { "title": "...", "author": "...", "chapters": [{ "id": "...", "title": "...", "content": "..." }], "pov_detection": { "pov": "...", "first_person_count": int, "total_tokens": int, "confidence": "..." } }
 """
 
-import html
 import json
 import os
 import re
@@ -57,38 +56,33 @@ def _flatten_inline_markup(soup) -> None:
 
 
 def clean_chapter_text(text: str) -> str:
-    """Normalize chapter text to remove noise before NLP processing."""
-    # 0. Unicode NFC normalization — must be first to compose combining characters
+    """Normalize a chapter's extracted text for NLP.
+
+    Input is always `_flatten_inline_markup` + `get_text(separator="\\n",
+    strip=True)`, i.e. "\\n".join of non-empty stripped strings. It therefore
+    carries no \\n\\n (so chapter text has no paragraph structure — STU-523) and
+    no HTML entities (html.parser resolves charrefs at parse time).
+    """
+    # 1. Unicode NFC normalization — must be first to compose combining characters
     text = unicodedata.normalize('NFC', text)
 
-    # 1. Resolve typographic ligatures (ﬁ → fi, ﬂ → fl, ﬀ → ff, …)
+    # 2. Resolve typographic ligatures (ﬁ → fi, ﬂ → fl, ﬀ → ff, …)
     for lig, repl in _LIGATURES.items():
         text = text.replace(lig, repl)
 
-    # 2. Normalize apostrophe-like Unicode chars and guillemets
+    # 3. Normalize apostrophe-like Unicode chars and guillemets
     for apostrophe in _APOSTROPHE_VARIANTS:
         text = text.replace(apostrophe, "'")
     text = text.replace('\u00ab', '"').replace('\u00bb', '"')  # « » → "
 
-    # 3. Unescape HTML entities (&nbsp; → \xa0, &mdash; → —, etc.)
-    text = html.unescape(text)
-
-    # 3b. Normalize non-breaking spaces → regular space
-    #     html.unescape() converts &nbsp; → \xa0, so this comes after step 3.
+    # 4. Normalize non-breaking spaces → regular space
     text = text.replace('\u00a0', ' ').replace('\u202f', ' ')
 
-    # 4. Collapse runs of 2+ newlines into exactly \n\n (paragraph break)
-    text = re.sub(r'\n{2,}', '\n\n', text)
-
-    # 5. Replace remaining single \n with a space
-    text = re.sub(r'(?<!\n)\n(?!\n)', ' ', text)
+    # 5. Every \n is a tag boundary, never a word or paragraph boundary
+    text = text.replace('\n', ' ')
 
     # 6. Normalize runs of spaces/tabs to a single space
     text = re.sub(r'[ \t]{2,}', ' ', text)
-
-    # 7. Strip each paragraph
-    paragraphs = [p.strip() for p in text.split('\n\n')]
-    text = '\n\n'.join(p for p in paragraphs if p)
 
     return text.strip()
 

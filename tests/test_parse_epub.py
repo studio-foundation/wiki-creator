@@ -107,10 +107,14 @@ def test_clean_isolated_newline_mid_word():
     assert clean_chapter_text("I\nntéressant") == "I ntéressant"
 
 
-def test_clean_double_newline_preserved():
-    """Double \\n\\n (paragraph break) is preserved."""
-    result = clean_chapter_text("Paragraph one.\n\nParagraph two.")
-    assert result == "Paragraph one.\n\nParagraph two."
+def test_chapter_text_carries_no_paragraph_structure():
+    """get_text(separator="\\n", strip=True) joins non-empty strings, so \\n\\n
+    can never reach clean_chapter_text and every \\n flattens to a space.
+
+    Restoring paragraph breaks is STU-523 — it shifts every STU-489 mention offset.
+    """
+    body = "<p>Paragraph one.</p><p>Paragraph two.</p>"
+    assert _text_of(body) == "Paragraph one. Paragraph two."
 
 
 def test_clean_multiple_spaces_normalized():
@@ -123,23 +127,15 @@ def test_clean_leading_trailing_whitespace_stripped():
     assert clean_chapter_text("  hello world  ") == "hello world"
 
 
-def test_clean_html_entities_amp():
-    """&amp; is unescaped to &."""
-    assert clean_chapter_text("AT&amp;T") == "AT&T"
+def test_html_entities_are_resolved_by_the_parser():
+    """html.parser resolves charrefs at parse time (convert_charrefs default).
 
-
-def test_clean_html_mdash():
-    """&mdash; is unescaped to the em dash character."""
-    result = clean_chapter_text("word&mdash;word")
-    assert "\u2014" in result  # em dash U+2014
-
-
-def test_clean_html_nbsp_handled():
-    """&nbsp; est converti en espace standard (pas en \\xa0)."""
-    result = clean_chapter_text("hello&nbsp;world")
-    assert "&nbsp;" not in result
-    assert "\xa0" not in result  # doit être normalisé, pas laissé comme \xa0
-    assert result == "hello world"
+    clean_chapter_text therefore never saw an entity — its own html.unescape()
+    call was unreachable. &nbsp; still arrives as \\xa0 and needs normalizing.
+    """
+    result = _text_of("<p>AT&amp;T word&mdash;word hello&nbsp;world</p>")
+    assert result == "AT&T word\u2014word hello world"
+    assert "\xa0" not in result
 
 
 def test_clean_xa0_normalized_to_space():
