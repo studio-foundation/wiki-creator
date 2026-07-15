@@ -390,11 +390,15 @@ def test_clean_extended_apostrophe_variants():
     assert clean_chapter_text("I\u2032ve seen it") == "I've seen it"
 
 
-def test_clean_rejoins_spaced_i_contractions():
-    """Split English I-contractions are repaired before downstream NER."""
-    assert clean_chapter_text("I 'll go now.") == "I'll go now."
-    assert clean_chapter_text("I ’ve seen this.") == "I've seen this."
-    assert clean_chapter_text("I  'd rather wait.") == "I'd rather wait."
+def test_clean_keeps_dialect_elision_intact():
+    """A space before an elided-h word is the author's, not damage (STU-519).
+
+    The old I-contraction repair rewrote Eldest's "I 'ope" (a character dropping
+    his aitches) to "I'ope". Its only genuine target, Inheritance's "I 'll insult",
+    was an inline-markup split now fixed by _flatten_inline_markup.
+    """
+    assert clean_chapter_text("But I 'ope you and the girl") == "But I 'ope you and the girl"
+    assert clean_chapter_text("I'll go now.") == "I'll go now."
 
 
 def test_clean_guillemets_normalisés():
@@ -402,15 +406,13 @@ def test_clean_guillemets_normalisés():
     assert clean_chapter_text("\u00abBonjour\u00bb") == '"Bonjour"'
 
 
-def test_clean_a_grave_artifact():
-    """'Àla', 'Àson', 'Àsa' artifacts get spaces re-inserted."""
-    assert clean_chapter_text("Àla fin") == "À la fin"
-    assert clean_chapter_text("Àson tour") == "À son tour"
-    assert clean_chapter_text("Àsa place") == "À sa place"
+def test_clean_keeps_a_grave_proper_nouns_intact():
+    """A word starting with À is never split (STU-519).
 
-
-def test_clean_a_grave_does_not_alter_correct_text():
-    """'À la' with proper spacing is preserved (not double-spaced)."""
+    The old 'Àla' → 'À la' rule only ever undid step 5b's own damage; its one
+    effect on real text was breaking "Plaza dels Àngels" into "À ngels".
+    """
+    assert clean_chapter_text("la Plaza dels Àngels, siège") == "la Plaza dels Àngels, siège"
     assert clean_chapter_text("À la maison") == "À la maison"
 
 

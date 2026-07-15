@@ -83,16 +83,8 @@ def clean_chapter_text(text: str) -> str:
     # 5. Replace remaining single \n with a space
     text = re.sub(r'(?<!\n)\n(?!\n)', ' ', text)
 
-    # 5b. Re-insert spaces eaten after À (e.g. "Àla" → "À la", "Àson" → "À son").
-    #     Fixes EPUB encoding artifacts where the space after the preposition À was lost.
-    text = re.sub(r'À([a-zéèêëàâùûüîïôœæç])', r'À \1', text)
-
     # 6. Normalize runs of spaces/tabs to a single space
     text = re.sub(r'[ \t]{2,}', ' ', text)
-
-    # 6b. Repair English I-contractions split by EPUB/tokenization artifacts
-    #     so spaCy sees "I'll"/"I've"/"I'd"/"I'm" instead of stray tokens.
-    text = re.sub(r"\bI\s*'\s*([a-z]{1,6})\b", r"I'\1", text)
 
     # 7. Strip each paragraph
     paragraphs = [p.strip() for p in text.split('\n\n')]
