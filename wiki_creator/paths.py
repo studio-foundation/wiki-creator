@@ -41,6 +41,11 @@ class BookPaths:
         """Per-book accumulation delta: processing_output/<slug>/registry_delta.json"""
         return self.processing / "registry_delta.json"
 
+    @property
+    def series_canon(self) -> Path:
+        """Series-level canon policy: library/<author>/<series>/canon.yaml"""
+        return self.epub.parent.parent / "canon.yaml"
+
 
 def book_paths_from_epub(epub_path: Path | str) -> BookPaths:
     """Derive all book working directories from the epub path.

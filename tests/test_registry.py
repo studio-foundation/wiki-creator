@@ -1033,6 +1033,21 @@ def test_accumulate_keeps_series_entity_type_and_warns():
     assert any("kept entity_type 'PLACE'" in w for w in delta["warnings"])
 
 
+def test_accumulate_later_tome_overrides_entity_type_and_warns():
+    """cross_tome.later_tome_overrides (STU-512): tome N wins, still auditable."""
+    series = Registry()
+    series.accumulate(_book_registry("01-book", [
+        {"canonical": "Terrasen", "type": "PLACE"},
+    ]))
+    delta = series.accumulate(
+        _book_registry("02-book", [{"canonical": "Terrasen", "type": "PERSON"}]),
+        later_tome_overrides=True,
+    )
+    series.validate()
+    assert series.lookup("Terrasen").entity_type == "PERSON"
+    assert any("overridden to 'PERSON'" in w for w in delta["warnings"])
+
+
 def test_accumulate_series_round_trips_through_save_load(tmp_path):
     series = Registry()
     series.accumulate(_book_registry("01-book", [
