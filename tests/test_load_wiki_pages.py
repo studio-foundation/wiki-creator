@@ -107,3 +107,27 @@ def test_load_synopsis_page_skips_failed(tmp_path):
 def test_load_synopsis_page_tolerates_bad_json(tmp_path):
     (tmp_path / "book_synopsis.json").write_text("{not json", encoding="utf-8")
     assert _load_synopsis_page(tmp_path) is None
+
+
+# --- STU-511: collective pages ---
+
+from scripts.load_wiki_pages import _load_extra_pages
+
+
+def _collation_page(**extra):
+    page = {"title": "Personnages mineurs", "entity_type": "COLLATION", "importance": "figurant",
+            "infobox_fields": {}, "content": "## Cain\n\nMentionné 3 fois dans 1 chapitre(s)."}
+    page.update(extra)
+    return page
+
+
+def test_load_collation_pages_reads_artifact(tmp_path):
+    (tmp_path / "collation_pages.json").write_text(
+        json.dumps({"pages": [_collation_page(), _collation_page(_failed=True)]}), encoding="utf-8"
+    )
+    pages = _load_extra_pages(tmp_path, "collation_pages.json", "collation pages")
+    assert [p["entity_type"] for p in pages] == ["COLLATION"]
+
+
+def test_load_collation_pages_absent(tmp_path):
+    assert _load_extra_pages(tmp_path, "collation_pages.json", "collation pages") == []

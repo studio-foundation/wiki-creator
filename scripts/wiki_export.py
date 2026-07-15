@@ -16,6 +16,7 @@ from wiki_creator.md2wiki import convert, make_infobox_call
 from wiki_creator.export_helpers import (
     page_filename,
     category_tags,
+    index_limits,
     infobox_template_content,
     main_page_content,
 )
@@ -78,8 +79,8 @@ def render_page(page: dict, labels: dict, collapse_after: int | None = None) -> 
     """(path relative to the wiki dir, wikitext content) for one page.
 
     Entity pages keep the infobox + body + categories layout in their type
-    subdir. SYNOPSIS pages (SP4, STU-482) render at the wiki root, body only —
-    no infobox, no categories.
+    subdir. SYNOPSIS pages (SP4, STU-482) and COLLATION pages (STU-511) render
+    at the wiki root, body only — no infobox, no categories.
 
     STU-492: the Relations index is injected under the Relations section, and —
     when ``collapse_after`` is set — sections first revealed after that chapter
@@ -100,7 +101,7 @@ def render_page(page: dict, labels: dict, collapse_after: int | None = None) -> 
             body = wrap_collapsible(body, page.get("content_units") or [], collapse_after)
     filename = page_filename(title) + ".wiki"
 
-    if entity_type == "SYNOPSIS":
+    if entity_type in ("SYNOPSIS", "COLLATION"):
         return filename, body
 
     infobox = make_infobox_call(entity_type, page.get("infobox_fields", {}))
@@ -207,7 +208,10 @@ def main() -> None:
     files_written += 1
 
     # Write Main_Page.wiki
-    main_content = main_page_content(book_title, author, pages, labels)
+    principals_shown, places_shown = index_limits(export_cfg)
+    main_content = main_page_content(
+        book_title, author, pages, labels, principals_shown, places_shown
+    )
     (wiki_dir / "Main_Page.wiki").write_text(main_content, encoding="utf-8")
     files_written += 1
 

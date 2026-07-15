@@ -236,3 +236,16 @@ def test_render_page_per_relation_still_gates_non_relationship_sections():
     assert 'data-expandtext="Chapitre 40 — révéler"' in out  # Biographie gated
     assert "Chapitre 55" in out                              # Celaena gated
     assert out.count("mw-collapsible") == 2
+
+
+# --- STU-511: collective page for a collated tier ---
+
+
+def test_render_page_collation_goes_to_wiki_root_without_infobox_or_categories():
+    page = {"title": "Personnages mineurs", "entity_type": "COLLATION", "importance": "figurant",
+            "infobox_fields": {}, "content": "## Cain\n\nMentionné 3 fois dans 1 chapitre(s)."}
+    rel_path, content = render_page(page, _LABELS)
+    assert rel_path == "Personnages_mineurs.wiki"
+    assert "{{Infobox" not in content
+    assert "[[Category:" not in content
+    assert "== Cain ==" in content

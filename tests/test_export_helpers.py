@@ -1,6 +1,7 @@
 # tests/test_export_helpers.py
 import pytest
 from wiki_creator.export_helpers import (
+    index_limits,
     page_filename,
     category_tags,
     infobox_template_content,
@@ -208,3 +209,40 @@ def test_main_page_omits_synopsis_section_when_absent():
     pages = [{"title": "Celaena", "importance": "principal", "entity_type": "PERSON"}]
     content = main_page_content("Throne of Glass", "Sarah J. Maas", pages, labels)
     assert "== Synopsis ==" not in content
+
+
+def test_index_limits_default_to_the_pre_config_slices():
+    assert index_limits({}) == (8, 5)
+    assert index_limits(None) == (8, 5)
+
+
+def test_index_limits_read_export_index():
+    assert index_limits({"index": {"principals_shown": 3, "places_shown": 0}}) == (3, 0)
+
+
+def test_index_limits_ignore_unparseable_or_negative_values():
+    assert index_limits({"index": {"principals_shown": "many", "places_shown": -1}}) == (8, 5)
+
+
+def test_main_page_honours_index_limits():
+    labels = {"persons": "Personnages", "locations": "Lieux", "organizations": "Organisations"}
+    pages = [
+        {"title": f"Perso {i}", "importance": "principal", "entity_type": "PERSON"}
+        for i in range(10)
+    ]
+    content = main_page_content(
+        "Throne of Glass", "Sarah J. Maas", pages, labels, principals_shown=2
+    )
+    assert "[[Perso 1]]" in content
+    assert "[[Perso 2]]" not in content
+
+
+def test_main_page_links_collective_pages_under_navigation():
+    labels = {"persons": "Personnages", "locations": "Lieux", "organizations": "Organisations"}
+    pages = [
+        {"title": "Celaena", "importance": "principal", "entity_type": "PERSON"},
+        {"title": "Personnages mineurs", "importance": "figurant", "entity_type": "COLLATION"},
+    ]
+    content = main_page_content("Throne of Glass", "Sarah J. Maas", pages, labels)
+    navigation = content.split("== Navigation ==")[1]
+    assert "[[Personnages mineurs]]" in navigation.split("== Statistiques ==")[0]

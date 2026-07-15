@@ -34,6 +34,7 @@ from dataclasses import asdict
 from wiki_creator import studio_io
 from wiki_creator.paths import BookPaths
 from wiki_creator.character_graph import CharacterGraph
+from wiki_creator.collation import collation_config, collation_labels, collective_pages, partition
 from wiki_creator.facts import extract_titles
 from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator.confidence import relationship_confidence
@@ -441,6 +442,26 @@ def _flush_batch(
     print(f"  Wrote {file_path} ({len(entities)} {importance} entities, {ctx_chars} chars)", file=sys.stderr)
 
 
+def write_collation_pages(entities: list[dict], book_cfg: dict, paths: "BookPaths") -> list[dict]:
+    """Collective pages (STU-511) for the entities their tier collates, written
+    to collation_pages.json for load_wiki_pages.py. Always rewritten: a stale
+    file from an earlier `collective` run must not resurrect its pages once the
+    book config goes back to `dedicated`.
+    """
+    path = paths.processing / "collation_pages.json"
+    pages = collective_pages(entities, collation_labels(book_cfg.get("export", {})))
+    if not pages:
+        path.unlink(missing_ok=True)
+        return []
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"pages": pages}, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(
+        f"wiki-preparation: {len(entities)} entities collated onto {len(pages)} collective page(s)",
+        file=sys.stderr,
+    )
+    return pages
+
+
 def write_batches(entity_bundles: list[dict], narrator: object, paths: "BookPaths") -> list[dict]:
     """Split entity bundles into batch files.
 
@@ -564,6 +585,17 @@ def main() -> None:
             file=sys.stderr,
         )
 
+    plot_events = read_plot_events(paths.processing / "events.json")
+    relevant_entities, collated, dropped = partition(
+        relevant_entities, collation_config(book_cfg), plot_events
+    )
+    write_collation_pages(collated, book_cfg, paths)
+    if dropped:
+        print(
+            f"wiki-preparation: dropped {len(dropped)} entities (collation mode=drop)",
+            file=sys.stderr,
+        )
+
     entities_by_name = {
         e.get("canonical_name", ""): e
         for e in relevant_entities
@@ -599,8 +631,6 @@ def main() -> None:
             }
         except (OSError, json.JSONDecodeError, KeyError):
             pass
-
-    plot_events = read_plot_events(paths.processing / "events.json")
 
     entity_bundles = [
         build_entity_bundle(

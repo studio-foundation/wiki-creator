@@ -44,9 +44,18 @@ generation:
   figurant:
     sections: [infobox, biography]
     max_tokens_per_page: 200
+  # What kind of page each tier earns. Absent tier = dedicated (one page each).
+  # collation:
+  #   figurant:
+  #     mode: collective    # dedicated | collective | drop
+  #     promote_if:
+  #       appears_in_event_salience_above: 0.7
 
 export:
   wiki_dir: output/wiki
+  # index:
+  #   principals_shown: 8
+  #   places_shown: 5
   categories:
     language: fr
     labels:
@@ -55,3 +64,8 @@ export:
       secondary: Personnages secondaires
       locations: Lieux
       organizations: Organisations
+      # Collective page titles, one per entity type (generation.collation).
+      # minor_persons: Personnages mineurs
+      # minor_locations: Lieux mineurs
+      # minor_organizations: Organisations mineures
+      # minor_other: Autres entités mineures
