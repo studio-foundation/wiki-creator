@@ -133,8 +133,8 @@ def infobox_template_content(entity_type: str) -> str:
     return _INFOBOX_TEMPLATES[entity_type]
 
 
-# How many entries Main_Page showcases per section — an editorial choice,
-# overridable via book YAML `export.index` (STU-511).
+# An editorial choice, so it belongs in book YAML `export.index`, not in a
+# slice (STU-511).
 DEFAULT_PRINCIPALS_SHOWN = 8
 DEFAULT_PLACES_SHOWN = 5
 

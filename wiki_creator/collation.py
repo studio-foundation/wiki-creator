@@ -23,7 +23,7 @@ MODES = ("dedicated", "collective", "drop")
 COLLATION_ENTITY_TYPE = "COLLATION"
 COLLATION_IMPORTANCE = "figurant"
 
-# Collective page title per entity type, keyed into the export labels dict.
+# Values key into the export labels dict.
 _TITLE_LABEL_KEYS = {
     "PERSON": "minor_persons",
     "PLACE": "minor_locations",
@@ -31,8 +31,8 @@ _TITLE_LABEL_KEYS = {
 }
 _DEFAULT_TITLE_LABEL_KEY = "minor_other"
 
-# Distinct from the `secondary` category labels — a collective page holds the
-# tier below, and a page title colliding with a category name reads as a bug.
+# Deliberately not the `secondary` category labels: a collective page holds the
+# tier below. A page title colliding with a category name reads as a bug.
 _DEFAULT_TITLE_LABELS = {
     "minor_persons": "Personnages mineurs",
     "minor_locations": "Lieux mineurs",
@@ -105,8 +105,8 @@ def partition_by_collation(
 
 
 def _entry(entity: dict) -> str:
-    """One collective-page entry — name, aliases and appearance counts. Every
-    line is a fact already carried by the classification artifact; no LLM."""
+    """One collective-page entry. Every line is a fact the classification
+    artifact already carries; no LLM."""
     lines = [f"## {entity.get('canonical_name', '')}"]
     aliases = [str(a) for a in entity.get("aliases") or [] if a]
     if aliases:
@@ -120,9 +120,8 @@ def _entry(entity: dict) -> str:
 def collective_pages(entities: list[dict], labels: dict[str, str]) -> list[dict]:
     """One page per title key, entries ordered by canonical name.
 
-    Grouping is by title and not by entity type: the types without a title key
-    of their own (EVENT, OTHER) share ``minor_other``, and two pages with the
-    same title would collide in the flat wiki namespace.
+    Grouped by title, not by entity type: EVENT and OTHER share ``minor_other``,
+    and two pages with the same title collide in the flat wiki namespace.
     """
     by_key: dict[str, list[dict]] = {}
     for entity in entities:

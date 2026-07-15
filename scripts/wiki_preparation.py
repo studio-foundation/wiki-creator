@@ -448,10 +448,10 @@ def _flush_batch(
 
 
 def write_collation_pages(entities: list[dict], book_cfg: dict, paths: "BookPaths") -> list[dict]:
-    """Collective pages (STU-511) for the entities their tier collates, written
-    to collation_pages.json for load_wiki_pages.py. Always rewritten: a stale
-    file from an earlier `collective` run must not resurrect its pages once the
-    book config goes back to `dedicated`.
+    """Collective pages (STU-511) written to collation_pages.json for
+    load_wiki_pages.py. Deleted when empty: a stale file from an earlier
+    `collective` run must not resurrect its pages once the config goes back to
+    `dedicated`.
     """
     path = paths.processing / "collation_pages.json"
     pages = collective_pages(entities, collation_labels(book_cfg.get("export", {})))
@@ -601,9 +601,8 @@ def main() -> None:
             file=sys.stderr,
         )
 
-    # Collated entities keep their entry here: losing a dedicated page must not
-    # cost their neighbours the related-context snippets they contribute. Dropped
-    # ones are excluded — mode=drop means gone from the wiki entirely.
+    # Collated entities stay: losing a page must not cost their neighbours the
+    # related-context snippets they contribute. Dropped ones are gone entirely.
     entities_by_name = {
         e.get("canonical_name", ""): e
         for e in dedicated + collated
