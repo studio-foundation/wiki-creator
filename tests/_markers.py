@@ -42,6 +42,16 @@ requires_fastcoref = pytest.mark.skipif(
 )
 
 
+def gliner_available() -> bool:
+    return importlib.util.find_spec("gliner") is not None
+
+
+requires_gliner = pytest.mark.skipif(
+    not gliner_available(),
+    reason="requires the gliner extra (pip install -e '.[gliner]')",
+)
+
+
 def sentence_transformers_available() -> bool:
     return importlib.util.find_spec("sentence_transformers") is not None
 
