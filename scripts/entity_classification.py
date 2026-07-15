@@ -191,6 +191,10 @@ def compute_thresholds(
     thresholds that mean the same thing in every tome.
     """
     config = config or {}
+    if not isinstance(config, Mapping):
+        # `thresholds: auto` was the pre-STU-509 spelling; renaming the key in place
+        # yields `notability: auto`, which would otherwise silently take the defaults.
+        raise ValueError(f"notability must be a mapping; omit it for defaults, got {config!r}")
     percentiles = {**DEFAULT_PERCENTILES, **(config.get("percentiles") or {})}
     fallback = {**DEFAULT_FALLBACK_ABSOLUTE, **(config.get("fallback_absolute") or {})}
     per_type = config.get("per_type") or {}

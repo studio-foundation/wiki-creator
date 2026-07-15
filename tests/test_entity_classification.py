@@ -974,7 +974,6 @@ def test_corrections_lower_priority_than_entity_overrides(monkeypatch, classific
 
     book_yaml = yaml.dump({
         "file_path": str(book_file),
-        "thresholds": "auto",
         "entity_overrides": {"Arobynn": {"force_type": "PLACE"}},
     })
     entities = [
@@ -1013,7 +1012,7 @@ def test_run_studio_mode_applies_corrections_file(monkeypatch, classification_tm
     tmp_path, processing_dir = classification_tmp_env
     book_file = tmp_path / "books" / "testbook.epub"
 
-    book_yaml = yaml.dump({"file_path": str(book_file), "thresholds": "auto"})
+    book_yaml = yaml.dump({"file_path": str(book_file)})
     entities = [
         {"canonical_name": "Arobynn", "type": "PLACE", "aliases": [], "source_ids": [], "relevant": True}
     ]
@@ -1216,3 +1215,10 @@ def test_notability_present_but_empty_yields_defaults():
     """`notability:` with no body parses to None, not {} — must not crash."""
     assert yaml.safe_load("notability:\n").get("notability") is None
     assert compute_thresholds(_MENTIONS, None) == compute_thresholds(_MENTIONS)
+
+
+def test_notability_scalar_is_rejected_not_silently_defaulted():
+    """`thresholds: auto` renamed in place yields `notability: auto` — a config that
+    looks meaningful must not silently resolve to the defaults."""
+    with pytest.raises(ValueError, match="must be a mapping"):
+        compute_thresholds(_MENTIONS, "auto")
