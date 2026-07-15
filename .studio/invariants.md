@@ -17,8 +17,9 @@ Enforced par :
   (`exit 1`) et aucun fichier wikitext n'est écrit.
 
 Note : le contract `copyright-check` ne valide que la présence du champ
-`status` (limitation des contracts Studio actuels — required_fields only).
-Le gate de `wiki_export.py` est le mécanisme bloquant.
+`status` — le gate de `wiki_export.py` est le mécanisme bloquant. Ce n'est pas
+une limitation des contracts Studio : `validators:` permettrait de porter le
+gate dans le contract (cf. INV-WC-05).
 
 ## INV-WC-02 — Progression narrative chronologique — ⚠️ NON ENFORCED
 Les révélations dans une page wiki devraient apparaître dans l'ordre où elles
@@ -67,3 +68,35 @@ un JSON en contournant le registre. La clause tient par convention +
 injection de ce fichier dans le system prompt de chaque agent Studio ;
 `validate()` ne la détecte que si le registre est effectivement l'auteur des
 sorties.
+
+## INV-WC-05 — Le vocabulaire de types de page est déclaré dans `base.yaml`
+`wiki_creator/templates/base.yaml#entity_types` est la seule autorité sur les
+types de page. Aucun autre fichier ne redéclare l'énumération : un enum
+restatté dérive en silence, et celui du contract `wiki-page` l'avait déjà fait
+(il annonçait `PERSON | PLACE | ORG` longtemps après la sortie d'`EVENT`).
+
+Enforced par :
+- **Blocage** : validateur externe `entity-type-declared` du contract
+  `wiki-page` (`scripts/validate_entity_type_declared.py`). Il lit `base.yaml`
+  à l'exécution et reçoit la sortie réelle du stage sur stdin ; un type absent
+  fait échouer le stage `wiki-generation` de `pages-export`, donc le run —
+  aucun wikitext n'est écrit. Vérifié sur ToG 01 : retirer `EVENT` de
+  `base.yaml` fait échouer le run sur les 20 pages d'événements.
+- **Blocage (corollaire)** : validateur externe `unique-page-title`
+  (`scripts/validate_unique_page_title.py`) — deux pages rendant le même
+  `page_filename` font échouer le run. Les sous-dossiers par type séparent les
+  fichiers, mais l'espace de noms des titres wiki est plat.
+- Logique pure : `wiki_creator/page_validators.py`.
+
+⚠️ Portée : l'invariant couvre les types *sortis en pages*, au stage
+`wiki-page`. `wiki_creator/types.py::ENTITY_TYPE` reste un `Literal` figé,
+parallèle à `base.yaml`, et 4 autres tables Python (`entity_extraction.py`,
+`export_helpers.py`, `wiki_export.py`, `md2wiki.py`) portent encore leur propre
+vocabulaire — leur convergence est STU-505. `OTHER` et `SYNOPSIS` sont déclarés
+dans `base.yaml` sans template (zéro slot) : c'est leur état réel, pas un
+template à écrire.
+
+Note : les contracts Studio ne sont pas limités à `required_fields` — le noyau
+expose `validators:` (commande shell, sortie réelle du stage sur stdin,
+`{valid, errors}` sur stdout, exécutée dans la boucle RALPH). C'est le
+mécanisme utilisé ici, et il est réutilisable par tout autre contract.
