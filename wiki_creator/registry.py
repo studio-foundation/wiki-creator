@@ -196,17 +196,20 @@ class Registry:
                 table.setdefault(normalize_name(alias), record)
         return table
 
-    def accumulate(self, book: "Registry") -> dict:
+    def accumulate(self, book: "Registry", *, later_tome_overrides: bool = False) -> dict:
         """Fold a per-book registry into this series registry (STU-485).
 
         The series-accumulation counterpart of ``CharacterGraph.merge_book``:
         ``self`` is the series registry (tomes 1..N-1), ``book`` the registry
-        written for tome N. Guarantees:
+        written for tome N. ``later_tome_overrides`` is the series canon's
+        ``cross_tome`` policy (STU-512): when set, tome N's ``entity_type`` wins
+        a cross-tome disagreement instead of the earlier tome's. Guarantees:
 
         * entity_id **stability** — a book entity whose aliases match an
           existing series entity (normalize_name comparison, STU-450) keeps the
-          series ``entity_id``; nothing existing is overwritten (canonical
-          name and entity_type of the series record win, mismatches warn);
+          series ``entity_id``; nothing existing is overwritten (canonical name
+          always wins for the series record, entity_type per the cross-tome
+          policy; mismatches warn either way);
         * **new** entities are added; on entity_id collision with an unrelated
           series entity the new record gets a deterministic ``_<n>`` suffix
           and its decisions are re-emitted against the new id;
@@ -285,7 +288,7 @@ class Registry:
                     )
                 self._accumulate_into(
                     target, incoming, incoming_books, by_normalized,
-                    owners_casefold, delta, _warn,
+                    owners_casefold, delta, _warn, later_tome_overrides,
                 )
                 delta["matched"].append(
                     {"book_entity_id": incoming.entity_id, "series_entity_id": target.entity_id}
@@ -351,14 +354,23 @@ class Registry:
         owners_casefold: dict[str, "EntityRecord"],
         delta: dict,
         warn: Callable[[str], None],
+        later_tome_overrides: bool = False,
     ) -> None:
         """Union one matched book record into its series record (accumulate helper)."""
         book_label = ", ".join(incoming.books) or "unknown book"
         if incoming.entity_type != target.entity_type:
-            warn(
-                f"series accumulation: kept entity_type '{target.entity_type}' for "
-                f"'{target.entity_id}' (book '{book_label}' says '{incoming.entity_type}')"
-            )
+            if later_tome_overrides:
+                warn(
+                    f"series accumulation: entity_type of '{target.entity_id}' overridden "
+                    f"to '{incoming.entity_type}' by book '{book_label}' "
+                    f"(was '{target.entity_type}')"
+                )
+                target.entity_type = incoming.entity_type
+            else:
+                warn(
+                    f"series accumulation: kept entity_type '{target.entity_type}' for "
+                    f"'{target.entity_id}' (book '{book_label}' says '{incoming.entity_type}')"
+                )
 
         added_aliases: list[str] = []
         existing = {alias.casefold() for alias in target.aliases}

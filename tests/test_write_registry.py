@@ -299,6 +299,77 @@ def test_write_registry_accumulates_series_registry(tmp_path):
     assert [e["series_entity_id"] for e in delta["added"]] == ["kaltain"]
 
 
+def _tome_entities(entity_type: str) -> dict:
+    return {
+        "entities": [
+            {
+                "canonical_name": "Terrasen",
+                "type": entity_type,
+                "aliases": ["Terrasen"],
+                "source_ids": ["e_terrasen"],
+                "relevant": True,
+            }
+        ],
+        "relationships": [],
+        "narrator": None,
+        "stats": {"merges_applied": 0},
+    }
+
+
+def _tome_full(entity_type: str) -> dict:
+    return {
+        "e_terrasen": {
+            "type": entity_type,
+            "raw_mentions": ["Terrasen"],
+            "first_seen": "ch01",
+            "mention_count": 1,
+            "mentions_by_chapter": {"ch01": ["Terrasen lay to the north."]},
+        }
+    }
+
+
+def _accumulate_two_tomes(tmp_path: Path, canon: str | None) -> dict:
+    """Tome 1 says PLACE, tome 2 says PERSON; returns the series record."""
+    series_dir = tmp_path / "library" / "author" / "series"
+    epub1, processing1 = _book_tree(tmp_path)
+    if canon is not None:
+        (series_dir / "canon.yaml").write_text(canon, encoding="utf-8")
+    _run_book(epub1, processing1, _tome_entities("PLACE"), _tome_full("PLACE"))
+
+    epub2, processing2 = _second_book_tree(tmp_path)
+    _run_book(epub2, processing2, _tome_entities("PERSON"), _tome_full("PERSON"))
+
+    series = json.loads((series_dir / "registry.json").read_text(encoding="utf-8"))
+    return {e["entity_id"]: e for e in series["entities"]}["terrasen"]
+
+
+_CANON_OVERRIDE = """canon:
+  primary_source: epub
+  sources:
+    - id: epub_01
+      type: epub
+      path: books/01-book.epub
+    - id: epub_02
+      type: epub
+      path: books/02-book.epub
+  cross_tome:
+    later_tome_overrides: true
+"""
+
+
+def test_write_registry_cross_tome_override_follows_canon(tmp_path):
+    """STU-512 wiring: canon.cross_tome.later_tome_overrides reaches accumulate.
+
+    Unwire later_tome_overrides in main() and this test fails.
+    """
+    assert _accumulate_two_tomes(tmp_path, _CANON_OVERRIDE)["entity_type"] == "PERSON"
+
+
+def test_write_registry_cross_tome_keeps_earlier_tome_without_canon(tmp_path):
+    """No canon.yaml → historical rule: the earlier tome's type wins."""
+    assert _accumulate_two_tomes(tmp_path, None)["entity_type"] == "PLACE"
+
+
 def test_write_registry_skips_accumulation_on_corrupt_series_registry(tmp_path):
     """An unreadable series registry must not be clobbered."""
     epub, processing = _book_tree(tmp_path)

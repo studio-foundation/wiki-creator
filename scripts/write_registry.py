@@ -32,6 +32,7 @@ from pathlib import Path
 
 import yaml
 from wiki_creator import studio_io
+from wiki_creator.canon import load_canon
 from wiki_creator.paths import book_paths_from_epub
 from wiki_creator.registry import Registry
 from wiki_creator.types import ClassifiedBundle, Splits
@@ -132,6 +133,9 @@ def _accumulate_into_series(paths, registry: Registry) -> dict | None:
     per-book accumulation delta. An existing-but-unreadable series registry is
     left untouched: accumulation is skipped with a warning instead of clobbering
     tomes already accumulated.
+
+    Cross-tome conflicts are arbitrated by the series canon policy (STU-512);
+    a series with no canon.yaml keeps the historical rule (earlier tome wins).
     """
     series_path = paths.series_registry
     if series_path.exists():
@@ -147,7 +151,11 @@ def _accumulate_into_series(paths, registry: Registry) -> dict | None:
     else:
         series = Registry()
 
-    delta = series.accumulate(registry)
+    canon = load_canon(paths.series_canon)
+    delta = series.accumulate(
+        registry,
+        later_tome_overrides=bool(canon and canon.later_tome_overrides),
+    )
 
     tmp = series_path.with_suffix(".json.tmp")
     try:

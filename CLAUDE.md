@@ -187,6 +187,38 @@ Inside `wiki-resolution`, order matters:
   route through this helper (`spoiler_blocks`, `provenance.relation_units`,
   `confidence`, `generate_wiki_pages` prompt builders). This is a rendering fix,
   independent of classification correctness (STU-495/476).
+- Canon policy (STU-512): `library/<author>/<series>/canon.yaml` declares which
+  source is authoritative for a series — `primary_source`, a `sources` list
+  (`id`/`type`/`path`/`book`/`authority`), `conflict_resolution` (`strategy`:
+  `highest_authority` | `primary_wins` | `flag_for_review`; `on_unresolved`:
+  `flag` | `fail`) and `cross_tome.later_tome_overrides`. Pure logic in
+  `wiki_creator/canon.py`. Two real consumers: `parse_epub.py` resolves which
+  file it reads via `resolve_book_source`, and `write_registry.py` passes
+  `later_tome_overrides` into `Registry.accumulate` (the only pre-existing
+  cross-tome arbitration point — an `entity_type` disagreement between tomes,
+  previously hardcoded to "earlier tome wins"). Both consumers are pinned by a
+  wiring test (`test_parse_epub_reads_the_source_the_canon_declares`,
+  `test_write_registry_cross_tome_override_follows_canon`) — unwire either and a
+  test fails; without them the whole feature was deletable with the suite green.
+  A source binds to a tome via `book:`, defaulting to the filename stem. The book
+  YAML's `file_path` stays the identity anchor (it derives every output path);
+  canon only decides which bytes are read.
+  **No policy degrades, a broken policy fails**: absent/empty `canon.yaml`, or a
+  book the canon doesn't declare, reads `file_path` as before (warning on the
+  latter); a `canon.yaml` that exists but is malformed raises, because silently
+  ignoring a broken authority file would read a source nobody vouched for.
+  The two halves have very different reach. **Source** arbitration
+  (`strategy`/`on_unresolved`/`authority`) is unreachable in production —
+  `resolve_source` returns early at one candidate, and one EPUB per tome means
+  there is never a second. Deliberate: the rule is written down **before**
+  `scrape_fandom.py` (a second source of truth on the same content, currently
+  LoRA-dataset only) is wired into generation, per STU-512's acceptance criteria.
+  **Cross-tome** arbitration is one `canon.yaml` away from live: `inheritance`
+  (6 tomes) and `hollow_star_saga` (4) already accumulate via `make run-series`,
+  and only `throne-of-glass` (1 tome, where cross-tome can never fire) declares a
+  canon today. `later_tome_overrides` is a boolean; STU-488 (the real consumer)
+  wants "trace both with provenance rather than overwrite", so it will need to
+  widen to an enum.
 
 ## Working Norms
 
