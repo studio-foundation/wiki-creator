@@ -1,7 +1,7 @@
 .PHONY: run run-coref run-extraction run-resolution run-preparation run-generation pages-export run-all \
         test-extraction test-clustering test-relationships classify-relationships classify-relationships-dry \
         run-events generate-synopsis generate-synopsis-dry \
-        generate-event-pages generate-event-pages-dry \
+        generate-event-pages generate-event-pages-dry consolidate-stance \
         generate-pages generate-pages-dry generate-pages-primary generate-pages-entity \
         test test-coref test-coref-parallel \
         smoke golden golden-update \
@@ -80,13 +80,18 @@ generate-event-pages:
 generate-event-pages-dry:
 	python scripts/generate_event_pages.py --book $(BOOK) --dry-run
 
+# Editorial-stance consolidation pass (STU-508): advisory drift report over the
+# generated pages vs the declared editorial_stance.mode. Never fails the run.
+consolidate-stance:
+	python scripts/consolidate_editorial_stance.py --book $(BOOK)
+
 run-preparation:
 	studio run wiki-preparation --input-file $(BOOK) --live --verbose
 
 pages-export:
 	studio run pages-export --input-file $(BOOK) --live --verbose
 
-run-generation: run-preparation generate-pages generate-synopsis generate-event-pages pages-export
+run-generation: run-preparation generate-pages generate-synopsis generate-event-pages consolidate-stance pages-export
 
 # Orchestrator shortcuts
 run-from-extraction:
