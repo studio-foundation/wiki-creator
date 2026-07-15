@@ -37,6 +37,7 @@ import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 from wiki_creator.chapters import chapter_number
+from wiki_creator.lang import load_lang_config
 from wiki_creator.editorial_stance import GROUNDING_BLOCK, EditorialStance, editorial_stance
 from wiki_creator.page_templates import (
     few_shot_example,
@@ -84,11 +85,18 @@ _INTERNAL_INFOBOX_KEYS = frozenset({
 
 _MIN_CONTENT_CHARS_WARNING = 80  # warn when LLM output is suspiciously short but not empty
 
-_PLACEHOLDER_PATTERNS = (
-    re.compile(r"<[^>\n]{1,80}>"),
-    re.compile(r"\bsi connu\b", re.IGNORECASE),
-    re.compile(r"contenu en fran[çc]ais bas[ée] uniquement sur les extraits", re.IGNORECASE),
-)
+# Language-neutral: an angle-bracket token leaked from the prompt (`<if known>`).
+_ANGLE_PLACEHOLDER = re.compile(r"<[^>\n]{1,80}>")
+
+
+def _placeholder_patterns(lang: str) -> tuple[re.Pattern, ...]:
+    """Prompt-placeholder detectors for a page in ``lang``: the neutral
+    angle-bracket token plus the localized placeholder phrases from
+    cue_words (`placeholder_markers`) — de-Frenchified in STU-517."""
+    markers = load_lang_config(lang, allow_en_fallback=True).get("placeholder_markers", [])
+    return (_ANGLE_PLACEHOLDER, *(
+        re.compile(r"\b" + re.escape(m) + r"\b", re.IGNORECASE) for m in markers
+    ))
 
 
 def _assemble_section_blocks(blocks: list[str]) -> str:
@@ -754,11 +762,10 @@ def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> No
             page["infobox_fields"][slot.token] = value
 
 
-# Kept in sync with check_identity_match in scripts/wiki_page_validator.py:
-# these are the only validator errors that identity confusion produces.
-# STU-517: this substring coupling on the validator's French prose is fragile —
-# to be replaced by a language-neutral error code when the validator is localized.
-_IDENTITY_ERROR_MARKERS = ("≠ entité demandée", "ne correspond pas à l'entité")
+# The neutral error codes check_identity_match emits (scripts/wiki_page_validator.py).
+# STU-517: matching on codes, not the validator's localized prose, so rewording an
+# error can never silently break identity-only recovery.
+_IDENTITY_ERROR_CODES = frozenset({"identity_title_mismatch", "identity_infobox_mismatch"})
 
 
 def _rejection_is_identity_only(run_id: str, runner: StudioRunner | None = None) -> bool:
@@ -767,10 +774,8 @@ def _rejection_is_identity_only(run_id: str, runner: StudioRunner | None = None)
     validators when we recover it."""
     runner = runner or StudioRunner()
     vout = runner.load_stage_output(str(run_id), "wiki-page-validator")
-    errors = (vout or {}).get("errors") or []
-    return bool(errors) and all(
-        any(marker in str(e) for marker in _IDENTITY_ERROR_MARKERS) for e in errors
-    )
+    codes = (vout or {}).get("error_codes") or []
+    return bool(codes) and all(code in _IDENTITY_ERROR_CODES for code in codes)
 
 
 def _recover_identity_rejected_page(
@@ -1478,7 +1483,7 @@ def parse_response(raw: str, entity: dict, lang: str = "fr") -> dict:
         if not page["infobox_fields"] and page["content"]:
             page["infobox_fields"] = _extract_infobox_fields_from_content(page["content"])
         page["infobox_fields"] = _clean_infobox_fields(page["infobox_fields"])
-        if _contains_template_placeholder(page):
+        if _contains_template_placeholder(page, lang):
             print(
                 f"    [WARN] Placeholder/template leak for {entity['canonical_name']}, using failed stub",
                 file=sys.stderr,
@@ -1850,16 +1855,17 @@ def _is_page_complete(page: dict) -> bool:
     return isinstance(content, str) and bool(content.strip())
 
 
-def _contains_template_placeholder(page: dict) -> bool:
+def _contains_template_placeholder(page: dict, lang: str = "fr") -> bool:
     """Reject responses that leak prompt placeholders into final content."""
+    patterns = _placeholder_patterns(lang)
     content = str(page.get("content", "") or "")
-    for pattern in _PLACEHOLDER_PATTERNS:
+    for pattern in patterns:
         if pattern.search(content):
             return True
     infobox = page.get("infobox_fields", {}) or {}
     for value in infobox.values():
         text = str(value or "")
-        for pattern in _PLACEHOLDER_PATTERNS:
+        for pattern in patterns:
             if pattern.search(text):
                 return True
     return False

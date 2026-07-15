@@ -81,6 +81,7 @@ A pack may omit these; the consumer degrades to an empty collection.
 | `elision_prefixes` | grounding | Elision prefixes stripped when matching names (French `l'`, `d'`); empty for English. |
 | `first_person_artifact_tails` | extraction | Verb tails that flag a false "I …" entity artifact; language-specific. |
 | `language_id_markers` | wiki page validator | Copula phrases (`is the`, `was a`) used to sanity-check generated prose language. |
+| `placeholder_markers` | page generation | Prompt-placeholder phrases (`si connu`, `if known`) that flag a leaked template when echoed into a page. |
 
 ## The required/optional split
 

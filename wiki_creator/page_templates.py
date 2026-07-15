@@ -198,6 +198,16 @@ def stub_content(kind, lang, base=None) -> str:
     return f"## {heading}\n\n*{message}*"
 
 
+def validator_message(code, lang, base=None, **params) -> str:
+    """Localized wiki-page-validator error message (base.yaml ``validator.errors``),
+    keyed by a stable neutral ``code``. Falls back to French, then the raw code
+    (STU-517). ``params`` fill the ``{placeholders}`` in the template."""
+    raw = base if base is not None else load_base_template()
+    entry = ((raw.get("validator") or {}).get("errors") or {}).get(code) or {}
+    template = entry.get(lang) or entry.get("fr") or code
+    return template.format(**params) if params else template
+
+
 def language_name(lang, base=None) -> str:
     """English display name of a language code, for the (English) prompt
     scaffolding — e.g. ``language_name("fr") == "French"``."""

@@ -42,7 +42,7 @@ def test_check_language_fr_passes_french():
 def test_check_language_fr_detects_english():
     page = {"content": "Celaena is the best assassin in the kingdom. She was known as Laena."}
     errors = check_language_fr(page)
-    assert any("anglais" in e for e in errors)
+    assert any(e.code == "language_contamination" for e in errors)
 
 
 def test_check_language_fr_passes_mixed_names():
@@ -75,7 +75,7 @@ def test_check_series_anchor_detects_missing():
     page = {"content": "Celaena est une assassine redoutable."}
     meta = {"series": "Throne of Glass"}
     errors = check_series_anchor(page, meta)
-    assert any("série" in e.lower() for e in errors)
+    assert any(e.code == "series_anchor_missing" for e in errors)
 
 
 def test_check_series_anchor_passes_present():
@@ -88,7 +88,7 @@ def test_check_forbidden_series_detects_keyword():
     page = {"content": "Celaena est un personnage de Kingkiller Chronicle.", "infobox_fields": {}}
     meta = {"forbidden_series": ["Kingkiller Chronicle", "The Selection"]}
     errors = check_forbidden_series(page, meta)
-    assert any("Kingkiller" in e for e in errors)
+    assert any("Kingkiller" in e.message for e in errors)
 
 
 def test_check_forbidden_series_checks_infobox_too():
@@ -114,7 +114,7 @@ def test_check_forbidden_names_detects_in_content():
     page = {"content": "Celaena, aussi connue sous le nom d'Aelin Galathynius.", "infobox_fields": {}}
     meta = {"forbidden_names": ["Aelin Galathynius"]}
     errors = check_forbidden_names(page, meta)
-    assert any("Aelin Galathynius" in e for e in errors)
+    assert any("Aelin Galathynius" in e.message for e in errors)
 
 
 def test_check_forbidden_names_detects_in_infobox():
@@ -182,7 +182,7 @@ def test_check_references_book_title_passes_correct_title():
 def test_check_references_book_title_detects_wrong_title():
     page = {"content": "## Biographie\nTexte.\n\n## Références\n- *La Colonne de feu* de Sarah J. Maas\n"}
     errors = check_references_book_title(page, ["Throne of Glass"])
-    assert any("La Colonne de feu" in e for e in errors)
+    assert any("La Colonne de feu" in e.message for e in errors)
 
 
 def test_check_references_book_title_no_section_passes():
@@ -203,7 +203,7 @@ def test_check_references_book_title_multi_book_passes():
 def test_check_references_book_title_underscore_italics():
     page = {"content": "## Références\n- _Mauvais Titre_\n"}
     errors = check_references_book_title(page, ["Throne of Glass"])
-    assert any("Mauvais Titre" in e for e in errors)
+    assert any("Mauvais Titre" in e.message for e in errors)
 
 
 def test_validate_page_catches_wrong_references_title(tmp_path):
@@ -319,14 +319,14 @@ def test_identity_match_detects_wrong_infobox_name():
     # Real regression from run 15: page 'Verin' with infobox nom='Kaltain'
     page = {"title": "Verin", "infobox_fields": {"nom": "Kaltain"}}
     errors = check_identity_match(page, {"title": "Verin"})
-    assert any("Kaltain" in e for e in errors)
+    assert any(e.code == "identity_infobox_mismatch" and "Kaltain" in e.message for e in errors)
 
 
 def test_identity_match_detects_title_drift():
     # Real regression from run 15: entity 'Philippa' titled 'Philippe'
     page = {"title": "Philippe", "infobox_fields": {}}
     errors = check_identity_match(page, {"title": "Philippa"})
-    assert any("Philippe" in e for e in errors)
+    assert any(e.code == "identity_title_mismatch" and "Philippe" in e.message for e in errors)
 
 
 def test_identity_match_accent_insensitive():
@@ -375,7 +375,7 @@ def test_check_ungrounded_names_flags_invented_name():
             "infobox_fields": {}}
     meta = {"prompt": _SOURCE_PROMPT, "title": "Celaena Sardothien", "language": "fr"}
     errors = check_ungrounded_names(page, meta)
-    assert any("Yrene" in e for e in errors)
+    assert any("Yrene" in e.message for e in errors)
 
 
 def test_check_ungrounded_names_skips_without_prompt():
@@ -454,7 +454,7 @@ def test_check_grounding_llm_flags_unsupported_claims(monkeypatch):
     monkeypatch.setattr("urllib.request.urlopen", lambda req, timeout=120: fake)
     errors = v.check_grounding_llm(_nox_page(), _llm_meta())
     assert len(errors) == 1
-    assert "Nox Owen meurt" in errors[0]
+    assert "Nox Owen meurt" in errors[0].message
 
 
 def test_check_grounding_llm_passes_grounded_page(monkeypatch):
@@ -478,3 +478,42 @@ def test_parse_grounding_response_caps_claims():
     raw = json.dumps({"grounded": False,
                       "ungrounded_claims": [f"claim {i}" for i in range(10)]})
     assert len(_parse_grounding_response(raw)) == 5
+
+
+# --- Error codes / localization (STU-517) ---
+
+
+def test_validate_page_emits_neutral_error_codes():
+    """Identity confusion surfaces stable codes generate_wiki_pages matches on."""
+    page = {"title": "Verin", "importance": "secondary", "entity_type": "PERSON",
+            "infobox_fields": {"nom": "Kaltain"}, "content": "Texte en français correct."}
+    result = validate_page(page, {"title": "Verin", "language": "fr"})
+    assert "identity_infobox_mismatch" in result["error_codes"]
+    # codes and messages stay aligned one-to-one
+    assert len(result["error_codes"]) == len(result["errors"])
+
+
+def test_error_codes_are_language_neutral():
+    """The same defect yields the same codes regardless of output language."""
+    page = {"title": "Philippe", "infobox_fields": {}}
+    fr = check_identity_match(page, {"title": "Philippa"}, "fr")
+    en = check_identity_match(page, {"title": "Philippa"}, "en")
+    assert [e.code for e in fr] == [e.code for e in en] == ["identity_title_mismatch"]
+
+
+def test_messages_follow_output_language():
+    """Feedback errors are localized: French prose for fr, English for en."""
+    page = {"title": "Elena", "infobox_fields": {}}
+    meta = {"title": "Marion"}
+    fr_msg = check_identity_match(page, {**meta, "language": "fr"}, "fr")[0].message
+    en_msg = check_identity_match(page, {**meta, "language": "en"}, "en")[0].message
+    assert "entité demandée" in fr_msg
+    assert "requested entity" in en_msg
+
+
+def test_validate_page_english_book_has_no_french_prose():
+    page = {"title": "Verin", "importance": "secondary", "entity_type": "PERSON",
+            "infobox_fields": {"nom": "Kaltain"}, "content": "Correct English text."}
+    result = validate_page(page, {"title": "Verin", "language": "en"})
+    assert result["errors"]
+    assert all("entité" not in e and "correspond" not in e for e in result["errors"])
