@@ -10,14 +10,14 @@ Input (via Studio context):
   previous_outputs.relationship-extraction:
     { "entities": [{canonical_name, type, aliases, source_ids, relevant}],
       "relationships": [...], "stats": {...}, "narrator": ... }
-  additional_context: YAML string (book.input.yaml) with "thresholds" key
+  additional_context: YAML string (book.input.yaml) with "notability" key
   Files: persons_full.json, places_full.json, orgs_full.json, events_full.json (project root)
 
 Output (stdout):
   {
     "entities": [{ ...same fields..., "total_mentions": int, "chapters_present": int, "importance": str }],
     "relationships": [...passthrough...],
-    "stats": { "principal": int, "secondary": int, "figurant": int, "ignored": int, "thresholds_used": str },
+    "stats": { "principal": int, "secondary": int, "figurant": int, "ignored": int, "strategy_used": str },
     "narrator": ...passthrough...
   }
 
@@ -32,6 +32,7 @@ import os
 import re
 import sys
 from collections import defaultdict
+from collections.abc import Mapping
 from pathlib import Path
 
 import yaml
@@ -138,58 +139,90 @@ def get_total_mentions(
     return total, len(chapters)
 
 
-MIN_ENTITIES_FOR_AUTO = 4
-# Conservative absolute thresholds used when a type has too few entities for
-# percentiles to be meaningful (n < MIN_ENTITIES_FOR_AUTO).  Better to
-# under-score a rare entity than to award "principal" to a 3-mention place.
-_ABSOLUTE_FALLBACK_THRESHOLDS: dict[str, int] = {
+TIERS = ("principal", "secondary", "figurant")
+
+DEFAULT_PERCENTILES: dict[str, float] = {
+    "principal": 0.90,   # top 10%
+    "secondary": 0.60,   # 10-40%
+    "figurant": 0.10,    # 40-90%, below p10 → ignored
+}
+DEFAULT_MIN_ENTITIES_FOR_PERCENTILE = 4
+# Better to under-score a rare entity than to award "principal" to a 3-mention place.
+DEFAULT_FALLBACK_ABSOLUTE: dict[str, int] = {
     "principal": 20,
     "secondary": 10,
     "figurant": 3,
 }
 
 
-def compute_auto_thresholds(
+def _tier_spec(value: int | Mapping[str, int]) -> dict[str, int]:
+    """Normalize one configured tier to {min_mentions, min_chapters}.
+
+    An absent min_chapters means 0, i.e. the chapter gate never binds.
+    """
+    if isinstance(value, Mapping):
+        return {
+            "min_mentions": int(value.get("min_mentions", 0)),
+            "min_chapters": int(value.get("min_chapters", 0)),
+        }
+    return {"min_mentions": int(value), "min_chapters": 0}
+
+
+def _percentile(sorted_counts: list[int], p: float) -> int:
+    idx = max(0, int(len(sorted_counts) * p) - 1)
+    return sorted_counts[min(idx, len(sorted_counts) - 1)]
+
+
+def compute_thresholds(
     mention_counts: list[tuple[str, str, int]],
-) -> dict[str, dict[str, int]]:
-    """Compute percentile-based importance thresholds per entity type.
+    config: dict | None = None,
+) -> dict[str, dict[str, dict[str, int]]]:
+    """Resolve importance thresholds per entity type from the notability config.
 
     Args:
         mention_counts: list of (canonical_name, type, total_mentions)
+        config: book YAML `notability` block; empty/None yields the defaults.
 
     Returns:
-        { "PERSON": { "principal": N, "secondary": M, "figurant": K }, ... }
-        An entity is "principal" if mentions >= principal threshold, etc.
+        { "PERSON": { "principal": {"min_mentions": N, "min_chapters": M}, ... }, ... }
 
-    When a type has fewer than MIN_ENTITIES_FOR_AUTO entities, percentiles are
-    statistically meaningless (e.g. p90 on 2 values == the maximum).  In that
-    case _ABSOLUTE_FALLBACK_THRESHOLDS are used instead so a 3-mention entity
-    can never be promoted to "principal" purely by being alone in its type.
+    Percentile thresholds are relative to the book's own distribution, so tiers
+    are not comparable across tomes; a series pins `strategy: absolute` to get
+    thresholds that mean the same thing in every tome.
     """
+    config = config or {}
+    if not isinstance(config, Mapping):
+        # `thresholds: auto` was the pre-STU-509 spelling; renaming the key in place
+        # yields `notability: auto`, which would otherwise silently take the defaults.
+        raise ValueError(f"notability must be a mapping; omit it for defaults, got {config!r}")
+    percentiles = {**DEFAULT_PERCENTILES, **(config.get("percentiles") or {})}
+    fallback = {**DEFAULT_FALLBACK_ABSOLUTE, **(config.get("fallback_absolute") or {})}
+    per_type = config.get("per_type") or {}
+    default_strategy = config.get("strategy", "percentile")
+    min_entities = int(
+        config.get("min_entities_for_percentile", DEFAULT_MIN_ENTITIES_FOR_PERCENTILE)
+    )
+
     by_type: dict[str, list[int]] = defaultdict(list)
     for _, etype, count in mention_counts:
         by_type[etype].append(count)
 
-    thresholds: dict[str, dict[str, int]] = {}
+    thresholds: dict[str, dict[str, dict[str, int]]] = {}
     for etype, counts in by_type.items():
-        sorted_counts = sorted(counts)
-        n = len(sorted_counts)
+        type_cfg = per_type.get(etype) or {}
+        strategy = type_cfg.get("strategy", default_strategy)
 
-        if n < MIN_ENTITIES_FOR_AUTO:
-            thresholds[etype] = dict(_ABSOLUTE_FALLBACK_THRESHOLDS)
+        if strategy == "absolute":
+            thresholds[etype] = {t: _tier_spec(type_cfg.get(t, fallback[t])) for t in TIERS}
             continue
 
-        def percentile(p: float, _sorted=sorted_counts, _n=n) -> int:
-            if _n == 0:
-                return 0
-            idx = max(0, int(_n * p) - 1)
-            return _sorted[min(idx, _n - 1)]
+        sorted_counts = sorted(counts)
+        if len(sorted_counts) < min_entities:
+            thresholds[etype] = {t: _tier_spec(fallback[t]) for t in TIERS}
+            continue
 
         thresholds[etype] = {
-            "principal": percentile(0.90),   # top 10%
-            "secondary": percentile(0.60),   # 10-40%
-            "figurant": percentile(0.10),    # 40-90%
-            # below p10 → ignored
+            t: _tier_spec(_percentile(sorted_counts, percentiles[t])) for t in TIERS
         }
     return thresholds
 
@@ -197,26 +230,25 @@ def compute_auto_thresholds(
 def assign_importance(
     entity_type: str,
     total_mentions: int,
-    chapters_present: int,  # available for future min_chapters threshold support
-    thresholds: dict[str, dict[str, int]],
+    chapters_present: int,
+    thresholds: dict[str, dict[str, dict[str, int]]],
 ) -> str:
     """Assign importance tier based on thresholds dict.
 
-    thresholds shape: { "PERSON": { "principal": N, "secondary": M, "figurant": K } }
+    thresholds shape: { "PERSON": { "principal": {"min_mentions": N, "min_chapters": M} } }
+    A tier is reached only when both gates pass; failing one falls through to
+    the tier below.
     Falls back to "figurant" for unknown types (conservative: generate a short page).
     """
     t = thresholds.get(entity_type)
     if not t:
         return "figurant"
 
-    if total_mentions >= t["principal"]:
-        return "principal"
-    elif total_mentions >= t["secondary"]:
-        return "secondary"
-    elif total_mentions >= t["figurant"]:
-        return "figurant"
-    else:
-        return "ignored"
+    for tier in TIERS:
+        spec = t[tier]
+        if total_mentions >= spec["min_mentions"] and chapters_present >= spec["min_chapters"]:
+            return tier
+    return "ignored"
 
 
 def classify_entities(
@@ -224,7 +256,7 @@ def classify_entities(
     persons_full: dict,
     places_full: dict,
     orgs_full: dict,
-    thresholds_config: str | dict,
+    notability: dict | None = None,
     events_full: dict | None = None,
     geo_keywords=None,
     event_keywords=None,
@@ -238,7 +270,7 @@ def classify_entities(
     Args:
         entities: resolved entities from entity-resolution / relationship-extraction
         persons_full / places_full / orgs_full / events_full: raw entity registries
-        thresholds_config: "auto" or explicit dict from book.input.yaml
+        notability: book.input.yaml `notability` block; None yields the defaults
 
     Returns:
         Same list with 3 new fields per entity.
@@ -258,11 +290,8 @@ def classify_entities(
         mention_data.append((entity["canonical_name"], entity.get("type", "OTHER"), total, chapters))
 
     # Step 2: compute thresholds
-    if thresholds_config == "auto":
-        threshold_input = [(name, etype, total) for name, etype, total, _ in mention_data]
-        thresholds = compute_auto_thresholds(threshold_input)
-    else:
-        thresholds = _parse_explicit_thresholds(thresholds_config)
+    threshold_input = [(name, etype, total) for name, etype, total, _ in mention_data]
+    thresholds = compute_thresholds(threshold_input, notability)
 
     # Step 3: assign importance
     result = []
@@ -274,37 +303,6 @@ def classify_entities(
         enriched = {**entity, "total_mentions": total, "chapters_present": chapters, "importance": importance}
         result.append(enriched)
     return result
-
-
-def _parse_explicit_thresholds(config: dict) -> dict[str, dict[str, int]]:
-    """Convert book.input.yaml explicit thresholds to internal format."""
-    thresholds: dict[str, dict[str, int]] = {}
-
-    char_cfg = config.get("characters", {})
-    if char_cfg:
-        thresholds["PERSON"] = {
-            "principal": char_cfg.get("principal", {}).get("min_mentions", 50),
-            "secondary": char_cfg.get("secondary", {}).get("min_mentions", 10),
-            "figurant": char_cfg.get("figurant", {}).get("min_mentions", 3),
-        }
-
-    loc_cfg = config.get("locations", {})
-    if loc_cfg:
-        thresholds["PLACE"] = {
-            "principal": loc_cfg.get("major", {}).get("min_mentions", 20),
-            "secondary": loc_cfg.get("minor", {}).get("min_mentions", 3),
-            "figurant": 1,
-        }
-
-    org_cfg = config.get("organizations", {})
-    if org_cfg:
-        thresholds["ORG"] = {
-            "principal": org_cfg.get("major", {}).get("min_mentions", 10),
-            "secondary": org_cfg.get("minor", {}).get("min_mentions", 3),
-            "figurant": 1,
-        }
-
-    return thresholds
 
 
 def _collect_context_sentences(
@@ -725,7 +723,7 @@ def run_studio_mode() -> None:
 
     additional_ctx = payload.get("additional_context", "")
     book_input = yaml.safe_load(additional_ctx) if additional_ctx else {}
-    thresholds_config = book_input.get("thresholds", "auto")
+    notability = book_input.get("notability") or {}
     entity_overrides = book_input.get("entity_overrides", {})
 
     # Language-specific keyword sets from cue_words JSON
@@ -787,7 +785,7 @@ def run_studio_mode() -> None:
         persons_full,
         places_full,
         orgs_full,
-        thresholds_config,
+        notability,
         events_full=events_full,
         geo_keywords=geo_keywords,
         event_keywords=event_keywords,
@@ -805,7 +803,7 @@ def run_studio_mode() -> None:
         "secondary": importance_counts.get("secondary", 0),
         "figurant": importance_counts.get("figurant", 0),
         "ignored": importance_counts.get("ignored", 0),
-        "thresholds_used": "auto" if thresholds_config == "auto" else "explicit",
+        "strategy_used": notability.get("strategy", "percentile"),
     }
 
     output = {
@@ -853,7 +851,7 @@ def run_test_mode() -> None:
                        "first_seen": "ch05",
                        "mentions_by_chapter": {"ch05": ["l1"]}},
     }
-    enriched = classify_entities(entities, persons_full, {}, {}, thresholds_config="auto", events_full={})
+    enriched = classify_entities(entities, persons_full, {}, {}, events_full={})
     for e in enriched:
         print(f"{e['canonical_name']:30s}  mentions={e['total_mentions']:3d}  chapters={e['chapters_present']}  importance={e['importance']}")
 

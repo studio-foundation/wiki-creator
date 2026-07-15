@@ -104,7 +104,7 @@
   "secondary": 2,
   "figurant": 3,
   "ignored": 1,
-  "thresholds_used": "auto"
+  "strategy_used": "percentile"
  },
  "narrator": null
 }
