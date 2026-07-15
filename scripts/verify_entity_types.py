@@ -29,16 +29,10 @@ import yaml
 from wiki_creator import studio_io
 from wiki_creator.llm import ollama
 
-# Base keywords that indicate a genuine geographic entity — skip LLM for these.
-# Language-specific place nouns (Spanish calle/plaza/barrio, …) are NOT hardcoded
-# here: they come from cue_words/<lang>.json `place_cue_words` via
-# load_geographic_keywords (STU-452).
-GEOGRAPHIC_KEYWORDS = frozenset({
-    "rue", "avenue", "boulevard", "place", "quartier", "ville",
-    "église", "eglise", "cathédrale", "cathedrale", "cimetière",
-    "cimetiere", "gare", "marché", "marche", "pont", "tour",
-    "château", "chateau", "palais", "hotel", "hôtel",
-})
+# Keywords that indicate a genuine geographic entity — skip LLM for these. No
+# vocabulary is hardcoded here (STU-518): the place-type nouns live in
+# cue_words/<lang>.json `geographic_keywords`. Unknown language → empty set.
+GEOGRAPHIC_KEYWORDS: frozenset[str] = frozenset()
 
 DEFAULT_MODEL = "mistral:7b-instruct"
 
@@ -49,13 +43,13 @@ TYPE_TO_KEY = {
 
 
 def load_geographic_keywords(language: str | None = None) -> frozenset[str]:
-    """Return GEOGRAPHIC_KEYWORDS extended with `place_cue_words` from cue_words/{lang}.json."""
+    """Return the language's `geographic_keywords` from cue_words/{lang}.json."""
     if not language:
         return GEOGRAPHIC_KEYWORDS
     try:
         from wiki_creator.lang import load_lang_config
         lang_cfg = load_lang_config(language)
-        return GEOGRAPHIC_KEYWORDS | frozenset(w.lower() for w in lang_cfg.get("place_cue_words", []))
+        return frozenset(w.lower() for w in lang_cfg.get("geographic_keywords", []))
     except Exception as exc:
         print(f"Warning: could not load cue_words for language {language!r}: {exc}", file=sys.stderr)
         return GEOGRAPHIC_KEYWORDS

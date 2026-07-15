@@ -14,24 +14,31 @@ from scripts.verify_entity_types import (
 
 
 # --- is_obvious_geographic ---
+# All detection vocabulary now lives in the lang packs (STU-518); pass the
+# book language's geographic_keywords, never a hardcoded default.
+_FR_GEO = load_geographic_keywords("fr")
 
 def test_obvious_geographic_rue():
-    assert is_obvious_geographic("rue de la Paix") is True
+    assert is_obvious_geographic("rue de la Paix", _FR_GEO) is True
 
 def test_obvious_geographic_avenue():
-    assert is_obvious_geographic("avenue Barcelona") is True
+    assert is_obvious_geographic("avenue Barcelona", _FR_GEO) is True
 
 def test_obvious_geographic_eglise():
-    assert is_obvious_geographic("Église Saint-Pierre") is True
+    assert is_obvious_geographic("Église Saint-Pierre", _FR_GEO) is True
 
 def test_obvious_geographic_proper_name_not_geo():
-    assert is_obvious_geographic("Barrido") is False
+    assert is_obvious_geographic("Barrido", _FR_GEO) is False
 
 def test_obvious_geographic_hispanic_name():
-    assert is_obvious_geographic("Marlasca") is False
+    assert is_obvious_geographic("Marlasca", _FR_GEO) is False
 
 def test_obvious_geographic_case_insensitive():
-    assert is_obvious_geographic("Boulevard du Temple") is True
+    assert is_obvious_geographic("Boulevard du Temple", _FR_GEO) is True
+
+def test_obvious_geographic_no_language_is_empty():
+    # No language → no vocabulary → nothing is "obviously geographic".
+    assert is_obvious_geographic("rue de la Paix") is False
 
 
 def test_obvious_geographic_spanish_from_lang_pack():

@@ -18,6 +18,12 @@ from scripts.entity_clustering import (
     load_feminine_titles,
 )
 
+# All title/gender vocabulary lives in the lang packs (STU-518); the "Angel's Game"
+# fixtures below are a French book, so they pass the French sets explicitly.
+_FR_TITLES = load_title_prefixes("fr")
+_FR_MASC = load_masculine_titles("fr")
+_FR_FEM = load_feminine_titles("fr")
+
 
 # --- normalize_for_comparison ---
 
@@ -34,10 +40,10 @@ def test_normalize_strips_leading_trailing_spaces():
 # --- tokenize_name ---
 
 def test_tokenize_strips_monsieur():
-    assert tokenize_name("Monsieur Martín") == ["martín"]
+    assert tokenize_name("Monsieur Martín", _FR_TITLES) == ["martín"]
 
 def test_tokenize_strips_inspecteur():
-    assert tokenize_name("inspecteur Grandes") == ["grandes"]
+    assert tokenize_name("inspecteur Grandes", _FR_TITLES) == ["grandes"]
 
 def test_tokenize_strips_don():
     # Spanish honorifics come from es.json (STU-452), not a hardcoded default.
@@ -48,7 +54,7 @@ def test_tokenize_keeps_full_name():
 
 def test_tokenize_empty_after_strip():
     # If only a title remains, should return empty list
-    assert tokenize_name("M.") == []
+    assert tokenize_name("M.", _FR_TITLES) == []
 
 
 # --- is_single_given_name ---
@@ -72,7 +78,7 @@ def test_cluster_tokens_subset_match():
 
 def test_cluster_tokens_title_stripped():
     # "M. Martín" → ["martín"], "David Martín" → ["david", "martín"] → subset
-    assert should_cluster_tokens("M. Martín", "David Martín") is True
+    assert should_cluster_tokens("M. Martín", "David Martín", _FR_TITLES) is True
 
 def test_cluster_tokens_two_single_names_dont_match():
     # "David" and "Pedro" — both single given names, should NOT match
@@ -118,7 +124,7 @@ def test_build_clusters_martin_family():
         "e004": {"type": "PERSON", "raw_mentions": ["Monsieur Martín"], "first_seen": "ch05"},
         "e005": {"type": "PERSON", "raw_mentions": ["David"], "first_seen": "ch02"},
     }
-    clusters, unclustered = build_clusters(entities)
+    clusters, unclustered = build_clusters(entities, language="fr")
     assert len(clusters) == 1, f"Expected 1 cluster, got {len(clusters)}: {clusters}"
     assert set(clusters[0]["entity_ids"]) == {"e001", "e002", "e003", "e004", "e005"}
 
@@ -131,7 +137,7 @@ def test_build_clusters_sempere_all_in_one():
         "e012": {"type": "PERSON", "raw_mentions": ["M. Sempere"], "first_seen": "ch03"},
         "e013": {"type": "PERSON", "raw_mentions": ["Daniel Sempere"], "first_seen": "ch06"},
     }
-    clusters, unclustered = build_clusters(entities)
+    clusters, unclustered = build_clusters(entities, language="fr")
     assert len(clusters) == 1, f"Expected 1 cluster, got {len(clusters)}"
     assert set(clusters[0]["entity_ids"]) == {"e010", "e011", "e012", "e013"}
 
@@ -169,7 +175,7 @@ def test_build_clusters_transitive_closure():
         "eB": {"type": "PERSON", "raw_mentions": ["Pedro Vidal"], "first_seen": "ch01"},
         "eC": {"type": "PERSON", "raw_mentions": ["Monsieur Vidal"], "first_seen": "ch02"},
     }
-    clusters, unclustered = build_clusters(entities)
+    clusters, unclustered = build_clusters(entities, language="fr")
     assert len(clusters) == 1
     assert set(clusters[0]["entity_ids"]) == {"eA", "eB", "eC"}
 
@@ -181,7 +187,7 @@ def test_build_clusters_canonical_picks_most_complete():
         "e002": {"type": "PERSON", "raw_mentions": ["Pedro Vidal"], "first_seen": "ch01"},
         "e003": {"type": "PERSON", "raw_mentions": ["Monsieur Vidal"], "first_seen": "ch02"},
     }
-    clusters, _ = build_clusters(entities)
+    clusters, _ = build_clusters(entities, language="fr")
     assert clusters[0]["canonical_candidate"] == "Pedro Vidal"
 
 
@@ -244,25 +250,25 @@ def test_build_clusters_place_not_absorbed_into_person_title():
 # --- extract_leading_titles ---
 
 def test_extract_leading_titles_mme():
-    assert "mme" in extract_leading_titles("Mme Vidal")
+    assert "mme" in extract_leading_titles("Mme Vidal", _FR_TITLES)
 
 def test_extract_leading_titles_monsieur():
-    assert "monsieur" in extract_leading_titles("Monsieur Vidal")
+    assert "monsieur" in extract_leading_titles("Monsieur Vidal", _FR_TITLES)
 
 def test_extract_leading_titles_no_title():
-    assert extract_leading_titles("Pedro Vidal") == frozenset()
+    assert extract_leading_titles("Pedro Vidal", _FR_TITLES) == frozenset()
 
 def test_extract_leading_titles_stops_at_first_non_title():
-    assert extract_leading_titles("M. Vidal") == frozenset({"m."})
+    assert extract_leading_titles("M. Vidal", _FR_TITLES) == frozenset({"m."})
 
 
 # --- has_conflicting_gender_title ---
 
 def test_gender_conflict_mme_vs_m():
-    assert has_conflicting_gender_title("Mme Vidal", "M. Vidal") is True
+    assert has_conflicting_gender_title("Mme Vidal", "M. Vidal", _FR_TITLES, _FR_MASC, _FR_FEM) is True
 
 def test_gender_conflict_madame_vs_monsieur():
-    assert has_conflicting_gender_title("Madame Dupont", "Monsieur Dupont") is True
+    assert has_conflicting_gender_title("Madame Dupont", "Monsieur Dupont", _FR_TITLES, _FR_MASC, _FR_FEM) is True
 
 def test_gender_conflict_senora_vs_senor():
     # Spanish gendered honorifics are loaded from es.json (STU-452).
@@ -274,51 +280,53 @@ def test_gender_conflict_senora_vs_senor():
     ) is True
 
 def test_gender_conflict_reversed():
-    assert has_conflicting_gender_title("M. Vidal", "Mme Vidal") is True
+    assert has_conflicting_gender_title("M. Vidal", "Mme Vidal", _FR_TITLES, _FR_MASC, _FR_FEM) is True
 
 def test_no_gender_conflict_same_title():
-    assert has_conflicting_gender_title("Mme Vidal", "Mme Dupont") is False
+    assert has_conflicting_gender_title("Mme Vidal", "Mme Dupont", _FR_TITLES, _FR_MASC, _FR_FEM) is False
 
 def test_no_gender_conflict_no_title():
-    assert has_conflicting_gender_title("Pedro Vidal", "Vidal") is False
+    assert has_conflicting_gender_title("Pedro Vidal", "Vidal", _FR_TITLES, _FR_MASC, _FR_FEM) is False
 
 def test_no_gender_conflict_mme_vs_no_title():
-    assert has_conflicting_gender_title("Mme Vidal", "Pedro Vidal") is False
+    assert has_conflicting_gender_title("Mme Vidal", "Pedro Vidal", _FR_TITLES, _FR_MASC, _FR_FEM) is False
 
 
-# --- Spanish gendered titles loaded from es.json (STU-452) ---
+# --- Gendered titles loaded per-language from the packs (STU-452, STU-518) ---
 
-def test_load_masculine_titles_extends_with_spanish():
+def test_load_masculine_titles_spanish():
     masc = load_masculine_titles("es")
     assert {"don", "señor"} <= masc
-    assert {"m.", "monsieur"} <= masc  # French base kept
 
 
-def test_load_feminine_titles_extends_with_spanish():
+def test_load_feminine_titles_spanish():
     fem = load_feminine_titles("es")
     assert {"doña", "señora", "señorita"} <= fem
-    assert {"mme", "madame"} <= fem  # French base kept
 
 
-def test_load_gender_titles_no_language_is_base():
+def test_load_gender_titles_french():
+    # French book: French honorifics + translated-works Spanish ones (Don/Doña).
+    assert {"m.", "monsieur"} <= load_masculine_titles("fr")
+    assert {"mme", "madame"} <= load_feminine_titles("fr")
+
+
+def test_load_gender_titles_no_language_is_empty():
     from scripts.entity_clustering import MASCULINE_TITLES, FEMININE_TITLES
-    assert load_masculine_titles(None) == MASCULINE_TITLES
-    assert load_feminine_titles(None) == FEMININE_TITLES
-    # Spanish honorifics are not in the hardcoded base anymore.
-    assert "señor" not in MASCULINE_TITLES
-    assert "doña" not in FEMININE_TITLES
+    # No vocabulary is hardcoded in Python anymore (STU-518).
+    assert load_masculine_titles(None) == frozenset() == MASCULINE_TITLES
+    assert load_feminine_titles(None) == frozenset() == FEMININE_TITLES
 
 
 # --- should_cluster with Rule 1 ---
 
 def test_should_cluster_blocks_mme_vs_m():
-    assert should_cluster("Mme Vidal", "M. Vidal") is False
+    assert should_cluster("Mme Vidal", "M. Vidal", _FR_TITLES, _FR_MASC, _FR_FEM) is False
 
 def test_should_cluster_blocks_madame_vs_monsieur():
-    assert should_cluster("Madame Vidal", "Monsieur Vidal") is False
+    assert should_cluster("Madame Vidal", "Monsieur Vidal", _FR_TITLES, _FR_MASC, _FR_FEM) is False
 
 def test_should_cluster_allows_mme_variants():
-    assert should_cluster("Mme Vidal", "Mme de Vidal") is True
+    assert should_cluster("Mme Vidal", "Mme de Vidal", _FR_TITLES, _FR_MASC, _FR_FEM) is True
 
 
 # --- extract_surname_and_firstname ---
@@ -335,7 +343,7 @@ def test_extract_surname_and_firstname_no_first():
 
 def test_extract_surname_and_firstname_with_title():
     # Title stripped before extraction
-    surname, firsts = extract_surname_and_firstname("M. Sagnier")
+    surname, firsts = extract_surname_and_firstname("M. Sagnier", _FR_TITLES)
     assert surname == "sagnier"
     assert firsts == []
 
@@ -355,7 +363,7 @@ def test_build_clusters_sagnier_family_separated():
         "e_s":  {"type": "PERSON", "raw_mentions": ["Sagnier"], "first_seen": "ch04"},
         "e_mlle": {"type": "PERSON", "raw_mentions": ["Mlle Cristina"], "first_seen": "ch13"},
     }
-    clusters, unclustered = build_clusters(entities)
+    clusters, unclustered = build_clusters(entities, language="fr")
 
     def cluster_of(eid):
         for c in clusters:
@@ -383,7 +391,7 @@ def test_build_clusters_mme_vidal_separated_from_m():
         "e_vidal": {"type": "PERSON", "raw_mentions": ["Vidal"], "first_seen": "ch01"},
         "e_don":   {"type": "PERSON", "raw_mentions": ["Don Pedro"], "first_seen": "ch03"},
     }
-    clusters, unclustered = build_clusters(entities, language="es")
+    clusters, unclustered = build_clusters(entities, language="fr")
 
     all_items = list(clusters) + [
         {"cluster_id": f"unc_{eid}", "entity_ids": [eid]}
@@ -410,9 +418,9 @@ def test_build_clusters_pedro_vidal_aliases_stay_together():
         "e_vidal": {"type": "PERSON", "raw_mentions": ["Vidal"], "first_seen": "ch01"},
         "e_m":     {"type": "PERSON", "raw_mentions": ["M. Vidal"], "first_seen": "ch02"},
     }
-    # Spanish "Don" honorific is stripped via es.json (STU-452); French base titles
-    # (M.) are always present, so an es book handles both.
-    clusters, unclustered = build_clusters(entities, language="es")
+    # French translation of a Spanish novel: fr.json carries both French titles
+    # (M.) and the translated-works honorific "Don" (STU-518).
+    clusters, unclustered = build_clusters(entities, language="fr")
     assert len(clusters) == 1, f"Expected 1 cluster, got {len(clusters)}: {[c['entity_ids'] for c in clusters]}"
     assert set(clusters[0]["entity_ids"]) == {"e_pedro", "e_don", "e_vidal", "e_m"}
 
