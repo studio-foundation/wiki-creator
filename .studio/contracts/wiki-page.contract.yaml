@@ -3,9 +3,14 @@ version: 1
 schema:
   required_fields:
     - pages
-# pages: list of generated wiki page objects
-#   title (str)             — canonical_name
-#   importance (str)        — "principal" | "secondary" | "figurant"
-#   entity_type (str)       — "PERSON" | "PLACE" | "ORG"
-#   infobox_fields (object) — key-value pairs for infobox template (no nulls)
-#   content (str)           — Markdown body WITHOUT infobox section
+# Page shape: wiki_creator/types.py::WikiPage.
+# The type vocabulary is wiki_creator/templates/base.yaml#entity_types, read at
+# execution time. Restating it here is how it drifted last time — the enum that
+# stood here claimed PERSON|PLACE|ORG long after EVENT shipped.
+# PYTHONPATH pins each check to the tree being run, not to whichever checkout
+# `pip install -e` points at.
+validators:
+  - name: entity-type-declared
+    command: PYTHONPATH=. python3 scripts/validate_entity_type_declared.py
+  - name: unique-page-title
+    command: PYTHONPATH=. python3 scripts/validate_unique_page_title.py
