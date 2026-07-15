@@ -502,7 +502,7 @@ def _patch_datasets_pickler_py314() -> None:
 
 def _pronouns_for_model(spacy_model: str) -> frozenset:
     """Pronoun cue set for the language inferred from the spaCy model name."""
-    return frozenset(load_lang_config(infer_language(spacy_model)).get("pronouns", []))
+    return frozenset(load_lang_config(infer_language(spacy_model) or "en").get("pronouns", []))
 
 
 _SENT_BOUNDARY = re.compile(r'(?<=[.!?»])\s+(?=[A-ZÀÂÇÈÉÊÎÔÙÛÜ\u2014«])')

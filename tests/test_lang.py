@@ -19,7 +19,13 @@ def test_infer_language_fr():
 
 def test_infer_language_en():
     assert infer_language("en_core_web_lg") == "en"
-    assert infer_language("") == "en"
+
+
+def test_infer_language_non_standard_returns_none():
+    # Local paths and community models carry no language signal (STU-453).
+    assert infer_language("") is None
+    assert infer_language("models/wiki-ner-fr/model-best") is None
+    assert infer_language("fr_solipcysme_lg") is None
 
 
 def test_load_lang_config_en_has_existing_keys():
@@ -138,7 +144,14 @@ def test_book_language_explicit_key_wins():
 def test_book_language_infers_from_spacy_model():
     assert book_language({"spacy_model": "fr_core_news_lg"}) == "fr"
     assert book_language({"spacy_model": "en_core_web_sm"}) == "en"
-    assert book_language({"spacy_model": "models/wiki-ner-en/model-best"}) == "en"
+
+
+def test_book_language_non_inferable_model_requires_explicit_language():
+    # A local-path model with no explicit language fails loudly (STU-453).
+    with pytest.raises(ValueError, match="Cannot infer language"):
+        book_language({"spacy_model": "models/wiki-ner-en/model-best"})
+    # ...unless language is declared.
+    assert book_language({"spacy_model": "models/wiki-ner-en/model-best", "language": "en"}) == "en"
 
 
 def test_book_language_defaults_to_fr():

@@ -35,10 +35,11 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 from wiki_creator import studio_io
 from wiki_creator.chapters import is_frontmatter_chapter
 from wiki_creator.entity_taxonomy import full_registry_files, ner_label_map, ner_types
-from wiki_creator.lang import infer_language as _infer_lang, load_lang_config as _load_lang_config
+from wiki_creator.lang import book_language as _book_language, load_lang_config as _load_lang_config
 from wiki_creator.nlp.loader import (
     ensure_sentencizer as _ensure_sentencizer,
     load_spacy_model_with_fallback as _load_spacy_model_with_fallback,
+    log_pipeline as _log_pipeline,
 )
 from wiki_creator.types import EntityFull
 
@@ -184,30 +185,26 @@ _DEFAULT_CUE_WORDS = {
 }
 
 
-def _infer_cue_words_language(spacy_model: str) -> str:
-    """Infer cue-word language from spaCy model name. Delegates to wiki_creator.lang."""
-    return _infer_lang(spacy_model)
-
-
-def _resolve_cue_words_language(spacy_model: str, override: str | None) -> str:
+def _resolve_cue_words_language(default_language: str, override: str | None) -> str:
     """
     Resolve cue-word language.
-    Accepted override values: auto, en, fr, all.
+    Accepted override values: auto, en, fr, all; anything else (including auto)
+    falls back to *default_language* (the book language resolved from YAML).
     """
     if override is None:
-        return _infer_cue_words_language(spacy_model)
+        return default_language
 
     value = str(override).strip().lower()
     if value in {"auto", ""}:
-        return _infer_cue_words_language(spacy_model)
+        return default_language
     if value in {"en", "fr", "all"}:
         return value
     print(
         f"[WARN] invalid cue_words_language={override!r}; "
-        f"falling back to auto ({_infer_cue_words_language(spacy_model)})",
+        f"falling back to book language ({default_language})",
         file=sys.stderr,
     )
-    return _infer_cue_words_language(spacy_model)
+    return default_language
 
 
 def _load_single_cue_words_file(language: str) -> dict[str, frozenset[str]]:
@@ -707,21 +704,26 @@ def main() -> None:
         json.dump({"error": "missing field: chapters"}, sys.stdout)
         sys.exit(1)
 
+    # Resolves the book language explicit-or-fail: a non-inferable model (local
+    # path, community model) without an explicit `language:` raises here (STU-453).
+    book_lang = _book_language(input_data)
+
     import spacy
     try:
-        nlp, loaded_model = _load_spacy_model_with_fallback(spacy.load, spacy_model)
+        nlp, loaded_model = _load_spacy_model_with_fallback(spacy.load, spacy_model, book_lang)
     except OSError as e:
         json.dump({"error": str(e)}, sys.stdout, ensure_ascii=False)
         sys.exit(1)
     if loaded_model != spacy_model:
         print(f"[WARN] spaCy model '{spacy_model}' not available; using '{loaded_model}'", file=sys.stderr)
     _ensure_sentencizer(nlp)
+    _log_pipeline(nlp, loaded_model)
     _audit_ner_labels(nlp)
     _warn_if_no_pos_tagger(nlp)
 
     try:
         cue_words_language = _resolve_cue_words_language(
-            loaded_model,
+            book_lang,
             input_data.get("cue_words_language", "auto"),
         )
         cue_words = _load_cue_words(cue_words_language)

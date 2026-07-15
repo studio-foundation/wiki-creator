@@ -121,6 +121,23 @@ Inside `wiki-resolution`, order matters:
 
 ## Gotchas
 
+- Non-standard spaCy models (STU-453): `lang.infer_language` returns `fr`/`en`
+  only for stock-model name prefixes (`fr_core_news_`/`fr_dep_news_`/
+  `en_core_web_`) and `None` for anything else — a local path
+  (`models/wiki-ner-en/model-best`) or a community model (`fr_solipcysme_lg`).
+  `lang.book_language` no longer defaults a non-inferable model to `en`: it
+  **raises** unless the book YAML declares a top-level `language:` (throne-of-glass
+  now sets `language: en`). It's validated at stage 1 (`parse_epub` calls
+  `book_language`), so a misconfig fails at config, not run 16. `entity_extraction`
+  resolves cue-words via `book_language` (not model-name inference), so English
+  cue-words can't silently run on French text. `nlp/loader.spacy_model_candidates`
+  takes an optional `language` to append generic per-language stock fallbacks
+  (`fr_core_news_lg`/`sm`, `en_core_web_sm`) for non-standard requested models;
+  `load_spacy_model`/`load_spacy_model_with_fallback` thread it. `nlp/loader.log_pipeline`
+  logs components + NER labels at load and WARNs on a missing/empty NER
+  (half-disconnected model, STU-439), complementing `entity_extraction`'s
+  KEPT_LABELS audit.
+
 - Name-collision policy (STU-506): `registry.py::_merge_duplicate_canonicals`
   used to fold two entities on `canonical_name.casefold()` alone — a PERSON and
   a PLACE homonym became one false entity. Policy is now declared in the book
