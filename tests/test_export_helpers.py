@@ -166,6 +166,26 @@ def test_main_page_content_contains_title():
     assert "Category:Lieux" in content
 
 
+def test_main_page_content_localizes_chrome_by_lang():
+    pages = [
+        {"title": "David", "importance": "principal", "entity_type": "PERSON"},
+        {"title": "Barcelona", "importance": "principal", "entity_type": "PLACE"},
+    ]
+    labels = {"persons": "Characters", "locations": "Locations", "organizations": "Organizations"}
+    en = main_page_content("The Angel's Game", "Zafón", pages, labels, lang="en")
+    assert "== Main characters ==" in en
+    assert "== Important locations ==" in en
+    assert "== Navigation ==" in en
+    assert "[[:Category:Characters|All characters]]" in en
+    assert "== Statistics ==" in en
+    assert "wiki pages" in en
+    # category targets stay on the export.categories axis (labels), not localized here
+    assert "Category:Characters" in en
+    # French default preserved when lang is unset
+    fr = main_page_content("x", "y", pages, labels)
+    assert "== Personnages principaux ==" in fr
+
+
 def test_infobox_template_event():
     content = infobox_template_content("EVENT")
     assert "{{{name}}}" in content

@@ -32,6 +32,7 @@ import yaml
 from wiki_creator.grounding import find_ungrounded_names
 from wiki_creator.lang import load_lang_config
 from wiki_creator.llm import ollama
+from wiki_creator.page_templates import language_name
 from wiki_creator.registry import normalize_name as _normalize_name
 
 
@@ -302,18 +303,21 @@ def validate_page(page: dict, meta: dict) -> dict:
     return {
         "valid": len(errors) == 0,
         "errors": errors,
-        "feedback": build_feedback(errors) if errors else "",
+        "feedback": build_feedback(errors, meta.get("language", "fr")) if errors else "",
     }
 
 
-def build_feedback(errors: list[str]) -> str:
+def build_feedback(errors: list[str], lang: str = "fr") -> str:
+    """Retry feedback for the writer. Scaffolding stays English (STU-510); only
+    the write-in-language directive follows ``lang`` (STU-514)."""
     lines = "\n".join(f"- {e}" for e in errors)
+    lang_name = language_name(lang)
     return (
-        "La page précédente contient les erreurs suivantes. "
-        "Régénère-la en les corrigeant toutes :\n"
+        "The previous page contained the following errors. "
+        "Regenerate it, fixing all of them:\n"
         f"{lines}\n\n"
-        "Rappels : écris entièrement en français, appuie chaque affirmation "
-        "sur les extraits fournis, ne mentionne aucune série sauf celle du livre."
+        f"Reminders: write entirely in {lang_name}, ground every statement in the "
+        "provided excerpts, and mention no series other than the book's."
     )
 
 

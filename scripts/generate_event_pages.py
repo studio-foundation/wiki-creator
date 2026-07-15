@@ -43,15 +43,28 @@ from wiki_creator.event_pages import (
     event_title,
     select_events,
 )
-from wiki_creator.lang import book_language
+from wiki_creator.page_templates import (
+    chrome_label,
+    load_base_template,
+    output_language,
+    slot_label,
+)
 from wiki_creator.paths import book_paths_from_yaml
 
-_STUB_CONTENT_DRY = "## Déroulement\n\n*Page d'événement non générée (dry-run).*"
 
-# Mirrors generate_book_synopsis: the writer is told not to author a Références
+def _event_stub(lang: str, kind: str) -> str:
+    """Reader-facing stub body under the localized ``course`` heading (STU-514)."""
+    heading = slot_label("course", lang)
+    entry = (load_base_template().get("stubs") or {}).get(kind) or {}
+    message = entry.get(lang) or entry.get("fr") or ""
+    return f"## {heading}\n\n*{message}*"
+
+
+# Mirrors generate_book_synopsis: the writer is told not to author a references
 # section (it is appended deterministically), but the instruction can be
-# ignored — strip it before appending ours.
-_REFERENCES_SECTION_RE = re.compile(r"(?m)^## Références\s*\n(?:(?!^##\s).*\n?)*")
+# ignored — strip it before appending ours. Heading follows the output language.
+def _references_section_re(lang: str) -> "re.Pattern[str]":
+    return re.compile(rf"(?m)^## {re.escape(slot_label('references', lang))}\s*\n(?:(?!^##\s).*\n?)*")
 
 
 def _event_entity(title: str) -> dict:
@@ -74,24 +87,24 @@ def _base_page(title: str, event: dict, content: str) -> dict:
     }
 
 
-def _stub_page(title: str, event: dict, *, failed: bool = False) -> dict:
+def _stub_page(title: str, event: dict, lang: str, *, failed: bool = False) -> dict:
     page = _base_page(
         title,
         event,
-        "## Déroulement\n\n*Échec technique de la génération.*" if failed else _STUB_CONTENT_DRY,
+        _event_stub(lang, "event_failed" if failed else "event_dry_run"),
     )
     if failed:
         page["_failed"] = True
     return page
 
 
-def _finalize_page(result: dict, title: str, event: dict, book_title: str) -> dict:
+def _finalize_page(result: dict, title: str, event: dict, book_title: str, lang: str) -> dict:
     """Reduce a wiki-page-item result to the event-page contract, drop any
-    authored Références section, append the deterministic one, and attach the
+    authored references section, append the deterministic one, and attach the
     deterministic infobox."""
     content = str(result.get("content", "") or "")
-    content = _REFERENCES_SECTION_RE.sub("", content).rstrip("\n")
-    return _base_page(title, event, content + "\n\n" + _references_block(book_title))
+    content = _references_section_re(lang).sub("", content).rstrip("\n")
+    return _base_page(title, event, content + "\n\n" + _references_block(book_title, lang))
 
 
 def generate_event_page(
@@ -107,11 +120,12 @@ def generate_event_page(
     timeout: int = 120,
     dry_run: bool = False,
 ) -> dict:
-    """One event page via the wiki-page-item pipeline."""
+    """One event page via the wiki-page-item pipeline. ``language`` is the wiki's
+    output language, driving prose, headings and stubs (STU-514)."""
     if dry_run:
-        return _stub_page(title, event)
+        return _stub_page(title, event, language)
 
-    prompt = build_event_prompt(event, title, book_title, forbidden_names, all_events)
+    prompt = build_event_prompt(event, title, book_title, forbidden_names, all_events, lang=language)
     item_input = {
         "title": title,
         "importance": EVENT_IMPORTANCE,
@@ -127,21 +141,21 @@ def generate_event_page(
     result = _execute_wiki_page_item(item_input, entity, timeout)
     if result.get("error"):
         print(f"[event-pages] '{title}' generation failed: {result['error']}", file=sys.stderr)
-        return _stub_page(title, event, failed=True)
+        return _stub_page(title, event, language, failed=True)
 
     if forbidden_names and _check_forbidden_names(result, forbidden_names):
         print(f"[event-pages] '{title}' spoiler detected, retrying…", file=sys.stderr)
         result = _execute_wiki_page_item(item_input, entity, timeout)
         if result.get("error"):
-            return _stub_page(title, event, failed=True)
+            return _stub_page(title, event, language, failed=True)
         hits = _check_forbidden_names(result, forbidden_names)
         if hits:
             print(f"[event-pages] '{title}' spoiler persists ({', '.join(hits)}), rejecting", file=sys.stderr)
-            page = _stub_page(title, event, failed=True)
+            page = _stub_page(title, event, language, failed=True)
             page["_spoiler_rejected"] = True
             return page
 
-    return _finalize_page(result, title, event, book_title)
+    return _finalize_page(result, title, event, book_title, language)
 
 
 def _event_pages_config(book_cfg: dict) -> tuple[float, int, int]:
@@ -203,10 +217,11 @@ def run_for_processing(
             continue
         title = base  # keep filenames/wikilinks unique
         if title in seen_titles:
-            title = f"{base} (chapitre {event.get('chapter', '?')})"
+            chapter_tag = chrome_label("chapter_tag", language).format(chapter=event.get("chapter", "?"))
+            title = f"{base} ({chapter_tag})"
             suffix = 2
             while title in seen_titles:
-                title = f"{base} (chapitre {event.get('chapter', '?')}, #{suffix})"
+                title = f"{base} ({chapter_tag}, #{suffix})"
                 suffix += 1
         seen_titles.add(title)
         print(f"[event-pages] generating '{title}' (salience {event.get('salience')})", file=sys.stderr)
@@ -252,7 +267,7 @@ def main() -> None:
     run_for_processing(
         book_paths.processing,
         book_cfg=book_cfg,
-        language=book_language(book_cfg),
+        language=output_language(book_cfg),
         timeout=args.timeout,
         dry_run=args.dry_run,
     )

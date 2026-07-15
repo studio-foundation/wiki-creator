@@ -42,6 +42,7 @@ from wiki_creator.collation import (
 )
 from wiki_creator.facts import extract_titles
 from wiki_creator.lang import book_language, load_lang_config
+from wiki_creator.page_templates import output_language
 from wiki_creator.confidence import relationship_confidence
 from wiki_creator.chapters import chapter_number
 from wiki_creator.provenance import relation_revealed_at
@@ -454,7 +455,8 @@ def write_collation_pages(entities: list[dict], book_cfg: dict, paths: "BookPath
     `dedicated`.
     """
     path = paths.processing / "collation_pages.json"
-    pages = collective_pages(entities, collation_labels(book_cfg.get("export", {})))
+    lang = output_language(book_cfg)
+    pages = collective_pages(entities, collation_labels(book_cfg.get("export", {}), lang), lang)
     if not pages:
         path.unlink(missing_ok=True)
         return []

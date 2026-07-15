@@ -242,6 +242,9 @@ labels:
   narrative_role: {en: "Narrative role", fr: "Rôle dans le récit"}
   events:        {en: Events,      fr: Événements}
   references:    {en: References,  fr: Références}
+  # STU-514: event-page section heading (Déroulement), localized like every
+  # other output-anchoring section title.
+  course:        {en: "Course of events", fr: "Déroulement"}
 # STU-510: language display names for the (English) prompt scaffolding, and the
 # per-tier prose length guide — previously hardcoded in generate_wiki_pages.py.
 language_names:
@@ -253,11 +256,39 @@ chrome:
   reveal:    {fr: "Chapitre {chapter} — révéler", en: "Chapter {chapter} — reveal"}
   collapse:  {fr: "Masquer", en: "Hide"}
   evolution: {fr: "Évolution :", en: "Evolution:"}
+  # STU-514: Main_Page navigation, showcase headings, and statistics. Reader-facing
+  # chrome — localized by output_language, was hardcoded French in export_helpers.py.
+  main_characters:    {fr: "Personnages principaux", en: "Main characters"}
+  main_locations:     {fr: "Lieux importants", en: "Important locations"}
+  navigation:         {fr: "Navigation", en: "Navigation"}
+  statistics:         {fr: "Statistiques", en: "Statistics"}
+  synopsis:           {fr: "Synopsis", en: "Synopsis"}
+  synopsis_link:      {fr: "Synopsis du livre", en: "Book synopsis"}
+  all_characters:     {fr: "Tous les personnages", en: "All characters"}
+  all_locations:      {fr: "Tous les lieux", en: "All locations"}
+  all_organizations:  {fr: "Toutes les organisations", en: "All organizations"}
+  stat_pages:         {fr: "pages wiki", en: "wiki pages"}
+  stat_characters:    {fr: "personnages", en: "characters"}
+  stat_locations:     {fr: "lieux", en: "locations"}
+  stat_organizations: {fr: "organisations", en: "organizations"}
+  # STU-514: collective-page (collation) chrome — titles and per-entry lines.
+  minor_persons:       {fr: "Personnages mineurs", en: "Minor characters"}
+  minor_locations:     {fr: "Lieux mineurs", en: "Minor locations"}
+  minor_organizations: {fr: "Organisations mineures", en: "Minor organizations"}
+  minor_other:         {fr: "Autres entités mineures", en: "Other minor entities"}
+  collation_aliases:   {fr: "Alias : {aliases}", en: "Aliases: {aliases}"}
+  collation_mentions:  {fr: "Mentionné {mentions} fois dans {chapters} chapitre(s).", en: "Mentioned {mentions} times in {chapters} chapter(s)."}
+  # STU-514: event-page title disambiguation suffix (chapter tag on colliding titles).
+  chapter_tag:         {fr: "chapitre {chapter}", en: "chapter {chapter}"}
 # STU-516: reader-facing stub-page bodies, rendered as-is in the wiki when an
 # entity's page cannot be generated. Localized like the rest of the output.
 stubs:
   failed:       {fr: "Échec technique de la génération pour cette entité.", en: "Technical failure while generating this entity."}
   insufficient: {fr: "Informations insuffisantes disponibles pour cette entité.", en: "Insufficient information available for this entity."}
+  # STU-514: event-page stubs (dry-run / generation failure), rendered under the
+  # localized "course" heading.
+  event_failed:  {fr: "Échec technique de la génération.", en: "Technical failure while generating this page."}
+  event_dry_run: {fr: "Page d'événement non générée (dry-run).", en: "Event page not generated (dry run)."}
 length_by_tier:
   principal: "4 to 6 paragraphs total across all sections."
   secondary: "1 to 2 paragraphs for the main section. Keep all other sections brief."

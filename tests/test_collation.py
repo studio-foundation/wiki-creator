@@ -121,3 +121,17 @@ def test_collective_pages_titles_come_from_export_labels():
 
 def test_collective_pages_empty_input_yields_nothing():
     assert collective_pages([], collation_labels({})) == []
+
+
+def test_collective_pages_localize_titles_and_entries_by_lang():
+    entities = [_entity("Cain", total_mentions=4, chapters_present=2, aliases=["The Champion"])]
+    pages = collective_pages(entities, collation_labels({}, "en"), "en")
+    assert [p["title"] for p in pages] == ["Minor characters"]
+    content = pages[0]["content"]
+    assert "*Aliases: The Champion*" in content
+    assert "Mentioned 4 times in 2 chapter(s)." in content
+    # export.categories.labels override still wins over the localized default
+    over = collective_pages(
+        entities, collation_labels({"categories": {"labels": {"minor_persons": "Extras"}}}, "en"), "en"
+    )
+    assert over[0]["title"] == "Extras"
