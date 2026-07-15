@@ -38,6 +38,12 @@ dev = [
 coref = [
     "fastcoref>=2.1",
 ]
+# GLiNER zero-shot NER (scripts/entity_extraction.py, opt-in per book via
+# `ner.backend: gliner`). An extra rather than a core dep for the same reason as
+# coref: it pulls torch (STU-521).
+gliner = [
+    "gliner>=0.2.13",
+]
 embeddings = ["sentence-transformers>=3"]  # numpy comes transitively via spaCy
 
 [project.urls]
