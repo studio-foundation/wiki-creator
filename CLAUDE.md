@@ -125,6 +125,22 @@ Inside `wiki-resolution`, order matters:
 - `generate_wiki_pages.py` must run after `wiki-preparation`; it consumes `wiki_inputs/<slug>/batch_*.json`.
 - `generate_book_synopsis.py` (SP4) consumes `events.json` (SP0) and writes `processing_output/<slug>/book_synopsis.json`; `load_wiki_pages.py` appends that page to the export flow and `wiki_export.py` renders it at the wiki root (`Synopsis.wiki`, no infobox/categories, `entity_type: SYNOPSIS`). If `events.json` is absent, the stage warns and skips — it never fails the run.
 - `generate_event_pages.py` (SP3/STU-481, STU-502) consumes `events.json` (SP0) and writes `processing_output/<slug>/event_pages.json` — one `EVENT` page per event with `salience >= threshold` (default `0.7`, raised from `0.6` in STU-502 to drop the low-value long tail) that has ≥1 participant. Title and infobox `{participants, lieu, chapitre, issue}` are built deterministically from the event; the writer LLM only authors the `## Déroulement` prose (grounded, spoiler-safe via forbidden_names). To stop the writer paraphrasing the title (STU-502), `build_event_prompt` injects the `DEFAULT_CONTEXT_WINDOW` (=3) neighbouring events before/after in narrative order as **read-only** NARRATIVE CONTEXT — background to situate the event (what leads up to it / what it brings about), never facts to attribute to it; `neighbor_context` windows the full events list, so context spans below-threshold neighbours too. `load_wiki_pages.py` appends the pages; `wiki_export.py` renders each under `output/wiki/events/` with `Infobox_event` + `[[Category:Événements]]`. Thresholds are configurable via book YAML `generation.event_pages` (`salience_threshold`, `max_pages`, `max_tokens`). Absent/empty `events.json` warns and skips — never fails the run. Titles are the full event description (grounded, unique) — LLM-named events are a possible fast-follow.
+- Notability tiers (STU-509): the book YAML `notability` block is the single source
+  for importance thresholds — it replaced `thresholds: auto`, whose explicit form
+  (`characters`/`locations`/`organizations`, keyed by domain nouns) was deleted. That
+  form was dead (every book said `auto`; the explicit shape only ever existed as a YAML
+  comment) and was the root of two defects: it had no key for `EVENT`, so switching to
+  explicit thresholds dropped every event to `figurant`, and its documented `min_chapters`
+  was never parsed. `notability` is keyed by real entity types, so `per_type.EVENT` is
+  reachable by construction. `compute_thresholds` resolves `{type: {tier: {min_mentions,
+  min_chapters}}}`; a tier needs BOTH gates, and failing one falls through to the tier
+  below (`min_chapters` absent → 0 → never binds). `strategy: percentile` (default) cuts
+  thresholds from the book's own distribution, so tiers are NOT comparable across tomes —
+  a series wanting stable tiers pins `strategy: absolute`. Below
+  `min_entities_for_percentile` (default 4) entities of a type, percentiles are
+  meaningless and `fallback_absolute` is used instead. Defaults reproduce the old
+  percentile behavior exactly; the only golden change was the stat rename
+  `thresholds_used: auto` → `strategy_used: percentile`.
 - `classify_relationships.py` (pre-step to `wiki-preparation`) folds the co-occurrence graph onto canonical entities via `registry.alias_table()` before classifying (STU-435). The graph is built at mention level (pre alias-resolution), so surface forms of one entity (`Chaol Westfall` / `Captain Westfall`) are collapsed, counts summed, `chapters`/`sample_contexts` unioned — one classification per canonical pair. Requires `registry.json` (written by `write-registry`); degrades to unfolded edges if absent. Fold logic is pure in `wiki_creator/relationship_fold.py`.
 - Mention offsets (STU-489): extraction persists `mention_spans_by_chapter` in
   `*_full.json` — one `{surface, start, end}` per occurrence (uncapped, unlike the

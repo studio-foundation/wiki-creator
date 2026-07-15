@@ -15,7 +15,7 @@ from scripts.entity_classification import (
     _normalize_entity_type,
     get_total_mentions,
     build_surface_index,
-    compute_auto_thresholds,
+    compute_thresholds,
     assign_importance,
     classify_entities,
 )
@@ -201,7 +201,7 @@ def test_classify_entities_promotes_undercounted_central_character():
     entities = [
         {"canonical_name": "Nehemia", "type": "PERSON", "source_ids": ["entity_048"],
          "aliases": [], "relevant": True},
-        # Filler so percentile thresholds have >= MIN_ENTITIES_FOR_AUTO entities.
+        # Filler so percentile thresholds have >= min_entities_for_percentile entities.
         {"canonical_name": "Extra1", "type": "PERSON", "source_ids": ["e1"], "relevant": True},
         {"canonical_name": "Extra2", "type": "PERSON", "source_ids": ["e2"], "relevant": True},
         {"canonical_name": "Extra3", "type": "PERSON", "source_ids": ["e3"], "relevant": True},
@@ -212,15 +212,15 @@ def test_classify_entities_promotes_undercounted_central_character():
         "e2": {"type": "PERSON", "raw_mentions": ["Extra2"], "mentions_by_chapter": {"C01": ["b"]}},
         "e3": {"type": "PERSON", "raw_mentions": ["Extra3"], "mentions_by_chapter": {"C01": ["c"]}},
     }))
-    result = classify_entities(entities, persons, {}, {}, "auto")
+    result = classify_entities(entities, persons, {}, {})
     nehemia = next(e for e in result if e["canonical_name"] == "Nehemia")
     assert nehemia["total_mentions"] == 5
     assert nehemia["importance"] != "figurant"
 
 
-# --- compute_auto_thresholds ---
+# --- compute_thresholds ---
 
-def test_compute_auto_thresholds_returns_thresholds_per_type():
+def test_compute_thresholds_returns_thresholds_per_type():
     mention_counts = [
         ("A", "PERSON", 100),
         ("B", "PERSON", 50),
@@ -233,66 +233,66 @@ def test_compute_auto_thresholds_returns_thresholds_per_type():
         ("I", "PERSON", 0),
         ("J", "PERSON", 0),
     ]
-    thresholds = compute_auto_thresholds(mention_counts)
+    thresholds = compute_thresholds(mention_counts)
     assert "PERSON" in thresholds
     t = thresholds["PERSON"]
-    assert t["principal"] > t["secondary"] > t["figurant"] >= 0
+    assert t["principal"]["min_mentions"] > t["secondary"]["min_mentions"] > t["figurant"]["min_mentions"] >= 0
 
 
-def test_compute_auto_thresholds_single_entity():
+def test_compute_thresholds_single_entity():
     mention_counts = [("A", "PERSON", 10)]
-    thresholds = compute_auto_thresholds(mention_counts)
+    thresholds = compute_thresholds(mention_counts)
     # Should not crash with a single entity
     assert "PERSON" in thresholds
 
 
-def test_compute_auto_thresholds_few_entities_uses_absolute_floor():
+def test_compute_thresholds_few_entities_uses_absolute_floor():
     # n=2 PLACEs: percentiles collapse → Calaculla (3 mentions) must NOT be "principal"
     mention_counts = [
         ("White Fang Mountains", "PLACE", 4),
         ("Calaculla", "PLACE", 3),
     ]
-    thresholds = compute_auto_thresholds(mention_counts)
+    thresholds = compute_thresholds(mention_counts)
     t = thresholds["PLACE"]
     # With only 2 entities, principal threshold must require substantially more than 3 mentions
-    assert t["principal"] > 3, (
-        f"principal threshold {t['principal']} too low: Calaculla (3 mentions) "
+    assert t["principal"]["min_mentions"] > 3, (
+        f"principal threshold {t['principal']['min_mentions']} too low: Calaculla (3 mentions) "
         "would be assigned 'principal'"
     )
 
 
-def test_compute_auto_thresholds_single_entity_not_principal_with_few_mentions():
+def test_compute_thresholds_single_entity_not_principal_with_few_mentions():
     # A single entity with few mentions should not become "principal"
     mention_counts = [("Calaculla", "PLACE", 3)]
-    thresholds = compute_auto_thresholds(mention_counts)
+    thresholds = compute_thresholds(mention_counts)
     importance = assign_importance("PLACE", 3, 1, thresholds)
     assert importance != "principal", (
         f"3-mention entity should not be 'principal', got {importance!r}"
     )
 
 
-def test_compute_auto_thresholds_three_entities_conservative():
-    # n=3: still below MIN_ENTITIES_FOR_AUTO — principal must not be trivially reachable
+def test_compute_thresholds_three_entities_conservative():
+    # n=3: still below min_entities_for_percentile — principal must not be trivially reachable
     mention_counts = [
         ("A", "PLACE", 5),
         ("B", "PLACE", 4),
         ("C", "PLACE", 3),
     ]
-    thresholds = compute_auto_thresholds(mention_counts)
+    thresholds = compute_thresholds(mention_counts)
     t = thresholds["PLACE"]
-    assert t["principal"] > 5, (
-        f"principal threshold {t['principal']} is ≤ 5: an entity with only 5 mentions "
-        "should not reach 'principal' when n < MIN_ENTITIES_FOR_AUTO"
+    assert t["principal"]["min_mentions"] > 5, (
+        f"principal threshold {t['principal']['min_mentions']} is ≤ 5: an entity with only 5 mentions "
+        "should not reach 'principal' when n < min_entities_for_percentile"
     )
 
 
-def test_compute_auto_thresholds_separate_types():
+def test_compute_thresholds_separate_types():
     mention_counts = [
         ("Paris", "PLACE", 30),
         ("Lyon", "PLACE", 5),
         ("Acme", "ORG", 15),
     ]
-    thresholds = compute_auto_thresholds(mention_counts)
+    thresholds = compute_thresholds(mention_counts)
     assert "PLACE" in thresholds
     assert "ORG" in thresholds
     assert "PERSON" not in thresholds
@@ -301,25 +301,41 @@ def test_compute_auto_thresholds_separate_types():
 # --- assign_importance (auto thresholds) ---
 
 def test_assign_importance_principal():
-    thresholds = {"PERSON": {"principal": 90, "secondary": 40, "figurant": 10}}
+    thresholds = {"PERSON": {
+        "principal": {"min_mentions": 90, "min_chapters": 0},
+        "secondary": {"min_mentions": 40, "min_chapters": 0},
+        "figurant": {"min_mentions": 10, "min_chapters": 0},
+    }}
     importance = assign_importance("PERSON", 100, 15, thresholds)
     assert importance == "principal"
 
 
 def test_assign_importance_secondary():
-    thresholds = {"PERSON": {"principal": 90, "secondary": 40, "figurant": 10}}
+    thresholds = {"PERSON": {
+        "principal": {"min_mentions": 90, "min_chapters": 0},
+        "secondary": {"min_mentions": 40, "min_chapters": 0},
+        "figurant": {"min_mentions": 10, "min_chapters": 0},
+    }}
     importance = assign_importance("PERSON", 50, 5, thresholds)
     assert importance == "secondary"
 
 
 def test_assign_importance_figurant():
-    thresholds = {"PERSON": {"principal": 90, "secondary": 40, "figurant": 10}}
+    thresholds = {"PERSON": {
+        "principal": {"min_mentions": 90, "min_chapters": 0},
+        "secondary": {"min_mentions": 40, "min_chapters": 0},
+        "figurant": {"min_mentions": 10, "min_chapters": 0},
+    }}
     importance = assign_importance("PERSON", 15, 2, thresholds)
     assert importance == "figurant"
 
 
 def test_assign_importance_ignored():
-    thresholds = {"PERSON": {"principal": 90, "secondary": 40, "figurant": 10}}
+    thresholds = {"PERSON": {
+        "principal": {"min_mentions": 90, "min_chapters": 0},
+        "secondary": {"min_mentions": 40, "min_chapters": 0},
+        "figurant": {"min_mentions": 10, "min_chapters": 0},
+    }}
     importance = assign_importance("PERSON", 3, 1, thresholds)
     assert importance == "ignored"
 
@@ -342,7 +358,6 @@ def test_classify_entities_enriches_with_importance():
         PERSONS_FULL["persons_full"],
         PLACES_FULL["places_full"],
         ORGS_FULL["orgs_full"],
-        thresholds_config="auto",
     )
     assert len(enriched) == 2
     martín = next(e for e in enriched if e["canonical_name"] == "David Martín")
@@ -360,7 +375,7 @@ def test_classify_entities_skips_irrelevant():
     entities = [
         {"canonical_name": "Artefact", "type": "PERSON", "source_ids": [], "relevant": False},
     ]
-    enriched = classify_entities(entities, {}, {}, {}, thresholds_config="auto")
+    enriched = classify_entities(entities, {}, {}, {})
     # Irrelevant entities are still in output but with importance = "ignored"
     assert enriched[0]["importance"] == "ignored"
 
@@ -371,7 +386,7 @@ def test_classify_entities_passthrough_extra_fields():
          "relevant": True, "aliases": ["Martín"]},
     ]
     enriched = classify_entities(
-        entities, PERSONS_FULL["persons_full"], {}, {}, thresholds_config="auto"
+        entities, PERSONS_FULL["persons_full"], {}, {}
     )
     assert enriched[0]["aliases"] == ["Martín"]
 
@@ -463,7 +478,7 @@ def test_classify_entities_accepts_geo_keywords_param():
     """classify_entities should accept optional geo_keywords without error."""
     from scripts.entity_classification import classify_entities
     entities = [{"canonical_name": "Arendelle", "type": "PLACE", "relevant": True, "aliases": [], "source_ids": []}]
-    result = classify_entities(entities, {}, {}, {}, "auto", geo_keywords=frozenset({"glacier"}))
+    result = classify_entities(entities, {}, {}, {}, geo_keywords=frozenset({"glacier"}))
     assert isinstance(result, list)
 
 
@@ -471,7 +486,7 @@ def test_classify_entities_accepts_concept_keywords_param():
     """classify_entities should return OTHER for entities matching concept_keywords."""
     from scripts.entity_classification import classify_entities
     entities = [{"canonical_name": "wyrdmark", "type": "OTHER", "relevant": True, "aliases": [], "source_ids": []}]
-    result = classify_entities(entities, {}, {}, {}, "auto", concept_keywords=frozenset({"wyrdmark"}))
+    result = classify_entities(entities, {}, {}, {}, concept_keywords=frozenset({"wyrdmark"}))
     assert result[0]["type"] == "OTHER"
 
 
@@ -741,7 +756,7 @@ def test_is_role_entity_name_empty_role_words_returns_false():
 
 def test_classify_entities_empty_concept_keywords_does_not_crash():
     entities = [{"canonical_name": "Magic", "type": "OTHER", "source_ids": [], "relevant": True}]
-    result = classify_entities(entities, {}, {}, {}, "auto", concept_keywords=frozenset())
+    result = classify_entities(entities, {}, {}, {}, concept_keywords=frozenset())
     assert result[0]["importance"] in ("principal", "secondary", "figurant", "ignored")
 
 
@@ -1080,3 +1095,117 @@ def test_unmerged_entity_omits_alias_resolution(tmp_path):
     studio_io.save_artifact(path, ClassifiedBundle(entities=[entity]), ClassifiedBundle)
     loaded = studio_io.load_artifact(path, ClassifiedBundle)
     assert loaded.entities[0].alias_resolution is None
+
+
+# --- notability config (STU-509) ---
+
+_MENTIONS = [(f"P{i}", "PERSON", n) for i, n in enumerate([100, 50, 20, 10, 5, 2, 1, 1, 0, 0])]
+
+
+def test_percentiles_are_configurable():
+    strict = compute_thresholds(_MENTIONS, {"percentiles": {"principal": 0.50}})
+    default = compute_thresholds(_MENTIONS)
+    assert (
+        strict["PERSON"]["principal"]["min_mentions"]
+        < default["PERSON"]["principal"]["min_mentions"]
+    ), "lowering the principal percentile must lower the principal threshold"
+
+
+def test_min_entities_for_percentile_is_configurable():
+    two = [("A", "PLACE", 4), ("B", "PLACE", 3)]
+    # Default (4) → too few for percentiles → absolute fallback.
+    assert compute_thresholds(two)["PLACE"]["principal"]["min_mentions"] == 20
+    # Lowered to 2 → percentiles apply, cut from the 2-value distribution.
+    assert compute_thresholds(two, {"min_entities_for_percentile": 2})["PLACE"]["principal"][
+        "min_mentions"
+    ] == 3
+
+
+def test_fallback_absolute_is_configurable():
+    two = [("A", "PLACE", 4), ("B", "PLACE", 3)]
+    t = compute_thresholds(two, {"fallback_absolute": {"principal": 99}})
+    assert t["PLACE"]["principal"]["min_mentions"] == 99
+    assert t["PLACE"]["secondary"]["min_mentions"] == 10, "unset tiers keep their default"
+
+
+# The same character (60 mentions, 5 chapters) in two tomes of one series:
+# tome A is lead-heavy with a long figurant tail, tome B is a balanced choral cast.
+_TOME_A = [("X", "PERSON", 60), ("Lead1", "PERSON", 70), ("Lead2", "PERSON", 80)] + [
+    (f"F{i}", "PERSON", 2) for i in range(40)
+]
+_TOME_B = [("X", "PERSON", 60)] + [(f"C{i}", "PERSON", n) for i, n in enumerate(range(65, 140, 5))]
+
+
+def test_percentile_strategy_gives_one_character_different_tiers_across_tomes():
+    """The defect STU-509 documents: percentile tiers are relative to each book."""
+    a = assign_importance("PERSON", 60, 5, compute_thresholds(_TOME_A))
+    b = assign_importance("PERSON", 60, 5, compute_thresholds(_TOME_B))
+    assert (a, b) == ("principal", "figurant")
+
+
+def test_absolute_strategy_stabilizes_tiers_across_tomes():
+    """STU-509 acceptance: absolute thresholds mean the same thing in every tome."""
+    cfg = {
+        "strategy": "absolute",
+        "fallback_absolute": {"principal": 50, "secondary": 10, "figurant": 3},
+    }
+    ta = compute_thresholds(_TOME_A, cfg)
+    tb = compute_thresholds(_TOME_B, cfg)
+    assert ta == tb, "absolute thresholds must not depend on the book's own distribution"
+    assert assign_importance("PERSON", 60, 5, ta) == assign_importance("PERSON", 60, 5, tb) == "principal"
+
+
+def test_event_has_a_working_absolute_threshold_path():
+    """STU-509 acceptance: EVENT must not silently collapse to figurant."""
+    counts = [("Duel", "EVENT", 8), ("Feast", "EVENT", 3), ("Raid", "EVENT", 1)]
+    cfg = {"per_type": {"EVENT": {"strategy": "absolute", "principal": 5, "secondary": 2, "figurant": 1}}}
+    t = compute_thresholds(counts, cfg)
+    assert assign_importance("EVENT", 8, 3, t) == "principal"
+    assert assign_importance("EVENT", 3, 2, t) == "secondary"
+    assert assign_importance("EVENT", 1, 1, t) == "figurant"
+
+
+def test_per_type_override_leaves_other_types_on_the_default_strategy():
+    counts = _MENTIONS + [("Duel", "EVENT", 8), ("Feast", "EVENT", 3), ("Raid", "EVENT", 1)]
+    cfg = {"per_type": {"EVENT": {"strategy": "absolute", "principal": 5}}}
+    t = compute_thresholds(counts, cfg)
+    assert t["EVENT"]["principal"]["min_mentions"] == 5
+    assert t["PERSON"] == compute_thresholds(_MENTIONS)["PERSON"]
+
+
+def test_min_chapters_gate_demotes_a_single_chapter_character():
+    """STU-509 acceptance: min_chapters actually influences the tier."""
+    cfg = {
+        "per_type": {
+            "PERSON": {
+                "strategy": "absolute",
+                "principal": {"min_mentions": 50, "min_chapters": 15},
+                "secondary": {"min_mentions": 10, "min_chapters": 3},
+                "figurant": {"min_mentions": 3},
+            }
+        }
+    }
+    t = compute_thresholds(_MENTIONS, cfg)
+    # 60 mentions but confined to 2 chapters: fails principal AND secondary chapter gates.
+    assert assign_importance("PERSON", 60, 2, t) == "figurant"
+    # Same mentions, spread across the book.
+    assert assign_importance("PERSON", 60, 20, t) == "principal"
+
+
+def test_min_chapters_absent_never_binds():
+    t = compute_thresholds(_MENTIONS, {"per_type": {"PERSON": {"strategy": "absolute", "principal": 50}}})
+    assert assign_importance("PERSON", 60, 1, t) == "principal"
+
+
+def test_classify_entities_defaults_match_no_config():
+    entities = [
+        {"canonical_name": n, "type": "PERSON", "source_ids": [f"e{i}"], "relevant": True}
+        for i, n in enumerate(["A", "B", "C", "D"])
+    ]
+    persons = _pf({
+        f"e{i}": {"type": "PERSON", "raw_mentions": [n], "mentions_by_chapter": {"C01": ["x"] * (i + 1)}}
+        for i, n in enumerate(["A", "B", "C", "D"])
+    })
+    assert classify_entities(entities, persons, {}, {}) == classify_entities(
+        entities, persons, {}, {}, notability={}
+    )

@@ -16,26 +16,26 @@ novel_summary: |
   With the Courts on the brink and the heavens themselves in play, the four allies gamble
   everything on one last, wild song — knowing that whatever they win will be paid for in loss.
 
-# Entity importance classification — 'auto' uses percentile distribution
-# Override with explicit values if the auto-detected tiers are wrong for your book
-#
 # Absolute pre-filter applied before clustering/classification:
 # entities with total mentions below this value are dropped early.
 min_mentions_absolute: 3
-thresholds: auto
-# Example explicit config (uncomment to use):
-# thresholds:
-#   characters:
-#     principal: { min_mentions: 50, min_chapters: 15 }
-#     secondary: { min_mentions: 10, min_chapters: 3 }
-#     figurant: { min_mentions: 3 }
-#     ignored_below: 3
-#   locations:
-#     major: { min_mentions: 20, min_chapters: 5 }
-#     minor: { min_mentions: 3 }
-#   organizations:
-#     major: { min_mentions: 10 }
-#     minor: { min_mentions: 3 }
+
+# Entity importance tiers. Omit the whole block to take the defaults shown below.
+# strategy: percentile cuts thresholds from THIS book's own distribution, so tiers
+# are not comparable across tomes; absolute uses fixed counts, stable in a series.
+#
+# notability:
+#   strategy: percentile
+#   percentiles: { principal: 0.90, secondary: 0.60, figurant: 0.10 }
+#   min_entities_for_percentile: 4   # under this many entities of a type, percentiles are meaningless
+#   fallback_absolute: { principal: 20, secondary: 10, figurant: 3 }
+#   per_type:                        # keys are entity types, not domain nouns
+#     EVENT: { strategy: absolute, principal: 5, secondary: 2, figurant: 1 }
+#     PERSON:
+#       strategy: absolute
+#       principal: { min_mentions: 50, min_chapters: 15 }   # a tier needs BOTH gates
+#       secondary: { min_mentions: 10, min_chapters: 3 }
+#       figurant: { min_mentions: 3 }
 
 generation:
   chapter_summary:
