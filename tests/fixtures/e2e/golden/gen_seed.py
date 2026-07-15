@@ -49,7 +49,9 @@ TYPE_FILES = {
 
 
 def _sentences(text: str) -> list[str]:
-    return [s.strip() for s in re.split(r"(?<=\.)\s+", text) if s.strip()]
+    # A paragraph break ends a sentence even with no period — a chapter heading
+    # has none, and doc.sents would not run it into the paragraph below.
+    return [s.strip() for s in re.split(r"(?<=\.)\s+|\n{2,}", text) if s.strip()]
 
 
 def _context(sentences: list[str], char_pos: int, text: str) -> str:
@@ -125,18 +127,20 @@ def main() -> None:
     spec.loader.exec_module(test_e2e_smoke)
     CHAPTER_TITLES, FIXTURE_DIR = test_e2e_smoke.CHAPTER_TITLES, test_e2e_smoke.FIXTURE_DIR
 
-    # Same ids and content parse_epub derives from the smoke EPUB: ebooklib
-    # item ids, and the chapter <h1> title prepended to the paragraph text.
+    # Same ids and content parse_epub derives from the smoke EPUB: ebooklib item
+    # ids, and the chapter <h1> title prepended to the paragraphs, each block
+    # separated by \n\n (STU-523). Offsets are seeded against this exact text.
     chapters = [
         {
             "id": f"chapter_{i}",
             "title": title,
-            "content": title + " " + " ".join(
-                (FIXTURE_DIR / f"ch{i + 1:02d}.txt")
+            "content": "\n\n".join([
+                title,
+                *(FIXTURE_DIR / f"ch{i + 1:02d}.txt")
                 .read_text(encoding="utf-8")
                 .strip()
-                .split("\n\n")
-            ),
+                .split("\n\n"),
+            ]),
         }
         for i, title in enumerate(CHAPTER_TITLES)
     ]

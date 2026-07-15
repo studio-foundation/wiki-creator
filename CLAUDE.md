@@ -216,9 +216,8 @@ Inside `wiki-resolution`, order matters:
   BS4-parsed HTML): `html.unescape` (html.parser resolves charrefs at parse time —
   and on already-unescaped text it would eat a literal `&nbsp;` an author wrote),
   and the two paragraph steps (that `get_text` returns `"\n".join` of non-empty
-  stripped strings, so `\n\n` cannot occur — which also means **chapter text has no
-  paragraph structure at all**, filed as STU-523; restoring it moves every STU-489
-  mention offset). Two more are inert on this corpus (NFC, ligatures: 0/1102) but
+  stripped strings, so `\n\n` could not occur — chapter text had no paragraph
+  structure at all; STU-523 restored it, see below). Two more are inert on this corpus (NFC, ligatures: 0/1102) but
   kept — they are not structurally unreachable, another publisher plausibly ships
   NFD or `ﬁ`. Two were deleted as **actively harmful** band-aids over the markup
   split `_flatten_inline_markup` now fixes at the root: `Àla`→`À la` only ever undid
@@ -227,6 +226,27 @@ Inside `wiki-resolution`, order matters:
   fixed upstream) against two corruptions of Eldest dialect (`I 'ope` → `I'ope`).
   When a step here looks dead, measure before deleting — and when it looks alive,
   check it is not just undoing a neighbour.
+- Paragraph structure (STU-523): `chapters.json` content carries block boundaries
+  as `\n\n`. `get_text(separator="\n", strip=True)` drops whitespace-only strings,
+  so a break cannot ride on whitespace: `_mark_paragraph_breaks` inserts a NUL
+  (`_PARAGRAPH_MARK`) after every `_BLOCK_TAGS` element and `clean_chapter_text`
+  turns each run of marks into one `\n\n`. Three constraints are load-bearing and
+  each has a test. (1) The mark goes *after* the tag, not inside it, so
+  `_extract_chapter_title`'s `heading.get_text()` stays clean. (2) It runs *after*
+  `_flatten_inline_markup` — both mutate the same tree, and marking a tag about to
+  be unwrapped strands its mark mid-word (STU-519). (3) Marks come from markup
+  only, never from source whitespace, so the blank lines pretty-printed XHTML
+  sprinkles inside a `<p>` are not paragraph breaks. `<br>` is deliberately not a
+  block tag: it is a soft line break (verse, addresses) and stays a space.
+  Every `\n\n` is +1 char over the space it replaced, so **it shifts every STU-489
+  mention offset** — the seed (`gen_seed.py`, which rebuilds the chapter text
+  itself and must mirror parse_epub's joining) and the goldens were regenerated.
+  Offsets survived because every consumer is self-consistent: extraction computes
+  them from the same text, `Mention.window` and `gliner_ner.windows` slice
+  `doc.text` verbatim. `research/ner-eval/chunking.py` still splits on `\s+` and
+  is paragraph-blind — it is eval scaffolding for the retired `wiki-ner-en`, so it
+  was left alone; paragraph-aware chunking and dialogue attribution are the
+  follow-ups this unblocks.
 - `entity_extraction.py` keys chapter mentions by chapter ID, not chapter title.
 - `merge_entities.py` passes through only the current `resolve-clusters` output shape (runs before `alias-resolution` per the STU-276 pipeline order; STU-447 dropped the older `split-clusters` + `entity-resolution-*` compat branch and a vestigial `alias-resolution` priority check that predated STU-276 and never fired in production).
 - `split_clusters.py`, `relationship_extraction.py`, and `verify_entity_types.py` are intentionally tolerant of missing `file_path` in unit-test mode.

@@ -55,13 +55,40 @@ def _flatten_inline_markup(soup) -> None:
     soup.smooth()
 
 
+# Block elements end a paragraph. <br> is deliberately absent: it is a soft line
+# break (verse, addresses) and stays a space, as it always has.
+_BLOCK_TAGS: tuple[str, ...] = (
+    'p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'li',
+)
+
+# get_text(separator="\n", strip=True) drops whitespace-only strings, so a
+# paragraph break cannot be carried by whitespace — it needs a character that
+# survives strip(). NUL never occurs in EPUB prose.
+_PARAGRAPH_MARK = '\x00'
+_PARAGRAPH_MARK_RUN = re.compile(r'[ \t\n]*\x00[ \t\n\x00]*')
+
+
+def _mark_paragraph_breaks(soup) -> None:
+    """Mark block boundaries in place so get_text() cannot flatten them away.
+
+    The mark goes *after* the tag, not inside it, so `_extract_chapter_title`'s
+    `heading.get_text()` stays clean. Must run after `_flatten_inline_markup`:
+    the two mutate the same tree, and marking a tag that is about to be
+    unwrapped would strand its mark mid-word.
+    """
+    for tag in soup.find_all(_BLOCK_TAGS):
+        tag.insert_after(_PARAGRAPH_MARK)
+
+
 def clean_chapter_text(text: str) -> str:
     """Normalize a chapter's extracted text for NLP.
 
-    Input is always `_flatten_inline_markup` + `get_text(separator="\\n",
-    strip=True)`, i.e. "\\n".join of non-empty stripped strings. It therefore
-    carries no \\n\\n (so chapter text has no paragraph structure — STU-523) and
-    no HTML entities (html.parser resolves charrefs at parse time).
+    Input is always `_flatten_inline_markup` + `_mark_paragraph_breaks` +
+    `get_text(separator="\\n", strip=True)`, i.e. "\\n".join of non-empty
+    stripped strings, with `_PARAGRAPH_MARK` at every block boundary. Newlines
+    are therefore tag boundaries only, and the marks become the \\n\\n paragraph
+    breaks (STU-523). No HTML entities reach here (html.parser resolves charrefs
+    at parse time).
     """
     # 1. Unicode NFC normalization — must be first to compose combining characters
     text = unicodedata.normalize('NFC', text)
@@ -84,7 +111,13 @@ def clean_chapter_text(text: str) -> str:
     # 6. Normalize runs of spaces/tabs to a single space
     text = re.sub(r'[ \t]{2,}', ' ', text)
 
-    return text.strip()
+    # 7. Marked block boundaries become paragraph breaks; nesting emits several
+    #    marks for one boundary (a <p> inside a <div>), so a run collapses to one.
+    text = _PARAGRAPH_MARK_RUN.sub('\n\n', text)
+
+    # 8. Strip each paragraph and drop the empty ones
+    paragraphs = [p.strip() for p in text.split('\n\n')]
+    return '\n\n'.join(p for p in paragraphs if p)
 
 
 def _first_person_regex(language: str) -> re.Pattern | None:
@@ -287,13 +320,18 @@ def parse_epub(file_path: str, language: str = "fr", max_chapters: int | None = 
             continue
         soup = BeautifulSoup(item.get_content(), "html.parser")
         _flatten_inline_markup(soup)
+        chapter_title = _extract_chapter_title(soup, item, toc_titles)
+        _mark_paragraph_breaks(soup)
         raw_text = soup.get_text(separator="\n", strip=True)
         cleaned = clean_chapter_text(raw_text)
-        if len(cleaned) < MIN_CHAPTER_CHARS:
+        # The bar gates prose, so it must not count structure: \n\n is one char
+        # wider than the space it replaced, and on 01_eragon.epub that alone was
+        # enough to lift seven boilerplate pages over it (STU-523).
+        if len(cleaned) - cleaned.count('\n\n') < MIN_CHAPTER_CHARS:
             continue
         chapters.append({
             "id": item.get_id(),
-            "title": _extract_chapter_title(soup, item, toc_titles),
+            "title": chapter_title,
             "content": cleaned,
         })
 
