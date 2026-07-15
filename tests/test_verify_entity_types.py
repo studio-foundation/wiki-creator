@@ -8,6 +8,7 @@ import yaml
 from scripts.verify_entity_types import (
     is_obvious_geographic,
     load_context_for_cluster,
+    load_geographic_keywords,
     apply_corrections,
 )
 
@@ -31,6 +32,20 @@ def test_obvious_geographic_hispanic_name():
 
 def test_obvious_geographic_case_insensitive():
     assert is_obvious_geographic("Boulevard du Temple") is True
+
+
+def test_obvious_geographic_spanish_from_lang_pack():
+    # calle/plaza/barrio are no longer hardcoded — they come from es.json (STU-452).
+    es_geo = load_geographic_keywords("es")
+    assert is_obvious_geographic("Calle Comercio", es_geo) is True
+    assert is_obvious_geographic("Plaza Mayor", es_geo) is True
+    assert is_obvious_geographic("Barrio Gótico", es_geo) is True
+    # Without the Spanish pack, the base set no longer recognizes them.
+    assert is_obvious_geographic("Calle Comercio") is False
+
+
+def test_load_geographic_keywords_no_language_is_base():
+    assert load_geographic_keywords(None) is load_geographic_keywords()
 
 
 # --- load_context_for_cluster ---

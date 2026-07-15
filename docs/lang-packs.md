@@ -82,6 +82,8 @@ A pack may omit these; the consumer degrades to an empty collection.
 | `first_person_artifact_tails` | extraction | Verb tails that flag a false "I …" entity artifact; language-specific. |
 | `language_id_markers` | wiki page validator | Copula phrases (`is the`, `was a`) used to sanity-check generated prose language. |
 | `placeholder_markers` | page generation | Prompt-placeholder phrases (`si connu`, `if known`) that flag a leaked template when echoed into a page. |
+| `masculine_titles` | clustering | Gendered honorifics marking a masculine title (Spanish `don`, `señor`) — used to block a masculine/feminine merge. French/English defaults live in the script; a pack extends them for its language. |
+| `feminine_titles` | clustering | Gendered honorifics marking a feminine title (Spanish `doña`, `señora`). Counterpart of `masculine_titles`. |
 
 ## The required/optional split
 

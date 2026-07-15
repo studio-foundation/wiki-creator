@@ -54,6 +54,9 @@ from wiki_creator.registry import Registry, normalize_name as normalize_for_comp
 
 # --- Configuration ---
 
+# Base title prefixes. Language-specific honorifics (Spanish don/señor/…) are NOT
+# hardcoded here — they come from cue_words/<lang>.json `person_cue_words` via
+# load_title_prefixes (STU-452).
 TITLE_PREFIXES = frozenset({
     # French
     "m.", "mr.", "mrs.", "mme", "mme.", "mlle", "mlle.",
@@ -61,8 +64,6 @@ TITLE_PREFIXES = frozenset({
     "père", "frère", "sœur", "saint", "sainte",
     "inspecteur", "commissaire", "capitaine", "colonel", "général",
     "professeur", "maître", "docteur",
-    # Spanish (for translated works)
-    "don", "doña", "señor", "señora", "señorita",
     # Generic
     "dr.", "dr", "le", "la", "les", "el", "los", "las",
 })
@@ -105,9 +106,34 @@ JW_THRESHOLD = 0.92  # Jaro-Winkler threshold for orthographic variant matching
 # Tie-break order when a cluster spans multiple types (STU-505: from base.yaml).
 TYPE_PRECEDENCE = resolution_types()
 
-# Gender-discriminating title sets (subset of TITLE_PREFIXES)
-MASCULINE_TITLES = frozenset({"m.", "mr.", "monsieur", "señor", "don"})
-FEMININE_TITLES = frozenset({"mme", "mme.", "madame", "señora", "doña"})
+# Base gender-discriminating title sets. Language-specific gendered honorifics
+# (Spanish señor/don, señora/doña) are loaded from cue_words/<lang>.json via
+# load_masculine_titles / load_feminine_titles (STU-452), not hardcoded here.
+MASCULINE_TITLES = frozenset({"m.", "mr.", "monsieur"})
+FEMININE_TITLES = frozenset({"mme", "mme.", "madame"})
+
+
+def load_masculine_titles(language: str | None = None) -> frozenset[str]:
+    """Return MASCULINE_TITLES extended with `masculine_titles` from cue_words/{lang}.json."""
+    return _extend_from_lang(MASCULINE_TITLES, "masculine_titles", language)
+
+
+def load_feminine_titles(language: str | None = None) -> frozenset[str]:
+    """Return FEMININE_TITLES extended with `feminine_titles` from cue_words/{lang}.json."""
+    return _extend_from_lang(FEMININE_TITLES, "feminine_titles", language)
+
+
+def _extend_from_lang(base: frozenset[str], key: str, language: str | None) -> frozenset[str]:
+    if not language:
+        return base
+    try:
+        from wiki_creator.lang import load_lang_config
+        lang_cfg = load_lang_config(language)
+        return base | frozenset(w.lower() for w in lang_cfg.get(key, []))
+    except Exception as exc:
+        import logging
+        logging.warning("_extend_from_lang: could not load cue_words[%r] for language %r: %s", key, language, exc)
+        return base
 
 
 # --- String utilities ---
@@ -132,12 +158,18 @@ def extract_leading_titles(name: str, title_prefixes: frozenset[str] = TITLE_PRE
     return frozenset(result)
 
 
-def has_conflicting_gender_title(name1: str, name2: str, title_prefixes: frozenset[str] = TITLE_PREFIXES) -> bool:
+def has_conflicting_gender_title(
+    name1: str,
+    name2: str,
+    title_prefixes: frozenset[str] = TITLE_PREFIXES,
+    masculine_titles: frozenset[str] = MASCULINE_TITLES,
+    feminine_titles: frozenset[str] = FEMININE_TITLES,
+) -> bool:
     """Rule 1: block merge if one name has a feminine title and the other a masculine title."""
     t1 = extract_leading_titles(name1, title_prefixes)
     t2 = extract_leading_titles(name2, title_prefixes)
-    masc1, fem1 = bool(t1 & MASCULINE_TITLES), bool(t1 & FEMININE_TITLES)
-    masc2, fem2 = bool(t2 & MASCULINE_TITLES), bool(t2 & FEMININE_TITLES)
+    masc1, fem1 = bool(t1 & masculine_titles), bool(t1 & feminine_titles)
+    masc2, fem2 = bool(t2 & masculine_titles), bool(t2 & feminine_titles)
     return (masc1 and fem2) or (fem1 and masc2)
 
 
@@ -306,10 +338,16 @@ def cross_type_union_blocked(
     return is_place_titled_toponym(place_m, person_m, connectors, title_prefixes)
 
 
-def should_cluster(name1: str, name2: str, title_prefixes: frozenset[str] = TITLE_PREFIXES) -> bool:
+def should_cluster(
+    name1: str,
+    name2: str,
+    title_prefixes: frozenset[str] = TITLE_PREFIXES,
+    masculine_titles: frozenset[str] = MASCULINE_TITLES,
+    feminine_titles: frozenset[str] = FEMININE_TITLES,
+) -> bool:
     """Combined matching with pre-filter rules for obvious wrong merges."""
     # Rule 1: conflicting gender titles → definitely different people
-    if has_conflicting_gender_title(name1, name2, title_prefixes):
+    if has_conflicting_gender_title(name1, name2, title_prefixes, masculine_titles, feminine_titles):
         return False
     return should_cluster_tokens(name1, name2, title_prefixes) or should_cluster_jw(name1, name2, title_prefixes)
 
@@ -359,6 +397,8 @@ def build_clusters(
     """
     title_prefixes = load_title_prefixes(language)
     name_connectors = load_name_connectors(language)
+    masculine_titles = load_masculine_titles(language)
+    feminine_titles = load_feminine_titles(language)
     parent = {eid: eid for eid in entities}
 
     def find(x):
@@ -386,7 +426,12 @@ def build_clusters(
                 if matched:
                     break
                 for mj in entities[ej]["raw_mentions"]:
-                    if not should_cluster(mi, mj, title_prefixes=title_prefixes):
+                    if not should_cluster(
+                        mi, mj,
+                        title_prefixes=title_prefixes,
+                        masculine_titles=masculine_titles,
+                        feminine_titles=feminine_titles,
+                    ):
                         continue
                     # STU-473: don't let a PLACE fold into a PERSON's titled
                     # toponym ("Adarlan" into "King of Adarlan"). Keep scanning —
@@ -448,7 +493,9 @@ def build_clusters(
             })
 
     # Rule 2 post-processing: split clusters with conflicting first names
-    clusters_list, unclustered = split_conflicting_first_names(clusters_list, unclustered, entities, title_prefixes)
+    clusters_list, unclustered = split_conflicting_first_names(
+        clusters_list, unclustered, entities, title_prefixes, masculine_titles, feminine_titles
+    )
     clusters_list.sort(key=lambda c: c["total_mentions"], reverse=True)
     return clusters_list, unclustered
 
@@ -524,6 +571,8 @@ def split_conflicting_first_names(
     unclustered: dict,
     entities: dict,
     title_prefixes: frozenset[str] = TITLE_PREFIXES,
+    masculine_titles: frozenset[str] = MASCULINE_TITLES,
+    feminine_titles: frozenset[str] = FEMININE_TITLES,
 ) -> tuple[list[dict], dict]:
     """
     Rule 2 post-processing: split clusters where multiple full-name entities
@@ -567,9 +616,9 @@ def split_conflicting_first_names(
             if not surname or not firsts:
                 # Determine gender from title prefix
                 titles = extract_leading_titles(mention, title_prefixes)
-                if titles & MASCULINE_TITLES:
+                if titles & masculine_titles:
                     gender = "masc"
-                elif titles & FEMININE_TITLES:
+                elif titles & feminine_titles:
                     gender = "fem"
                 else:
                     gender = "neutral"

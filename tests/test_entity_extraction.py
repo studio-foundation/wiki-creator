@@ -253,6 +253,20 @@ def test_load_cue_words_all_merges_languages():
     assert "dans" in cues["place_prepositions"]    # FR
 
 
+def test_resolve_cue_words_language_accepts_es():
+    assert _resolve_cue_words_language("es", None) == "es"
+    assert _resolve_cue_words_language("fr", "es") == "es"
+
+
+def test_load_cue_words_es_loads_spanish_pack():
+    # A Spanish book must extract with Spanish cue-words, not the English fallback (STU-452).
+    cues = _load_cue_words("es")
+    assert "ciudad" in cues["place_cue_words"]
+    assert "señor" in cues["person_cue_words"]
+    assert "en" in cues["place_prepositions"]
+    assert "city" not in cues["place_cue_words"]  # not falling back to en.json
+
+
 # --- split_entities tests ---
 
 def test_split_entities_for_resolution_has_no_mentions_by_chapter(nlp):

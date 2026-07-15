@@ -197,7 +197,7 @@ def _resolve_cue_words_language(default_language: str, override: str | None) -> 
     value = str(override).strip().lower()
     if value in {"auto", ""}:
         return default_language
-    if value in {"en", "fr", "all"}:
+    if value in {"en", "fr", "es", "all"}:
         return value
     print(
         f"[WARN] invalid cue_words_language={override!r}; "
@@ -233,7 +233,7 @@ def _load_cue_words(language: str) -> dict[str, frozenset[str]]:
             key: en[key] | fr[key]
             for key in ("place_cue_words", "person_cue_words", "place_prepositions", "event_suffixes")
         }
-    if language in {"en", "fr"}:
+    if language in {"en", "fr", "es"}:
         return _load_single_cue_words_file(language)
     # Safe fallback
     return _load_single_cue_words_file("en")

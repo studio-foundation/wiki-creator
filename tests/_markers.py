@@ -31,6 +31,11 @@ requires_fr_lg = pytest.mark.skipif(
     reason="requires spaCy model fr_core_news_lg (python -m spacy download fr_core_news_lg)",
 )
 
+requires_es_sm = pytest.mark.skipif(
+    not spacy_model_available("es_core_news_sm"),
+    reason="requires spaCy model es_core_news_sm (python -m spacy download es_core_news_sm)",
+)
+
 requires_fastcoref = pytest.mark.skipif(
     not fastcoref_available(),
     reason="requires the coref extra (pip install -e '.[coref]')",

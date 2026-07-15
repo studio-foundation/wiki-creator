@@ -17,6 +17,7 @@ from collections.abc import Callable
 _GENERIC_FALLBACKS = {
     "en": ["en_core_web_sm"],
     "fr": ["fr_core_news_lg", "fr_core_news_sm"],
+    "es": ["es_core_news_lg", "es_core_news_sm"],
 }
 
 
@@ -35,6 +36,11 @@ def spacy_model_candidates(requested_model: str, language: str | None = None) ->
             candidates.append("fr_core_news_lg")
         if requested_model != "fr_core_news_sm":
             candidates.append("fr_core_news_sm")
+    if requested_model.startswith("es_core_news_"):
+        if requested_model != "es_core_news_lg":
+            candidates.append("es_core_news_lg")
+        if requested_model != "es_core_news_sm":
+            candidates.append("es_core_news_sm")
     if language:
         candidates.extend(_GENERIC_FALLBACKS.get(language, []))
     # De-duplicate while preserving order.
