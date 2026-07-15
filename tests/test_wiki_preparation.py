@@ -1011,13 +1011,14 @@ def test_write_collation_pages_removes_a_stale_artifact(tmp_path: Path):
     assert not stale.exists()
 
 
-def _run_main_with(monkeypatch, paths, book_cfg, entities):
+def _run_main_with(monkeypatch, paths, book_cfg, entities, relationships=()):
     for name in ("persons_full", "places_full", "orgs_full", "events_full"):
         (paths.processing / f"{name}.json").write_text(json.dumps({name: {}}), encoding="utf-8")
     monkeypatch.setattr(wp.studio_io, "paths_from_payload", lambda _payload: paths)
     monkeypatch.setattr(wp, "load_book_config_from_payload", lambda _payload: book_cfg)
     payload = {"additional_context": "file_path: fake.epub", "all_stage_outputs": {
-        "entity-classification": {"entities": entities, "relationships": [], "narrator": None}}}
+        "entity-classification": {"entities": entities, "relationships": list(relationships),
+                                  "narrator": None}}}
     stdin_backup, stdout_backup = sys.stdin, sys.stdout
     try:
         sys.stdin = io.StringIO(json.dumps(payload))
@@ -1066,3 +1067,32 @@ def test_main_promotes_a_salient_figurant_back_to_a_dedicated_page(monkeypatch, 
     out = _run_main_with(monkeypatch, paths, book_cfg, [_classified("Cain", "figurant")])
     assert out["total_entities"] == 1
     assert not (paths.processing / "collation_pages.json").exists()
+
+
+def test_collated_entities_still_feed_their_neighbours_related_context(monkeypatch, tmp_path: Path):
+    """Losing a dedicated page must not cost the neighbours the related-context
+    a collated entity contributes — it stays in entities_by_name."""
+    paths = _collation_paths(tmp_path)
+    book_cfg = {"generation": {"collation": {"figurant": {"mode": "collective"}}}}
+    _run_main_with(
+        monkeypatch, paths, book_cfg,
+        [_classified("Celaena", "principal"), _classified("Cain", "figurant")],
+        relationships=[{"entity_a": "Celaena", "entity_b": "Cain", "cooccurrence_count": 4}],
+    )
+    batch = json.loads(next(paths.wiki_inputs.glob("batch_*.json")).read_text(encoding="utf-8"))
+    related = batch["entities"][0]["related_context"]
+    assert [r["related_name"] for r in related] == ["Cain"]
+    assert related[0]["related_type"] == "PERSON"   # resolved via entities_by_name
+
+
+def test_dropped_entities_are_gone_from_related_context(monkeypatch, tmp_path: Path):
+    """mode=drop means gone from the wiki — including as a neighbour's context."""
+    paths = _collation_paths(tmp_path)
+    book_cfg = {"generation": {"collation": {"figurant": {"mode": "drop"}}}}
+    _run_main_with(
+        monkeypatch, paths, book_cfg,
+        [_classified("Celaena", "principal"), _classified("Cain", "figurant")],
+        relationships=[{"entity_a": "Celaena", "entity_b": "Cain", "cooccurrence_count": 4}],
+    )
+    batch = json.loads(next(paths.wiki_inputs.glob("batch_*.json")).read_text(encoding="utf-8"))
+    assert batch["entities"][0]["related_context"][0]["related_type"] is None

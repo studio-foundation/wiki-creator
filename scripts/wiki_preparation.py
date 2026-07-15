@@ -34,7 +34,12 @@ from dataclasses import asdict
 from wiki_creator import studio_io
 from wiki_creator.paths import BookPaths
 from wiki_creator.character_graph import CharacterGraph
-from wiki_creator.collation import collation_config, collation_labels, collective_pages, partition
+from wiki_creator.collation import (
+    collation_config,
+    collation_labels,
+    collective_pages,
+    partition_by_collation,
+)
 from wiki_creator.facts import extract_titles
 from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator.confidence import relationship_confidence
@@ -586,7 +591,7 @@ def main() -> None:
         )
 
     plot_events = read_plot_events(paths.processing / "events.json")
-    relevant_entities, collated, dropped = partition(
+    dedicated, collated, dropped = partition_by_collation(
         relevant_entities, collation_config(book_cfg), plot_events
     )
     write_collation_pages(collated, book_cfg, paths)
@@ -596,9 +601,12 @@ def main() -> None:
             file=sys.stderr,
         )
 
+    # Collated entities keep their entry here: losing a dedicated page must not
+    # cost their neighbours the related-context snippets they contribute. Dropped
+    # ones are excluded — mode=drop means gone from the wiki entirely.
     entities_by_name = {
         e.get("canonical_name", ""): e
-        for e in relevant_entities
+        for e in dedicated + collated
         if e.get("canonical_name")
     }
     chapter_summaries = chapter_summary_output.get("chapter_summaries", {})
@@ -648,7 +656,7 @@ def main() -> None:
             role_words=role_words,
             plot_events=plot_events,
         )
-        for e in relevant_entities
+        for e in dedicated
     ]
 
     batches = write_batches(entity_bundles, narrator, paths)

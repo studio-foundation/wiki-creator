@@ -3,7 +3,7 @@ from wiki_creator.collation import (
     collation_config,
     collation_labels,
     collective_pages,
-    partition,
+    partition_by_collation,
 )
 
 
@@ -17,7 +17,7 @@ def _collective_cfg(**tier):
 
 def test_config_absent_leaves_every_tier_dedicated():
     assert collation_config({}) == {}
-    dedicated, collective, dropped = partition(
+    dedicated, collective, dropped = partition_by_collation(
         [_entity("Extra"), _entity("Celaena", "principal")], collation_config({}), []
     )
     assert [e["canonical_name"] for e in dedicated] == ["Extra", "Celaena"]
@@ -31,7 +31,7 @@ def test_unknown_mode_falls_back_to_dedicated():
 
 def test_collective_mode_moves_figurants_off_dedicated():
     config = collation_config(_collective_cfg())
-    dedicated, collective, dropped = partition(
+    dedicated, collective, dropped = partition_by_collation(
         [_entity("Extra"), _entity("Celaena", "principal")], config, []
     )
     assert [e["canonical_name"] for e in dedicated] == ["Celaena"]
@@ -41,7 +41,7 @@ def test_collective_mode_moves_figurants_off_dedicated():
 
 def test_drop_mode_removes_the_tier_entirely():
     config = collation_config({"generation": {"collation": {"figurant": {"mode": "drop"}}}})
-    dedicated, collective, dropped = partition([_entity("Extra")], config, [])
+    dedicated, collective, dropped = partition_by_collation([_entity("Extra")], config, [])
     assert dedicated == [] and collective == []
     assert [e["canonical_name"] for e in dropped] == ["Extra"]
 
@@ -54,7 +54,7 @@ def test_promote_if_keeps_a_salient_figurant_dedicated():
         {"participants": ["Nehemia"], "salience": 0.9},
         {"participants": ["Extra"], "salience": 0.2},
     ]
-    dedicated, collective, _ = partition(
+    dedicated, collective, _ = partition_by_collation(
         [_entity("Nehemia"), _entity("Extra")], config, events
     )
     assert [e["canonical_name"] for e in dedicated] == ["Nehemia"]
@@ -66,7 +66,7 @@ def test_promote_if_matches_places_too():
         _collective_cfg(promote_if={"appears_in_event_salience_above": 0.7})
     )
     events = [{"participants": [], "places": ["Endovier"], "salience": 0.9}]
-    dedicated, collective, _ = partition(
+    dedicated, collective, _ = partition_by_collation(
         [_entity("Endovier", entity_type="PLACE")], config, events
     )
     assert [e["canonical_name"] for e in dedicated] == ["Endovier"]
@@ -76,12 +76,12 @@ def test_promote_if_matches_places_too():
 def test_promote_if_absent_never_promotes():
     config = collation_config(_collective_cfg())
     events = [{"participants": ["Extra"], "salience": 1.0}]
-    dedicated, collective, _ = partition([_entity("Extra")], config, events)
+    dedicated, collective, _ = partition_by_collation([_entity("Extra")], config, events)
     assert dedicated == []
     assert [e["canonical_name"] for e in collective] == ["Extra"]
 
 
-def test_collective_pages_group_by_entity_type_and_sort_entries():
+def test_collective_pages_group_by_title_and_sort_entries():
     pages = collective_pages(
         [
             _entity("Verin", total_mentions=4, chapters_present=2),

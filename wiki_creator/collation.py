@@ -43,8 +43,8 @@ _DEFAULT_TITLE_LABELS = {
 
 @dataclass
 class TierCollation:
-    mode: str = DEFAULT_MODE
-    promote_above: float | None = None
+    mode: str
+    promote_above: float | None
 
 
 def collation_config(book_cfg: dict) -> dict[str, TierCollation]:
@@ -74,28 +74,20 @@ def collation_labels(export_cfg: dict) -> dict[str, str]:
 
 def _promoted(entity: dict, events: list[dict], threshold: float | None) -> bool:
     """True when the entity takes part in an event salient enough to earn a
-    dedicated page despite its tier."""
+    dedicated page despite its tier. Participants or places, matching
+    wiki_preparation.events_for_entity."""
     if threshold is None:
         return False
     name = entity.get("canonical_name", "")
-    if not name:
-        return False
-    for event in events or []:
-        if name not in (event.get("participants") or []) and name not in (
-            event.get("places") or []
-        ):
-            continue
-        try:
-            salience = float(event.get("salience", 0.0))
-        except (TypeError, ValueError):
-            continue
-        if salience > threshold:
-            return True
-    return False
+    return any(
+        (name in (event.get("participants") or []) or name in (event.get("places") or []))
+        and float(event.get("salience", 0.0)) > threshold
+        for event in events
+    )
 
 
-def partition(
-    entities: list[dict], config: dict[str, TierCollation], events: list[dict] | None = None
+def partition_by_collation(
+    entities: list[dict], config: dict[str, TierCollation], events: list[dict]
 ) -> tuple[list[dict], list[dict], list[dict]]:
     """Split entities into (dedicated, collective, dropped) per their tier's mode."""
     dedicated: list[dict] = []
@@ -103,7 +95,7 @@ def partition(
     dropped: list[dict] = []
     for entity in entities:
         rule = config.get(entity.get("importance", "figurant"))
-        if rule is None or rule.mode == "dedicated" or _promoted(entity, events or [], rule.promote_above):
+        if rule is None or rule.mode == "dedicated" or _promoted(entity, events, rule.promote_above):
             dedicated.append(entity)
         elif rule.mode == "collective":
             collective.append(entity)
@@ -138,14 +130,14 @@ def collective_pages(entities: list[dict], labels: dict[str, str]) -> list[dict]
         by_key.setdefault(key, []).append(entity)
 
     pages = []
-    for key, default_title in _DEFAULT_TITLE_LABELS.items():
+    for key in _DEFAULT_TITLE_LABELS:
         group = by_key.get(key)
         if not group:
             continue
         group = sorted(group, key=lambda e: str(e.get("canonical_name", "")).casefold())
         pages.append(
             {
-                "title": labels.get(key, default_title),
+                "title": labels[key],
                 "importance": COLLATION_IMPORTANCE,
                 "entity_type": COLLATION_ENTITY_TYPE,
                 "infobox_fields": {},
