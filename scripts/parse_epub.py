@@ -42,6 +42,20 @@ _APOSTROPHE_VARIANTS: tuple[str, ...] = (
 )
 
 
+# Inline elements never break a word, so their boundaries must not become separators.
+# A dropcap or small-caps opener is markup of this kind: <span>D</span><span>ISCOVERY</span>.
+_INLINE_TAGS: tuple[str, ...] = (
+    'span', 'em', 'i', 'b', 'strong', 'small', 'sup', 'sub', 'a', 'u', 'cite', 'abbr',
+)
+
+
+def _flatten_inline_markup(soup) -> None:
+    """Dissolve inline tags in place so get_text() cannot split a word at their edges."""
+    for tag in soup.find_all(_INLINE_TAGS):
+        tag.unwrap()
+    soup.smooth()
+
+
 def clean_chapter_text(text: str) -> str:
     """Normalize chapter text to remove noise before NLP processing."""
     # 0. Unicode NFC normalization — must be first to compose combining characters
@@ -69,15 +83,8 @@ def clean_chapter_text(text: str) -> str:
     # 5. Replace remaining single \n with a space
     text = re.sub(r'(?<!\n)\n(?!\n)', ' ', text)
 
-    # 5b. Joindre lettre majuscule isolée + mot suivant en minuscule
-    #     Artefact lettrine HTML : <span>P</span>edro → "P\nedro" (via BS4) → après step 5 → "P edro" → "Pedro"
-    #     Doit venir APRÈS step 5 pour que le \n ait déjà été converti en espace.
-    #     Ne touche pas "M. Pedro" (suivi d'un point) ni les fins de phrase.
-    text = re.sub(r'(?<!\w)([A-ZÀÂÇÉÈÊËÎÏÔÙÛÜ]) ([a-záàâçéèêëîïôùûü])', r'\1\2', text)
-
-    # 5c. Re-insert spaces eaten after À (e.g. "Àla" → "À la", "Àson" → "À son").
+    # 5b. Re-insert spaces eaten after À (e.g. "Àla" → "À la", "Àson" → "À son").
     #     Fixes EPUB encoding artifacts where the space after the preposition À was lost.
-    #     Also restores any "À la" → "Àla" false positive introduced by step 5b above.
     text = re.sub(r'À([a-zéèêëàâùûüîïôœæç])', r'À \1', text)
 
     # 6. Normalize runs of spaces/tabs to a single space
@@ -293,6 +300,7 @@ def parse_epub(file_path: str, language: str = "fr", max_chapters: int | None = 
         if item is None:
             continue
         soup = BeautifulSoup(item.get_content(), "html.parser")
+        _flatten_inline_markup(soup)
         raw_text = soup.get_text(separator="\n", strip=True)
         cleaned = clean_chapter_text(raw_text)
         if len(cleaned) < MIN_CHAPTER_CHARS:
