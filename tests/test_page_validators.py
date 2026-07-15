@@ -59,9 +59,9 @@ def test_declaring_a_type_lets_a_book_override_reach_it():
 
 
 def test_undeclared_type_is_an_error():
-    errors = undeclared_entity_types([_page("Cadre", "FACTION")], DECLARED)
+    errors = undeclared_entity_types([_page("Wyvern", "CREATURE")], DECLARED)
     assert len(errors) == 1
-    assert "'FACTION'" in errors[0] and "Cadre" in errors[0]
+    assert "'CREATURE'" in errors[0] and "Wyvern" in errors[0]
 
 
 def test_unique_titles_pass():
@@ -78,10 +78,10 @@ def test_collision_after_filename_rendering_is_an_error():
 
 def test_entity_type_script_rejects_undeclared_type():
     result = _run_validator(
-        "validate_entity_type_declared.py", {"pages": [_page("Cadre", "FACTION")]}
+        "validate_entity_type_declared.py", {"pages": [_page("Wyvern", "CREATURE")]}
     )
     assert result["valid"] is False
-    assert "FACTION" in result["errors"][0]
+    assert "CREATURE" in result["errors"][0]
 
 
 def test_entity_type_script_accepts_declared_types():

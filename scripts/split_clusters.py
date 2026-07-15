@@ -4,7 +4,7 @@ Stage: split-clusters (script executor, no LLM)
 
 Partitions entity-clustering output into:
 - singles_resolved: entity_count==1, pre-resolved (no LLM needed)
-- PERSON/PLACE/ORG/EVENT/OTHER: multi-clusters for parallel LLM resolution
+- by_type: multi-clusters per resolution type (entity_taxonomy.resolution_types())
 
 Input (Studio stdin):
   previous_outputs["entity-clustering"]["clusters"]
@@ -12,11 +12,7 @@ Input (Studio stdin):
 Output (stdout):
   {
     "singles_resolved": [{canonical_name, type, aliases, source_ids, relevant}],
-    "PERSON": [...multi-clusters],
-    "PLACE":  [...multi-clusters],
-    "ORG":    [...multi-clusters],
-    "EVENT":  [...multi-clusters],
-    "OTHER":  [...multi-clusters],
+    "by_type": {"PERSON": [...multi-clusters], "PLACE": [...], ...},
     "stats":  {singles, multi_PERSON, multi_PLACE, ...}
   }
 """
@@ -27,14 +23,14 @@ import sys
 from pathlib import Path
 
 from wiki_creator import studio_io
+from wiki_creator.entity_taxonomy import resolution_types
 from wiki_creator.types import SplitCluster, SplitSingle, Splits
-
-ENTITY_TYPES = ("PERSON", "PLACE", "ORG", "EVENT", "OTHER")
 
 
 def split_clusters(clusters: list[dict]) -> dict:
+    types = resolution_types()
     singles_resolved = []
-    multi_by_type: dict[str, list] = {t: [] for t in ENTITY_TYPES}
+    multi_by_type: dict[str, list] = {t: [] for t in types}
 
     for cluster in clusters:
         entity_type = cluster.get("type", "OTHER")
@@ -53,10 +49,10 @@ def split_clusters(clusters: list[dict]) -> dict:
             multi_by_type[entity_type].append(cluster)
 
     stats = {"singles": len(singles_resolved)}
-    for t in ENTITY_TYPES:
+    for t in types:
         stats[f"multi_{t}"] = len(multi_by_type[t])
 
-    return {"singles_resolved": singles_resolved, **multi_by_type, "stats": stats}
+    return {"singles_resolved": singles_resolved, "by_type": multi_by_type, "stats": stats}
 
 
 def main() -> None:
@@ -89,7 +85,10 @@ def main() -> None:
         paths.processing.mkdir(parents=True, exist_ok=True)
         splits_obj = Splits(
             singles_resolved=[SplitSingle(**s) for s in result["singles_resolved"]],
-            **{t: [SplitCluster(**c) for c in result[t]] for t in ENTITY_TYPES},
+            by_type={
+                t: [SplitCluster(**c) for c in clusters]
+                for t, clusters in result["by_type"].items()
+            },
             stats=result["stats"],
             pov_detection=result.get("pov_detection"),
         )

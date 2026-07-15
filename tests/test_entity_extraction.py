@@ -672,7 +672,7 @@ def test_custom_ontology_labels_survive_extraction(custom_ontology_nlp):
     assert types_by_mention.get("Celaena") == "PERSON"
     assert types_by_mention.get("Endovier") == "PLACE"
     assert types_by_mention.get("Yulemas") == "EVENT"
-    assert types_by_mention.get("Silent Assassins") == "ORG"  # FACTION → ORG (spec decision)
+    assert types_by_mention.get("Silent Assassins") == "FACTION"  # first-order (STU-505)
 
 
 @requires_fr_lg
@@ -966,7 +966,7 @@ def test_custom_model_labels_are_mapped_and_kept():
     from scripts.entity_extraction import LABEL_TO_TYPE, KEPT_LABELS
     # custom wiki-ner-en model labels: {PERSON, PLACE, FACTION, ORG, EVENT}
     assert LABEL_TO_TYPE["PLACE"] == "PLACE"
-    assert LABEL_TO_TYPE["FACTION"] == "ORG"
+    assert LABEL_TO_TYPE["FACTION"] == "FACTION"  # first-order (STU-505)
     assert LABEL_TO_TYPE["EVENT"] == "EVENT"
     for lab in ("PLACE", "FACTION", "EVENT"):
         assert lab in KEPT_LABELS

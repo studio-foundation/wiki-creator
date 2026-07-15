@@ -40,9 +40,9 @@ SINGLE_ORG = {
 
 def test_multi_clusters_routed_by_type():
     result = split_clusters([MULTI_PERSON, MULTI_PLACE, SINGLE_PERSON, SINGLE_ORG])
-    assert result["PERSON"] == [MULTI_PERSON]
-    assert result["PLACE"] == [MULTI_PLACE]
-    assert result["ORG"] == []
+    assert result["by_type"]["PERSON"] == [MULTI_PERSON]
+    assert result["by_type"]["PLACE"] == [MULTI_PLACE]
+    assert result["by_type"]["ORG"] == []
 
 
 def test_singles_pre_resolved():
@@ -72,9 +72,9 @@ def test_multi_clusters_not_in_singles():
 
 def test_all_types_present_in_output():
     result = split_clusters([])
-    for t in ("PERSON", "PLACE", "ORG", "EVENT", "OTHER"):
-        assert t in result
-        assert isinstance(result[t], list)
+    for t in ("PERSON", "PLACE", "ORG", "EVENT", "FACTION", "OTHER"):
+        assert t in result["by_type"]
+        assert isinstance(result["by_type"][t], list)
     assert "singles_resolved" in result
 
 
@@ -94,8 +94,8 @@ def test_unknown_type_routed_to_other():
         "first_seen": "ch01", "total_mentions": 5,
     }
     result = split_clusters([unknown_cluster])
-    assert result["OTHER"] == [unknown_cluster]
-    assert "CREATURE" not in result
+    assert result["by_type"]["OTHER"] == [unknown_cluster]
+    assert "CREATURE" not in result["by_type"]
 
 
 def test_studio_interface():
@@ -114,7 +114,7 @@ def test_studio_interface():
     assert result.returncode == 0, result.stderr
     out = json.loads(result.stdout)
     assert "singles_resolved" in out
-    assert "PERSON" in out
+    assert "PERSON" in out["by_type"]
 
 
 def test_main_writes_validated_splits_artifact(tmp_path):
@@ -136,7 +136,7 @@ def test_main_writes_validated_splits_artifact(tmp_path):
     splits_path = processing / "splits.json"
     assert splits_path.exists()
     splits = studio_io.load_artifact(splits_path, Splits)
-    assert splits.PERSON[0].canonical_candidate == "David Martín"
+    assert splits.by_type["PERSON"][0].canonical_candidate == "David Martín"
     assert splits.singles_resolved[0].canonical_name == "Piquillo"
 
 
@@ -144,8 +144,7 @@ def test_splits_artifact_drift_raises(tmp_path):
     """An unknown top-level key on splits.json must be rejected."""
     path = tmp_path / "splits.json"
     path.write_text(json.dumps({
-        "singles_resolved": [], "PERSON": [], "PLACE": [], "ORG": [],
-        "EVENT": [], "OTHER": [], "stats": {}, "surprise": "unexpected",
+        "singles_resolved": [], "by_type": {}, "stats": {}, "surprise": "unexpected",
     }), encoding="utf-8")
     with pytest.raises(studio_io.ArtifactSchemaError):
         studio_io.load_artifact(path, Splits)

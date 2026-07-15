@@ -38,11 +38,12 @@ from pathlib import Path
 import yaml
 
 from wiki_creator import studio_io
+from wiki_creator.entity_taxonomy import resolution_types
 from wiki_creator.lang import load_lang_config, infer_language
 from wiki_creator.registry import normalize_name as _normalize_name
 from wiki_creator.types import ClassifiedBundle, ClassifiedEntity, Relationship
 
-_VALID_TYPES = {"PERSON", "PLACE", "ORG", "EVENT", "OTHER"}
+_VALID_TYPES = set(resolution_types())
 
 
 # --- Pure functions (testable) ---
@@ -116,7 +117,7 @@ def get_total_mentions(
         # Primary lookup by current type, fallback across registries for retagged entities.
         entry = type_to_registry.get(entity.get("type", ""), {}).get(sid)
         if entry is None:
-            for alt in ("PERSON", "PLACE", "ORG", "EVENT"):
+            for alt in type_to_registry:
                 candidate = type_to_registry.get(alt, {}).get(sid)
                 if candidate is not None:
                     entry = candidate

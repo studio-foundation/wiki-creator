@@ -48,6 +48,7 @@ from collections import defaultdict
 from pathlib import Path
 
 
+from wiki_creator.entity_taxonomy import resolution_types
 from wiki_creator.paths import book_paths_from_epub, book_paths_from_yaml
 from wiki_creator.registry import Registry, normalize_name as normalize_for_comparison
 
@@ -101,7 +102,8 @@ def load_name_connectors(language: str | None = None) -> frozenset[str]:
 
 
 JW_THRESHOLD = 0.92  # Jaro-Winkler threshold for orthographic variant matching
-TYPE_PRECEDENCE = ("PERSON", "PLACE", "ORG", "EVENT", "OTHER")
+# Tie-break order when a cluster spans multiple types (STU-505: from base.yaml).
+TYPE_PRECEDENCE = resolution_types()
 
 # Gender-discriminating title sets (subset of TITLE_PREFIXES)
 MASCULINE_TITLES = frozenset({"m.", "mr.", "monsieur", "señor", "don"})

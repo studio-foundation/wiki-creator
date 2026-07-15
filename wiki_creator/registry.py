@@ -18,8 +18,9 @@ from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
+from wiki_creator.entity_taxonomy import resolution_types
+
 REGISTRY_VERSION = 1
-ENTITY_TYPES = ("PERSON", "PLACE", "ORG", "EVENT", "OTHER")
 
 
 @dataclass(frozen=True)
@@ -597,10 +598,11 @@ class Registry:
             e for e in (alias_output or {}).get("entities") or [] if isinstance(e, dict)
         ]
 
+        by_type = splits.get("by_type") or {}
         jw_names = {
             str(name).casefold()
-            for etype in ENTITY_TYPES
-            for cluster in (splits.get(etype) or [])
+            for etype in resolution_types()
+            for cluster in (by_type.get(etype) or [])
             for name in (cluster.get("all_mentions") or [])
         }
 

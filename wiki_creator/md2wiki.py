@@ -2,6 +2,8 @@
 """Markdown → MediaWiki wikitext conversion for wiki export."""
 import re
 
+from wiki_creator import entity_taxonomy
+
 
 def convert(markdown: str) -> str:
     """Convert markdown body text to wikitext.
@@ -45,23 +47,15 @@ def _convert_inline(text: str) -> str:
     return text
 
 
-# OTHER is intentionally absent: the pipeline does not generate wiki pages for
-# it, so it falls through to the generic "Infobox" fallback in
-# make_infobox_call(). SYNOPSIS renders body-only (no infobox).
-_TEMPLATE_NAMES = {
-    "PERSON": "Infobox character",
-    "PLACE": "Infobox location",
-    "ORG": "Infobox organization",
-    "EVENT": "Infobox event",
-}
-
-
 def make_infobox_call(entity_type: str, fields: dict) -> str:
-    """Return the wikitext template call for the given entity type.
+    """Return the wikitext template call for the given entity type
+    (base.yaml#entity_types.export.infobox_template, STU-505).
 
-    Empty/None values are omitted. Each field on its own line.
+    A type without a declared template (OTHER, SYNOPSIS) falls through to the
+    generic "Infobox" — though SYNOPSIS/COLLATION render body-only and never call
+    this. Empty/None values are omitted. Each field on its own line.
     """
-    template = _TEMPLATE_NAMES.get(entity_type, "Infobox")
+    template = entity_taxonomy.infobox_template_name(entity_type) or "Infobox"
     lines = ["{{" + template]
     for key, value in fields.items():
         if value is not None and value != "":

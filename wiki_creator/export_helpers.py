@@ -2,6 +2,7 @@
 """Helper functions for wiki export — pure logic, no I/O."""
 from __future__ import annotations
 
+from wiki_creator import entity_taxonomy
 from wiki_creator.tome_labels import tome_number
 
 
@@ -10,16 +11,6 @@ def page_filename(canonical_name: str) -> str:
     name = canonical_name.replace(" ", "_")
     name = name.replace("/", "_")
     return name
-
-
-# Per-tome category label key (in the `labels` dict) for each entity type that
-# gets one (STU-486). EVENT is absent — event pages carry a single flat
-# category, not per-tome provenance (cf. md2wiki._TEMPLATE_NAMES).
-_TOME_LABEL_KEYS = {
-    "PERSON": "persons_by_tome",
-    "PLACE": "locations_by_tome",
-    "ORG": "organizations_by_tome",
-}
 
 
 def category_tags(
@@ -34,21 +25,26 @@ def category_tags(
     ``books`` empty/omitted → no per-tome categories (registry absent or
     pre-multi-tome artifact).
 
+    Category key, default label, per-tome key and whether the type carries
+    importance-tier categories all come from base.yaml#entity_types.export
+    (STU-505).
+
     ``expose_importance_tier`` (STU-507): the tier is a pipeline ranking, not a
     fact of the fiction — False drops the principal/secondary categories."""
     tags = []
-    if entity_type == "PERSON":
-        tags.append(f"[[Category:{labels['persons']}]]")
-        if expose_importance_tier and importance in ("principal", "secondary"):
+    cat_key = entity_taxonomy.category_key(entity_type)
+    if cat_key:
+        label = labels.get(cat_key) or entity_taxonomy.category_default(entity_type)
+        if label:
+            tags.append(f"[[Category:{label}]]")
+        if (
+            entity_taxonomy.exposes_importance_categories(entity_type)
+            and expose_importance_tier
+            and importance in ("principal", "secondary")
+        ):
             tags.append(f"[[Category:{labels[importance]}]]")
-    elif entity_type == "PLACE":
-        tags.append(f"[[Category:{labels['locations']}]]")
-    elif entity_type == "ORG":
-        tags.append(f"[[Category:{labels['organizations']}]]")
-    elif entity_type == "EVENT":
-        tags.append(f"[[Category:{labels.get('events', 'Événements')}]]")
 
-    tome_key = _TOME_LABEL_KEYS.get(entity_type)
+    tome_key = entity_taxonomy.tome_label_key(entity_type)
     if tome_key:
         template = labels.get(tome_key, "")
         for book_id in books or []:
@@ -57,85 +53,13 @@ def category_tags(
     return tags
 
 
-_INFOBOX_TEMPLATES = {
-    "PERSON": """\
-<includeonly>
-{| class="infobox"
-|-
-! colspan="2" | {{{name}}}
-|-
-| '''Aussi connu comme''' || {{{aliases|}}}
-|-
-| '''Titre(s)''' || {{{titles|}}}
-|-
-| '''Statut''' || {{{status|}}}
-|-
-| '''Espèce/Race''' || {{{species|}}}
-|-
-| '''Occupation''' || {{{occupation|}}}
-|-
-| '''Résidence''' || {{{residence|}}}
-|-
-| '''Affiliation''' || {{{affiliation|}}}
-|-
-| '''Première apparition''' || {{{first_seen|}}}
-|}
-</includeonly>""",
-    "PLACE": """\
-<includeonly>
-{| class="infobox"
-|-
-! colspan="2" | {{{name}}}
-|-
-| '''Type''' || {{{type|}}}
-|-
-| '''Localisation''' || {{{location|}}}
-|-
-| '''Première mention''' || {{{first_seen|}}}
-|-
-| '''Résidents notables''' || {{{residents|}}}
-|}
-</includeonly>""",
-    "ORG": """\
-<includeonly>
-{| class="infobox"
-|-
-! colspan="2" | {{{name}}}
-|-
-| '''Type''' || {{{type|}}}
-|-
-| '''Leader(s)''' || {{{leaders|}}}
-|-
-| '''Membres notables''' || {{{members|}}}
-|-
-| '''Siège''' || {{{headquarters|}}}
-|-
-| '''Première mention''' || {{{first_seen|}}}
-|}
-</includeonly>""",
-    "EVENT": """\
-<includeonly>
-{| class="infobox"
-|-
-! colspan="2" | {{{name}}}
-|-
-| '''Participants''' || {{{participants|}}}
-|-
-| '''Lieu''' || {{{lieu|}}}
-|-
-| '''Chapitre''' || {{{chapitre|}}}
-|-
-| '''Issue''' || {{{issue|}}}
-|}
-</includeonly>""",
-}
-
-
 def infobox_template_content(entity_type: str) -> str:
-    """Return the MediaWiki template source for the given entity type."""
-    if entity_type not in _INFOBOX_TEMPLATES:
+    """Return the MediaWiki template source for the given entity type
+    (base.yaml#entity_types.export.infobox_source, STU-505)."""
+    source = entity_taxonomy.infobox_source(entity_type)
+    if not source:
         raise ValueError(f"No infobox template for entity type: {entity_type!r}")
-    return _INFOBOX_TEMPLATES[entity_type]
+    return source
 
 
 # An editorial choice, so it belongs in book YAML `export.index`, not in a
