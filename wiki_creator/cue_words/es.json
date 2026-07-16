@@ -167,15 +167,6 @@
     "rito",
     "ritual"
   ],
-  "alias_pattern_templates": [
-    "\\bpuedes llamarme {b}\\b",
-    "\\btambién conocido como {b}\\b",
-    "\\banteriormente conocido como {b}\\b",
-    "\\bllamado {b}\\b",
-    "\\bconocido como {b}\\b",
-    "\\bde soltera {b}\\b",
-    "\\b{a}[^.]{{0,80}}\\bbajo otro nombre[^.]{{0,80}}\\b{b}\\b"
-  ],
   "action_cues": [
     "encontró",
     "descubrió",

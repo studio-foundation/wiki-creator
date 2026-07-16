@@ -29,7 +29,6 @@ REQUIRED_KEYS = frozenset(
         "reveal_words",
         "geo_keywords",
         "event_keywords",
-        "alias_pattern_templates",
         "action_cues",
         "geo_suffixes",
         "role_words",
