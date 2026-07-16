@@ -124,6 +124,7 @@ class Relationship:
     direction: str | None = None
     evolution: str | None = None
     evidence: str | None = None
+    confidence: str | None = None
     key_moments: list[str] = field(default_factory=list)
 
 

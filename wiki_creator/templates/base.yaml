@@ -311,6 +311,25 @@ relationships:
       description: >-
         A directly-attested relationship no other type fits. Last resort: exhaust every
         other type first, and prefer null over other when no bond is attested at all.
+  # STU-476: how strongly the evidence sentence supports the type — graded by the
+  # classifier, which is the only step that reads the excerpts. Keys are the tiers
+  # wiki_creator/confidence.py declares (STU-428).
+  confidence:
+    explicit:
+      description: >-
+        The evidence sentence states or enacts the bond itself — it is named, declared
+        or played out on the page (a kiss, "you are my friend", an order given and
+        obeyed, a stated rank). A reader cannot read that sentence and doubt the type.
+    inferred:
+      description: >-
+        The bond is never named, but the evidence shows conduct that this type explains
+        and the others do not — repeated cooperation, a rescue, deference to a command.
+        The reading is the likely one; the text still never says it.
+    interpretation:
+      description: >-
+        The type rests on reading meaning into a gesture, a look, a silence, a
+        proximity. Another reader could take the same sentence and type the pair
+        differently. Grade here rather than round up — a smile is not a declaration.
 labels:
   nom:           {en: Name,        fr: Nom}
   type:          {en: Type,        fr: Type}
