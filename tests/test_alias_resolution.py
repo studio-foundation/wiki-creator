@@ -6,7 +6,7 @@ import sys
 import unittest.mock as mock
 from pathlib import Path
 
-from scripts.alias_resolution import resolve_aliases, detect_named_aliases, _pick_snippets, make_ollama_confirmer
+from scripts.alias_resolution import resolve_aliases, _pick_snippets, make_ollama_confirmer
 from wiki_creator.lang import load_lang_config
 from wiki_creator.types import EntityFull
 
@@ -206,58 +206,6 @@ def test_script_stdin_contract_reads_registry_from_processing_dir(tmp_path: Path
     assert len(output["entities"]) == 1
     assert output["stats"]["merges_applied"] == 1
 
-
-
-def test_detect_named_aliases_no_evidence_returns_empty():
-    mentions = {
-        "Celaena": ["Celaena entered the room."],
-        "Dorian": ["Dorian watched the door."],
-    }
-    pairs = detect_named_aliases(mentions, text="Celaena entered the room. Dorian watched the door.")
-    assert pairs == []
-
-
-def test_detect_named_aliases_window_cooccurrence():
-    # Build a text where Celaena and Aelin appear within 300 tokens, twice
-    window = "Celaena " + "word " * 50 + "Aelin "
-    text = (window * 3).strip()
-    mentions = {
-        "Celaena": [window],
-        "Aelin": [window],
-    }
-    pairs = detect_named_aliases(mentions, text=text)
-    assert len(pairs) == 1
-    assert pairs[0]["source"] == "cooccurrence"
-    assert pairs[0]["confidence"] == "medium"
-
-
-def test_detect_named_aliases_window_below_threshold_returns_empty():
-    # Only one shared window — below threshold of 2
-    window = "Celaena " + "word " * 50 + "Aelin "
-    mentions = {
-        "Celaena": [window],
-        "Aelin": [window],
-    }
-    pairs = detect_named_aliases(mentions, text=window)
-    assert pairs == []
-
-
-
-
-def test_detect_named_aliases_uses_custom_reveal_words():
-    """reveal_words parameter overrides default _REVEAL_WORDS."""
-    from scripts.alias_resolution import detect_named_aliases
-    entity_a = {"canonical_name": "Celaena", "aliases": ["Celaena"], "type": "PERSON", "relevant": True}
-    entity_b = {"canonical_name": "Laena", "aliases": ["Laena"], "type": "PERSON", "relevant": True}
-    # Use a custom reveal word that would only match this context
-    context = "Celaena, known by the secret_reveal_marker as Laena, walked on."
-    pairs = detect_named_aliases(
-        {"Celaena": [context], "Laena": [context]},
-        text="",
-        reveal_words=("secret_reveal_marker",),
-    )
-    # With a custom reveal word matching the context, we should get pairs or at least no crash
-    assert isinstance(pairs, list)
 
 
 def test_pick_snippets_prioritises_canonical_name():

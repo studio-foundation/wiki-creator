@@ -701,10 +701,13 @@ def run_studio_mode() -> None:
         or all_stage_outputs.get("relationship-extraction")
         or {}
     )
-    # Entities: prefer alias-resolution output (post-merge) when available, fall back to
-    # relationship-extraction (original pipeline order) for backward compatibility.
+    # Entities: prefer the last stage that merged them — alias-adjudication (STU-539)
+    # runs after alias-resolution and re-emits its payload, so its output supersedes.
+    # Fall back to relationship-extraction (original pipeline order) for compatibility.
     alias_output = (
-        prev_outputs.get("alias-resolution")
+        prev_outputs.get("alias-adjudication")
+        or all_stage_outputs.get("alias-adjudication")
+        or prev_outputs.get("alias-resolution")
         or all_stage_outputs.get("alias-resolution")
         or {}
     )

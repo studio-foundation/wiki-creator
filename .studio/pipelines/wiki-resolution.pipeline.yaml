@@ -60,6 +60,19 @@ stages:
         - input
         - all_stage_outputs
 
+  - name: alias-adjudication
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/alias_adjudication.py
+    contract: alias-adjudication
+    # One `studio run` per book, over the whole PERSON roster.
+    timeout_ms: 900000
+    context:
+      include:
+        - input
+        - all_stage_outputs
+
   - name: entity-classification
     kind: extraction
     executor: script
