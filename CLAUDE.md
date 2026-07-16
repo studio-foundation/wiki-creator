@@ -106,12 +106,15 @@ Typical payload shape:
 }
 ```
 
-## wiki-resolution Stage Order (as of STU-276)
+## wiki-resolution Stage Order (as of STU-539)
 
 Inside `wiki-resolution`, order matters:
 1. `merge-entities` + `relationship-extraction` run first
-2. `alias-resolution` runs after — reads entities from merge-entities output
-3. `entity-classification` reads entities from alias-resolution, relationships from relationship-extraction
+2. `alias-resolution` runs after — reads entities from merge-entities output (STU-276)
+3. `alias-adjudication` runs after that — re-emits alias-resolution's payload with
+   contextual merges applied; the only stage here that needs the network (STU-539)
+4. `entity-classification` reads entities from alias-adjudication (falling back to
+   alias-resolution), relationships from relationship-extraction
 
 ## Chapter Summary: temporal_context (as of STU-271)
 
@@ -235,7 +238,51 @@ Inside `wiki-resolution`, order matters:
   were falsified in STU-468). Finding it is contextual adjudication, a separate
   ticket. The golden diff is one always-zero counter; no entity moved.
   `detect_named_aliases` has no production caller — it lost its pattern strategy here
-  but is dead API either way.
+  but is dead API either way (deleted in STU-539).
+
+- Contextual alias adjudication (STU-539): the alias pair no rule proposes is
+  decided by one `studio run alias-adjudication-item` per book, over the **whole
+  PERSON roster** — the `section-filter` shape (STU-529), with the opposite bias:
+  every failure path (missing CLI, timeout, unparseable verdict, hallucinated name)
+  **merges nothing** and warns, because STU-538's asymmetry runs the other way from
+  STU-529's. A false merge invents a character, deletes a real one, and
+  `Registry.accumulate` carries it into every later tome; a false negative leaves two
+  pages that are each still correct. `scripts/alias_adjudication.py` runs between
+  `alias-resolution` and `entity-classification`, re-emitting the former's payload
+  with merges applied (so `entity_classification` prefers `alias-adjudication` and
+  falls back); pure logic in `wiki_creator/alias_adjudication.py`. It is a **separate
+  stage on purpose** — `alias-resolution` stays deterministic and offline, so `make
+  golden`/`make smoke` stay LLM-free by construction, not by mocking. The cache
+  (`processing_output/<slug>/alias_adjudication.json`) is keyed on the roster rows
+  themselves, so `WIKI_MAX_CHAPTERS` or any upstream extraction fix cannot replay a
+  verdict made for a different roster.
+  **The ticket's premise was measured false, and that is what made this cheap.**
+  STU-539 was written believing Celaena/Lillian's evidence is only 2nd-person address
+  and pronouns, so adjudication would need dialogue attribution (with `coref: true`
+  queued as a possible source). It was written against a **5-chapter** cached
+  extraction, where the cover identity has not yet been revealed. Re-extract the full
+  book and two snippets name both outright: *"Lillian Gordaina was Celaena Sardothien,
+  the world's most notorious assassin"* (C40) and *"'Lillian Gordaina doesn't exist,'
+  Celaena said"* (C43). No attribution needed, no coref, no embeddings. **Re-measure a
+  ticket's premise against a full artifact before designing for it** — a subset run
+  (STU-497) answers a different question than the one asked.
+  Two consequences for the design. (1) **No candidate generation.** The ticket feared
+  `n²` pairs × one LLM call; the roster is 21–71 PERSON entities across the library
+  (38 on Throne of Glass), so the whole thing goes in one call and the model does the
+  `n²` internally — exactly as `section-filter` reasons over 60 sections at once. A
+  co-mention pre-filter was measured and rejected: it cuts 703 pairs to 222 and ranks
+  the target **28th**, behind every ordinary co-occurring pair, so it buys a threshold
+  nobody could set. (2) **The snippets are filtered, not the pairs.**
+  `select_snippets` keeps the ≤5 snippets that name *another roster character* — a
+  sentence naming nobody else can only confirm the entity exists. That is what fits a
+  38-entity roster into ~14k tokens while keeping the C40 reveal for **both** sides of
+  the pair. **A merge must quote text we showed the model** (`parse_merge_verdict`
+  drops any pair whose quote is not verbatim in its own snippets): these novels are in
+  the model's training data, so without the check a merge sourced from its memory of
+  the plot and one sourced from this run's text are indistinguishable afterwards. It
+  is the anti-theatre rule applied to a claim rather than a tool call. Merges do not
+  chain: A=B then B=C is skipped, because the classifier judged the roster it was
+  shown and was never asked for a transitive claim.
 
 - Name-collision policy (STU-506): `registry.py::_merge_duplicate_canonicals`
   used to fold two entities on `canonical_name.casefold()` alone — a PERSON and

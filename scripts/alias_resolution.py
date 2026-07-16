@@ -15,23 +15,11 @@ from pathlib import Path
 
 import yaml
 from collections.abc import Callable
-from typing import Literal, TypedDict
 
 from wiki_creator import studio_io
 from wiki_creator.lang import load_lang_config, infer_language
 from wiki_creator.llm import ollama
 from wiki_creator.registry import EntityRecord, Registry, normalize_name
-
-
-class AliasPair(TypedDict):
-    entity_a: str
-    entity_b: str
-    confidence: Literal["high", "medium"]
-    source: Literal["cooccurrence", "title_alias"]
-    snippet: str
-
-
-_WINDOW_SIZE = 300  # tokens
 
 
 def _empty_stats() -> dict:
@@ -255,59 +243,6 @@ def _detect_series_seed(
     return None
 
 
-def _detect_cooccurrence_window(
-    name_a: str,
-    name_b: str,
-    text: str,
-    threshold: int = 2,
-) -> str | None:
-    """
-    Returns a ~200-character snippet from the first co-occurrence zone, or None.
-
-    Tokenizes by whitespace. A name matches if its lowercased tokens appear
-    consecutively in the token list.
-    """
-    tokens = text.split()
-    if not tokens:
-        return None
-
-    na = name_a.lower()
-    nb = name_b.lower()
-
-    def find_positions(name: str) -> list[int]:
-        name_tokens = name.split()
-        n = len(name_tokens)
-        positions = []
-        for idx in range(len(tokens) - n + 1):
-            if " ".join(tokens[idx: idx + n]).lower() == name:
-                positions.append(idx)
-        return positions
-
-    pos_a = find_positions(na)
-    pos_b = find_positions(nb)
-
-    if not pos_a or not pos_b:
-        return None
-
-    # Collect all positions of name_a that have name_b within _WINDOW_SIZE tokens
-    # (symmetric: either name can precede the other).
-    cooccurrence_centers: list[int] = []
-    for pa in pos_a:
-        for pb in pos_b:
-            if abs(pa - pb) < _WINDOW_SIZE:
-                center = min(pa, pb)
-                cooccurrence_centers.append(center)
-                break
-
-    if len(cooccurrence_centers) < threshold:
-        return None
-
-    ws = max(0, cooccurrence_centers[0])
-    snippet_tokens = tokens[ws: ws + _WINDOW_SIZE]
-    snippet = " ".join(snippet_tokens)
-    return snippet[:200]
-
-
 def _tokens_between_are_connective(between: str, connective_words: set[str]) -> bool:
     """True when every word in ``between`` is a connective (article/preposition) or
     pure punctuation — the marker of apposition rather than conjunction.
@@ -528,46 +463,6 @@ def _detect_title_alias(
                         "snippet": f"{name} / {full_name}",
                     }
     return None
-
-
-def detect_named_aliases(
-    mentions: dict[str, list[str]],
-    text: str,
-    reveal_words: tuple[str, ...] | None = None,
-) -> list[AliasPair]:
-    """
-    Detect alias pairs by token-window co-occurrence (zero LLM).
-
-    Args:
-        mentions: mapping of entity canonical_name -> list of context snippets
-        text: raw concatenated book text, used for token-window co-occurrence
-        reveal_words: optional override for reveal signal words
-
-    Returns:
-        list of AliasPair, each with entity_a, entity_b, confidence, source, snippet
-    """
-    if reveal_words is None:
-        reveal_words = ()
-    names = list(mentions.keys())
-    pairs: list[AliasPair] = []
-
-    for i in range(len(names)):
-        for j in range(i + 1, len(names)):
-            name_a = names[i]
-            name_b = names[j]
-
-            if text:
-                window_evidence = _detect_cooccurrence_window(name_a, name_b, text)
-                if window_evidence:
-                    pairs.append(AliasPair(
-                        entity_a=name_a,
-                        entity_b=name_b,
-                        confidence="medium",
-                        source="cooccurrence",
-                        snippet=window_evidence,
-                    ))
-
-    return pairs
 
 
 def _build_role_index(relationships: list[dict]) -> dict[tuple[str, str], list[str]]:

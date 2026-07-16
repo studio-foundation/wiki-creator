@@ -1,0 +1,11 @@
+name: alias-adjudication-item
+version: 1
+schema:
+  required_fields:
+    - merge
+# merge: list of {a: string, b: string, quote: string, reason: string} — the roster
+# entries that are one person under two names.
+# An empty list is valid and means every entry is a distinct character.
+# Names absent from the roster, and quotes absent from the snippets shown, are
+# discarded by the caller (scripts/alias_adjudication.py), not rejected here: a
+# hallucinated merge must not fail a run, it must not merge.

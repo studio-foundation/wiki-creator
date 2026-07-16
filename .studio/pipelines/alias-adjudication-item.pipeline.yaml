@@ -1,0 +1,14 @@
+name: alias-adjudication-item
+description: Decide which PERSON roster entries are one character under two names — one call per book
+version: 1
+
+stages:
+  - name: alias-adjudication-item
+    kind: analysis
+    agent: alias-adjudication
+    contract: alias-adjudication-item
+    ralph:
+      max_attempts: 3
+    context:
+      include:
+        - input
