@@ -275,6 +275,21 @@ Inside `wiki-resolution`, order matters:
   `detect_named_aliases` has no production caller — it lost its pattern strategy here
   but is dead API either way (deleted in STU-539).
 
+- An honorific is not a role (STU-541): `_detect_title_alias` merged **Mr Beaver and
+  Mrs Beaver into one Narnia entity**. The rule is written for `Captain Westfall` →
+  `Chaol Westfall`, where the role designates one person, so the remainder
+  (`westfall`) discriminates. `mr`/`mrs`/`miss` reach `role_words` through
+  `person_cue_words` like any other title, and a married couple differs **only** by
+  the honorific — the surname is the very part that cannot tell the spouses apart, so
+  a matching remainder identifies nobody. A merge is refused when both entities bear
+  titles that never overlap. **Titles are compared per entity, not per name**: once
+  bare `Beaver` has absorbed `Mr Beaver`, it *is* Mr Beaver, and a per-name check
+  would let it match `Mrs Beaver` and remarry the couple transitively. The remainder
+  matches **whole tokens** (`_contains_token_run`), never a substring — `Beavers` is
+  the couple, and `beaver` sitting inside it is an accident of spelling. What still
+  merges and must keep merging: `Mr Tumnus` → `Tumnus` (one side titled, no conflict),
+  `Captain Westfall` → `Chaol Westfall`.
+
 - Contextual alias adjudication (STU-539): the alias pair no rule proposes is
   decided by one `studio run alias-adjudication-item` per book, over the **whole
   PERSON roster** — the `section-filter` shape (STU-529), with the opposite bias:
