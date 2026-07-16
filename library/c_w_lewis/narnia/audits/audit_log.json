@@ -1,0 +1,115 @@
+[
+  {
+    "run": 1,
+    "date": "2026-07-15",
+    "book": "01-the_lion_the_witch_and_the_wardrobe",
+    "pages_generated": 26,
+    "pages_usable": 9,
+    "infobox_pct": 35,
+    "lang_fr_pct": 100,
+    "alias_duplicates": 0,
+    "alias_false_merges": 2,
+    "hallucinations": 0,
+    "gt_violations": [
+      {
+        "page": "Lucy",
+        "signal": "INFOBOX_ALIAS_CROSS [Lucy->Peter]: infobox 'alias=PETER, Peter'",
+        "cause": "confusion_alias",
+        "first_seen_in": "entities_classified.json (alias_resolution, method=pattern, confidence=high, merged_from=['Peter'])",
+        "component": "wiki_creator/cue_words/{en,fr}.json#alias_pattern_templates + scripts/alias_resolution.py::_detect_pattern_for_names",
+        "action": "Couvert par STU-534. La cause racine (le détecteur d'alias par pattern) est supprimée par STU-538, en review — re-valider ce point après son merge.",
+        "issue": "STU-534"
+      },
+      {
+        "page": "Beaver",
+        "signal": "INFOBOX_ALIAS_CROSS [Mr Beaver->Mrs Beaver]: infobox 'alias=Beavers, Mr Beaver, Mrs Beaver'",
+        "cause": "confusion_alias",
+        "first_seen_in": "entities_classified.json (alias_resolution, method=title_alias, confidence=medium, merged_from=['Beavers'], evidence snippet 'Mrs Beaver / Beavers')",
+        "component": "scripts/alias_resolution.py — méthode title_alias",
+        "action": "Ne pas fusionner deux entités dont les titres honorifiques diffèrent (Mr/Mrs) sur un nom de famille commun. Distinct de STU-534 (method=pattern) et NON couvert par STU-538, qui ne retire que le détecteur pattern. Issue à créer.",
+        "issue": "à créer"
+      }
+    ],
+    "gt_note": "Corpus ground-truth Narnia créé le 2026-07-16 sous library/c_w_lewis/narnia/books/ground-truth/ (8 fichiers, 14 entités : Aslan, les quatre enfants, la Sorcière Blanche, Tumnus, les Beavers, Maugrim, Narnia + Cair Paravel, le Professeur + Mrs Macready). Étapes 1b/1c rejouées sur le wiki_pages.json de cette run : 3 violations brutes / 2 distinctes, toutes de classe alias-identité, toutes en amont dans entities_classified.json. Zéro signal d'hallucination, zéro terme interdit, zéro relation future — la génération sur les 9 pages abouties est propre au regard du GT. Chaque fait du corpus est vérifié par grep contre chapters.json, ce qui a corrigé deux erreurs de mémoire : 'Jadis' EST dans LWW (1 occurrence, dans l'avis d'arrestation signé Maugrim) et 'Pevensie' n'y est PAS (0 occurrence) — le patronyme est donc un signal d'hallucination, pas un fait.",
+    "coverage": {
+      "classified_entities": 26,
+      "batch_entities": 26,
+      "pages_generated": 26,
+      "missing": [],
+      "failed": [
+        "Adam", "Cair Paravel", "Daughter of Eve", "Faun", "Fauns", "Fox",
+        "Giant Rumblebuffin", "House", "Maugrim", "Mrs Macready", "Naiads",
+        "Queens", "Robin", "Son", "Tumnus", "Turkish", "Wolf"
+      ],
+      "failed_extra_artifacts": ["book_synopsis (Synopsis)", "event_pages (Aslan/White Witch)"],
+      "filtered_before_batch": 0
+    },
+    "weak_entities": [
+      "Narnia (16/16 relations untyped)",
+      "Turkish (10/10 untyped)",
+      "Naiads (4/4 untyped)",
+      "Cair Paravel (0 relations)",
+      "House (0 relations)",
+      "Queens (0 relations)",
+      "Kings (0 relations)",
+      "Fox (0 relations)"
+    ],
+    "regression": {
+      "prefixed_keys": "✅",
+      "epub_ids": "✅",
+      "entity_type_null": "✅",
+      "alias_duplicates": "❌",
+      "cross_serie": "✅",
+      "evolution_quality": "❌",
+      "temporal_context": "⚠️",
+      "ground_truth": "⚠️"
+    },
+    "gt_regression_detail": "⚠️ partiel : 0 signal d'hallucination, 0 terme interdit, 0 relation future sur les 9 pages abouties ; 2 contaminations d'identité par alias (Lucy←Peter, Beaver←Mrs Beaver), toutes deux introduites en amont par alias-resolution, aucune imputable au rédacteur LLM.",
+    "metrics": {
+      "relations_total": 212,
+      "relations_typed_pct": 30,
+      "evolution_non_generic_pct": 18,
+      "key_moments_populated_pct": 34,
+      "evidence_present_pct": 30
+    },
+    "root_causes_verified": [
+      {
+        "signal": "17/26 pages _failed + synopsis + event page (19 artifacts)",
+        "cause": "studio run --json stdout truncated at exactly 8192 bytes (nondeterministic Node stdout flush race); extract_first_json_object then silently returns the nested stages[0] fragment, so run_id becomes the stage id and the JSONL fallback misses too",
+        "first_seen_in": "llm_generation (studio CLI stdout)",
+        "evidence": "raw_response byte length == 8192 on all 3 saved artifacts; load_studio_stage_output('d9f310e4') recovers 'Cair Paravel', load_studio_stage_output('6fea0d4f') returns None",
+        "component": "wiki_creator/studio_io.py::extract_first_json_object + scripts/generate_wiki_pages.py::_execute_wiki_page_item",
+        "action": "Fail on truncated top-level JSON instead of returning a fragment; read run_id independently and always prefer the complete .studio/runs JSONL log",
+        "issue": "STU-533"
+      },
+      {
+        "signal": "Peter Pevensie absent from the wiki; Lucy carries alias 'Peter'; Aslan carries alias 'Queen'",
+        "cause": "7 of 9 en.json alias_pattern_templates (6 of 7 in fr.json) reference only {b} — {a} never enters the regex, so any 'called her X' sentence merges X into an unconstrained partner",
+        "first_seen_in": "entities_classified.json (alias_resolution, method=pattern, confidence=high)",
+        "evidence": "template '\\bcalled (?:him|her|them) {b}\\b' matched a='Peter' b='Queen Lucy' on a sentence that never mentions Peter; reproduced at HEAD via detect_named_aliases",
+        "component": "wiki_creator/cue_words/{en,fr}.json#alias_pattern_templates + scripts/alias_resolution.py::_detect_pattern_for_names",
+        "action": "Anchor {a} in every template; add a negative test where the snippet names only b",
+        "issue": "STU-534"
+      },
+      {
+        "signal": "30 PERSON / 1 PLACE; Narnia (the world) has a character page",
+        "cause": "Book takes the default spacy backend; en_core_web_lg tags Narnia PERSON 7/7 and Cair Paravel ORG on the real chapter text — upstream model limit on an invented world, not a routing defect",
+        "first_seen_in": "persons_full.json / entity-extraction",
+        "evidence": "spaCy en_core_web_lg run directly on 3 chapters: PERSON 178, GPE 1, LOC 1",
+        "component": "library/c_w_lewis/narnia/books/01-the_lion_the_witch_and_the_wardrobe.yaml (no ner: block)",
+        "action": "Evaluate and flip to backend: gliner (STU-521)",
+        "issue": "STU-535"
+      }
+    ],
+    "stale_artifacts": [
+      "chapters.json was extracted at 18:00, before STU-529 (section filter) merged at 19:44 — section_filter.json is absent and the publisher blurb ('Peter, Susan, Edmund, and Lucy find their way through an old wardrobe...') is chapter 'annotation' in the corpus, feeding relationship sample_contexts. Re-extract before treating this as a live defect."
+    ],
+    "verdict": "Two live bugs, both proven by replay: every one of the 19 'failed' pages was successfully generated and then discarded by an 8192-byte stdout truncation the recovery path was one id away from surviving (STU-533); and an alias rule whose regex cannot see one of its two operands merged Peter Pevensie into Lucy at confidence:high (STU-534). Generation quality on the 9 surviving pages is otherwise clean — 0 prefixed keys, 0 EPUB ids, 0 hallucinations, 100% FR.",
+    "new_issues": [
+      "STU-533: studio run --json stdout truncates at 8192 bytes → 19 fully-generated pages discarded (bug)",
+      "STU-534: 7 of 9 alias_pattern_templates never anchor {a} → Peter merged into Lucy (bug)",
+      "STU-535: Narnia 01 on the spaCy NER backend: 30 PERSON / 1 PLACE (config/eval)",
+      "à créer: alias-resolution method=title_alias merges Mr Beaver + Mrs Beaver into one 'Beaver' entity — distinct from STU-534 (method=pattern) and not covered by STU-538, which only removes the pattern detector (bug)"
+    ]
+  }
+]
