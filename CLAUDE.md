@@ -436,6 +436,33 @@ Inside `wiki-resolution`, order matters:
 - `export.index.{principals_shown, places_shown}` sizes the Main_Page showcase
   lists (STU-511, was `[:8]`/`[:5]` hardcoded in `export_helpers.py`). `0` empties
   a section; absent/negative/unparseable falls back to the 8/5 defaults.
+- The co-occurrence window is the chapter's (STU-536): `build_cooccurrence_graph`
+  takes `chapters` (the text) and slides over `split_sentences(text)`, so
+  `_MAX_DIRECT_INTERACTION_GAP` means what its name says. It used to take
+  `mentions_by_entity` and stitch a per-chapter list by iterating that dict —
+  each entity's ≤3 context sentences, entity block after entity block. Sentence
+  *i* and *i+1* were then two different entities' samples, pages apart (median
+  4151 chars on Eragon; 7% were really adjacent prose), and since the entity
+  order decided adjacency, it decided the graph: shuffling the roster moved
+  28–33% of it (`research/relation-eval/diagnose_baseline.py`, now 0% by
+  construction, pinned by `test_graph_does_not_depend_on_entity_order`). Against
+  a 109-pair gold on Eragon the fix took detection F1 0.200 → 0.507, almost all
+  of it precision (0.122 → 0.415) — level with the GLiREL that STU-467 was
+  considering buying, which is why STU-536 blocked it: a third of the baseline's
+  output was iteration-order noise, so beating it proved nothing.
+  Two consequences. (1) **Coref only starts working here now.** It attributes a
+  pronoun sentence to an entity, but the graph read the *sentence text* and
+  matched names by regex, so an attributed sentence carried no name and only ever
+  padded the pool — the attribution was never read. It is now the optional
+  `mentions_by_entity` presence index: a listed sentence counts the entity
+  present but yields no context (no name to quote). It matches by string, so the
+  stage speaks one splitter — `split_sentences` and coref's
+  `_find_sentence_containing` share `_sentence_spans`.
+  (2) **The splitter is a blank sentencizer**, not the book's spaCy model: punct
+  rules only, no model to install, so `make golden` stays hermetic (~4s for
+  Eragon's 900k chars). It costs some boundary quality — a chapter title glues to
+  the first sentence, a closing quote starts the next one — which is why contexts
+  moved in the goldens.
 - `workers` in relationship/coref config directly impact RAM usage.
 - `.studio/config.yaml` and `.studio/runs/` must not be committed.
 - Never add hardcoded word lists to scripts. All vocabulary belongs in `wiki_creator/cue_words/<lang>.json` (language-wide) or the book YAML `classification` section (book-specific). No script may define a fallback vocabulary constant — if a key is absent from cue_words, degrade gracefully to an empty collection.
