@@ -21,6 +21,17 @@
 #   - hallucination guard: pure co-occurrence at court must stay null
 #     (Westfall↔Kaltain — the canonical false-positive)
 #
+# `max_confidence` (STU-476) is the strongest grade the excerpts BELOW support —
+# not the strongest reading of the novel. It scores over-grading only: a pair may
+# come back weaker than its label without penalty (hedged prose costs nothing), but
+# claiming more than the quoted sentence says reaches the reader as a fact. Omit the
+# key to leave a pair ungraded rather than guess it.
+#
+# The over-grade axis has real power on two pairs only (Celaena↔Dorian,
+# Celaena↔Nox): the rest of this fixture's excerpts state their bond outright, so
+# `explicit` is simply correct there. That is the corpus, not a target — do not
+# weaken an excerpt to make the metric bite.
+#
 # NOT covered: friendly_rivalry and wary_alliance. Both types exist in base.yaml
 # but no Throne-of-Glass book-1 pair in this fixture attests them, and inventing
 # excerpts to exercise a type would score the classifier against fiction rather
@@ -34,6 +45,7 @@ pairs:
     entity_b: Chaol
     expected: [strained_friendship, budding_attraction]
     cooccurrence_count: 48
+    max_confidence: explicit
     note: >-
       STU-477, the audit's headline case. Captain of the Guard and the King's
       Champion: the excerpts show trust AND the fear of that trust, a charge no
@@ -49,11 +61,14 @@ pairs:
     entity_b: Dorian
     expected: [budding_attraction, romance]
     cooccurrence_count: 41
+    max_confidence: inferred
     note: >-
       Crown Prince and his Champion. Scored on the excerpts provided, not the
       whole book: they show the pull (caught breath, brushing hands) but nothing
       declared or reciprocated aloud, which is budding_attraction. `romance` stays
-      acceptable — the book's arc does consummate it.
+      acceptable — the book's arc does consummate it. Graded `inferred`: the pull is
+      shown as conduct, never named — `explicit` here is the audit's Chaol defect
+      (a gesture reported as a fact).
     sample_contexts:
       - "Dorian leaned closer, and Celaena felt her breath catch. \"You are the most insufferable woman I have ever met,\" the prince murmured, smiling."
       - "They read together in the library until dawn, Dorian's hand brushing hers over the pages."
@@ -63,6 +78,7 @@ pairs:
     entity_b: Nehemia
     expected: [friend, ally]
     cooccurrence_count: 33
+    max_confidence: explicit
     note: Princess of Eyllwe and Celaena become close confidantes.
     sample_contexts:
       - "Nehemia sat with Celaena for hours, teaching her the marks of the Wyrd, the two of them laughing like sisters."
@@ -72,7 +88,11 @@ pairs:
     entity_b: Nox
     expected: [ally, friend]
     cooccurrence_count: 18
-    note: Fellow Champion and thief; they watch each other's backs during the competition.
+    max_confidence: inferred
+    note: >-
+      Fellow Champion and thief; they watch each other's backs during the competition.
+      Graded `inferred`: Nox offers the pact aloud but Celaena never answers, so the
+      mutual trust `ally` requires is read from conduct, not stated.
     sample_contexts:
       - "Nox slid into the seat beside Celaena at the Champions' table. \"Stick with me,\" he whispered, \"and we'll both survive this.\""
       - "When the others sneered, Nox alone nodded at Celaena across the training yard."
@@ -81,6 +101,7 @@ pairs:
     entity_b: Celaena
     expected: mentor
     cooccurrence_count: 14
+    max_confidence: explicit
     note: >-
       Weapons Master over the Champions — STU-495 one-to-many authority: the
       evidence is group-directed ("the Champions") and names only the role-holder,
@@ -94,6 +115,7 @@ pairs:
     entity_b: Celaena
     expected: antagonist
     cooccurrence_count: 22
+    max_confidence: explicit
     note: Rival Champion; open hostility escalating to a duel.
     sample_contexts:
       - "Cain sneered down at Celaena. \"When they pit us against each other, assassin, I'll enjoy breaking you.\""
@@ -104,6 +126,7 @@ pairs:
     entity_b: Chaol
     expected: [friend, ally]
     cooccurrence_count: 27
+    max_confidence: explicit
     note: Prince and Captain are lifelong best friends.
     sample_contexts:
       - "Dorian clapped Chaol on the shoulder. \"You worry too much, my friend,\" the prince laughed."
@@ -113,6 +136,7 @@ pairs:
     entity_b: Arobynn
     expected: [mentor, employment]
     cooccurrence_count: 9
+    max_confidence: explicit
     note: Arobynn Hamel, King of the Assassins, trained and owned Celaena — authority relation from backstory.
     sample_contexts:
       - "Arobynn had taught Celaena everything — how to hold a blade, how to pick a lock, how to kill without leaving a trace."
@@ -123,6 +147,7 @@ pairs:
     entity_b: King
     expected: [employment, ally]
     cooccurrence_count: 12
+    max_confidence: explicit
     note: >-
       STU-496 structural/faction: Duke Perrington serves the King of Adarlan.
       They share the court but the excerpts show no two-way dyadic exchange — the
@@ -135,6 +160,7 @@ pairs:
     entity_b: King
     expected: [employment, ally]
     cooccurrence_count: 6
+    max_confidence: explicit
     note: >-
       STU-496 structural: Brullo runs the King's competition on the crown's
       orders; a role/employment tie with no direct scene between them.

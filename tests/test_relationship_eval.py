@@ -183,3 +183,84 @@ def test_render_report_on_real_fixture_all_correct():
     assert m["overall_accuracy"] == 1.0
     assert m["false_null_rate"] == 0.0
     assert m["hallucination_rate"] == 0.0
+
+
+# ------------------------------------------------- confidence grading (STU-476)
+
+def test_load_gold_reads_max_confidence_and_leaves_ungraded_pairs_none():
+    gold = re.load_gold(FIXTURE)
+    by_pair = {gp.key: gp for gp in gold}
+    assert by_pair[re.pair_key("Celaena", "Dorian")].max_confidence == "inferred"
+    assert by_pair[re.pair_key("Westfall", "Kaltain")].max_confidence is None
+
+
+def test_confidences_from_relationships_normalizes():
+    rels = [
+        {"entity_a": "A", "entity_b": "B", "confidence": "Explicit"},
+        {"entity_a": "C", "entity_b": "D", "confidence": None},
+        {"entity_b": "no_a", "confidence": "explicit"},
+    ]
+    conf = re.confidences_from_relationships(rels)
+    assert conf[re.pair_key("A", "B")] == "explicit"
+    assert conf[re.pair_key("C", "D")] is None
+    assert len(conf) == 2
+
+
+def _graded(*specs):
+    return [
+        re.GoldPair(a, b, ("friend",), max_confidence=mc) for a, b, mc in specs
+    ]
+
+
+def test_score_confidence_flags_a_stronger_claim_than_the_excerpts_support():
+    gold = _graded(("Celaena", "Dorian", "inferred"))
+    m = re.score_confidence(gold, {re.pair_key("Celaena", "Dorian"): "explicit"})
+    assert m["overgraded_count"] == 1
+    assert m["overgraded_rate"] == 1.0
+    assert m["rows"][0].verdict == "overgraded"
+
+
+def test_score_confidence_does_not_penalize_a_weaker_grade():
+    gold = _graded(("A", "B", "explicit"))
+    m = re.score_confidence(gold, {re.pair_key("A", "B"): "interpretation"})
+    assert m["overgraded_count"] == 0
+    assert m["rows"][0].verdict == "ok"
+
+
+def test_score_confidence_counts_a_missing_grade_as_ungraded_not_overgraded():
+    gold = _graded(("A", "B", "inferred"))
+    m = re.score_confidence(gold, {})
+    assert m["ungraded_count"] == 1
+    assert m["overgraded_count"] == 0
+
+
+def test_score_confidence_skips_pairs_the_gold_leaves_ungraded():
+    gold = _graded(("A", "B", None))
+    m = re.score_confidence(gold, {re.pair_key("A", "B"): "explicit"})
+    assert m["scored"] == 0
+    assert m["overgraded_rate"] == 0.0
+
+
+def test_render_report_appends_the_confidence_section():
+    gold = _graded(("Celaena", "Dorian", "inferred"))
+    metrics = re.score(gold, {re.pair_key("Celaena", "Dorian"): "friend"})
+    conf = re.score_confidence(gold, {re.pair_key("Celaena", "Dorian"): "explicit"})
+    report = re.render_report("throne-of-glass-01", metrics, conf)
+    assert "Over-graded rate" in report
+    assert "overgraded" in report
+
+
+def test_render_report_omits_the_confidence_section_when_nothing_is_graded():
+    gold = _graded(("A", "B", None))
+    metrics = re.score(gold, {re.pair_key("A", "B"): "friend"})
+    report = re.render_report("x", metrics, re.score_confidence(gold, {}))
+    assert "Over-graded rate" not in report
+
+
+def test_fixture_grades_score_clean_against_a_gold_mirroring_prediction_set():
+    gold = re.load_gold(FIXTURE)
+    conf = {gp.key: gp.max_confidence for gp in gold if gp.max_confidence}
+    m = re.score_confidence(gold, conf)
+    assert m["scored"] >= 10
+    assert m["overgraded_count"] == 0
+    assert m["ungraded_count"] == 0
