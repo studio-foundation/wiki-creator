@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
-"""The adjudication CLI: one row, one keypress. Reads adjudicate.py's sheet.
+"""The adjudication CLI: one row, one keypress. Renders adjudicate.py's sheet.
+
+A dumb renderer on purpose — it knows about sections, questions and rows, and
+nothing about relations. What is being asked lives in the sheet, so a new section
+is an adjudicate.py change and never a change here.
 
 Every vote is written to disk as it is cast, so quitting is a pause, not a loss,
 and a second run picks up where the first stopped. That is not a nicety: this is
 the only step of STU-540 a human has to do, and the whole method dies if it is
 long enough to abandon.
 
-Order is the sheet's, and the sheet is sorted by name — a row never says which
-arm claimed the pair. See adjudicate.py for why, and for the one case where
-blindness leaks.
+Order within a section is the sheet's, and the sheet is sorted by name — a row
+never says which arm claimed the pair. See adjudicate.py for why, and for the one
+case where blindness leaks.
 
 Usage:
     python vote.py                 # resumes
@@ -35,7 +39,7 @@ def getch() -> str:
         termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
 
-def ask(header: str, body: list[str], question: str, progress: str) -> str | None:
+def ask(header: str, body: list[str], question: str, hint: str, progress: str) -> str | None:
     """Returns 'o' | 'n' | 's' (skip), or None to stop."""
     while True:
         os.system("clear")
@@ -44,7 +48,8 @@ def ask(header: str, body: list[str], question: str, progress: str) -> str | Non
         for block in body:
             print(textwrap.fill(block, WIDTH, initial_indent="  ", subsequent_indent="  "))
             print()
-        print(f"{question}   \033[2m[o]ui  [n]on  [s]auter  [q]uitter\033[0m")
+        print(question + (f"   \033[2m{hint}\033[0m" if hint else ""))
+        print("\033[2m[o]ui  [n]on  [s]auter  [q]uitter\033[0m")
         key = getch().lower()
         if key in ("o", "n", "s"):
             return key
@@ -60,47 +65,37 @@ def main() -> None:
     args = ap.parse_args()
 
     with open(args.sheet, encoding="utf-8") as f:
-        sheet = json.load(f)
+        sections = json.load(f)["sections"]
 
-    votes = {"detection": {}, "typing": {}}
+    votes = {s["id"]: {} for s in sections}
     if os.path.exists(args.votes) and not args.restart:
         with open(args.votes, encoding="utf-8") as f:
-            votes.update(json.load(f))
+            for section, cast in json.load(f).items():
+                votes.setdefault(section, {}).update(cast)
 
     def save() -> None:
         with open(args.votes, "w", encoding="utf-8") as f:
             json.dump(votes, f, ensure_ascii=False, indent=2)
 
-    todo = [("detection", r) for r in sheet["detection"] if r["key"] not in votes["detection"]]
-    todo += [("typing", r) for r in sheet["typing"] if r["key"] not in votes["typing"]]
-    done = len(votes["detection"]) + len(votes["typing"])
-    total = len(sheet["detection"]) + len(sheet["typing"])
+    todo = [(s, row) for s in sections for row in s["rows"] if row["key"] not in votes[s["id"]]]
+    total = sum(len(s["rows"]) for s in sections)
+    done = total - len(todo)
 
     if not todo:
-        print(f"{total}/{total} déjà voté. python score_adjudication.py --votes {args.votes}")
+        print(f"{total}/{total} déjà voté.\n\n  python score_adjudication.py --votes {args.votes}")
         return
 
     for section, row in todo:
         done += 1
-        if section == "detection":
-            body = row["windows"] or [
-                "Les deux noms ne partagent jamais une fenêtre de 5 phrases dans le livre."
-            ]
-            question = "Le livre montre-t-il une VRAIE RELATION entre ces deux-là ?"
-        else:
-            a = row["key"].split(" | ")[0]
-            body = [f"type : {row['relationship_type']}    direction : {row['direction']}  (A = {a})"]
-            body += [f"« {e} »" for e in row["evidence"]]
-            question = "Le type et la direction sont-ils justes ?"
-
-        answer = ask(row["key"], body, question, f"{done}/{total}  ({section})")
+        answer = ask(row["key"], row["body"] or ["(aucun extrait)"], section["question"],
+                     section.get("hint", ""), f"{done}/{total}  ({section['id']})")
         if answer is None:
             save()
-            cast = len(votes["detection"]) + len(votes["typing"])
+            cast = sum(len(v) for v in votes.values())
             print(f"\n{cast}/{total} voté. `python vote.py` reprend ici.")
             return
         if answer != "s":
-            votes[section][row["key"]] = answer
+            votes[section["id"]][row["key"]] = answer
             save()
 
     save()

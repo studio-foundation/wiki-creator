@@ -9,13 +9,33 @@ decision at a fraction of the reading: it asks a human only where the two arms
 on needs no adjudication — agreement between an LLM and a regex is not the
 confound.
 
-Two sections, because the ticket's question has two halves:
+Three sections, and the first one is not optional.
+
+  ROSTER — is this roster entry a character at all? One keypress per entity, no
+  reading. It exists because the two arms are not told the same things: the LLM's
+  prompt says the roster holds entries that are not people and that they take part
+  in no relation, and co-occurrence has no notion of type and cannot decline. On
+  Eragon the roster still carries `Rider` (a role), `Kull` (a race) and `Brisingr`
+  (a sword), and co-occurrence claims 15 pairs on `Rider` where the LLM claims 0.
+  Adjudicating those pair-by-pair would spend a human's votes deciding what the NER
+  should have decided, and would charge co-occurrence for another stage's defect.
+  Asked once per entity, `Rider` costs one keypress and settles 15 pairs.
+
+  The spike's roster was deliberately dirty and the README defends that: whether an
+  arm declines to relate a character to a valley is part of what is measured. It
+  still is — but it is measured as its own number (each arm's junk-pair rate) by
+  `score_adjudication.py`, not smeared into a detection score where it reads as a
+  window bug.
+
+  The filter is applied at scoring, never at sampling: the pair sections are drawn
+  before anyone knows which entries are characters, and re-drawing them afterwards
+  would throw away votes already cast on pairs that are still valid.
 
   DETECTION — a stratified sample of the pairs exactly one arm found, equal
-  numbers from each arm so neither is over-represented in the estimate. **Blind**:
-  rows are sorted by name and never say which arm claimed the pair, so a vote
-  cannot be a vote for an architecture. Evidence is the book's own text (the
-  windows where both names appear), never an arm's output, for the same reason.
+  numbers from each arm so neither is over-represented.
+  **Blind**: rows are sorted by name and never say which arm claimed the pair, so a
+  vote cannot be a vote for an architecture. Evidence is the book's own text, never
+  an arm's output, for the same reason.
 
   Blindness is partial and cannot be total: co-occurrence cannot emit a pair whose
   names never share a window, so a row marked as having no shared window is
@@ -53,6 +73,16 @@ def names_of(roster: list[dict]) -> dict[str, list[str]]:
     return {e["canonical_name"]: [e["canonical_name"], *e.get("aliases", [])] for e in roster}
 
 
+def first_mention(name: str, chapters: list[dict], forms: dict) -> list[str]:
+    """One passage naming the entity — enough to tell a character from a role noun."""
+    needles = [f.lower() for f in forms.get(name, [])]
+    for chapter in chapters:
+        for sentence in split_sentences(chapter["text"]):
+            if any(n in sentence.lower() for n in needles):
+                return [sentence.strip()]
+    return []
+
+
 def windows_for(pair: tuple[str, str], chapters: list[dict], forms: dict) -> list[str]:
     """Verbatim passages of the book where both names land within one window.
 
@@ -79,7 +109,7 @@ def windows_for(pair: tuple[str, str], chapters: list[dict], forms: dict) -> lis
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--corpus", default="corpus.jsonl")
-    ap.add_argument("--roster", default="roster_oracle.json")
+    ap.add_argument("--roster", default="roster.json")
     ap.add_argument("--cooccurrence", default="predictions.cooccurrence_fixed.json")
     ap.add_argument("--llm", default="predictions.llm_schema.json")
     ap.add_argument("--detection-sample", type=int, default=20,
@@ -100,11 +130,20 @@ def main() -> None:
 
     forms = names_of(roster)
     rng = random.Random(args.seed)
+    names = sorted(forms)
+
+    sections = [{
+        "id": "roster",
+        "question": "Est-ce un PERSONNAGE du livre ?",
+        "hint": "Un rôle (« Rider »), une race (« Kull »), un objet : non.",
+        "rows": [{"key": n, "body": first_mention(n, chapters, forms)} for n in names],
+    }]
+
     agreed = sorted(cooc & set(llm))
 
     # Sample per arm, not from the pooled disputed set: the arms disagree in very
-    # unequal numbers (75 vs 27 on Eragon), and a pooled sample would spend the
-    # human's votes on whichever arm is noisier and leave the other unmeasured.
+    # unequal numbers, and a pooled sample would spend the human's votes on
+    # whichever arm is noisier and leave the other unmeasured.
     disputed = []
     for keys in (cooc - set(llm), set(llm) - cooc):
         pool = sorted(keys)
@@ -112,27 +151,38 @@ def main() -> None:
         disputed += rng.sample(pool, n)
     disputed.sort()
 
-    sheet = {"detection": [], "typing": []}
-    for a, b in disputed:
-        sheet["detection"].append({
-            "key": f"{a} | {b}",
-            "windows": windows_for((a, b), chapters, forms),
-        })
+    sections.append({
+        "id": "detection",
+        "question": "Le livre montre-t-il une VRAIE RELATION entre ces deux-là ?",
+        "hint": "« Dans la même scène » n'est pas une relation.",
+        "rows": [
+            {"key": f"{a} | {b}",
+             "body": windows_for((a, b), chapters, forms)
+                     or ["Les deux noms ne partagent jamais une fenêtre de 5 phrases."]}
+            for a, b in disputed
+        ],
+    })
 
+    typing_rows = []
     for a, b in sorted(rng.sample(agreed, min(args.typing_sample, len(agreed)))):
         pred = llm[(a, b)]
-        sheet["typing"].append({
+        typing_rows.append({
             "key": f"{a} | {b}",
-            "relationship_type": pred["relationship_type"],
-            "direction": pred["direction"],
-            "evidence": pred.get("evidence", [])[:2],
+            "body": [f"type : {pred['relationship_type']}    "
+                     f"direction : {pred['direction']}  (A = {a})",
+                     *(f"« {e} »" for e in pred.get("evidence", [])[:2])],
         })
+    sections.append({
+        "id": "typing",
+        "question": "Le type et la direction sont-ils justes ?",
+        "hint": "",
+        "rows": typing_rows,
+    })
 
     with open(args.out, "w", encoding="utf-8") as f:
-        json.dump(sheet, f, ensure_ascii=False, indent=2)
-
-    print(f"{len(sheet['detection'])} disputed, {len(sheet['typing'])} typing rows -> {args.out}",
-          file=sys.stderr)
+        json.dump({"sections": sections}, f, ensure_ascii=False, indent=2)
+    print(f"{len(names)} roster, {len(disputed)} disputed, {len(typing_rows)} typing "
+          f"-> {args.out}", file=sys.stderr)
 
 
 if __name__ == "__main__":
