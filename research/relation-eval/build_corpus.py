@@ -73,6 +73,9 @@ def build_roster(bundle_entities: list[dict], classified: dict | None) -> list[d
         {
             "canonical_name": e["canonical_name"],
             "aliases": sorted(set(e.get("aliases") or []) | {e["canonical_name"]}),
+            # Carried so an arm can reach the entity's mentions in *_full.json,
+            # which key them by extraction id, not by canonical name.
+            "source_ids": e.get("source_ids") or [],
             "type": e.get("type"),
             "refined_type": refined.get(e["canonical_name"]),
         }

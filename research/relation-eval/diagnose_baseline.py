@@ -28,6 +28,13 @@ readings of "adjacent" by locating every unified sentence back in its chapter.
 Only cross-entity adjacencies are measured: an entity's own block is in text
 order, so it is not where the mechanism can mislead.
 
+The second measurement follows from the first. If the list is ordered by entity,
+then the ENTITY order decides which sentences are adjacent, and the entity order
+is dict insertion order — an artifact of how the roster was assembled, carrying no
+information about the book. Shuffling the roster and re-running the real
+build_cooccurrence_graph on the same text with the same parameters shows how much
+of the relationship graph that artifact decides.
+
 Usage:
     python diagnose_baseline.py \\
         --processing-output ../../library/christopher_paolini/inheritance/processing_output/01_eragon
@@ -35,6 +42,7 @@ Usage:
 import argparse
 import json
 import os
+import random
 import statistics
 import sys
 
@@ -67,11 +75,49 @@ def cross_entity_distances(unified: list[tuple[str, str]], text: str) -> list[in
     return distances
 
 
+def pairs_for_order(roster: list[dict], persons_full: dict) -> set:
+    """Run the real build_cooccurrence_graph over this roster order."""
+    sys.path.insert(0, os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "scripts"))
+    from relationship_extraction import build_cooccurrence_graph
+
+    entities = [
+        {"canonical_name": e["canonical_name"], "type": "PERSON",
+         "aliases": e.get("aliases") or [], "relevant": True}
+        for e in roster
+    ]
+    mentions: dict[str, dict[str, list[str]]] = {}
+    for entity in roster:
+        merged: dict[str, list[str]] = {}
+        for eid in entity.get("source_ids", []):
+            for cid, sents in persons_full.get(eid, {}).get("mentions_by_chapter", {}).items():
+                merged.setdefault(cid, []).extend(sents)
+        mentions[entity["canonical_name"]] = merged
+
+    relationships, _ = build_cooccurrence_graph(entities, mentions)
+    return {tuple(sorted((r["entity_a"], r["entity_b"]))) for r in relationships}
+
+
+def report_order_sensitivity(roster: list[dict], persons_full: dict, seeds: list[int]) -> None:
+    base = pairs_for_order(roster, persons_full)
+    print(f"roster in its own order: {len(base)} pairs")
+    for seed in seeds:
+        shuffled = roster[:]
+        random.Random(seed).shuffle(shuffled)
+        got = pairs_for_order(shuffled, persons_full)
+        drift = len(base ^ got)
+        print(f"  shuffled (seed {seed}): {len(got):4} pairs, {drift:4} differ "
+              f"= {drift / max(len(base), 1):.0%} of the graph")
+    print()
+    print("Same entities, same text, same parameters. The difference is dict order.")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--processing-output", required=True)
     ap.add_argument("--near-chars", type=int, default=300,
                     help="what a genuinely adjacent pair of sentences looks like")
+    ap.add_argument("--shuffle-seeds", type=int, nargs="*", default=[1, 2, 3])
     args = ap.parse_args()
 
     root = args.processing_output
@@ -109,6 +155,9 @@ def main() -> None:
           f"{near}/{len(distances)} = {near / len(distances):.0%}")
     print()
     print("_MAX_DIRECT_INTERACTION_GAP admits these pairs as direct interactions.")
+    print()
+    print("=== how much of the graph does the entity order decide? ===")
+    report_order_sensitivity(roster, persons_full, args.shuffle_seeds)
 
 
 if __name__ == "__main__":
