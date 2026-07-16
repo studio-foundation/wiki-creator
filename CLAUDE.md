@@ -204,6 +204,36 @@ Inside `wiki-resolution`, order matters:
   (classification), not collision rustines, so removing them needs a real spaCy
   run to verify — left in place.
 
+- Markup corpus (STU-525): `tests/fixtures/markup/` is the parser's regression
+  record — one `<publisher>-<shape>.html` per real convention (tags, classes,
+  charrefs, whitespace byte-exact from the publisher's file; prose swapped for
+  filler), paired with a `.txt` holding the text the parser must produce.
+  `tests/test_markup_corpus.py` parametrizes over it. Three things are
+  load-bearing. (1) **The `.txt` is hand-written, never generated** — deriving it
+  from `parse_epub` asserts only that the parser agrees with itself, the
+  circularity STU-524 removed from the e2e fixture. It caught a wrong prediction
+  of mine on the first pass: `eragon-epigraph-em-split` really does render
+  `elit .`, because the source really is `</em>&#13;\n .` — the publisher's
+  space, not our bug. (2) **Shapes are keyed on tag names, never classes**
+  (`tests/fixtures/markup/harvest.py`, re-runs the survey against a local
+  library): the parser only sees tags, and Brisingr does its small-caps with a
+  bare `<small>` while Eragon uses `<span class="small1">` — same shape.
+  Classes stay in the snippet as provenance. (3) **The harvest writes nothing** —
+  a new shape is a prompt for a human (swap the prose, hand-write the `.txt`),
+  not a patch. Reverting `_flatten_inline_markup` reds 9 of the 15 snippets.
+  The corpus found two bugs on its first run, both invisible to markup we wrote
+  ourselves: STU-531 (`\r`, fixed here) and STU-532 (block-level dropcap, the one
+  `strict=True` xfail — do not "fix" it by editing the expected text).
+- Carriage returns (STU-531): `clean_chapter_text` normalizes `\r` like `\n`.
+  It never comes from line endings — not one EPUB in the library holds a `\r`
+  byte — but from **`&#13;` charrefs**, which `html.parser` resolves at parse
+  time. 6 of 16 books ship them (le-jeu-de-lange 11249, Murtagh 7506, Eragon
+  7057, Brisingr 6055, hollow-star 4655, Narnia 970). Most sit between blocks and
+  die as whitespace-only strings under `get_text(strip=True)`; the ones inside a
+  block reached the output, leaving a raw `\r` in **1192 blocks** of chapter text
+  and titles like `PALANCAR\r VALLEY`. So "no HTML entities reach here" was true
+  and still not enough: charrefs resolve *to characters*, and the cleaner has to
+  handle the character.
 - Dropcaps (STU-519): word-splitting markup is rejoined in `parse_epub` by
   `_flatten_inline_markup` — inline tags (`span`, `em`, `sup`, `a`, …) are
   unwrapped and `soup.smooth()` merges the adjacent strings, *before*
@@ -215,9 +245,15 @@ Inside `wiki-resolution`, order matters:
   dropcaps). The old `clean_chapter_text` step 5b regex merged *any* isolated
   capital + lowercase word and was pure corruption: 7361 distinct bogus tokens
   across the 16 EPUBs (`Asilvery` — NER-tagged PLACE and eligible for a wiki page —
-  plus `Smajuscule`, `Aà`). Only two markup shapes in the library actually split a
-  word, both span-based: Eragon's small-caps chapter openers
-  (`D<span>ISCOVERY</span>`) and Hollow Star's `f_dropcapital`.
+  plus `Smajuscule`, `Aà`). STU-519 recorded "only two markup shapes in the
+  library actually split a word, both span-based" (Eragon's small-caps chapter
+  openers `D<span>ISCOVERY</span>` and Hollow Star's `f_dropcapital`) — the
+  STU-525 harvest falsified that on both counts. Twelve conventions split words
+  across 13 of 16 books, `<small>`/`<em>`/`<sup>`/`<b>`/`<i>` as well as `<span>`
+  (see `tests/fixtures/markup/`), and the shape STU-519 called absent from the
+  library — the block-level dropcap — is the first sentence of The Hobbit
+  (STU-532). The survey found what it went looking for; the number was never a
+  census.
   `first_person_artifact_tails` (`entity_extraction.py`, kills `Iwould`/`Ihave`) is
   NOT dead — it now catches only genuine source typos (throne-of-glass has one real
   `Isay`), which is what it was reduced to, not what it was written for. Note

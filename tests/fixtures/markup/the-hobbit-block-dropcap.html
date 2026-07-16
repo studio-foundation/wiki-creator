@@ -1,0 +1,9 @@
+<!-- 00-the_hobbit.epub (J.R.R. Tolkien) :: OEBPS/part2_split_001.xhtml
+     Block-level dropcap: the initial is its own <p>, so the word is split
+     across two *block* elements. _flatten_inline_markup cannot fix this -- it
+     only dissolves inline tags -- and _mark_paragraph_breaks then inserts a
+     paragraph break inside the word. The real text is the opening sentence of
+     the novel ("In a hole in the ground..."), which the pipeline emits as
+     "I\n\nn a hole...". Known broken: STU-532. -->
+<p class="calibre4">L</p>
+      <p class="calibre4">orem ipsum in a hole in the ground.</p>
