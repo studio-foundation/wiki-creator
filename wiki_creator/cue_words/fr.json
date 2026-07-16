@@ -448,5 +448,11 @@
   "placeholder_markers": [
     "si connu",
     "contenu en français basé uniquement sur les extraits"
+  ],
+  "status_markers": [
+    "mort", "morte", "morts", "mourut", "meurt", "mourir", "mourant",
+    "tué", "tuée", "tuer", "assassiné", "assassinée", "cadavre", "tombe",
+    "enterré", "enterrée", "funérailles", "périt", "périr",
+    "disparu", "disparue", "disparaît", "ressuscité", "revenant"
   ]
 }
