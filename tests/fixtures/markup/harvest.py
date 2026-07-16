@@ -49,10 +49,11 @@ from ebooklib import epub
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from scripts.parse_epub import (  # noqa: E402
-    _BLOCK_TAGS,
     _INLINE_TAGS,
     _flatten_inline_markup,
+    _leaf_blocks,
     _mark_paragraph_breaks,
+    _merge_block_dropcaps,
     clean_chapter_text,
 )
 
@@ -67,6 +68,7 @@ BLOCK_DROPCAP = "block-dropcap"  # the split is between two blocks: STU-532
 def parse(html: str) -> str:
     soup = BeautifulSoup(html, "html.parser")
     _flatten_inline_markup(soup)
+    _merge_block_dropcaps(soup)
     _mark_paragraph_breaks(soup)
     return clean_chapter_text(soup.get_text(separator="\n", strip=True))
 
@@ -96,16 +98,15 @@ def splits_a_word(broken: str, fixed: str) -> bool:
     return False
 
 
-def leaf_blocks(soup):
-    """Only innermost blocks: a wrapper would repeat everything its children hold."""
-    for block in soup.find_all(list(_BLOCK_TAGS)):
-        if not block.find(list(_BLOCK_TAGS)):
-            yield block
-
-
 def block_dropcap_pairs(soup):
-    """A block holding one capital letter, followed by one starting lowercase."""
-    blocks = list(leaf_blocks(soup))
+    """A block holding one capital letter, followed by one starting lowercase.
+
+    The survey question ("where does this shape occur") is not the production
+    question ("rejoin it"), so this reads the tree _merge_block_dropcaps has not
+    touched. Both follow the same rule; loosen one and this stops reporting what
+    the other now merges.
+    """
+    blocks = _leaf_blocks(soup)
     for first, second in zip(blocks, blocks[1:]):
         head, tail = first.get_text().strip(), second.get_text().strip()
         if len(head) == 1 and head.isupper() and tail[:1].islower():
@@ -116,7 +117,7 @@ def units(soup):
     """Yield ((block_tag, inline_tag, kind), markup) for every shape in the tree."""
     for first, second in block_dropcap_pairs(soup):
         yield (first.name, "-", BLOCK_DROPCAP), f"{first}\n{second}"
-    for block in leaf_blocks(soup):
+    for block in _leaf_blocks(soup):
         frag = str(block)
         broken, fixed = unflattened(frag), parse(frag)
         if broken == fixed:

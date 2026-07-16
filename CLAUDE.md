@@ -222,8 +222,27 @@ Inside `wiki-resolution`, order matters:
   a new shape is a prompt for a human (swap the prose, hand-write the `.txt`),
   not a patch. Reverting `_flatten_inline_markup` reds 9 of the 15 snippets.
   The corpus found two bugs on its first run, both invisible to markup we wrote
-  ourselves: STU-531 (`\r`, fixed here) and STU-532 (block-level dropcap, the one
-  `strict=True` xfail — do not "fix" it by editing the expected text).
+  ourselves: STU-531 (`\r`) and STU-532 (block-level dropcap), both since fixed.
+  A shape recorded but not fixed gets a `strict=True` xfail naming its issue —
+  never an expected text edited down to what the parser happens to emit.
+- Block dropcaps (STU-532): a dropcap can be its own **block**, not its own span
+  — `<p>I</p><p>n a hole…</p>`, The Hobbit's opening sentence. Inline flattening
+  cannot reach it, so `_mark_paragraph_breaks` used to put a paragraph break
+  inside the word. `_merge_block_dropcaps` rejoins it, between
+  `_flatten_inline_markup` (so `<p><span>I</span></p>` has already collapsed) and
+  `_mark_paragraph_breaks` (whose mark would outlive the block it decomposes).
+  This is **not** the STU-519 regex coming back: that one guessed from flat text,
+  where `P`+`edro` and `A`+`silvery` are indistinguishable. This reads markup
+  while the tree still stands — a block holding one capital, followed by one
+  resuming lowercase. A lone capital is a legal word; a lone capital as an entire
+  paragraph, with the next paragraph resuming mid-sentence, is typesetting. The
+  gate that matters is the lowercase one: drop it and `<p>A</p><p>Silvery
+  cloud…</p>` welds, which is exactly the 7361-token corruption STU-519 deleted.
+  Verified by re-parsing all 16 EPUBs: it fires **once**, on the Hobbit sentence,
+  nowhere else. It also removes a paragraph break, so it shifts every STU-489
+  mention offset downstream of it in that chapter — no book in the library but
+  The Hobbit is affected, and the fixture novella has no such shape (goldens
+  unchanged).
 - Carriage returns (STU-531): `clean_chapter_text` normalizes `\r` like `\n`.
   It never comes from line endings — not one EPUB in the library holds a `\r`
   byte — but from **`&#13;` charrefs**, which `html.parser` resolves at parse
@@ -251,9 +270,9 @@ Inside `wiki-resolution`, order matters:
   STU-525 harvest falsified that on both counts. Twelve conventions split words
   across 13 of 16 books, `<small>`/`<em>`/`<sup>`/`<b>`/`<i>` as well as `<span>`
   (see `tests/fixtures/markup/`), and the shape STU-519 called absent from the
-  library — the block-level dropcap — is the first sentence of The Hobbit
-  (STU-532). The survey found what it went looking for; the number was never a
-  census.
+  library — the block-level dropcap — is the first sentence of The Hobbit, now
+  handled by `_merge_block_dropcaps` (STU-532). The survey found what it went
+  looking for; the number was never a census.
   `first_person_artifact_tails` (`entity_extraction.py`, kills `Iwould`/`Ihave`) is
   NOT dead — it now catches only genuine source typos (throne-of-glass has one real
   `Isay`), which is what it was reduced to, not what it was written for. Note
