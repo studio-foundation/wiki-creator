@@ -620,6 +620,40 @@ Inside `wiki-resolution`, order matters:
   `--restart wiki-extraction --clean`. (2) Entities — `generate_wiki_pages.py
   --entities NAME... [--force]` (STU-497/#110, `make generate-pages-entity ENTITY=...`)
   regenerates only a slice of pages without wiping the rest.
+- Book-specific relationship types (STU-472): the book YAML
+  `classification.relationship_types` (`name` + `description`) is **appended** to
+  `base.yaml#relationships.enum`; absent ⇒ the generic vocabulary alone, unchanged.
+  The bonds that define a world are exactly the ones a generic enum cannot name —
+  the Rider–dragon link flattened to `ally`, carranam to `other`. Declared on the 6
+  `inheritance` tomes; every other book is untouched. Three things are load-bearing.
+  (1) **The name is the label** — a book type carries no `labels` map and no
+  token/label split. A book declares one `output_language` and its YAML is written
+  by someone who read the novel, so `name: lien de Dragonnier` is both what the
+  classifier returns and what the page prints. The ticket's `lien_dragonnier` +
+  rendered-label shape was dropped: it buys a config axis nobody needs.
+  (2) **A book type must cross three gates, not one.** The ticket names only prompt
+  injection. `relationship_classifier_validator` rejected any type outside
+  `relationship_tokens()`, so an injected book type would have been *validated
+  against a table that never heard of this book* — RALPH would retry it to death.
+  It now reads the vocabulary out of the **payload** (`allowed_types`), i.e. judges
+  the answer against the question we actually asked; no payload vocabulary (pre-472
+  artifact, offline caller) falls back to the generic enum. The third gate is
+  rendering (`canonical_relationship`/`relationship_label` take `book_config`).
+  (3) **An incomplete or shadowing entry raises**, it does not degrade — a type the
+  config declares and the pipeline silently drops is the STU-470 shape.
+  STU-477 is why this was cheap: the vocabulary already travelled in the payload
+  with per-type criteria, so the agent prompt needed **no edit at all**.
+- `antagonist` is now `enemy` (STU-472): a relationship type must be a word a reader
+  would use. *Antagonist* is narratology — a role defined toward THE protagonist —
+  so `Cain.wiki` typing `[[Captain Westfall]] — antagoniste` on the sole grounds that
+  both are in the tournament claims Cain heads his own novel. It also made the term a
+  catch-all for "neither friend, family nor lover", which is what the audit caught.
+  `legacy: [antagoniste, antagonist]` keeps artifacts already on disk rendering — in
+  the new word. **`ally` was checked and kept**: an ally is defined by a shared goal,
+  not by a story-structure role, and readers do say it; its STU-477 criterion already
+  names the concrete test (shared goal + mutual trust), with `wary_alliance` for
+  cooperation without trust. Goldens unaffected — relationship typing is an LLM stage,
+  outside the golden path by construction.
 - Untyped relations never render (STU-501): a relationship with no usable
   `relationship_type` is **omitted** from every reader-facing surface — the dated
   relationship index, per-relation prose, and the writer prompt. No neutral
