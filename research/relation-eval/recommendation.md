@@ -60,27 +60,40 @@ is, not on implicit reach.
 
 The numbers agree with the diagnosis, and more sharply than expected.
 
-| arm | detection F1 | precision | recall | pairs emitted |
-|---|---|---|---|---|
-| `cooccurrence_shipped` | **0.200** | 0.122 | 0.560 | 501 |
-| `cooccurrence_fixed` | **0.507** | 0.415 | 0.651 | 171 |
-| `glirel` | **0.498** | 0.443 | 0.569 | 140 |
+| arm | det F1 | det P | det R | type (e2e) | direction | pairs |
+|---|---|---|---|---|---|---|
+| `cooccurrence_shipped` | 0.200 | 0.122 | 0.560 | — | — | 501 |
+| `cooccurrence_fixed` | **0.507** | 0.415 | 0.651 | — | — | 171 |
+| `glirel` | 0.498 | 0.443 | 0.569 | 0.202 | 0.091 | 140 |
+| `llm_schema` | 0.864 | 0.784 | 0.963 | 0.817 | 0.854 | 134 |
 
-**Sliding the window over the chapter instead of over an entity-ordered list takes
-detection F1 from 0.200 to 0.507 — two and a half times — and lands level with
-GLiREL.** Almost all of it is precision: 0.122 to 0.415. The shipped arm emits 501
-pairs to find 61 of the gold's 109; the fixed arm emits 171 to find 71. Its extra
-recall is free.
+Read this table with caveat 1 open, because `llm_schema` is not comparable to the
+rest. The gold is built by an LLM; `llm_schema` is an LLM. Its 0.864/0.817/0.854
+is in large part a measure of two LLM runs agreeing on what a relation is and how
+to type it — a different model (sonnet vs the gold's opus) and a production-shaped
+task blunt that, nothing removes it. Its number is an upper bound on the *method*,
+not a measurement anyone can bank. What it does establish is a ceiling: typed,
+directed discovery in one pass is achievable, and the two non-LLM arms are far
+below it.
 
-That is the whole answer to "GLiREL or co-occurrence". They tie on the axis where
-they are comparable, and one of them is a change to how one list is built.
+**The comparison that survives the confound is the three non-LLM rows, and among
+them the finding is co-occurrence.** Sliding the window over the chapter instead
+of over an entity-ordered list takes detection F1 from 0.200 to 0.507 — two and a
+half times — and lands level with GLiREL. Almost all of it is precision: 0.122 to
+0.415. The shipped arm emits 501 pairs to find 61 of the gold's 109; the fixed arm
+emits 171 to find 71. Its extra recall is free.
+
+That is the answer to "GLiREL or co-occurrence": they tie on detection, the axis
+where they are comparable, and one of them is a change to how one list is built.
 
 GLiREL does buy something co-occurrence cannot give at any price: a type at
 discovery, where `build_cooccurrence_graph` emits `None` by construction. But it
 buys it weakly — 0.202 end-to-end, with a threshold picked by looking at the gold
 and labels that were never swept — and it cannot supply direction at all: 0.091,
 because it emits a directed head -> tail triple and most relations are
-`symétrique`. The pipeline needs direction.
+`symétrique`. The pipeline needs direction. On the evidence here the typed-discovery
+prize goes to schema-LLM, not GLiREL — but only the ceiling is demonstrated, not
+the margin, and it is the one arm the gold flatters.
 
 ### What to do
 
@@ -98,12 +111,26 @@ because it emits a directed head -> tail triple and most relations are
 
 Then re-run this bake-off. The arms and the gold are built; re-scoring is minutes.
 
-**Do not adopt GLiREL or schema-LLM on the strength of the numbers above.** Not
-because they lose — read the tables — but because a win over a baseline that is a
-third dict-order noise is not evidence about relation extraction. It is evidence
-about the bug. The two ideas the ticket names (type and direction at discovery;
-dialogue-based signal) remain the right direction, and STU-467 should carry them
-once there is a baseline worth beating.
+Then re-run this bake-off and decide about GLiREL and schema-LLM against a
+baseline worth beating. **Do not decide on the numbers above.** A win over an arm
+that is a third dict-order noise is evidence about the bug, not about relation
+extraction — and the one arm that wins decisively is the one the gold flatters.
+The ideas the ticket names (type and direction at discovery; dialogue-based
+signal) stay right; only the comparison is not yet decidable.
+
+**If the fix lands and typed discovery is still wanted, the shortlist is
+schema-LLM, not GLiREL.** GLiREL was the ticket's headline candidate on the
+grounds of being a fast local encoder, and it is — but it needs a label sweep and
+a threshold calibration before it emits anything at all, and it structurally
+cannot express `symétrique`. Its ceiling on type (0.202) sits below what the fixed
+window already gives on detection for free. A GLiREL loss here reads "not
+demonstrated" (caveat 2), so this is not a verdict — but it is not the cheap win
+the ticket assumed either.
+
+The honest next measurement, if that path is taken: score schema-LLM against a
+**human-annotated** gold on a subset. Everything else in this harness can be
+reused; only `build_gold.py` changes. Nothing else removes caveat 1, and caveat 1
+is the only thing standing between "schema-LLM at 0.86" and a decision.
 
 ### Issues this spike should spawn
 
