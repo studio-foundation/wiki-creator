@@ -1,0 +1,104 @@
+{
+  "id": "d9f310e4-1ec0-4094-8bd7-8b9602f36cdf",
+  "pipeline_name": "wiki-page-item",
+  "status": "success",
+  "started_at": "2026-07-16T01:04:11.725Z",
+  "stages": [
+    {
+      "id": "6fea0d4f-f9b1-4363-ae44-3b0be9d2e861",
+      "stage_name": "wiki-page-item",
+      "status": "success",
+      "started_at": "2026-07-16T01:04:11.750Z",
+      "tasks": [
+        {
+          "id": "492ff8d2-8ef3-4dd4-b5b1-88eb925a8afe",
+          "task_name": "wiki-page-item",
+          "status": "success",
+          "started_at": "2026-07-16T01:04:11.750Z",
+          "agent_runs": [
+            {
+              "id": "008dd93c-2cf5-4c58-be06-490789107f01",
+              "agent_name": "wiki-page-item",
+              "attempt": 1,
+              "status": "success",
+              "tool_calls": 0,
+              "started_at": "2026-07-16T01:04:11.764Z",
+              "completed_at": "2026-07-16T01:04:43.431Z",
+              "output": {
+                "title": "Cair Paravel",
+                "importance": "figurant",
+                "entity_type": "PLACE",
+                "infobox_fields": {
+                  "nom": "Cair Paravel",
+                  "type de lieu": "Château",
+                  "statut": "Actif"
+                },
+                "content": "## Infobox\n\n- Nom: Cair Paravel\n- Type de lieu: Château\n- Statut: Actif\n\n## Biographie\n\nCair Paravel est un château côtier situé à l'embouchure d'une rivière, perché sur une petite colline dominant un littoral de sable, de rochers et de mares d'eau salée. Le château possède quatre trônes, symboles des sièges de pouvoir du royaume. Ses fenêtres reflètent la lumière du soleil de manière à faire briller l'édifice comme une grande étoile au-dessus de la mer. En tant que capitale du pays, il demeure le centre du pouvoir royal."
+              }
+            }
+          ],
+          "completed_at": "2026-07-16T01:04:43.432Z"
+        }
+      ],
+      "completed_at": "2026-07-16T01:04:43.432Z",
+      "output": {
+        "title": "Cair Paravel",
+        "importance": "figurant",
+        "entity_type": "PLACE",
+        "infobox_fields": {
+          "nom": "Cair Paravel",
+          "type de lieu": "Château",
+          "statut": "Actif"
+        },
+        "content": "## Infobox\n\n- Nom: Cair Paravel\n- Type de lieu: Château\n- Statut: Actif\n\n## Biographie\n\nCair Paravel est un château côtier situé à l'embouchure d'une rivière, perché sur une petite colline dominant un littoral de sable, de rochers et de mares d'eau salée. Le château possède quatre trônes, symboles des sièges de pouvoir du royaume. Ses fenêtres reflètent la lumière du soleil de manière à faire briller l'édifice comme une grande étoile au-dessus de la mer. En tant que capitale du pays, il demeure le centre du pouvoir royal."
+      }
+    },
+    {
+      "id": "b8cef637-038c-40b4-b4cd-830fa0e03e9e",
+      "stage_name": "wiki-page-validator",
+      "status": "success",
+      "started_at": "2026-07-16T01:04:43.433Z",
+      "tasks": [
+        {
+          "id": "114b09ad-dca7-4c12-bebf-91cfefad0518",
+          "task_name": "wiki-page-validator",
+          "status": "success",
+          "started_at": "2026-07-16T01:04:43.433Z",
+          "agent_runs": [
+            {
+              "id": "902e1f73-9d99-4c7f-9032-f91bb04f587f",
+              "agent_name": "script:scripts/wiki_page_validator.py",
+              "attempt": 1,
+              "status": "success",
+              "tool_calls": 0,
+              "started_at": "2026-07-16T01:04:43.438Z",
+              "completed_at": "2026-07-16T01:04:43.721Z",
+              "output": {
+                "valid": true,
+                "errors": [],
+                "error_codes": [],
+                "feedback": ""
+              }
+            }
+          ],
+          "completed_at": "2026-07-16T01:04:43.721Z"
+        }
+      ],
+      "completed_at": "2026-07-16T01:04:43.721Z",
+      "output": {
+        "valid": true,
+        "errors": [],
+        "error_codes": [],
+        "feedback": ""
+      }
+    }
+  ],
+  "input": {
+    "title": "Cair Paravel",
+    "importance": "figurant",
+    "entity_type": "PLACE",
+    "max_tokens": 200,
+    "language": "fr",
+    "forbidden_names": [],
+    "file_path": "library/c_w_lewis/narnia/books/01-the_lion_the_witch_and_the_wardrobe.epub",
+    "prompt": "GROUNDING — this is a fictional world, and the GROUNDING EXCERPTS below are its ONLY authoritative source of truth:\n- Ignore any prior knowledge you have of this book, series, or author: whatever you recall of its plot, characters, or ending is not evidence.\n- Every factual claim in your output must be directly supported by one of the GROUNDING EXCERPTS. If you cannot point to a supporting excerpt, do not write the claim.\n\nEDITORIAL STANCE — hybrid:\n- Default to writing from inside the fictional world, as if it were real: never refer to the text as a novel, a book or a story, and never address the reader.\n- Never mention the real-world author, publisher, publication date, or edition.\n\nYou are writing a wiki page for a fictional novel called \"The Lion, the Witch and the Wardrobe (tcon-2)\".\nOutput ONLY a valid JSON object. No markdown fences. No explanation. No preamble.\n\n---\n\nEXAMPLE OF THE EXPECTED OUTPUT FORMAT AND TONE:\n{\n  \"title\": \"John Doe\",\n  \"importance\": \"principal\",\n  \"entity_type\": \"PERSON\",\n  \"infobox_fields\": {\n    \"nom\": \"John Doe\",\n    \"nom complet\": \"Jonathan Aldric Doe\",\n    \"alias\": \"Le Fantôme, Jay\",\n    \"rôle\": \"Espion de la Couronne, ancien soldat\",\n    \"affiliation\": \"La Guilde des Ombres (ancienne), Couronne d'Arenell\",\n    \"statut\": \"Actif\"\n  },\n  \"content\": \"## Infobox\\n\\n- Nom: John Doe\\n- Nom complet: Jonathan Aldric Doe\\n- Alias: Le Fantôme, Jay\\n- Rôle: Espion de la Couronne, ancien soldat\\n- Affiliation: La Guilde des Ombres (ancienne), Couronne d'Arenell\\n- Statut: Actif\\n\\n## Biographie\\n\\nJohn Doe, né Jonathan Aldric Doe, est un espion au service de la Couronne d'Arenell. Ancien soldat reconverti après la chute de la forteresse de Veldrath, il opère sous le pseudonyme **Le Fantôme** dans les cercles criminels de la capitale. Sa double identité — homme de cour le jour, informateur la nuit — lui permet d'infiltrer des réseaux que les services officiels du roi ne peuvent atteindre.\\n\\nAprès la trahison de son ancien commandant lors du siège de Veldrath, Doe a rompu avec l'armée régulière et disparu pendant trois ans. Il réapparaît à Arenell sous une fausse identité marchande, avant d'être recruté par la conseillère Mira Vayne pour des missions que le Conseil préfère nier.\\n\\n## Personnalité\\n\\nDoe est méthodique et difficile à lire. Il parle peu, observe beaucoup, et donne rarement son opinion sans qu'on la lui demande. Ceux qui le côtoient décrivent une loyauté sélective : il honore ses engagements à la lettre, mais ne s'investit pas au-delà de ce qui a été convenu. Sous cette froideur calculée affleure parfois un humour sec, surtout dans les situations les plus tendues.\\n\\nSon rapport à la violence est pragmatique — ni enthousiaste ni réticent. Il considère les moyens selon leur efficacité, ce qui le met régulièrement en friction avec les idéalistes de son entourage.\\n\\n## Description physique\\n\\nGrand, brun, avec une cicatrice linéaire qui part du coin de l'œil gauche jusqu'à la mâchoire — séquelle d'un interrogatoire à Veldrath. Il s'habille de façon à ne pas attirer l'attention : teintes sombres, coupes fonctionnelles, aucun bijou. Seul détail invariable : une chevalière en argent terne à l'annulaire droit, dont l'origine n'est jamais expliquée.\\n\\n## Pouvoirs et compétences\\n\\nDoe ne possède aucune magie. Ses compétences sont entièrement acquises : infiltration, déguisement, combat rapproché, et une mémoire quasi photographique des visages et des plans d'architecture. Il parle couramment quatre langues, dont le dialecte du Sud qu'il utilise pour ses couvertures marchandes.\\n\\n## Relations\\n\\n**[[Mira Vayne]]** — mentor/protégé. Sa recruteuse et supérieure directe ; leur relation est professio

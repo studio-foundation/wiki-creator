@@ -25,14 +25,14 @@ def _fake_item(content):
 def test_generate_one_section_returns_content(monkeypatch):
     monkeypatch.setattr(gwp, "_run_wiki_page_item",
                         lambda **kw: _fake_item("## Biographie\n\nTexte."))
-    out = gwp._generate_one_section(entity={"canonical_name": "A"}, section="biography",
+    out, _ = gwp._generate_one_section(entity={"canonical_name": "A"}, section="biography",
                                     book_title="B", model="m", timeout=10, max_tokens=500)
     assert out == "## Biographie\n\nTexte."
 
 
 def test_generate_one_section_none_on_error(monkeypatch):
     monkeypatch.setattr(gwp, "_run_wiki_page_item", lambda **kw: {"error": "studio_run_failed"})
-    out = gwp._generate_one_section(entity={"canonical_name": "A"}, section="powers",
+    out, _ = gwp._generate_one_section(entity={"canonical_name": "A"}, section="powers",
                                     book_title="B", model="m", timeout=10, max_tokens=500)
     assert out is None
 
@@ -51,7 +51,7 @@ def test_generate_one_section_scopes_to_single_section(monkeypatch):
 def test_generate_one_section_omits_on_persistent_forbidden(monkeypatch):
     monkeypatch.setattr(gwp, "_run_wiki_page_item",
                         lambda **kw: _fake_item("## Biographie\n\nNehemia dies."))
-    out = gwp._generate_one_section(entity={"canonical_name": "A"}, section="biography",
+    out, _ = gwp._generate_one_section(entity={"canonical_name": "A"}, section="biography",
                                     book_title="B", model="m", timeout=10, max_tokens=500,
                                     forbidden_names=["Nehemia"])
     assert out is None   # one retry attempted, still hit → omit
@@ -178,7 +178,7 @@ def test_sectioned_narrative_role_wikilinks_first_mention(monkeypatch):
 def test_isolate_section_drops_leaked_infobox(monkeypatch):
     leaked = "## Infobox\n\n- Nom: X\n\n## Biographie\n\nBio réelle."
     monkeypatch.setattr(gwp, "_run_wiki_page_item", lambda **kw: _fake_item(leaked))
-    out = gwp._generate_one_section(entity={"canonical_name": "A"}, section="biography",
+    out, _ = gwp._generate_one_section(entity={"canonical_name": "A"}, section="biography",
                                     book_title="B", model="m", timeout=10, max_tokens=500)
     assert out == "## Biographie\n\nBio réelle."
     assert "Infobox" not in out
@@ -186,21 +186,21 @@ def test_isolate_section_drops_leaked_infobox(monkeypatch):
 
 def test_isolate_section_wraps_bare_body(monkeypatch):
     monkeypatch.setattr(gwp, "_run_wiki_page_item", lambda **kw: _fake_item("Juste le corps."))
-    out = gwp._generate_one_section(entity={"canonical_name": "A"}, section="biography",
+    out, _ = gwp._generate_one_section(entity={"canonical_name": "A"}, section="biography",
                                     book_title="B", model="m", timeout=10, max_tokens=500)
     assert out == "## Biographie\n\nJuste le corps."
 
 
 def test_isolate_section_none_when_only_infobox(monkeypatch):
     monkeypatch.setattr(gwp, "_run_wiki_page_item", lambda **kw: _fake_item("## Infobox\n\n- Nom: X"))
-    out = gwp._generate_one_section(entity={"canonical_name": "A"}, section="biography",
+    out, _ = gwp._generate_one_section(entity={"canonical_name": "A"}, section="biography",
                                     book_title="B", model="m", timeout=10, max_tokens=500)
     assert out is None
 
 
 def test_sectioned_page_carries_relationship_index(monkeypatch):
     from pathlib import Path
-    monkeypatch.setattr(gwp, "_generate_one_section", lambda **kw: "## Biographie\n\nBio.")
+    monkeypatch.setattr(gwp, "_generate_one_section", lambda **kw: ("## Biographie\n\nBio.", None))
     entity = {
         "canonical_name": "Celaena", "type": "PERSON", "importance": "principal",
         "aliases": [], "context_by_chapter": {"C01.xhtml": ["ctx"]},
@@ -342,3 +342,27 @@ def test_build_prompt_omits_references_rule_when_section_is_not_generated():
     without = gwp.build_prompt(entity, "Throne of Glass", sections=["infobox", "biography"])
     assert "## Références section must list ONLY" in with_refs
     assert "Références" not in without
+
+
+def test_biography_failure_records_the_evidence(monkeypatch, tmp_path):
+    """STU-533: `biography_failed` was a bare literal — no raw_response, no
+    run_metadata — so the 14 pages that took this path carried zero signal."""
+    from pathlib import Path
+    import json as _json
+
+    failure = {"error": "studio_run_output_missing", "raw_response": "truncated stdout",
+               "run_metadata": {"run_id": "d9f310e4"}}
+    monkeypatch.setattr(gwp, "_run_wiki_page_item", lambda **kw: failure)
+    entity = {"canonical_name": "Lucy", "type": "PERSON", "importance": "principal",
+              "context_by_chapter": {"C01": ["ctx"]}, "relationships": []}
+
+    page = gwp._run_generation_sectioned(
+        entity=entity, book_title="Narnia", model="m", timeout=10,
+        sections=["biography"], max_tokens=500,
+        dry_run=False, debug_dir=Path(tmp_path), book_config={})
+
+    assert page["_failed"]
+    artifact = _json.loads((tmp_path / "Lucy.json").read_text(encoding="utf-8"))
+    assert artifact["error"] == "studio_run_output_missing"
+    assert artifact["raw_response"] == "truncated stdout"
+    assert artifact["run_metadata"] == {"run_id": "d9f310e4"}

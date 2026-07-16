@@ -952,7 +952,7 @@ def _execute_wiki_page_item(item_input: dict, entity: dict, timeout: int) -> dic
 
     combined_output = (result.stdout or "") + (("\n" + result.stderr) if result.stderr else "")
     run_payload = studio_io.extract_first_json_object(result.stdout or "")
-    run_id = str((run_payload or {}).get("id") or "").strip()
+    run_id = studio_io.extract_run_id(result.stdout or "")
     run_metadata = {
         "command": cmd,
         "returncode": result.returncode,
@@ -966,13 +966,6 @@ def _execute_wiki_page_item(item_input: dict, entity: dict, timeout: int) -> dic
             "run_metadata": run_metadata,
         }
 
-    if run_payload is None:
-        return {
-            "error": "studio_output_json_parse_error",
-            "raw_response": combined_output.strip(),
-            "run_metadata": run_metadata,
-        }
-
     if not run_id:
         return {
             "error": "studio_run_missing_id",
@@ -980,9 +973,11 @@ def _execute_wiki_page_item(item_input: dict, entity: dict, timeout: int) -> dic
             "run_metadata": run_metadata,
         }
 
-    payload = studio_io.extract_stage_output_from_run_payload(run_payload, "wiki-page-item")
-    if payload is None:
-        payload = studio_io.load_studio_stage_output(run_id, "wiki-page-item")
+    # STU-533: the JSONL log is complete on disk; the stdout --json echo is a
+    # redundant duplicate of it, cut at 8192 bytes whenever the run is large.
+    payload = studio_io.load_studio_stage_output(run_id, "wiki-page-item")
+    if payload is None and run_payload is not None:
+        payload = studio_io.extract_stage_output_from_run_payload(run_payload, "wiki-page-item")
     if payload is None:
         return {
             "error": "studio_run_output_missing",
@@ -1015,6 +1010,10 @@ class StudioRunner:
         return studio_io.load_studio_stage_output(run_id, stage)
 
 
+def _as_failure(result: object) -> dict:
+    return result if isinstance(result, dict) else {"error": "studio_result_not_a_dict", "raw_response": repr(result)}
+
+
 def _generate_one_section(
     *,
     entity: dict,
@@ -1029,19 +1028,23 @@ def _generate_one_section(
     grounding: dict | None = None,
     runner: StudioRunner | None = None,
     stance: EditorialStance | None = None,
-) -> str | None:
-    """Generate a single section via a scoped wiki-page-item call. Returns the
-    section's content block, or None on error / persistent forbidden-name hit."""
+) -> tuple[str | None, dict | None]:
+    """Generate a single section via a scoped wiki-page-item call.
+
+    Returns ``(content, failure)``: the section's content block, or None on
+    error / persistent forbidden-name hit, paired with the failing item result
+    so the caller can save its evidence (STU-533).
+    """
 
     # SP1: the arc section is data-gated — skip the LLM call entirely when SP0
     # produced no participant events, rather than prompting it to hallucinate one.
     if section == "narrative_role" and not _narrative_events(entity):
-        return None
+        return None, None
 
     # STU-493: the backstory section is data-gated — skip the LLM call when the
     # character has no flashback-tagged chapter summaries.
     if section == "backstory" and not _has_backstory(entity):
-        return None
+        return None, None
 
     def _once() -> dict:
         return _run_wiki_page_item(
@@ -1053,21 +1056,21 @@ def _generate_one_section(
 
     result = _once()
     if not isinstance(result, dict) or result.get("error"):
-        return None
+        return None, _as_failure(result)
     content = _isolate_section(result.get("content") or "", section, language) or ""
     if section == "relationships" and not entity.get("relationships"):
         content = _strip_relations_section(content)
     if forbidden_names and _check_forbidden_names({"content": content, "infobox_fields": {}}, forbidden_names):
         result = _once()
         if not isinstance(result, dict) or result.get("error"):
-            return None
+            return None, _as_failure(result)
         content = _isolate_section(result.get("content") or "", section, language) or ""
         if section == "relationships" and not entity.get("relationships"):
             content = _strip_relations_section(content)
         if _check_forbidden_names({"content": content, "infobox_fields": {}}, forbidden_names):
-            return None
+            return None, {"error": "forbidden_names_persist", "run_metadata": result.get("run_metadata")}
     content = content.strip()
-    return content or None
+    return (content or None), (None if content else {"error": "empty_section", "raw_response": result.get("content") or "", "run_metadata": result.get("run_metadata")})
 
 
 def _generate_one_relation(
@@ -1303,7 +1306,7 @@ def _run_generation_sectioned(
                 # so it is excluded from content_units — per-relation gating
                 # (relation_units) replaces whole-section gating.
             continue
-        block = _generate_one_section(
+        block, failure = _generate_one_section(
             entity=entity, section=section, book_title=book_title, model=model,
             timeout=timeout, max_tokens=max_tokens, forbidden_names=forbidden_names,
             language=language, file_path=file_path, grounding=grounding, runner=runner,
@@ -1315,7 +1318,7 @@ def _run_generation_sectioned(
             blocks.append(block)
             emitted.append(section)
         elif section == "biography":
-            _save_generation_debug_artifact(debug_dir, entity, {"error": "biography_failed"})
+            _save_generation_debug_artifact(debug_dir, entity, failure or {"error": "biography_failed"})
             return make_stub_page(entity, failed=True, lang=language)
         # else: OPT section omitted
 
