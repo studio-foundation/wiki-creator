@@ -200,28 +200,37 @@ Inside `wiki-resolution`, order matters:
 - `invented_names` is about the world, not the cast (STU-535): STU-537 read the
   property off the characters and concluded Narnia — Peter, Lucy, Edmund, Susan —
   was a real-names book with no spaCy problem. It is the opposite. The cast is
-  English, the *world* is invented, and `en_core_web_lg` typed **`Narnia` PERSON
-  in 41 of 41 mentions** (a character page for the world, listed as a participant
-  in an event), `Cair Paravel` ORG, and left **30 PERSON against 1 PLACE** — and
-  that 1 was `Queens`. Same failure as Garrow, different half of the novel: a
-  place name spaCy never memorised falls to PERSON as readily as a person's does
-  to ORG. So the question the key asks is "are this novel's proper nouns invented",
-  and one invented toponym is enough — a book can look like Peter and Lucy on the
-  cover and still need the flip.
-  Measured the STU-537 way (LLM oracle over the union of both arms' candidates
-  with ≥3 mentions, 52 entities): typing accuracy **24/52 spaCy → 35/52 GLiNER**,
-  PERSON precision 24/30 → 27/29, PLACE **0/1 → 3/4 precision and 0/3 → 3/3
-  recall**. Narnia, Cair Paravel and the Stone Table type PLACE; `Turkish` (from
-  *Turkish Delight*), `Son`, `Kings`, `Queens`, `House` — spaCy PERSON/ORG noise —
-  are gone, and the Professor, Father Christmas and Maugrim arrive.
-  **`threshold: 0.3`, not the 0.5 default**, and it was measured, not felt: at 0.5
-  the book scores 27/52 and finds no Fauns, Centaurs or Sons of Adam at all. The
-  gap this does not close is GLiNER's weakness on a common noun used as a name:
-  the antagonist is "the Witch" 80 times, and GLiNER detects `Witch` **16 of 116**
-  where spaCy gets 73 (`gliner_label: person name` asks for *names*). It costs no
-  tier here — 73 was already below the book's own p90 principal cut, so the Witch
-  is `secondary` under either arm — and it is not worth re-sweeping the label on
-  Eragon's gold to chase, but it is the reason total mentions drop 1334 → 1176.
+  English, the *world* is invented, and `en_core_web_lg` types **`Narnia` PERSON**
+  on all 40 mentions it finds (a character page for the world, listed as a
+  participant in an event), `Cair Paravel` ORG, and left the shipped run with
+  **30 PERSON against 1 PLACE** — and that 1 was `Queens`. Same failure as Garrow,
+  different half of the novel: a place name spaCy never memorised falls to PERSON
+  as readily as a person's does to ORG. So the question the key asks is "are this
+  novel's proper nouns invented", and one invented toponym is enough — a book can
+  look like Peter and Lucy on the cover and still need the flip.
+  Measured by `research/ner-eval/{run_arms,oracle_types}.py` (the STU-537 oracle
+  generalised: an LLM types the union of the arms' candidates at the book's own
+  `min_mentions_absolute`, 51 entities): typing accuracy **22/51 spaCy → 32/51
+  GLiNER at 0.3**, PERSON precision 22/30 → 24/28, PLACE **0/1 → 3/5 precision and
+  0/3 → 3/3 recall**. Narnia, Cair Paravel and the Stone Table type PLACE;
+  `Turkish` (from *Turkish Delight*), `Son`, `Kings`, `Queens`, `House` — spaCy
+  PERSON/ORG noise — are gone, and the Professor, Father Christmas and Maugrim
+  arrive. **The rubric names no entity under test**: writing "Narnia is a PLACE"
+  into the oracle prompt (the first draft did, and the numbers #164 shipped came
+  from it) scores the arms against the author's verdict on the one entity in
+  dispute. Neutral rubric, same verdict.
+  **`threshold: 0.3`, not the 0.5 default**, and it was measured, not felt: 0.5
+  scores 26/51 and finds no Fauns, Centaurs or Sons of Adam at all. Two caveats
+  the method cannot lift: an entity **no** arm found is invisible to it (that is
+  STU-470's gold corpus' job), and GLiNER's borderline spans are not
+  deterministic — the counts move by ±1 entity between runs.
+  The gap this does not close is GLiNER's weakness on a common noun used as a
+  name: the antagonist is "the Witch" 80 times, and GLiNER detects `Witch` **20 of
+  116** at 0.3 where spaCy gets 72 (`gliner_label: person name` asks for *names*).
+  It costs no tier here — 72 was already below the book's own p90 principal cut, so
+  the Witch is `secondary` under either arm — and it is not worth re-sweeping the
+  label on Eragon's gold to chase, but it is the reason total mentions drop
+  1327 → 1194.
 - Non-standard spaCy models (STU-453): `lang.infer_language` returns `fr`/`en`
   only for stock-model name prefixes (`fr_core_news_`/`fr_dep_news_`/
   `en_core_web_`) and `None` for anything else — a local path
@@ -620,6 +629,29 @@ Inside `wiki-resolution`, order matters:
   `--restart wiki-extraction --clean`. (2) Entities — `generate_wiki_pages.py
   --entities NAME... [--force]` (STU-497/#110, `make generate-pages-entity ENTITY=...`)
   regenerates only a slice of pages without wiping the rest.
+- Relation confidence is graded, not counted (STU-476): `confidence.py` used to
+  read evidence *presence* — a type plus a verbatim quote was `explicit`, and the
+  writer stated it as fact. Presence is not strength: Chaol is typed `amoureux`
+  off "Their eyes met, and Chaol didn't hide his smile as she grinned at him",
+  quoted word for word and indistinguishable from Dorian's intimate gesture. Only
+  the classifier reads the excerpts, so **it** grades the tier; the vocabulary
+  lives in `base.yaml#relationships.confidence` and travels with the payload like
+  the STU-477 type vocabulary, injected in `_run_studio_classifier_item` — the one
+  point both callers cross. `TIER_ORDER` stays in `confidence.py`, not on
+  base.yaml's key order: it decides what over-grading *is*. Two rules are
+  load-bearing. (1) **The floor no grade may lift**: an ungrounded type is
+  `inferred` whatever it claims, so the STU-476 grade can only ever *lower*
+  what the pre-existing grounding check already allowed. Absent grade (pre-STU-476
+  artifacts) keeps the old presence reading. (2) **Grade the sentence, not the
+  type you believe in** — the prompt says so and the eval scores it: gold pairs
+  carry `max_confidence` and `score_confidence` reports the over-graded rate
+  (`--max-overgraded` gates CI). Under-grading is deliberately not an error — it
+  costs hedged prose; over-grading reaches the reader as a fact. Only 2 of the 10
+  typed fixture pairs have power on that axis, and that is the corpus: weakening
+  an excerpt to make the metric bite would score the classifier against fiction.
+  Requiring `evidence` when `relationship_type != null` was already enforced by
+  `scripts/relationship_classifier_validator.py` (the ticket's 57%-absent stat is
+  run 18, pre-STU-495/496); STU-476 only added the grade rule beside it.
 - Book-specific relationship types (STU-472): the book YAML
   `classification.relationship_types` (`name` + `description`) is **appended** to
   `base.yaml#relationships.enum`; absent ⇒ the generic vocabulary alone, unchanged.

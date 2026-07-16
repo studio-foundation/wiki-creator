@@ -13,7 +13,7 @@ Output (stdout):
 import json
 import sys
 
-from wiki_creator.page_templates import relationship_tokens
+from wiki_creator.page_templates import confidence_tokens, relationship_tokens
 
 _GENERIC_EVOLUTIONS = {
     "relation stable dans les extraits fournis",
@@ -125,11 +125,30 @@ def check_evolution_not_generic(clf: dict) -> list[str]:
     return []
 
 
+def check_confidence_graded(clf: dict) -> list[str]:
+    """STU-476 : une relation typée porte un grade de confiance déclaré, une relation null aucun."""
+    conf = clf.get("confidence")
+    tokens = confidence_tokens()
+    if clf.get("relationship_type") is None:
+        if conf is None:
+            return []
+        return [f"❌ confidence doit être null quand relationship_type est null (reçu : '{conf}')"]
+    if conf is None:
+        return [
+            "❌ confidence absent — grade la force de l'evidence citée : "
+            f"{'|'.join(tokens)}"
+        ]
+    if conf not in tokens:
+        return [f"❌ confidence hors vocabulaire : '{conf}' — attendu {'|'.join(tokens)}"]
+    return []
+
+
 def validate_classification(clf: dict, meta: dict) -> dict:
     errors: list[str] = []
     errors += check_relationship_type_valid(clf, meta)
     errors += check_evolution_not_generic(clf)
     errors += check_evidence_contains_both_names(clf, meta)
+    errors += check_confidence_graded(clf)
     return {
         "valid": len(errors) == 0,
         "errors": errors,
@@ -146,7 +165,9 @@ def build_feedback(errors: list[str], meta: dict | None = None) -> str:
         f"({'|'.join(allowed_types(meta))}). "
         "evolution doit décrire une évolution observable dans les extraits, pas une phrase générique. "
         "evidence doit être un extrait verbatim de sample_contexts montrant les deux personnages "
-        "en interaction directe — ce champ est obligatoire quand relationship_type n'est pas null."
+        "en interaction directe — ce champ est obligatoire quand relationship_type n'est pas null. "
+        f"confidence ({'|'.join(confidence_tokens())}) grade la force de cet extrait, pas ta "
+        "certitude : un sourire cité verbatim reste un sourire."
     )
 
 

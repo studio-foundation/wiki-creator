@@ -69,7 +69,7 @@ from wiki_creator.paths import book_paths_from_yaml, BookPaths
 from wiki_creator.lang import load_lang_config, infer_language
 from wiki_creator.llm import ollama
 from wiki_creator.nlp.loader import load_spacy_model
-from wiki_creator.page_templates import relationship_definitions
+from wiki_creator.page_templates import confidence_definitions, relationship_definitions
 from wiki_creator import studio_io
 
 
@@ -1035,6 +1035,7 @@ def _run_studio_classifier_item(
         "role_contexts_b": role_contexts_b or [],
         "novel_summary": novel_summary or "",
         "relationship_types": relationship_definitions(book_config=book_config),
+        "confidence_levels": confidence_definitions(),
     }
 
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".yaml", delete=False) as tmp:
@@ -1124,6 +1125,7 @@ def classify_relationships(
                 "evolution": classification.get("evolution"),
                 "key_moments": classification.get("key_moments", []),
                 "evidence": classification.get("evidence"),
+                "confidence": classification.get("confidence"),
             }
             if rel["relationship_type"]:
                 total_typed += 1

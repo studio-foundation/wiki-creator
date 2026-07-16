@@ -171,6 +171,23 @@ def relationship_definitions(base=None, book_config=None) -> list[dict[str, str]
     return generic + _book_types(book_config, base)
 
 
+def _confidence_enum(base: dict | None):
+    raw = base if base is not None else load_base_template()
+    return (raw.get("relationships") or {}).get("confidence") or {}
+
+
+def confidence_tokens(base=None) -> list[str]:
+    return list(_confidence_enum(base).keys())
+
+
+def confidence_definitions(base=None) -> list[dict[str, str]]:
+    """Confidence tiers + grading criterion, injected into the classifier prompt (STU-476)."""
+    return [
+        {"name": token, "description": (spec.get("description") or "").strip()}
+        for token, spec in _confidence_enum(base).items()
+    ]
+
+
 def canonical_relationship(value, base=None, book_config=None):
     if not value:
         return None

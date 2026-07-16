@@ -36,7 +36,7 @@ from scripts.relationship_extraction import (
 # evidence_kind, …) is dropped so {**pair, **classification} can only produce a
 # valid Relationship.
 _KNOWN_CLASSIFICATION_KEYS = frozenset(
-    {"relationship_type", "direction", "evolution", "key_moments", "evidence"}
+    {"relationship_type", "direction", "evolution", "key_moments", "evidence", "confidence"}
 )
 
 # STU-496: how many per-entity role/status excerpts to surface to the classifier.

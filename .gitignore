@@ -79,3 +79,5 @@ library/**/registry.json
 
 # Scratch audits at repo root; per-book audit logs under library/ stay tracked
 /audits/
+# Research eval outputs: per-book arm extractions + the oracle verdicts (STU-535)
+research/*/arms/
