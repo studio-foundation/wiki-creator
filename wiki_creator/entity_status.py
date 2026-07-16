@@ -18,7 +18,9 @@ Every helper here fails toward `unknown`. The asymmetry is STU-539's: a false
 
 from __future__ import annotations
 
+import json
 import re
+from pathlib import Path
 
 from wiki_creator.chapters import chapter_number
 
@@ -27,6 +29,12 @@ DEFAULT_STATUS = "unknown"
 
 SNIPPETS_PER_ENTITY = 5
 SNIPPET_CHARS = 300
+
+_WHITESPACE_RE = re.compile(r"\s+")
+
+
+def _normalize(text: object) -> str:
+    return _WHITESPACE_RE.sub(" ", str(text or "")).strip().casefold()
 
 
 def _has_marker(text: str, status_markers: list[str]) -> bool:
@@ -90,3 +98,105 @@ def roster_rows(
         }
         for entity in entities
     ]
+
+
+def render_roster(rows: list[dict]) -> str:
+    """The roster block the classifier reads. Text only — the chapter is derived
+    by the caller from the snippet the verdict quotes, never reported by the model."""
+    blocks = []
+    for row in rows:
+        header = row["name"]
+        if row["aliases"]:
+            header += f" (also called: {', '.join(row['aliases'])})"
+        lines = [f"## {header}"]
+        lines.extend(f"- {snippet['text']}" for snippet in row["snippets"])
+        if not row["snippets"]:
+            lines.append("- (no snippet found for this character)")
+        blocks.append("\n".join(lines))
+    return "\n\n".join(blocks)
+
+
+def _quoted_snippet(quote: str, snippets: list[dict]) -> dict | None:
+    """The entity's own snippet holding ``quote`` verbatim, or None.
+
+    Verification and dating are one lookup: the snippet that proves the verdict
+    is the snippet that dates it.
+    """
+    needle = _normalize(quote)
+    if not needle:
+        return None
+    for snippet in snippets:
+        if needle in _normalize(snippet.get("text")):
+            return snippet
+    return None
+
+
+def parse_status_verdict(payload: object, rows: list[dict]) -> dict[str, dict]:
+    """Map the classifier's reply to verified verdicts, keyed by roster name.
+
+    A name absent from the result is `unknown`; unparseable input verdicts
+    nothing. A verdict survives only when its name is on the roster, its status
+    is in the enum and is not `unknown`, and its quote is verbatim in **that
+    entity's own** snippets. The model has read these novels: without the quote
+    check, a verdict from its memory of the plot and one from this run's text
+    are indistinguishable afterwards.
+    """
+    if isinstance(payload, str):
+        try:
+            payload = json.loads(payload)
+        except ValueError:
+            return {}
+    if not isinstance(payload, dict):
+        return {}
+    entries = payload.get("status")
+    if not isinstance(entries, list):
+        return {}
+
+    rows_by_name = {row["name"]: row for row in rows}
+    verdicts: dict[str, dict] = {}
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        name = str(entry.get("name", "")).strip()
+        status = str(entry.get("status", "")).strip().lower()
+        quote = str(entry.get("quote", "") or "").strip()
+        row = rows_by_name.get(name)
+        if row is None or name in verdicts:
+            continue
+        if status not in STATUS_VALUES or status == DEFAULT_STATUS:
+            continue
+        snippet = _quoted_snippet(quote, row["snippets"])
+        if snippet is None:
+            continue
+        verdicts[name] = {
+            "status": status,
+            "quote": quote,
+            "chapter": chapter_number(snippet.get("chapter_id")) if status == "deceased" else None,
+        }
+    return verdicts
+
+
+def load_cached_status(path: Path | str, rows: list[dict]) -> dict[str, dict] | None:
+    """Cached verdicts for exactly this roster, or None.
+
+    Keyed on the rows themselves: the roster changes with WIKI_MAX_CHAPTERS and
+    with every upstream extraction fix, and a verdict returned for a different
+    roster must not be replayed onto it.
+    """
+    try:
+        cached = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(cached, dict) or cached.get("roster") != rows:
+        return None
+    verdicts = cached.get("verdicts")
+    return verdicts if isinstance(verdicts, dict) else None
+
+
+def save_status_cache(path: Path | str, rows: list[dict], verdicts: dict[str, dict]) -> None:
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps({"roster": rows, "verdicts": verdicts}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
