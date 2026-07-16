@@ -49,7 +49,23 @@ Read these before quoting any number.
    LLM stage. Read them on detection. Scoring them on type would score the
    classifier bolted after them.
 
-6. **The oracle roster is an oracle.** Arms are handed a PERSON roster an LLM
+6. **Precision is measured against a gold that may be incomplete.** A predicted
+   pair absent from the gold is scored a false positive, which assumes the gold
+   enumerates every relation in the book. It was built by an exhaustive per-chapter
+   sweep, but one pass by one annotator. Precision around 0.42 with 109 gold pairs
+   and 140–171 predicted means some predictions are over-connection and some are
+   relations the gold missed, in an unknown ratio. **Detection recall and the
+   ranking between arms are robust to this; the absolute precision is not.**
+
+7. **`acceptable` is a set, so typing is scored generously.** 84 of 109 gold pairs
+   carry a single type, but 25 carry 2–4, and any of them counts as a hit. That is
+   deliberate — relations move inside a book — but it inflates every arm's typing
+   number equally.
+
+8. **The implicit stratum is n=7 (6% of the gold), and all of it is marginal.**
+   Nothing there is significant. Do not quote an implicit F1.
+
+9. **The oracle roster is an oracle.** Arms are handed a PERSON roster an LLM
    re-typed from the pipeline's own extractions. It is not a proposed fix and it
    is not achievable today — it exists so the benchmark can measure relation
    discovery rather than entity typing. `cooccurrence_shipped` runs on the roster

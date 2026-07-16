@@ -39,6 +39,49 @@ extractor, however good, can find it, because the entity never reaches the graph
 GLiREL found it in a two-chapter smoke test the moment it was handed a roster
 containing him.
 
+### One of the ticket's premises did not survive
+
+STU-467 lists "rate les relations implicites ou hors-champ (« son père », jamais
+nommés dans la même phrase)" as a motivation. On this book it is close to empty.
+
+Of 109 gold pairs, **7 are implicit** — never within one sentence of each other
+anywhere in 60 chapters — and all seven are single-chapter walk-ons: Hrothgar and
+Korgan, Baldor and Elain, Ajihad and Morzan. Over a novel, a real relation gets a
+sentence naming both sooner or later. Eragon and Garrow, the example the ticket
+reaches for, are textually adjacent in 17 chapters; the shipped pipeline misses
+them for the entity reason above, not for a windowing one.
+
+So the implicit stratum is 6% of the gold and all of it is marginal. No arm scores
+above F1 0.07 there, on n=7 — that is noise, not a finding. The case for typed
+discovery has to rest on type and direction, which is where GLiREL's real deficit
+is, not on implicit reach.
+
+### What the arms then showed
+
+The numbers agree with the diagnosis, and more sharply than expected.
+
+| arm | detection F1 | precision | recall | pairs emitted |
+|---|---|---|---|---|
+| `cooccurrence_shipped` | **0.200** | 0.122 | 0.560 | 501 |
+| `cooccurrence_fixed` | **0.507** | 0.415 | 0.651 | 171 |
+| `glirel` | **0.498** | 0.443 | 0.569 | 140 |
+
+**Sliding the window over the chapter instead of over an entity-ordered list takes
+detection F1 from 0.200 to 0.507 — two and a half times — and lands level with
+GLiREL.** Almost all of it is precision: 0.122 to 0.415. The shipped arm emits 501
+pairs to find 61 of the gold's 109; the fixed arm emits 171 to find 71. Its extra
+recall is free.
+
+That is the whole answer to "GLiREL or co-occurrence". They tie on the axis where
+they are comparable, and one of them is a change to how one list is built.
+
+GLiREL does buy something co-occurrence cannot give at any price: a type at
+discovery, where `build_cooccurrence_graph` emits `None` by construction. But it
+buys it weakly — 0.202 end-to-end, with a threshold picked by looking at the gold
+and labels that were never swept — and it cannot supply direction at all: 0.091,
+because it emits a directed head -> tail triple and most relations are
+`symétrique`. The pipeline needs direction.
+
 ### What to do
 
 **Fix the mechanism before shopping for a replacement.** In order:
