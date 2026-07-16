@@ -11,7 +11,9 @@ file_path: library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.epub
 spacy_model: en_core_web_lg
 language: en
 ner:
-  backend: gliner
+  # Celaena, Chaol, Nehemia, Erilea: names spaCy has never read, so it types them
+  # ORG. A prompt-typed model finds the entities instead (STU-521, STU-537).
+  invented_names: true
 coref: true
 use_llm: true
 classify: false  # classification handled by scripts/classify_relationships.py (pre-step in run_wiki.py)

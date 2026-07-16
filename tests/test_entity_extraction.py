@@ -213,6 +213,37 @@ def test_retags_org_or_place_to_person_from_context(name, source_type, contexts)
     assert _retag_entity_type_from_context(entity) == "PERSON"
 
 
+class _OrgTypingNlp:
+    """Types every entity ORG, the way spaCy types a name it never memorised."""
+
+    def __init__(self, nlp):
+        self._nlp = nlp
+
+    def __call__(self, text):
+        doc = self._nlp(text)
+        doc.ents = [Span(doc, e.start, e.end, label="ORG") for e in doc.ents]
+        return doc
+
+
+def test_context_retag_repairs_an_org_typed_person(nlp):
+    chapters = [{"id": "ch01", "content": "Dorian said nothing and looked away."}]
+    result = extract_entities(chapters, _OrgTypingNlp(nlp))
+    assert [e["type"] for e in result["entities"].values()] == ["PERSON"]
+
+
+def test_context_retag_is_skipped_when_the_model_types_by_prompt(nlp):
+    """STU-537: the retag repairs spaCy's typing of names it never memorised.
+
+    Under `invented_names` GLiNER types by prompt, so an unseen name costs it
+    nothing and the repair only did harm — it retyped Eragon's `Empire` from ORG
+    to PERSON. Measured against the oracle roster, not assumed: 84/103 without
+    it, 83/103 with.
+    """
+    chapters = [{"id": "ch01", "content": "Dorian said nothing and looked away."}]
+    result = extract_entities(chapters, _OrgTypingNlp(nlp), retag_from_context=False)
+    assert [e["type"] for e in result["entities"].values()] == ["ORG"]
+
+
 def test_resolve_cue_words_language_auto_uses_book_language():
     # "auto"/None fall back to the resolved book language, not model-name inference.
     assert _resolve_cue_words_language("fr", "auto") == "fr"

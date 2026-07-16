@@ -136,11 +136,15 @@ Inside `wiki-resolution`, order matters:
   runs rather than failing. `tests/test_spacy_model_extras.py` pins that every
   stock model a book declares is installed by an extra; a new book declaring an
   uninstalled model fails it.
-- GLiNER NER backend (STU-521): the book YAML `ner` block picks who finds the
-  entities — `backend: spacy` (default, pre-STU-521 behavior) | `gliner`, plus
-  `model`/`threshold`. Pure config in `wiki_creator/ner.py`; an unknown backend
-  or key **raises** rather than degrading, because a backend silently falling
-  back is the STU-470 bug itself. **spaCy does not go away**: it still tokenizes,
+- GLiNER NER backend (STU-521, STU-537): the book YAML `ner` block picks who
+  finds the entities — `invented_names: true` (GLiNER) | absent/`false` (spaCy,
+  pre-STU-521 behavior), plus `model`/`threshold`. The key names a property of
+  the **book**, not a backend: a book YAML is configured by people who know the
+  novel, not the pipeline, so it states what is true of the novel and the code
+  derives the mechanism. Pure config in `wiki_creator/ner.py`; an unknown key
+  **raises** rather than degrading, because a backend silently falling back is
+  the STU-470 bug itself — `backend:` is one such key now, so a stale config
+  fails instead of quietly reverting to spaCy. **spaCy does not go away**: it still tokenizes,
   tags and splits sentences (`_is_valid_span` needs POS, the extractor needs
   `doc.sents`), so `spacy_model` keeps its meaning — GLiNER replaces the *entity*
   step only. `wiki_creator/nlp/gliner_ner.py` does it as a spaCy component
@@ -159,10 +163,36 @@ Inside `wiki-resolution`, order matters:
   GLiNER's window, so text is cut into sentence-aligned windows that are verbatim
   `doc.text` slices: STU-489 persists mention offsets into the chapter text, so a
   window that didn't map back exactly would corrupt them. `gliner` is an optional
-  extra (it pulls torch, like `coref`). `throne-of-glass` is the only book flipped
-  and was the only wiki-ner-en consumer, which is why its 0.105 detection F1 on an
-  unseen book stayed invisible; `models/wiki-ner-en` is retired (gitignored, so
-  the flip *is* the retirement). EVENT ships with no accuracy claim (n=2 gold).
+  extra (it pulls torch, like `coref`), so a book declaring `invented_names`
+  needs `pip install -e ".[gliner]"`. `throne-of-glass` was the only book flipped
+  by STU-521 and the only wiki-ner-en consumer, which is why its 0.105 detection
+  F1 on an unseen book stayed invisible; `models/wiki-ner-en` is retired
+  (gitignored, so the flip *is* the retirement). STU-537 flipped the 6
+  `inheritance` tomes. EVENT ships with no accuracy claim (n=2 gold).
+- Invented names break spaCy's typing (STU-537): spaCy's NER only recognises the
+  proper nouns it memorised, and types the rest **ORG**. On Eragon that is not a
+  tail case — `Garrow` (112 mentions, the uncle whose death launches the plot) is
+  ORG in **111 of 113** mentions, `Cadoc` 42/42 ORG, `Katrina` 17/17 EVENT,
+  `Varden` (a faction) 147/147 PERSON. So this is **not** a majority-vote bug and
+  no vote fixes it: the model is consistently wrong, not noisy, and
+  `extract_entities` freezing the type at the first mention's label is a
+  non-issue. It is also invisible from inside the pipeline — the book YAML
+  `entity_overrides` patch `Varden`/`Empire` at *classification*, long after
+  relation discovery filtered `type == "PERSON"` and dropped Garrow. Measured
+  against an LLM oracle roster (103 entities, `research/relation-eval/retype_roster.py`
+  on the STU-467 spike branch): typing accuracy **50/103 spaCy → 84/103 GLiNER**,
+  PERSON roster precision 61% → 92%, recall 80% → 94%. The fix is a config flip
+  per book, not code — GLiNER types by prompt so an unseen name costs it nothing.
+  Only `inheritance` is flipped: no oracle exists for the other 14 books, and a
+  book of real-world names (Narnia's Peter/Lucy/Edmund) has no such problem and
+  should not pay GLiNER's runtime. **`_retag_entity_type_from_context` is skipped
+  under `invented_names`**: it exists to repair spaCy's ORG typing, and on a
+  prompt-typed model it only misfires (it retyped Eragon's `Empire` ORG→PERSON;
+  83/103 with it vs 84/103 without). It stays on for spaCy books, where its
+  measured value is +1/103 — noise, but noise nobody has an oracle to remove
+  safely. `Cadoc`/`Snowfire` (horses) are a real judgment call left as the oracle
+  ruled them (PERSON): a named animal is a character, and dropping them would
+  drop Saphira.
 - Non-standard spaCy models (STU-453): `lang.infer_language` returns `fr`/`en`
   only for stock-model name prefixes (`fr_core_news_`/`fr_dep_news_`/
   `en_core_web_`) and `None` for anything else — a local path
@@ -602,6 +632,21 @@ Inside `wiki-resolution`, order matters:
   `entity_classification.get_total_mentions` still threads only PERSON/PLACE/ORG/
   EVENT full-registries; a FACTION entity's counts come from the surface index,
   not its `*_full.json` — a possible fast-follow.
+
+## Config Is Read By People Who Know Books, Not Pipelines
+
+The book YAML is the project's user interface, and its users are readers and
+editors — literature people, not engineers. Every key there must be answerable
+by someone who has read the novel and nothing else.
+
+- **Name the property of the book, never the mechanism.** `ner.invented_names:
+  true` (STU-537), not `ner.backend: gliner` — "are this novel's names invented?"
+  is a question about *Eragon*; "which NER backend?" is a question about us. The
+  code derives the mechanism from the answer, in one place.
+- **A key whose right value requires knowing our internals is a bug**, not a
+  config. Either derive it, or reshape the question until the novel answers it.
+- Same rule for values: a threshold nobody can set without reading our source is
+  a default we have not chosen yet.
 
 ## Working Norms
 
