@@ -107,6 +107,17 @@ def test_clean_isolated_newline_mid_word():
     assert clean_chapter_text("I\nntéressant") == "I ntéressant"
 
 
+def test_clean_carriage_return_is_whitespace_not_text():
+    """A \\r reaches here from a &#13; charref, resolved by html.parser (STU-531).
+
+    Six of the sixteen library books ship &#13;; Eragon puts one between the two
+    words of a chapter title, which used to come out as 'PALANCAR\\r VALLEY'.
+    """
+    assert clean_chapter_text("PALANCAR\r\n VALLEY") == "PALANCAR VALLEY"
+    assert clean_chapter_text("one\rtwo") == "one two"
+    assert "\r" not in _text_of("<p>Title&#13;\n Subtitle</p>")
+
+
 def test_chapter_text_carries_paragraph_structure():
     """Block boundaries survive extraction as \\n\\n (STU-523)."""
     body = "<p>Paragraph one.</p><p>Paragraph two.</p>"

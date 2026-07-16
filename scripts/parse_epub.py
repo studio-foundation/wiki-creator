@@ -105,8 +105,12 @@ def clean_chapter_text(text: str) -> str:
     # 4. Normalize non-breaking spaces → regular space
     text = text.replace('\u00a0', ' ').replace('\u202f', ' ')
 
-    # 5. Every \n is a tag boundary, never a word or paragraph boundary
-    text = text.replace('\n', ' ')
+    # 5. Every \n is a tag boundary, never a word or paragraph boundary. A \r is
+    #    source whitespace too: it reaches here from a &#13; charref, which
+    #    html.parser resolves at parse time (6 of the 16 books ship them, and
+    #    Eragon puts one between the two words of a chapter title). Step 6
+    #    collapses the pair a \r\n leaves behind.
+    text = text.replace('\r', ' ').replace('\n', ' ')
 
     # 6. Normalize runs of spaces/tabs to a single space
     text = re.sub(r'[ \t]{2,}', ' ', text)
