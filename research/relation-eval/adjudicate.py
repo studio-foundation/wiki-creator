@@ -1,0 +1,161 @@
+#!/usr/bin/env python3
+"""Build the human adjudication sheet — the one thing that removes the LLM gold's confound.
+
+`build_gold.py` is written by an LLM and `run_llm_schema.py` is an LLM, so that
+arm partly grades itself (caveat 1 of the report). A hand-annotated gold over 60
+chapters lifts it and will never be written. This does the same job for the
+decision at a fraction of the reading: it asks a human only where the two arms
+*disagree*, and makes those votes the gold on that set. Everything the arms agree
+on needs no adjudication — agreement between an LLM and a regex is not the
+confound.
+
+Two sections, because the ticket's question has two halves:
+
+  DETECTION — every pair exactly one arm found. **Blind**: rows are sorted by
+  name and never say which arm claimed the pair, so a vote cannot be a vote for
+  an architecture. Evidence is the book's own text (the windows where both names
+  appear), never an arm's output, for the same reason. A pair whose names never
+  share a window is labelled as such — that is a property of the novel, computed
+  in `explicit_pairs.py`, not a tell.
+
+  TYPING — a sample of pairs both arms found, where only the LLM has a type.
+  Not blind and cannot be: only one arm emits types. It measures the axis the
+  ticket is actually buying (type + direction at discovery), which detection
+  alone cannot price.
+
+Usage:
+    python adjudicate.py --corpus corpus.jsonl --roster roster_oracle.json
+    # -> adjudication.md   (fill in the verdict columns)
+    # -> votes.json        (skeleton; score with score_adjudication.py)
+"""
+import argparse
+import json
+import os
+import random
+import sys
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.dirname(os.path.dirname(_HERE)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(_HERE)), "scripts"))
+
+from wiki_creator.relationship_eval import pair_key  # noqa: E402
+from relationship_extraction import split_sentences  # noqa: E402
+
+MAX_WINDOWS = 2
+WINDOW_SENTENCES = 5
+
+
+def names_of(roster: list[dict]) -> dict[str, list[str]]:
+    return {e["canonical_name"]: [e["canonical_name"], *e.get("aliases", [])] for e in roster}
+
+
+def windows_for(pair: tuple[str, str], chapters: list[dict], forms: dict) -> list[str]:
+    """Verbatim passages of the book where both names land within one window.
+
+    The evidence a human reads must come from the novel, not from an arm: quoting
+    the LLM's own `evidence` field next to a pair only the LLM found would tell the
+    annotator which arm to side with.
+    """
+    a_forms = [f.lower() for f in forms.get(pair[0], [])]
+    b_forms = [f.lower() for f in forms.get(pair[1], [])]
+    out = []
+    for chapter in chapters:
+        sentences = split_sentences(chapter["text"])
+        for i in range(len(sentences)):
+            window = sentences[i : i + WINDOW_SENTENCES]
+            blob = " ".join(window).lower()
+            if any(f in blob for f in a_forms) and any(f in blob for f in b_forms):
+                out.append(f"[{chapter['title']}] " + " ".join(window).strip())
+                break  # one window per chapter is enough to judge
+        if len(out) >= MAX_WINDOWS:
+            break
+    return out
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--corpus", default="corpus.jsonl")
+    ap.add_argument("--roster", default="roster_oracle.json")
+    ap.add_argument("--cooccurrence", default="predictions.cooccurrence_fixed.json")
+    ap.add_argument("--llm", default="predictions.llm_schema.json")
+    ap.add_argument("--typing-sample", type=int, default=20)
+    ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--out", default="adjudication.md")
+    ap.add_argument("--votes-out", default="votes.json")
+    args = ap.parse_args()
+
+    with open(args.corpus, encoding="utf-8") as f:
+        chapters = [json.loads(line) for line in f if line.strip()]
+    with open(args.roster, encoding="utf-8") as f:
+        roster = json.load(f)
+    with open(args.cooccurrence, encoding="utf-8") as f:
+        cooc = {pair_key(p["entity_a"], p["entity_b"]) for p in json.load(f)}
+    with open(args.llm, encoding="utf-8") as f:
+        llm = {pair_key(p["entity_a"], p["entity_b"]): p for p in json.load(f)}
+
+    forms = names_of(roster)
+    disputed = sorted((cooc | set(llm)) - (cooc & set(llm)))
+    agreed = sorted(cooc & set(llm))
+
+    lines = [
+        "# Feuille d'adjudication — STU-540",
+        "",
+        f"{len(disputed)} paires en litige, {len(agreed)} paires trouvées par les deux.",
+        "",
+        "## 1. Détection (aveugle)",
+        "",
+        "Un seul des deux arms a trouvé chaque paire ci-dessous — l'ordre ne dit pas",
+        "lequel. Question : **est-ce que le livre montre une vraie relation entre ces",
+        "deux-là ?** Pas « sont-ils dans la même scène » — une relation.",
+        "",
+        "Réponds `o` (oui, vraie relation) ou `n` (non) dans `votes.json`.",
+        "",
+    ]
+    votes = {"detection": {}, "typing": {}}
+    for a, b in disputed:
+        key = f"{a} | {b}"
+        votes["detection"][key] = ""
+        windows = windows_for((a, b), chapters, forms)
+        lines.append(f"### {key}")
+        lines.append("")
+        if windows:
+            for w in windows:
+                lines.append(f"> {w}")
+                lines.append("")
+        else:
+            lines.append("> _Les deux noms ne partagent jamais une fenêtre de 5 phrases._")
+            lines.append("")
+
+    lines += [
+        "## 2. Typage",
+        "",
+        "Paires que **les deux** arms ont trouvées. Seul l'arm LLM émet un type, donc",
+        "cette section n'est pas aveugle — elle mesure le typage, pas la découverte.",
+        "Question : **le type et la direction sont-ils justes ?** `o` / `n`.",
+        "",
+    ]
+    rng = random.Random(args.seed)
+    sample = rng.sample(agreed, min(args.typing_sample, len(agreed)))
+    for a, b in sorted(sample):
+        pred = llm[(a, b)]
+        key = f"{a} | {b}"
+        votes["typing"][key] = ""
+        lines.append(f"### {key}")
+        lines.append("")
+        lines.append(f"- type : **{pred['relationship_type']}**")
+        lines.append(f"- direction : **{pred['direction']}** (« A » = {a})")
+        for ev in pred.get("evidence", [])[:2]:
+            lines.append(f"- extrait : {ev}")
+        lines.append("")
+
+    with open(args.out, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
+    with open(args.votes_out, "w", encoding="utf-8") as f:
+        json.dump(votes, f, ensure_ascii=False, indent=2)
+
+    print(f"{len(disputed)} disputed, {len(sample)} typing rows -> {args.out} / {args.votes_out}",
+          file=sys.stderr)
+
+
+if __name__ == "__main__":
+    main()
