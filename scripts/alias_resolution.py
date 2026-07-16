@@ -459,10 +459,29 @@ def _contains_token_run(name: str, run: str) -> bool:
     )
 
 
+def _ambiguous_remainders(entities: list[dict], role_words: list[str]) -> frozenset[str]:
+    """Return the remainders the roster attaches to two or more different titles.
+
+    "Beaver" is worn by both "Mr Beaver" and "Mrs Beaver", so it identifies neither
+    spouse; "Tumnus" is worn by "Mr Tumnus" alone, so it identifies him.
+    """
+    roles_by_remainder: dict[str, set[str]] = {}
+    for entity in entities:
+        for name in _entity_names(entity):
+            role = _leading_role(name, role_words)
+            if role is None:
+                continue
+            remainder = name.lower()[len(role) + 1:].strip()
+            if remainder:
+                roles_by_remainder.setdefault(remainder, set()).add(role)
+    return frozenset(remainder for remainder, roles in roles_by_remainder.items() if len(roles) > 1)
+
+
 def _detect_title_alias(
     entity_a: dict,
     entity_b: dict,
     role_words: list[str],
+    ambiguous_remainders: frozenset[str] = frozenset(),
 ) -> dict | None:
     """
     Return evidence dict if one entity's name starts with a role_word and the
@@ -477,6 +496,11 @@ def _detect_title_alias(
     that cannot tell them apart. Titles are compared per entity, not per name —
     once "Beaver" has absorbed "Mr Beaver", it is Mr Beaver, and letting it match
     "Mrs Beaver" would remarry the couple transitively.
+
+    That leaves the bare name itself (STU-542): a remainder the roster attaches to
+    two titles identifies no one, so the entity whose whole name IS that remainder
+    merges with neither bearer — otherwise iteration order picks the spouse who
+    inherits its mentions.
     """
     if not role_words:
         return None
@@ -495,6 +519,8 @@ def _detect_title_alias(
             if not remainder:
                 continue
             for full_name in names_full:
+                if remainder in ambiguous_remainders and full_name.lower() == remainder:
+                    continue
                 if _contains_token_run(full_name, remainder):
                     return {
                         "method": "title_alias",
@@ -711,6 +737,7 @@ def resolve_aliases(
     relationships = relationships or []
     resolved: list[dict] = []
     consumed: set[int] = set()
+    ambiguous_remainders = _ambiguous_remainders(entities, role_words)
 
     centroids: dict = {}
     if judge is not None:
@@ -756,7 +783,7 @@ def resolve_aliases(
                 consumed.add(candidate_index)
                 break
 
-            title = _detect_title_alias(entity, candidate, role_words)
+            title = _detect_title_alias(entity, candidate, role_words, ambiguous_remainders)
             if title:
                 merged = _merge_entities(entity, candidate, title, persons_full, role_words=role_words)
                 stats["merges_applied"] += 1
