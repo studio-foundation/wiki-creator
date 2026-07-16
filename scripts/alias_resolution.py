@@ -428,6 +428,37 @@ def _detect_reveal_signal(entity_a: dict, entity_b: dict, persons_full: dict, re
     return None
 
 
+def _leading_role(name: str, role_words: list[str]) -> str | None:
+    """Return the role_word a name leads with ("Mrs Beaver" -> "mrs"), longest match first."""
+    name_lower = name.lower()
+    for role in sorted(role_words, key=len, reverse=True):
+        role_lower = role.lower()
+        if name_lower.startswith(role_lower + " "):
+            return role_lower
+    return None
+
+
+def _entity_roles(names: list[str], role_words: list[str]) -> set[str]:
+    """Return every role_word the entity's names lead with."""
+    return {role for name in names if (role := _leading_role(name, role_words))}
+
+
+def _contains_token_run(name: str, run: str) -> bool:
+    """Return True if run's tokens appear contiguously among name's tokens.
+
+    Whole tokens, never substrings: "Beavers" is the couple, and "beaver" being a
+    substring of it says nothing about either spouse.
+    """
+    tokens = name.lower().split()
+    run_tokens = run.split()
+    if not run_tokens:
+        return False
+    return any(
+        tokens[i:i + len(run_tokens)] == run_tokens
+        for i in range(len(tokens) - len(run_tokens) + 1)
+    )
+
+
 def _detect_title_alias(
     entity_a: dict,
     entity_b: dict,
@@ -435,32 +466,41 @@ def _detect_title_alias(
 ) -> dict | None:
     """
     Return evidence dict if one entity's name starts with a role_word and the
-    remainder appears in the other entity's canonical name.
+    remainder's tokens appear in the other entity's name.
 
     Example: "Captain Westfall" + role_word "captain"
              → remainder "westfall" in "Chaol Westfall" → match.
+
+    A remainder only discriminates when the other entity bears no differing title
+    (STU-541): a role designates one person, so "Westfall" identifies its bearer,
+    but "Mr Beaver" and "Mrs Beaver" are a couple whose surname is the very part
+    that cannot tell them apart. Titles are compared per entity, not per name —
+    once "Beaver" has absorbed "Mr Beaver", it is Mr Beaver, and letting it match
+    "Mrs Beaver" would remarry the couple transitively.
     """
     if not role_words:
         return None
     names_a = _entity_names(entity_a)
     names_b = _entity_names(entity_b)
+    roles_a = _entity_roles(names_a, role_words)
+    roles_b = _entity_roles(names_b, role_words)
+    if roles_a and roles_b and roles_a.isdisjoint(roles_b):
+        return None
     for names_title, names_full in ((names_a, names_b), (names_b, names_a)):
         for name in names_title:
-            name_lower = name.lower()
-            for role in role_words:
-                role_lower = role.lower()
-                if not name_lower.startswith(role_lower + " "):
-                    continue
-                remainder = name_lower[len(role_lower) + 1:].strip()
-                if not remainder:
-                    continue
-                for full_name in names_full:
-                    if remainder in full_name.lower():
-                        return {
-                            "method": "title_alias",
-                            "confidence": "medium",
-                            "snippet": f"{name} / {full_name}",
-                        }
+            role = _leading_role(name, role_words)
+            if role is None:
+                continue
+            remainder = name.lower()[len(role) + 1:].strip()
+            if not remainder:
+                continue
+            for full_name in names_full:
+                if _contains_token_run(full_name, remainder):
+                    return {
+                        "method": "title_alias",
+                        "confidence": "medium",
+                        "snippet": f"{name} / {full_name}",
+                    }
     return None
 
 

@@ -527,6 +527,46 @@ def test_detect_title_alias_via_aliases_list():
     assert result["method"] == "title_alias"
 
 
+def test_detect_title_alias_different_honorifics_same_surname():
+    from scripts.alias_resolution import _detect_title_alias
+    # Mr Beaver and Mrs Beaver are two characters: the shared surname cannot discriminate them
+    entity_a = {"canonical_name": "Mrs Beaver", "aliases": ["Mrs Beaver"]}
+    entity_b = {"canonical_name": "Mr Beaver", "aliases": ["Mr Beaver"]}
+    assert _detect_title_alias(entity_a, entity_b, role_words=["mr", "mrs"]) is None
+
+
+def test_detect_title_alias_titled_alias_blocks_transitive_remarriage():
+    from scripts.alias_resolution import _detect_title_alias
+    # Once bare "Beaver" carries "Mr Beaver" as an alias, it is Mr Beaver
+    entity_a = {"canonical_name": "Beaver", "aliases": ["Beaver", "Mr Beaver"]}
+    entity_b = {"canonical_name": "Mrs Beaver", "aliases": ["Mrs Beaver"]}
+    assert _detect_title_alias(entity_a, entity_b, role_words=["mr", "mrs"]) is None
+
+
+def test_detect_title_alias_plural_family_name():
+    from scripts.alias_resolution import _detect_title_alias
+    # "Beavers" is the couple, not either spouse — it is not the token "Beaver"
+    entity_a = {"canonical_name": "Mrs Beaver", "aliases": ["Mrs Beaver"]}
+    entity_b = {"canonical_name": "Beavers", "aliases": ["Beavers"]}
+    assert _detect_title_alias(entity_a, entity_b, role_words=["mr", "mrs"]) is None
+
+
+def test_detect_title_alias_honorific_merges_untitled_name():
+    from scripts.alias_resolution import _detect_title_alias
+    entity_a = {"canonical_name": "Mr Tumnus", "aliases": ["Mr Tumnus"]}
+    entity_b = {"canonical_name": "Tumnus", "aliases": ["Tumnus"]}
+    result = _detect_title_alias(entity_a, entity_b, role_words=["mr", "mrs"])
+    assert result is not None
+    assert result["method"] == "title_alias"
+
+
+def test_detect_title_alias_same_title_merges():
+    from scripts.alias_resolution import _detect_title_alias
+    entity_a = {"canonical_name": "Captain Westfall", "aliases": ["Captain Westfall"]}
+    entity_b = {"canonical_name": "Captain Chaol Westfall", "aliases": ["Captain Chaol Westfall"]}
+    assert _detect_title_alias(entity_a, entity_b, role_words=["captain"]) is not None
+
+
 def test_empty_stats_has_title_alias_key():
     from scripts.alias_resolution import _empty_stats
     stats = _empty_stats()
