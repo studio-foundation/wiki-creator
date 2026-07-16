@@ -28,9 +28,9 @@ Two sections, because the ticket's question has two halves:
   alone cannot price.
 
 Usage:
-    python adjudicate.py --corpus corpus.jsonl --roster roster_oracle.json
-    # -> adjudication.md   (fill in the verdict columns)
-    # -> votes.json        (skeleton; score with score_adjudication.py)
+    python adjudicate.py --corpus corpus.jsonl --roster roster.json
+    python vote.py            # answer o/n, writes votes.json
+    python score_adjudication.py --votes votes.json
 """
 import argparse
 import json
@@ -86,8 +86,7 @@ def main() -> None:
                     help="disputed pairs to adjudicate PER ARM (0 = all)")
     ap.add_argument("--typing-sample", type=int, default=20)
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--out", default="adjudication.md")
-    ap.add_argument("--votes-out", default="votes.json")
+    ap.add_argument("--out", default="adjudication.json")
     args = ap.parse_args()
 
     with open(args.corpus, encoding="utf-8") as f:
@@ -113,62 +112,26 @@ def main() -> None:
         disputed += rng.sample(pool, n)
     disputed.sort()
 
-    lines = [
-        "# Feuille d'adjudication — STU-540",
-        "",
-        f"{len(disputed)} paires en litige à juger, {len(agreed)} paires trouvées par les deux.",
-        "",
-        "## 1. Détection (aveugle)",
-        "",
-        "Un seul des deux arms a trouvé chaque paire ci-dessous — l'ordre ne dit pas",
-        "lequel. Question : **est-ce que le livre montre une vraie relation entre ces",
-        "deux-là ?** Pas « sont-ils dans la même scène » — une relation.",
-        "",
-        "Réponds `o` (oui, vraie relation) ou `n` (non) dans `votes.json`.",
-        "",
-    ]
-    votes = {"detection": {}, "typing": {}}
+    sheet = {"detection": [], "typing": []}
     for a, b in disputed:
-        key = f"{a} | {b}"
-        votes["detection"][key] = ""
-        windows = windows_for((a, b), chapters, forms)
-        lines.append(f"### {key}")
-        lines.append("")
-        if windows:
-            for w in windows:
-                lines.append(f"> {w}")
-                lines.append("")
-        else:
-            lines.append("> _Les deux noms ne partagent jamais une fenêtre de 5 phrases._")
-            lines.append("")
+        sheet["detection"].append({
+            "key": f"{a} | {b}",
+            "windows": windows_for((a, b), chapters, forms),
+        })
 
-    lines += [
-        "## 2. Typage",
-        "",
-        "Paires que **les deux** arms ont trouvées. Seul l'arm LLM émet un type, donc",
-        "cette section n'est pas aveugle — elle mesure le typage, pas la découverte.",
-        "Question : **le type et la direction sont-ils justes ?** `o` / `n`.",
-        "",
-    ]
-    sample = rng.sample(agreed, min(args.typing_sample, len(agreed)))
-    for a, b in sorted(sample):
+    for a, b in sorted(rng.sample(agreed, min(args.typing_sample, len(agreed)))):
         pred = llm[(a, b)]
-        key = f"{a} | {b}"
-        votes["typing"][key] = ""
-        lines.append(f"### {key}")
-        lines.append("")
-        lines.append(f"- type : **{pred['relationship_type']}**")
-        lines.append(f"- direction : **{pred['direction']}** (« A » = {a})")
-        for ev in pred.get("evidence", [])[:2]:
-            lines.append(f"- extrait : {ev}")
-        lines.append("")
+        sheet["typing"].append({
+            "key": f"{a} | {b}",
+            "relationship_type": pred["relationship_type"],
+            "direction": pred["direction"],
+            "evidence": pred.get("evidence", [])[:2],
+        })
 
     with open(args.out, "w", encoding="utf-8") as f:
-        f.write("\n".join(lines))
-    with open(args.votes_out, "w", encoding="utf-8") as f:
-        json.dump(votes, f, ensure_ascii=False, indent=2)
+        json.dump(sheet, f, ensure_ascii=False, indent=2)
 
-    print(f"{len(disputed)} disputed, {len(sample)} typing rows -> {args.out} / {args.votes_out}",
+    print(f"{len(sheet['detection'])} disputed, {len(sheet['typing'])} typing rows -> {args.out}",
           file=sys.stderr)
 
 
