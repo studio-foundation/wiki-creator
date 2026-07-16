@@ -11,12 +11,16 @@ confound.
 
 Two sections, because the ticket's question has two halves:
 
-  DETECTION — every pair exactly one arm found. **Blind**: rows are sorted by
-  name and never say which arm claimed the pair, so a vote cannot be a vote for
-  an architecture. Evidence is the book's own text (the windows where both names
-  appear), never an arm's output, for the same reason. A pair whose names never
-  share a window is labelled as such — that is a property of the novel, computed
-  in `explicit_pairs.py`, not a tell.
+  DETECTION — a stratified sample of the pairs exactly one arm found, equal
+  numbers from each arm so neither is over-represented in the estimate. **Blind**:
+  rows are sorted by name and never say which arm claimed the pair, so a vote
+  cannot be a vote for an architecture. Evidence is the book's own text (the
+  windows where both names appear), never an arm's output, for the same reason.
+
+  Blindness is partial and cannot be total: co-occurrence cannot emit a pair whose
+  names never share a window, so a row marked as having no shared window is
+  necessarily the LLM's. On Eragon that is 4 of 102 disputed pairs. Every other row
+  is genuinely unattributable.
 
   TYPING — a sample of pairs both arms found, where only the LLM has a type.
   Not blind and cannot be: only one arm emits types. It measures the axis the
@@ -78,6 +82,8 @@ def main() -> None:
     ap.add_argument("--roster", default="roster_oracle.json")
     ap.add_argument("--cooccurrence", default="predictions.cooccurrence_fixed.json")
     ap.add_argument("--llm", default="predictions.llm_schema.json")
+    ap.add_argument("--detection-sample", type=int, default=20,
+                    help="disputed pairs to adjudicate PER ARM (0 = all)")
     ap.add_argument("--typing-sample", type=int, default=20)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", default="adjudication.md")
@@ -94,13 +100,23 @@ def main() -> None:
         llm = {pair_key(p["entity_a"], p["entity_b"]): p for p in json.load(f)}
 
     forms = names_of(roster)
-    disputed = sorted((cooc | set(llm)) - (cooc & set(llm)))
+    rng = random.Random(args.seed)
     agreed = sorted(cooc & set(llm))
+
+    # Sample per arm, not from the pooled disputed set: the arms disagree in very
+    # unequal numbers (75 vs 27 on Eragon), and a pooled sample would spend the
+    # human's votes on whichever arm is noisier and leave the other unmeasured.
+    disputed = []
+    for keys in (cooc - set(llm), set(llm) - cooc):
+        pool = sorted(keys)
+        n = len(pool) if args.detection_sample == 0 else min(args.detection_sample, len(pool))
+        disputed += rng.sample(pool, n)
+    disputed.sort()
 
     lines = [
         "# Feuille d'adjudication — STU-540",
         "",
-        f"{len(disputed)} paires en litige, {len(agreed)} paires trouvées par les deux.",
+        f"{len(disputed)} paires en litige à juger, {len(agreed)} paires trouvées par les deux.",
         "",
         "## 1. Détection (aveugle)",
         "",
@@ -134,7 +150,6 @@ def main() -> None:
         "Question : **le type et la direction sont-ils justes ?** `o` / `n`.",
         "",
     ]
-    rng = random.Random(args.seed)
     sample = rng.sample(agreed, min(args.typing_sample, len(agreed)))
     for a, b in sorted(sample):
         pred = llm[(a, b)]
