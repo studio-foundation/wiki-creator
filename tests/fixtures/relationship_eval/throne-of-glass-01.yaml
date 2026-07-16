@@ -12,7 +12,7 @@
 # validator both read (STU-477).
 #
 # Coverage targets (from the milestone audit, 2026-07-14):
-#   - typed pairs across friend / romance / ally / mentor / antagonist / employment
+#   - typed pairs across friend / romance / ally / mentor / enemy / employment
 #   - STU-477 graduated middle ground: strained_friendship (Celaena↔Chaol),
 #     budding_attraction (Celaena↔Dorian) — the ami→amoureux jump the audit flagged
 #   - STU-495 one-to-many authority (Brullo↔Celaena): group-directed evidence
@@ -92,7 +92,7 @@ pairs:
 
   - entity_a: Cain
     entity_b: Celaena
-    expected: antagonist
+    expected: enemy
     cooccurrence_count: 22
     note: Rival Champion; open hostility escalating to a duel.
     sample_contexts:

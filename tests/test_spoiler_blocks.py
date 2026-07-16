@@ -63,7 +63,7 @@ def test_relationship_index_lines_content_and_order():
     lines = relationship_index_lines(_entity())
     # untyped (Ghost) and chapter-less (NoChap) excluded
     assert lines == [
-        "* [[Cain]] — Antagoniste (ch.7)",          # reveal ch.7, most recent first
+        "* [[Cain]] — Ennemi (ch.7)",               # legacy "antagoniste" renders in the new word
         "* [[Chaol]] — Amoureux (ch.1→ch.55)",      # reveal ch.1
     ]
 

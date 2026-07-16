@@ -40,7 +40,7 @@ def test_load_gold_parses_fixture():
 def test_load_gold_single_expected_becomes_one_element_tuple():
     gold = re.load_gold(FIXTURE)
     cain = next(gp for gp in gold if gp.key == re.pair_key("Cain", "Celaena"))
-    assert cain.acceptable == ("antagonist",)
+    assert cain.acceptable == ("enemy",)
 
 
 # ------------------------------------------------------- predictions parsing

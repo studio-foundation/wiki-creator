@@ -266,16 +266,19 @@ relationships:
       description: >-
         The parties compete against each other without real hostility — sparring,
         contests, needling. Use when the competition is genuine but mutual regard
-        survives it; antagonist requires actual enmity.
+        survives it; enemy requires actual enmity.
     wary_alliance:
       labels: {en: Wary alliance, fr: "Alliance méfiante"}
       description: >-
         The parties cooperate toward a shared goal while withholding trust — a pact of
         convenience, a truce, collaboration under watch. Use when ally would overstate
-        the trust and antagonist would overstate the enmity.
-    antagonist:
-      legacy: [antagoniste]
-      labels: {en: Antagonist, fr: Antagoniste}
+        the trust and enemy would overstate the enmity.
+    enemy:
+      # STU-472: was `antagonist` — a narratological role, held toward THE protagonist.
+      # Naming Chaol the antagonist of Cain implies Cain heads his own novel. Readers
+      # say enemy; the classifier reached for the literary term as its catch-all.
+      legacy: [antagoniste, antagonist]
+      labels: {en: Enemy, fr: Ennemi}
       description: >-
         The parties work against each other with real enmity — opposed goals, harm done
         or intended. Competition without hostility is friendly_rivalry.
