@@ -168,7 +168,8 @@ Inside `wiki-resolution`, order matters:
   by STU-521 and the only wiki-ner-en consumer, which is why its 0.105 detection
   F1 on an unseen book stayed invisible; `models/wiki-ner-en` is retired
   (gitignored, so the flip *is* the retirement). STU-537 flipped the 6
-  `inheritance` tomes. EVENT ships with no accuracy claim (n=2 gold).
+  `inheritance` tomes, STU-535 `narnia`. EVENT ships with no accuracy claim
+  (n=2 gold).
 - Invented names break spaCy's typing (STU-537): spaCy's NER only recognises the
   proper nouns it memorised, and types the rest **ORG**. On Eragon that is not a
   tail case — `Garrow` (112 mentions, the uncle whose death launches the plot) is
@@ -183,9 +184,9 @@ Inside `wiki-resolution`, order matters:
   on the STU-467 spike branch): typing accuracy **50/103 spaCy → 84/103 GLiNER**,
   PERSON roster precision 61% → 92%, recall 80% → 94%. The fix is a config flip
   per book, not code — GLiNER types by prompt so an unseen name costs it nothing.
-  Only `inheritance` is flipped: no oracle exists for the other 14 books, and a
-  book of real-world names (Narnia's Peter/Lucy/Edmund) has no such problem and
-  should not pay GLiNER's runtime. **`_retag_entity_type_from_context` is skipped
+  Only `inheritance` was flipped by STU-537: no oracle existed for the other 14
+  books, and a book of real-world names should not pay GLiNER's runtime.
+  **`_retag_entity_type_from_context` is skipped
   under `invented_names`**: it exists to repair spaCy's ORG typing, and on a
   prompt-typed model it only misfires (it retyped Eragon's `Empire` ORG→PERSON;
   83/103 with it vs 84/103 without). It stays on for spaCy books, where its
@@ -193,6 +194,31 @@ Inside `wiki-resolution`, order matters:
   safely. `Cadoc`/`Snowfire` (horses) are a real judgment call left as the oracle
   ruled them (PERSON): a named animal is a character, and dropping them would
   drop Saphira.
+- `invented_names` is about the world, not the cast (STU-535): STU-537 read the
+  property off the characters and concluded Narnia — Peter, Lucy, Edmund, Susan —
+  was a real-names book with no spaCy problem. It is the opposite. The cast is
+  English, the *world* is invented, and `en_core_web_lg` typed **`Narnia` PERSON
+  in 41 of 41 mentions** (a character page for the world, listed as a participant
+  in an event), `Cair Paravel` ORG, and left **30 PERSON against 1 PLACE** — and
+  that 1 was `Queens`. Same failure as Garrow, different half of the novel: a
+  place name spaCy never memorised falls to PERSON as readily as a person's does
+  to ORG. So the question the key asks is "are this novel's proper nouns invented",
+  and one invented toponym is enough — a book can look like Peter and Lucy on the
+  cover and still need the flip.
+  Measured the STU-537 way (LLM oracle over the union of both arms' candidates
+  with ≥3 mentions, 52 entities): typing accuracy **24/52 spaCy → 35/52 GLiNER**,
+  PERSON precision 24/30 → 27/29, PLACE **0/1 → 3/4 precision and 0/3 → 3/3
+  recall**. Narnia, Cair Paravel and the Stone Table type PLACE; `Turkish` (from
+  *Turkish Delight*), `Son`, `Kings`, `Queens`, `House` — spaCy PERSON/ORG noise —
+  are gone, and the Professor, Father Christmas and Maugrim arrive.
+  **`threshold: 0.3`, not the 0.5 default**, and it was measured, not felt: at 0.5
+  the book scores 27/52 and finds no Fauns, Centaurs or Sons of Adam at all. The
+  gap this does not close is GLiNER's weakness on a common noun used as a name:
+  the antagonist is "the Witch" 80 times, and GLiNER detects `Witch` **16 of 116**
+  where spaCy gets 73 (`gliner_label: person name` asks for *names*). It costs no
+  tier here — 73 was already below the book's own p90 principal cut, so the Witch
+  is `secondary` under either arm — and it is not worth re-sweeping the label on
+  Eragon's gold to chase, but it is the reason total mentions drop 1334 → 1176.
 - Non-standard spaCy models (STU-453): `lang.infer_language` returns `fr`/`en`
   only for stock-model name prefixes (`fr_core_news_`/`fr_dep_news_`/
   `en_core_web_`) and `None` for anything else — a local path
