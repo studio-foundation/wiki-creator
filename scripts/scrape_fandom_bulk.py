@@ -10,18 +10,31 @@ Usage:
         --workers 4 \\
         --limit-per-wiki 300
 
-wikis.yaml format:
+wikis.yaml format (see scripts/fandom_wikis.yaml for the curated list):
     - wiki: https://throneofglass.fandom.com
       lang: en
       types: [PERSON, PLACE, ORG]
-    - wiki: https://harrypotter.fandom.com
+    - wiki: https://hisdarkmaterials.fandom.com
       lang: en
-    - wiki: https://lejeudelange.fandom.com   # if it exists
+      categories: {PERSON: Humans, ORG: Organisations}
+    - wiki: https://enkidiev.fandom.com/fr
       lang: fr
       types: [PERSON]
+      categories: {PERSON: Personnage}
 
 Only `wiki` is required per entry. `lang` defaults to "en".
 `types` defaults to ["PERSON", "PLACE", "ORG"].
+`categories` overrides DEFAULT_CATEGORIES per entity type, merged over the
+defaults so a partial override is enough. It is per-wiki because a category
+name is a property of the wiki, not something derivable: the plain
+"Characters"/"Locations"/"Organizations" default holds on barely half the
+wikis surveyed. Real names in use include `Personnage` (singular, fr),
+`Humans`, `Character`, `Places`, `Geography`, `Groups`, `Factions`, and
+`The Shadowhunter Chronicles characters`. A wrong name is silent — the
+category returns 0 members and the wiki yields no pages.
+
+Non-English wikis are served under a path, not a subdomain: give the full
+`https://enkidiev.fandom.com/fr` as `wiki`.
 
 Per-page record schema (one JSON object per line in lora_dataset_fandom.jsonl):
     source, wiki_slug, page_title, entity_type, content_lang, scraped_at
@@ -425,6 +438,7 @@ def scrape_one_wiki(entry: dict, out_dir: Path, limit_per_wiki: int | None) -> d
     wiki_url = entry["wiki"]
     lang = entry.get("lang", "en")
     types = entry.get("types", list(DEFAULT_CATEGORIES.keys()))
+    categories = {**DEFAULT_CATEGORIES, **entry.get("categories", {})}
     slug = entry.get("slug") or derive_wiki_slug(wiki_url)
 
     api_url = wiki_url.rstrip("/") + "/api.php"
@@ -451,7 +465,7 @@ def scrape_one_wiki(entry: dict, out_dir: Path, limit_per_wiki: int | None) -> d
             for entity_type in types:
                 if limit_per_wiki is not None and total_written >= limit_per_wiki:
                     break
-                category = DEFAULT_CATEGORIES.get(entity_type, entity_type)
+                category = categories.get(entity_type, entity_type)
                 try:
                     titles = fetch_category_members(api_url, category)
                 except requests.RequestException as e:
