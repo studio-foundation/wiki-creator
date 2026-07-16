@@ -1,0 +1,166 @@
+{
+  "entities": ["Galbatorix", "Durza", "les Ra'zac", "Morzan"],
+  "note": "Galbatorix n'apparaît jamais en personne dans le livre 1 — il n'est qu'une menace rapportée. Morzan est mort avant le livre. Toute scène, dialogue ou psychologie de l'un ou l'autre est une invention.",
+
+  "galbatorix": {
+    "canonical_aliases_book1": [
+      "Galbatorix",
+      "le roi",
+      "the king"
+    ],
+    "known_facts_book1": [
+      "Roi de l'Empire, ancien Dragon Rider devenu tyran",
+      "Son premier dragon fut tué par des Urgals ; les Riders lui refusèrent un autre dragon, ce qui le rendit fou",
+      "Vola un dragon, Shruikan, et força son lien par magie noire",
+      "Rallia treize Riders — les Forsworn — dont Morzan fut le premier",
+      "Détruisit l'ordre des Riders ; vainquit Vrael devant les portes de Doru Araeba après que celui-ci eut hésité à porter le coup final",
+      "Règne depuis une centaine d'années",
+      "Détenait les trois derniers œufs de dragon ; celui de Saphira lui a été volé",
+      "N'apparaît JAMAIS en personne dans ce livre — il n'agit que par ses serviteurs (Durza, les Ra'zac, l'Empire)"
+    ],
+    "known_relations_book1": {
+      "Durza": "son serviteur, chargé de récupérer l'œuf",
+      "les Ra'zac": "ses chasseurs, envoyés à Carvahall",
+      "Morzan": "premier et plus fidèle des Forsworn, mort",
+      "Eragon": "adversaire ; il veut l'œuf et le Rider"
+    },
+    "forbidden_book1": {
+      "note": "Éléments venant d'Eldest, Brisingr, Inheritance.",
+      "later_books": [
+        "les Eldunarí",
+        "Eldunarí",
+        "sa mort",
+        "son nom véritable",
+        "le Nom des Noms",
+        "la salle du trône d'Urû'baen",
+        "Murtagh comme son Rider",
+        "Thorn",
+        "sa rencontre avec Eragon"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute scène ou dialogue direct de Galbatorix (il n'apparaît pas dans ce livre)",
+      "Toute mention des Eldunarí ou de sa réserve de cœurs des cœurs",
+      "Toute mention de sa mort ou de son affrontement avec Eragon",
+      "Toute mention de Murtagh ou Thorn à son service",
+      "Toute mention du Nom des Noms"
+    ],
+    "identity_confusion_forbidden": ["alias: Morzan", "alias: Durza"]
+  },
+
+  "durza": {
+    "canonical_aliases_book1": [
+      "Durza",
+      "le Shade",
+      "the Shade"
+    ],
+    "known_facts_book1": [
+      "Shade — un humain possédé par des esprits qu'il a invoqués",
+      "Serviteur de Galbatorix, chargé de récupérer l'œuf de dragon",
+      "Tend l'embuscade à Arya et ses compagnons à la lisière du Du Weldenvarden ; l'œuf lui échappe",
+      "Retient et torture Arya à Gil'ead pendant des mois",
+      "Capture Eragon à Gil'ead ; le sonde",
+      "Mène l'armée d'Urgals à la bataille de Farthen Dûr",
+      "Tué par Eragon, qui lui transperce le cœur — seul moyen de tuer un Shade",
+      "En mourant, ses esprits ravagent l'esprit d'Eragon",
+      "Lui a ouvert le dos d'un coup d'épée pendant le duel"
+    ],
+    "known_relations_book1": {
+      "Eragon": "le capture, le blesse ; Eragon le tue à Farthen Dûr",
+      "Arya": "son prisonnier, qu'il empoisonne et torture",
+      "Galbatorix": "son maître",
+      "Saphira": "brise l'Isidar Mithrim pour le distraire pendant le duel"
+    },
+    "forbidden_book1": {
+      "note": "Le passé de Durza (Carsaib, son enfance) est raconté dans Eldest, via les souvenirs qu'Eragon en garde.",
+      "identity": ["Carsaib", "son vrai nom", "son enfance dans le désert", "Haeg"],
+      "later_books": ["Eldest", "Varaug", "un autre Shade"]
+    },
+    "hallucination_signals": [
+      "Toute mention de Carsaib ou du passé humain de Durza (Eldest)",
+      "Toute mention qu'Arya le tue (c'est Eragon)",
+      "Toute mention d'un autre Shade nommé"
+    ],
+    "identity_confusion_forbidden": ["alias: Galbatorix", "alias: Shade comme personne distincte"]
+  },
+
+  "razac": {
+    "canonical_aliases_book1": [
+      "les Ra'zac",
+      "Ra'zac",
+      "the Ra'zac"
+    ],
+    "known_facts_book1": [
+      "Deux créatures encapuchonnées au service de Galbatorix, envoyées chercher l'œuf",
+      "Brom avertit : 'don't make the mistake of underestimating a Ra'zac, for they are cunning and full of guile'",
+      "Leur haleine étourdit ; ils craignent l'eau et la lumière du jour",
+      "Viennent à Carvahall, détruisent la ferme de Garrow et le blessent mortellement",
+      "Traqués par Eragon et Brom jusqu'à Dras-Leona et Helgrind",
+      "Blessent mortellement Brom",
+      "Échappent à Eragon dans ce livre — ils ne sont pas tués"
+    ],
+    "known_relations_book1": {
+      "Galbatorix": "leurs maîtres",
+      "Garrow": "ils le blessent mortellement",
+      "Brom": "ils le tuent",
+      "Eragon": "il les traque pour venger Garrow"
+    },
+    "forbidden_book1": {
+      "note": "Leur mort et la nature des Lethrblaka sont développées dans Brisingr.",
+      "later_books": [
+        "les Lethrblaka",
+        "leur mort",
+        "leur nid à Helgrind détruit",
+        "Sloan retrouvé à Helgrind",
+        "Brisingr"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention de leur mort (ils survivent au livre 1)",
+      "Toute mention des Lethrblaka comme leurs montures nommées",
+      "Toute mention de la destruction de Helgrind ou du sauvetage de Katrina"
+    ],
+    "identity_confusion_forbidden": ["alias: Durza"]
+  },
+
+  "morzan": {
+    "canonical_aliases_book1": [
+      "Morzan",
+      "first and last of the Forsworn",
+      "le premier des Forsworn"
+    ],
+    "known_facts_book1": [
+      "Premier et dernier des Forsworn — les treize Riders ralliés à Galbatorix",
+      "Mort AVANT les événements du livre : tué par Brom en duel à Gil'ead lors de la chasse à l'œuf",
+      "Son épée était Zar'roc, la lame rouge que Brom a prise sur son corps et donnée à Eragon",
+      "Père de Murtagh ; lui a ouvert le dos en lui jetant Zar'roc alors qu'il était enfant",
+      "A séduit la mère de Murtagh par 'some small kindness, no doubt a ploy to gain her confidence'",
+      "Détesté à Farthen Dûr, surtout par les nains : Ajihad conseille à Eragon de ne pas porter Zar'roc dans Farthen Dûr",
+      "N'apparaît jamais vivant dans le livre — seulement dans les récits de Brom, Murtagh et Ajihad"
+    ],
+    "known_relations_book1": {
+      "Murtagh": "son fils, qu'il a mutilé",
+      "Brom": "son meurtrier, à Gil'ead",
+      "Galbatorix": "son maître ; 'by far his most loyal'",
+      "Eragon": "porte son épée, Zar'roc, sans le savoir au début"
+    },
+    "forbidden_book1": {
+      "note": "Le lien Morzan–Selena est une révélation d'Eldest/Brisingr.",
+      "identity": [
+        "Selena comme sa compagne",
+        "Selena la Main Noire",
+        "père d'Eragon",
+        "les Forsworn nommés individuellement",
+        "son château",
+        "son Eldunarí"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention de Selena comme compagne ou Main Noire de Morzan (Eldest/Brisingr)",
+      "Toute mention de Morzan comme père d'Eragon",
+      "Toute mention qu'il apparaît vivant dans ce livre",
+      "Toute mention de son Eldunarí"
+    ],
+    "identity_confusion_forbidden": ["alias: Murtagh", "alias: Brom", "alias: Galbatorix"]
+  }
+}
