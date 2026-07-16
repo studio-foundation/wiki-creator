@@ -26,8 +26,8 @@
         "cause": "confusion_alias",
         "first_seen_in": "entities_classified.json (alias_resolution, method=title_alias, confidence=medium, merged_from=['Beavers'], evidence snippet 'Mrs Beaver / Beavers')",
         "component": "scripts/alias_resolution.py — méthode title_alias",
-        "action": "Ne pas fusionner deux entités dont les titres honorifiques diffèrent (Mr/Mrs) sur un nom de famille commun. Distinct de STU-534 (method=pattern) et NON couvert par STU-538, qui ne retire que le détecteur pattern. Issue à créer.",
-        "issue": "à créer"
+        "action": "Ne pas fusionner deux entités dont les titres honorifiques diffèrent (Mr/Mrs) sur un nom de famille commun. Distinct de STU-534 (method=pattern) et NON couvert par STU-538, qui ne retire que le détecteur pattern.",
+        "issue": "STU-541"
       }
     ],
     "gt_note": "Corpus ground-truth Narnia créé le 2026-07-16 sous library/c_w_lewis/narnia/books/ground-truth/ (8 fichiers, 14 entités : Aslan, les quatre enfants, la Sorcière Blanche, Tumnus, les Beavers, Maugrim, Narnia + Cair Paravel, le Professeur + Mrs Macready). Étapes 1b/1c rejouées sur le wiki_pages.json de cette run : 3 violations brutes / 2 distinctes, toutes de classe alias-identité, toutes en amont dans entities_classified.json. Zéro signal d'hallucination, zéro terme interdit, zéro relation future — la génération sur les 9 pages abouties est propre au regard du GT. Chaque fait du corpus est vérifié par grep contre chapters.json, ce qui a corrigé deux erreurs de mémoire : 'Jadis' EST dans LWW (1 occurrence, dans l'avis d'arrestation signé Maugrim) et 'Pevensie' n'y est PAS (0 occurrence) — le patronyme est donc un signal d'hallucination, pas un fait.",
@@ -109,7 +109,7 @@
       "STU-533: studio run --json stdout truncates at 8192 bytes → 19 fully-generated pages discarded (bug)",
       "STU-534: 7 of 9 alias_pattern_templates never anchor {a} → Peter merged into Lucy (bug)",
       "STU-535: Narnia 01 on the spaCy NER backend: 30 PERSON / 1 PLACE (config/eval)",
-      "à créer: alias-resolution method=title_alias merges Mr Beaver + Mrs Beaver into one 'Beaver' entity — distinct from STU-534 (method=pattern) and not covered by STU-538, which only removes the pattern detector (bug)"
+      "STU-541: alias-resolution method=title_alias merges Mr Beaver + Mrs Beaver into one 'Beaver' entity — honorifics treated as role_words; distinct from STU-534 (method=pattern) and not covered by STU-538 (bug)"
     ]
   }
 ]
