@@ -84,6 +84,53 @@ The winners live in `base.yaml#entity_types.<TYPE>.gliner_label`, not here;
 `gliner_labels.yaml` is only the candidate list. Same caveat as STU-470: labels
 are selected on the gold they are scored against, so these are mildly optimistic.
 
+## Per-book arm choice, without a gold (STU-535)
+
+Everything above answers *which arm is better on Eragon*, against a gold that cost
+~$3 and a day to build. `ner.invented_names` is declared **per book**, and no other
+book has a gold — which is how Narnia ran spaCy while the world itself was typed
+PERSON on all 40 mentions of it.
+
+`run_arms.py` + `oracle_types.py` answer the cheaper question a book config
+actually faces, on any book, for one LLM call:
+
+    B=library/c_w_lewis/narnia/books/01-the_lion_the_witch_and_the_wardrobe.yaml
+    python research/ner-eval/run_arms.py --book $B --arm spacy
+    python research/ner-eval/run_arms.py --book $B --arm gliner_t0.5 --threshold 0.5
+    python research/ner-eval/run_arms.py --book $B --arm gliner_t0.3 --threshold 0.3
+    python research/ner-eval/oracle_types.py --book $B
+
+(from the repo root — `paths.py` resolves a book path against the project root, not
+the cwd, unlike this directory's STU-470 scripts. Needs the book already parsed.)
+
+It is a different measurement, not a cheaper version of the one above:
+
+|  | STU-470 corpus | this |
+|---|---|---|
+| unit | a span in the text | an entity in the pipeline's output |
+| reference | annotated gold, ~$3/book | LLM verdict per candidate, one call |
+| answers | which model finds and types spans best | which arm should this book declare |
+| blind to | nothing in the sampled chunks | anything **no** arm found |
+
+Narnia, 51 candidates at the book's `min_mentions_absolute`:
+
+| arm | typing | PERSON prec / rec | PLACE prec / rec |
+|---|---|---|---|
+| spaCy `en_core_web_lg` | 22/51 | 22/30 · 22/31 | **0/1 · 0/3** |
+| GLiNER, threshold 0.5 | 26/51 | 21/24 · 21/31 | 3/3 · 3/3 |
+| GLiNER, threshold 0.3 | **32/51** | 24/28 · 24/31 | 3/5 · 3/3 |
+
+Three things this method gets wrong if you let it:
+
+- **A rubric that names an entity under test is not a measurement.** The first draft
+  of the prompt said "Narnia is a PLACE" — scoring the arms against the author's
+  verdict on the one entity in dispute. The shipped rubric defines the types and
+  stops; the verdict held without the hint.
+- **The union of arms is not the book.** An entity every arm missed is invisible
+  here. Detection claims belong to the gold corpus above.
+- **GLiNER's borderline spans are not deterministic.** Counts move by ±1 entity
+  between identical runs; do not read a one-entity difference as a result.
+
 ## Tests
 
     pytest tests/ -q

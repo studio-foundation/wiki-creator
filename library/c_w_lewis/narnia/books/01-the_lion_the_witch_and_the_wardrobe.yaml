@@ -8,11 +8,11 @@ file_path: library/c_w_lewis/narnia/books/01-the_lion_the_witch_and_the_wardrobe
 spacy_model: en_core_web_lg
 
 # Narnia's characters are real-world English names (Peter, Lucy) but its world is
-# not: en_core_web_lg typed Narnia itself PERSON in 41 of 41 mentions and Cair
-# Paravel ORG, leaving 30 PERSON entities against 1 PLACE (STU-535). threshold is
-# below the 0.5 default because it was measured on this book: 0.3 types 35 of 52
-# oracle-typed candidates against 27 at 0.5, and finds the Fauns, the Centaurs and
-# the Sons of Adam that 0.5 misses entirely.
+# not: en_core_web_lg types Narnia itself PERSON and Cair Paravel ORG, leaving 30
+# PERSON entities against 1 PLACE (STU-535). threshold is below the 0.5 default
+# because it was measured on this book (research/ner-eval/oracle_types.py): 0.3
+# types 32 of 51 oracle-typed candidates against 26 at 0.5, and finds the Fauns,
+# the Centaurs and the Sons of Adam that 0.5 misses entirely.
 ner:
   invented_names: true
   threshold: 0.3
