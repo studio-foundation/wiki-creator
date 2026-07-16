@@ -1,0 +1,90 @@
+{
+  "entity": "Aslan",
+  "canonical_aliases_book1": [
+    "Aslan",
+    "le Lion",
+    "the Lion",
+    "le Roi de la forêt",
+    "le Roi des Bêtes",
+    "fils du grand Empereur-d'au-delà-des-Mers"
+  ],
+  "known_facts_book1": [
+    "Grand lion, fils du grand Empereur-d'au-delà-des-Mers — 'King of the wood and the son of the great Emperor-beyond-the-Sea'",
+    "Véritable roi de Narnia ; la Sorcière Blanche n'est qu'une usurpatrice",
+    "Son nom seul provoque une réaction chez chacun des quatre enfants avant même qu'ils le rencontrent",
+    "Absent de Narnia depuis longtemps ; son retour brise l'hiver perpétuel de la Sorcière",
+    "Mr Beaver le décrit ainsi : 'Course he isn't safe. But he's good. He's the King'",
+    "Établit son camp près de la Table de Pierre (Stone Table)",
+    "Montre Cair Paravel à Peter et lui annonce qu'il sera High King, étant l'aîné",
+    "Envoie une troupe secourir Edmund, capturé par la Sorcière",
+    "La Sorcière réclame le sang d'Edmund : la Deep Magic donne au traître à la Sorcière comme 'lawful prey'",
+    "Négocie seul à seule avec la Sorcière et se substitue à Edmund sans que les enfants le sachent",
+    "Se laisse lier, tondre ('Let him first be shaved') et museler ('Muzzle him!') par les partisans de la Sorcière",
+    "Tué par la Sorcière sur la Table de Pierre, Susan et Lucy témoins cachés",
+    "Ressuscite par la Deeper Magic from Before the Dawn of Time : 'when a willing victim who had committed no treachery was killed in a traitor's stead, the Table would crack and Death itself would start working backwards'",
+    "Emmène Susan et Lucy sur son dos jusqu'à la maison de la Sorcière",
+    "Ranime les créatures pétrifiées en soufflant sur elles, dont Tumnus et Giant Rumblebuffin",
+    "Tue la Sorcière Blanche lors de la bataille finale",
+    "Guérit Edmund grâce au cordial de Lucy après la bataille",
+    "Couronne les quatre enfants à Cair Paravel",
+    "Part sans prévenir ; Mr Beaver avertit qu'il fait cela — 'He's wild, you know. Not like a tame lion'"
+  ],
+  "known_relations_book1": {
+    "Lucy": "l'une des Filles d'Ève qu'il couronne reine ; assiste à sa mort et à sa résurrection",
+    "Susan": "l'une des Filles d'Ève qu'il couronne reine ; assiste à sa mort et à sa résurrection",
+    "Peter": "le fait High King ; lui montre Cair Paravel et l'adoube après son premier combat",
+    "Edmund": "rachète sa trahison en mourant à sa place ; le fait roi",
+    "la Sorcière Blanche": "adversaire ; elle le tue sur la Table de Pierre, il la tue lors de la bataille finale",
+    "Tumnus": "le ramène à la vie en soufflant sur sa statue",
+    "Giant Rumblebuffin": "le ranime et lui demande d'abattre la porte de la cour de la Sorcière"
+  },
+  "physical_description_book1": [
+    "Un lion — grand, doré, à la crinière épaisse",
+    "Tondu (crinière coupée aux ciseaux) avant sa mise à mort sur la Table de Pierre",
+    "Retrouve sa crinière après sa résurrection"
+  ],
+  "forbidden_book1": {
+    "note": "Ces éléments appartiennent aux autres Chronicles. Les mentionner dans une page scopée livre 1 = hallucination. Attention : LWW est le premier livre publié, mais The Magician's Nephew le précède chronologiquement — tout ce qui vient de la création de Narnia est hors-scope ici.",
+    "cosmology": [
+      "création de Narnia par son chant",
+      "Aslan chante Narnia",
+      "le Bois entre les Mondes",
+      "le pays d'Aslan",
+      "Aslan's country",
+      "la Deplorable Word"
+    ],
+    "later_books": [
+      "Prince Caspian",
+      "Aslan's How",
+      "le Dawn Treader",
+      "Reepicheep",
+      "Eustace Scrubb",
+      "Puddleglum",
+      "la fin du monde de Narnia",
+      "The Last Battle",
+      "l'agneau au bord de la mer"
+    ],
+    "identity": [
+      "Aslan comme figure christique explicite nommée Jésus",
+      "Aslan comme allégorie déclarée par le texte"
+    ]
+  },
+  "hallucination_signals": [
+    "Toute mention qu'Aslan a créé Narnia par son chant",
+    "Toute mention du Bois entre les Mondes ou de Charn",
+    "Toute mention du pays d'Aslan comme lieu visité",
+    "Toute mention de Caspian, Reepicheep, Eustace, Puddleglum",
+    "Toute mention d'Aslan's How",
+    "Toute mention explicite d'Aslan comme le Christ ou Jésus",
+    "Toute mention de la fin du monde de Narnia",
+    "Toute mention d'Aslan portant le nom Jadis ou confondu avec la Sorcière",
+    "Toute mention d'un autre livre des Chroniques comme source d'un fait de cette page"
+  ],
+  "identity_confusion_forbidden": [
+    "alias: Lion",
+    "connu sous le nom de Narnia",
+    "alias: Narnia",
+    "connu sous le nom de Jadis",
+    "alias: Kings"
+  ]
+}

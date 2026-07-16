@@ -1,0 +1,75 @@
+{
+  "entities": ["Mr Beaver", "Mrs Beaver"],
+  "note": "Le pipeline extrait 'Beaver' comme une seule entité PERSON, alors que le livre distingue nettement Mr Beaver et Mrs Beaver. Les deux sont documentés ici séparément ; une page unique 'Beaver' qui fond les deux est un défaut de résolution, pas une hallucination.",
+  "note_on_aliases": "Pas de traductions françaises ('Monsieur/Madame Castor') dans les alias : le matcher de l'étape 1b est un substring bidirectionnel et 'Adam' est contenu dans 'Madame' — la page 'Adam' se liait à Mrs Beaver. Les titres de page viennent de l'extraction et restent anglais.",
+
+  "mr_beaver": {
+    "canonical_aliases_book1": [
+      "Mr Beaver",
+      "Beaver"
+    ],
+    "known_facts_book1": [
+      "Castor parlant ; aborde les quatre enfants dans le bois en montrant le mouchoir que Lucy avait donné à Tumnus",
+      "Mot de passe implicite : il murmure 'They say Aslan is on the move — perhaps has already landed'",
+      "Les mène à sa hutte sur le barrage (dam)",
+      "Explique aux enfants qui est Aslan : 'he is the King of the wood and the son of the great Emperor-beyond-the-Sea' et 'Aslan is a lion—the Lion, the great Lion'",
+      "Sur la sécurité d'Aslan : 'Course he isn't safe. But he's good. He's the King, I tell you'",
+      "Donne la généalogie de la Sorcière : elle descend de Lilith, première femme d'Adam, 'one of the Jinn', et des géants — 'she's no Daughter of Eve'",
+      "Cite la prophétie : quand deux Fils d'Adam et deux Filles d'Ève siégeront sur les quatre trônes de Cair Paravel, le règne de la Sorcière et sa vie prendront fin",
+      "Récite le vers : 'Wrong will be right, when Aslan comes in sight'",
+      "Remarque le premier la disparition d'Edmund et comprend qu'il est parti chez la Sorcière",
+      "Guide les enfants jusqu'à la Table de Pierre pendant le dégel",
+      "Explique à la fin qu'Aslan part sans prévenir : 'He's wild, you know. Not like a tame lion'"
+    ],
+    "known_relations_book1": {
+      "Mrs Beaver": "son épouse ; il s'impatiente de sa lenteur au moment de fuir",
+      "Tumnus": "il a le mouchoir de Lucy que Tumnus lui a confié",
+      "les quatre enfants": "les recueille, les instruit et les guide jusqu'à Aslan",
+      "Aslan": "son roi ; il annonce son retour",
+      "la Sorcière Blanche": "adversaire ; il fuit sa hutte devant l'arrivée des loups"
+    },
+    "forbidden_book1": {
+      "note": "Éléments venant des autres Chronicles.",
+      "later_books": ["Prince Caspian", "Caspian", "le Dawn Treader"]
+    },
+    "hallucination_signals": [
+      "Toute mention de Prince Caspian ou d'un livre ultérieur",
+      "Toute confusion avec Mrs Beaver (la machine à coudre est à elle)",
+      "Toute mention qu'il combat lors de la bataille finale"
+    ],
+    "identity_confusion_forbidden": [
+      "alias: Mrs Beaver",
+      "alias: Aslan"
+    ]
+  },
+
+  "mrs_beaver": {
+    "canonical_aliases_book1": [
+      "Mrs Beaver",
+      "she-beaver"
+    ],
+    "known_facts_book1": [
+      "Castor parlant, épouse de Mr Beaver",
+      "Les enfants la découvrent à sa machine à coudre (sewing machine) dans un coin de la hutte",
+      "Prépare le repas : poisson pêché par Mr Beaver, pommes de terre, et un roly-poly à la marmelade",
+      "Au moment de fuir, insiste pour emporter des provisions et se prépare posément malgré l'urgence",
+      "Renonce à emporter la machine à coudre — 'A great deal too heavy'",
+      "Fuit avec les autres jusqu'à la Table de Pierre"
+    ],
+    "known_relations_book1": {
+      "Mr Beaver": "son époux",
+      "les quatre enfants": "les nourrit et les héberge, puis fuit avec eux"
+    },
+    "forbidden_book1": {
+      "note": "Éléments venant des autres Chronicles.",
+      "later_books": ["Prince Caspian", "Caspian"]
+    },
+    "hallucination_signals": [
+      "Toute mention de Prince Caspian ou d'un livre ultérieur",
+      "Toute mention qu'elle emporte la machine à coudre (elle y renonce)"
+    ],
+    "identity_confusion_forbidden": [
+      "alias: Mr Beaver"
+    ]
+  }
+}

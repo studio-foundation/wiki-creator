@@ -1,0 +1,101 @@
+{
+  "entities": ["le Professeur", "Mrs Macready"],
+  "note": "Le Professeur n'est JAMAIS nommé dans LWW — ni 'Kirke', ni 'Digory' (0 occurrence de chacun). Son identité comme Digory Kirke, le garçon de The Magician's Nephew, est une révélation d'un autre livre. C'est le piège d'hallucination principal de cette page.",
+
+  "professeur": {
+    "canonical_aliases_book1": [
+      "le Professeur",
+      "the Professor",
+      "un vieux Professeur"
+    ],
+    "known_facts_book1": [
+      "Vieil homme qui héberge les quatre enfants, envoyés de Londres à cause des air-raids",
+      "Vit au cœur de la campagne, à dix miles de la gare la plus proche et deux miles du bureau de poste",
+      "Sans épouse, dans une très grande maison, avec une gouvernante nommée Mrs Macready et trois servantes",
+      "Très vieux, cheveux blancs en broussaille, poussant aussi sur la plus grande partie du visage",
+      "Lucy le trouve un peu effrayant au premier abord ; Edmund a envie de rire",
+      "La maison est célèbre et attire des visiteurs que Mrs Macready fait visiter",
+      "Peter et Susan viennent le consulter sur les 'mensonges' de Lucy",
+      "Il répond par la logique : soit elle ment, soit elle est folle, soit elle dit la vérité — et puisqu'elle n'est ni menteuse ni folle, il faut provisoirement admettre qu'elle dit la vérité",
+      "Lance : 'What do they teach them at these schools?'",
+      "Croit à Narnia et n'est pas surpris à la fin ; conseille aux enfants de ne pas essayer d'y retourner par le même chemin"
+    ],
+    "known_relations_book1": {
+      "Lucy": "le seul adulte à la croire",
+      "Peter": "le consulte au sujet de Lucy",
+      "Susan": "le consulte au sujet de Lucy",
+      "Mrs Macready": "sa gouvernante"
+    },
+    "forbidden_book1": {
+      "note": "Son nom et son passé viennent de The Magician's Nephew et de The Last Battle.",
+      "identity": [
+        "Digory",
+        "Digory Kirke",
+        "Professor Kirke",
+        "Kirke",
+        "le garçon qui a assisté à la création de Narnia",
+        "Polly",
+        "Uncle Andrew",
+        "les anneaux magiques",
+        "l'armoire faite du bois du pommier",
+        "la pomme de jeunesse",
+        "sa mère guérie"
+      ],
+      "later_books": [
+        "The Last Battle",
+        "sa mort dans l'accident de chemin de fer",
+        "les Sept Amis de Narnia"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention du nom 'Kirke' ou 'Digory' (le Professeur n'est jamais nommé dans le livre 1)",
+      "Toute mention qu'il a visité Narnia lui-même ou assisté à sa création",
+      "Toute mention de l'origine de l'armoire (bois du pommier — The Magician's Nephew)",
+      "Toute mention de Polly ou d'Uncle Andrew",
+      "Toute mention de l'accident de chemin de fer ou des Sept Amis de Narnia"
+    ],
+    "identity_confusion_forbidden": [
+      "alias: Kirke",
+      "alias: Digory",
+      "alias: House"
+    ]
+  },
+
+  "mrs_macready": {
+    "canonical_aliases_book1": [
+      "Mrs Macready",
+      "the Macready",
+      "la gouvernante"
+    ],
+    "known_facts_book1": [
+      "Gouvernante (housekeeper) du Professeur",
+      "Fait visiter la maison aux touristes, qui est célèbre",
+      "Les enfants l'évitent : c'est en fuyant son groupe de visiteurs qu'ils se réfugient tous les quatre dans l'armoire et entrent à Narnia ensemble",
+      "Edmund la surnomme 'the Macready'",
+      "N'aime pas les enfants et n'aime pas être interrompue pendant ses visites",
+      "N'entre jamais à Narnia et ne sait rien de ce qui arrive aux enfants"
+    ],
+    "known_relations_book1": {
+      "le Professeur": "son employeur",
+      "les quatre enfants": "les enfants la fuient ; c'est ce qui les mène tous les quatre dans l'armoire"
+    },
+    "forbidden_book1": {
+      "note": "Personnage strictement mineur du livre 1, absent des autres Chronicles.",
+      "later_books": ["Prince Caspian", "The Last Battle"],
+      "events": [
+        "sa venue à Narnia",
+        "sa rencontre avec Aslan",
+        "sa connaissance de l'armoire"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention qu'elle entre à Narnia ou connaît l'armoire",
+      "Toute mention qu'elle rencontre Aslan ou la Sorcière",
+      "Toute mention d'un livre ultérieur"
+    ],
+    "identity_confusion_forbidden": [
+      "alias: House",
+      "alias: Macready comme prénom"
+    ]
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "entity": "Tumnus",
+  "canonical_aliases_book1": [
+    "Tumnus",
+    "Mr Tumnus"
+  ],
+  "note_on_aliases": "Ne pas ajouter 'the Faun Tumnus' comme alias : le matcher de l'étape 1b est un substring bidirectionnel et lierait les pages parasites 'Faun'/'Fauns' à Tumnus, faisant tourner ses signaux sur des entités qui ne sont pas lui.",
+  "known_facts_book1": [
+    "Faune — première créature de Narnia que rencontre Lucy, près du lamp-post",
+    "Porte des paquets et un parapluie sous la neige lors de leur rencontre",
+    "Invite Lucy à prendre le thé dans sa grotte",
+    "Joue d'une étrange petite flûte tirée d'un étui sur la commode",
+    "Raconte à Lucy les fêtes de Narnia d'avant l'hiver — les Dryades et les Naïades dansant avec les Fauns, les chasses au milk-white stag, les festins avec les Red Dwarfs",
+    "Avoue en pleurant être à la solde de la Sorcière Blanche, chargé de lui livrer tout Fils d'Adam ou Fille d'Ève trouvé dans le bois",
+    "Renonce et raccompagne Lucy jusqu'au lamp-post — c'est son crime",
+    "Arrêté par Maugrim pour High Treason ; l'avis d'arrestation est cloué sur sa porte, sa grotte saccagée",
+    "Redoute d'être changé en pierre et de finir statue dans la maison de la Sorcière 'until the four thrones at Cair Paravel are filled'",
+    "Pétrifié par la Sorcière",
+    "Ranimé par le souffle d'Aslan dans la cour de la Sorcière",
+    "Toujours vivant à la fin du livre : 'Tumnus (who was a middle-aged Faun by now and beginning to be stout)' annonce le retour du White Stag"
+  ],
+  "known_relations_book1": {
+    "Lucy": "premier ami à Narnia ; il refuse de la livrer à la Sorcière et est pétrifié pour cela",
+    "la Sorcière Blanche": "il était à sa solde, puis la trahit en laissant partir Lucy ; elle le fait arrêter et pétrifier",
+    "Maugrim": "signe l'avis d'arrestation qui le vise",
+    "Aslan": "le ramène à la vie en soufflant sur sa statue"
+  },
+  "physical_description_book1": [
+    "Faune : torse d'homme, jambes et sabots de chèvre, queue",
+    "Petites cornes sur le front",
+    "Peau rougeâtre, cheveux bouclés",
+    "Barbe courte et pointue",
+    "Porte une écharpe rouge et un parapluie lors de sa première apparition"
+  ],
+  "forbidden_book1": {
+    "note": "Éléments venant des autres Chronicles.",
+    "later_books": [
+      "Prince Caspian",
+      "Caspian",
+      "sa descendance",
+      "le Dawn Treader"
+    ]
+  },
+  "hallucination_signals": [
+    "Toute mention de Prince Caspian ou d'un livre ultérieur",
+    "Toute mention qu'il livre effectivement Lucy à la Sorcière (il renonce)",
+    "Toute mention qu'il meurt (il est ranimé et vivant à la fin)"
+  ],
+  "identity_confusion_forbidden": [
+    "alias: Faun",
+    "alias: Fauns",
+    "alias: Lucy"
+  ]
+}
