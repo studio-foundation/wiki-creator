@@ -1,0 +1,12 @@
+name: entity-status-item
+version: 1
+schema:
+  required_fields:
+    - status
+# status: list of {name: string, status: string, quote: string} — the roster
+# entries whose fate the snippets state.
+# An empty list is valid and means the snippets settle nobody's fate; every
+# character then renders the slot's declared fallback, `unknown`.
+# Names absent from the roster, statuses outside the enum, and quotes absent from
+# the snippets shown are discarded by the caller (scripts/entity_status.py), not
+# rejected here: a hallucinated verdict must not fail a run, it must render unknown.
