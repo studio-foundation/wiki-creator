@@ -533,7 +533,7 @@ def test_classify_relationships_includes_novel_summary_in_prompt():
     """novel_summary is passed to _run_studio_classifier_item when provided."""
     captured_calls = []
 
-    def fake_studio(rel, *, novel_summary, additional_context):
+    def fake_studio(rel, *, novel_summary, additional_context, book_config=None):
         captured_calls.append({"novel_summary": novel_summary})
         return {
             "relationship_type": "ami",
@@ -558,7 +558,7 @@ def test_classify_relationships_omits_summary_block_when_none():
     """When novel_summary is None, empty string is passed to Studio."""
     captured_calls = []
 
-    def fake_studio(rel, *, novel_summary, additional_context):
+    def fake_studio(rel, *, novel_summary, additional_context, book_config=None):
         captured_calls.append({"novel_summary": novel_summary})
         return {
             "relationship_type": "ami",
@@ -578,7 +578,7 @@ def test_classify_relationships_omits_summary_block_when_whitespace_only():
     """A whitespace-only novel_summary is normalized to empty string passed to Studio."""
     captured_calls = []
 
-    def fake_studio(rel, *, novel_summary, additional_context):
+    def fake_studio(rel, *, novel_summary, additional_context, book_config=None):
         captured_calls.append({"novel_summary": novel_summary})
         return {
             "relationship_type": "ami",
@@ -626,7 +626,7 @@ def test_pipeline_passes_llm_model_to_classify(monkeypatch):
     import scripts.relationship_extraction as rel_mod
     captured = {}
 
-    def fake_classify(rels, *, model, ollama_url, novel_summary=None):
+    def fake_classify(rels, *, model, ollama_url, novel_summary=None, book_config=None):
         captured["model"] = model
         captured["ollama_url"] = ollama_url
         return rels
@@ -665,7 +665,7 @@ def test_pipeline_passes_novel_summary_to_classify(monkeypatch):
 
     captured = {}
 
-    def fake_classify(rels, *, model, ollama_url, novel_summary=None):
+    def fake_classify(rels, *, model, ollama_url, novel_summary=None, book_config=None):
         captured["novel_summary"] = novel_summary
         return rels
 
@@ -986,7 +986,7 @@ def test_classify_relationships_skips_place_entity_without_calling_studio():
     """Studio must NOT be called for PLACE entities — not just result left null."""
     studio_calls = []
 
-    def fake_studio(rel, *, novel_summary, additional_context):
+    def fake_studio(rel, *, novel_summary, additional_context, book_config=None):
         studio_calls.append(rel)
         return {"relationship_type": "ami", "direction": "symétrique", "evolution": "x", "key_moments": []}
 
@@ -1013,7 +1013,7 @@ def test_classify_relationships_skips_other_entity_without_calling_studio():
     """Studio must NOT be called for OTHER (object) entities."""
     studio_calls = []
 
-    def fake_studio(rel, *, novel_summary, additional_context):
+    def fake_studio(rel, *, novel_summary, additional_context, book_config=None):
         studio_calls.append(rel)
         return {"relationship_type": "allié", "direction": "symétrique", "evolution": "x", "key_moments": []}
 
@@ -1040,7 +1040,7 @@ def test_classify_relationships_still_classifies_person_pairs_with_entity_types(
     """Person↔person pairs must still be classified when entity_types is provided."""
     studio_calls = []
 
-    def fake_studio(rel, *, novel_summary, additional_context):
+    def fake_studio(rel, *, novel_summary, additional_context, book_config=None):
         studio_calls.append(rel)
         return {"relationship_type": "ami", "direction": "symétrique", "evolution": "x", "key_moments": []}
 

@@ -200,6 +200,7 @@ def main() -> None:
                     additional_context="",
                     role_contexts_a=role_contexts.get(pair.get("entity_a", ""), []),
                     role_contexts_b=role_contexts.get(pair.get("entity_b", ""), []),
+                    book_config=book_cfg,
                 )
                 if classification and not classification.get("error"):
                     classification = {

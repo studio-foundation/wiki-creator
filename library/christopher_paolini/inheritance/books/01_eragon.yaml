@@ -68,6 +68,21 @@ export:
       organizations: Organizations
 
 classification:
+  # The bonds this world runs on. Flattened into the generic vocabulary, the
+  # Rider-dragon link reads "allié" and carranam reads "autre" — the two things a
+  # reader opens an Alagaësia wiki for (STU-472).
+  relationship_types:
+    - name: lien de Dragonnier
+      description: >-
+        The magical, lifelong bond between a Dragon Rider and their dragon, formed
+        when the dragon hatches for them. The pair share thought and sensation. It
+        outranks every generic type: a Rider and their own dragon are never merely
+        allies or friends.
+    - name: carranam
+      description: >-
+        Two magicians whose minds are joined so they can cast as one, sharing
+        strength in the ancient language. Applies only to the magical joining
+        itself, not to any ordinary bond between two spellcasters.
   concept_keywords:
     - magic
     - spell
