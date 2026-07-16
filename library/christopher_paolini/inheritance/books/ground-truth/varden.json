@@ -1,0 +1,145 @@
+{
+  "entities": ["Ajihad", "Nasuada", "Orik", "Hrothgar"],
+  "note": "Ajihad meurt à la toute fin du livre 1. La succession de Nasuada à la tête des Varden appartient à Eldest — dans ce livre elle n'est qu'une jeune femme porteuse d'un message.",
+
+  "ajihad": {
+    "canonical_aliases_book1": ["Ajihad", "le chef des Varden", "the Varden's leader"],
+    "known_facts_book1": [
+      "Chef des Varden, basé à Farthen Dûr",
+      "Homme noir, grand, crâne rasé, voix profonde",
+      "Correspondait avec Brom, qui était son agent",
+      "Reçoit Eragon et Murtagh à leur arrivée ; fait sonder Eragon par les Twins",
+      "Reconnaît la voix de Murtagh : 'I met his father once'",
+      "Conseille à Eragon de ne pas porter Zar'roc dans Farthen Dûr : 'Many here remember Morzan's time with hate, especially the dwarves'",
+      "Explique qu'après la disparition d'Arya, les elfes ont retiré leur soutien aux Varden et qu'Islanzadí refusait tout contact",
+      "Commande les Varden à la bataille de Farthen Dûr",
+      "Pris en embuscade par des Urgals dans les tunnels après la bataille",
+      "Meurt de ses blessures ; ses derniers mots à Eragon lui font promettre d'empêcher les Varden de sombrer dans le chaos : 'They must be kept strong. You must promise me' — 'Then peace be with you, Eragon Shadeslayer.…'",
+      "Père de Nasuada"
+    ],
+    "known_relations_book1": {
+      "Nasuada": "sa fille",
+      "Eragon": "le reçoit, l'instruit des Varden, lui fait promettre de les protéger en mourant",
+      "Murtagh": "le fait surveiller ; a connu son père Morzan",
+      "Brom": "son agent et correspondant",
+      "les Twins": "ses sondeurs mentaux ; ils disparaissent lors de l'embuscade"
+    },
+    "forbidden_book1": {
+      "note": "Tout ce qui suit sa mort appartient à Eldest.",
+      "later_books": [
+        "ses funérailles",
+        "la succession de Nasuada",
+        "la trahison des Twins révélée",
+        "Eldest"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention de sa survie au-delà du livre 1",
+      "Toute mention de la trahison des Twins comme fait établi (elle est révélée dans Eldest)",
+      "Toute mention de ses funérailles ou de la succession"
+    ],
+    "identity_confusion_forbidden": ["alias: Nasuada", "alias: Eragon"]
+  },
+
+  "nasuada": {
+    "canonical_aliases_book1": ["Nasuada"],
+    "known_facts_book1": [
+      "Jeune femme, fille d'Ajihad",
+      "Se présente elle-même à Eragon : 'I am Nasuada'",
+      "Vient lui porter un message de son père : 'My father, Ajihad, sent me here with a message'",
+      "Visage frappant : yeux en amande, lèvres pleines, pommettes rondes",
+      "Rôle strictement mineur dans ce livre — quatorze mentions seulement",
+      "Ne dirige PAS les Varden dans ce livre"
+    ],
+    "known_relations_book1": {
+      "Ajihad": "son père",
+      "Eragon": "lui porte un message de son père"
+    },
+    "forbidden_book1": {
+      "note": "Tout le parcours de Nasuada appartient à Eldest et aux livres suivants.",
+      "later_books": [
+        "elle devient chef des Varden",
+        "l'Épreuve des Longs Couteaux",
+        "sa relation avec Murtagh",
+        "sa capture par l'Empire",
+        "elle devient reine",
+        "les Nighthawks",
+        "Elva à son service"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention qu'elle dirige les Varden (Eldest)",
+      "Toute mention de l'Épreuve des Longs Couteaux",
+      "Toute mention de sa relation avec Murtagh",
+      "Toute mention qu'elle devient reine",
+      "Toute mention des Nighthawks ou d'Elva"
+    ],
+    "identity_confusion_forbidden": ["alias: Ajihad", "alias: Arya"]
+  },
+
+  "orik": {
+    "canonical_aliases_book1": ["Orik"],
+    "known_facts_book1": [
+      "Nain de Farthen Dûr, du clan Dûrgrimst Ingeitum",
+      "Neveu adoptif de Hrothgar",
+      "Sert de guide à Eragon dans Tronjheim",
+      "Bourru, pragmatique, souvent en tension avec les Twins",
+      "Combat à la bataille de Farthen Dûr",
+      "Après le vol de Saphira au-dessus de Tronjheim : 'Ah boy, you have been blessed indeed. I find a sudden longing in my heart for open skies and soaring cliffs'"
+    ],
+    "known_relations_book1": {
+      "Eragon": "son guide et allié à Farthen Dûr",
+      "Hrothgar": "son roi et parent adoptif",
+      "les Twins": "il s'en méfie"
+    },
+    "forbidden_book1": {
+      "note": "Éléments venant d'Eldest et des livres suivants.",
+      "later_books": [
+        "il devient roi des nains",
+        "son mariage avec Hvedra",
+        "son voyage à Ellesméra avec Eragon",
+        "la mort de Hrothgar",
+        "Eldest"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention qu'il devient roi des nains (Brisingr)",
+      "Toute mention de Hvedra ou de son mariage",
+      "Toute mention de son voyage à Ellesméra"
+    ],
+    "identity_confusion_forbidden": ["alias: Hrothgar"]
+  },
+
+  "hrothgar": {
+    "canonical_aliases_book1": ["Hrothgar", "le roi des nains", "the dwarf king"],
+    "known_facts_book1": [
+      "Roi des nains, régnant depuis Tronjheim, dans Farthen Dûr",
+      "Chef du clan Dûrgrimst Ingeitum",
+      "Reçoit Eragon sur son trône de granit",
+      "Adopte Eragon dans son clan, le Dûrgrimst Ingeitum",
+      "Méfiant envers les Riders à cause du passé, mais accorde son soutien",
+      "Vivant à la fin du livre"
+    ],
+    "known_relations_book1": {
+      "Eragon": "l'adopte dans le Dûrgrimst Ingeitum",
+      "Orik": "son neveu adoptif",
+      "Ajihad": "allié ; les nains hébergent les Varden"
+    },
+    "forbidden_book1": {
+      "note": "Sa mort appartient à Eldest.",
+      "later_books": [
+        "sa mort",
+        "sa mort par la main de Murtagh",
+        "les Burning Plains",
+        "sa succession",
+        "Eldest"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention de sa mort (il survit au livre 1)",
+      "Toute mention des Burning Plains ou de Murtagh comme son meurtrier",
+      "Toute mention de sa succession"
+    ],
+    "identity_confusion_forbidden": ["alias: Orik", "alias: Ajihad"]
+  }
+}

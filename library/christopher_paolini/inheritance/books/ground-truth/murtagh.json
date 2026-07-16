@@ -1,0 +1,77 @@
+{
+  "entity": "Murtagh",
+  "canonical_aliases_book1": [
+    "Murtagh",
+    "le fils de Morzan",
+    "Morzan's son"
+  ],
+  "known_facts_book1": [
+    "Jeune homme solitaire qui sauve Eragon des Ra'zac près de Dras-Leona",
+    "Excellent épéiste, monté sur un cheval nommé Tornac (du nom de son maître d'armes)",
+    "Fuit l'Empire et refuse d'être vu ou reconnu",
+    "Révèle à Eragon être 'the son of Morzan, first and last of the Forsworn' — la révélation a lieu DANS ce livre",
+    "Son père lui a ouvert le dos en lui jetant Zar'roc — l'épée que porte maintenant Eragon : 'My back was laid open by the very sword you now carry'",
+    "N'a hérité de rien d'autre : 'the only thing I expected to receive as inheritance, until Brom stole it from my father's corpse'",
+    "Apprend d'Eragon que Brom a tué son père",
+    "Raconte comment ses parents se sont rencontrés : Morzan a montré à sa mère 'some small kindness, no doubt a ploy to gain her confidence' et elle l'a suivi",
+    "Sa mère n'est PAS nommée dans ce livre — il ne dit que 'my mother'",
+    "Refuse de laisser les Twins sonder son esprit à Farthen Dûr",
+    "Ajihad le fait garder à vue : il a reconnu sa voix car il a rencontré son père autrefois",
+    "Combat à la bataille de Farthen Dûr",
+    "Disparaît à la fin du livre lors de l'embuscade dans les tunnels, avec les Twins ; on le croit mort"
+  ],
+  "known_relations_book1": {
+    "Eragon": "le sauve des Ra'zac et voyage avec lui ; amitié tendue, 'a bond between them now, welded in the brotherhood of battle'",
+    "Morzan": "son père, premier et dernier des Forsworn ; l'a mutilé enfant",
+    "Brom": "a tué son père à Gil'ead",
+    "Ajihad": "le fait surveiller à Farthen Dûr ; a connu son père",
+    "les Twins": "il refuse leur sondage mental ; il disparaît avec eux à la fin"
+  },
+  "physical_description_book1": [
+    "Jeune homme, à peine plus âgé qu'Eragon",
+    "Cheveux bruns",
+    "Une longue cicatrice en travers du dos, de l'épaule à la hanche, faite par Zar'roc"
+  ],
+  "forbidden_book1": {
+    "note": "Tout ce que Murtagh devient appartient à Eldest et aux livres suivants. Dans ce livre il n'est ni Rider, ni ennemi.",
+    "identity": [
+      "demi-frère d'Eragon",
+      "fils de Selena",
+      "Selena est sa mère",
+      "Murtagh Morzansson",
+      "son vrai nom",
+      "sa fidélité forcée à Galbatorix"
+    ],
+    "powers": [
+      "Rider",
+      "son dragon",
+      "Thorn",
+      "Zar'roc reprise à Eragon",
+      "les Eldunarí",
+      "Eldunarí"
+    ],
+    "events": [
+      "sa capture par les Twins et sa présentation à Galbatorix",
+      "les Burning Plains",
+      "la mort de Hrothgar",
+      "sa relation avec Nasuada",
+      "son exil au nord",
+      "le roman Murtagh"
+    ]
+  },
+  "hallucination_signals": [
+    "Toute mention que Murtagh est le demi-frère d'Eragon (Eldest)",
+    "Toute mention de Selena comme sa mère (sa mère n'est pas nommée dans ce livre)",
+    "Toute mention de Thorn ou de Murtagh comme Dragon Rider",
+    "Toute mention de son allégeance à Galbatorix ou de son serment en ancient language",
+    "Toute mention des Burning Plains",
+    "Toute mention qu'il reprend Zar'roc",
+    "Toute mention de sa relation avec Nasuada",
+    "Toute mention qu'il est un antagoniste dans ce livre (il est un allié d'Eragon)"
+  ],
+  "identity_confusion_forbidden": [
+    "alias: Eragon",
+    "alias: Morzan",
+    "connu sous le nom de Morzan"
+  ]
+}

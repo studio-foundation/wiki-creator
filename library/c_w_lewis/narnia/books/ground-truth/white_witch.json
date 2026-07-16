@@ -1,0 +1,96 @@
+{
+  "entity": "la Sorcière Blanche",
+  "canonical_aliases_book1": [
+    "la Sorcière Blanche",
+    "the White Witch",
+    "la Sorcière",
+    "the Witch",
+    "the Queen",
+    "la Reine",
+    "Jadis",
+    "Queen of Narnia",
+    "Chatelaine of Cair Paravel",
+    "Empress of the Lone Islands"
+  ],
+  "note_on_jadis": "Le nom 'Jadis' apparaît EXACTEMENT une fois dans LWW, dans l'avis d'arrestation signé par Maugrim : 'her Imperial Majesty Jadis, Queen of Narnia, Chatelaine of Cair Paravel, Empress of the Lone Islands'. C'est donc un alias légitime du livre 1 — mais tout ce que The Magician's Nephew raconte de Jadis (Charn, le Deplorable Word, son arrivée à Narnia) reste hors-scope.",
+  "known_facts_book1": [
+    "S'est emparée de Narnia et se proclame Reine ; Mr Beaver et Aslan la tiennent pour une usurpatrice",
+    "Maintient Narnia dans un hiver perpétuel : 'Always winter and never Christmas'",
+    "N'est pas une Fille d'Ève : selon Mr Beaver, elle descend de Lilith, première femme d'Adam, 'one of the Jinn', et des géants — 'there isn't a drop of real human blood in the Witch'",
+    "Se déplace en traîneau (sledge) tiré par des rennes, conduit par un nain",
+    "Rencontre Edmund seule et lui fait apparaître du Turkish Delight enchanté et une boisson chaude",
+    "Promet à Edmund de le faire roi et de le gaver de Turkish Delight s'il ramène ses frère et sœurs — promesse jamais tenue",
+    "Pétrifie ses ennemis avec sa baguette (wand) ; sa maison et sa cour sont pleines de statues",
+    "Pétrifie Tumnus pour avoir laissé partir Lucy",
+    "Maugrim est le chef de sa police secrète (Captain of the Secret Police)",
+    "Pétrifie une compagnie d'animaux surpris à festoyer avec les cadeaux de Father Christmas, sous les yeux d'Edmund",
+    "Invoque la Deep Magic devant Aslan : le Magic que l'Emperor a mis dans Narnia à l'origine lui donne tout traître comme 'lawful prey' — 'that human creature is mine. His life is forfeit to me. His blood is my property'",
+    "Négocie seule à seul avec Aslan et obtient sa vie contre celle d'Edmund",
+    "Fait tondre ('Let him first be shaved') et museler ('Muzzle him!') Aslan avant de le tuer sur la Table de Pierre",
+    "Ignore la Deeper Magic from Before the Dawn of Time, ce qui cause sa perte",
+    "Sa baguette est brisée par Edmund lors de la bataille",
+    "Tuée par Aslan lors de la bataille finale"
+  ],
+  "known_relations_book1": {
+    "Edmund": "elle le séduit par le Turkish Delight enchanté, puis le traite en prisonnier",
+    "Aslan": "adversaire ; elle le tue sur la Table de Pierre, il la tue lors de la bataille finale",
+    "Maugrim": "chef de sa police secrète, son serviteur",
+    "Tumnus": "elle le fait arrêter puis pétrifier pour avoir laissé partir Lucy",
+    "le nain": "son cocher et serviteur — jamais nommé dans le livre"
+  },
+  "physical_description_book1": [
+    "Grande, plus grande qu'une femme ordinaire",
+    "Le visage blanc — 'white as paper or snow'",
+    "La bouche très rouge",
+    "Belle mais fière, froide et sévère",
+    "Porte une couronne d'or et tient une longue baguette d'or"
+  ],
+  "forbidden_book1": {
+    "note": "Ces éléments viennent de The Magician's Nephew (son origine) ou de Prince Caspian. LWW ne raconte RIEN de son passé au-delà de la généalogie que donne Mr Beaver (Lilith, les Jinn, les géants).",
+    "origin": [
+      "Charn",
+      "le Deplorable Word",
+      "la dernière reine de Charn",
+      "la destruction de Charn",
+      "le Bois entre les Mondes",
+      "Digory",
+      "Polly",
+      "Uncle Andrew",
+      "les anneaux magiques",
+      "la pomme de jeunesse",
+      "le jardin à l'ouest",
+      "son arrivée à Narnia le jour de la création"
+    ],
+    "later_books": [
+      "sa tentative de résurrection par la sorcière et le loup-garou",
+      "Prince Caspian",
+      "Caspian",
+      "la Dame à la Robe Verte",
+      "la Dame au Vert Kirtle"
+    ],
+    "identity": [
+      "immortelle par la pomme",
+      "reine de Charn",
+      "descendante de géants ET de Jadis en tant que personnes distinctes"
+    ]
+  },
+  "hallucination_signals": [
+    "Toute mention de Charn ou du Deplorable Word",
+    "Toute mention de son arrivée à Narnia depuis un autre monde",
+    "Toute mention de Digory, Polly ou Uncle Andrew",
+    "Toute mention de la pomme de jeunesse ou de son immortalité expliquée",
+    "Toute mention du Bois entre les Mondes",
+    "Toute mention de sa résurrection tentée dans Prince Caspian",
+    "Toute mention de la Dame à la Robe Verte comme étant elle",
+    "Toute mention du nain sous le nom de Ginarrbrik (nom de film, absent du livre)",
+    "Toute mention de Maugrim sous le nom de Fenris Ulf (nom d'une édition américaine, absent de cette édition)",
+    "Toute mention qu'elle tient réellement sa promesse de faire d'Edmund un roi"
+  ],
+  "identity_confusion_forbidden": [
+    "alias: Narnia",
+    "alias: Aslan",
+    "connue sous le nom d'Aslan",
+    "alias: Queens",
+    "alias: Kings"
+  ]
+}

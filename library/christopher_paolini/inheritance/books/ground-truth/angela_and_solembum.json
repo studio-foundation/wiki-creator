@@ -1,0 +1,87 @@
+{
+  "entities": ["Angela", "Solembum"],
+  "note": "Le bébé qu'Eragon bénit à Farthen Dûr n'est PAS nommé dans ce livre — 'Elva' n'apparaît pas une seule fois (0 occurrence). Angela n'est pas non plus celle qui bénit. Toute page nommant l'enfant invente.",
+
+  "angela": {
+    "canonical_aliases_book1": ["Angela", "l'herboriste", "the herbalist", "the witch"],
+    "known_facts_book1": [
+      "Herboriste tenant boutique à Teirm, à côté de celle de Jeod",
+      "Petite, cheveux bouclés, volubile et imprévisible",
+      "Compagne du werecat Solembum",
+      "Tire les os de dragon (les Rider's bones) pour Eragon et lui prédit son avenir",
+      "Ne le fait presque jamais : 'I offered to do this for the other two people who talked with him. Only the woman agreed to it. Selena was her name'",
+      "A tiré les os pour Selena, la mère d'Eragon, autrefois — 'Ah, she regretted it, too. Her fortune was bleak and painful'",
+      "La prophétie annonce à Eragon une vie extraordinaire, une trahison par un membre de sa famille, un amour d'une naissance noble, et un départ définitif d'Alagaësia",
+      "Sur le hawthorn root et l'arbre qui se croisent : 'it can only mean more trouble'",
+      "Sur le courage : 'The real courage is in living and suffering for what you believe'",
+      "Se retrouve à Farthen Dûr et combat à la bataille",
+      "Tricote sans cesse ; caractère facétieux et énigmatique"
+    ],
+    "known_relations_book1": {
+      "Eragon": "lui tire les os et lui prédit son avenir à Teirm",
+      "Solembum": "son compagnon werecat",
+      "Selena": "elle lui a tiré les os autrefois — le seul lien qu'Eragon ait avec sa mère"
+    },
+    "forbidden_book1": {
+      "note": "L'identité et le passé d'Angela sont développés bien plus tard.",
+      "identity": [
+        "elle est une ancienne",
+        "son âge véritable",
+        "sa relation avec les elfes",
+        "son arme Tinkledeath",
+        "elle bénit l'enfant"
+      ],
+      "later_books": [
+        "Elva",
+        "elle élève Elva",
+        "Eldest",
+        "Brisingr",
+        "Inheritance",
+        "son rôle à la mort de Galbatorix"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention d'Elva par son nom",
+      "Toute mention qu'Angela bénit l'enfant (c'est Eragon qui bénit)",
+      "Toute mention de Tinkledeath",
+      "Toute révélation sur son âge ou son identité véritable",
+      "Toute mention d'un livre ultérieur comme source"
+    ],
+    "identity_confusion_forbidden": ["alias: Solembum", "alias: Selena"]
+  },
+
+  "solembum": {
+    "canonical_aliases_book1": ["Solembum", "le werecat", "the werecat"],
+    "known_facts_book1": [
+      "Werecat — chat-garou capable de prendre forme humaine et de parler par la pensée",
+      "Compagnon d'Angela, rencontré dans sa boutique à Teirm",
+      "Ne parle qu'à ceux qu'il juge dignes ; il parle à Eragon",
+      "Lui donne deux conseils énigmatiques, les seuls du livre : 'When the time comes and you need a weapon, look under the roots of the Menoa tree. Then, when all seems lost and your power is insufficient, go to the Rock of Kuthian and speak your name to open the Vault of Souls'",
+      "Disparaît aussitôt après, sans laisser Eragon poser de question",
+      "Se retrouve à Farthen Dûr et combat à la bataille sous forme féline"
+    ],
+    "known_relations_book1": {
+      "Angela": "sa compagne",
+      "Eragon": "lui donne les deux conseils qui orientent tout le cycle"
+    },
+    "forbidden_book1": {
+      "note": "L'accomplissement des deux conseils appartient à Brisingr (le Menoa tree) et Inheritance (la Vault of Souls).",
+      "later_books": [
+        "l'épée tirée sous le Menoa tree",
+        "Brisingr l'épée",
+        "l'ouverture de la Vault of Souls",
+        "les Eldunarí de la Vault of Souls",
+        "Inheritance",
+        "les rois des werecats",
+        "Grimrr Halfpaw"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention de ce que contient la Vault of Souls",
+      "Toute mention de l'épée trouvée sous le Menoa tree ou de Brisingr comme épée",
+      "Toute mention de Grimrr Halfpaw ou des werecats comme faction organisée",
+      "Toute mention que ses conseils ont été suivis ou accomplis"
+    ],
+    "identity_confusion_forbidden": ["alias: Angela"]
+  }
+}

@@ -1,0 +1,228 @@
+{
+  "entities": ["Peter", "Susan", "Edmund", "Lucy"],
+  "note": "Le patronyme 'Pevensie' n'apparaît PAS une seule fois dans The Lion, the Witch and the Wardrobe — il vient des livres suivants. Toute page nommant un enfant 'X Pevensie' est une contamination cross-livres. Les titres royaux (le Magnifique, la Douce, le Juste, la Vaillante) ne sont donnés qu'au dernier chapitre, après le couronnement.",
+
+  "peter": {
+    "canonical_aliases_book1": [
+      "Peter",
+      "King Peter the Magnificent",
+      "le roi Peter le Magnifique",
+      "High King"
+    ],
+    "known_facts_book1": [
+      "L'aîné des quatre enfants",
+      "Envoyé de Londres à la campagne chez un vieux Professeur à cause des air-raids de la guerre",
+      "Ne croit pas Lucy au début et se moque d'elle avec Edmund",
+      "Consulte le Professeur, qui lui répond que la logique veut que Lucy dise la vérité",
+      "Reçoit de Father Christmas une épée et un bouclier",
+      "Tue Maugrim, le loup chef de la police secrète de la Sorcière — son premier combat",
+      "Adoubé par Aslan après ce combat",
+      "Aslan lui montre Cair Paravel et lui annonce qu'il sera High King, étant le premier-né",
+      "Commande l'armée d'Aslan lors de la bataille finale",
+      "Couronné à Cair Paravel ; devient 'King Peter the Magnificent'",
+      "Devient adulte à Narnia : 'a tall and deep-chested man and a great warrior'",
+      "Redevient enfant en repassant par l'armoire à la poursuite du White Stag"
+    ],
+    "known_relations_book1": {
+      "Lucy": "sa plus jeune sœur ; il finit par la croire",
+      "Susan": "sa sœur",
+      "Edmund": "son frère ; le rapport est tendu après la trahison, réconcilié après",
+      "Aslan": "le fait High King et l'adoube",
+      "Maugrim": "il le tue lors de son premier combat"
+    },
+    "forbidden_book1": {
+      "note": "Éléments venant des autres Chronicles.",
+      "identity": [
+        "Peter Pevensie",
+        "Pevensie"
+      ],
+      "later_books": [
+        "son retour à Narnia dans Prince Caspian",
+        "l'interdiction de revenir à Narnia",
+        "sa mort dans un accident de chemin de fer",
+        "Caspian",
+        "Aslan's How"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention du patronyme 'Pevensie' (absent du livre 1)",
+      "Toute mention de Prince Caspian ou d'un retour ultérieur à Narnia",
+      "Toute mention de l'accident de chemin de fer ou de la mort des enfants",
+      "Toute mention qu'il ne peut plus revenir à Narnia (dit à la fin de Prince Caspian)"
+    ],
+    "identity_confusion_forbidden": [
+      "alias: Lucy",
+      "alias: Queen",
+      "connu sous le nom de Lucy"
+    ]
+  },
+
+  "susan": {
+    "canonical_aliases_book1": [
+      "Susan",
+      "Queen Susan the Gentle",
+      "la reine Susan la Douce",
+      "Susan the Gentle"
+    ],
+    "known_facts_book1": [
+      "La deuxième des quatre enfants",
+      "Ne croit pas Lucy au début",
+      "Reçoit de Father Christmas un arc, un carquois de flèches et un petit cor d'ivoire",
+      "Father Christmas lui dit de n'utiliser l'arc qu'en cas de grande nécessité et qu'il ne veut pas qu'elle combatte dans la bataille",
+      "Le cor amène du secours à qui le sonne",
+      "Avec Lucy, veille Aslan la nuit de sa mort sur la Table de Pierre",
+      "Avec Lucy, témoin de sa résurrection ; les deux jouent avec lui et le chevauchent",
+      "Couronnée à Cair Paravel ; devient 'Queen Susan the Gentle'",
+      "Devient adulte : grande et gracieuse, cheveux noirs tombant presque jusqu'aux pieds ; les rois d'au-delà des mers envoient des ambassadeurs demander sa main",
+      "Redevient enfant en repassant par l'armoire"
+    ],
+    "known_relations_book1": {
+      "Lucy": "sa sœur ; les deux assistent seules à la mort et à la résurrection d'Aslan",
+      "Peter": "son frère aîné",
+      "Edmund": "son frère",
+      "Aslan": "elle et Lucy le veillent, le pleurent, puis le voient ressuscité"
+    },
+    "forbidden_book1": {
+      "note": "Éléments venant des autres Chronicles.",
+      "identity": [
+        "Susan Pevensie",
+        "Pevensie"
+      ],
+      "later_books": [
+        "Susan cessant d'être une amie de Narnia",
+        "Susan ne croyant plus à Narnia",
+        "son voyage en Amérique",
+        "sa survie à l'accident de chemin de fer",
+        "Caspian"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention du patronyme 'Pevensie' (absent du livre 1)",
+      "Toute mention que Susan cesse de croire à Narnia (The Last Battle)",
+      "Toute mention de l'accident de chemin de fer",
+      "Toute mention de Prince Caspian ou du Dawn Treader"
+    ],
+    "identity_confusion_forbidden": [
+      "alias: Lucy",
+      "alias: Queens"
+    ]
+  },
+
+  "edmund": {
+    "canonical_aliases_book1": [
+      "Edmund",
+      "King Edmund the Just",
+      "le roi Edmund le Juste",
+      "Edmund the Just"
+    ],
+    "known_facts_book1": [
+      "Le troisième des quatre enfants",
+      "Entre à Narnia par l'armoire après Lucy et rencontre la Sorcière Blanche seul",
+      "La Sorcière lui fait apparaître du Turkish Delight enchanté et une boisson chaude ; il en devient avide",
+      "Elle lui promet d'être roi et de manger du Turkish Delight à volonté s'il ramène ses frère et sœurs",
+      "Ment à Peter et Susan en niant que Narnia existe, après y être allé — la trahison de Lucy",
+      "Rejoint la maison de la Sorcière et découvre la cour pleine de statues, dont un lion pétrifié qu'il défigure",
+      "La Sorcière le traite en prisonnier, pas en prince ; il ne reçoit ni Turkish Delight ni couronne",
+      "Voit la Sorcière pétrifier une compagnie d'animaux en train de festoyer avec les cadeaux de Father Christmas",
+      "Secouru par la troupe d'Aslan",
+      "Aslan lui parle en privé ; les enfants n'entendent jamais ce qui est dit",
+      "La Sorcière réclame son sang au nom de la Deep Magic : tout traître est sa 'lawful prey'",
+      "Aslan meurt à sa place, sans qu'Edmund le sache",
+      "Brise la baguette de la Sorcière lors de la bataille, gravement blessé",
+      "Sauvé par quelques gouttes du cordial de Lucy",
+      "Couronné à Cair Paravel ; devient 'King Edmund the Just'",
+      "Devient adulte : 'a graver and quieter man than Peter, and great in council and judgement'"
+    ],
+    "known_relations_book1": {
+      "la Sorcière Blanche": "elle le séduit par le Turkish Delight enchanté puis le traite en prisonnier",
+      "Lucy": "sa sœur ; il la trahit en niant Narnia, puis elle le sauve avec le cordial",
+      "Peter": "son frère aîné",
+      "Aslan": "meurt à sa place pour racheter sa trahison",
+      "Tumnus": "aucun lien direct — ils ne se rencontrent pas avant la fin"
+    },
+    "forbidden_book1": {
+      "note": "Éléments venant des autres Chronicles.",
+      "identity": [
+        "Edmund Pevensie",
+        "Pevensie"
+      ],
+      "later_books": [
+        "son retour dans Prince Caspian",
+        "son voyage sur le Dawn Treader",
+        "Eustace",
+        "Caspian",
+        "sa mort dans un accident de chemin de fer"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention du patronyme 'Pevensie' (absent du livre 1)",
+      "Toute mention que la Sorcière le fait réellement roi ou prince (elle le promet, elle ne le fait jamais)",
+      "Toute mention d'Edmund recevant sa récompense de Turkish Delight",
+      "Toute mention de Prince Caspian, du Dawn Treader ou d'Eustace",
+      "Toute mention de l'accident de chemin de fer",
+      "Toute mention du nain de la Sorcière sous le nom de Ginarrbrik (nom de film, absent du livre)"
+    ],
+    "identity_confusion_forbidden": [
+      "alias: Adam",
+      "alias: Son",
+      "connu sous le nom de Turkish"
+    ]
+  },
+
+  "lucy": {
+    "canonical_aliases_book1": [
+      "Lucy",
+      "Queen Lucy the Valiant",
+      "la reine Lucy la Vaillante",
+      "Lucy the Valiant"
+    ],
+    "known_facts_book1": [
+      "La plus jeune des quatre enfants",
+      "Première à entrer à Narnia, par l'armoire, pendant une partie de cache-cache",
+      "Trouve un lamp-post au milieu du bois enneigé",
+      "Rencontre le Faune Tumnus, qui l'invite à prendre le thé puis avoue avoir été chargé de la livrer à la Sorcière",
+      "Tumnus la laisse repartir ; c'est le crime pour lequel il est arrêté",
+      "Personne ne la croit à son retour, sauf le Professeur",
+      "Reçoit de Father Christmas un flacon de cordial (jus d'une fireflower des montagnes du soleil) et un petit poignard",
+      "Father Christmas lui dit qu'il ne veut pas non plus qu'elle combatte",
+      "Avec Susan, veille Aslan mort sur la Table de Pierre et assiste à sa résurrection",
+      "Après la bataille, guérit Edmund avec quelques gouttes de cordial, puis les autres blessés",
+      "Couronnée à Cair Paravel ; devient 'Queen Lucy the Valiant'",
+      "Devient adulte : 'always gay and golden-haired'"
+    ],
+    "known_relations_book1": {
+      "Tumnus": "premier ami à Narnia ; il refuse de la livrer à la Sorcière et est pétrifié pour cela",
+      "Aslan": "elle et Susan le veillent et assistent à sa résurrection",
+      "Edmund": "son frère ; il la trahit en niant Narnia, elle le sauve avec le cordial",
+      "Susan": "sa sœur",
+      "Peter": "son frère aîné",
+      "le Professeur": "le seul adulte à la croire"
+    },
+    "forbidden_book1": {
+      "note": "Éléments venant des autres Chronicles.",
+      "identity": [
+        "Lucy Pevensie",
+        "Pevensie"
+      ],
+      "later_books": [
+        "son retour dans Prince Caspian",
+        "son voyage sur le Dawn Treader",
+        "Caspian",
+        "Eustace",
+        "sa mort dans un accident de chemin de fer"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention du patronyme 'Pevensie' (absent du livre 1)",
+      "Toute mention de Prince Caspian, du Dawn Treader ou d'Eustace",
+      "Toute mention de l'accident de chemin de fer",
+      "Toute mention qu'elle porte le prénom d'un autre enfant"
+    ],
+    "identity_confusion_forbidden": [
+      "alias: Peter",
+      "alias: Daughter of Eve",
+      "connue sous le nom de Peter",
+      "son alias Peter"
+    ]
+  }
+}

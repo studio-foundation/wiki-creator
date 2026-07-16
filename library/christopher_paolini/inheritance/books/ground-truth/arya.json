@@ -1,0 +1,77 @@
+{
+  "entity": "Arya",
+  "canonical_aliases_book1": [
+    "Arya",
+    "l'elfe",
+    "the elf woman"
+  ],
+  "known_facts_book1": [
+    "Elfe, émissaire chargée de transporter l'œuf de Saphira entre les elfes et les Varden pour les présentations aux enfants",
+    "Prise en embuscade par Durza à la lisière du Du Weldenvarden ; ses deux compagnons sont tués",
+    "Envoie l'œuf par magie avant d'être capturée — il atterrit dans la Spine, où Eragon le trouve",
+    "Retenue prisonnière à Gil'ead par Durza pendant des mois",
+    "Empoisonnée au Skilna Bragh, un poison rare : l'antidote de la veille lui est administré chaque matin, de force si elle refuse ; sans lui elle meurt en quelques heures",
+    "Droguée pour supprimer ses pouvoirs",
+    "Se maintient en transe pour ralentir le poison — 'That is why I lie in this trance—it slows the Skilna Bragh's progress'",
+    "A envisagé de se réveiller pour se donner la mort et priver Galbatorix de sa prise, mais y a renoncé",
+    "Eragon la voit d'abord en rêve, puis la libère lors de son évasion de Gil'ead",
+    "Contacte Eragon mentalement et lui indique Farthen Dûr comme seule destination possible pour la sauver",
+    "Soignée à Farthen Dûr et guérie",
+    "Combat à la bataille de Farthen Dûr",
+    "Dit à Eragon après sa victoire : 'You have paid a terrible price for your deed, Eragon Shadeslayer'",
+    "Sa disparition avait poussé les elfes à retirer leur soutien aux Varden ; la reine Islanzadí était 'especially enraged' et refusait tout contact"
+  ],
+  "known_relations_book1": {
+    "Eragon": "il la libère de Gil'ead et la ramène à Farthen Dûr ; elle lui parle mentalement",
+    "Saphira": "a envoyé son œuf dans la Spine",
+    "Durza": "son ravisseur et tortionnaire",
+    "Ajihad": "chef des Varden auprès de qui elle sert d'émissaire elfe",
+    "Islanzadí": "reine des elfes ; sa disparition l'a mise en fureur"
+  },
+  "physical_description_book1": [
+    "Elfe : grande, mince, oreilles pointues",
+    "Longs cheveux noirs",
+    "Yeux verts",
+    "Émaciée et affaiblie par des mois de captivité et de poison"
+  ],
+  "forbidden_book1": {
+    "note": "Le statut royal d'Arya n'est révélé que dans Eldest. Le livre 1 ne dit jamais qu'elle est princesse ni fille d'Islanzadí — le mot 'princesse' n'y désigne qu'un compliment de Murtagh sur son allure.",
+    "identity": [
+      "princesse Arya",
+      "Arya Dröttning",
+      "fille d'Islanzadí",
+      "la princesse des elfes",
+      "héritière du trône elfique",
+      "Arya Shadeslayer"
+    ],
+    "relationships": [
+      "Fäolin comme compagnon nommé",
+      "sa relation amoureuse avec Eragon",
+      "Fírnen",
+      "son dragon"
+    ],
+    "events": [
+      "son retour à Ellesméra",
+      "l'Agaetí Blödhren",
+      "les Burning Plains",
+      "la mort de Durza par sa main",
+      "son couronnement",
+      "elle devient reine des elfes",
+      "elle devient Dragon Rider"
+    ]
+  },
+  "hallucination_signals": [
+    "Toute mention qu'Arya est une princesse ou la fille d'Islanzadí (révélé dans Eldest)",
+    "Toute mention qu'elle devient reine des elfes",
+    "Toute mention de Fírnen ou qu'elle devient Dragon Rider",
+    "Toute mention d'une relation amoureuse avec Eragon",
+    "Toute mention de Fäolin par son nom",
+    "Toute mention de son retour à Ellesméra ou de l'Agaetí Blödhren",
+    "Toute mention qu'elle tue Durza (c'est Eragon)"
+  ],
+  "identity_confusion_forbidden": [
+    "alias: Islanzadí",
+    "alias: Eragon",
+    "alias: princesse"
+  ]
+}

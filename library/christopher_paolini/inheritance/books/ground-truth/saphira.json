@@ -1,0 +1,71 @@
+{
+  "entity": "Saphira",
+  "canonical_aliases_book1": [
+    "Saphira",
+    "Saphira Bjartskular",
+    "Bjartskular",
+    "Brightscales"
+  ],
+  "note_on_name": "Deux Saphira existent dans le livre 1 : la dragonne d'Eragon, et la première dragonne de Brom, tuée à Doru Araeba. Brom donne le nom à la nouvelle : 'my young dragon was killed. Her name … was Saphira.' Confondre les deux est une erreur de résolution à surveiller.",
+  "known_facts_book1": [
+    "Dragonne bleue, éclose de la pierre bleue qu'Eragon a trouvée dans la Spine",
+    "Son œuf était l'un des trois derniers, gardés par Galbatorix ; Arya le transportait entre les elfes et les Varden",
+    "Arya l'a envoyé par magie dans la Spine pour l'arracher à Durza — c'est ainsi qu'Eragon l'a trouvé",
+    "Liée mentalement à Eragon dès qu'il la touche ; la gedwëy ignasia apparaît alors sur sa paume",
+    "Grandit très vite : de la taille d'un chat à celle d'un cheval en quelques semaines",
+    "Communique avec Eragon par la pensée, et avec d'autres si elle le veut",
+    "Brom lui donne son nom : c'était celui de sa propre dragonne, tuée dans les combats de Doru Araeba",
+    "Reçoit le nom de guerre Bjartskular — Brightscales",
+    "Change le tombeau de grès de Brom en diamant",
+    "Refuse de laisser Eragon en danger et le protège tout au long du voyage",
+    "Combat à la bataille de Farthen Dûr",
+    "Brise l'Isidar Mithrim, le grand saphir étoilé de Tronjheim, pour sauver Eragon de Durza",
+    "N'a pas encore de Rider adulte formé ; personne ne lui enseigne le vol de combat dans ce livre"
+  ],
+  "known_relations_book1": {
+    "Eragon": "son Rider ; lien mental permanent, protection mutuelle",
+    "Brom": "lui donne son nom, celui de sa dragonne morte",
+    "Arya": "a envoyé son œuf dans la Spine ; les deux se reconnaissent",
+    "Durza": "adversaire ; Saphira brise l'Isidar Mithrim pour le distraire",
+    "Galbatorix": "détenait son œuf ; adversaire"
+  },
+  "physical_description_book1": [
+    "Écailles bleu saphir",
+    "Yeux bleus",
+    "Passe de la taille d'un chaton à celle d'un cheval, puis assez grande pour porter Eragon en vol",
+    "Écailles assez dures pour briser les branches sous son poids"
+  ],
+  "forbidden_book1": {
+    "note": "Éléments venant d'Eldest, Brisingr, Inheritance ou Murtagh.",
+    "later_books": [
+      "Glaedr",
+      "Oromis",
+      "son entraînement à Ellesméra",
+      "Thorn",
+      "Shruikan tué",
+      "les Eldunarí",
+      "Eldunarí",
+      "la réparation de l'Isidar Mithrim",
+      "sa ponte",
+      "les œufs de dragon qu'elle donne",
+      "les Burning Plains",
+      "son départ d'Alagaësia",
+      "Firnen"
+    ]
+  },
+  "hallucination_signals": [
+    "Toute mention de Glaedr ou d'Oromis",
+    "Toute mention de Thorn ou de Firnen",
+    "Toute mention des Eldunarí",
+    "Toute mention de la réparation de l'Isidar Mithrim (Brisingr)",
+    "Toute mention de son entraînement à Ellesméra",
+    "Toute mention de sa descendance ou de ses œufs",
+    "Toute confusion avec la première Saphira, la dragonne de Brom morte à Doru Araeba",
+    "Toute mention de la mort de Galbatorix ou de Shruikan"
+  ],
+  "identity_confusion_forbidden": [
+    "alias: Eragon",
+    "alias: Brom",
+    "la dragonne de Brom"
+  ]
+}

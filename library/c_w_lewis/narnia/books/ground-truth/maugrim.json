@@ -1,0 +1,48 @@
+{
+  "entity": "Maugrim",
+  "canonical_aliases_book1": [
+    "Maugrim",
+    "Captain of the Secret Police",
+    "le loup gris"
+  ],
+  "note_on_aliases": "Ne pas réintroduire 'the Chief of the Witch's Secret Police' comme alias : le matcher de l'étape 1b est un substring bidirectionnel, et 'Witch' y est contenu — la page 'Witch' se lie alors à Maugrim et les signaux de la Sorcière ne tournent jamais.",
+  "note_on_name": "Cette édition utilise 'Maugrim'. Les éditions américaines de l'époque le nomment 'Fenris Ulf' — ce nom est ABSENT du texte audité (0 occurrence) et toute page qui l'emploie invente.",
+  "known_facts_book1": [
+    "Loup gris, chef de la police secrète de la Sorcière Blanche",
+    "Signe l'avis d'arrestation cloué sur la porte de Tumnus : 'signed MAUGRIM, Captain of the Secret Police, LONG LIVE THE QUEEN'",
+    "Accueille Edmund à la maison de la Sorcière : 'Come in! Come in! Fortunate favourite of the Queen—or else not so fortunate'",
+    "La Sorcière lui ordonne de prendre les plus rapides de ses loups et d'aller à la maison des Beavers, et de tuer tout ce qui s'y trouve",
+    "Trouve la hutte des Beavers vide",
+    "Attaque au camp d'Aslan et est tué par Peter — le premier combat de Peter",
+    "Aslan envoie les autres loups à la poursuite du second loup pour retrouver Edmund"
+  ],
+  "known_relations_book1": {
+    "la Sorcière Blanche": "son maître ; il est le chef de sa police secrète",
+    "Peter": "il est tué par lui lors du premier combat de Peter",
+    "Tumnus": "il signe l'avis d'arrestation qui le vise",
+    "Edmund": "l'accueille à la maison de la Sorcière"
+  },
+  "physical_description_book1": [
+    "Loup gris, énorme",
+    "Bondit 'like an enormous dog'"
+  ],
+  "forbidden_book1": {
+    "note": "Éléments absents du livre 1 ou venant d'autres versions.",
+    "identity": [
+      "Fenris Ulf",
+      "Otmin",
+      "un fils nommé"
+    ],
+    "later_books": ["Prince Caspian", "Caspian"]
+  },
+  "hallucination_signals": [
+    "Toute mention du nom 'Fenris Ulf' (nom d'une autre édition, absent du texte)",
+    "Toute mention d'Otmin ou d'un second loup nommé",
+    "Toute mention qu'il survit à la bataille (il est tué par Peter avant)",
+    "Toute mention de Prince Caspian ou d'un livre ultérieur"
+  ],
+  "identity_confusion_forbidden": [
+    "alias: Wolf",
+    "alias: Peter"
+  ]
+}

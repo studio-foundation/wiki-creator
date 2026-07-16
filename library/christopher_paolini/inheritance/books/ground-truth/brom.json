@@ -1,0 +1,78 @@
+{
+  "entity": "Brom",
+  "canonical_aliases_book1": [
+    "Brom",
+    "le conteur",
+    "the storyteller"
+  ],
+  "known_facts_book1": [
+    "Vieil homme de Carvahall, connu comme le conteur du village",
+    "En réalité un ancien Dragon Rider : sa dragonne, également nommée Saphira, a été tuée dans les combats de Doru Araeba, sur Vroengard",
+    "A aidé à voler un œuf de dragon au roi Galbatorix et à le poursuivre à travers l'Empire",
+    "A traqué Morzan, premier et dernier des Forsworn ; l'a affronté à Gil'ead pour la possession de l'œuf et l'a tué en duel — 'in the end I slew him'",
+    "A pris Zar'roc sur le corps de Morzan et l'a gardée",
+    "Agent des Varden ; correspond avec Ajihad et Jeod",
+    "S'est installé à Carvahall pour attendre l'éclosion de l'œuf et veiller sur son Rider",
+    "Raconte à Eragon l'histoire des Riders, de Vrael, de la chute de Doru Araeba et de la trahison de Galbatorix",
+    "Accompagne Eragon après la mort de Garrow",
+    "Lui enseigne l'escrime, l'ancient language et la magie ; son premier mot enseigné est 'brisingr'",
+    "Lui donne Zar'roc sans lui dire d'où elle vient — Eragon l'apprend de Murtagh",
+    "Emmène Eragon à Teirm chez Jeod pour retrouver la trace des Ra'zac",
+    "Connaissait Selena, la mère d'Eragon : 'Did you ever meet my mother?' — 'Yes, I did. She was full of dignity and pride'",
+    "Blessé mortellement par les Ra'zac en protégeant Eragon d'un coup destiné à lui",
+    "Meurt et est enterré dans un tombeau de grès que Saphira change en diamant",
+    "La reine Islanzadí le tenait en haute estime — Ajihad s'en étonne à propos de l'anneau d'elfe qu'Eragon porte"
+  ],
+  "known_relations_book1": {
+    "Eragon": "mentor ; lui enseigne l'escrime et la magie, meurt en le protégeant",
+    "Saphira": "lui donne son nom, celui de sa propre dragonne morte",
+    "Morzan": "ennemi juré ; Brom le tue en duel à Gil'ead",
+    "Jeod": "vieil ami et complice du vol de l'œuf",
+    "Ajihad": "chef des Varden avec qui il correspond",
+    "Selena": "il l'a connue et la décrit à Eragon",
+    "Murtagh": "il a tué son père, Morzan — Murtagh le lui reproche"
+  },
+  "physical_description_book1": [
+    "Vieil homme, barbe blanche",
+    "Nez crochu",
+    "Porte un bâton",
+    "Plus vigoureux et plus rapide que son âge ne le laisse croire"
+  ],
+  "forbidden_book1": {
+    "note": "La révélation majeure sur Brom — sa paternité — vient de Brisingr. Ne jamais l'anticiper sur une page scopée livre 1.",
+    "identity": [
+      "Brom est le père d'Eragon",
+      "père d'Eragon",
+      "sa relation avec Selena comme couple",
+      "Selena était sa compagne",
+      "fondateur des Varden"
+    ],
+    "powers": [
+      "Aren",
+      "son anneau contenant de l'énergie",
+      "son Eldunarí",
+      "son souvenir enregistré dans une pierre"
+    ],
+    "later_books": [
+      "son message posthume à Eragon",
+      "Oromis comme son maître",
+      "Eldest",
+      "Brisingr",
+      "Inheritance"
+    ]
+  },
+  "hallucination_signals": [
+    "Toute mention que Brom est le père d'Eragon (révélé dans Brisingr)",
+    "Toute mention d'une relation amoureuse entre Brom et Selena",
+    "Toute mention de l'anneau Aren ou de l'énergie qu'il contient",
+    "Toute mention d'Oromis comme maître de Brom",
+    "Toute mention de son message posthume à Eragon (Brisingr)",
+    "Toute mention qu'il a fondé les Varden (le texte ne le dit pas)",
+    "Toute confusion entre sa dragonne Saphira et celle d'Eragon"
+  ],
+  "identity_confusion_forbidden": [
+    "alias: Eragon",
+    "alias: Saphira",
+    "alias: Morzan"
+  ]
+}
