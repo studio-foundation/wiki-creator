@@ -1,0 +1,157 @@
+{
+  "entities": ["Garrow", "Roran", "Selena", "Jeod"],
+  "note": "Roran est un personnage secondaire dans ce livre : il part pour Therinsford avant l'attaque des Ra'zac. Tout son arc (Carvahall assiégée, l'exode, Katrina enlevée) appartient à Eldest.",
+
+  "garrow": {
+    "canonical_aliases_book1": ["Garrow", "l'oncle d'Eragon", "Eragon's uncle"],
+    "known_facts_book1": [
+      "Fermier de la Palancar Valley, près de Carvahall",
+      "Frère de Selena ; oncle d'Eragon et père de Roran",
+      "A élevé Eragon depuis sa naissance, à la demande de Selena, avec sa femme Marian (morte avant le livre)",
+      "Dur, taciturne, fier ; refuse la charité",
+      "Face au marchand Merlock, à propos de la pierre bleue : 'We aren't looking to buy, but to sell'",
+      "N'a jamais dit à Eragon qui était son père",
+      "Blessé mortellement quand les Ra'zac détruisent sa ferme",
+      "Meurt de ses blessures et des brûlures malgré les soins de Gertrude",
+      "Sa mort est ce qui pousse Eragon à quitter Carvahall"
+    ],
+    "known_relations_book1": {
+      "Eragon": "son neveu, qu'il a élevé comme un fils",
+      "Roran": "son fils",
+      "Selena": "sa sœur, qui lui a confié Eragon",
+      "les Ra'zac": "ils détruisent sa ferme et le blessent mortellement"
+    },
+    "forbidden_book1": {
+      "note": "Éléments venant des livres suivants.",
+      "identity": ["il connaissait l'identité du père d'Eragon", "Brom lui avait confié Eragon"],
+      "later_books": ["Eldest", "sa tombe profanée"]
+    },
+    "hallucination_signals": [
+      "Toute mention qu'il connaissait le père d'Eragon",
+      "Toute mention de Brom comme père d'Eragon",
+      "Toute mention qu'il survit (il meurt dans ce livre)"
+    ],
+    "identity_confusion_forbidden": ["alias: Roran", "alias: Eragon"]
+  },
+
+  "roran": {
+    "canonical_aliases_book1": ["Roran", "le cousin d'Eragon"],
+    "known_facts_book1": [
+      "Fils de Garrow, cousin d'Eragon, élevé avec lui comme un frère — 'They could not have been closer even if they had been real brothers'",
+      "Plus âgé qu'Eragon, plus massif, mesuré dans ses gestes",
+      "Part travailler au moulin de Therinsford pour gagner de quoi épouser Katrina",
+      "Absent lors de l'attaque des Ra'zac ; revient pour la mort de Garrow",
+      "Ne sait rien de Saphira ni du statut de Rider d'Eragon dans ce livre",
+      "Reste à Carvahall quand Eragon part ; leurs chemins se séparent",
+      "Rôle secondaire — environ cent mentions"
+    ],
+    "known_relations_book1": {
+      "Eragon": "son cousin, élevé comme un frère",
+      "Garrow": "son père, tué par les Ra'zac",
+      "Katrina": "la fille de Sloan, qu'il veut épouser",
+      "Sloan": "le boucher, père de Katrina, opposé au parti"
+    },
+    "forbidden_book1": {
+      "note": "Tout l'arc de Roran appartient à Eldest et aux livres suivants.",
+      "later_books": [
+        "le siège de Carvahall",
+        "l'exode vers Surda",
+        "Roran Stronghammer",
+        "son marteau",
+        "l'enlèvement de Katrina",
+        "la trahison de Sloan",
+        "son mariage avec Katrina",
+        "les Burning Plains",
+        "Eldest"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention de 'Stronghammer' ou de son marteau",
+      "Toute mention du siège de Carvahall ou de l'exode",
+      "Toute mention de l'enlèvement de Katrina ou de la trahison de Sloan",
+      "Toute mention de son mariage",
+      "Toute mention qu'il connaît Saphira ou le secret d'Eragon dans ce livre"
+    ],
+    "identity_confusion_forbidden": ["alias: Eragon", "alias: Garrow"]
+  },
+
+  "selena": {
+    "canonical_aliases_book1": ["Selena", "la mère d'Eragon", "Eragon's mother"],
+    "known_facts_book1": [
+      "Mère d'Eragon, sœur de Garrow",
+      "Partie six ans vivre dans les cités ; revenue à Carvahall enceinte, seule, 'sixteen years ago'",
+      "Revenue vêtue de vêtements coûteux, les cheveux pris dans un filet de perles",
+      "A demandé à son frère Garrow de l'héberger jusqu'à la naissance",
+      "A supplié Garrow et Marian d'élever l'enfant, en larmes, sans dire pourquoi — 'she only wept and said, \"I must\"'",
+      "Repartie peu après ; morte depuis",
+      "Brom l'a connue : 'She was full of dignity and pride'",
+      "Angela lui a tiré les os autrefois, et sa fortune était 'bleak and painful'",
+      "Le père de son enfant n'est jamais nommé dans ce livre"
+    ],
+    "known_relations_book1": {
+      "Eragon": "son fils, qu'elle confie à Garrow",
+      "Garrow": "son frère",
+      "Brom": "l'a connue et la décrit à Eragon",
+      "Angela": "lui a tiré les os autrefois"
+    },
+    "forbidden_book1": {
+      "note": "Tout ce que Selena était appartient à Eldest et Brisingr — c'est le nœud d'hallucination le plus probable de cette page.",
+      "identity": [
+        "la Main Noire",
+        "Black Hand",
+        "compagne de Morzan",
+        "servante de Morzan",
+        "mère de Murtagh",
+        "son autre fils",
+        "son vrai nom",
+        "elle est morte en protégeant Eragon"
+      ],
+      "relationships": ["Brom comme père de son enfant", "Morzan comme père d'Eragon"]
+    },
+    "hallucination_signals": [
+      "Toute mention de Selena comme la Main Noire ou Black Hand",
+      "Toute mention de Selena comme compagne ou servante de Morzan",
+      "Toute mention qu'elle est la mère de Murtagh",
+      "Toute mention de Brom ou Morzan comme père de son enfant",
+      "Toute mention des circonstances de sa mort (jamais racontées dans ce livre)"
+    ],
+    "identity_confusion_forbidden": ["alias: Angela", "alias: Marian"]
+  },
+
+  "jeod": {
+    "canonical_aliases_book1": ["Jeod", "Jeod Longshanks"],
+    "known_facts_book1": [
+      "Marchand de Teirm, vieil ami de Brom",
+      "Érudit ; sa maison est pleine de livres",
+      "A aidé Brom à voler l'œuf de dragon au roi et l'a accompagné dans la poursuite à travers l'Empire",
+      "Séparé de Brom pendant le duel contre Morzan à Gil'ead",
+      "Croyait Brom mort depuis des années",
+      "Demande confirmation à Eragon : 'Is your Brom the Brom? The one who helped steal a dragon egg from the king, chased it across the Empire, and killed Morzan in a duel?'",
+      "Agent des Varden ; son commerce sert de couverture",
+      "Aide Eragon et Brom à retrouver la trace des Ra'zac par les registres de l'huile de Seithr",
+      "Son commerce périclite ; l'Empire soupçonne ses activités"
+    ],
+    "known_relations_book1": {
+      "Brom": "vieil ami et complice du vol de l'œuf",
+      "Eragon": "l'héberge à Teirm et l'aide à traquer les Ra'zac",
+      "Angela": "sa voisine de boutique",
+      "Ajihad": "les Varden, pour qui il travaille"
+    },
+    "forbidden_book1": {
+      "note": "Éléments venant d'Eldest et des livres suivants.",
+      "later_books": [
+        "la trahison de sa femme Helen",
+        "sa fuite de Teirm",
+        "le Dragon Wing",
+        "son rôle chez les Varden",
+        "Eldest"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention de sa fuite de Teirm ou du Dragon Wing",
+      "Toute mention de Helen ou de la trahison de sa femme",
+      "Toute mention d'un livre ultérieur comme source"
+    ],
+    "identity_confusion_forbidden": ["alias: Brom"]
+  }
+}

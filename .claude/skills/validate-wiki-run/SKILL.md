@@ -13,13 +13,23 @@ Skill d'audit qualité pour Wiki Creator. L'utilisatrice dépose des fichiers d'
 - `batch_*.json` — batches d'entrée (optionnel mais recommandé, itérer sur tous)
 - Tout autre batch ou fichier intermédiaire fourni
 
-## Ground-Truth (Throne of Glass)
+## Ground-Truth (par série)
 
-Quand le livre audité est dans la série Throne of Glass, des fichiers de vérité terrain sont disponibles sous :
+Le corpus de vérité terrain se résout **depuis le livre audité**, jamais en dur :
+
 ```
-library/sarah_j_maas/throne-of-glass/books/ground-truth/
+library/<author>/<series>/books/ground-truth/*.json
 ```
-Fichiers : `celeana.json`, `chaol.json`, `dorian.json`, `elena_and_gavin.json`, `king-of-adarlan.json`, `nehemia.json`, `perrington.json`
+
+Séries couvertes à ce jour :
+
+| Série | Répertoire | Fichiers |
+|---|---|---|
+| Throne of Glass | `library/sarah_j_maas/throne-of-glass/books/ground-truth/` | `celeana`, `chaol`, `dorian`, `elena_and_gavin`, `king-of-adarlan`, `nehemia`, `perrington` |
+| Narnia | `library/c_w_lewis/narnia/books/ground-truth/` | `aslan`, `the_four_children`, `white_witch`, `tumnus`, `the_beavers`, `maugrim`, `narnia_and_cair_paravel`, `professor_and_macready` |
+| Inheritance (Eragon) | `library/christopher_paolini/inheritance/books/ground-truth/` | `eragon`, `saphira`, `brom`, `murtagh`, `arya`, `antagonists`, `varden`, `angela_and_solembum`, `carvahall` |
+
+Si le répertoire n'existe pas pour la série auditée, l'étape 1b est **n/a** — le noter explicitement dans l'audit plutôt que de la sauter en silence.
 
 Chaque fichier contient :
 - `canonical_aliases_book1` — noms valides pour ce livre
@@ -30,6 +40,14 @@ Chaque fichier contient :
 - `identity_confusion_forbidden` — phrases explicites de confusion d'identité (champ optionnel, ex: "alias: Elena" dans l'infobox)
 
 **Intégrer ces fichiers dans l'étape 1b ci-dessous lorsque disponibles.**
+
+### Écrire un corpus ground-truth
+
+Trois contraintes, chacune apprise d'un faux positif ou d'un faux négatif observé :
+
+1. **Vérifier chaque fait contre le texte du livre, jamais contre sa mémoire.** Les corpus Narnia et Eragon ont été écrits en grepant `chapters.json`. Ça a corrigé des faits que la mémoire donnait à l'envers : `Jadis` **est** dans LWW (une fois, dans l'avis d'arrestation de Maugrim), `Pevensie` **n'y est pas** (0 occurrence) ; `Vroengard`, `Doru Araeba` et le `Rock of Kuthian` **sont** dans Eragon. Un fait faux dans le GT est pire qu'un GT absent : il transforme le rédacteur correct en violation.
+2. **Les alias sont matchés en substring bidirectionnel** (`a in title or title in a`). Un alias trop long ou traduit crée de fausses liaisons : `the Chief of the Witch's Secret Police` liait la page `Witch` à Maugrim (donc les 10 signaux de la Sorcière ne tournaient jamais) ; `Madame Castor` liait la page `Adam` à Mrs Beaver (`adam` ⊂ `madame`). Garder les alias courts, non traduits, et discriminants.
+3. **Les termes `forbidden` doivent être des phrases discriminantes, pas des tokens nus.** Le loader ignore déjà `len <= 4`, mais ça ne suffit pas : `Aren` (l'anneau de Brom) matche `aren't`, `Bree` matche `breeze`, `How` matche le mot `how`. Préférer `Aren l'anneau de Brom` à `Aren`.
 
 ## Workflow
 
@@ -79,15 +97,19 @@ for d in ['Captain Westfall','Crown Prince','Chaol Westfall']:
     print(f"Doublon {d}: {'PRÉSENT' if d in titles else 'absent'}")
 ```
 
-### Étape 1b — Validation ground-truth (Throne of Glass uniquement)
+### Étape 1b — Validation ground-truth
 
-Si le livre audité est dans la série Throne of Glass, exécute ce bloc **avant** l'analyse des batches :
+Si un corpus ground-truth existe pour la série auditée (voir le tableau plus haut), exécute ce bloc **avant** l'analyse des batches. Sinon, noter l'étape `n/a` dans l'audit.
 
 ```python
-import json, glob, os
+import json, glob, os, re
 
-GT_DIR = 'library/sarah_j_maas/throne-of-glass/books/ground-truth'
+# Résolu depuis le livre audité : library/<author>/<series>/books/ground-truth
+# ex Narnia : library/c_w_lewis/narnia/books/ground-truth
+GT_DIR = '<SERIES_DIR>/books/ground-truth'
 gt_files = glob.glob(f'{GT_DIR}/*.json')
+if not gt_files:
+    print(f"Aucun corpus ground-truth sous {GT_DIR} — étape 1b n/a pour cette série.")
 
 def _load_gt_entries(gt_files):
     """Normalise les fichiers GT en une liste d'entrées uniformes.
@@ -235,14 +257,16 @@ for p in pages:
 
     _tl = full_text.lower()
     for term, entity, cat in all_forbidden:
-        if len(term) <= 4:
+        # Match sur frontière de mot, pas en substring nu. L'ancien `_tl.find()` obligeait
+        # à jeter tout terme de <=4 caractères pour éviter le bruit ('Bree' ⊂ 'breeze'),
+        # ce qui faisait taire silencieusement les noms propres courts — 'Elva' (Eragon)
+        # et 'Aren' (l'anneau de Brom) faisaient exactement 4 et n'étaient JAMAIS testés.
+        # Les lookarounds rendent le garde-fou inutile : on ne filtre plus que le bruit réel.
+        if len(term) <= 2:
             continue
-        tlow = term.lower()
-        start, real_hit = 0, False
-        while True:
-            idx = _tl.find(tlow, start)
-            if idx == -1:
-                break
+        real_hit = False
+        for _m in re.finditer(r'(?<!\w)' + re.escape(term.lower()) + r'(?!\w)', _tl):
+            idx = _m.start()
             attributed = _attributed_entity(_tl, idx)
             if entity == page_entity:
                 # La page porte sur l'entité propriétaire du terme interdit : on signale,
@@ -259,7 +283,6 @@ for p in pages:
                 if attributed == entity:
                     real_hit = True
                     break
-            start = idx + len(tlow)
         if real_hit:
             page_violations.append(f"FORBIDDEN [{entity}/{cat}]: '{term}'")
 
@@ -487,7 +510,7 @@ from collections import Counter
 
 # Charge GT pour la validation des types de relation (STU-314)
 import glob as _glob
-_gt_files = _glob.glob('library/sarah_j_maas/throne-of-glass/books/ground-truth/*.json')
+_gt_files = _glob.glob('<SERIES_DIR>/books/ground-truth/*.json')
 _gt_by_entity = {}
 _ANTAGONIST_KW = {'rival', 'antagoniste', 'ennemi', 'empoisonne', 'possédé', 'adversaire', 'venin'}
 _POSITIVE_TYPES = {'amoureux', 'allié', 'ami', 'protecteur', 'mentor', 'confident', 'partenaire', 'amie'}
@@ -614,10 +637,13 @@ En 3-4 phrases : état du pipeline, ce qui est validé, ce qui bloque encore, **
 
 Après avoir produit le verdict, sauvegarder les résultats dans le log d'audit du livre.
 
-**Chemin pour Throne of Glass :**
+**Chemin, résolu depuis le livre audité :**
 ```
-library/sarah_j_maas/throne-of-glass/audits/audit_log.json
+library/<author>/<series>/audits/audit_log.json
 ```
+ex. `library/sarah_j_maas/throne-of-glass/audits/audit_log.json`, `library/c_w_lewis/narnia/audits/audit_log.json`.
+
+Une série multi-tomes partage un seul `audit_log.json` : le champ `book` identifie le tome.
 
 Le fichier est un tableau JSON. S'il n'existe pas, le créer avec `[]`. Sinon, charger le contenu existant et **ajouter** une nouvelle entrée à la fin — ne jamais écraser les entrées précédentes.
 

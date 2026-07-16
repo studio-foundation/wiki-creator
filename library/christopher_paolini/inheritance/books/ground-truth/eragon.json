@@ -1,0 +1,117 @@
+{
+  "entity": "Eragon",
+  "canonical_aliases_book1": [
+    "Eragon",
+    "Eragon Shadeslayer",
+    "Shadeslayer",
+    "Argetlam",
+    "Main d'Argent"
+  ],
+  "known_facts_book1": [
+    "Garçon de ferme de Carvahall, dans la Palancar Valley, élevé par son oncle Garrow avec son cousin Roran",
+    "Environ quinze ans au début du livre : sa mère Selena est rentrée à Carvahall enceinte 'sixteen years ago'",
+    "Sa mère, Selena, sœur de Garrow, l'a confié à Garrow et Marian à sa naissance puis est repartie ; elle est morte depuis",
+    "L'identité de son père est INCONNUE de lui et du lecteur dans ce livre — 'This was his home, regardless of who his father was!'",
+    "Trouve une pierre bleue dans la Spine pendant une chasse ; elle apparaît devant lui dans un éclair",
+    "La pierre est en réalité un œuf de dragon ; elle éclôt et donne Saphira",
+    "Devient Dragon Rider ; la gedwëy ignasia (la paume brillante) apparaît sur sa main quand il touche Saphira",
+    "Les Ra'zac viennent à Carvahall chercher l'œuf ; ils détruisent la ferme et blessent mortellement Garrow, qui meurt",
+    "Quitte Carvahall pour venger Garrow, accompagné de Brom, le conteur du village",
+    "Brom lui enseigne l'escrime, l'ancient language et la magie ; son premier mot de magie est 'brisingr' (le feu)",
+    "Brom lui donne Zar'roc, une épée rouge — il découvre plus tard qu'elle appartenait à Morzan",
+    "À Teirm, rencontre Jeod, un vieil ami de Brom, marchand et agent des Varden",
+    "À Teirm, Angela l'herboriste lui tire les os et lui prédit son avenir ; le werecat Solembum lui donne deux conseils : chercher sous les racines du Menoa tree, et aller au Rock of Kuthian dire son nom pour ouvrir la Vault of Souls",
+    "Brom est tué par les Ra'zac ; Eragon l'enterre dans un tombeau de grès que Saphira change en diamant",
+    "Murtagh le sauve des Ra'zac et voyage avec lui",
+    "Capturé à Gil'ead et retenu par le Shade Durza",
+    "S'évade avec l'aide de Murtagh et libère une prisonnière elfe inconsciente, Arya, empoisonnée au Skilna Bragh",
+    "Contacte mentalement Arya, qui lui indique Farthen Dûr comme seule destination pour la sauver",
+    "Traverse le Hadarac Desert jusqu'aux Beor Mountains puis Farthen Dûr",
+    "Accueilli par les Varden ; interrogé par les Twins ; reçu par Ajihad, leur chef",
+    "Adopté dans le clan des nains Dûrgrimst Ingeitum par Hrothgar ; Orik lui sert de guide",
+    "Bénit un bébé à Farthen Dûr — l'enfant n'est PAS nommé dans ce livre",
+    "Combat lors de la bataille de Farthen Dûr et tue le Shade Durza en lui transperçant le cœur",
+    "Durza lui ouvre le dos d'un coup d'épée ; il en garde une cicatrice invalidante",
+    "Pendant son inconscience, un être mystérieux le contacte : 'I am Osthato Chetowä, the Mourning Sage. And Togira Ikonoka, the Cripple Who Is Whole' — il lui dit de venir le trouver",
+    "On commence à l'appeler Shadeslayer",
+    "Ajihad meurt à la fin du livre après une embuscade d'Urgals dans les tunnels ; Eragon lui promet d'empêcher les Varden de tomber dans le chaos"
+  ],
+  "known_relations_book1": {
+    "Saphira": "sa dragonne, liée à lui par le lien de Rider ; communication mentale constante",
+    "Brom": "mentor, lui enseigne l'escrime et la magie ; meurt en le protégeant des Ra'zac",
+    "Garrow": "son oncle, qui l'a élevé ; tué par les Ra'zac",
+    "Roran": "son cousin, élevé comme un frère — 'They could not have been closer even if they had been real brothers'",
+    "Murtagh": "compagnon de route qui le sauve des Ra'zac ; révèle être le fils de Morzan",
+    "Arya": "elfe qu'il libère de Gil'ead ; il la ramène à Farthen Dûr pour la sauver",
+    "Durza": "le Shade qui le capture puis le blesse ; Eragon le tue à Farthen Dûr",
+    "Angela": "l'herboriste qui lui prédit son avenir à Teirm",
+    "Solembum": "le werecat qui lui donne deux conseils énigmatiques",
+    "Ajihad": "chef des Varden ; meurt à la fin du livre",
+    "Orik": "nain qui lui sert de guide à Farthen Dûr",
+    "Selena": "sa mère, morte ; il apprend son nom et qu'Angela lui a tiré les os autrefois"
+  },
+  "physical_description_book1": [
+    "Jeune homme d'environ quinze ans, brun",
+    "La gedwëy ignasia — une marque argentée brillante — sur la paume de la main droite",
+    "Après la bataille de Farthen Dûr : une longue cicatrice en travers du dos, laissée par Durza"
+  ],
+  "forbidden_book1": {
+    "note": "Ces éléments appartiennent à Eldest, Brisingr, Inheritance ou Murtagh. Les mentionner dans une page scopée livre 1 = hallucination.",
+    "identity": [
+      "Eragon fils de Brom",
+      "Brom est son père",
+      "fils de Morzan",
+      "demi-frère de Murtagh",
+      "Eragon Bromsson",
+      "son vrai nom",
+      "sa transformation en elfe",
+      "l'Agaetí Blödhren",
+      "le Blood-oath Celebration"
+    ],
+    "powers": [
+      "Eldunarí",
+      "eldunari",
+      "les cœurs des cœurs",
+      "Brisingr comme nom de son épée",
+      "son épée bleue",
+      "Aren l'anneau de Brom",
+      "la guérison de sa cicatrice"
+    ],
+    "relationships": [
+      "Oromis",
+      "Glaedr",
+      "Blödhgarm",
+      "sa relation amoureuse avec Arya",
+      "Elva"
+    ],
+    "events": [
+      "son entraînement à Ellesméra",
+      "la bataille des Burning Plains",
+      "la mort de Galbatorix",
+      "l'ouverture de la Vault of Souls",
+      "son départ d'Alagaësia",
+      "Murtagh devenant Rider",
+      "Thorn"
+    ]
+  },
+  "hallucination_signals": [
+    "Toute mention de Brom comme père d'Eragon (révélé dans Brisingr)",
+    "Toute mention qu'Eragon est le fils de Morzan (affirmé dans Eldest, faux)",
+    "Toute mention qu'Eragon et Murtagh sont demi-frères",
+    "Toute mention d'Oromis, Glaedr ou d'un entraînement à Ellesméra",
+    "Toute mention des Eldunarí",
+    "Toute mention de Brisingr comme nom de son épée (dans ce livre, brisingr est le mot du feu et son épée est Zar'roc)",
+    "Toute mention de sa transformation en elfe ou de l'Agaetí Blödhren",
+    "Toute mention du bébé béni sous le nom d'Elva",
+    "Toute mention d'une relation amoureuse établie avec Arya",
+    "Toute mention de la mort de Galbatorix ou de la fin du cycle",
+    "Toute mention des Burning Plains ou de Thorn",
+    "Toute mention de la guérison de sa cicatrice"
+  ],
+  "identity_confusion_forbidden": [
+    "alias: Murtagh",
+    "alias: Brom",
+    "connu sous le nom de Murtagh",
+    "alias: Eragon Bromsson"
+  ]
+}

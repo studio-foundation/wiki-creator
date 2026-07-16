@@ -1,0 +1,112 @@
+{
+  "entities": ["Narnia", "Cair Paravel"],
+  "note": "Narnia est un LIEU (le monde/pays), pas un personnage. Le pipeline lui a donné une page PERSON — c'est un défaut d'extraction (spaCy tague 'Narnia' PERSON), pas une hallucination du rédacteur. Toute page qui prête à Narnia des actions, des relations ou une psychologie de personnage est une violation.",
+
+  "narnia": {
+    "canonical_aliases_book1": [
+      "Narnia",
+      "le pays de Narnia",
+      "the land of Narnia"
+    ],
+    "known_facts_book1": [
+      "Pays/monde accessible depuis notre monde par l'armoire du Professeur",
+      "Peuplé de créatures parlantes : Fauns, Dryades, Naïades, Castors, nains, géants, centaures",
+      "Sous l'emprise de la Sorcière Blanche au début du livre : 'Always winter and never Christmas'",
+      "Le dégel commence avec le retour d'Aslan et l'arrivée de Father Christmas",
+      "Cair Paravel, au bord de la mer, est le siège des quatre trônes",
+      "Un lamp-post se dresse au milieu du bois, là où Lucy arrive — le livre n'explique jamais pourquoi",
+      "L'Emperor-beyond-the-Sea a mis la Deep Magic dans Narnia 'at the very beginning'",
+      "Le temps y coule différemment : les enfants y règnent des années et rentrent à l'heure même de leur départ",
+      "Prophétie : quand deux Fils d'Adam et deux Filles d'Ève siégeront sur les quatre trônes de Cair Paravel, le règne de la Sorcière prendra fin"
+    ],
+    "known_relations_book1": {
+      "Aslan": "son véritable roi, fils de l'Empereur-d'au-delà-des-Mers",
+      "la Sorcière Blanche": "usurpatrice qui l'a mis sous hiver perpétuel",
+      "les quatre enfants": "y règnent comme Kings and Queens depuis Cair Paravel"
+    },
+    "forbidden_book1": {
+      "note": "Tout ce qui touche à la création ou à la fin de Narnia vient de The Magician's Nephew et de The Last Battle.",
+      "cosmology": [
+        "la création de Narnia",
+        "le chant d'Aslan créant Narnia",
+        "la plantation de l'arbre protecteur",
+        "Frank et Helen",
+        "le premier roi de Narnia",
+        "la fin de Narnia",
+        "la destruction de Narnia"
+      ],
+      "later_books": [
+        "les Telmarins",
+        "Telmarine",
+        "Miraz",
+        "Caspian",
+        "Prince Caspian",
+        "l'âge d'or décrit depuis un livre ultérieur",
+        "Calormen",
+        "Archenland",
+        "Lantern Waste"
+      ],
+      "type_errors": [
+        "Narnia comme personne",
+        "Narnia comme personnage",
+        "Narnia comme Fils d'Adam",
+        "Narnia comme Fille d'Ève"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention de la création de Narnia ou du chant d'Aslan",
+      "Toute mention des Telmarins, de Miraz ou de Caspian",
+      "Toute mention de Calormen ou d'Archenland (absents du livre 1)",
+      "Toute mention de Lantern Waste comme toponyme (absent du texte)",
+      "Toute phrase prêtant à Narnia une action, une psychologie ou une biographie de personnage",
+      "Toute mention de la fin du monde de Narnia"
+    ],
+    "identity_confusion_forbidden": [
+      "alias: Aslan",
+      "alias: Lucy",
+      "connu sous le nom d'Aslan",
+      "Fils d'Adam",
+      "Fille d'Ève"
+    ]
+  },
+
+  "cair_paravel": {
+    "canonical_aliases_book1": [
+      "Cair Paravel",
+      "Cair Paravel of the four thrones"
+    ],
+    "known_facts_book1": [
+      "Château au bord de la mer, siège des quatre trônes de Narnia",
+      "Aslan le montre à Peter depuis une hauteur : 'That, O Man, is Cair Paravel of the four thrones, in one of which you must sit as King'",
+      "La prophétie lie la fin de la Sorcière au remplissage des quatre trônes",
+      "La Sorcière s'en attribue le titre de 'Chatelaine of Cair Paravel' dans l'avis d'arrestation de Tumnus",
+      "Les quatre enfants y sont couronnés par Aslan à la fin du livre",
+      "Ils y règnent des années et y reçoivent des ambassades"
+    ],
+    "known_relations_book1": {
+      "Peter": "y siège comme High King",
+      "Aslan": "y couronne les quatre enfants",
+      "Narnia": "capitale du pays"
+    },
+    "forbidden_book1": {
+      "note": "Éléments venant des autres Chronicles.",
+      "later_books": [
+        "les ruines de Cair Paravel",
+        "Prince Caspian",
+        "Caspian",
+        "l'île où se dresse Cair Paravel",
+        "le trésor retrouvé dans ses ruines"
+      ]
+    },
+    "hallucination_signals": [
+      "Toute mention des ruines de Cair Paravel (Prince Caspian)",
+      "Toute mention de Caspian ou d'un livre ultérieur",
+      "Toute mention qu'il est sur une île (il l'est devenu dans Prince Caspian, pas dans LWW)"
+    ],
+    "identity_confusion_forbidden": [
+      "alias: Narnia",
+      "alias: Kings",
+      "alias: Queens"
+    ]
+  }
+}
