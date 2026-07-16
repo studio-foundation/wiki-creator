@@ -1,4 +1,5 @@
 from scripts.relationship_classifier_validator import (
+    check_confidence_graded,
     check_relationship_type_valid,
     check_evolution_not_generic,
     check_evidence_contains_both_names,
@@ -47,6 +48,7 @@ def test_validate_classification_valid():
         "direction": "symétrique",
         "evolution": "Leur complicité grandit au fil des chapitres.",
         "key_moments": ["ch03: ils s'entraînent ensemble"],
+        "confidence": "explicit",
     }
     result = validate_classification(clf, meta={})
     assert result["valid"] is True
@@ -237,3 +239,37 @@ def test_build_feedback_mentions_evidence():
     from scripts.relationship_classifier_validator import build_feedback
     msg = build_feedback(["❌ evolution générique"])
     assert "evidence" in msg.lower()
+
+
+# ---------------------------------------------------------------------------
+# STU-476: a typed relation carries a graded confidence
+# ---------------------------------------------------------------------------
+
+
+def test_check_confidence_graded_accepts_a_declared_tier():
+    assert check_confidence_graded({"relationship_type": "friend", "confidence": "interpretation"}) == []
+
+
+def test_check_confidence_graded_rejects_a_missing_grade():
+    assert check_confidence_graded({"relationship_type": "friend"}) != []
+
+
+def test_check_confidence_graded_rejects_a_tier_outside_the_vocabulary():
+    assert check_confidence_graded({"relationship_type": "friend", "confidence": "certain"}) != []
+
+
+def test_check_confidence_graded_requires_null_when_the_type_is_null():
+    assert check_confidence_graded({"relationship_type": None, "confidence": None}) == []
+    assert check_confidence_graded({"relationship_type": None, "confidence": "explicit"}) != []
+
+
+def test_validate_classification_rejects_an_ungraded_typed_relation():
+    clf = {
+        "relationship_type": "friend",
+        "direction": "symétrique",
+        "evolution": "Leur complicité grandit.",
+        "key_moments": ["ch03: entraînement"],
+    }
+    result = validate_classification(clf, meta={})
+    assert result["valid"] is False
+    assert any("confidence" in e for e in result["errors"])

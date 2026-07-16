@@ -629,6 +629,29 @@ Inside `wiki-resolution`, order matters:
   `--restart wiki-extraction --clean`. (2) Entities — `generate_wiki_pages.py
   --entities NAME... [--force]` (STU-497/#110, `make generate-pages-entity ENTITY=...`)
   regenerates only a slice of pages without wiping the rest.
+- Relation confidence is graded, not counted (STU-476): `confidence.py` used to
+  read evidence *presence* — a type plus a verbatim quote was `explicit`, and the
+  writer stated it as fact. Presence is not strength: Chaol is typed `amoureux`
+  off "Their eyes met, and Chaol didn't hide his smile as she grinned at him",
+  quoted word for word and indistinguishable from Dorian's intimate gesture. Only
+  the classifier reads the excerpts, so **it** grades the tier; the vocabulary
+  lives in `base.yaml#relationships.confidence` and travels with the payload like
+  the STU-477 type vocabulary, injected in `_run_studio_classifier_item` — the one
+  point both callers cross. `TIER_ORDER` stays in `confidence.py`, not on
+  base.yaml's key order: it decides what over-grading *is*. Two rules are
+  load-bearing. (1) **The floor no grade may lift**: an ungrounded type is
+  `inferred` whatever it claims, so the STU-476 grade can only ever *lower*
+  what the pre-existing grounding check already allowed. Absent grade (pre-STU-476
+  artifacts) keeps the old presence reading. (2) **Grade the sentence, not the
+  type you believe in** — the prompt says so and the eval scores it: gold pairs
+  carry `max_confidence` and `score_confidence` reports the over-graded rate
+  (`--max-overgraded` gates CI). Under-grading is deliberately not an error — it
+  costs hedged prose; over-grading reaches the reader as a fact. Only 2 of the 10
+  typed fixture pairs have power on that axis, and that is the corpus: weakening
+  an excerpt to make the metric bite would score the classifier against fiction.
+  Requiring `evidence` when `relationship_type != null` was already enforced by
+  `scripts/relationship_classifier_validator.py` (the ticket's 57%-absent stat is
+  run 18, pre-STU-495/496); STU-476 only added the grade rule beside it.
 - Untyped relations never render (STU-501): a relationship with no usable
   `relationship_type` is **omitted** from every reader-facing surface — the dated
   relationship index, per-relation prose, and the writer prompt. No neutral

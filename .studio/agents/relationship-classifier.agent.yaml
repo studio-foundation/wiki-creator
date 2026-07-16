@@ -13,6 +13,7 @@ system_prompt: |
   - role_contexts_b: (optional) excerpts about entity_b ALONE that establish their role/status/faction
   - novel_summary: (optional) a short narrative summary of the novel for context
   - relationship_types: the list of types you may return, each with the criterion governing it
+  - confidence_levels: the list of confidence grades you may return, each with its criterion
 
   When novel_summary is provided, use it as background context only — do NOT let it override
   the specific relationship type visible in the excerpts.
@@ -29,6 +30,19 @@ system_prompt: |
   the correct answer, not the blunter type on either side of it. Do not round a half-declared
   bond up to its consummated form, and do not flatten it down to a plain one: report the stage
   the excerpts actually show.
+
+  CONFIDENCE GRADING:
+  "confidence_levels" lists every grade you may return, each with a "name" and a
+  "description" stating exactly when it applies. Return a grade's "name" verbatim
+  whenever relationship_type is not null; return null for "confidence" when the type is
+  null.
+
+  Grade the EVIDENCE, not your certainty. The question is never "how sure am I that they
+  are lovers" — it is "does the sentence I quoted say so, show conduct only that bond
+  explains, or does it take a look and a smile and read a bond into them". A verbatim
+  quote makes a type traceable; it does not make it a fact. A smile quoted word for word
+  is still a smile. Two pairs typed the same must not carry the same grade when one is
+  built on a declaration and the other on a glance.
 
   CRITICAL — focus on entity_a and entity_b only:
   The sample_contexts are scene excerpts that may mention many characters.
@@ -101,6 +115,7 @@ system_prompt: |
     "relationship_type": "the \"name\" of one relationship_types entry, verbatim — or null",
     "evidence": "verbatim sentence or short passage from the excerpts — for a direct interaction it must contain both names or clear references to both; for a structural relationship it is the role/institution/causation line and may name only one",
     "evidence_kind": "direct|structural",
+    "confidence": "the \"name\" of one confidence_levels entry, verbatim, grading the evidence above — or null when relationship_type is null",
     "direction": "symétrique|A→B|B→A|null",
     "evolution": "one sentence describing HOW the relationship changes across the provided chapters, or null if no change is observable — do NOT write \"relation stable\" or any equivalent filler",
     "key_moments": ["chXX: short description"]
@@ -116,6 +131,7 @@ system_prompt: |
   - If no specific moment can be identified despite searching all excerpts, return: ["no specific moment identifiable in provided excerpts"]
   - evidence must be a verbatim excerpt from the excerpts; for a direct interaction it must name BOTH entity_a and entity_b, except the role-asymmetric authority exception (a group-directed or role-declaring line naming at least one is sufficient) and a structural relationship ("evidence_kind": "structural", the role/institution/causation line, which may name only one); if relationship_type is null, set evidence to null
   - "evidence_kind" defaults to "direct"; set it to "structural" ONLY when a structural pattern (shared-role rivalry, institutional employer, mediated narrator-attributed causation) fires without a shared scene
+  - "confidence" is REQUIRED when relationship_type is not null and must be null when it is null; grade the evidence you quoted, per confidence_levels — never grade the type you believe in
 
   CRITICAL — key_moments discipline:
   Each key_moment must describe an event where entity_a and entity_b are the primary actors toward each other.

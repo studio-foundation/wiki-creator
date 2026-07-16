@@ -9,10 +9,11 @@ surface the current gate closes (Westfall↔Kaltain) with no test to catch it.
 
 This module turns "blind prompt tuning" into "measured change": given a
 hand-labelled fixture of pairs (gold typing on Throne of Glass book 1) and a set
-of predictions, it computes per-class precision/recall plus the two rates the
+of predictions, it computes per-class precision/recall plus the three rates the
 classifier's defects live in — the false-null rate (over-nulling real relations,
-STU-495) and the hallucination rate (typing pure co-occurrence, the
-Westfall↔Kaltain case).
+STU-495), the hallucination rate (typing pure co-occurrence, the Westfall↔Kaltain
+case), and the over-graded rate (claiming more confidence than the excerpts
+support, STU-476).
 
 Everything here is pure: no LLM, no I/O beyond fixture loading. The heavy path
 (running the classifier per pair) lives in ``scripts/eval_relationship_classifier.py``.
@@ -25,6 +26,7 @@ from pathlib import Path
 
 import yaml
 
+from wiki_creator.confidence import is_stronger
 from wiki_creator.relationship_types import usable_relationship_type
 
 NULL_LABEL = "null"
@@ -57,6 +59,9 @@ class GoldPair:
     note: str = ""
     cooccurrence_count: int = 0
     sample_contexts: tuple[str, ...] = ()
+    # STU-476: the strongest grade the excerpts support. None = ungraded pair,
+    # skipped by score_confidence rather than scored against a guess.
+    max_confidence: str | None = None
 
     @property
     def key(self) -> tuple[str, str]:
@@ -87,6 +92,17 @@ class EvalRow:
     verdict: str  # ok | false_null | hallucination | wrong_type
 
 
+@dataclass(frozen=True)
+class ConfidenceRow:
+    """Per-pair confidence-grading outcome (STU-476)."""
+
+    entity_a: str
+    entity_b: str
+    max_confidence: str
+    predicted: str | None
+    verdict: str  # ok | overgraded | ungraded
+
+
 def load_gold(path: str | Path) -> list[GoldPair]:
     """Parse a gold fixture YAML into ``GoldPair`` records.
 
@@ -112,9 +128,55 @@ def load_gold(path: str | Path) -> list[GoldPair]:
                 note=entry.get("note", ""),
                 cooccurrence_count=int(entry.get("cooccurrence_count", 0)),
                 sample_contexts=tuple(entry.get("sample_contexts", []) or ()),
+                max_confidence=entry.get("max_confidence"),
             )
         )
     return out
+
+
+def confidences_from_relationships(relationships: list[dict]) -> dict[tuple[str, str], str | None]:
+    """Map ``pair_key -> graded confidence`` from a classified bundle (STU-476)."""
+    out: dict[tuple[str, str], str | None] = {}
+    for rel in relationships:
+        a, b = rel.get("entity_a"), rel.get("entity_b")
+        if not a or not b:
+            continue
+        out[pair_key(a, b)] = (str(rel.get("confidence") or "").strip().lower()) or None
+    return out
+
+
+def score_confidence(
+    gold: list[GoldPair], confidences: dict[tuple[str, str], str | None]
+) -> dict:
+    """Grade the grading: how often the classifier claims more than the excerpts support.
+
+    Only pairs carrying ``max_confidence`` are scored. Over-grading is the defect
+    this measures — a smile typed romance and stamped ``explicit`` reaches the reader
+    as a fact (STU-476). Under-grading is not counted as an error: it only costs
+    hedged prose, never a false claim.
+    """
+    rows: list[ConfidenceRow] = []
+    for gp in gold:
+        supported = gp.max_confidence
+        if not supported:
+            continue
+        predicted = confidences.get(gp.key)
+        if predicted is None:
+            verdict = "ungraded"
+        elif is_stronger(predicted, supported):
+            verdict = "overgraded"
+        else:
+            verdict = "ok"
+        rows.append(ConfidenceRow(gp.entity_a, gp.entity_b, supported, predicted, verdict))
+    overgraded = sum(1 for r in rows if r.verdict == "overgraded")
+    ungraded = sum(1 for r in rows if r.verdict == "ungraded")
+    return {
+        "scored": len(rows),
+        "overgraded_count": overgraded,
+        "overgraded_rate": overgraded / len(rows) if rows else 0.0,
+        "ungraded_count": ungraded,
+        "rows": rows,
+    }
 
 
 def predictions_from_relationships(relationships: list[dict]) -> dict[tuple[str, str], str | None]:
@@ -234,7 +296,7 @@ def _num(x: float | None) -> str:
     return f"{x:.2f}" if x is not None else "—"
 
 
-def render_report(book: str, metrics: dict) -> str:
+def render_report(book: str, metrics: dict, confidence_metrics: dict | None = None) -> str:
     """Markdown report: headline rates, per-class table, per-pair verdicts."""
     m = metrics
     lines = [f"# Relationship-classifier eval — {book}", ""]
@@ -261,4 +323,25 @@ def render_report(book: str, metrics: dict) -> str:
         expected = " / ".join(r.acceptable)
         mark = "✅" if r.verdict == "ok" else "❌"
         lines.append(f"| {r.entity_a} ↔ {r.entity_b} | {expected} | {r.predicted} | {mark} {r.verdict} |")
+
+    if confidence_metrics and confidence_metrics["scored"]:
+        c = confidence_metrics
+        lines += [
+            "",
+            "## Confidence grading",
+            "",
+            f"**Over-graded rate**: {_pct(c['overgraded_rate'])} "
+            f"({c['overgraded_count']}/{c['scored']} graded pairs), "
+            f"{c['ungraded_count']} ungraded",
+            "",
+            "| Pair | Max supported | Predicted | Verdict |",
+            "|---|---|---|---|",
+        ]
+        corder = {"overgraded": 0, "ungraded": 1, "ok": 2}
+        for r in sorted(c["rows"], key=lambda r: (corder.get(r.verdict, 9), r.entity_a)):
+            mark = "✅" if r.verdict == "ok" else "❌"
+            lines.append(
+                f"| {r.entity_a} ↔ {r.entity_b} | {r.max_confidence} | "
+                f"{r.predicted or '—'} | {mark} {r.verdict} |"
+            )
     return "\n".join(lines) + "\n"
