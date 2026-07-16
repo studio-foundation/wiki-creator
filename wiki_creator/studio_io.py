@@ -82,17 +82,60 @@ def write_output(
 
 def extract_first_json_object(text: str) -> dict | None:
     """Return the first balanced JSON object embedded in ``text``, else ``None``."""
+    text = str(text or "")
     decoder = json.JSONDecoder()
-    for i, ch in enumerate(str(text or "")):
-        if ch != "{":
-            continue
+    i = text.find("{")
+    while i != -1:
         try:
             candidate, _ = decoder.raw_decode(text[i:])
         except json.JSONDecodeError:
+            end = _brace_span_end(text, i)
+            # STU-533: an object with no closing brace is truncated, not noise.
+            # Scanning into it would return one of its nested objects — a fragment
+            # the caller never asked for, which reads as a successful parse.
+            if end is None:
+                return None
+            i = text.find("{", end)
             continue
         if isinstance(candidate, dict):
             return candidate
+        i = text.find("{", i + 1)
     return None
+
+
+def _brace_span_end(text: str, start: int) -> int | None:
+    """Index just past the ``}`` closing the ``{`` at ``start``, else ``None``."""
+    depth = 0
+    in_string = False
+    escaped = False
+    for i in range(start, len(text)):
+        ch = text[i]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                in_string = False
+        elif ch == '"':
+            in_string = True
+        elif ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                return i + 1
+    return None
+
+
+def extract_run_id(text: str) -> str:
+    """Return the run id from a ``studio run --json`` stdout, else ``""``.
+
+    Read independently of the payload parse: ``id`` is the run's own first key,
+    so it survives the 8 KiB stdout truncation the payload does not (STU-533).
+    """
+    match = re.search(r'"id"\s*:\s*"([^"]+)"', str(text or ""))
+    return match.group(1) if match else ""
 
 
 def studio_run_log_path(run_id: str) -> Path | None:
