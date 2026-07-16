@@ -175,6 +175,11 @@ gold, which makes that arm's number optimistic and is caveat 2 in the report.
 
     PYTHONPATH=../.. python -m pytest tests/ -q
 
+Run it from this directory, in its own process — not via `pytest research/` and
+not from the repo root. Two evals in one pytest process share one top-level
+namespace, and `ner-eval/score.py` would shadow this one. See
+[../README.md](../README.md); CI gives each eval its own step.
+
 Covers the scorer and the vote fold — everything except the API and model calls.
 Direction flipping has its own tests: `pair_key` sorts the two names and
 `direction` is stated against `entity_a`, so a vote naming (Brom, Eragon) and one

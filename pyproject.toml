@@ -68,6 +68,14 @@ Homepage = "https://github.com/studio-foundation/wiki-creator"
 module = ["gliner.*", "torch.*"]
 ignore_missing_imports = true
 
+[tool.pytest.ini_options]
+# `tests` is the suite; `research/*-eval` are separate benchmarks and each must
+# run in its own process (see research/README.md). Collecting both in one run is
+# what a bare `pytest` used to do, and it broke the moment a second eval existed:
+# the dirs are hyphenated, so they can never be packages, so their top-level
+# modules all land in one namespace and `score` shadows `score`.
+testpaths = ["tests"]
+
 [tool.hatch.metadata]
 # The spaCy models in the `dev` and `models` extras are wheel URLs, not PyPI
 # names — hatchling rejects a direct reference without this (STU-522).
