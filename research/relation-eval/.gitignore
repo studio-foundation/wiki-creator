@@ -8,3 +8,6 @@ results.md
 roster_oracle.json
 explicit_pairs_oracle.json
 retype_verdicts.json
+adjudication.json
+votes.json
+predictions.cooccurrence_classified.json

@@ -131,7 +131,7 @@ def main() -> None:
     predictions = [
         {"entity_a": p["entity_a"], "entity_b": p["entity_b"],
          "relationship_type": p["acceptable"][0], "direction": p["direction"],
-         "chapters": p["chapters"]}
+         "chapters": p["chapters"], "evidence": p["evidence"]}
         for p in pairs
     ]
     with open(args.out, "w", encoding="utf-8") as f:

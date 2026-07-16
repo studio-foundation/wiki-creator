@@ -1,0 +1,23 @@
+# Roster entries that are another name for someone already in the roster.
+#
+# Hand-written, and it has to be: alias-resolution is the stage that missed them,
+# so nothing in the pipeline's own artifacts knows. Read off Eragon's roster by
+# someone who read Eragon.
+#
+# These are not NER noise — every name here is a real character. They are the
+# entity layer leaking a duplicate, and the two arms meet that leak on very
+# unequal terms: co-occurrence matches `Neal` by regex and reports Brom related to
+# himself, while the LLM knows Neal *is* Brom and claims 0 pairs on the name. So
+# folding them is not cosmetic; leaving them unfolded scores an alias-resolution
+# defect as a co-occurrence discovery error.
+#
+# STU-538 predicted exactly this. It deleted pattern alias merging and wrote that
+# the shape which would actually pay is a speaker naming themselves *while already
+# known under another name*, and that finding it needs dialogue attribution rather
+# than a regex. Brom saying "call me Neal" on the road is that shape.
+#
+# alias: canonical
+Neal: Brom
+Evan: Eragon
+The Shade: Durza
+Carsaib: Durza
