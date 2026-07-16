@@ -94,15 +94,22 @@ def test_salience_climax_beat_with_cue_and_participants_scores_high():
 from wiki_creator.event_layer import build_events
 
 
+def _summaries(bullets_by_chapter: dict[int, list[str]], total: int | None = None) -> dict:
+    """Ordered chapter summaries — a chapter's number is its position (STU-546)."""
+    total = total or max(bullets_by_chapter)
+    return {
+        f"Chapter {n}": {
+            "chapter_id": f"C{n:02d}.xhtml",
+            "chapter_title": f"Chapter {n}",
+            "summary_bullets": bullets_by_chapter.get(n, []),
+        }
+        for n in range(1, total + 1)
+    }
+
+
 def test_build_events_from_summaries_and_key_moments():
     reg = _registry(CELAENA, CAIN, RIFTHOLD)
-    summaries = {
-        "Chapter 12": {
-            "chapter_id": "C12.xhtml",
-            "chapter_title": "Chapter 12",
-            "summary_bullets": ["Celaena vainquit Cain at Rifthold"],
-        },
-    }
+    summaries = _summaries({12: ["Celaena vainquit Cain at Rifthold"]})
     relationships = [
         {"entity_a": "Celaena", "entity_b": "Cain",
          "key_moments": ["Ch12: Celaena vainquit Cain at Rifthold"]},
@@ -116,7 +123,7 @@ def test_build_events_from_summaries_and_key_moments():
     assert e["participants"] == ["Cain", "Celaena Sardothien"]
     assert e["places"] == ["Rifthold"]
     assert e["outcome"] == "Celaena vainquit Cain at Rifthold"  # has action cue
-    assert e["salience"] == 1.0
+    assert e["salience"] == 0.55  # action cue + last chapter, no importance weights
     assert len(e["source_bullets"]) == 2  # both sources merged
     assert e["event_id"] == "e_ch12_0"
 
@@ -128,17 +135,44 @@ def test_build_events_skips_beats_without_chapter():
     assert build_events({}, relationships, reg, action_cues=[]) == []
 
 
+def test_build_events_skips_key_moments_naming_an_unknown_chapter(capsys):
+    # A marker is the classifier's guess, not a fact: a book of 3 chapters has
+    # no chapter 16, so the beat is dropped — counted and warned (STU-546).
+    reg = _registry(CELAENA)
+    relationships = [{"entity_a": "Celaena", "entity_b": "Cain",
+                      "key_moments": ["ch16: Celaena vainquit Cain"]}]
+    events = build_events(_summaries({}, total=3), relationships, reg, action_cues=[])
+    assert events == []
+    err = capsys.readouterr().err
+    assert "1 relationship key-moments name no chapter of this book" in err
+    assert "3 chapters of summaries produced no event" in err
+
+
+def test_build_events_numbers_chapters_by_position_not_by_title(capsys):
+    # Narnia words its chapter numbers and Eragon prints none at all, so the
+    # number is the chapter's position (STU-546).
+    summaries = {
+        "CHAPTER ONE.  LUCY LOOKS INTO A WARDROBE": {
+            "chapter_id": "bookcontent2_0",
+            "chapter_title": "CHAPTER ONE.  LUCY LOOKS INTO A WARDROBE",
+            "summary_bullets": ["Lucy steps through the wardrobe"],
+        },
+        "CHAPTER TWO.  WHAT LUCY FOUND THERE": {
+            "chapter_id": "bookcontent3_0",
+            "chapter_title": "CHAPTER TWO.  WHAT LUCY FOUND THERE",
+            "summary_bullets": ["Lucy meets Mr Tumnus"],
+        },
+    }
+    events = build_events(summaries, [], None, action_cues=[])
+    assert [e["chapter"] for e in events] == [1, 2]
+    assert "produced no event" not in capsys.readouterr().err
+
+
 def test_build_events_degrades_gracefully_with_no_registry():
     # No relationships (so no entity_a/entity_b seed names) — participants and
     # places can only come from registry name-matching, which is unavailable
     # when registry is None.
-    summaries = {
-        "Chapter 3": {
-            "chapter_id": "C03.xhtml",
-            "chapter_title": "Chapter 3",
-            "summary_bullets": ["Celaena vainquit Cain at Rifthold"],
-        },
-    }
+    summaries = _summaries({3: ["Celaena vainquit Cain at Rifthold"]})
     events = build_events(summaries, [], None, action_cues=["vainquit"])
 
     assert len(events) == 1
@@ -157,15 +191,9 @@ def test_build_events_tolerates_none_summaries_and_relationships():
 
 def test_build_events_threads_participant_importance_into_salience():
     reg = _registry(CELAENA, CAIN)
-    summaries = {
-        "Chapter 1": {
-            "chapter_id": "C01.xhtml",
-            "chapter_title": "Chapter 1",
-            "summary_bullets": ["Celaena and Cain meet in the yard"],
-        },
-    }
+    beat = ["Celaena and Cain meet in the yard"]
     importance = {"Celaena Sardothien": 1.0, "Cain": 1.0}
-    events = build_events({**summaries, "Chapter 2": summaries["Chapter 1"]}, [], reg,
+    events = build_events(_summaries({1: beat, 2: beat}), [], reg,
                            action_cues=[], participant_importance=importance)
     e = next(ev for ev in events if ev["chapter"] == 1)
     # Both participants are top-importance → the participant term alone beats
@@ -175,15 +203,9 @@ def test_build_events_threads_participant_importance_into_salience():
 
 def test_build_events_orphan_high_salience_event_inherits_source_pair_participants():
     reg = _registry(CELAENA, CAIN)
-    summaries = {
-        "Chapter 55": {
-            "chapter_id": "C55.xhtml",
-            "chapter_title": "Chapter 55",
-            # No name literally appears in this beat — the climax-orphan case
-            # from STU-483 (ch55, "only her left").
-            "summary_bullets": ["But there were no other Champions left—only her"],
-        },
-    }
+    # No name literally appears in this beat — the climax-orphan case from
+    # STU-483 (ch55, "only her left").
+    summaries = _summaries({55: ["But there were no other Champions left—only her"]})
     relationships = [
         {"entity_a": "Celaena", "entity_b": "Cain",
          "key_moments": ["Ch55: Celaena defeats the last challenger"]},

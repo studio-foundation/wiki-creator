@@ -602,6 +602,36 @@ Inside `wiki-resolution`, order matters:
   Eragon's 900k chars). It costs some boundary quality — a chapter title glues to
   the first sentence, a closing quote starts the next one — which is why contexts
   moved in the goldens.
+- A chapter's number is its position (STU-546): `event_layer._chapter_numbers`
+  numbers the ordered `chapter_summaries` 1..N. It used to regex the number out
+  of the chapter's own text (`^(?:chapter\s+|c\.?h?\.?\s*)(\d+)`), which demands
+  the book print `Chapter 12` — **1 of the 6 cached books does**. Narnia words
+  them (`CHAPTER ONE`), le-jeu-de-lange writes `1. Un écrivain…`, and **Eragon
+  prints no chapter number at all** (`DISCOVERY`, `PALANCAR VALLEY`), so a word
+  numeral branch — the obvious fix — buys Narnia and nothing else. The number was
+  never in the prose to recover: `parse_epub` emits an ordered list and
+  `section_filter` tags the front matter, so position is the only universal
+  source, and it *is* the printed number on both books that had one (Narnia 1-17,
+  throne-of-glass 1-55, byte-identical 447 events). Narnia went 0 → 136.
+  The failure was total and silent — no `event_pages.json`, no synopsis events,
+  no participant-importance signal — because `build_events` returned `[]` and
+  every downstream stage reads "no events" as an answer; it now warns when
+  summaries produced none.
+  Two consequences. (1) **A prologue takes number 1**, so a prologue book's
+  numbers sit one below the printed ones — deliberate (a `prologue` word list is
+  the same shape as the bug being closed) and it regresses nothing, since those
+  books built zero events. (2) **The `chapter_id` fallback is deleted, not
+  fixed**: a section id numbers spine items, so Narnia's `bookcontent2_0` is
+  chapter *one* — it would have renumbered every chapter had it ever matched.
+  `chapters.chapter_number` (first digit run) carries the same id hazard for its
+  own callers; out of scope here.
+  The `key_moments` path keeps its marker regex but the number must now name a
+  real chapter of the book. The marker is the classifier's guess — it is handed
+  chapter *ids* in `relationships.json`, so it prefixes `ch16:` on
+  throne-of-glass and the chapter *title* (`EDMUND AND THE WARDROBE:`) on Narnia,
+  and **43 of ~50 resolve on neither book**. That path is low-yield by
+  construction and is not what fixes Narnia; matching markers against titles is a
+  separate ticket.
 - `workers` in relationship/coref config directly impact RAM usage.
 - `.studio/config.yaml` and `.studio/runs/` must not be committed.
 - Never add hardcoded word lists to scripts. All vocabulary belongs in `wiki_creator/cue_words/<lang>.json` (language-wide) or the book YAML `classification` section (book-specific). No script may define a fallback vocabulary constant — if a key is absent from cue_words, degrade gracefully to an empty collection.

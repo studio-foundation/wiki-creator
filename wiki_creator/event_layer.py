@@ -5,6 +5,7 @@ relationship_fold.py pure-module pattern.
 from __future__ import annotations
 
 import re
+import sys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -14,11 +15,22 @@ _CHAPTER_RE = re.compile(r"^\s*(?:chapter\s+|c\.?h?\.?\s*)0*(\d+)", re.IGNORECAS
 
 
 def _parse_chapter(text: str) -> int | None:
-    """Extract the leading chapter number from a beat string or summary key."""
+    """Extract the chapter number from a key-moment's leading `Ch12:` marker."""
     if not text:
         return None
     m = _CHAPTER_RE.match(text)
     return int(m.group(1)) if m else None
+
+
+def _chapter_numbers(chapter_summaries: dict) -> dict[str, int]:
+    """Chapter key -> its 1-based position among the book's narrative chapters.
+
+    A chapter's number is its position, never a number read out of its own
+    text: Narnia prints `CHAPTER ONE`, Eragon prints no number at all, and a
+    section id (`bookcontent2_0`) numbers spine items, so its digits are off by
+    the front matter (STU-546). A prologue therefore takes number 1.
+    """
+    return {key: i for i, key in enumerate(chapter_summaries, start=1)}
 
 
 def _resolve(name: str, registry: "Registry | None") -> str:
@@ -128,6 +140,9 @@ def build_events(
     relationships = relationships or []
     participant_importance = participant_importance or {}
     total_chapters = len(chapter_summaries)
+    chapter_numbers = _chapter_numbers(chapter_summaries)
+    known_chapters = set(chapter_numbers.values())
+    unresolved_beats = 0
 
     # (chapter, normalized_description) -> aggregate
     agg: dict[tuple[int, str], dict] = {}
@@ -163,18 +178,15 @@ def build_events(
         resolved_seed = [_resolve(s, registry) for s in seed]
         for km in rel.get("key_moments") or []:
             chapter = _parse_chapter(km)
-            if chapter is None:
+            if chapter not in known_chapters:
+                unresolved_beats += 1
                 continue
             add_beat(chapter, km, _strip_marker(km), seed)
             chapter_rel_participants.setdefault(chapter, set()).update(resolved_seed)
 
     # Source 2: chapter summary bullets
     for key, summary in chapter_summaries.items():
-        chapter = _parse_chapter(str(summary.get("chapter_title") or key))
-        if chapter is None:
-            chapter = _parse_chapter(str(summary.get("chapter_id") or ""))
-        if chapter is None:
-            continue
+        chapter = chapter_numbers[key]
         for bullet in summary.get("summary_bullets") or []:
             add_beat(chapter, bullet, bullet.strip(), [])
 
@@ -205,4 +217,17 @@ def build_events(
         idx = by_chapter.get(e["chapter"], 0)
         e["event_id"] = f"e_ch{e['chapter']}_{idx}"
         by_chapter[e["chapter"]] = idx + 1
+
+    if unresolved_beats:
+        print(
+            f"[events] warning: {unresolved_beats} relationship key-moments name no "
+            f"chapter of this book; their beats are dropped",
+            file=sys.stderr,
+        )
+    if chapter_summaries and not events:
+        print(
+            f"[events] warning: {len(chapter_summaries)} chapters of summaries "
+            f"produced no event",
+            file=sys.stderr,
+        )
     return events
