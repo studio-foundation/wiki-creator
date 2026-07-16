@@ -84,13 +84,13 @@ system_prompt: |
   find. Use role_contexts_a, role_contexts_b and novel_summary to type such a pair ONLY when ONE of
   these explicit, low-ambiguity structural patterns is established. This is NARROW — it never fires
   on mere co-occurrence or on a vague "they're both important" feeling:
-  - SHARED-ROLE RIVALRY → antagonist: the excerpts establish that BOTH entities hold the same
+  - SHARED-ROLE RIVALRY → enemy: the excerpts establish that BOTH entities hold the same
     named competitive role or membership (both Champions/contestants in the same competition, both
     claimants to one throne) — they are structural rivals even if they never meet on the page.
   - INSTITUTIONAL EMPLOYER → employment: the excerpts establish that one entity commissions,
     owns or leads an institution (a competition, the guard, a council) and the other holds a named
     staff/subordinate role WITHIN that same institution — even with no shared scene.
-  - MEDIATED, NARRATOR-ATTRIBUTED CAUSATION → antagonist: the excerpts attribute a harmful act
+  - MEDIATED, NARRATOR-ATTRIBUTED CAUSATION → enemy: the excerpts attribute a harmful act
     (a killing, a betrayal) by one entity to the other THROUGH an agent or instrument (a summoned
     creature, a hired killer) AND the narration or a character's deduction names the other entity as
     the cause — a killer/victim edge with no direct scene.

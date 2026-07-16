@@ -154,9 +154,9 @@ def test_check_evidence_symmetric_still_requires_both():
 # ---------------------------------------------------------------------------
 
 def test_check_evidence_structural_rivalry_accepts_one_name():
-    """Structural rivalry (antagonist) with a role line naming only one party passes."""
+    """Structural rivalry (enemy) with a role line naming only one party passes."""
     clf = {
-        "relationship_type": "antagonist",
+        "relationship_type": "enemy",
         "evidence_kind": "structural",
         "evidence": "Xavier—the thief from Melisande, a Champion.",
     }
@@ -165,9 +165,9 @@ def test_check_evidence_structural_rivalry_accepts_one_name():
 
 
 def test_check_evidence_structural_mediated_causation_accepts_one_name():
-    """Mediated killer/victim (antagonist) grounded on a narrator-attributed line passes."""
+    """Mediated killer/victim (enemy) grounded on a narrator-attributed line passes."""
     clf = {
-        "relationship_type": "antagonist",
+        "relationship_type": "enemy",
         "evidence_kind": "structural",
         "evidence": "Cain was a demon-summoning psychopath.",
     }
@@ -178,7 +178,7 @@ def test_check_evidence_structural_mediated_causation_accepts_one_name():
 def test_check_evidence_structural_fails_when_neither_named():
     """Structural evidence naming neither entity still fails — must ground to a real quote."""
     clf = {
-        "relationship_type": "antagonist",
+        "relationship_type": "enemy",
         "evidence_kind": "structural",
         "evidence": "The competition claimed another victim.",
     }
@@ -186,9 +186,9 @@ def test_check_evidence_structural_fails_when_neither_named():
     assert check_evidence_contains_both_names(clf, meta) != []
 
 
-def test_check_evidence_antagonist_without_structural_flag_requires_both():
-    """antagonist is NOT asymmetric: absent the structural flag, both names required (guard)."""
-    clf = {"relationship_type": "antagonist", "evidence": "Xavier—the thief from Melisande."}
+def test_check_evidence_enemy_without_structural_flag_requires_both():
+    """enemy is NOT asymmetric: absent the structural flag, both names required (guard)."""
+    clf = {"relationship_type": "enemy", "evidence": "Xavier—the thief from Melisande."}
     meta = {"entity_a": "Celaena", "entity_b": "Xavier"}
     assert check_evidence_contains_both_names(clf, meta) != []
 
