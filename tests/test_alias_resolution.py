@@ -551,6 +551,37 @@ def test_detect_title_alias_plural_family_name():
     assert _detect_title_alias(entity_a, entity_b, role_words=["mr", "mrs"]) is None
 
 
+def _beaver_roster():
+    return [
+        {"canonical_name": "Mr Beaver", "aliases": ["Mr Beaver"], "type": "PERSON", "source_ids": ["e1"]},
+        {"canonical_name": "Mrs Beaver", "aliases": ["Mrs Beaver"], "type": "PERSON", "source_ids": ["e2"]},
+        {"canonical_name": "Beaver", "aliases": ["Beaver"], "type": "PERSON", "source_ids": ["e3"]},
+    ]
+
+
+def test_resolve_aliases_bare_surname_shared_by_two_honorifics_merges_with_neither():
+    from itertools import permutations
+
+    from scripts.alias_resolution import resolve_aliases
+
+    for roster in permutations(_beaver_roster()):
+        result = resolve_aliases(list(roster), {}, role_words=["mr", "mrs"])
+        assert sorted(e["canonical_name"] for e in result["entities"]) == ["Beaver", "Mr Beaver", "Mrs Beaver"]
+        assert result["stats"]["merges_applied"] == 0
+
+
+def test_resolve_aliases_bare_name_of_a_single_honorific_still_merges():
+    from scripts.alias_resolution import resolve_aliases
+
+    entities = [
+        {"canonical_name": "Mr Tumnus", "aliases": ["Mr Tumnus"], "type": "PERSON", "source_ids": ["e1"]},
+        {"canonical_name": "Tumnus", "aliases": ["Tumnus"], "type": "PERSON", "source_ids": ["e2"]},
+    ]
+    result = resolve_aliases(entities, {}, role_words=["mr", "mrs"])
+    assert len(result["entities"]) == 1
+    assert result["stats"]["merges_by_method"]["title_alias"] == 1
+
+
 def test_detect_title_alias_honorific_merges_untitled_name():
     from scripts.alias_resolution import _detect_title_alias
     entity_a = {"canonical_name": "Mr Tumnus", "aliases": ["Mr Tumnus"]}
