@@ -1,0 +1,35 @@
+# Natural-language label GLiREL is asked for, per relation token in
+# base.yaml#relationships.enum.
+#
+# GLiREL is trained on Wikidata-shaped properties ("has parent", "employer"), so
+# it is asked in that register rather than handed our snake_case tokens. The
+# mapping back to the token is exact, so the arm answers in the same vocabulary
+# as the gold and every other arm.
+#
+# NOT SWEPT. research/ner-eval/sweep_labels.py exists because label wording moved
+# GLiNER's macro F1 from 0.840 to 0.866 — wording is load-bearing, and the NER
+# side learned not to guess it. These are guesses. That makes this arm's score a
+# LOWER bound: a swept label set can only help it. Read a GLiREL loss here as
+# "not demonstrated", never as "GLiREL cannot"; a win needs no such caution.
+#
+# Sweeping them is the obvious follow-up if this arm lands close enough to matter.
+#
+# `other` is deliberately absent. Our vocabulary defines it as "none of the
+# above" — a verdict reached after the alternatives fail, which is not a thing a
+# zero-shot scorer can be asked for. Given a label for it, GLiREL matched it to
+# everything and typed a whole chapter `other`, the same catch-all magnetism the
+# NER side saw. An arm that cannot answer `other` scores a gold `other` wrong;
+# that is a real cost, and smaller than a label that eats the other twelve.
+
+family: has family relation with
+mentor: is the mentor of
+romance: is romantically involved with
+budding_attraction: is attracted to
+strained_friendship: is an estranged friend of
+friendly_rivalry: is a friendly rival of
+wary_alliance: is a reluctant ally of
+antagonist: is an enemy of
+ally: is an ally of
+employment: is the employer of
+friend: is a friend of
+acquaintance: is an acquaintance of

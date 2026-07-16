@@ -28,3 +28,15 @@ jobs:
 
       - name: Tests
         run: python -m pytest -q
+
+      # One process per eval, never `pytest research/` — the dirs are hyphenated,
+      # so they are not packages, so two evals in one process share a namespace
+      # and `score` shadows `score` (research/README.md). Their own requirements
+      # are not installed here; these suites cover the pure logic only.
+      - name: Research eval suites
+        run: |
+          for eval in research/*-eval; do
+            echo "::group::$eval"
+            (cd "$eval" && PYTHONPATH="$GITHUB_WORKSPACE" python -m pytest tests/ -q)
+            echo "::endgroup::"
+          done

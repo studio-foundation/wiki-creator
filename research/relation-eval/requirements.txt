@@ -1,0 +1,5 @@
+# Heavy, dev-machine-only. Nothing here is a pipeline dependency.
+glirel==1.2.1
+loguru        # glirel imports it but does not declare it
+torch
+anthropic
