@@ -23,22 +23,18 @@ from bs4 import BeautifulSoup
 from scripts.parse_epub import (
     _flatten_inline_markup,
     _mark_paragraph_breaks,
+    _merge_block_dropcaps,
     clean_chapter_text,
 )
 
 CORPUS_DIR = Path(__file__).parent / "fixtures" / "markup"
-
-# Shapes the parser is known to get wrong. Each names the issue that fixes it;
-# strict=True so the fix cannot land without retiring the entry.
-KNOWN_BROKEN = {
-    "the-hobbit-block-dropcap": "STU-532: block-level dropcap splits the word across two <p>",
-}
 
 
 def parse(html: str) -> str:
     """The production text path, as parse_epub wires it."""
     soup = BeautifulSoup(html, "html.parser")
     _flatten_inline_markup(soup)
+    _merge_block_dropcaps(soup)
     _mark_paragraph_breaks(soup)
     return clean_chapter_text(soup.get_text(separator="\n", strip=True))
 
@@ -47,15 +43,7 @@ def _snippets():
     return sorted(CORPUS_DIR.glob("*.html"))
 
 
-def _params():
-    for html_path in _snippets():
-        marks = []
-        if html_path.stem in KNOWN_BROKEN:
-            marks.append(pytest.mark.xfail(reason=KNOWN_BROKEN[html_path.stem], strict=True))
-        yield pytest.param(html_path, marks=marks, id=html_path.stem)
-
-
-@pytest.mark.parametrize("html_path", _params())
+@pytest.mark.parametrize("html_path", _snippets(), ids=lambda p: p.stem)
 def test_corpus_snippet_parses_to_expected_text(html_path):
     expected = html_path.with_suffix(".txt").read_text(encoding="utf-8").rstrip("\n")
     assert parse(html_path.read_text(encoding="utf-8")) == expected

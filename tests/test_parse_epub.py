@@ -310,10 +310,15 @@ def test_parse_epub_preserves_paragraph_breaks(tmp_path):
 def _text_of(body: str) -> str:
     """Run the parse_epub text pipeline over one chapter body, as parse_epub does."""
     from bs4 import BeautifulSoup
-    from scripts.parse_epub import _flatten_inline_markup, _mark_paragraph_breaks
+    from scripts.parse_epub import (
+        _flatten_inline_markup,
+        _mark_paragraph_breaks,
+        _merge_block_dropcaps,
+    )
 
     soup = BeautifulSoup(f"<html><body>{body}</body></html>", "html.parser")
     _flatten_inline_markup(soup)
+    _merge_block_dropcaps(soup)
     _mark_paragraph_breaks(soup)
     return clean_chapter_text(soup.get_text(separator="\n", strip=True))
 
@@ -342,6 +347,49 @@ def test_flatten_inline_markup_keeps_block_level_boundaries():
     """Flattening inline markup must not glue adjacent block elements together."""
     body = "<p>First paragraph ends here</p><p>Second paragraph starts here</p>"
     assert _text_of(body) == "First paragraph ends here\n\nSecond paragraph starts here"
+
+
+def test_merge_block_dropcaps_rejoins_a_dropcap_in_its_own_block():
+    """A dropcap can be its own <p>, not its own <span> (STU-532).
+
+    Markup copied from 00-the_hobbit.epub, whose opening sentence is typeset this
+    way. _flatten_inline_markup cannot reach it: the split is between two blocks.
+    """
+    body = '<p class="calibre4">I</p>\n<p class="calibre4">n a hole there lived a hobbit.</p>'
+    assert _text_of(body) == "In a hole there lived a hobbit."
+
+
+def test_merge_block_dropcaps_joins_without_a_space():
+    body = "<p>W</p><p>ord</p>"
+    assert _text_of(body) == "Word"
+
+
+def test_merge_block_dropcaps_leaves_a_lone_capital_before_a_real_sentence():
+    """The next block resuming with a capital means two real paragraphs.
+
+    Without this gate the pass would weld any one-letter paragraph — a section
+    divider, a list label — onto its neighbour, which is how STU-519's deleted
+    regex produced 7361 bogus tokens.
+    """
+    body = "<p>A</p><p>Silvery cloud drifted past.</p>"
+    assert _text_of(body) == "A\n\nSilvery cloud drifted past."
+
+
+def test_merge_block_dropcaps_ignores_a_multi_letter_block():
+    body = "<p>To</p><p>morrow never came.</p>"
+    assert _text_of(body) == "To\n\nmorrow never came."
+
+
+def test_merge_block_dropcaps_ignores_a_spacer_paragraph():
+    """The Hobbit puts an &nbsp;-only <p> right before the dropcap."""
+    body = '<p>Chapter title</p><p>\xa0</p><p>I</p><p>n a hole there lived a hobbit.</p>'
+    assert _text_of(body) == "Chapter title\n\nIn a hole there lived a hobbit."
+
+
+def test_merge_block_dropcaps_handles_a_dropcap_still_wrapped_in_a_span():
+    """Runs after _flatten_inline_markup, so the span is already gone."""
+    body = '<p class="dc"><span class="initial">I</span></p><p>n a hole there lived a hobbit.</p>'
+    assert _text_of(body) == "In a hole there lived a hobbit."
 
 
 def test_parse_epub_flattens_inline_markup(tmp_path):

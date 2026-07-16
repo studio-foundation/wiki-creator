@@ -68,6 +68,43 @@ _PARAGRAPH_MARK = '\x00'
 _PARAGRAPH_MARK_RUN = re.compile(r'[ \t\n]*\x00[ \t\n\x00]*')
 
 
+def _leaf_blocks(soup) -> list:
+    """Blocks holding no other block: a wrapper repeats what its children hold."""
+    return [tag for tag in soup.find_all(_BLOCK_TAGS) if not tag.find(_BLOCK_TAGS)]
+
+
+def _merge_block_dropcaps(soup) -> None:
+    """Rejoin a dropcap that is its own block, not its own span (STU-532).
+
+    `_flatten_inline_markup` cannot reach this shape — the word is split across
+    two *block* elements — so `_mark_paragraph_breaks` would put a paragraph
+    break inside the word. The Hobbit opens this way: `<p>I</p><p>n a hole…</p>`.
+
+    Where STU-519's deleted regex guessed from flat text (and welded `A`+`silvery`
+    into a false entity), this reads the markup while the tree is still standing:
+    a block holding one capital letter, followed by one starting lowercase. A
+    lone capital is a legal English word — a lone capital as an entire paragraph,
+    with the next paragraph resuming mid-sentence, is typesetting.
+
+    Must run after `_flatten_inline_markup` (so `<p><span>I</span></p>` has
+    already collapsed to `<p>I</p>`) and before `_mark_paragraph_breaks` (whose
+    mark for the dropcap block would outlive the block itself).
+    """
+    blocks = _leaf_blocks(soup)
+    for dropcap, body in zip(blocks, blocks[1:]):
+        letter = dropcap.get_text().strip()
+        if len(letter) != 1 or not letter.isupper():
+            continue
+        for text in body.strings:
+            if not text.strip():
+                continue
+            if not text.lstrip()[:1].islower():
+                break  # a capital resumes a new sentence: two real paragraphs
+            text.replace_with(letter + text.lstrip())
+            dropcap.decompose()
+            break
+
+
 def _mark_paragraph_breaks(soup) -> None:
     """Mark block boundaries in place so get_text() cannot flatten them away.
 
@@ -324,6 +361,7 @@ def parse_epub(file_path: str, language: str = "fr", max_chapters: int | None = 
             continue
         soup = BeautifulSoup(item.get_content(), "html.parser")
         _flatten_inline_markup(soup)
+        _merge_block_dropcaps(soup)
         chapter_title = _extract_chapter_title(soup, item, toc_titles)
         _mark_paragraph_breaks(soup)
         raw_text = soup.get_text(separator="\n", strip=True)
