@@ -59,7 +59,6 @@ Present in every pack; a missing one is a hard error at load time.
 | `reveal_words` | alias resolution | Phrases signalling a name reveal (`true name`, `alias`). |
 | `geo_keywords` | classification | Geography nouns that push a PLACE toward the geographic sense. |
 | `event_keywords` | classification | Nouns that classify an entity as an EVENT (`ceremony`, `feast`). |
-| `alias_pattern_templates` | alias resolution | Regex templates (with `{a}`/`{b}` placeholders) matching "X also known as Y". |
 | `action_cues` | event layer, chapter summary | Verbs that mark a narrative action, seeding event detection. |
 | `geo_suffixes` | classification | Toponym suffixes (`mountains`, `river`, `isle`). |
 | `role_words` | classification, facts, preparation, chapter summary, alias resolution | Role nouns (`captain`, `champion`) used for role facts and titles. |

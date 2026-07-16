@@ -150,21 +150,17 @@ def test_load_lang_config_en_reveal_words_contains_alias():
 
 def test_load_lang_config_en_has_all_new_keys():
     cfg = load_lang_config("en")
-    for key in ("alias_pattern_templates", "action_cues", "geo_suffixes", "role_words", "role_patterns"):
+    for key in ("action_cues", "geo_suffixes", "role_words", "role_patterns"):
         assert key in cfg, f"missing key: {key}"
         assert len(cfg[key]) > 0, f"key is empty: {key}"
 
 
 def test_load_lang_config_fr_has_all_new_keys():
     cfg = load_lang_config("fr")
-    for key in ("alias_pattern_templates", "action_cues", "geo_suffixes", "role_words", "role_patterns"):
+    for key in ("action_cues", "geo_suffixes", "role_words", "role_patterns"):
         assert key in cfg, f"missing key: {key}"
         assert len(cfg[key]) > 0, f"key is empty: {key}"
 
-
-def test_en_alias_pattern_templates_contain_placeholder():
-    cfg = load_lang_config("en")
-    assert any("{b}" in t for t in cfg["alias_pattern_templates"])
 
 
 def test_en_action_cues_contains_found():

@@ -26,7 +26,6 @@ def _pf(records: dict) -> dict:
     }
 
 _EN_CFG = load_lang_config("en")
-_EN_PATTERN_TEMPLATES = tuple(_EN_CFG.get("alias_pattern_templates", ()))
 _EN_REVEAL_WORDS = tuple(_EN_CFG.get("reveal_words", ()))
 
 
@@ -71,27 +70,39 @@ def test_passthrough_when_no_alias_evidence_exists():
     assert result["stats"]["merges_applied"] == 0
 
 
-def test_explicit_alias_pattern_merges_person_entities():
+
+def test_self_introduction_does_not_merge_the_bystander_it_is_spoken_to():
+    """STU-538: "you may call me X" names its speaker, who the snippet never names.
+
+    Verbatim from Eragon ch. 19: Solembum the werecat introduces himself to Eragon.
+    A template anchored on {b} alone is a property of one entity's context, so it
+    fires on whatever entity happens to be paired with it.
+    """
+    solembum = {
+        "canonical_name": "Solembum",
+        "type": "PERSON",
+        "aliases": ["Solembum"],
+        "source_ids": ["entity_138"],
+        "relevant": True,
+    }
+    eragon = {
+        "canonical_name": "Eragon",
+        "type": "PERSON",
+        "aliases": ["Eragon"],
+        "source_ids": ["entity_013"],
+        "relevant": True,
+    }
+    snippet = (
+        "Eragon gave up and turned to leave. However, you may call me Solembum. "
+        "Thank you, said Eragon seriously."
+    )
     persons_full = _pf({
-        "entity_001": {
-            "mentions_by_chapter": {
-                "ch03": ["Celaena smiled. You may call me Lillian Gordaina, she said."],
-            }
-        },
-        "entity_002": {
-            "mentions_by_chapter": {
-                "ch03": ["You may call me Lillian Gordaina, she said."],
-            }
-        },
+        "entity_013": {"mentions_by_chapter": {"ch19": [snippet]}},
+        "entity_138": {"mentions_by_chapter": {"ch19": [snippet]}},
     })
-    result = resolve_aliases([PERSON_A, PERSON_B], persons_full=persons_full, pattern_templates=_EN_PATTERN_TEMPLATES)
-    assert len(result["entities"]) == 1
-    merged = result["entities"][0]
-    assert merged["canonical_name"] == "Lillian Gordaina"
-    assert merged["aliases"] == ["Celaena", "Lillian", "Lillian Gordaina"]
-    assert merged["source_ids"] == ["entity_001", "entity_002"]
-    assert merged["alias_resolution"]["method"] == "pattern"
-    assert result["stats"]["merges_applied"] == 1
+    result = resolve_aliases([eragon, solembum], persons_full=persons_full)
+    assert [e["canonical_name"] for e in result["entities"]] == ["Eragon", "Solembum"]
+    assert result["stats"]["merges_applied"] == 0
 
 
 def test_medium_confidence_pair_requires_llm_confirmation():
@@ -144,28 +155,43 @@ def test_script_stdin_contract_reads_registry_from_processing_dir(tmp_path: Path
 
     processing = tmp_path / "library" / "author" / "series" / "processing_output" / "book"
     processing.mkdir(parents=True)
+    # pure_title is the merge path that cannot fire without the on-disk contexts.
     persons_full = {
         "persons_full": {
-            "entity_001": {
+            "title_001": {
                 "type": "PERSON",
-                "raw_mentions": ["Celaena"],
+                "raw_mentions": ["Captain"],
                 "first_seen": "ch03",
                 "mention_count": 1,
-                "mentions_by_chapter": {"ch03": ["Celaena said: you may call me Lillian Gordaina."]},
+                "mentions_by_chapter": {"ch03": ["Captain Chaol Westfall saluted."]},
             },
-            "entity_002": {
+            "entity_003": {
                 "type": "PERSON",
-                "raw_mentions": ["Lillian"],
+                "raw_mentions": ["Chaol Westfall"],
                 "first_seen": "ch03",
                 "mention_count": 1,
-                "mentions_by_chapter": {"ch03": ["You may call me Lillian Gordaina."]},
+                "mentions_by_chapter": {"ch03": ["Captain Chaol Westfall saluted."]},
             },
         }
     }
     (processing / "persons_full.json").write_text(json.dumps(persons_full), encoding="utf-8")
 
+    title_entity = {
+        "canonical_name": "Captain",
+        "type": "PERSON",
+        "aliases": ["Captain"],
+        "source_ids": ["title_001"],
+        "relevant": True,
+    }
+    named_entity = {
+        "canonical_name": "Chaol Westfall",
+        "type": "PERSON",
+        "aliases": ["Chaol Westfall"],
+        "source_ids": ["entity_003"],
+        "relevant": True,
+    }
     payload = {
-        "previous_outputs": {"resolve-clusters": {"entities": [PERSON_A, PERSON_B], "narrator": None}},
+        "previous_outputs": {"resolve-clusters": {"entities": [title_entity, named_entity], "narrator": None}},
         "additional_context": f"file_path: {book_yaml}\n",
     }
     result = subprocess.run(
@@ -180,18 +206,6 @@ def test_script_stdin_contract_reads_registry_from_processing_dir(tmp_path: Path
     assert len(output["entities"]) == 1
     assert output["stats"]["merges_applied"] == 1
 
-
-def test_detect_named_aliases_pattern_high_confidence():
-    mentions = {
-        "Celaena": ["Celaena smiled. You may call me Lillian, she said."],
-        "Lillian": ["You may call me Lillian, she said."],
-    }
-    pairs = detect_named_aliases(mentions, text="", pattern_templates=_EN_PATTERN_TEMPLATES)
-    assert len(pairs) == 1
-    assert pairs[0]["entity_a"] == "Celaena"
-    assert pairs[0]["entity_b"] == "Lillian"
-    assert pairs[0]["confidence"] == "high"
-    assert pairs[0]["source"] == "pattern"
 
 
 def test_detect_named_aliases_no_evidence_returns_empty():
@@ -228,24 +242,6 @@ def test_detect_named_aliases_window_below_threshold_returns_empty():
     assert pairs == []
 
 
-def test_detect_named_aliases_née_pattern():
-    mentions = {
-        "Jane Smith": ["Jane Smith, née Austen, entered."],
-        "Austen": ["née Austen"],
-    }
-    pairs = detect_named_aliases(mentions, text="", pattern_templates=_EN_PATTERN_TEMPLATES)
-    assert len(pairs) == 1
-    assert pairs[0]["confidence"] == "high"
-
-
-def test_detect_named_aliases_known_as_pattern():
-    mentions = {
-        "David": ["David, known as El Príncipe, walked in."],
-        "El Príncipe": ["known as El Príncipe"],
-    }
-    pairs = detect_named_aliases(mentions, text="", pattern_templates=_EN_PATTERN_TEMPLATES)
-    assert len(pairs) == 1
-    assert pairs[0]["confidence"] == "high"
 
 
 def test_detect_named_aliases_uses_custom_reveal_words():
@@ -674,27 +670,6 @@ def test_script_role_words_propagated_from_ctx(tmp_path):
     assert output["stats"]["merges_by_method"]["title_alias"] >= 1
 
 
-def test_resolve_aliases_accepts_pattern_templates_kwarg():
-    """pattern_templates kwarg must be accepted (not crash)."""
-    result = resolve_aliases(
-        [PERSON_A, PERSON_B],
-        persons_full={},
-        pattern_templates=("\\byou may call me {b}\\b",),
-    )
-    assert "entities" in result
-
-
-def test_pattern_templates_empty_means_no_pattern_merges():
-    persons_full = _pf({
-        "entity_001": {"mentions_by_chapter": {"ch01": ["You may call me Lillian Gordaina."]}},
-        "entity_002": {"mentions_by_chapter": {}},
-    })
-    result = resolve_aliases(
-        [PERSON_A, PERSON_B],
-        persons_full=persons_full,
-        pattern_templates=(),   # empty → no pattern detection
-    )
-    assert result["stats"]["merges_applied"] == 0
 
 
 def test_main_reads_entities_from_merge_entities_when_available(tmp_path):
@@ -1498,7 +1473,7 @@ def _series_seed_registry() -> "Registry":
         "decisions": [
             {
                 "decision_id": "d_seed",
-                "strategy": "pattern",
+                "strategy": "llm",
                 "inputs": ["celaena_sardothien", "lillian_gordaina"],
                 "evidence": "call me Lillian",
                 "confidence": "high",

@@ -210,6 +210,33 @@ Inside `wiki-resolution`, order matters:
   (half-disconnected model, STU-439), complementing `entity_extraction`'s
   KEPT_LABELS audit.
 
+- Pattern alias merging is gone (STU-538): `alias_pattern_templates` and
+  `_detect_pattern_match` are deleted, not fixed. The templates named only `{b}`
+  (`\byou may call me {b}\b`), so a hit was a property of **one** entity's context
+  and merged it with whatever entity happened to be paired first — Solembum the
+  werecat says "you may call me Solembum" *to* Eragon, and NER pools both entities'
+  snippets, so Eragon absorbed him at `confidence: high`. The measurement is the
+  whole argument: over the 6 books with cached extraction the templates fired **340
+  times, with 0 true positives** (Solembum matched all 70 PERSONs of Eragon,
+  including `Christopher Paolini` off the copyright page; Hoid swallowed Way of
+  Kings). Anchoring `{a}` was tried first and is not enough — it cuts 340 to 1, and
+  that 1 is still false (`"queen, and her own people called her queen lucy"`), because
+  `{a}[^.]{0,80}` buys adjacency, not apposition: *"Eragon looked at the man known as
+  Solembum"* still matches. **Every real hit in the library has `{b}` = the speaker
+  naming themselves**, which is no alias at all; the shape only pays when the speaker
+  is already known by another name (`"Wit will suffice—or if you must, you may call
+  me Hoid"`), and that needs dialogue attribution, not a regex. The two paths that
+  do find aliases (`_detect_title_alias`/`_detect_pure_title_in_context`, and
+  reveal-words → LLM) are untouched. **This costs no recall**: the phrases nobody
+  says in these books were never found — Throne of Glass's Celaena/Lillian is real
+  and was never merged by pattern (its evidence is 2nd-person address, `"your name is
+  Lillian Gordaina"`, and pronouns), and no signal even proposes that pair today
+  (`role_symmetric` needs `_names_share_token`, `reveal_words` are absent, embeddings
+  were falsified in STU-468). Finding it is contextual adjudication, a separate
+  ticket. The golden diff is one always-zero counter; no entity moved.
+  `detect_named_aliases` has no production caller — it lost its pattern strategy here
+  but is dead API either way.
+
 - Name-collision policy (STU-506): `registry.py::_merge_duplicate_canonicals`
   used to fold two entities on `canonical_name.casefold()` alone — a PERSON and
   a PLACE homonym became one false entity. Policy is now declared in the book

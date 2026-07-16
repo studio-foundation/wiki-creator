@@ -27,7 +27,7 @@ class AliasPair(TypedDict):
     entity_a: str
     entity_b: str
     confidence: Literal["high", "medium"]
-    source: Literal["pattern", "cooccurrence", "title_alias"]
+    source: Literal["cooccurrence", "title_alias"]
     snippet: str
 
 
@@ -38,7 +38,7 @@ def _empty_stats() -> dict:
     return {
         "candidates_considered": 0,
         "merges_applied": 0,
-        "merges_by_method": {"pattern": 0, "cooccurrence": 0, "llm": 0, "title_alias": 0, "role_symmetric": 0, "pure_title": 0, "series_seed": 0},
+        "merges_by_method": {"cooccurrence": 0, "llm": 0, "title_alias": 0, "role_symmetric": 0, "pure_title": 0, "series_seed": 0},
         "ambiguous_pairs": 0,
         "embedding_vetoes": 0,
         "llm_attempts": 0,
@@ -255,48 +255,6 @@ def _detect_series_seed(
     return None
 
 
-def _detect_pattern_for_names(
-    name_a: str,
-    name_b: str,
-    snippets: list[str],
-    pattern_templates: tuple[str, ...] = (),
-) -> str | None:
-    """Return the first snippet matching an alias pattern for name_a/name_b, or None."""
-    if name_a.lower() == name_b.lower():
-        return None
-    pattern_a_b = [
-        t.format(a=re.escape(name_a.lower()), b=re.escape(name_b.lower()))
-        for t in pattern_templates
-    ]
-    pattern_b_a = [
-        t.format(a=re.escape(name_b.lower()), b=re.escape(name_a.lower()))
-        for t in pattern_templates
-    ]
-    for snippet in snippets:
-        lowered = snippet.lower()
-        for pattern in pattern_a_b + pattern_b_a:
-            if re.search(pattern, lowered):
-                return snippet
-    return None
-
-
-def _detect_pattern_match(
-    entity_a: dict,
-    entity_b: dict,
-    persons_full: dict,
-    pattern_templates: tuple[str, ...] = (),
-) -> dict | None:
-    contexts = _gather_contexts(entity_a, persons_full) + _gather_contexts(entity_b, persons_full)
-    names_a = _entity_names(entity_a)
-    names_b = _entity_names(entity_b)
-    for name_a in names_a:
-        for name_b in names_b:
-            snippet = _detect_pattern_for_names(name_a, name_b, contexts, pattern_templates)
-            if snippet:
-                return {"method": "pattern", "confidence": "high", "snippet": snippet}
-    return None
-
-
 def _detect_cooccurrence_window(
     name_a: str,
     name_b: str,
@@ -510,16 +468,14 @@ def detect_named_aliases(
     mentions: dict[str, list[str]],
     text: str,
     reveal_words: tuple[str, ...] | None = None,
-    pattern_templates: tuple[str, ...] = (),
 ) -> list[AliasPair]:
     """
-    Detect alias pairs using two deterministic heuristics (zero LLM).
+    Detect alias pairs by token-window co-occurrence (zero LLM).
 
     Args:
         mentions: mapping of entity canonical_name -> list of context snippets
         text: raw concatenated book text, used for token-window co-occurrence
         reveal_words: optional override for reveal signal words
-        pattern_templates: regex templates for alias pattern detection
 
     Returns:
         list of AliasPair, each with entity_a, entity_b, confidence, source, snippet
@@ -534,20 +490,6 @@ def detect_named_aliases(
             name_a = names[i]
             name_b = names[j]
 
-            # Strategy 1: pattern matching
-            all_snippets = mentions[name_a] + mentions[name_b]
-            evidence = _detect_pattern_for_names(name_a, name_b, all_snippets, pattern_templates)
-            if evidence:
-                pairs.append(AliasPair(
-                    entity_a=name_a,
-                    entity_b=name_b,
-                    confidence="high",
-                    source="pattern",
-                    snippet=evidence,
-                ))
-                continue
-
-            # Strategy 2: token-window co-occurrence
             if text:
                 window_evidence = _detect_cooccurrence_window(name_a, name_b, text)
                 if window_evidence:
@@ -718,7 +660,6 @@ def resolve_aliases(
     reveal_words: tuple[str, ...] = (),
     role_words: list[str] | None = None,
     connective_words: list[str] | None = None,
-    pattern_templates: tuple[str, ...] = (),
     relationships: list[dict] | None = None,
     role_symmetric_min_shared: int = 2,
     seed_lookup: dict[str, EntityRecord] | None = None,
@@ -772,14 +713,6 @@ def resolve_aliases(
                 merged = _merge_entities(entity, candidate, seed, persons_full, role_words=role_words)
                 stats["merges_applied"] += 1
                 stats["merges_by_method"]["series_seed"] = stats["merges_by_method"].get("series_seed", 0) + 1
-                consumed.add(candidate_index)
-                break
-
-            evidence = _detect_pattern_match(entity, candidate, persons_full, pattern_templates)
-            if evidence:
-                merged = _merge_entities(entity, candidate, evidence, persons_full, role_words=role_words)
-                stats["merges_applied"] += 1
-                stats["merges_by_method"]["pattern"] += 1
                 consumed.add(candidate_index)
                 break
 
@@ -892,7 +825,6 @@ def main() -> None:
     language = export_categories.get("language") or infer_language(spacy_model)
     lang_cfg = load_lang_config(language)
     reveal_words = tuple(lang_cfg.get("reveal_words", ()))
-    pattern_templates = tuple(lang_cfg.get("alias_pattern_templates", ()))
     classification_cfg = ctx.get("classification", {}) or {}
     role_words: list[str] = list(classification_cfg.get("role_words", []))
     cue_role_words = [w.lower() for w in lang_cfg.get("person_cue_words", [])]
@@ -981,7 +913,6 @@ def main() -> None:
         entities, persons_full=persons_full, narrator=narrator,
         llm_confirmer=llm_confirmer, reveal_words=reveal_words,
         role_words=role_words, connective_words=connective_words,
-        pattern_templates=pattern_templates,
         relationships=relationships,
         role_symmetric_min_shared=ctx.get("role_symmetric_min_shared", 2),
         seed_lookup=seed_lookup,

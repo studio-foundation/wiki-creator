@@ -177,17 +177,6 @@
     "holiday",
     "eve"
   ],
-  "alias_pattern_templates": [
-    "\\byou may call me {b}\\b",
-    "\\balso known as {b}\\b",
-    "\\bformerly known as {b}\\b",
-    "\\bformerly {b}\\b",
-    "\\bcalled (?:him|her|them) {b}\\b",
-    "\\bknown as {b}\\b",
-    "\\bnée {b}\\b",
-    "\\b{a}[^.]{{0,80}}\\banother name[^.]{{0,80}}\\b{b}\\b",
-    "\\b{a}[^.]{{0,80}}\\bunder another name[^.]{{0,80}}\\b{b}\\b"
-  ],
   "action_cues": [
     "found",
     "discovered",
