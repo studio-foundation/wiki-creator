@@ -68,13 +68,17 @@ def wrap_collapsible(body: str, content_units: list[dict], collapse_after: int, 
     return "".join(out)
 
 
-def relationship_index_lines(entity: dict, lang: str = "fr") -> list[str]:
+def relationship_index_lines(
+    entity: dict, lang: str = "fr", book_config: dict | None = None
+) -> list[str]:
     """Dated index line per typed relationship, most-recent-reveal first.
 
     Surfaces entity names + the localized relationship type + chapter numbers only.
     The English evolution/key_moments fields are never surfaced. The classifier emits
     canonical tokens (STU-477); a token is rendered through its ``lang`` label, and a
     French string from a pre-STU-477 artifact resolves via the enum's ``legacy`` map.
+    ``book_config`` carries the types only this novel declares (STU-472) — their name
+    is already the reader's term, so they render as written.
     """
     own = {entity.get("canonical_name")} | set(entity.get("aliases") or [])
     rows = []
@@ -82,8 +86,8 @@ def relationship_index_lines(entity: dict, lang: str = "fr") -> list[str]:
         rtype = usable_relationship_type(rel.get("relationship_type"))
         if not rtype:
             continue
-        token = canonical_relationship(rtype)
-        rtype = relationship_label(token, lang) if token else rtype
+        token = canonical_relationship(rtype, book_config=book_config)
+        rtype = relationship_label(token, lang, book_config=book_config) if token else rtype
         chapters = [c for c in (chapter_number(k) for k in rel.get("chapters") or []) if c is not None]
         if not chapters:
             continue

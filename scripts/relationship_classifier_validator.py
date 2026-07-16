@@ -39,11 +39,27 @@ def parse_payload(payload: dict) -> tuple[dict, dict]:
     return clf, inp
 
 
-def check_relationship_type_valid(clf: dict) -> list[str]:
+def allowed_types(meta: dict | None) -> list[str]:
+    """Le vocabulaire réellement montré au modèle (STU-472).
+
+    Il voyage dans le payload, donc les types propres au livre en font partie ;
+    les valider contre `relationship_tokens()` rejetterait un type que le livre
+    déclare et que le prompt vient d'envoyer. Payload sans vocabulaire (artefact
+    pré-STU-472, appel hors pipeline) → l'enum générique.
+    """
+    declared = [
+        str(d.get("name")).strip()
+        for d in (meta or {}).get("relationship_types") or []
+        if isinstance(d, dict) and str(d.get("name") or "").strip()
+    ]
+    return declared or relationship_tokens()
+
+
+def check_relationship_type_valid(clf: dict, meta: dict | None = None) -> list[str]:
     rt = clf.get("relationship_type")
     if rt is None:
         return []  # null = co-occurrence sans interaction directe attestée, réponse valide
-    if rt not in relationship_tokens():
+    if rt not in allowed_types(meta):
         return [f"❌ relationship_type invalide ou hors taxonomie : '{rt}'"]
     return []
 
@@ -111,23 +127,23 @@ def check_evolution_not_generic(clf: dict) -> list[str]:
 
 def validate_classification(clf: dict, meta: dict) -> dict:
     errors: list[str] = []
-    errors += check_relationship_type_valid(clf)
+    errors += check_relationship_type_valid(clf, meta)
     errors += check_evolution_not_generic(clf)
     errors += check_evidence_contains_both_names(clf, meta)
     return {
         "valid": len(errors) == 0,
         "errors": errors,
-        "feedback": build_feedback(errors) if errors else "",
+        "feedback": build_feedback(errors, meta) if errors else "",
     }
 
 
-def build_feedback(errors: list[str]) -> str:
+def build_feedback(errors: list[str], meta: dict | None = None) -> str:
     lines = "\n".join(f"- {e}" for e in errors)
     return (
         "La classification précédente contient les erreurs suivantes. Régénère-la :\n"
         f"{lines}\n\n"
         "Rappels : utilise uniquement les types autorisés "
-        f"({'|'.join(relationship_tokens())}). "
+        f"({'|'.join(allowed_types(meta))}). "
         "evolution doit décrire une évolution observable dans les extraits, pas une phrase générique. "
         "evidence doit être un extrait verbatim de sample_contexts montrant les deux personnages "
         "en interaction directe — ce champ est obligatoire quand relationship_type n'est pas null."

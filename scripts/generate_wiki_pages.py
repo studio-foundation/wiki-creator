@@ -1202,7 +1202,7 @@ def _run_generation_for_entity(
         if recovered is not None:
             _record_safety_net("identity_recovery")
             recovered["content_units"] = content_units(sections, entity)
-            recovered["relationship_index"] = relationship_index_lines(entity, language)
+            recovered["relationship_index"] = relationship_index_lines(entity, language, book_config)
             _bind_batch_fields(recovered, entity, book_config)
             print(" ⚠ identity-corrected from rejected run", file=sys.stderr, end="", flush=True)
             return recovered
@@ -1255,7 +1255,7 @@ def _run_generation_for_entity(
 
     if isinstance(item_result, dict) and "content" in item_result:
         item_result["content_units"] = content_units(sections, entity)
-        item_result["relationship_index"] = relationship_index_lines(entity, language)
+        item_result["relationship_index"] = relationship_index_lines(entity, language, book_config)
         _bind_batch_fields(item_result, entity, book_config)
 
     return item_result
@@ -1336,7 +1336,7 @@ def _run_generation_sectioned(
         "infobox_fields": {},
         "content": _assemble_section_blocks(blocks),
         "content_units": content_units(emitted, entity),
-        "relationship_index": relationship_index_lines(entity, language),
+        "relationship_index": relationship_index_lines(entity, language, book_config),
     }
     if per_relation:
         page["relation_units"] = relation_units(entity)

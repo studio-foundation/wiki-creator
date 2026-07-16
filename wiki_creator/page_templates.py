@@ -8,6 +8,8 @@ from pathlib import Path
 
 import yaml
 
+from wiki_creator.relationship_vocabulary import book_relationship_types
+
 PROVENANCES = {"batch-bound", "extracted-fact", "llm-prose"}
 OBLIGATIONS = {"MIN", "OPT"}
 TIERS = ("figurant", "secondary", "principal")
@@ -148,23 +150,34 @@ def _rel_enum(base: dict | None):
     return (raw.get("relationships") or {}).get("enum") or {}
 
 
-def relationship_tokens(base=None) -> list[str]:
-    return list(_rel_enum(base).keys())
+def _book_types(book_config, base=None) -> list[dict[str, str]]:
+    return book_relationship_types(book_config, reserved=_rel_enum(base).keys())
 
 
-def relationship_definitions(base=None) -> list[dict[str, str]]:
-    """Type vocabulary + application criterion, injected into the classifier prompt (STU-477)."""
-    return [
+def relationship_tokens(base=None, book_config=None) -> list[str]:
+    return list(_rel_enum(base).keys()) + [d["name"] for d in _book_types(book_config, base)]
+
+
+def relationship_definitions(base=None, book_config=None) -> list[dict[str, str]]:
+    """Type vocabulary + application criterion, injected into the classifier prompt (STU-477).
+
+    A book's own types (STU-472) are appended: the generic enum stays the base, the
+    world's bonds are added to it.
+    """
+    generic = [
         {"name": token, "description": (spec.get("description") or "").strip()}
         for token, spec in _rel_enum(base).items()
     ]
+    return generic + _book_types(book_config, base)
 
 
-def canonical_relationship(value, base=None):
+def canonical_relationship(value, base=None, book_config=None):
     if not value:
         return None
     enum = _rel_enum(base)
     if value in enum:
+        return value
+    if any(value == d["name"] for d in _book_types(book_config, base)):
         return value
     for token, spec in enum.items():
         if value in (spec.get("legacy") or []):
@@ -172,10 +185,10 @@ def canonical_relationship(value, base=None):
     return None
 
 
-def relationship_label(token, lang, base=None) -> str:
+def relationship_label(token, lang, base=None, book_config=None) -> str:
     spec = _rel_enum(base).get(token)
     if not spec:
-        return token
+        return token  # a book type's name is already its reader-facing label (STU-472)
     return (spec.get("labels") or {}).get(lang, token)
 
 

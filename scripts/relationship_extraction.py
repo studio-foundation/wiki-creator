@@ -1010,6 +1010,7 @@ def _run_studio_classifier_item(
     additional_context: str,
     role_contexts_a: list[str] | None = None,
     role_contexts_b: list[str] | None = None,
+    book_config: dict | None = None,
     timeout_seconds: int = 120,
 ) -> dict:
     """Invoke Studio to classify one relationship pair via relationship-classifier-item pipeline.
@@ -1022,7 +1023,8 @@ def _run_studio_classifier_item(
 
     The type vocabulary travels with the payload (STU-477) rather than sitting in the
     agent prompt: it is injected here, the one point both callers cross, so no caller can
-    dispatch a pair without one.
+    dispatch a pair without one. ``book_config`` adds the types only this novel has
+    (STU-472); absent ⇒ the generic vocabulary alone.
     """
     item_input = {
         "entity_a": rel["entity_a"],
@@ -1032,7 +1034,7 @@ def _run_studio_classifier_item(
         "role_contexts_a": role_contexts_a or [],
         "role_contexts_b": role_contexts_b or [],
         "novel_summary": novel_summary or "",
-        "relationship_types": relationship_definitions(),
+        "relationship_types": relationship_definitions(book_config=book_config),
     }
 
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".yaml", delete=False) as tmp:
@@ -1093,6 +1095,7 @@ def classify_relationships(
     novel_summary: str | None = None,
     additional_context: str = "",
     entity_types: dict[str, str] | None = None,
+    book_config: dict | None = None,
 ) -> list[dict]:
     """Classify relationships using Studio relationship-classifier-item pipeline.
 
@@ -1111,6 +1114,7 @@ def classify_relationships(
             rel,
             novel_summary=novel_summary or "",
             additional_context=additional_context,
+            book_config=book_config,
         )
         if classification and not classification.get("error"):
             rel = {
@@ -1463,10 +1467,12 @@ def main() -> None:
     ollama_url = os.environ.get("OLLAMA_URL", _OLLAMA_URL)
     pronouns: frozenset = frozenset(load_lang_config("fr").get("pronouns", []))
     novel_summary: str | None = None
+    book_config: dict = {}
     raw_context = payload.get("additional_context", "")
     if raw_context:
         try:
             additional = yaml.safe_load(raw_context) or {}
+            book_config = additional
             do_classify = bool(additional.get("classify", False))
             llm_model = additional.get("llm_model") or additional.get("model")
             novel_summary = (additional.get("novel_summary") or "").strip() or None
@@ -1529,6 +1535,7 @@ def main() -> None:
                 model=llm_model,
                 ollama_url=ollama_url,
                 novel_summary=novel_summary,
+                book_config=book_config,
             )
             stats["classified"] = sum(1 for r in relationships if r.get("relationship_type"))
 
