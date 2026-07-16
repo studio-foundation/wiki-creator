@@ -6,6 +6,8 @@ import sys
 import unittest.mock as mock
 from pathlib import Path
 
+import pytest
+
 from scripts.alias_resolution import resolve_aliases, detect_named_aliases, _pick_snippets, make_ollama_confirmer
 from wiki_creator.lang import load_lang_config
 from wiki_creator.types import EntityFull
@@ -246,6 +248,20 @@ def test_detect_named_aliases_known_as_pattern():
     pairs = detect_named_aliases(mentions, text="", pattern_templates=_EN_PATTERN_TEMPLATES)
     assert len(pairs) == 1
     assert pairs[0]["confidence"] == "high"
+
+
+def test_detect_named_aliases_reveal_pattern_needs_both_names():
+    """A reveal phrase naming only b must not merge whatever entity sits on the other side."""
+    context = "Her own people called her Queen Lucy the Valiant."
+    mentions = {"Queen Lucy": [context], "Peter": [context]}
+    pairs = detect_named_aliases(mentions, text="", pattern_templates=_EN_PATTERN_TEMPLATES)
+    assert pairs == []
+
+
+@pytest.mark.parametrize("lang", ["en", "fr"])
+def test_alias_pattern_templates_anchor_both_names(lang):
+    for template in load_lang_config(lang)["alias_pattern_templates"]:
+        assert "{a}" in template and "{b}" in template, template
 
 
 def test_detect_named_aliases_uses_custom_reveal_words():

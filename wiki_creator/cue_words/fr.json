@@ -171,12 +171,12 @@
     "rituel"
   ],
   "alias_pattern_templates": [
-    "\\bvous pouvez m'appeler {b}\\b",
-    "\\bégalement connu sous le nom de {b}\\b",
-    "\\bautrefois connu sous le nom de {b}\\b",
-    "\\bappelé {b}\\b",
-    "\\bconnu sous le nom de {b}\\b",
-    "\\bnée {b}\\b",
+    "\\b{a}\\b.{{0,80}}\\bvous pouvez m'appeler {b}\\b",
+    "\\b{a}\\b.{{0,80}}\\bégalement connu sous le nom de {b}\\b",
+    "\\b{a}\\b.{{0,80}}\\bautrefois connu sous le nom de {b}\\b",
+    "\\b{a}\\b.{{0,80}}\\bappelé {b}\\b",
+    "\\b{a}\\b.{{0,80}}\\bconnu sous le nom de {b}\\b",
+    "\\b{a}\\b.{{0,80}}\\bnée {b}\\b",
     "\\b{a}[^.]{{0,80}}\\bsous un autre nom[^.]{{0,80}}\\b{b}\\b"
   ],
   "action_cues": [
