@@ -404,19 +404,10 @@ def _stu248_entities():
     ]
 
 
-def _stu248_mentions():
+def _stu248_chapters():
     return {
-        "David Martín": {
-            "ch01": ["Vidal tendit le manuscrit à Martín.", "Martín retrouva Vidal."],
-            "ch02": ["Martín reçut une lettre.", "Vidal encouragea Martín."],
-        },
-        "Pedro Vidal": {
-            "ch01": ["Vidal tendit le manuscrit à Martín.", "Martín retrouva Vidal."],
-            "ch02": ["Vidal encouragea Martín."],
-        },
-        "Regarde": {
-            "ch01": ["— Regarde, il est là."],
-        },
+        "ch01": "Vidal tendit le manuscrit à Martín. Martín retrouva Vidal. — Regarde, il est là.",
+        "ch02": "Martín reçut une lettre. Vidal encouragea Martín.",
     }
 
 
@@ -425,7 +416,7 @@ def test_false_entity_filtered_by_min_chapters():
     from scripts.relationship_extraction import build_cooccurrence_graph
     rels, stats = build_cooccurrence_graph(
         _stu248_entities(),
-        _stu248_mentions(),
+        _stu248_chapters(),
         window_size=5,
         min_cooccurrence=2,
         min_chapters_together=2,
@@ -439,7 +430,7 @@ def test_true_relation_survives_filter():
     from scripts.relationship_extraction import build_cooccurrence_graph
     rels, stats = build_cooccurrence_graph(
         _stu248_entities(),
-        _stu248_mentions(),
+        _stu248_chapters(),
         window_size=5,
         min_cooccurrence=2,
         min_chapters_together=2,
@@ -476,7 +467,7 @@ def test_stats_include_new_fields():
     from scripts.relationship_extraction import build_cooccurrence_graph
     _, stats = build_cooccurrence_graph(
         _stu248_entities(),
-        _stu248_mentions(),
+        _stu248_chapters(),
         window_size=5,
         min_cooccurrence=3,
         min_chapters_together=2,
@@ -777,27 +768,16 @@ def test_build_cooccurrence_graph_sample_contexts_contain_both_names():
         {"canonical_name": "Dorian", "type": "PERSON", "aliases": [], "relevant": True},
         {"canonical_name": "Hollin", "type": "PERSON", "aliases": [], "relevant": True},
     ]
-    mentions = {
-        "Dorian": {
-            "ch01": [
-                "The snow fell hard.",
-                "Dorian entered the hall.",
-                "Hollin ran toward him.",
-                "They spoke quietly.",
-                "The king watched.",
-            ]
-        },
-        "Hollin": {
-            "ch01": [
-                "The snow fell hard.",
-                "Dorian entered the hall.",
-                "Hollin ran toward him.",
-                "They spoke quietly.",
-                "The king watched.",
-            ]
-        },
+    chapters = {
+        "ch01": (
+            "The snow fell hard. "
+            "Dorian entered the hall. "
+            "Hollin ran toward him. "
+            "They spoke quietly. "
+            "The king watched."
+        )
     }
-    rels, _ = build_cooccurrence_graph(entities, mentions, window_size=5, min_cooccurrence=1, min_chapters_together=1)
+    rels, _ = build_cooccurrence_graph(entities, chapters, window_size=5, min_cooccurrence=1, min_chapters_together=1)
     assert rels, "Expected at least one relationship"
     for rel in rels:
         for ctx in rel["sample_contexts"]:
@@ -815,18 +795,11 @@ def test_build_cooccurrence_graph_sample_contexts_prefer_same_sentence():
     ]
     # ch01..ch10: gap=1 (Alice in sentence 1, Bob in sentence 2 — no same-sentence occurrence)
     # ch11..ch20: gap=0 (Alice and Bob in the same sentence)
-    mentions: dict = {"Alice": {}, "Bob": {}}
-    for i in range(1, 11):
-        ch = f"ch{i:02d}"
-        mentions["Alice"][ch] = ["Alice entered the room.", "Bob followed behind."]
-        mentions["Bob"][ch] = ["Alice entered the room.", "Bob followed behind."]
-    for i in range(11, 21):
-        ch = f"ch{i:02d}"
-        mentions["Alice"][ch] = ["Alice and Bob spoke quietly together."]
-        mentions["Bob"][ch] = ["Alice and Bob spoke quietly together."]
+    chapters = {f"ch{i:02d}": "Alice entered the room. Bob followed behind." for i in range(1, 11)}
+    chapters |= {f"ch{i:02d}": "Alice and Bob spoke quietly together." for i in range(11, 21)}
 
     rels, _ = build_cooccurrence_graph(
-        entities, mentions, window_size=3, min_cooccurrence=1, min_chapters_together=1
+        entities, chapters, window_size=3, min_cooccurrence=1, min_chapters_together=1
     )
     assert rels, "Expected at least one relationship"
     contexts = rels[0]["sample_contexts"]
@@ -852,15 +825,10 @@ def test_build_cooccurrence_graph_sample_contexts_distributed_across_chapters():
         {"canonical_name": "Bob", "type": "PERSON", "aliases": [], "relevant": True},
     ]
     # 20 chapters, each with one co-occurrence sentence
-    mentions: dict = {"Alice": {}, "Bob": {}}
-    for i in range(1, 21):
-        ch = f"ch{i:02d}"
-        sentence = f"Alice met Bob in chapter {i}."
-        mentions["Alice"][ch] = [sentence]
-        mentions["Bob"][ch] = [sentence]
+    chapters = {f"ch{i:02d}": f"Alice met Bob in chapter {i}." for i in range(1, 21)}
 
     rels, _ = build_cooccurrence_graph(
-        entities, mentions, window_size=3, min_cooccurrence=1, min_chapters_together=1
+        entities, chapters, window_size=3, min_cooccurrence=1, min_chapters_together=1
     )
     assert rels, "Expected at least one relationship"
     contexts = rels[0]["sample_contexts"]
@@ -930,20 +898,13 @@ def test_build_cooccurrence_graph_excludes_pairs_without_proximity_context():
         {"canonical_name": "Nehemia", "type": "PERSON", "aliases": [], "relevant": True},
     ]
     # Names appear in same window but always gap>=2 apart
-    mentions = {
-        "Cain": {"ch01": [
-            "Nehemia watched the competition.",   # Nehemia @ 0
-            "The crowd cheered loudly.",          # gap filler @ 1
-            "Cain flexed his arms.",              # Cain @ 2 — gap=2 from Nehemia
-        ]},
-        "Nehemia": {"ch01": [
-            "Nehemia watched the competition.",
-            "The crowd cheered loudly.",
-            "Cain flexed his arms.",
-        ]},
-    }
+    chapters = {"ch01": (
+        "Nehemia watched the competition. "   # Nehemia @ 0
+        "The crowd cheered loudly. "          # gap filler @ 1
+        "Cain flexed his arms."               # Cain @ 2 — gap=2 from Nehemia
+    )}
     rels, _ = build_cooccurrence_graph(
-        entities, mentions, window_size=5, min_cooccurrence=1, min_chapters_together=1
+        entities, chapters, window_size=5, min_cooccurrence=1, min_chapters_together=1
     )
     names_in_output = {(r["entity_a"], r["entity_b"]) for r in rels}
     assert ("Cain", "Nehemia") not in names_in_output
@@ -1104,24 +1065,15 @@ def test_build_cooccurrence_graph_stores_at_most_one_context_per_chapter():
     ]
     # 5 sentences in same chapter, all with tight proximity (gap=0 or gap=1)
     # This would normally produce 3 contexts without per-chapter cap
-    mentions = {
-        "Cain": {"ch01": [
-            "Cain faced Chaol.",
-            "The hall was silent.",
-            "Cain and Chaol exchanged glares.",
-            "Someone else spoke.",
-            "Cain watched Chaol leave.",
-        ]},
-        "Chaol": {"ch01": [
-            "Cain faced Chaol.",
-            "The hall was silent.",
-            "Cain and Chaol exchanged glares.",
-            "Someone else spoke.",
-            "Cain watched Chaol leave.",
-        ]},
-    }
+    chapters = {"ch01": (
+        "Cain faced Chaol. "
+        "The hall was silent. "
+        "Cain and Chaol exchanged glares. "
+        "Someone else spoke. "
+        "Cain watched Chaol leave."
+    )}
     rels, _ = build_cooccurrence_graph(
-        entities, mentions, window_size=3, min_cooccurrence=1, min_chapters_together=1
+        entities, chapters, window_size=3, min_cooccurrence=1, min_chapters_together=1
     )
     assert len(rels) == 1
     assert len(rels[0]["sample_contexts"]) == 1  # only 1 context from ch01
@@ -1153,16 +1105,9 @@ def test_build_cooccurrence_graph_excludes_negation_of_relationship_contexts():
         {"canonical_name": "Cain", "type": "PERSON", "aliases": [], "relevant": True},
     ]
     # Only evidence is a sentence that explicitly negates their relationship
-    mentions = {
-        "Nehemia": {"ch01": [
-            "Whatever Nehemia's involvement was, it wasn't with Cain.",
-        ]},
-        "Cain": {"ch01": [
-            "Whatever Nehemia's involvement was, it wasn't with Cain.",
-        ]},
-    }
+    chapters = {"ch01": "Whatever Nehemia's involvement was, it wasn't with Cain."}
     rels, _ = build_cooccurrence_graph(
-        entities, mentions, window_size=3, min_cooccurrence=1, min_chapters_together=1
+        entities, chapters, window_size=3, min_cooccurrence=1, min_chapters_together=1
     )
     # The pair may still co-occur, but must have 0 valid contexts
     for r in rels:
@@ -1229,3 +1174,82 @@ def test_process_chapter_clusters_english_pronouns():
         clusters, chunk, "ch01", {"celaena": "Celaena"}, frozenset({"she", "he"})
     )
     assert ("Celaena", "ch01", "She smiled at Dorian.") in out
+
+
+# ---------------------------------------------------------------------------
+# STU-536: the window slides over the chapter, in the chapter's order
+# ---------------------------------------------------------------------------
+
+def _stu536_chapter(pair_distance_sentences: int) -> str:
+    """One chapter naming Alice, then Bob `pair_distance_sentences` sentences later."""
+    filler = " ".join("The rain kept falling on the city." for _ in range(pair_distance_sentences - 1))
+    return f"Alice crossed the courtyard. {filler} Bob locked the gate."
+
+
+def _stu536_entities():
+    return [
+        {"canonical_name": "Alice", "type": "PERSON", "aliases": [], "relevant": True},
+        {"canonical_name": "Bob", "type": "PERSON", "aliases": [], "relevant": True},
+        {"canonical_name": "Cora", "type": "PERSON", "aliases": [], "relevant": True},
+    ]
+
+
+def test_graph_does_not_depend_on_entity_order():
+    """The roster is a dict; its order carries no information about the book."""
+    from scripts.relationship_extraction import build_cooccurrence_graph
+
+    chapters = {
+        "ch01": "Alice greeted Bob. Cora watched them from the stairs. Bob said nothing.",
+        "ch02": "Cora found Alice alone. Alice asked about Bob. Bob never came.",
+    }
+    entities = _stu536_entities()
+
+    def graph(roster):
+        rels, _ = build_cooccurrence_graph(
+            roster, chapters, window_size=5, min_cooccurrence=1, min_chapters_together=1
+        )
+        return [(r["entity_a"], r["entity_b"], r["cooccurrence_count"], r["sample_contexts"]) for r in rels]
+
+    baseline = graph(entities)
+    assert len(baseline) == 3, f"Expected the three pairs, got {baseline}"
+    for permutation in ([2, 0, 1], [1, 2, 0], [2, 1, 0]):
+        assert graph([entities[i] for i in permutation]) == baseline
+
+
+def test_names_pages_apart_are_not_a_direct_interaction():
+    """Adjacent in the window must mean adjacent in the chapter (STU-536)."""
+    from scripts.relationship_extraction import build_cooccurrence_graph
+
+    entities = _stu536_entities()[:2]
+    far = {f"ch{i:02d}": _stu536_chapter(40) for i in range(1, 4)}
+    rels, _ = build_cooccurrence_graph(
+        entities, far, window_size=5, min_cooccurrence=1, min_chapters_together=1
+    )
+    assert rels == []
+
+    near = {f"ch{i:02d}": _stu536_chapter(1) for i in range(1, 4)}
+    rels, _ = build_cooccurrence_graph(
+        entities, near, window_size=5, min_cooccurrence=1, min_chapters_together=1
+    )
+    assert [(r["entity_a"], r["entity_b"]) for r in rels] == [("Alice", "Bob")]
+
+
+def test_coref_sentence_counts_the_entity_as_present():
+    """A pronoun sentence coref attributed to an entity is co-presence, not a context."""
+    from scripts.relationship_extraction import build_cooccurrence_graph
+
+    entities = _stu536_entities()[:2]
+    chapters = {f"ch{i:02d}": "Alice crossed the courtyard. She waved at Bob." for i in range(1, 4)}
+    attributed = {"Alice": {f"ch{i:02d}": ["She waved at Bob."] for i in range(1, 4)}}
+
+    rels, _ = build_cooccurrence_graph(
+        entities, chapters, window_size=1, min_cooccurrence=1, min_chapters_together=1,
+        mentions_by_entity=attributed,
+    )
+    assert [(r["entity_a"], r["entity_b"], r["cooccurrence_count"]) for r in rels] == []
+
+    rels, _ = build_cooccurrence_graph(
+        entities, chapters, window_size=2, min_cooccurrence=1, min_chapters_together=1,
+        mentions_by_entity=attributed,
+    )
+    assert [(r["entity_a"], r["entity_b"]) for r in rels] == [("Alice", "Bob")]

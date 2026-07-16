@@ -53,6 +53,7 @@ Workers / RAM budget (LingMessCoref ~590M params per worker):
   If a worker runs out of memory, it returns [] for its chapter (graceful skip).
 """
 
+import functools
 import json
 import os
 import re
@@ -78,6 +79,40 @@ DEFAULT_MIN_COOCCURRENCE = 3
 DEFAULT_MIN_CHAPTERS_TOGETHER = 2
 _MAX_DIRECT_INTERACTION_GAP = 1  # max sentence distance to qualify as direct interaction
 _OLLAMA_URL = ollama.DEFAULT_URL
+
+_SENTENCIZER = None
+
+
+def _sentencizer():
+    """Rule-based sentence splitter — punctuation only, so no model, no language."""
+    global _SENTENCIZER
+    if _SENTENCIZER is None:
+        import spacy
+
+        nlp = spacy.blank("xx")
+        nlp.add_pipe("sentencizer")
+        nlp.max_length = 10_000_000
+        _SENTENCIZER = nlp
+    return _SENTENCIZER
+
+
+@functools.lru_cache(maxsize=4)
+def _sentence_spans(text: str) -> tuple[tuple[int, int, str], ...]:
+    """(start_char, end_char, sentence) for each sentence of text, in order."""
+    return tuple(
+        (sent.start_char, sent.end_char, sent.text.strip())
+        for sent in _sentencizer()(text).sents
+        if sent.text.strip()
+    )
+
+
+def split_sentences(text: str) -> list[str]:
+    """The sentences of text, in order.
+
+    The stage speaks one splitter: coref attributes pronoun sentences by their
+    text, and the window looks those strings up.
+    """
+    return [sentence for _, _, sentence in _sentence_spans(text)]
 
 
 def _tightest_span(window: list[str], name_a: str, name_b: str) -> str | None:
@@ -137,24 +172,31 @@ def _span_contains_both(span: str, name_a: str, name_b: str) -> bool:
 
 def build_cooccurrence_graph(
     entities: list[dict],
-    mentions_by_entity: dict[str, dict[str, list[str]]],
+    chapters: dict[str, str],
     window_size: int = DEFAULT_WINDOW,
     threshold: int = DEFAULT_THRESHOLD,
     min_cooccurrence: int | None = None,
     min_chapters_together: int = DEFAULT_MIN_CHAPTERS_TOGETHER,
+    mentions_by_entity: dict[str, dict[str, list[str]]] | None = None,
 ) -> tuple[list[dict], dict]:
     """
     Build weighted co-occurrence graph between PERSON entities.
 
     Args:
         entities: resolved entities with canonical_name, aliases, relevant, type
-        mentions_by_entity: {canonical_name: {chapter_id: [sentence, ...]}}
+        chapters: {chapter_id: full_text} from chapters.json — the window slides
+            over each chapter's own sentences, in the chapter's order, so
+            "N sentences apart" means N sentences apart in the book (STU-536).
         window_size: sliding window of N sentences
         threshold: minimum co-occurrence count to include in output
         min_cooccurrence: minimum co-occurrence count to include. Overrides threshold
             when provided. Defaults to None (falls back to threshold).
         min_chapters_together: minimum number of distinct chapters the pair must
             co-occur in. Defaults to DEFAULT_MIN_CHAPTERS_TOGETHER (2).
+        mentions_by_entity: {canonical_name: {chapter_id: [sentence, ...]}} —
+            presence the name regex cannot see, i.e. the pronoun sentences coref
+            attributes to an entity. A sentence listed here counts the entity as
+            present, but carries no name to quote, so it never yields a context.
 
     Returns:
         (relationships list, stats dict)
@@ -189,13 +231,13 @@ def build_cooccurrence_graph(
             if len(alias) >= 4:
                 _canonical_to_names.setdefault(canonical, []).append(alias)
 
-    def _find_name_in_window(canonical: str, window: list[str]) -> str:
-        """Return the alias form of canonical that appears in this window, or canonical itself."""
-        window_lower = " ".join(window).lower()
-        for name in _canonical_to_names.get(canonical, [canonical]):
-            if re.search(r'\b' + re.escape(name.lower()) + r'\b', window_lower):
-                return name
-        return canonical
+    # Canonical form first, so it wins over an alias when both are in a sentence.
+    name_patterns = [
+        (re.compile(r'\b' + re.escape(name.lower()) + r'\b'), name, canonical)
+        for canonical, names in _canonical_to_names.items()
+        for name in names
+        if name_to_canonical.get(name.lower()) == canonical
+    ]
 
     # Co-occurrence matrix: {(canonical_a, canonical_b): {"count": int, "chapters": set, "contexts": list}}
     cooc: dict[tuple[str, str], dict] = {}
@@ -204,33 +246,40 @@ def build_cooccurrence_graph(
 
     persons_canonical = {e["canonical_name"] for e in persons}
 
-    # Build unified chapter sentences (deduplicated, order-preserved) across all entity mentions
-    chapter_sentences: dict[str, list[str]] = {}
-    chapter_seen: dict[str, set[str]] = {}
-    for canonical, chapters in mentions_by_entity.items():
+    # Sentences coref attributed to an entity through a pronoun: {chapter: {sentence: {canonical}}}
+    attributed: dict[str, dict[str, set[str]]] = {}
+    for canonical, by_chapter in (mentions_by_entity or {}).items():
         if canonical not in persons_canonical:
             continue
-        for chapter_id, sentences in chapters.items():
-            if chapter_id not in chapter_sentences:
-                chapter_sentences[chapter_id] = []
-            if chapter_id not in chapter_seen:
-                chapter_seen[chapter_id] = set()
-            for sent in sentences:
-                if sent not in chapter_seen[chapter_id]:
-                    chapter_seen[chapter_id].add(sent)
-                    chapter_sentences[chapter_id].append(sent)
+        for chapter_id, sentences in by_chapter.items():
+            for sentence in sentences:
+                attributed.setdefault(chapter_id, {}).setdefault(sentence, set()).add(canonical)
 
     # Slide window once per chapter
-    for chapter_id, sentences in chapter_sentences.items():
+    for chapter_id, text in chapters.items():
+        sentences = split_sentences(text)
+
+        # Which entities each sentence names, resolved once: every sentence is
+        # read by up to window_size windows.
+        names_by_sentence: list[dict[str, str]] = []
+        for sentence in sentences:
+            sentence_lower = sentence.lower()
+            found: dict[str, str] = {}
+            for pattern, name, canonical in name_patterns:
+                if canonical not in found and pattern.search(sentence_lower):
+                    found[canonical] = name
+            for canonical in attributed.get(chapter_id, {}).get(sentence, ()):
+                found.setdefault(canonical, canonical)
+            names_by_sentence.append(found)
+
         for i in range(len(sentences)):
             window = sentences[i : i + window_size]
-            window_text = " ".join(window)
+            window_names = names_by_sentence[i : i + window_size]
 
-            # Find which entities appear in this window
-            present: set[str] = set()
-            for name, canon in name_to_canonical.items():
-                if re.search(r'\b' + re.escape(name) + r'\b', window_text.lower()):
-                    present.add(canon)
+            present: dict[str, str] = {}
+            for found in window_names:
+                for canonical, name in found.items():
+                    present.setdefault(canonical, name)
 
             # Record all pairs in this window
             present_list = sorted(present)
@@ -242,8 +291,8 @@ def build_cooccurrence_graph(
                         cooc[key] = {"count": 0, "chapters": set(), "contexts": [], "context_chapters": set()}
                     cooc[key]["count"] += 1
                     cooc[key]["chapters"].add(chapter_id)
-                    name_a_in_window = _find_name_in_window(a, window)
-                    name_b_in_window = _find_name_in_window(b, window)
+                    name_a_in_window = present[a]
+                    name_b_in_window = present[b]
                     span = _tightest_span(window, name_a_in_window, name_b_in_window)
                     if (span is not None
                             and _span_contains_both(span, name_a_in_window, name_b_in_window)
@@ -251,13 +300,7 @@ def build_cooccurrence_graph(
                             and chapter_id not in cooc[key]["context_chapters"]):
                         # gap=0 means both names appear in the same sentence — stronger signal
                         # of direct interaction than gap=1 (adjacent sentences).
-                        name_a_lower = name_a_in_window.lower()
-                        name_b_lower = name_b_in_window.lower()
-                        same_sentence = any(
-                            re.search(r'\b' + re.escape(name_a_lower) + r'\b', s.lower())
-                            and re.search(r'\b' + re.escape(name_b_lower) + r'\b', s.lower())
-                            for s in window
-                        )
+                        same_sentence = any(a in found and b in found for found in window_names)
                         gap = 0 if same_sentence else 1
                         cooc[key]["contexts"].append((span, gap))
                         cooc[key]["context_chapters"].add(chapter_id)
@@ -506,15 +549,11 @@ def _pronouns_for_model(spacy_model: str) -> frozenset:
     return frozenset(load_lang_config(infer_language(spacy_model) or "en").get("pronouns", []))
 
 
-_SENT_BOUNDARY = re.compile(r'(?<=[.!?»])\s+(?=[A-ZÀÂÇÈÉÊÎÔÙÛÜ\u2014«])')
-
-
 def _find_sentence_containing(text: str, char_start: int) -> str:
     """Return the sentence in text that contains the character at char_start."""
-    boundaries = [0] + [m.end() for m in _SENT_BOUNDARY.finditer(text)] + [len(text)]
-    for i in range(len(boundaries) - 1):
-        if boundaries[i] <= char_start < boundaries[i + 1]:
-            return text[boundaries[i]:boundaries[i + 1]].strip()
+    for start, end, sentence in _sentence_spans(text):
+        if start <= char_start < end:
+            return sentence
     return text[max(0, char_start - 80):min(len(text), char_start + 120)].strip()
 
 
@@ -863,96 +902,45 @@ def run_test_mode(
         {"canonical_name": "Cristina", "type": "PERSON", "aliases": [], "relevant": True},
     ]
 
-    mentions_by_entity = {
-        "David Martín": {
-            "ch01": [
-                "Vidal tendit le manuscrit à Martín en souriant.",
-                "Martín retrouva Vidal au café de la rue Fernando.",
-                "Martín écrivit toute la nuit.",
-                "Vidal encouragea Martín à continuer son roman.",
-                "Martín pensait souvent à Isabella.",
-            ],
-            "ch02": [
-                "Martín reçut une lettre de Corelli.",
-                "Corelli proposa un contrat à Martín.",
-                "Martín hésita longtemps avant d'accepter.",
-                "Cristina observait Martín depuis le couloir.",
-                "Martín ne remarqua pas Cristina.",
-            ],
-            "ch03": [
-                "Isabella retrouva Martín dans le parc.",
-                "Martín et Isabella parlèrent des heures.",
-                "Vidal arriva et interrompit leur conversation.",
-                "Martín regarda Vidal avec méfiance.",
-                "Corelli attendait Martín dans son bureau.",
-            ],
-            "ch04": [
-                "Il s'assit près de la fenêtre et contempla la nuit.",
-                "Elle lui tendit la lettre sans un mot.",
-                "Il la prit et la lut lentement.",
-            ],
-        },
-        "Pedro Vidal": {
-            "ch01": [
-                "Vidal tendit le manuscrit à Martín en souriant.",
-                "Martín retrouva Vidal au café de la rue Fernando.",
-                "Vidal encouragea Martín à continuer son roman.",
-                "Vidal rentra chez lui à minuit.",
-            ],
-            "ch03": [
-                "Vidal arriva et interrompit leur conversation.",
-                "Martín regarda Vidal avec méfiance.",
-            ],
-            "ch04": [
-                "Il s'assit près de la fenêtre et contempla la nuit.",
-            ],
-        },
-        "Andreas Corelli": {
-            "ch02": [
-                "Martín reçut une lettre de Corelli.",
-                "Corelli proposa un contrat à Martín.",
-                "Martín hésita longtemps avant d'accepter.",
-                "Corelli attendait Martín dans son bureau.",
-            ],
-            "ch03": [
-                "Corelli attendait Martín dans son bureau.",
-            ],
-        },
-        "Isabella": {
-            "ch01": [
-                "Martín pensait souvent à Isabella.",
-            ],
-            "ch03": [
-                "Isabella retrouva Martín dans le parc.",
-                "Martín et Isabella parlèrent des heures.",
-                "Vidal arriva et interrompit leur conversation.",
-            ],
-        },
-        "Cristina": {
-            "ch02": [
-                "Cristina observait Martín depuis le couloir.",
-                "Martín ne remarqua pas Cristina.",
-            ],
-        },
+    chapters = {
+        "ch01": (
+            "Vidal tendit le manuscrit à Martín en souriant. "
+            "Martín retrouva Vidal au café de la rue Fernando. "
+            "Martín écrivit toute la nuit. "
+            "Vidal encouragea Martín à continuer son roman. "
+            "Vidal rentra chez lui à minuit. "
+            "Martín pensait souvent à Isabella."
+        ),
+        "ch02": (
+            "Martín reçut une lettre de Corelli. "
+            "Corelli proposa un contrat à Martín. "
+            "Martín hésita longtemps avant d'accepter. "
+            "Cristina observait Martín depuis le couloir. "
+            "Martín ne remarqua pas Cristina."
+        ),
+        "ch03": (
+            "Isabella retrouva Martín dans le parc. "
+            "Martín et Isabella parlèrent des heures. "
+            "Vidal arriva et interrompit leur conversation. "
+            "Martín regarda Vidal avec méfiance. "
+            "Corelli attendait Martín dans son bureau."
+        ),
+        "ch04": (
+            "Il s'assit près de la fenêtre et contempla la nuit. "
+            "Elle lui tendit la lettre sans un mot. "
+            "Il la prit et la lut lentement."
+        ),
     }
 
+    mentions_by_entity: dict[str, dict[str, list[str]]] = {}
     if coref:
-        # In test mode, chapters.json is not available.
-        # Build a minimal chapters dict from existing mentions for demo.
-        chapters_demo: dict[str, str] = {}
-        for canonical, by_chapter in mentions_by_entity.items():
-            for chapter_id, sentences in by_chapter.items():
-                text = " ".join(sentences)
-                if chapter_id in chapters_demo:
-                    chapters_demo[chapter_id] += " " + text
-                else:
-                    chapters_demo[chapter_id] = text
-        mentions_by_entity = enrich_mentions_with_fastcoref(chapters_demo, entities, mentions_by_entity, workers=workers, max_chars=coref_max_chars, device=coref_device)
+        mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=workers, max_chars=coref_max_chars, device=coref_device)
 
     relationships, stats = build_cooccurrence_graph(
-        entities, mentions_by_entity, window_size, threshold,
+        entities, chapters, window_size, threshold,
         min_cooccurrence=min_cooccurrence,
         min_chapters_together=min_chapters_together,
+        mentions_by_entity=mentions_by_entity,
     )
 
     print(f"=== TEST MODE — relationship-extraction ===\n")
@@ -1297,35 +1285,26 @@ def run_live_mode(
         })
         cluster_members[canonical] = [entity_id]
 
-    # Build mentions_by_entity: merge mentions_by_chapter across all cluster members
-    mentions_by_entity: dict[str, dict[str, list[str]]] = {}
-    for canonical, member_ids in cluster_members.items():
-        merged: dict[str, list[str]] = {}
-        for eid in member_ids:
-            for chapter_id, sentences in raw_mentions_map.get(eid, {}).items():
-                if chapter_id not in merged:
-                    merged[chapter_id] = []
-                merged[chapter_id].extend(sentences)
-        mentions_by_entity[canonical] = merged
+    chapters_path = paths.processing / "chapters.json"
+    if not chapters_path.exists():
+        print(f"[ERROR] {chapters_path} not found — run make run-extraction first.", file=sys.stderr)
+        sys.exit(1)
+    with open(chapters_path, encoding="utf-8") as f:
+        chapters = json.load(f).get("chapters", {})
 
+    mentions_by_entity: dict[str, dict[str, list[str]]] = {}
     if coref:
-        chapters_path = paths.processing / "chapters.json"
-        if not chapters_path.exists():
-            print("[WARN] chapters.json not found — run make test first.", file=sys.stderr)
-        else:
-            with open(chapters_path, encoding="utf-8") as f:
-                chapters_data = json.load(f)
-            chapters = chapters_data.get("chapters", {})
-            mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=workers, max_chars=coref_max_chars, device=coref_device)
+        mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=workers, max_chars=coref_max_chars, device=coref_device)
 
     print(f"=== LIVE MODE — relationship-extraction ===\n")
     print(f"Loaded {len(entities)} persons from {persons_path}")
     print(f"Window size: {window_size}  |  Threshold: {threshold}\n")
 
     relationships, stats = build_cooccurrence_graph(
-        entities, mentions_by_entity, window_size, threshold,
+        entities, chapters, window_size, threshold,
         min_cooccurrence=min_cooccurrence,
         min_chapters_together=min_chapters_together,
+        mentions_by_entity=mentions_by_entity,
     )
 
     print(f"Top 20 relations (cooccurrence_count desc):\n")
@@ -1516,22 +1495,26 @@ def main() -> None:
             pronouns = frozenset(load_lang_config("fr").get("pronouns", []))
 
     paths = studio_io.paths_from_payload(payload, strict=False)
-    mentions_by_entity = _load_mentions_from_files(paths.processing) if paths else {}
+    chapters_path = paths.processing / "chapters.json" if paths else None
+    if chapters_path is not None and chapters_path.exists():
+        with open(chapters_path, encoding="utf-8") as f:
+            chapters = json.load(f).get("chapters", {})
+    else:
+        # Unit-test mode: no book, no text, no graph.
+        print("[WARN] chapters.json not found — no relationships to build.", file=sys.stderr)
+        chapters = {}
 
-    if do_coref and paths:
-        chapters_path = paths.processing / "chapters.json"
-        if chapters_path.exists():
-            with open(chapters_path, encoding="utf-8") as f:
-                chapters_data = json.load(f)
-            chapters = chapters_data.get("chapters", {})
-            mentions_by_entity = enrich_mentions_with_fastcoref(
-                chapters, entities, mentions_by_entity, workers=workers, spacy_model=spacy_model, max_chars=coref_max_chars, device=coref_device
-            )
+    mentions_by_entity: dict[str, dict[str, list[str]]] = {}
+    if do_coref:
+        mentions_by_entity = enrich_mentions_with_fastcoref(
+            chapters, entities, mentions_by_entity, workers=workers, spacy_model=spacy_model, max_chars=coref_max_chars, device=coref_device
+        )
 
     relationships, stats = build_cooccurrence_graph(
-        entities, mentions_by_entity, window_size, threshold,
+        entities, chapters, window_size, threshold,
         min_cooccurrence=min_cooccurrence_val,
         min_chapters_together=min_chapters_together,
+        mentions_by_entity=mentions_by_entity,
     )
 
     if do_classify:
