@@ -318,6 +318,10 @@ def _retag_entity_type_from_context(
     """
     Conservative type correction for frequent PERSON/ORG/PLACE false positives.
 
+    Only for a model that types by shape: it repairs spaCy's habit of typing an
+    unmemorised proper noun as ORG. Books declaring `ner.invented_names` skip it
+    — see the caller (STU-537).
+
     Uses lexical cues from mention contexts to retag PERSON entities as EVENT
     when evidence is strong, and ORG/PLACE entities as PERSON when person
     cues dominate. It no longer retags PERSON to PLACE: the custom NER model
@@ -487,6 +491,7 @@ def extract_entities(
     chapters: list[dict],
     nlp,
     cue_words: dict[str, frozenset[str]] | None = None,
+    retag_from_context: bool = True,
 ) -> dict:
     """
     Process all chapters in order and build the entity registry.
@@ -566,8 +571,9 @@ def extract_entities(
             for v in registry.values()
         }
     }
-    for entity in entities["entities"].values():
-        entity["type"] = _retag_entity_type_from_context(entity, cue_words=cue_words)
+    if retag_from_context:
+        for entity in entities["entities"].values():
+            entity["type"] = _retag_entity_type_from_context(entity, cue_words=cue_words)
     return entities
 
 
@@ -695,7 +701,7 @@ def main() -> None:
     # GLiNER takes over the `ner` slot, so every audit below still introspects
     # whatever will actually produce the entities (STU-521).
     ner = _ner_config(input_data)
-    if ner.uses_gliner:
+    if ner.invented_names:
         from wiki_creator.nlp.gliner_ner import attach as _attach_gliner
 
         _attach_gliner(nlp, gliner_label_map(), model=ner.model, threshold=ner.threshold)
@@ -710,7 +716,12 @@ def main() -> None:
             input_data.get("cue_words_language", "auto"),
         )
         cue_words = _load_cue_words(cue_words_language)
-        result = extract_entities(chapters, nlp, cue_words=cue_words)
+        # The context retag repairs spaCy's typing of names it never memorised.
+        # A prompt-typed model has no such gap and the repair only misfires on it
+        # (STU-537).
+        result = extract_entities(
+            chapters, nlp, cue_words=cue_words, retag_from_context=not ner.invented_names
+        )
     except ValueError as e:
         json.dump({"error": str(e)}, sys.stdout)
         sys.exit(1)

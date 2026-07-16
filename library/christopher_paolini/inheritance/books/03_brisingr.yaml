@@ -6,6 +6,12 @@ description: |
 
 file_path: library/christopher_paolini/inheritance/books/03_brisingr.epub
 spacy_model: en_core_web_lg
+ner:
+  # Garrow, Durza, Ra'zac, Alagaesia: names spaCy has never read, so it types
+  # them ORG — on Eragon it called the uncle who raises Eragon (112 mentions) and
+  # the book's antagonist organisations. A prompt-typed model finds the entities
+  # instead (STU-537).
+  invented_names: true
 coref: false
 workers: 8
 

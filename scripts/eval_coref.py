@@ -212,14 +212,12 @@ def run_variant(book_yaml: Path, variant: str, workers: int) -> None:
         DEFAULT_MIN_CHAPTERS_TOGETHER,
         DEFAULT_THRESHOLD,
         DEFAULT_WINDOW,
-        _load_mentions_from_files,
         build_cooccurrence_graph,
         enrich_mentions_with_fastcoref,
     )
 
     paths, cfg, entities, chapters = _load_book(book_yaml)
-    mentions = _load_mentions_from_files(paths.processing)
-    sentences_before = count_sentences(mentions)
+    mentions: dict[str, dict[str, list[str]]] = {}
 
     if variant != "baseline":
         mentions = enrich_mentions_with_fastcoref(
@@ -231,13 +229,14 @@ def run_variant(book_yaml: Path, variant: str, workers: int) -> None:
 
     min_cooc = cfg.get("min_cooccurrence")
     relationships, stats = build_cooccurrence_graph(
-        entities, mentions,
+        entities, chapters,
         int(cfg.get("window", DEFAULT_WINDOW)),
         int(cfg.get("threshold", DEFAULT_THRESHOLD)),
         min_cooccurrence=int(min_cooc) if min_cooc is not None else None,
         min_chapters_together=int(cfg.get("min_chapters_together", DEFAULT_MIN_CHAPTERS_TOGETHER)),
+        mentions_by_entity=mentions,
     )
-    stats["pronoun_sentences_added"] = count_sentences(mentions) - sentences_before
+    stats["pronoun_sentences_added"] = count_sentences(mentions)
 
     out = variant_dir(paths.processing, variant)
     out.mkdir(parents=True, exist_ok=True)

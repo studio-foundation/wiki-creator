@@ -14,7 +14,9 @@ to be worked around here.
 window, a count, a chapter floor, an adjacency gate — and changes one thing: the
 sentences are the chapter's, in the chapter's order, instead of a per-entity
 sample stitched together in dict order. See diagnose_baseline.py for why that is
-not a nuance.
+not a nuance. STU-536 landed that change in the stage itself, so `fixed` is now
+a plain call into production; `shipped` is the artifact a pre-STU-536 run left
+behind, and re-running the pipeline overwrites it.
 
 The pair exists so the bake-off can answer a question the ticket cannot ask of
 itself: whether co-occurrence loses to GLiREL because proximity is a weak signal
@@ -51,39 +53,6 @@ def shipped_predictions(processing_output: str) -> list[dict]:
         return json.load(f)["relationships"]
 
 
-def mentions_from_text(chapters: list[dict], roster: list[dict]) -> dict:
-    """Every sentence of every chapter, in order, for every entity it names.
-
-    Handing the same real sentence list to each entity is what makes the window
-    a text window again: build_cooccurrence_graph dedups across entities and
-    keeps first-seen order, so a shared in-order list stays in order.
-    """
-    import re
-
-    import spacy
-
-    nlp = spacy.blank("en")
-    nlp.add_pipe("sentencizer")
-
-    patterns = {
-        e["canonical_name"]: re.compile(
-            r"(?<!\w)(?:" + "|".join(
-                re.escape(a) for a in sorted(set(e["aliases"]), key=len, reverse=True)
-            ) + r")(?!\w)"
-        )
-        for e in roster
-    }
-
-    out: dict[str, dict[str, list[str]]] = {e["canonical_name"]: {} for e in roster}
-    for chapter in chapters:
-        sents = [s.text for s in nlp(chapter["text"]).sents]
-        for name, pattern in patterns.items():
-            hits = [s for s in sents if pattern.search(s)]
-            if hits:
-                out[name][chapter["id"]] = hits
-    return out
-
-
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--arm", choices=("shipped", "fixed"), required=True)
@@ -112,7 +81,7 @@ def main() -> None:
             for e in roster
         ]
         relationships, stats = build_cooccurrence_graph(
-            entities, mentions_from_text(chapters, roster), args.window, args.threshold,
+            entities, {c["id"]: c["text"] for c in chapters}, args.window, args.threshold,
             min_chapters_together=args.min_chapters,
         )
         checked = str(stats["total_pairs_checked"])
