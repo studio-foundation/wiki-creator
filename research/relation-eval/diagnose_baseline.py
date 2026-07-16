@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Measure what the shipped co-occurrence window is actually adjacent in.
 
+What it describes is the pre-STU-536 mechanism, and STU-536 fixed it. The first
+half reads the pooled list back out of the artifacts, so it still reports what
+that list was; the shuffle at the end calls the stage, so it now reads 0%.
+
 Run before reading any bake-off number: it decides what the bake-off is even
 comparing. STU-467 charges co-occurrence with "proximity is not relation". This
 script tests the prior question — whether the mechanism measures proximity at all.
@@ -75,7 +79,7 @@ def cross_entity_distances(unified: list[tuple[str, str]], text: str) -> list[in
     return distances
 
 
-def pairs_for_order(roster: list[dict], persons_full: dict) -> set:
+def pairs_for_order(roster: list[dict], texts: dict) -> set:
     """Run the real build_cooccurrence_graph over this roster order."""
     sys.path.insert(0, os.path.join(
         os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "scripts"))
@@ -86,30 +90,24 @@ def pairs_for_order(roster: list[dict], persons_full: dict) -> set:
          "aliases": e.get("aliases") or [], "relevant": True}
         for e in roster
     ]
-    mentions: dict[str, dict[str, list[str]]] = {}
-    for entity in roster:
-        merged: dict[str, list[str]] = {}
-        for eid in entity.get("source_ids", []):
-            for cid, sents in persons_full.get(eid, {}).get("mentions_by_chapter", {}).items():
-                merged.setdefault(cid, []).extend(sents)
-        mentions[entity["canonical_name"]] = merged
-
-    relationships, _ = build_cooccurrence_graph(entities, mentions)
+    relationships, _ = build_cooccurrence_graph(entities, texts)
     return {tuple(sorted((r["entity_a"], r["entity_b"]))) for r in relationships}
 
 
-def report_order_sensitivity(roster: list[dict], persons_full: dict, seeds: list[int]) -> None:
-    base = pairs_for_order(roster, persons_full)
+def report_order_sensitivity(roster: list[dict], texts: dict, seeds: list[int]) -> None:
+    base = pairs_for_order(roster, texts)
     print(f"roster in its own order: {len(base)} pairs")
     for seed in seeds:
         shuffled = roster[:]
         random.Random(seed).shuffle(shuffled)
-        got = pairs_for_order(shuffled, persons_full)
+        got = pairs_for_order(shuffled, texts)
         drift = len(base ^ got)
         print(f"  shuffled (seed {seed}): {len(got):4} pairs, {drift:4} differ "
               f"= {drift / max(len(base), 1):.0%} of the graph")
     print()
-    print("Same entities, same text, same parameters. The difference is dict order.")
+    print("Same entities, same text, same parameters. Since STU-536, the window")
+    print("slides over the chapter, so the roster order decides nothing: 0% is the")
+    print("expected reading, and anything else is a regression.")
 
 
 def main() -> None:
@@ -157,7 +155,7 @@ def main() -> None:
     print("_MAX_DIRECT_INTERACTION_GAP admits these pairs as direct interactions.")
     print()
     print("=== how much of the graph does the entity order decide? ===")
-    report_order_sensitivity(roster, persons_full, args.shuffle_seeds)
+    report_order_sensitivity(roster, texts, args.shuffle_seeds)
 
 
 if __name__ == "__main__":
