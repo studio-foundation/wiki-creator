@@ -5,3 +5,6 @@ gold.yaml
 gold_votes.json
 predictions.*.json
 results.md
+roster_oracle.json
+explicit_pairs_oracle.json
+retype_verdicts.json

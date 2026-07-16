@@ -15,7 +15,12 @@ the text — do these two surfaces ever share a sentence — so `aggregate.py` c
 it. Asking the model would make the benchmark's central axis a model judgment, and
 one no arm could be checked against.
 
-Usage (from research/relation-eval/, needs an API key):
+Runs through the Claude Code CLI, which has no schema enforcement, so every field
+the schema used to guarantee is checked here instead. A vote that fails validation
+is dropped and counted, never repaired: a gold quietly patched by its own builder
+is not a reference.
+
+Usage (from research/relation-eval/):
     python build_gold.py --corpus corpus.jsonl --roster roster.json --out gold.yaml
 """
 import argparse
@@ -25,15 +30,16 @@ import sys
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
-import anthropic
 import yaml
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from aggregate import aggregate  # noqa: E402
+from aggregate import SYMMETRIC, aggregate  # noqa: E402
+from claude_cli import DEFAULT_MODEL, complete_json  # noqa: E402
+from wiki_creator.page_templates import relationship_tokens  # noqa: E402
 from wiki_creator.page_templates import relationship_definitions  # noqa: E402
 
-MODEL = "claude-opus-4-8"
+DIRECTIONS = (SYMMETRIC, "A→B", "B→A")
 
 
 def prompt_for(roster_names: list[str]) -> str:
@@ -71,63 +77,57 @@ Rules:
   for the converse. A is entity_a, B is entity_b, exactly as you name them.
 - evidence: one short verbatim quote from the chapter, under 200 characters.
 - A chapter evidencing no relation gets an empty list.
+
+Reply with ONLY a JSON object, no prose and no code fence:
+
+{{"relations": [{{"entity_a": "...", "entity_b": "...", "relationship_type": "<one of the types above>", "direction": "symétrique" | "A→B" | "B→A", "evidence": "..."}}]}}
 """
 
 
-SCHEMA = {
-    "type": "object",
-    "properties": {
-        "relations": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "entity_a": {"type": "string"},
-                    "entity_b": {"type": "string"},
-                    "relationship_type": {
-                        "type": "string",
-                        "enum": [d["name"] for d in relationship_definitions()],
-                    },
-                    "direction": {"type": "string", "enum": ["symétrique", "A→B", "B→A"]},
-                    "evidence": {"type": "string"},
-                },
-                "required": ["entity_a", "entity_b", "relationship_type", "direction", "evidence"],
-                "additionalProperties": False,
-            },
-        }
-    },
-    "required": ["relations"],
-    "additionalProperties": False,
-}
+def valid_relations(raw, roster_names: set[str]) -> tuple[list[dict], list[str]]:
+    """Split a chapter's relations into (well-formed, rejected-with-reason).
+
+    The CLI enforces no schema, so everything the old json_schema guaranteed is
+    checked here. Names are checked by `aggregate`, which owns the roster rule for
+    every caller; this only rejects what would crash or silently mistype the fold.
+    """
+    types = set(relationship_tokens())
+    kept, rejected = [], []
+    if not isinstance(raw, list):
+        return [], [f"relations is {type(raw).__name__}, not a list"]
+
+    for rel in raw:
+        if not isinstance(rel, dict):
+            rejected.append(f"relation is {type(rel).__name__}, not an object")
+            continue
+        missing = [k for k in ("entity_a", "entity_b", "relationship_type", "direction")
+                   if not isinstance(rel.get(k), str) or not rel[k].strip()]
+        if missing:
+            rejected.append(f"missing/blank {missing}")
+            continue
+        if rel["relationship_type"] not in types:
+            rejected.append(f"type off-vocabulary: {rel['relationship_type']!r}")
+            continue
+        if rel["direction"] not in DIRECTIONS:
+            rejected.append(f"direction off-vocabulary: {rel['direction']!r}")
+            continue
+        kept.append({
+            "entity_a": rel["entity_a"].strip(),
+            "entity_b": rel["entity_b"].strip(),
+            "relationship_type": rel["relationship_type"],
+            "direction": rel["direction"],
+            "evidence": (rel.get("evidence") or "").strip()[:200],
+        })
+    return kept, rejected
 
 
-def annotate(client: anthropic.Anthropic, chapter: dict, roster_names: list[str]) -> dict:
-    response = client.messages.create(
-        model=MODEL,
-        max_tokens=16000,
-        thinking={"type": "adaptive"},
-        output_config={"format": {"type": "json_schema", "schema": SCHEMA}},
-        messages=[{
-            "role": "user",
-            "content": f"{prompt_for(roster_names)}\nChapter: {chapter['title']}\n\n{chapter['text']}",
-        }],
+def annotate(chapter: dict, roster_names: list[str], model: str) -> dict:
+    payload = complete_json(
+        f"{prompt_for(roster_names)}\nChapter: {chapter['title']}\n\n{chapter['text']}",
+        model=model,
     )
-    if response.stop_reason == "refusal":
-        raise RuntimeError(f"{chapter['id']}: refused")
-    raw = next(b.text for b in response.content if b.type == "text")
-    return {"chapter_id": chapter["id"], "relations": json.loads(raw)["relations"]}
-
-
-def api_key() -> str:
-    key = os.environ.get("ANTHROPIC_API_KEY")
-    if key:
-        return key
-    path = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-        ".studio", "config.yaml",
-    )
-    with open(path, encoding="utf-8") as f:
-        return yaml.safe_load(f)["providers"]["anthropic"]["apiKey"]
+    kept, rejected = valid_relations(payload.get("relations"), set(roster_names))
+    return {"chapter_id": chapter["id"], "relations": kept, "malformed": rejected}
 
 
 def main() -> None:
@@ -137,6 +137,7 @@ def main() -> None:
     ap.add_argument("--explicit-pairs", default="explicit_pairs.json")
     ap.add_argument("--out", default="gold.yaml")
     ap.add_argument("--votes-out", default="gold_votes.json")
+    ap.add_argument("--model", default=DEFAULT_MODEL)
     ap.add_argument("--workers", type=int, default=6)
     args = ap.parse_args()
 
@@ -148,16 +149,16 @@ def main() -> None:
         explicit = {(p["entity_a"], p["entity_b"]) for p in json.load(f)}
     roster_names = [r["canonical_name"] for r in roster]
 
-    client = anthropic.Anthropic(api_key=api_key())
     done = [0]
     lock = threading.Lock()
 
     def run(chapter: dict) -> dict:
-        record = annotate(client, chapter, roster_names)
+        record = annotate(chapter, roster_names, args.model)
         with lock:
             done[0] += 1
-            print(f"  [{done[0]}/{len(corpus)}] {chapter['id']}: {len(record['relations'])} relations",
-                  file=sys.stderr)
+            bad = f", {len(record['malformed'])} malformed" if record["malformed"] else ""
+            print(f"  [{done[0]}/{len(corpus)}] {chapter['id']}: "
+                  f"{len(record['relations'])} relations{bad}", file=sys.stderr)
         return record
 
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
@@ -174,8 +175,10 @@ def main() -> None:
         )
 
     implicit = sum(1 for p in pairs if p["implicit"])
+    malformed = [m for v in votes for m in v["malformed"]]
     print(f"\n{len(votes)} chapters, {sum(len(v['relations']) for v in votes)} chapter-level votes")
     print(f"-> {len(pairs)} book-level gold pairs ({implicit} implicit) -> {args.out}")
+    print(f"votes dropped as malformed: {len(malformed)} {malformed[:5]}")
     print(f"votes naming an entity outside the roster (dropped): {len(rejected)}")
     if rejected:
         print(f"  {rejected[:10]}")
