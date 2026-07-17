@@ -174,7 +174,7 @@ def build_name_index(entities: list[dict]) -> dict[str, dict[str, str]]:
 
 
 def _grounded_name(value: object, quote: str, names: dict[str, str]) -> str | None:
-    """The canonical name this value denotes, or None.
+    r"""The canonical name this value denotes, or None.
 
     Two gates: it is on the type's roster, and it is verbatim in the quote the
     verdict already had to prove. A name sourced from a neighbouring snippet
