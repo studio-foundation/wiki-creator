@@ -5,6 +5,7 @@ These tests pin the wiring rather than the wording: unwire any consumer from
 STU-477 — a declared table nothing reads (see the dead `relationship_tokens` /
 `canonical_relationship` helpers this issue put to work).
 """
+import re
 from pathlib import Path
 
 import pytest
@@ -17,6 +18,12 @@ import scripts.relationship_classifier_validator as validator
 from scripts.relationship_extraction import _run_studio_classifier_item
 
 GOLD_FIXTURE = Path(__file__).parent / "fixtures" / "relationship_eval" / "throne-of-glass-01.yaml"
+CLASSIFIER_PROMPT = (
+    Path(__file__).resolve().parents[1]
+    / ".studio"
+    / "agents"
+    / "relationship-classifier.agent.yaml"
+)
 
 # The graduated middle ground STU-477 exists to make expressible: the audit's
 # ami→amoureux jump had no type between "friend" and "romance".
@@ -101,3 +108,36 @@ def test_gold_pins_the_audit_case_between_friend_and_romance(pair, forbidden):
     entry = gold[tuple(sorted(pair))]
     assert forbidden not in entry.acceptable
     assert set(entry.acceptable) <= GRADUATED_TYPES
+
+
+def _prompt_type_mentions() -> set[str]:
+    """Relationship types the classifier prompt names as concrete instructions.
+
+    Mechanical, never a hand-kept list — a second copy of the enum is exactly what
+    STU-477 deleted, and it would rot the same way. The tokens are read out of the
+    prompt's own instruction grammar: the structural-rule arrows (`PATTERN → token:`,
+    where STU-472's renamed `antagonist` survived) and the role-asymmetric exception's
+    `classify the pair (a, or b ...)`. snake_case is deliberately not scanned — the
+    prompt's JSON field names (`relationship_type`, `key_moments`) share that shape.
+    """
+    prompt = yaml.safe_load(CLASSIFIER_PROMPT.read_text(encoding="utf-8"))["system_prompt"]
+    tokens = set(re.findall(r"→\s*([a-z][a-z_]*)", prompt))
+    pair = re.search(r"classify the pair \(([a-z_]+),\s*or\s+([a-z_]+)", prompt)
+    if pair:
+        tokens |= set(pair.groups())
+    return tokens
+
+
+def test_prompt_names_only_declared_relationship_types():
+    """The prompt is the third consumer of the vocabulary, and STU-472 pinned none of it.
+
+    That rename touched `base.yaml` and the validator's world but missed this prompt,
+    which kept ordering the model to return `antagonist`; the validator then rejected
+    it and RALPH-retried every structural pair to death. `rg` skips `.studio/` and no
+    test read the prompt, so the suite stayed green through the whole rename. This
+    fails the moment the prompt names a type absent from `relationship_tokens()`.
+    """
+    mentions = _prompt_type_mentions()
+    assert mentions, "extracted no type tokens from the prompt — the instruction grammar moved"
+    undeclared = mentions - set(pt.relationship_tokens())
+    assert undeclared == set(), f"prompt names types absent from base.yaml: {sorted(undeclared)}"
