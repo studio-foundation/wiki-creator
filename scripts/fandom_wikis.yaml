@@ -19,6 +19,12 @@
 # `Places`, `Geography`, `Groups`, `Factions`, and prefixed forms like
 # `The Shadowhunter Chronicles characters`.
 #
+# `infobox_templates` is per-wiki for the same reason, and is only needed where
+# BOTH derivable tests fail. A template is taken as an infobox if its title says
+# "infobox" (a convention) or its source carries <infobox> markup (Portable
+# Infobox). `Charcat` on warriors is the only one in this list that says
+# neither: its own source is one call to `Charcat/deep`, which holds the markup.
+#
 # Book wikis only. Wikis whose subject is the screen adaptation are excluded even
 # when they are larger: `gameofthrones` (Wiki of Westeros, 5576 articles) covers
 # the TV series, so A Song of Ice and Fire points at `iceandfire` (2562) instead.
@@ -179,6 +185,10 @@
   lang: en
   types: [PERSON]
   categories: {PERSON: Characters}
+  # `Charcat`'s title does not say "infobox" and its own source carries no
+  # <infobox> markup — it just calls `Charcat/deep`, which does. Declared, like
+  # `categories`, because nothing about the wrapper itself is derivable.
+  infobox_templates: [Charcat]
 
 # ---------------------------------------------------------------------------
 # Verified to exist, deliberately NOT listed — a category name override cannot
