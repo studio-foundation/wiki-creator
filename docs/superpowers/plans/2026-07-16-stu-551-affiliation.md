@@ -25,7 +25,9 @@
 
 | File | Responsibility |
 |---|---|
-| `wiki_creator/entity_affiliation.py` | **Create.** Pure logic: snippet selection, roster rendering, verdict parsing + the three rejection rules, cache read/write. No I/O beyond the cache file. |
+| `wiki_creator/roster.py` | **Create (Task 3).** The helpers `entity_status` and `entity_affiliation` share byte-for-byte: text normalization, marker matching, chapter sort, roster rendering, quote verification, cache read/write. |
+| `wiki_creator/entity_status.py` | **Modify (Task 3).** Import the shared helpers instead of defining them. Behavior unchanged — pinned by its existing suite. |
+| `wiki_creator/entity_affiliation.py` | **Create.** Pure logic: snippet selection, verdict parsing + the three rejection rules. Everything shared comes from `roster.py`. |
 | `scripts/entity_affiliation.py` | **Create.** Runner: reads `registry.json`, builds the roster, shells out to `studio run`, writes the cache, reports to stderr. Never raises. |
 | `.studio/agents/entity-affiliation.agent.yaml` | **Create.** The prompt. |
 | `.studio/contracts/entity-affiliation-item.contract.yaml` | **Create.** `required_fields: [affiliation]`. |
@@ -37,13 +39,15 @@
 | `tests/test_entity_affiliation.py` | **Create.** Unit + wiring tests. |
 | `tests/test_generate_wiki_pages_binding.py:198` | **Modify.** An existing assertion pins the inert behavior and will fail. |
 
-**Reuse, do not reimplement:** `entity_affiliation` imports `_normalize` and `_latest_first` from `wiki_creator.entity_status`. `_normalize`'s typographic folding is the `99a6a71` fix — reimplementing it reintroduces a bug that silently dropped every verdict whose evidence sat in dialogue.
+**Reuse, do not reimplement.** `normalize`'s typographic folding is the `99a6a71` fix — reimplementing it reintroduces a bug that silently dropped every verdict whose evidence sat in dialogue. Task 3 puts it, and every other helper the two stages share verbatim, in `wiki_creator/roster.py`.
+
+**Pre-flight decision (approved): Option A-reduced.** The plan as first written duplicated four of `entity_status`'s seven functions verbatim into `entity_affiliation`. `render_roster`, `_is_quoted` and the two cache functions are byte-identical, so Task 3 extracts them. `roster_rows` stays duplicated in each stage: parameterising it by selector is speculative abstraction for two callers, and each stage's version is three lines. `_normalize`/`_latest_first`/`_has_marker` move to `roster.py` as well — leaving them in `entity_status` while `roster.py` needs them, and `entity_status` needs `roster.py`, is an import cycle.
 
 ---
 
 ### Task 1: Measure — does GLiNER produce a real faction roster?
 
-**This task decides Task 4's prompt and Task 3's rule set. It writes no production code.**
+**This task decides Task 5's prompt and Task 4's rule set. It writes no production code.**
 
 The spec's A-vs-B choice is open because the measurement that would settle it was taken against artifacts that STU-560 (`4d0dda9`) has just invalidated: all three cached books rendered spaCy-typed entities while configured for GLiNER.
 
@@ -246,24 +250,247 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 ---
 
-### Task 3: Pure logic — `wiki_creator/entity_affiliation.py`
+### Task 3: Extract the helpers both stages share — `wiki_creator/roster.py`
+
+**A pure refactor. No behavior changes. `entity_status`'s existing suite is the proof.**
+
+Both stages send a PERSON roster to one `studio run`, verify the reply against the
+snippets shown, and cache on the roster rows. That shared shape is real, not a
+coincidence — STU-529, STU-539 and STU-488 all have it. Four functions are byte-identical
+between them.
+
+**Files:**
+- Create: `wiki_creator/roster.py`
+- Modify: `wiki_creator/entity_status.py` — delete the moved definitions, import them
+- Test: `tests/test_entity_status.py` must pass **unchanged**. That is the whole safety net.
+
+**Interfaces:**
+- Produces, all consumed by Tasks 4 and 5:
+  - `normalize(text: object) -> str` (was `entity_status._normalize`)
+  - `has_marker(text: str, markers: list[str]) -> bool` (was `_has_marker`)
+  - `latest_first(snippets: list[dict]) -> list[dict]` (was `_latest_first`)
+  - `render_roster(rows: list[dict]) -> str`
+  - `is_quoted(quote: str, snippets: list[dict]) -> bool` (was `_is_quoted`)
+  - `load_cache(path: Path | str, rows: list[dict]) -> dict[str, dict] | None`
+  - `save_cache(path: Path | str, rows: list[dict], verdicts: dict[str, dict]) -> None`
+- `entity_status` keeps: `STATUS_VALUES`, `DEFAULT_STATUS`, `SNIPPETS_PER_ENTITY`, `SNIPPET_CHARS`, `select_status_snippets`, `roster_rows`, `parse_status_verdict`, `status_label`, and thin aliases `load_cached_status = load_cache`, `save_status_cache = save_cache` — `scripts/entity_status.py` and `tests/test_entity_status.py` import those names and must not change.
+
+- [ ] **Step 1: Verify the baseline is green before touching anything**
+
+```bash
+cd /home/arianeguay/dev/src/wiki-creator-stu-551
+PYTHONPATH=/home/arianeguay/dev/src/wiki-creator-stu-551 \
+  python -m pytest tests/test_entity_status.py -q
+```
+
+Expected: all pass. Record the count — it must be identical at Step 4.
+
+- [ ] **Step 2: Create the shared module**
+
+Create `wiki_creator/roster.py` by **moving** these definitions out of
+`wiki_creator/entity_status.py` verbatim (renamed to drop the leading underscore where
+noted). Do not rewrite them — a rewrite is a behavior change with no test to catch it.
+
+```python
+"""What a roster-classifier stage does regardless of what it asks.
+
+`entity_status` (STU-488) and `entity_affiliation` (STU-551) both send the PERSON
+roster to one `studio run`, verify the reply against the snippets they showed, and
+cache on the roster rows. The shape is STU-529's and STU-539's before them. What
+differs is the question — which snippets to select, and what makes a verdict valid.
+That stays in each stage; this is the rest.
+
+`normalize`'s typographic folding is load-bearing (99a6a71): an EPUB's dialogue ships
+curly quotes and the model echoes straight ones, so without folding both sides every
+verdict whose evidence sat inside dialogue was silently dropped — in a novel, where
+such facts are announced in dialogue.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+from pathlib import Path
+
+from wiki_creator.chapters import chapter_number
+
+_WHITESPACE_RE = re.compile(r"\s+")
+
+# An EPUB's typesetting uses curly quotes/dashes; the model echoes the same
+# sentence back in plain ASCII. Folding both to one form is what lets a
+# verbatim quote inside dialogue still match its source snippet.
+_TYPOGRAPHIC_TRANSLATION = str.maketrans(
+    {
+        "‘": "'",
+        "’": "'",
+        "‚": "'",
+        "‛": "'",
+        "“": '"',
+        "”": '"',
+        "„": '"',
+        "‟": '"',
+        "′": "'",
+        "″": '"',
+        "…": "...",
+        "–": "-",
+        "—": "-",
+        "‑": "-",
+    }
+)
+
+
+def normalize(text: object) -> str:
+    folded = str(text or "").translate(_TYPOGRAPHIC_TRANSLATION)
+    return _WHITESPACE_RE.sub(" ", folded).strip().casefold()
+
+
+def has_marker(text: str, markers: list[str]) -> bool:
+    return any(
+        re.search(r"\b" + re.escape(marker) + r"\b", text, re.IGNORECASE)
+        for marker in markers
+        if marker
+    )
+
+
+def latest_first(snippets: list[dict]) -> list[dict]:
+    """Sorted by chapter, latest first. An unnumbered chapter (``Prologue``)
+    sorts earliest. Stable, so same-chapter snippets keep source order."""
+    return sorted(
+        snippets,
+        key=lambda snippet: chapter_number(snippet.get("chapter_id")) or 0,
+        reverse=True,
+    )
+
+
+def render_roster(rows: list[dict]) -> str:
+    """The roster block the classifier reads. Text only — the chapter is never
+    shown or reported by the model."""
+    blocks = []
+    for row in rows:
+        header = row["name"]
+        if row["aliases"]:
+            header += f" (also called: {', '.join(row['aliases'])})"
+        lines = [f"## {header}"]
+        lines.extend(f"- {snippet['text']}" for snippet in row["snippets"])
+        if not row["snippets"]:
+            lines.append("- (no snippet found for this character)")
+        blocks.append("\n".join(lines))
+    return "\n\n".join(blocks)
+
+
+def is_quoted(quote: str, snippets: list[dict]) -> bool:
+    """True iff ``quote`` is verbatim in one of the entity's own ``snippets``."""
+    needle = normalize(quote)
+    if not needle:
+        return False
+    return any(needle in normalize(snippet.get("text")) for snippet in snippets)
+
+
+def load_cache(path: Path | str, rows: list[dict]) -> dict[str, dict] | None:
+    """Cached verdicts for exactly this roster, or None.
+
+    Keyed on the rows themselves: the roster changes with WIKI_MAX_CHAPTERS and
+    with every upstream extraction fix, and a verdict returned for a different
+    roster must not be replayed onto it.
+    """
+    try:
+        cached = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(cached, dict) or cached.get("roster") != rows:
+        return None
+    verdicts = cached.get("verdicts")
+    return verdicts if isinstance(verdicts, dict) else None
+
+
+def save_cache(path: Path | str, rows: list[dict], verdicts: dict[str, dict]) -> None:
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps({"roster": rows, "verdicts": verdicts}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+```
+
+- [ ] **Step 3: Rewire `entity_status.py`**
+
+Delete from `wiki_creator/entity_status.py`: `_WHITESPACE_RE`, `_TYPOGRAPHIC_TRANSLATION`, `_normalize`, `_has_marker`, `_latest_first`, `_is_quoted`, `render_roster`, `load_cached_status`, `save_status_cache`, and the now-unused `import json` / `import re` / `chapter_number` import if nothing else uses them.
+
+Replace with:
+
+```python
+from wiki_creator.roster import (
+    has_marker,
+    is_quoted,
+    latest_first,
+    load_cache,
+    normalize,
+    render_roster,
+    save_cache,
+)
+
+# scripts/entity_status.py and tests/test_entity_status.py import these names.
+load_cached_status = load_cache
+save_status_cache = save_cache
+```
+
+Then update the internal call sites in `select_status_snippets` (`_has_marker` → `has_marker`, `_latest_first` → `latest_first`) and `parse_status_verdict` (`_is_quoted` → `is_quoted`).
+
+`render_roster` is re-exported by the import above, so `scripts/entity_status.py`'s `from wiki_creator.entity_status import render_roster` keeps working.
+
+- [ ] **Step 4: Prove nothing moved**
+
+```bash
+PYTHONPATH=/home/arianeguay/dev/src/wiki-creator-stu-551 \
+  python -m pytest tests/test_entity_status.py tests/test_entity_affiliation.py -q
+```
+
+Expected: the **same** pass count as Step 1, plus Task 2's test. Not one test edited — if a test needed changing, the refactor changed behavior and is wrong.
+
+```bash
+PYTHONPATH=/home/arianeguay/dev/src/wiki-creator-stu-551 python -m pytest -q
+PYTHONPATH=/home/arianeguay/dev/src/wiki-creator-stu-551 mypy wiki_creator/
+```
+
+Expected: full suite green, no new mypy errors.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add wiki_creator/roster.py wiki_creator/entity_status.py
+git commit -m "refactor(stu-551): extract the helpers roster stages share
+
+entity_status (STU-488) and entity_affiliation (STU-551) send a PERSON roster to
+one studio run, verify the reply against the snippets shown, and cache on the
+roster rows. Four functions were byte-identical between them; this moves them out
+before the second copy exists rather than after.
+
+What differs — which snippets to select, and what makes a verdict valid — stays
+in each stage. roster_rows stays duplicated: parameterising it by selector is
+speculative abstraction for two callers.
+
+Pure move. tests/test_entity_status.py passes unchanged, which is the point.
+
+Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
+```
+
+---
+
+### Task 4: Pure logic — `wiki_creator/entity_affiliation.py`
 
 **Files:**
 - Create: `wiki_creator/entity_affiliation.py`
 - Test: `tests/test_entity_affiliation.py` (modify — append)
 
 **Interfaces:**
-- Consumes: `affiliation_markers` (Task 2); `wiki_creator.entity_status._normalize`, `_latest_first`, `_has_marker`.
+- Consumes: `affiliation_markers` (Task 2); `wiki_creator.roster.{normalize, has_marker, latest_first, render_roster, is_quoted, load_cache, save_cache}` (Task 3).
 - Produces:
   - `SNIPPETS_PER_ENTITY: int = 5`, `SNIPPET_CHARS: int = 300`
   - `select_affiliation_snippets(snippets: list[dict], markers: list[str]) -> list[dict]`
   - `roster_rows(entities: list[dict], contexts: dict[str, list[dict]], markers: list[str]) -> list[dict]`
-  - `render_roster(rows: list[dict]) -> str`
   - `parse_affiliation_verdict(payload: object, rows: list[dict]) -> dict[str, dict]` → `{name: {"affiliation": str, "quote": str}}`
-  - `load_cached_affiliation(path, rows) -> dict[str, dict] | None`
-  - `save_affiliation_cache(path, rows, verdicts) -> None`
 
-  Task 4 (`scripts/entity_affiliation.py`) and Task 5 (`wiki_preparation`) consume these names.
+  Task 5 (`scripts/entity_affiliation.py`) and Task 6 (`wiki_preparation`) consume these names, plus `render_roster` / `load_cache` / `save_cache` straight from `wiki_creator.roster`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -274,13 +501,11 @@ import pytest
 
 from wiki_creator.entity_affiliation import (
     SNIPPETS_PER_ENTITY,
-    load_cached_affiliation,
     parse_affiliation_verdict,
-    render_roster,
     roster_rows,
-    save_affiliation_cache,
     select_affiliation_snippets,
 )
+from wiki_creator.roster import load_cache, render_roster, save_cache
 
 MARKERS = ["joined", "loyal", "betrayed"]
 
@@ -400,15 +625,15 @@ def test_cache_is_keyed_on_the_roster_rows(tmp_path):
     because it was measured on a 5-chapter extraction."""
     cache = tmp_path / "entity_affiliation.json"
     verdicts = {"Eragon": {"affiliation": "Varden", "quote": "Eragon joined the Varden."}}
-    save_affiliation_cache(cache, _rows(), verdicts)
-    assert load_cached_affiliation(cache, _rows()) == verdicts
+    save_cache(cache, _rows(), verdicts)
+    assert load_cache(cache, _rows()) == verdicts
 
     other = roster_rows(
         [{"canonical_name": "Eragon", "aliases": []}],
         {"Eragon": [_snip("Eragon joined the Empire.", "ch10")]},
         MARKERS,
     )
-    assert load_cached_affiliation(cache, other) is None
+    assert load_cache(cache, other) is None
 
 
 def test_render_roster_shows_names_aliases_and_snippets():
@@ -462,9 +687,8 @@ reread, and reads as fact; an absent one says nothing.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
-from wiki_creator.entity_status import _has_marker, _latest_first, _normalize
+from wiki_creator.roster import has_marker, is_quoted, latest_first, normalize
 
 SNIPPETS_PER_ENTITY = 5
 SNIPPET_CHARS = 300
@@ -483,11 +707,11 @@ def select_affiliation_snippets(snippets: list[dict], markers: list[str]) -> lis
     marked = [
         snippet
         for snippet in snippets or []
-        if _has_marker(str(snippet.get("text") or ""), markers or [])
+        if has_marker(str(snippet.get("text") or ""), markers or [])
     ]
     return [
         {"text": str(s.get("text") or "")[:SNIPPET_CHARS], "chapter_id": s.get("chapter_id")}
-        for s in _latest_first(marked)[:SNIPPETS_PER_ENTITY]
+        for s in latest_first(marked)[:SNIPPETS_PER_ENTITY]
     ]
 
 
@@ -508,30 +732,6 @@ def roster_rows(
         }
         for entity in entities
     ]
-
-
-def render_roster(rows: list[dict]) -> str:
-    """The roster block the classifier reads. Text only — the chapter is never
-    shown or reported by the model."""
-    blocks = []
-    for row in rows:
-        header = row["name"]
-        if row["aliases"]:
-            header += f" (also called: {', '.join(row['aliases'])})"
-        lines = [f"## {header}"]
-        lines.extend(f"- {snippet['text']}" for snippet in row["snippets"])
-        if not row["snippets"]:
-            lines.append("- (no snippet found for this character)")
-        blocks.append("\n".join(lines))
-    return "\n\n".join(blocks)
-
-
-def _is_quoted(quote: str, snippets: list[dict]) -> bool:
-    """True iff ``quote`` is verbatim in one of the entity's own ``snippets``."""
-    needle = _normalize(quote)
-    if not needle:
-        return False
-    return any(needle in _normalize(snippet.get("text")) for snippet in snippets)
 
 
 def parse_affiliation_verdict(payload: object, rows: list[dict]) -> dict[str, dict]:
@@ -570,39 +770,16 @@ def parse_affiliation_verdict(payload: object, rows: list[dict]) -> dict[str, di
         row = rows_by_name.get(name)
         if row is None or name in verdicts or not affiliation:
             continue
-        if not _is_quoted(quote, row["snippets"]):
+        if not is_quoted(quote, row["snippets"]):
             continue
-        if _normalize(affiliation) not in _normalize(quote):
+        if normalize(affiliation) not in normalize(quote):
             continue
         verdicts[name] = {"affiliation": affiliation, "quote": quote}
     return verdicts
-
-
-def load_cached_affiliation(path: Path | str, rows: list[dict]) -> dict[str, dict] | None:
-    """Cached verdicts for exactly this roster, or None.
-
-    Keyed on the rows themselves: the roster changes with WIKI_MAX_CHAPTERS and
-    with every upstream extraction fix, and a verdict returned for a different
-    roster must not be replayed onto it.
-    """
-    try:
-        cached = json.loads(Path(path).read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return None
-    if not isinstance(cached, dict) or cached.get("roster") != rows:
-        return None
-    verdicts = cached.get("verdicts")
-    return verdicts if isinstance(verdicts, dict) else None
-
-
-def save_affiliation_cache(path: Path | str, rows: list[dict], verdicts: dict[str, dict]) -> None:
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps({"roster": rows, "verdicts": verdicts}, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
 ```
+
+The cache is `roster.load_cache` / `roster.save_cache` — this module adds no cache of its
+own. `render_roster` likewise comes from `roster`.
 
 - [ ] **Step 4: Run to verify they pass**
 
@@ -636,7 +813,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 ---
 
-### Task 4: Runner, agent, contract, pipeline
+### Task 5: Runner, agent, contract, pipeline
 
 **Files:**
 - Create: `scripts/entity_affiliation.py`, `.studio/agents/entity-affiliation.agent.yaml`, `.studio/contracts/entity-affiliation-item.contract.yaml`, `.studio/pipelines/entity-affiliation-item.pipeline.yaml`
@@ -646,7 +823,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 - Consumes: everything Task 3 produces; `Registry.load_from_processing`, `book_paths_from_yaml`, `book_language`, `load_lang_config`, `studio_io`.
 - Produces: `contexts_by_entity(registry) -> dict[str, list[dict]]`, `resolve_affiliation(rows, book_title, cache_path) -> dict[str, dict]`. Task 5 reads the artifact this writes.
 
-**If Task 1 chose A**, the agent prompt gains a roster of allowed faction names and `parse_affiliation_verdict` gains a fourth rule (value must be on the faction roster). **If B**, ship as written below.
+**If Task 1 chose A**, the agent prompt gains a roster of allowed faction names and Task 4's `parse_affiliation_verdict` gains a fourth rule (value must be on the faction roster). **If B**, ship as written below.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -712,7 +889,7 @@ def test_a_stale_cache_from_another_roster_is_deleted_not_replayed(tmp_path):
     path that left the old artifact in place would let it replay a verdict made
     for a different roster."""
     cache = tmp_path / "entity_affiliation.json"
-    save_affiliation_cache(cache, _rows(), {"Eragon": {"affiliation": "Varden", "quote": "x"}})
+    save_cache(cache, _rows(), {"Eragon": {"affiliation": "Varden", "quote": "x"}})
     other = roster_rows(
         [{"canonical_name": "Murtagh", "aliases": []}],
         {"Murtagh": [_snip("Murtagh joined the Empire.", "ch40")]},
@@ -766,12 +943,10 @@ import yaml
 
 from wiki_creator import studio_io
 from wiki_creator.entity_affiliation import (
-    load_cached_affiliation,
     parse_affiliation_verdict,
-    render_roster,
     roster_rows,
-    save_affiliation_cache,
 )
+from wiki_creator.roster import load_cache, render_roster, save_cache
 from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.registry import Registry
@@ -806,7 +981,7 @@ def resolve_affiliation(rows: list[dict], book_title: str, cache_path: Path) -> 
     Never raises. Every failure path returns {} — every character then renders no
     `affiliation` slot, which is what an OPT slot with no value does.
     """
-    cached = load_cached_affiliation(cache_path, rows)
+    cached = load_cache(cache_path, rows)
     if cached is not None:
         return cached
     # A verdict for another roster must not survive a failure below:
@@ -848,7 +1023,7 @@ def resolve_affiliation(rows: list[dict], book_title: str, cache_path: Path) -> 
         return _give_up("studio_run_output_missing", rows)
 
     verdicts = parse_affiliation_verdict(stage_output, rows)
-    save_affiliation_cache(cache_path, rows, verdicts)
+    save_cache(cache_path, rows, verdicts)
     return verdicts
 
 
@@ -1073,7 +1248,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 ---
 
-### Task 5: Wire it — preparation, rendering, orchestrator
+### Task 6: Wire it — preparation, rendering, orchestrator
 
 **Files:**
 - Modify: `scripts/wiki_preparation.py` (add `load_affiliation_verdicts`; `build_entity_bundle` signature + body)
@@ -1083,7 +1258,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 - Test: `tests/test_entity_affiliation.py` (modify — append)
 
 **Interfaces:**
-- Consumes: `load_cached_affiliation` shape from Task 3; the artifact Task 4 writes.
+- Consumes: the verdict shape from Task 4; the artifact Task 5 writes.
 - Produces: `load_affiliation_verdicts(processing_dir) -> dict[str, dict]`; `build_entity_bundle(..., affiliation_verdicts: dict[str, dict] | None = None)`.
 
 The two wiring tests are the STU-512 lesson: *without them the whole feature was deletable with the suite green.*
@@ -1293,7 +1468,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 ---
 
-### Task 6: Measure the stage — the ship gate
+### Task 7: Measure the stage — the ship gate
 
 **No code. Precision is the metric: 0 false positives or it does not ship** (STU-488's bar).
 
@@ -1359,7 +1534,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 ---
 
-### Task 7: Update the ticket, CLAUDE.md, and file the follow-ups
+### Task 8: Update the ticket, CLAUDE.md, and file the follow-ups
 
 **Files:**
 - Modify: `CLAUDE.md` — a Gotchas entry.
@@ -1432,22 +1607,26 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 | Spec section | Task |
 |---|---|
-| What this ticket becomes (scalar, not dated edge) | 3 (docstring), 7 (CLAUDE.md) |
-| Architecture (pre-step, mirror of entity_status) | 4, 5 |
-| Why not folded into entity-status | 4 (separate pipeline/agent/contract) |
-| Snippet selection — single source, latest-first | 2, 3 |
-| Verdict + three rejection rules | 3 |
-| Rendering (plain text, no base.yaml change) | 5 |
+| What this ticket becomes (scalar, not dated edge) | 4 (docstring), 8 (CLAUDE.md) |
+| Architecture (pre-step, mirror of entity_status) | 5, 6 |
+| Why not folded into entity-status | 5 (separate pipeline/agent/contract) |
+| Snippet selection — single source, latest-first | 2, 4 |
+| Verdict + three rejection rules | 4 |
+| Rendering (plain text, no base.yaml change) | 6 |
 | The unresolved choice (A vs B) | **1** |
-| Testing (8 unit + 2 wiring) | 2, 3, 4, 5 |
-| Measurement — the ship gate | 6 |
-| Acceptance | 6 |
-| Follow-ups | 7 |
+| Testing (8 unit + 2 wiring) | 2, 4, 5, 6 |
+| Measurement — the ship gate | 7 |
+| Acceptance | 7 |
+| Follow-ups | 8 |
+| Pre-flight: A-reduced, extract the shared helpers | **3** (added, not in the spec) |
 
 No gaps.
 
-**Placeholder scan:** The `<A|B>`, `<date>`, and `<numbers>` in Tasks 1, 6 are outputs of measurements the task performs — the task states exactly what to run and what decides the value. Every code step carries complete code.
+**Placeholder scan:** The `<A|B>`, `<date>`, and `<numbers>` in Tasks 1, 7 are outputs of measurements the task performs — the task states exactly what to run and what decides the value. Every code step carries complete code.
 
-**Type consistency:** `select_affiliation_snippets`, `roster_rows`, `render_roster`, `parse_affiliation_verdict`, `load_cached_affiliation`, `save_affiliation_cache` (Task 3) are the names Task 4 imports. `resolve_affiliation`, `contexts_by_entity` (Task 4) match the tests. `load_affiliation_verdicts`, `affiliation_verdicts=` (Task 5) match. The verdict shape `{name: {"affiliation": str, "quote": str}}` is consistent across Tasks 3, 4, 5.
+**Type consistency:** `normalize`, `has_marker`, `latest_first`, `render_roster`, `is_quoted`, `load_cache`, `save_cache` (Task 3, in `wiki_creator.roster`) are the names Tasks 4 and 5 import. `select_affiliation_snippets`, `roster_rows`, `parse_affiliation_verdict` (Task 4) are what Task 5 imports from `entity_affiliation`. `resolve_affiliation`, `contexts_by_entity` (Task 5) match the tests. `load_affiliation_verdicts`, `affiliation_verdicts=` (Task 6) match. The verdict shape `{name: {"affiliation": str, "quote": str}}` is consistent across Tasks 4, 5, 6.
 
-**One risk the plan cannot remove:** Task 1 may choose **A**, which changes Task 3's `parse_affiliation_verdict` (a fourth rule) and Task 4's prompt (a roster of allowed names). Task 4 flags this. If A is chosen, re-read Task 3 before implementing it.
+**Two risks the plan cannot remove:**
+
+1. Task 1 may choose **A**, which changes Task 4's `parse_affiliation_verdict` (a fourth rule) and Task 5's prompt (a roster of allowed names). Task 5 flags this. If A is chosen, re-read Task 4 before implementing it.
+2. Task 3 moves code out of `entity_status.py`, which shipped yesterday. Its safety net is that `tests/test_entity_status.py` must pass **unedited** — a refactor that needs a test changed is not a refactor. If Task 3's review finds behavior moved, revert it and duplicate instead (the pre-flight's Option B); nothing downstream depends on the extraction beyond import paths.
