@@ -684,3 +684,44 @@ def test_a_saved_cache_round_trips(tmp_path):
     save_status_cache(path, rows, verdicts)
     assert json.loads(path.read_text(encoding="utf-8"))["version"] == CACHE_VERSION
     assert load_cached_status(path, rows) == verdicts
+
+
+def test_the_binder_renders_the_circumstance():
+    entity = {"death_agent": "Durza", "death_place": "Farthen Dûr"}
+    assert _extracted_fact_value(entity, "death", "fr") == "Tué par Durza à Farthen Dûr"
+
+
+def test_the_binder_omits_the_slot_without_a_circumstance():
+    # OPT: `_bind_batch_fields`'s `if value:` drops the token entirely, so a
+    # living character gets no Décès row.
+    assert _extracted_fact_value({}, "death", "fr") is None
+    assert _extracted_fact_value({"status": "alive"}, "death", "fr") is None
+
+
+def test_wiki_preparation_stamps_the_circumstance_onto_the_batch_entity():
+    # The hop the suite cannot see otherwise: unstamp these and every page
+    # renders no Décès row with every other test still green.
+    from scripts.wiki_preparation import build_entity_bundle
+
+    entity = {"canonical_name": "Brom", "type": "PERSON", "importance": "principal"}
+    verdicts = {"Brom": {"status": "deceased", "quote": "x", "agent": "Durza", "place": "Farthen Dûr"}}
+    bundle = build_entity_bundle(
+        entity, [], {}, {}, {}, {}, {"Brom": entity},
+        status_verdicts=verdicts,
+    )
+
+    assert bundle["death_agent"] == "Durza"
+    assert bundle["death_place"] == "Farthen Dûr"
+
+
+def test_wiki_preparation_stamps_none_for_a_character_with_no_circumstance():
+    from scripts.wiki_preparation import build_entity_bundle
+
+    entity = {"canonical_name": "Eragon", "type": "PERSON", "importance": "principal"}
+    bundle = build_entity_bundle(
+        entity, [], {}, {}, {}, {}, {"Eragon": entity},
+        status_verdicts={},
+    )
+
+    assert bundle["death_agent"] is None
+    assert bundle["death_place"] is None
