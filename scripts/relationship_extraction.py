@@ -1003,6 +1003,36 @@ def run_test_mode(
         print(f"  {k}: {v}")
 
 
+# STU-562: Studio failures that never reached the model — a killed subprocess, a
+# non-zero exit, an unrecoverable stdout — are transient by construction and worth
+# one more attempt. A missing CLI is not: retrying an absent binary only stalls.
+_TRANSIENT_CLASSIFIER_ERRORS = frozenset(
+    {"studio_run_timeout", "studio_run_failed", "studio_run_output_missing"}
+)
+_CLASSIFIER_MAX_ATTEMPTS = 2
+
+
+def _run_studio_classifier_once(cmd: list[str], timeout_seconds: int) -> dict:
+    try:
+        result = subprocess.run(
+            cmd, cwd=PROJECT_ROOT, capture_output=True, text=True, timeout=timeout_seconds
+        )
+    except FileNotFoundError:
+        return {"error": "studio_cli_missing"}
+    except subprocess.TimeoutExpired:
+        return {"error": "studio_run_timeout"}
+
+    if result.returncode != 0:
+        return {"error": "studio_run_failed", "stderr": result.stderr}
+
+    # The pipeline is `relationship-classifier-item` but its inner stage — the
+    # name recorded in the run payload/log — is `relationship-classifier`.
+    stage_output = studio_io.stage_output_from_stdout(result.stdout or "", "relationship-classifier")
+    if stage_output is None:
+        return {"error": "studio_run_output_missing"}
+    return stage_output
+
+
 def _run_studio_classifier_item(
     rel: dict,
     *,
@@ -1012,6 +1042,7 @@ def _run_studio_classifier_item(
     role_contexts_b: list[str] | None = None,
     book_config: dict | None = None,
     timeout_seconds: int = 120,
+    max_attempts: int = _CLASSIFIER_MAX_ATTEMPTS,
 ) -> dict:
     """Invoke Studio to classify one relationship pair via relationship-classifier-item pipeline.
 
@@ -1025,6 +1056,10 @@ def _run_studio_classifier_item(
     agent prompt: it is injected here, the one point both callers cross, so no caller can
     dispatch a pair without one. ``book_config`` adds the types only this novel has
     (STU-472); absent ⇒ the generic vocabulary alone.
+
+    A transient Studio failure (STU-562) is retried up to ``max_attempts`` times; a
+    persistent failure returns its ``{"error": ...}`` so the caller can mark the pair
+    as unjudged rather than conflate it with a real decline.
     """
     item_input = {
         "entity_a": rel["entity_a"],
@@ -1044,25 +1079,14 @@ def _run_studio_classifier_item(
 
     cmd = ["studio", "run", "relationship-classifier-item", "--input-file", input_path, "--json"]
     try:
-        result = subprocess.run(
-            cmd, cwd=PROJECT_ROOT, capture_output=True, text=True, timeout=timeout_seconds
-        )
-    except FileNotFoundError:
-        return {"error": "studio_cli_missing"}
-    except subprocess.TimeoutExpired:
-        return {"error": "studio_run_timeout"}
+        outcome: dict = {"error": "studio_run_output_missing"}
+        for _ in range(max(1, max_attempts)):
+            outcome = _run_studio_classifier_once(cmd, timeout_seconds)
+            if outcome.get("error") not in _TRANSIENT_CLASSIFIER_ERRORS:
+                break
+        return outcome
     finally:
         Path(input_path).unlink(missing_ok=True)
-
-    if result.returncode != 0:
-        return {"error": "studio_run_failed", "stderr": result.stderr}
-
-    # The pipeline is `relationship-classifier-item` but its inner stage — the
-    # name recorded in the run payload/log — is `relationship-classifier`.
-    stage_output = studio_io.stage_output_from_stdout(result.stdout or "", "relationship-classifier")
-    if stage_output is None:
-        return {"error": "studio_run_output_missing"}
-    return stage_output
 
 
 _NON_INTERPERSONAL_TYPES = frozenset({"PLACE", "OTHER"})

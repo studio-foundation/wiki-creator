@@ -57,6 +57,23 @@ def test_load_done_keys_skips_malformed_pairs(tmp_path):
     assert len(pairs) == 2
 
 
+def test_load_done_keys_retries_errored_pairs(tmp_path):
+    """A pair marked with a classification_error (STU-562) is dropped from both the
+    done-keys and the kept list, so a re-run retries it and does not duplicate it."""
+    output = tmp_path / "out.json"
+    data = {
+        "relationships": [
+            {"entity_a": "A", "entity_b": "B", "relationship_type": "ami"},
+            {"entity_a": "C", "entity_b": "D", "classification_error": "studio_run_timeout"},
+        ]
+    }
+    output.write_text(json.dumps(data))
+    keys, pairs = _load_done_keys(output)
+    assert ("A", "B") in keys
+    assert ("C", "D") not in keys
+    assert [p.get("entity_a") for p in pairs] == ["A"]
+
+
 def test_save_writes_valid_json(tmp_path):
     output = tmp_path / "out.json"
     base = {"entities": [], "stats": {}, "narrator": None}
@@ -101,6 +118,36 @@ def test_stray_llm_key_does_not_crash_save(tmp_path, monkeypatch):
     assert rel.relationship_type == "allies"
     assert rel.evidence == "they train together"
     assert not hasattr(rel, "reasoning")
+
+
+def test_studio_error_is_marked_in_artifact(tmp_path, monkeypatch):
+    """STU-562: a pair the classifier never judged (Studio error) is stamped with
+    classification_error, so it is distinguishable from a real decline (both untyped)."""
+    series = tmp_path / "library" / "author" / "series"
+    processing = series / "processing_output" / "01-book"
+    processing.mkdir(parents=True)
+    book_yaml = series / "books" / "01-book.yaml"
+    book_yaml.parent.mkdir(parents=True)
+    book_yaml.write_text("novel_summary: A tale.\n", encoding="utf-8")
+
+    input_bundle = RelationshipBundle(relationships=[clf.Relationship(
+        entity_a="Celaena", entity_b="Chaol", cooccurrence_count=9,
+        chapters=["ch01"], sample_contexts=["they spoke"],
+    )])
+    studio_io.save_artifact(processing / "relationships.json", input_bundle, RelationshipBundle)
+
+    monkeypatch.setattr(clf, "_run_studio_classifier_item",
+                        lambda pair, **kw: {"error": "studio_run_timeout"})
+    monkeypatch.setattr(sys, "argv", ["classify_relationships.py", "--book", str(book_yaml)])
+
+    clf.main()
+
+    out = studio_io.load_artifact(
+        processing / "relationships_classified.json", RelationshipBundle
+    )
+    rel = out.relationships[0]
+    assert rel.relationship_type is None
+    assert rel.classification_error == "studio_run_timeout"
 
 
 # ---------------------------------------------------------------------------

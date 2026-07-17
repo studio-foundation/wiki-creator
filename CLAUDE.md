@@ -995,6 +995,29 @@ Inside `wiki-resolution`, order matters:
   relation**, not just the hop — a path is nothing but its edge types, so a hole
   leaves the LLM to fill it. The target itself isn't dropped: the next fully-typed
   simple path to it is used if there is one.
+- A Studio failure is not a decline (STU-562): a pair the classifier never judged
+  — a subprocess timeout, an unrecoverable stdout — used to be appended untyped
+  with a `[WARN]` nobody reads, so STU-501 omitted it exactly as it omits a pair
+  the model *did* read and decline. Both were `relationship_type: null`, and the
+  artifact recorded no difference: the next person measuring the graph could not
+  tell loss-with-judgment from loss-with-none-behind-it. Two halves.
+  (1) **Retry.** `_run_studio_classifier_item` retries a *transient* failure
+  (`studio_run_timeout` / `studio_run_failed` / `studio_run_output_missing`) once
+  — `studio_cli_missing` is terminal and is not retried, since retrying an absent
+  binary only stalls. This is the outer, subprocess-level retry; it is distinct
+  from the pipeline's RALPH loop (`max_attempts: 3`), which catches an off-schema
+  *agent output*, not a killed `studio run`. STU-564's log recovery already
+  absorbs most of what used to surface as a parse error, so the timeout is the
+  live case. (2) **Mark.** A pair that still fails is stamped
+  `classification_error` (a new optional `Relationship` field), so the artifact
+  distinguishes it from a decline — a retry that does not persist the distinction
+  leaves the same fog. `_load_done_keys` treats a stamped pair as **unfinished**:
+  it drops it from both the resume keys and the kept list, so a re-run retries it
+  once more without duplicating it. The field is `null` on every declined and
+  typed pair, so it changes no reader surface (STU-501 still omits the untyped
+  pair) and no golden (relationship typing is an LLM stage, off the golden path).
+  Related: `stats.classified` is vestigial (STU-563) — the counter that would
+  have surfaced this reads 0 on every real run.
 - Editorial stance (STU-507): whether pages speak from inside the fiction is
   **declared** in the book YAML (`generation.editorial_stance`), not inherited
   from anti-hallucination prompting. `wiki_creator/editorial_stance.py` holds the

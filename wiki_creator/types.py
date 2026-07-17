@@ -126,6 +126,11 @@ class Relationship:
     evidence: str | None = None
     confidence: str | None = None
     key_moments: list[str] = field(default_factory=list)
+    # STU-562: a Studio failure (timeout, unrecoverable output) leaves the pair
+    # untyped just like a model that read the excerpts and declined. This stamps
+    # the failure code so the two are distinguishable in the artifact — set only
+    # when the classifier never delivered a verdict, never on a real decline.
+    classification_error: str | None = None
 
 
 @dataclass
