@@ -135,7 +135,7 @@ One row per entity, three fields:
 1. **Name off the roster** → dropped. The model hallucinates characters from its memory
    of the novel.
 2. **Quote not verbatim in that entity's own snippets** → dropped. STU-539's rule
-   unchanged, reusing `entity_status._normalize` — including its typographic folding.
+   unchanged, reusing `roster.normalize` — including its typographic folding.
    That folding is not cosmetic: before `99a6a71`, every STU-488 verdict whose evidence
    sat inside **dialogue** was silently dropped, in a novel, where such facts are
    announced in dialogue. The bug is inherited if the helper is reimplemented instead of
@@ -153,10 +153,27 @@ under-recall costs an omitted slot, over-reach puts a character in the wrong arm
 Comparison is on the normalized forms, so typographic and whitespace variants match; the
 folding is many-to-one on typography only and cannot make an invented name match.
 
+Rule 3 matches **whole tokens, never a substring** (`_quote_names`, `eab847b`) — STU-541's
+rule for STU-541's reason. As first written it was a raw `in` test and accepted `Order` off
+*"Roran betrayed nothing as he **order**ed the villagers"*: a faction invented out of a
+verb, by the rule that exists to reject exactly that.
+
 **Every failure path omits the slot** — missing CLI, timeout, unparseable JSON, empty
-reply, hallucinated name. `affiliation` is `OPT` with **no declared fallback** (unlike
-`status`: `MIN`, `fallback: unknown`), so `_bind_batch_fields` drops it cleanly and
-nothing renders. The run never fails.
+reply, hallucinated name. The run never fails.
+
+> **Correction (`c809896`).** This paragraph said `_bind_batch_fields` "drops it cleanly"
+> because `affiliation` is `OPT` with no declared fallback. **That was false, and it was
+> the load-bearing claim of the whole design.** `_bind_batch_fields` only *overwrites* an
+> extracted-fact token when the pipeline has a value, so returning `None` left the
+> **writer's** affiliation in place — and `base.yaml:437` tells the writer "Key factual
+> fields: name, aliases, role, affiliation, status" while `base.yaml:474`'s few-shot
+> demonstrates `affiliation: "La Guilde des Ombres (ancienne), Couronne d'Arenell"`. The
+> slot was never inert; the LLM has filled it since STU-504. Combined with the ~0 recall
+> measured below, shipped behaviour would have been *unchanged* — ungrounded affiliations
+> still rendering, with this document asserting they could not. `status` is immune only by
+> accident: `MIN`/`fallback: unknown` means `status_label` always returns a string, so it
+> always overwrites. `_bind_batch_fields` now clears a pipeline-owned fact that has no
+> value; `species`/`location`/`leaders`/`titles` have the same hole and are STU-572.
 
 The asymmetry is STU-539's, not STU-529's: a false affiliation puts a character in the
 wrong army on a page nobody will reread, and reads as fact; an absent one says nothing.

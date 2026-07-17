@@ -431,8 +431,19 @@ Inside `wiki-resolution`, order matters:
   `status` returns an enum member, so verifying the quote verifies the verdict;
   `affiliation` returns a **name**, so the model can quote a real sentence and
   infer the wrong faction from it. The rendered value must appear in the quote,
-  verbatim. Every failure path **omits the slot** (OPT, no declared fallback,
-  unlike `status`'s `MIN`/`fallback: unknown`). Shared roster plumbing lives in
+  verbatim, and **as whole tokens** — a raw substring test accepted `Order` off
+  "he ordered the villagers" (STU-541's rule, STU-541's reason).
+  **The slot was never "inert", and that nearly shipped a lie.** `base.yaml`
+  tells the writer to fill `affiliation` (the infobox brief names it; the
+  few-shot demonstrates one), and `_bind_batch_fields` only *overwrites* an
+  extracted-fact token when the pipeline has a value — so an undecided character
+  rendered the **writer's** inference, which with this stage's ~0 recall is
+  almost every character. `status` is immune only by accident of being
+  `MIN`/`fallback: unknown`, so `status_label` always returns a string. A
+  pipeline-owned fact with no value is now **cleared**
+  (`_PIPELINE_OWNED_FACTS`); `species`/`location`/`leaders` are declared
+  extracted-fact with nothing computing them, and `titles` has the same hole —
+  STU-572. Shared roster plumbing lives in
   `wiki_creator/roster.py` (`normalize`, `has_marker`, `latest_first`,
   `render_roster`, `is_quoted`, `load_cache`, `save_cache`), extracted from
   `entity_status` rather than copied — `normalize`'s typographic folding is the
