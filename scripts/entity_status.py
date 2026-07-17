@@ -99,15 +99,7 @@ def resolve_status(
 
     if result.returncode != 0:
         return _give_up("studio_run_failed", rows)
-    run_payload = studio_io.extract_first_json_object(result.stdout or "")
-    if run_payload is None:
-        return _give_up("studio_output_json_parse_error", rows)
-
-    stage_output = studio_io.extract_stage_output_from_run_payload(run_payload, "entity-status-item")
-    if stage_output is None:
-        run_id = str(run_payload.get("id") or "").strip()
-        if run_id:
-            stage_output = studio_io.load_studio_stage_output(run_id, "entity-status-item")
+    stage_output = studio_io.stage_output_from_stdout(result.stdout or "", "entity-status-item")
     if stage_output is None:
         return _give_up("studio_run_output_missing", rows)
 
