@@ -261,6 +261,7 @@ def test_build_entity_bundle_tags_revealed_at_chapter():
     chapter_summaries = {
         "ch01": {"chapter_id": "ch01", "summary_bullets": ["Dorian meets Chaol."]},
     }
+    chapter_numbers = {"ch01": 1, "ch02": 2, "ch03": 3}
     plot_events = [{"chapter": 5, "participants": ["Dorian Havilliard"], "description": "duel"}]
 
     bundle = build_entity_bundle(
@@ -272,6 +273,7 @@ def test_build_entity_bundle_tags_revealed_at_chapter():
         events,
         entities_by_name,
         chapter_summaries=chapter_summaries,
+        chapter_numbers=chapter_numbers,
         plot_events=plot_events,
     )
 
@@ -477,6 +479,7 @@ def test_build_chapter_summary_context_matches_xhtml_keys_to_chapter_title_keys(
         chapter_summaries=chapter_summaries,
         chapter_summary_max=8,
         context_by_chapter=context_by_chapter,
+        chapter_numbers={"C25.xhtml": 25},
     )
     assert len(result) == 1
     assert result[0]["chapter_key"] == "C25.xhtml"
@@ -494,7 +497,7 @@ def test_build_chapter_summary_context_includes_temporal_context():
         }
     }
     context_by_chapter = {"Chapter 1": ["some mention"]}
-    result = build_chapter_summary_context(entity, chapter_summaries, 10, context_by_chapter)
+    result = build_chapter_summary_context(entity, chapter_summaries, 10, context_by_chapter, {"Chapter 1": 1})
     assert len(result) == 1
     assert result[0]["temporal_context"] == "flashback"
 
@@ -509,7 +512,7 @@ def test_build_chapter_summary_context_defaults_unknown_when_missing():
         }
     }
     context_by_chapter = {"Chapter 1": ["some mention"]}
-    result = build_chapter_summary_context(entity, chapter_summaries, 10, context_by_chapter)
+    result = build_chapter_summary_context(entity, chapter_summaries, 10, context_by_chapter, {"Chapter 1": 1})
     assert result[0]["temporal_context"] == "unknown"
 
 
@@ -646,6 +649,7 @@ def test_build_chapter_summary_context_uses_chapter_id_to_title_when_heuristic_f
         chapter_summaries=chapter_summaries,
         chapter_summary_max=8,
         context_by_chapter=context_by_chapter,
+        chapter_numbers={"chapter_01.xhtml": 1},
         chapter_id_to_title=chapter_id_to_title,
     )
     assert len(result) == 1
@@ -844,6 +848,7 @@ def test_batch_chapter_entry_carries_pov():
         chapter_summaries=summaries,
         chapter_summary_max=8,
         context_by_chapter={"c1": ["ctx"]},
+        chapter_numbers={"c1": 1},
         chapter_id_to_title={},
     )
     assert out and out[0]["pov"] == "third_limited"
@@ -1119,3 +1124,75 @@ def test_dropped_entities_are_gone_from_related_context(monkeypatch, tmp_path: P
     )
     batch = json.loads(next(paths.wiki_inputs.glob("batch_*.json")).read_text(encoding="utf-8"))
     assert batch["entities"][0]["related_context"][0]["related_type"] is None
+
+
+def test_build_chapter_summary_context_follows_narrative_order_not_id_spelling():
+    """STU-550: on a book whose section ids are not zero-padded, sorting the keys as
+    strings put `bookcontent10_0` before `bookcontent2_0` — so an entity present
+    throughout Narnia was summarized from chapters 9-16 and never from the wardrobe."""
+    entity = {"type": "PERSON", "canonical_name": "Lucy"}
+    ids = [f"bookcontent{i}_0" for i in range(2, 19)]
+    chapter_numbers = {section_id: n for n, section_id in enumerate(ids, start=1)}
+    chapter_summaries = {
+        section_id: {"chapter_id": section_id, "summary_bullets": [f"Lucy in chapter {n}."]}
+        for section_id, n in chapter_numbers.items()
+    }
+    context_by_chapter = {section_id: ["Lucy was there."] for section_id in ids}
+
+    result = build_chapter_summary_context(
+        entity=entity,
+        chapter_summaries=chapter_summaries,
+        chapter_summary_max=8,
+        context_by_chapter=context_by_chapter,
+        chapter_numbers=chapter_numbers,
+    )
+
+    assert [r["revealed_at_chapter"] for r in result] == [1, 2, 3, 4, 5, 6, 7, 8]
+    assert result[0]["chapter_key"] == "bookcontent2_0"
+
+
+def test_build_entity_bundle_hands_chapter_numbers_out_not_section_ids():
+    """STU-550: the bundle is the boundary — `x101.xhtml` is chapter 1, not 101."""
+    persons, places, orgs, events = _registries()
+    entity = {
+        "canonical_name": "Dorian Havilliard",
+        "type": "PERSON",
+        "importance": "principal",
+        "source_ids": ["p1"],
+    }
+    entities_by_name = {"Dorian Havilliard": entity}
+    relationships = [
+        {"entity_a": "Chaol", "entity_b": "Dorian Havilliard", "chapters": ["x102.xhtml", "x101.xhtml"]},
+    ]
+
+    bundle = build_entity_bundle(
+        entity, relationships, persons, places, orgs, events, entities_by_name,
+        chapter_numbers={"x101.xhtml": 1, "x102.xhtml": 2, "ch01": 1, "ch02": 2},
+    )
+
+    assert bundle["relationships"][0]["chapters"] == [2, 1]
+    assert bundle["relationships"][0]["revealed_at_chapter"] == 1
+    assert bundle["context_chapters"] == [1, 2]
+
+
+def test_build_entity_bundle_drops_a_chapter_reference_it_cannot_resolve(capsys):
+    """STU-550: an unresolvable reference warns; it is never numbered by its digits."""
+    persons, places, orgs, events = _registries()
+    entity = {
+        "canonical_name": "Dorian Havilliard",
+        "type": "PERSON",
+        "importance": "principal",
+        "source_ids": ["p1"],
+    }
+    relationships = [
+        {"entity_a": "Chaol", "entity_b": "Dorian Havilliard", "chapters": ["x999.xhtml"]},
+    ]
+
+    bundle = build_entity_bundle(
+        entity, relationships, persons, places, orgs, events,
+        {"Dorian Havilliard": entity}, chapter_numbers={"ch01": 1, "ch02": 2},
+    )
+
+    assert bundle["relationships"][0]["chapters"] == []
+    assert bundle["relationships"][0]["revealed_at_chapter"] is None
+    assert "x999.xhtml" in capsys.readouterr().err

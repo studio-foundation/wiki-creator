@@ -2,19 +2,19 @@
 
 Foundation of per-chapter gating: every content unit that reaches a wiki page
 carries the chapter where its information is first revealed. Pure logic — the
-chapter data already lives in the entity bundle (event ``chapter``, relationship
-``chapters``, ``chapter_summary_context`` / ``context_by_chapter`` keys); this
-just normalizes and folds it to one ``revealed_at_chapter`` per unit.
+bundle hands every chapter reference over as a chapter number already (event
+``chapter``, relationship ``chapters``, ``context_chapters``,
+``chapter_summary_context``); this just folds them to one
+``revealed_at_chapter`` per unit.
 """
 
 from __future__ import annotations
 
-from wiki_creator.chapters import chapter_number
 from wiki_creator.relationship_types import usable_relationship_type
 
 
-def _min_chapter(keys) -> int | None:
-    nums = [n for n in (chapter_number(k) for k in keys) if n is not None]
+def _min_chapter(numbers) -> int | None:
+    nums = [n for n in numbers if isinstance(n, int)]
     return min(nums) if nums else None
 
 
@@ -36,13 +36,13 @@ def section_revealed_at(section: str, entity: dict) -> int | None:
         return _min_chapter(e.get("chapter") for e in entity.get("entity_events") or [])
     if section == "backstory":
         return _min_chapter(
-            s.get("chapter_key")
+            s.get("revealed_at_chapter")
             for s in entity.get("chapter_summary_context") or []
             if s.get("temporal_context") == "flashback"
         )
-    keys = list(entity.get("context_by_chapter") or {})
-    keys += [s.get("chapter_key") for s in entity.get("chapter_summary_context") or []]
-    return _min_chapter(keys)
+    numbers = list(entity.get("context_chapters") or [])
+    numbers += [s.get("revealed_at_chapter") for s in entity.get("chapter_summary_context") or []]
+    return _min_chapter(numbers)
 
 
 def content_units(sections, entity: dict) -> list[dict]:
@@ -69,7 +69,7 @@ def relation_units(entity: dict) -> list[dict]:
     for rel in entity.get("relationships") or []:
         if not usable_relationship_type(rel.get("relationship_type")):
             continue
-        chapters = [n for n in (chapter_number(k) for k in rel.get("chapters") or []) if n is not None]
+        chapters = [n for n in (rel.get("chapters") or []) if isinstance(n, int)]
         if not chapters:
             continue
         other = rel["entity_b"] if rel.get("entity_a") in own else rel["entity_a"]

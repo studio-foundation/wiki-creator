@@ -81,36 +81,33 @@ def test_studio_run_log_path_and_load_stage_output(tmp_path, monkeypatch):
     assert studio_io.studio_run_log_path("nope") is None
 
 
-def _write_run_log(tmp_path, run_id: str, stage: str, output: dict) -> None:
+def test_stage_output_from_stdout_recovers_from_log_when_stdout_truncated(tmp_path, monkeypatch):
+    """STU-564: the run id from the raw text reaches the complete JSONL log even
+    when the stdout echo is cut before its `stages` ever close."""
     runs_dir = tmp_path / ".studio" / "runs"
-    runs_dir.mkdir(parents=True, exist_ok=True)
-    (runs_dir / f"20260717-{run_id}.jsonl").write_text(
-        json.dumps({"event": "stage_complete", "stage": stage, "status": "success", "output": output})
+    runs_dir.mkdir(parents=True)
+    (runs_dir / "20260712-abc12345.jsonl").write_text(
+        json.dumps(
+            {"event": "stage_complete", "stage": "s", "status": "success", "output": {"ok": True}}
+        )
     )
-
-
-def test_stage_output_from_stdout_recovers_a_truncated_echo(tmp_path, monkeypatch):
-    """The whole point: the run the echo truncates is the run that needs the log.
-
-    A caller that reads the run id out of the *parsed* payload recovers only from
-    truncations it already survived — on a real oversized run the parse returns
-    None and the log is never opened (STU-564).
-    """
     monkeypatch.setattr(studio_io, "PROJECT_ROOT", tmp_path)
-    _write_run_log(tmp_path, "abc12345", "s", {"merge": ["from the log"]})
     truncated = '{"id": "abc12345", "status": "success", "stages": [{"stage_name": "s", "outp'
-    assert studio_io.extract_first_json_object(truncated) is None
-    assert studio_io.stage_output_from_stdout(truncated, "s") == {"merge": ["from the log"]}
+    assert studio_io.extract_first_json_object(truncated) is None  # the echo is unusable
+    assert studio_io.stage_output_from_stdout(truncated, "s") == {"ok": True}
 
 
-def test_stage_output_from_stdout_falls_back_to_the_echo_without_a_log(tmp_path, monkeypatch):
-    monkeypatch.setattr(studio_io, "PROJECT_ROOT", tmp_path)
+def test_stage_output_from_stdout_falls_back_to_stdout_echo(tmp_path, monkeypatch):
+    """No log on disk: recover from the complete stdout echo."""
     (tmp_path / ".studio" / "runs").mkdir(parents=True)
-    intact = json.dumps(
-        {"id": "nolog123", "stages": [{"stage_name": "s", "status": "success", "output": {"ok": True}}]}
+    monkeypatch.setattr(studio_io, "PROJECT_ROOT", tmp_path)
+    stdout = json.dumps(
+        {"id": "x", "stages": [{"stage_name": "s", "status": "success", "output": {"y": 2}}]}
     )
-    assert studio_io.stage_output_from_stdout(intact, "s") == {"ok": True}
-    assert studio_io.stage_output_from_stdout(intact, "other") is None
+    assert studio_io.stage_output_from_stdout(stdout, "s") == {"y": 2}
+
+
+def test_stage_output_from_stdout_returns_none_when_unrecoverable():
     assert studio_io.stage_output_from_stdout("not json at all", "s") is None
 
 

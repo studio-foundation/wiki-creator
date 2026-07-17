@@ -20,6 +20,7 @@ from wiki_creator import studio_io
 from wiki_creator.lang import load_lang_config, infer_language
 from wiki_creator.llm import ollama
 from wiki_creator.registry import EntityRecord, Registry, normalize_name
+from wiki_creator.tokens import contains_token_run
 
 
 def _empty_stats() -> dict:
@@ -243,23 +244,42 @@ def _detect_series_seed(
     return None
 
 
-def _tokens_between_are_connective(between: str, connective_words: set[str]) -> bool:
+def _tokens_between_are_connective(
+    between: str, connective_words: set[str], determiners: set[str]
+) -> bool:
     """True when every word in ``between`` is a connective (article/preposition) or
     pure punctuation — the marker of apposition rather than conjunction.
 
     "" / " - the " -> apposition (only 'the' + punctuation).
     ", of course, sat with " -> NOT apposition ('course', 'sat', 'with' are content words).
+
+    A comma AND a determiner is enumeration, not apposition (STU-559): apposition
+    renames without re-determining ("Dorian Havilliard, Crown Prince of Adarlan"),
+    whereas a comma followed by a fresh determined noun phrase opens a new phrase
+    that may head its own clause — "As for Zar'roc, the Shade might have it" merged
+    the antagonist into a sword. A dash keeps its determiner ("Brullo — the Master —"),
+    which is why the comma is the gate and the determiner alone is not.
     """
+    saw_comma = False
     for raw in between.split():
+        saw_comma = saw_comma or "," in raw
         core = raw.strip(".,;:!?\"'”“’‘—–-()[]").lower()
         if not core:
             continue  # pure punctuation between the two names
         if core not in connective_words:
             return False
+        if saw_comma and core in determiners:
+            return False
     return True
 
 
-def _is_apposition(sentence: str, title: str, name: str, connective_words: set[str]) -> bool:
+def _is_apposition(
+    sentence: str,
+    title: str,
+    name: str,
+    connective_words: set[str],
+    determiners: set[str] = frozenset(),
+) -> bool:
     """True when ``name`` sits in apposition to ``title`` within ``sentence``.
 
     Apposition = the two phrases are adjacent, separated only by connective words
@@ -282,7 +302,7 @@ def _is_apposition(sentence: str, title: str, name: str, connective_words: set[s
                 between = sentence[n1:t0]
             else:
                 continue  # spans overlap without nesting — inconclusive
-            if _tokens_between_are_connective(between, connective_words):
+            if _tokens_between_are_connective(between, connective_words, determiners):
                 return True
     return False
 
@@ -291,29 +311,40 @@ def _detect_pure_title_in_context(
     entity_a: dict,
     entity_b: dict,
     persons_full: dict,
-    role_words: list[str] | None = None,
+    roles_naming_one_character: list[str] | None = None,
     connective_words: list[str] | None = None,
+    determiners: list[str] | None = None,
 ) -> dict | None:
     """
-    Return evidence if one entity's canonical name is a pure role title (e.g. "Master")
-    AND the other entity's name appears in apposition to the title in either entity's
-    context snippets.
+    Return evidence if one entity's canonical name is a role the book declares as
+    naming one particular character (e.g. "Crown Prince" for Dorian) AND the other
+    entity's name appears in apposition to it in either entity's context snippets.
 
     This handles the case where NER produces a bare title entity ("Master") that refers
     to a named character ("Brullo") — a case _detect_title_alias cannot cover because the
     title entity has no surname remainder.
 
+    The premise — a bare role name designates a named character — holds only for a role
+    exactly one character wears, which no signal in the text can establish and a reader
+    knows without hesitation (STU-559). Reading it off `role_words` conflated it with
+    every other role vocabulary: `rider`, `urgal` and `shade` share that list with
+    `king`, so the species merged into the mountain and the Shade into a sword. An
+    undeclared book merges nothing here — the safe direction, since a false merge
+    invents a character and deletes a real one, whereas a false negative leaves two
+    pages that are each still correct.
+
     Both entities' contexts are scanned because NER attributes an appositive span like
     "Dorian Havilliard, Crown Prince of Adarlan" to the proper-name entity, so the
     decisive sentence may never appear in the title entity's own snippets (STU-440).
     """
-    role_words = role_words or []
-    if not role_words:
+    declared = {r.lower() for r in (roles_naming_one_character or [])}
+    if not declared:
         return None
     connective_set = {w.lower() for w in (connective_words or [])}
+    determiner_set = {w.lower() for w in (determiners or [])}
     for title_entity, proper_entity in ((entity_a, entity_b), (entity_b, entity_a)):
         title_name = title_entity.get("canonical_name", "")
-        if not _is_pure_title(title_name, role_words):
+        if title_name.lower() not in declared:
             continue
         proper_names = [n for n in _entity_names(proper_entity) if n]
         if not proper_names:
@@ -328,7 +359,10 @@ def _detect_pure_title_in_context(
             for sentence in sentences:
                 if title_lower not in sentence.lower():
                     continue
-                if any(_is_apposition(sentence, title_name, pn, connective_set) for pn in proper_names):
+                if any(
+                    _is_apposition(sentence, title_name, pn, connective_set, determiner_set)
+                    for pn in proper_names
+                ):
                     return {
                         "method": "pure_title",
                         "confidence": "medium",
@@ -376,22 +410,6 @@ def _leading_role(name: str, role_words: list[str]) -> str | None:
 def _entity_roles(names: list[str], role_words: list[str]) -> set[str]:
     """Return every role_word the entity's names lead with."""
     return {role for name in names if (role := _leading_role(name, role_words))}
-
-
-def _contains_token_run(name: str, run: str) -> bool:
-    """Return True if run's tokens appear contiguously among name's tokens.
-
-    Whole tokens, never substrings: "Beavers" is the couple, and "beaver" being a
-    substring of it says nothing about either spouse.
-    """
-    tokens = name.lower().split()
-    run_tokens = run.split()
-    if not run_tokens:
-        return False
-    return any(
-        tokens[i:i + len(run_tokens)] == run_tokens
-        for i in range(len(tokens) - len(run_tokens) + 1)
-    )
 
 
 def _ambiguous_remainders(entities: list[dict], role_words: list[str]) -> frozenset[str]:
@@ -456,7 +474,7 @@ def _detect_title_alias(
             for full_name in names_full:
                 if remainder in ambiguous_remainders and full_name.lower() == remainder:
                     continue
-                if _contains_token_run(full_name, remainder):
+                if contains_token_run(full_name.lower(), remainder):
                     return {
                         "method": "title_alias",
                         "confidence": "medium",
@@ -620,7 +638,9 @@ def resolve_aliases(
     llm_confirmer=None,
     reveal_words: tuple[str, ...] = (),
     role_words: list[str] | None = None,
+    roles_naming_one_character: list[str] | None = None,
     connective_words: list[str] | None = None,
+    determiners: list[str] | None = None,
     relationships: list[dict] | None = None,
     role_symmetric_min_shared: int = 2,
     seed_lookup: dict[str, EntityRecord] | None = None,
@@ -688,7 +708,9 @@ def resolve_aliases(
 
             pure_title = _detect_pure_title_in_context(
                 entity, candidate, persons_full,
-                role_words=role_words, connective_words=connective_words,
+                roles_naming_one_character=roles_naming_one_character,
+                connective_words=connective_words,
+                determiners=determiners,
             )
             if pure_title:
                 merged = _merge_entities(entity, candidate, pure_title, persons_full, role_words=role_words)
@@ -791,11 +813,16 @@ def main() -> None:
     role_words: list[str] = list(classification_cfg.get("role_words", []))
     cue_role_words = [w.lower() for w in lang_cfg.get("person_cue_words", [])]
     role_words = list(dict.fromkeys(role_words + cue_role_words))  # dedup, preserve order
+    # Book-declared only, never cue_words: the question is which roles THIS novel
+    # gives to a single character (STU-559), which no language-wide list can answer.
+    roles_naming_one_character: list[str] = list(
+        classification_cfg.get("roles_naming_one_character", [])
+    )
+    determiners = [w.lower() for w in lang_cfg.get("determiners", [])]
     # Apposition-safe words: articles/determiners + name connectors. Absent keys degrade
     # to an empty collection (only adjacency/punctuation counts as apposition then).
     connective_words = list(dict.fromkeys(
-        [w.lower() for w in lang_cfg.get("determiners", [])]
-        + [w.lower() for w in lang_cfg.get("name_connectors", [])]
+        determiners + [w.lower() for w in lang_cfg.get("name_connectors", [])]
     ))
 
     persons_full = {}
@@ -874,7 +901,9 @@ def main() -> None:
     result = resolve_aliases(
         entities, persons_full=persons_full, narrator=narrator,
         llm_confirmer=llm_confirmer, reveal_words=reveal_words,
-        role_words=role_words, connective_words=connective_words,
+        role_words=role_words,
+        roles_naming_one_character=roles_naming_one_character,
+        connective_words=connective_words, determiners=determiners,
         relationships=relationships,
         role_symmetric_min_shared=ctx.get("role_symmetric_min_shared", 2),
         seed_lookup=seed_lookup,

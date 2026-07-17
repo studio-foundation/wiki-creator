@@ -21,6 +21,10 @@ wikis.yaml format (see scripts/fandom_wikis.yaml for the curated list):
       lang: fr
       types: [PERSON]
       categories: {PERSON: Personnage}
+    - wiki: https://pern.fandom.com
+      lang: en
+      types: [PERSON, PLACE]
+      infoboxes: {PERSON: [Infobox show character], PLACE: [Infobox show hold]}
 
 Only `wiki` is required per entry. `lang` defaults to "en".
 `types` defaults to ["PERSON", "PLACE", "ORG"].
@@ -33,9 +37,13 @@ wikis surveyed. Real names in use include `Personnage` (singular, fr),
 `The Shadowhunter Chronicles characters`. A wrong name is silent — the
 category returns 0 members and the wiki yields no pages.
 
-`infobox_templates` names the templates that ARE infoboxes but say so nowhere a
-test can read — `Charcat` on warriors, whose markup lives one transclusion away.
-Everything else is derived: a template is an infobox if its title contains
+`infoboxes` names, per entity type, the infoboxes those pages carry. It does two
+jobs, and which one applies is derived (see `entity_page_source`): a type the
+entry names no category for is enumerated from its infoboxes' transclusions —
+the entry point for a wiki whose cast no category names. A type that has both
+keeps its category, and the names only tell the infobox identification what its
+two tests cannot see: `Charcat` on warriors, whose markup lives one transclusion
+away. Everything else is derived: a template is an infobox if its title contains
 "infobox", or its source carries Portable Infobox `<infobox>` markup.
 
 Non-English wikis are served under a path, not a subdomain: give the full
@@ -133,12 +141,13 @@ def is_infobox_template(title: str, source: str | None) -> bool:
 
     Following transclusions is what that seems to ask for, and it was measured
     and rejected: transcluding an infobox is not being one. On Warriors' 954
-    templates, one level adds 6 names to the 23 the direct tests find — `Charcat`
-    and 5 `/doc` and `/preload` subpages. Iterating to a fixpoint adds 85, since
-    `Charcat` then promotes each of its 78 `Charcat/<cat name>` subpages. Either
-    way the one real name arrives indistinguishable from the noise, so `Charcat`
-    is declared instead, like `categories` — derive what is derivable, declare
-    the rest.
+    templates, one level adds 16 names to the 23 the direct tests find, and only
+    one is `Charcat`. The wiki's `Image`, `Book` and `Location` are themselves
+    portable infoboxes, so the level sweeps in whatever shows a picture or cites
+    a tome — `Official Site`, `StaffBox`, `Prey`, `R`. Iterating to a fixpoint
+    adds 278, including 79 `Charcat/<cat name>` subpages. Either way the one real
+    name arrives indistinguishable from the noise, so `Charcat` is declared
+    instead, like `categories` — derive what is derivable, declare the rest.
 
     Deliberately NOT a param-count test: a well-filled `Dialogue` or `Quote`
     would pass one. Param count measured the size of this hole; it does not
@@ -251,6 +260,30 @@ def is_stub(body: str) -> bool:
 # --------------------------------------------------------------------------
 # MediaWiki API
 # --------------------------------------------------------------------------
+
+def fetch_transclusions(api_url: str, template_title: str) -> list[str]:
+    """The mainspace pages that transclude one template."""
+    titles = []
+    params: dict = {
+        "action": "query",
+        "list": "embeddedin",
+        "eititle": template_title,
+        "einamespace": "0",
+        "eilimit": "500",
+        "eifilterredir": "nonredirects",
+        "format": "json",
+    }
+    while True:
+        resp = requests.get(api_url, params=params, timeout=30)
+        resp.raise_for_status()
+        time.sleep(RATE_LIMIT_SECONDS)
+        data = resp.json()
+        titles.extend(p["title"] for p in data.get("query", {}).get("embeddedin", []))
+        if "continue" not in data:
+            break
+        params["eicontinue"] = data["continue"]["eicontinue"]
+    return titles
+
 
 def fetch_category_members(api_url: str, category: str) -> list[str]:
     titles = []
@@ -565,6 +598,46 @@ def scrape_infobox_templates(api_url: str, wiki_out_dir: Path, templates: WikiIn
     return summary
 
 
+def declared_infoboxes(entry: dict) -> dict[str, list[str]]:
+    return entry.get("infoboxes") or {}
+
+
+def declared_infobox_names(entry: dict) -> list[str]:
+    return [name for names in declared_infoboxes(entry).values() for name in names]
+
+
+def entity_page_source(entry: dict, entity_type: str) -> tuple[str, list[str]]:
+    """Where a wiki's pages of one entity type are enumerated from: the category
+    that names them, or the infoboxes they carry.
+
+    A category is the default and reaches most wikis. Five verified wikis have no
+    category naming their cast at all — they partition it by profession
+    (`harrypotter`), gender (`wot`), in-world era (`pern`), book or status
+    (`thehungergames`), species (`twilightsaga`) — so no name is the one to
+    override. What those pages do share is an infobox: the pages transcluding
+    `Infobox show character` ARE Pern's characters, however Pern files them.
+
+    So the entry point follows what the wiki gives us, per type: a type the entry
+    names no category for, but names infoboxes for, is enumerated from those.
+    Both are declared, for the same reason — neither a category name nor which
+    infobox means "character" is derivable, and a wrong guess is silent.
+    """
+    names = declared_infoboxes(entry).get(entity_type)
+    if names and entity_type not in entry.get("categories", {}):
+        return "infoboxes", list(names)
+    categories = {**DEFAULT_CATEGORIES, **entry.get("categories", {})}
+    return "category", [categories.get(entity_type, entity_type)]
+
+
+def fetch_entity_titles(api_url: str, kind: str, names: list[str], namespace_prefix: str) -> list[str]:
+    if kind == "category":
+        return fetch_category_members(api_url, names[0])
+    titles: list[str] = []
+    for name in names:
+        titles.extend(fetch_transclusions(api_url, namespace_prefix + name))
+    return list(dict.fromkeys(titles))  # one page can carry two of a type's infoboxes
+
+
 def scrape_one_wiki(entry: dict, out_dir: Path, limit_per_wiki: int | None) -> dict:
     """Scrape a single wiki entirely. Returns a summary dict for the run log.
 
@@ -574,7 +647,6 @@ def scrape_one_wiki(entry: dict, out_dir: Path, limit_per_wiki: int | None) -> d
     wiki_url = entry["wiki"]
     lang = entry.get("lang", "en")
     types = entry.get("types", list(DEFAULT_CATEGORIES.keys()))
-    categories = {**DEFAULT_CATEGORIES, **entry.get("categories", {})}
     slug = entry.get("slug") or derive_wiki_slug(wiki_url)
 
     api_url = wiki_url.rstrip("/") + "/api.php"
@@ -590,7 +662,7 @@ def scrape_one_wiki(entry: dict, out_dir: Path, limit_per_wiki: int | None) -> d
                 json.dump(wiki_stats, f, ensure_ascii=False, indent=2)
 
     try:
-        templates = resolve_infobox_templates(api_url, entry.get("infobox_templates"))
+        templates = resolve_infobox_templates(api_url, declared_infobox_names(entry))
     except requests.RequestException as e:
         return {
             "wiki": wiki_url,
@@ -615,15 +687,16 @@ def scrape_one_wiki(entry: dict, out_dir: Path, limit_per_wiki: int | None) -> d
             for entity_type in types:
                 if limit_per_wiki is not None and total_written >= limit_per_wiki:
                     break
-                category = categories.get(entity_type, entity_type)
+                kind, names = entity_page_source(entry, entity_type)
+                source = f"{kind} '{', '.join(names)}'"
                 try:
-                    titles = fetch_category_members(api_url, category)
+                    titles = fetch_entity_titles(api_url, kind, names, templates.namespace_prefix)
                 except requests.RequestException as e:
-                    errors.append(f"category '{category}' fetch failed: {e}")
+                    errors.append(f"{source} fetch failed: {e}")
                     continue
 
                 if not titles:
-                    errors.append(f"category '{category}' returned 0 results for type {entity_type}")
+                    errors.append(f"{source} returned 0 results for type {entity_type}")
                     continue
 
                 for title in titles:
@@ -679,7 +752,7 @@ def reparse_one_wiki(entry: dict, out_dir: Path) -> dict:
 
     try:
         templates = resolve_infobox_templates(
-            entry["wiki"].rstrip("/") + "/api.php", entry.get("infobox_templates")
+            entry["wiki"].rstrip("/") + "/api.php", declared_infobox_names(entry)
         )
     except requests.RequestException as e:
         summary["errors"].append(f"fatal: infobox template resolution failed: {e}")

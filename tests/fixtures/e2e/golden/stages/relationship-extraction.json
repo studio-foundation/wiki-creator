@@ -96,7 +96,6 @@
  "stats": {
   "total_pairs_checked": 1,
   "pairs_above_threshold": 1,
-  "classified": 0,
   "window_size": 5,
   "threshold": 5,
   "min_cooccurrence": 5,

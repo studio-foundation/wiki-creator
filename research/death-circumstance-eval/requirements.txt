@@ -1,0 +1,4 @@
+# No extra dependencies. This eval drives the real gate in wiki_creator/
+# (stdlib + PyYAML, already in the repo's pyproject) and needs only pytest,
+# which the dev extra provides. Nothing heavy, nothing dev-machine-only —
+# unlike ner-eval/relation-eval, it runs on the repo's own install.

@@ -13,12 +13,23 @@ system_prompt: |
 
   Return exactly:
   {
-    "status": [ {"name": "...", "status": "...", "quote": "..."} ]
+    "status": [ {"name": "...", "status": "...", "quote": "...", "agent": "...", "place": "..."} ]
   }
 
   "status" is exactly one of: alive, deceased, missing, undead
   "quote" is copied VERBATIM from a snippet shown above under THAT character's own
   "## " heading.
+
+  "agent" and "place" are OPTIONAL and only for "deceased". Omit either one you
+  cannot fill from the quote itself.
+  - "agent": the character who killed them, named in the quote.
+  - "place": where they died, named in the quote.
+
+  Both must be written EXACTLY as the quote writes them, and both must be in the
+  quote you returned — not in a neighbouring snippet. A place the character
+  travelled to in another sentence is not where they died. If the quote names no
+  killer, omit "agent". If it names no place, omit "place". Neither is a guess:
+  a field we cannot read off the quote is dropped, and the status still stands.
 
   List ONLY characters whose status the snippets state. Every character you do not
   list is recorded as unknown, which is the correct answer whenever the text shown

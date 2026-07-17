@@ -36,7 +36,6 @@ from pathlib import Path
 import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-from wiki_creator.chapters import chapter_number
 from wiki_creator.lang import load_lang_config
 from wiki_creator.editorial_stance import GROUNDING_BLOCK, EditorialStance, editorial_stance
 from wiki_creator.page_templates import (
@@ -53,7 +52,7 @@ from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.provenance import content_units, relation_units
 from wiki_creator import studio_io
 from wiki_creator.entity_links import link_first_mentions
-from wiki_creator.entity_status import status_label
+from wiki_creator.entity_status import death_label, status_label
 from wiki_creator.registry import Registry, normalize_name
 from wiki_creator.spoiler_blocks import relationship_index_lines, per_relation_prose_enabled
 from wiki_creator.relationship_types import usable_relationship_type
@@ -735,7 +734,7 @@ def _batch_bound_value(entity: dict, token: str, lang: str = "fr") -> str | None
 def _extracted_fact_value(entity: dict, token: str, lang: str) -> str | None:
     """Value for an extracted-fact infobox token, sourced from facts the pipeline
     produced into the batch entity. None when the fact is absent (slot omitted).
-    `affiliation` and the specific `type` are future slices."""
+    The specific `type` is a future slice."""
     if token == "titles":
         titles = [t for t in (entity.get("titles") or []) if t]
         return ", ".join(titles) if titles else None
@@ -743,14 +742,23 @@ def _extracted_fact_value(entity: dict, token: str, lang: str) -> str | None:
         # MIN with a declared fallback: an unstamped entity renders `unknown`
         # rather than dropping the slot (STU-488).
         return status_label(entity.get("status"), lang)
+    if token == "affiliation":
+        # OPT with no declared fallback: an undecided character drops the slot
+        # (STU-551). Plain text — no infobox slot carries a wikilink today.
+        return (entity.get("affiliation") or "").strip() or None
+    if token == "death":
+        # OPT, unlike `status`: no grounded circumstance renders no row (STU-552).
+        return death_label(entity.get("death_agent"), entity.get("death_place"), lang)
     return None
 
 
 def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> None:
     """Overwrite pipeline-sourced infobox tokens with authoritative values, per
     the resolved template: `batch-bound` from the batch identity, `extracted-fact`
-    from facts the pipeline produced. `llm-prose` slots are left to the LLM.
-    No-op when book_config is None."""
+    from facts the pipeline produced. An `extracted-fact` slot the pipeline cannot
+    fill is *cleared*, not left to the writer — the writer never owns a slot whose
+    provenance promises a grounded fact (STU-572). `llm-prose` slots are left to
+    the LLM. No-op when book_config is None."""
     if book_config is None:
         return
     page.setdefault("infobox_fields", {})
@@ -759,12 +767,20 @@ def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> No
     for slot in resolved.infobox():
         if slot.provenance == "batch-bound":
             value = _batch_bound_value(entity, slot.token, lang)
+            if value:
+                page["infobox_fields"][slot.token] = value
         elif slot.provenance == "extracted-fact":
+            # The pipeline owns this slot: both its value and its absence are
+            # authoritative. A present value overwrites; an absent one clears
+            # whatever the writer put there, rather than leaving an ungrounded
+            # fact under a provenance that promises a grounded one (STU-572).
+            # A slot the pipeline never computes (species, location, leaders)
+            # is therefore always empty until it is computed.
             value = _extracted_fact_value(entity, slot.token, lang)
-        else:
-            continue
-        if value:
-            page["infobox_fields"][slot.token] = value
+            if value:
+                page["infobox_fields"][slot.token] = value
+            else:
+                page["infobox_fields"].pop(slot.token, None)
 
 
 # The neutral error codes check_identity_match emits (scripts/wiki_page_validator.py).
@@ -1135,7 +1151,7 @@ def _generate_relationships_subsections(
     for rel in entity.get("relationships") or []:
         if not usable_relationship_type(rel.get("relationship_type")):
             continue
-        chapters = [n for n in (chapter_number(k) for k in rel.get("chapters") or []) if n is not None]
+        chapters = [n for n in (rel.get("chapters") or []) if isinstance(n, int)]
         other = rel["entity_b"] if rel.get("entity_a") in own else rel["entity_a"]
         typed.append((max(chapters) if chapters else -1, other, rel))
     typed.sort(key=lambda t: t[0], reverse=True)

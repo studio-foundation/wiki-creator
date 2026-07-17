@@ -59,3 +59,15 @@ def test_out_of_range_threshold_raises(threshold):
 
 def test_threshold_of_one_is_allowed():
     assert ner_config({"ner": {"invented_names": True, "threshold": 1}}).threshold == 1.0
+
+
+def test_fingerprint_carries_the_resolved_block_not_the_declared_one():
+    from wiki_creator.ner import DEFAULT_MODEL, extraction_fingerprint
+    assert extraction_fingerprint({"ner": {"invented_names": True}}) == {
+        "ner": {"invented_names": True, "model": DEFAULT_MODEL, "threshold": 0.5}
+    }
+
+
+def test_fingerprint_separates_the_two_backends():
+    from wiki_creator.ner import extraction_fingerprint
+    assert extraction_fingerprint({"ner": {"invented_names": True}}) != extraction_fingerprint(None)

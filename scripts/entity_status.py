@@ -28,6 +28,7 @@ import yaml
 
 from wiki_creator import studio_io
 from wiki_creator.entity_status import (
+    build_name_index,
     load_cached_status,
     parse_status_verdict,
     render_roster,
@@ -62,7 +63,9 @@ def contexts_by_entity(registry: Registry) -> dict[str, list[dict]]:
     return contexts
 
 
-def resolve_status(rows: list[dict], book_title: str, cache_path: Path) -> dict[str, dict]:
+def resolve_status(
+    rows: list[dict], book_title: str, cache_path: Path, name_index: dict[str, dict[str, str]]
+) -> dict[str, dict]:
     """Verified status per character, from cache or one `studio run`.
 
     Never raises. Every failure path returns {} — every character then renders
@@ -100,7 +103,7 @@ def resolve_status(rows: list[dict], book_title: str, cache_path: Path) -> dict[
     if stage_output is None:
         return _give_up("studio_run_output_missing", rows)
 
-    verdicts = parse_status_verdict(stage_output, rows)
+    verdicts = parse_status_verdict(stage_output, rows, name_index)
     save_status_cache(cache_path, rows, verdicts)
     return verdicts
 
@@ -154,10 +157,21 @@ def main() -> None:
         return
 
     rows = roster_rows(persons, contexts, status_markers)
+    name_index = build_name_index(
+        [
+            {
+                "entity_type": record.entity_type,
+                "canonical_name": record.canonical_name,
+                "aliases": record.aliases,
+            }
+            for record in registry.entities
+        ]
+    )
     verdicts = resolve_status(
         rows,
         book_title=str(book_cfg.get("title") or paths.processing.name),
         cache_path=cache_path,
+        name_index=name_index,
     )
 
     decided = {name: v["status"] for name, v in verdicts.items()}

@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import re
 
-from wiki_creator.chapters import chapter_number
 from wiki_creator.page_templates import (
     canonical_relationship,
     chrome_label,
@@ -88,7 +87,7 @@ def relationship_index_lines(
             continue
         token = canonical_relationship(rtype, book_config=book_config)
         rtype = relationship_label(token, lang, book_config=book_config) if token else rtype
-        chapters = [c for c in (chapter_number(k) for k in rel.get("chapters") or []) if c is not None]
+        chapters = [c for c in (rel.get("chapters") or []) if isinstance(c, int)]
         if not chapters:
             continue
         other = rel["entity_b"] if rel.get("entity_a") in own else rel["entity_a"]

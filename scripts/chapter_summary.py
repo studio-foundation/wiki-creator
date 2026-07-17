@@ -505,22 +505,16 @@ def _run_studio_chapter_summary_item(*, chapter: dict, config: ChapterSummaryCon
 
     combined_output = (result.stdout or "") + (("\n" + result.stderr) if result.stderr else "")
     run_id = studio_io.extract_run_id(result.stdout or "")
+    run_payload = studio_io.extract_first_json_object(result.stdout or "")
     run_metadata = {
         "command": cmd,
         "returncode": result.returncode,
         "run_id": run_id or None,
-        "status": (studio_io.extract_first_json_object(result.stdout or "") or {}).get("status"),
+        "status": (run_payload or {}).get("status"),
     }
     if result.returncode != 0:
         return {
             "error": "studio_run_failed",
-            "raw_response": combined_output.strip(),
-            "run_metadata": run_metadata,
-        }
-
-    if not run_id:
-        return {
-            "error": "studio_run_missing_id",
             "raw_response": combined_output.strip(),
             "run_metadata": run_metadata,
         }

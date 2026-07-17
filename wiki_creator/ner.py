@@ -25,10 +25,12 @@ months; a misconfiguration that quietly falls back is that same bug.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 
 DEFAULT_MODEL = "urchade/gliner_large-v2.1"
 DEFAULT_THRESHOLD = 0.5
+
+EXTRACTION_CONFIG_FILE = "extraction_config.json"
 
 _KEYS = {"invented_names", "model", "threshold"}
 
@@ -65,3 +67,16 @@ def ner_config(book_config: dict | None) -> NerConfig:
         raise ValueError(f"book YAML `ner.threshold` must be a number in (0, 1], got {threshold!r}")
 
     return NerConfig(invented_names, raw.get("model", DEFAULT_MODEL), float(threshold))
+
+
+def extraction_fingerprint(book_config: dict | None) -> dict:
+    """The resolved config the extraction artifacts were produced under (STU-560).
+
+    Extraction keeps no cache of its own, but the orchestrator skips a completed
+    stage on file presence alone. So a `ner` flip read correctly from the book
+    YAML stayed unapplied — the three books configured for GLiNER were all
+    rendering entities typed by spaCy, and nothing said so. An artifact that does
+    not declare the config that produced it cannot be invalidated by a config
+    change.
+    """
+    return {"ner": asdict(ner_config(book_config))}

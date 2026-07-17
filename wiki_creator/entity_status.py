@@ -19,64 +19,30 @@ Every helper here fails toward `unknown`. The asymmetry is STU-539's: a false
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
 
-from wiki_creator.chapters import chapter_number
 from wiki_creator.page_templates import chrome_label
+from wiki_creator.tokens import contains_token_run
+from wiki_creator.roster import (
+    has_marker,
+    is_quoted,
+    latest_first,
+    load_cache,
+    normalize,
+    render_roster,
+    save_cache,
+)
 
 STATUS_VALUES = ("alive", "deceased", "missing", "unknown", "undead")
 DEFAULT_STATUS = "unknown"
 
+CACHE_VERSION = 2
+
 SNIPPETS_PER_ENTITY = 5
 SNIPPET_CHARS = 300
 
-_WHITESPACE_RE = re.compile(r"\s+")
-
-# An EPUB's typesetting uses curly quotes/dashes; the model echoes the same
-# sentence back in plain ASCII. Folding both to one form is what lets a
-# verbatim quote inside dialogue still match its source snippet.
-_TYPOGRAPHIC_TRANSLATION = str.maketrans(
-    {
-        "‘": "'",
-        "’": "'",
-        "‚": "'",
-        "‛": "'",
-        "“": '"',
-        "”": '"',
-        "„": '"',
-        "‟": '"',
-        "′": "'",
-        "″": '"',
-        "…": "...",
-        "–": "-",
-        "—": "-",
-        "‑": "-",
-    }
-)
-
-
-def _normalize(text: object) -> str:
-    folded = str(text or "").translate(_TYPOGRAPHIC_TRANSLATION)
-    return _WHITESPACE_RE.sub(" ", folded).strip().casefold()
-
-
-def _has_marker(text: str, status_markers: list[str]) -> bool:
-    return any(
-        re.search(r"\b" + re.escape(marker) + r"\b", text, re.IGNORECASE)
-        for marker in status_markers
-        if marker
-    )
-
-
-def _latest_first(snippets: list[dict]) -> list[dict]:
-    """Sorted by chapter, latest first. An unnumbered chapter (``Prologue``)
-    sorts earliest. Stable, so same-chapter snippets keep source order."""
-    return sorted(
-        snippets,
-        key=lambda snippet: chapter_number(snippet.get("chapter_id")) or 0,
-        reverse=True,
-    )
+# The two types a death circumstance can name (STU-552).
+_CIRCUMSTANCE_TYPES = ("PERSON", "PLACE")
 
 
 def select_status_snippets(snippets: list[dict], status_markers: list[str]) -> list[dict]:
@@ -89,16 +55,16 @@ def select_status_snippets(snippets: list[dict], status_markers: list[str]) -> l
     latest evidence decides.
 
     Snippets are ``{"text": str, "chapter_id": str}``; the chapter rides along
-    because `_latest_first` sorts by it.
+    because `latest_first` sorts by it.
     """
     marked: list[dict] = []
     plain: list[dict] = []
     for snippet in snippets or []:
         text = str(snippet.get("text") or "")
-        (marked if _has_marker(text, status_markers or []) else plain).append(snippet)
+        (marked if has_marker(text, status_markers or []) else plain).append(snippet)
 
-    chosen = _latest_first(marked)[:SNIPPETS_PER_ENTITY]
-    chosen += _latest_first(plain)[: SNIPPETS_PER_ENTITY - len(chosen)]
+    chosen = latest_first(marked)[:SNIPPETS_PER_ENTITY]
+    chosen += latest_first(plain)[: SNIPPETS_PER_ENTITY - len(chosen)]
     return [
         {"text": str(snippet.get("text") or "")[:SNIPPET_CHARS], "chapter_id": snippet.get("chapter_id")}
         for snippet in chosen
@@ -124,31 +90,51 @@ def roster_rows(
     ]
 
 
-def render_roster(rows: list[dict]) -> str:
-    """The roster block the classifier reads. Text only — the chapter is never
-    shown or reported by the model."""
-    blocks = []
-    for row in rows:
-        header = row["name"]
-        if row["aliases"]:
-            header += f" (also called: {', '.join(row['aliases'])})"
-        lines = [f"## {header}"]
-        lines.extend(f"- {snippet['text']}" for snippet in row["snippets"])
-        if not row["snippets"]:
-            lines.append("- (no snippet found for this character)")
-        blocks.append("\n".join(lines))
-    return "\n\n".join(blocks)
+def build_name_index(entities: list[dict]) -> dict[str, dict[str, str]]:
+    """{entity_type: {normalized surface: canonical_name}} for the two types a
+    death circumstance can name. Aliases map to their canonical name, so a
+    circumstance renders `Chaol Westfall` where the text said `Captain Westfall`.
+    """
+    index: dict[str, dict[str, str]] = {etype: {} for etype in _CIRCUMSTANCE_TYPES}
+    for entity in entities:
+        names = index.get(str(entity.get("entity_type") or ""))
+        if names is None:
+            continue
+        canonical = str(entity.get("canonical_name") or "").strip()
+        if not canonical:
+            continue
+        for surface in (canonical, *(entity.get("aliases") or [])):
+            key = normalize(surface)
+            if key:
+                names.setdefault(key, canonical)
+    return index
 
 
-def _is_quoted(quote: str, snippets: list[dict]) -> bool:
-    """True iff ``quote`` is verbatim in one of the entity's own ``snippets``."""
-    needle = _normalize(quote)
-    if not needle:
-        return False
-    return any(needle in _normalize(snippet.get("text")) for snippet in snippets)
+def _grounded_name(value: object, quote: str, names: dict[str, str]) -> str | None:
+    r"""The canonical name this value denotes, or None.
+
+    Two gates: it is on the type's roster, and it is verbatim in the quote the
+    verdict already had to prove. A name sourced from a neighbouring snippet
+    would render where the character *was*, not where they died.
+
+    The quote check is a whole-token match (shared with STU-541, same bug): a
+    roster name like "Son" — a spaCy-mistyped common noun kept on the PERSON
+    roster — sits inside "per**son**" with no relation to it. `boundary="word"`
+    still crosses a possessive apostrophe ("Durza**'s**"), so a name owning the
+    sentence keeps grounding.
+    """
+    surface = normalize(value)
+    if not surface:
+        return None
+    canonical = names.get(surface)
+    if canonical is None or not contains_token_run(normalize(quote), surface, boundary="word"):
+        return None
+    return canonical
 
 
-def parse_status_verdict(payload: object, rows: list[dict]) -> dict[str, dict]:
+def parse_status_verdict(
+    payload: object, rows: list[dict], name_index: dict[str, dict[str, str]]
+) -> dict[str, dict]:
     """Map the classifier's reply to verified verdicts, keyed by roster name.
 
     A name absent from the result is `unknown`; unparseable input verdicts
@@ -157,6 +143,10 @@ def parse_status_verdict(payload: object, rows: list[dict]) -> dict[str, dict]:
     entity's own** snippets. The model has read these novels: without the quote
     check, a verdict from its memory of the plot and one from this run's text
     are indistinguishable afterwards.
+
+    A `deceased` verdict may also carry `agent` / `place` — each kept only when
+    `name_index` knows it under the right type and the quote names it. A field
+    failing either gate is dropped; the verdict survives (STU-552).
     """
     if isinstance(payload, str):
         try:
@@ -182,36 +172,35 @@ def parse_status_verdict(payload: object, rows: list[dict]) -> dict[str, dict]:
             continue
         if status not in STATUS_VALUES or status == DEFAULT_STATUS:
             continue
-        if not _is_quoted(quote, row["snippets"]):
+        if not is_quoted(quote, row["snippets"]):
             continue
-        verdicts[name] = {"status": status, "quote": quote}
+        verdict = {"status": status, "quote": quote}
+        if status == "deceased":
+            agent = _grounded_name(entry.get("agent"), quote, name_index["PERSON"])
+            if agent is not None and normalize(agent) == normalize(name):
+                agent = None
+            place = _grounded_name(entry.get("place"), quote, name_index["PLACE"])
+            if agent:
+                verdict["agent"] = agent
+            if place:
+                verdict["place"] = place
+        verdicts[name] = verdict
     return verdicts
 
 
 def load_cached_status(path: Path | str, rows: list[dict]) -> dict[str, dict] | None:
-    """Cached verdicts for exactly this roster, or None.
+    """Cached verdicts for exactly this roster and this question, or None.
 
     Keyed on the rows themselves: the roster changes with WIKI_MAX_CHAPTERS and
     with every upstream extraction fix, and a verdict returned for a different
-    roster must not be replayed onto it.
+    roster must not be replayed onto it. The version covers what the rows
+    cannot — STU-552 changed what we ask, not who we ask it about.
     """
-    try:
-        cached = json.loads(Path(path).read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return None
-    if not isinstance(cached, dict) or cached.get("roster") != rows:
-        return None
-    verdicts = cached.get("verdicts")
-    return verdicts if isinstance(verdicts, dict) else None
+    return load_cache(path, rows, CACHE_VERSION)
 
 
 def save_status_cache(path: Path | str, rows: list[dict], verdicts: dict[str, dict]) -> None:
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps({"roster": rows, "verdicts": verdicts}, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+    save_cache(path, rows, verdicts, CACHE_VERSION)
 
 
 def status_label(status: str | None, lang: str) -> str:
@@ -222,3 +211,20 @@ def status_label(status: str | None, lang: str) -> str:
     if value not in STATUS_VALUES:
         value = DEFAULT_STATUS
     return chrome_label(f"status_{value}", lang)
+
+
+def death_label(agent: str | None, place: str | None, lang: str) -> str | None:
+    """The localized death circumstance, or None when neither field is grounded.
+
+    OPT, unlike `status_label`: a character the text never says died renders no
+    row at all rather than a fallback.
+    """
+    who = str(agent or "").strip()
+    where = str(place or "").strip()
+    if who and where:
+        return chrome_label("death_by_at", lang).format(agent=who, place=where)
+    if who:
+        return chrome_label("death_by", lang).format(agent=who)
+    if where:
+        return chrome_label("death_at", lang).format(place=where)
+    return None

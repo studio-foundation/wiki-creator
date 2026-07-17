@@ -16,7 +16,6 @@ ner:
   invented_names: true
 coref: true
 use_llm: true
-classify: false  # classification handled by scripts/classify_relationships.py (pre-step in run_wiki.py)
 llm_model: mistral:7b-instruct
 novel_summary: |
   After serving out a year of hard labor in the salt mines of Endovier for her crimes, 18-year-old assassin Celaena Sardothien is dragged before the Crown Prince.
@@ -125,6 +124,13 @@ classification:
     - captain
     - guard
     - master
+  # Roles this novel uses, bare, as a name for one particular character: "the
+  # Crown Prince" is always Dorian, "the Captain" always Chaol. Not "king" —
+  # Adarlan's king and Brannon both wear it, so bare "King" names nobody.
+  roles_naming_one_character:
+    - crown prince
+    - captain
+
   role_patterns:
     - '\b[a-z][a-z''\- ]*assassin\b'
     - '\b[a-z][a-z''\- ]*champion\b'

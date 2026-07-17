@@ -12,10 +12,10 @@ Covers three families of duplication:
 * ``additional_context`` YAML -> :class:`~wiki_creator.paths.BookPaths`:
   :func:`paths_from_payload`
 * Studio run-output recovery (log scraping for ``*-item`` fan-out):
-  :func:`stage_output_from_stdout` is the front door; it is built from
-  :func:`extract_first_json_object`, :func:`extract_run_id`,
-  :func:`studio_run_log_path`, :func:`extract_stage_output_from_run_payload`
-  and :func:`load_studio_stage_output`. Plus :func:`slugify_filename`.
+  :func:`stage_output_from_stdout` (the single front door), over
+  :func:`extract_run_id`, :func:`extract_first_json_object`,
+  :func:`studio_run_log_path`, :func:`extract_stage_output_from_run_payload`,
+  :func:`load_studio_stage_output`, plus :func:`slugify_filename`.
 """
 
 from __future__ import annotations
@@ -196,23 +196,24 @@ def load_studio_stage_output(run_id: str, stage_name: str) -> dict | None:
 
 
 def stage_output_from_stdout(stdout: str, stage_name: str) -> dict | None:
-    """A stage's ``output`` from a ``studio run --json`` stdout, else ``None``.
+    """Recover a stage's success ``output`` from a ``studio run --json`` stdout.
 
-    The JSONL log on disk is complete; the ``--json`` stdout echo duplicates it and
-    is cut at 8 KiB whenever the run is large (STU-533). So the log is read first,
-    and the run id comes from :func:`extract_run_id` — a regex over the raw text —
-    because a caller that takes the id out of the *parsed* payload can only recover
-    from a truncation it has already survived. That is no recovery at all: on the
-    runs that actually truncate, the parse returns None and the log is never read.
+    The single front door for the ``*-item`` fan-out callers (STU-564). ``studio
+    run --json`` echoes the whole run — input included — and stdout is cut at
+    8 KiB (STU-533), so a large run's payload never decodes. The run id survives
+    the cut (``extract_run_id``: ``id`` is the run's first key), and the JSONL
+    log is complete on disk, so it is tried first; the truncation-fragile stdout
+    echo is only a fallback. Returns ``None`` when neither yields the stage.
     """
     run_id = extract_run_id(stdout)
-    output = load_studio_stage_output(run_id, stage_name) if run_id else None
-    if output is not None:
-        return output
+    if run_id:
+        output = load_studio_stage_output(run_id, stage_name)
+        if output is not None:
+            return output
     run_payload = extract_first_json_object(stdout)
-    if run_payload is None:
-        return None
-    return extract_stage_output_from_run_payload(run_payload, stage_name)
+    if run_payload is not None:
+        return extract_stage_output_from_run_payload(run_payload, stage_name)
+    return None
 
 
 def slugify_filename(value: str) -> str:

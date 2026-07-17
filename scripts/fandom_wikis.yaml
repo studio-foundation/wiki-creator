@@ -19,11 +19,16 @@
 # `Places`, `Geography`, `Groups`, `Factions`, and prefixed forms like
 # `The Shadowhunter Chronicles characters`.
 #
-# `infobox_templates` is per-wiki for the same reason, and is only needed where
-# BOTH derivable tests fail. A template is taken as an infobox if its title says
-# "infobox" (a convention) or its source carries <infobox> markup (Portable
-# Infobox). `Charcat` on warriors is the only one in this list that says
-# neither: its own source is one call to `Charcat/deep`, which holds the markup.
+# `infoboxes` names, per entity type, the infoboxes those pages carry — per-wiki
+# for the same reason, and read two ways depending on what else the entry gives.
+# A type that also names a category is enumerated from the category as usual, and
+# the names only tell the infobox identification what its two derivable tests
+# cannot see: a template is taken as an infobox if its title says "infobox" (a
+# convention) or its source carries <infobox> markup (Portable Infobox), and
+# `Charcat` on warriors says neither — its own source is one call to
+# `Charcat/deep`, which holds the markup. A type that names NO category is
+# enumerated from the pages transcluding those infoboxes instead: the 5 wikis at
+# the bottom of this file, whose cast no category names (STU-558).
 #
 # Book wikis only. Wikis whose subject is the screen adaptation are excluded even
 # when they are larger: `gameofthrones` (Wiki of Westeros, 5576 articles) covers
@@ -187,33 +192,68 @@
   categories: {PERSON: Characters}
   # `Charcat`'s title does not say "infobox" and its own source carries no
   # <infobox> markup — it just calls `Charcat/deep`, which does. Declared, like
-  # `categories`, because nothing about the wrapper itself is derivable.
-  infobox_templates: [Charcat]
+  # `categories`, because nothing about the wrapper itself is derivable. The
+  # `Characters` category above stays the entry point; this only types the
+  # infobox so the pages it fills get parsed.
+  infoboxes: {PERSON: [Charcat]}
 
 # ---------------------------------------------------------------------------
-# Verified to exist, deliberately NOT listed — a category name override cannot
-# reach them. These wikis have no character/location category root at all: they
-# partition the cast on a different axis, so no single category names it.
+# Enumerated from their infoboxes, not from a category (STU-558). No category
+# name reaches these 5: they have no character root at all, they partition the
+# cast on another axis — profession (`harrypotter`: `Wizards`, 3795), gender
+# (`wot`: `Men` 1213 / `Women` 1284), in-world era (`pern`: `Ninth Pass`, 738),
+# book and status (`thehungergames`: `Deceased characters`, 192), species
+# (`twilightsaga`: `Humans` 128, which excludes the vampires, i.e. the cast).
+# Their location/organisation roots exist but hold subcategories, not pages
+# (harrypotter `Locations`: 31 members against 2419 location pages).
 #
-#   harrypotter     24612 articles. 6987 categories, none a character root; the
-#                   cast lives under profession (`Wizards`, 3795).
-#   wot             6562. Partitions by gender: `Men` (1213) / `Women` (1284).
-#   pern            3247. Partitions by in-world era and role: `Dragonrider`
-#                   (299), `Holder` (241), `Ninth Pass` (738).
-#   thehungergames  911. Partitions per book (`Sunrise on the Reaping
-#                   characters`, 100) and by status (`Deceased characters`, 192).
-#   twilightsaga    895. Only `Minor characters` (144) / `Mentioned characters`
-#                   (89); `Humans` (128) excludes the vampires, i.e. the cast.
-#
-# Reaching them needs a different entry point, not a longer category list:
-# `list=embeddedin` on the infobox template. Pages transcluding
-# `Template:Infobox character` ARE the character pages regardless of how the
-# wiki files them, and scrape_fandom_bulk.py already fetches that template list
-# (fetch_infobox_template_titles) — it just doesn't enumerate from it. Verified
-# on pern, which has zero usable categories and a clean template taxonomy:
-# `Infobox show character` -> 500+ pages, `Infobox show hold` -> 135,
-# `Infobox show place` -> 65.
-#
+# The infobox is what those pages do share. Counts below are mainspace
+# transclusions, measured per wiki; the out-of-fiction infoboxes are the reason
+# this is a per-type declaration and not "every infobox on the wiki" —
+# harrypotter's `Actor infobox` fills 3025 pages and `Person infobox` 413 (J. K.
+# Rowling, the illustrators), thehungergames' `Actor` 223.
+# ---------------------------------------------------------------------------
+
+- wiki: https://harrypotter.fandom.com
+  lang: en
+  infoboxes:
+    PERSON: [Individual infobox]                   # 5154 pages
+    PLACE: [Location infobox]                      # 2419
+    ORG: [Organisation infobox, Family infobox]    # 476 + 387 (`House of Black`)
+
+- wiki: https://pern.fandom.com
+  lang: en
+  infoboxes:
+    # Dragons are named characters here (`Ramoth`, `Mnementh`), not scenery.
+    PERSON: [Infobox show character, Infobox show dragonkind]   # 1970 + 559
+    PLACE: [Infobox show hold, Infobox show place, Infobox show weyr]  # 135 + 65 + 18
+    # A Craft is the guild, not its hall: `Harper Hall`, `Smithcraft`.
+    ORG: [Infobox show craft]                                   # 45
+
+- wiki: https://thehungergames.fandom.com
+  lang: en
+  types: [PERSON, PLACE]
+  infoboxes:
+    PERSON: [Character]              # 353
+    PLACE: [Location, District]      # 41 + 14
+
+- wiki: https://twilightsaga.fandom.com
+  lang: en
+  types: [PERSON, ORG]
+  infoboxes:
+    # The cast is typed by species; `Renesmee` carries two of these.
+    PERSON: [Human infobox, Vampire infobox, Shape shifter infobox, Hybrid infobox]
+    ORG: [Coven infobox, Pack infobox]   # 18 + 3
+    # `Actor infobox` (71) is deliberately absent — out of fiction.
+
+- wiki: https://wot.fandom.com
+  lang: en
+  types: [PERSON, PLACE]
+  infoboxes:
+    PERSON: [Character]   # 2469
+    PLACE: [Nation]       # 31
+
+# ---------------------------------------------------------------------------
 # Excluded for other reasons:
 #   wicked          768 articles, but the subject is the musical, not the
 #                   novels (`Actors from Wicked`, 330).

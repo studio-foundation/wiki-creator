@@ -320,6 +320,50 @@ Inside `wiki-resolution`, order matters:
   merges and must keep merging: `Mr Tumnus` → `Tumnus` (one side titled, no conflict),
   `Captain Westfall` → `Chaol Westfall`.
 
+- A species is not a role (STU-559): `pure_title` merged **the Shade into a sword
+  and the Urgals into a mountain** on Eragon. Its premise — a bare role name
+  designates a named character — is true only of a role exactly one character
+  wears, and it read that off `role_words`, where `01_eragon.yaml` declares
+  `rider`, `elf`, `urgal`, `shade` beside `king` and `queen`. So the book YAML
+  now declares the property directly: `classification.roles_naming_one_character`
+  lists the roles **this novel** uses, bare, as a name for one character — the
+  "Config Is Read By People Who Know Books" rule, since a reader of Eragon knows
+  without hesitation that `king` designates a man and `urgal` a species. An
+  undeclared book merges nothing here (STU-539's asymmetry: a false merge invents
+  a character and deletes a real one; a false negative leaves two pages that are
+  each still correct), so only `throne-of-glass` declares it — `crown prince` and
+  `captain`, its two measured true positives. `_detect_pure_title_in_context` no
+  longer takes `role_words` **at all**: the two vocabularies being confusable is
+  the defect, so the parameter is gone rather than filtered. That also drops
+  STU-471's head-noun inference from this path — a declared phrase is matched
+  whole (`_is_pure_title` keeps it, for `_pick_canonical_name`).
+  **The config gate is not enough, and the second cause is separately measured.**
+  `_is_apposition` took a comma for apposition: between `Zar'roc` and `Shade` in
+  *"As for Zar'roc, the Shade might have it"* sit only `,` and `the`, so
+  adjacency was declared apposition — the STU-536/STU-538 shape one layer down.
+  A reader would plausibly declare `shade` (the Shade *is* Durza), which brings
+  the sword merge straight back, so `_tokens_between_are_connective` now refuses
+  **a comma plus a determiner**: apposition renames without re-determining
+  (`Dorian Havilliard, Crown Prince of Adarlan`), while a comma followed by a
+  fresh determined noun phrase opens a phrase that heads its own clause (`the
+  Shade might have`, `the Urgals ceased`). **The comma is the gate, not the
+  determiner** — `Brullo — the Master —` is the appositive dash form STU-281 was
+  built for and keeps merging. Measured by replaying the deterministic chain on
+  full rosters (ToG 60 ch, Eragon 67 ch, Narnia 20 ch — the 5-chapter caches
+  answer a different question, per STU-539): **5 fires / 2 true → 2 fires / 2
+  true**, both true positives kept. `alias-adjudication` is not a substitute: it
+  runs *after* this stage (so a false merge is already baked into the roster it
+  reads) and returned `merge: null` on every cached book.
+  **`Queen` → `Lucy` is not the true positive STU-559 recorded**, which is why
+  Narnia declares nothing: the novel writes `Queen Lucy` 5 times and `Queen
+  Susan` 4, so bare `Queen` names neither sister and the merge steals Susan's
+  mentions — STU-541's Mr/Mrs Beaver, reached through the other detector. The
+  question `roles_naming_one_character` asks is "does this word, bare, name one
+  character in **this** novel", not "is it a title": `king` is a title in ToG and
+  still names nobody there (Adarlan's king and Brannon both wear it), which is
+  why splitting `role_words` into titles-vs-species — the shape the ticket
+  proposed — would have kept `King` → `Brannon`.
+
 - Contextual alias adjudication (STU-539): the alias pair no rule proposes is
   decided by one `studio run alias-adjudication-item` per book, over the **whole
   PERSON roster** — the `section-filter` shape (STU-529), with the opposite bias:
@@ -445,8 +489,86 @@ Inside `wiki-resolution`, order matters:
   killed), and Morzan/Marian both died before the book begins and have no death
   chapter at all. The place where the text states a fact is not the place where
   the fact happens, so deriving a chapter from the quoting snippet does not
-  work. The in-universe death circumstance ("Killed by Durza at Farthen Dûr")
-  is STU-552 — it needs grounded prose, not a derived infobox slot.
+  work. The in-universe circumstance ("Tué par Durza à Farthen Dûr") replaced it in
+  STU-552, and **not as prose**: the ticket proposed the STU-481 `## Déroulement`
+  shape, but free prose in an infobox slot is the one non-grounded field, which
+  is what `_extracted_fact_value` exists to prevent. It is two optional fields —
+  `agent`, `place` — on the verdict this same call already returns, so it costs
+  no stage and no LLM call, and there is **no `cause` enum**: an agent means
+  someone killed them, a place means they died there, and a death by illness
+  renders "Mort à X", which stays true whatever the cause. Each field clears
+  three gates: `status == "deceased"`, the name is on the **type-scoped** roster
+  (PERSON for `agent`, PLACE for `place`, alias → canonical), and it is
+  **verbatim in that verdict's own quote**. The quote gate is the load-bearing
+  one and is deliberately stricter than "somewhere in the entity's snippets":
+  the slot asserts a link between two facts, and "they rode to Farthen Dûr" one
+  sentence from "Durza's blade took Brom" would render where he rode, not where
+  he died. A field failing a gate is dropped and the verdict survives — a wrong
+  `agent` costs the circumstance, never the `status`. Names render **plain, never
+  wikilinked** (`event_infobox_fields`'s precedent): a collated entity has no
+  page, so a link would be red, and no edge is drawn, so the STU-501 rule never
+  engages. The cache gained a `CACHE_VERSION` because the rows did **not** change
+  — same roster, new question — so roster-keying alone would have replayed a
+  pre-STU-552 verdict forever and silently. The infobox is not spoiler-gated
+  (`content_units` skips it by construction), so the circumstance leaks the death
+  exactly as `Statut : Décédé` already does; gating the infobox is its own ticket.
+
+- Affiliation is a scalar, not a dated edge (STU-551): the `affiliation` slot is
+  filled by one `studio run entity-affiliation-item` per book over the PERSON
+  roster — the STU-488 shape, a pre-step to wiki-preparation so resolution stays
+  LLM-free. The ticket asked for a **dated edge** and three findings refused it.
+  (1) Its own acceptance test — tome 3's faction on tome 3's page, tome 1's on
+  tome 1's — is true **by construction** under a per-tome wiki, exactly as for
+  `status`. (2) The intra-tome date is what STU-488 measured unbuildable: its
+  `death` slot derived the chapter from the snippet its verdict quoted and got 3
+  of 4 wrong, because the place where the text states a fact is not the place
+  where the fact happens; a dated edge has no other date source. (3) There is no
+  edge to date — `relationship_extraction.py` filters the co-occurrence graph to
+  `type == "PERSON"` in hard code, so no PERSON-ORG edge exists in any artifact.
+  Snippet selection is **single-source** where `status` is two-source: nothing
+  proves the *absence* of an affiliation, so there is no `alive`-analogue proved
+  by acting late. Marker-bearing snippets, latest-first — the latest-first is what
+  makes the scalar mean "end of tome" and absorbs an intra-tome switch without
+  dating it. **A third rejection rule exists here that `status` does not need**:
+  `status` returns an enum member, so verifying the quote verifies the verdict;
+  `affiliation` returns a **name**, so the model can quote a real sentence and
+  infer the wrong faction from it. The rendered value must appear in the quote,
+  verbatim, and **as whole tokens** — a raw substring test accepted `Order` off
+  "he ordered the villagers" (STU-541's rule, STU-541's reason).
+  **The slot was never "inert", and that nearly shipped a lie.** `base.yaml`
+  tells the writer to fill `affiliation` (the infobox brief names it; the
+  few-shot demonstrates one), and `_bind_batch_fields` only *overwrites* an
+  extracted-fact token when the pipeline has a value — so an undecided character
+  rendered the **writer's** inference, which with this stage's ~0 recall is
+  almost every character. `status` is immune only by accident of being
+  `MIN`/`fallback: unknown`, so `status_label` always returns a string. A
+  pipeline-owned fact with no value is now **cleared**
+  (`_PIPELINE_OWNED_FACTS`); `species`/`location`/`leaders` are declared
+  extracted-fact with nothing computing them, and `titles` has the same hole —
+  STU-572. Shared roster plumbing lives in
+  `wiki_creator/roster.py` (`normalize`, `has_marker`, `latest_first`,
+  `render_roster`, `is_quoted`, `load_cache`, `save_cache`), extracted from
+  `entity_status` rather than copied — `normalize`'s typographic folding is the
+  `99a6a71` fix and must exist once.
+  **A marker names the relation, never the group.** The first vocabulary included
+  `side`, `order`, `band`, `army`, `ranks`, `guild`: `side` alone fired on 28 of
+  the ~70 selected snippets ("his side burned sharply", "at her side"), crowding
+  real statements out of the 5-snippet budget. Group nouns are what the *value*
+  contains; only the relation (joining, serving, swearing, betraying) proves
+  membership. Prose-ambiguous single verbs go too — `join` also matches "where its
+  neck and shoulders joined", which was Eragon's only marker snippet.
+  **Measured: 0 false positives over 2 runs on 47 characters, and ~0 recall —
+  because of the book.** `01_eragon` is near worst-case: `join*` pairs with
+  `Varden` in five sentences of 907k chars and **none states an affiliation** (two
+  are questions; one is Eragon considering it and refusing). **Eragon does not
+  join the Varden in book 1** — that is Eldest. The design predicted he did, from
+  memory of the series rather than book 1's text: the exact error the agent prompt
+  forbids by name, made by the prompt's author in its own measurement plan. So the
+  slot rendering nothing there is correct, and the feature **has not been shown
+  useful** — a later tome (`02_eldest`, `05_murtagh`) is the measurement that
+  would decide, and it is not done. Narnia's species red-flag check is also
+  outstanding. Recall is unstable run to run (Brom's one true hit moved on
+  identical evidence); precision is not — STU-488 recorded the same asymmetry.
 
 - Name-collision policy (STU-506): `registry.py::_merge_duplicate_canonicals`
   used to fold two entities on `canonical_name.casefold()` alone — a PERSON and
@@ -761,6 +883,37 @@ Inside `wiki-resolution`, order matters:
   and **43 of ~50 resolve on neither book**. That path is low-yield by
   construction and is not what fixes Narnia; matching markers against titles is a
   separate ticket.
+- The number is assigned once, in `section_filter` (STU-550): `chapters.number_chapters`
+  stamps `chapter_number` on each narrative chapter right after the front-matter
+  verdict — the only place both the reading order and that verdict are known. It
+  reaches `epub_data.json`, and `chapter_number_index` (ids **and** titles, since
+  `chapter_summaries` is title-keyed on some books) resolves a reference to it.
+  This closes STU-546's shape in the two places it was still live.
+  **`sorted(context_by_chapter)` was sorting section ids as strings, not chapters**
+  — `bookcontent10_0` before `bookcontent2_0`. Above
+  `chapter_summary_max_chapters_per_entity` (8) chapters per entity, i.e. exactly
+  the principals, the truncation then kept the lexicographic middle: Lucy's page was
+  written from Narnia's chapters 9-16, never the wardrobe. Whether it fired was
+  decided by the publisher's zero-padding (throne-of-glass `C01.xhtml` is padded and
+  is the book we look at, so it was invisible), and nothing warned — the prompt
+  looked full.
+  **The bundle is the boundary.** `wiki_preparation` resolves every chapter
+  reference it emits (`relationships[].chapters`, the new `context_chapters`,
+  `chapter_summary_context[].revealed_at_chapter`), so `provenance`,
+  `spoiler_blocks` and `generate_wiki_pages` read numbers and no longer call
+  `chapter_number` at all. That is what makes the STU-492 gate honest: it compares
+  the book YAML's `collapse_after_chapter: N` — set by someone who read the novel
+  and means "chapter 20" — against a number in the same unit, where `x101.xhtml`
+  used to yield 101. Latent (no book sets the key today), but a config key silently
+  in a different unit than the code is the defect.
+  **An unresolvable reference warns and is dropped**, never numbered by whatever
+  digits it carries — `resolve_chapter_number` is the whole point, and falling back
+  to digits is the bug being closed. `chapters.chapter_number` survives for
+  `entity_status`, which sorts snippets by id digits: digits are monotone with
+  position on every book in the library, so that use is accidentally safe, like
+  `generate_wiki_pages`' relation ordering was. `event_layer._chapter_numbers` also
+  stays — it numbers the ordered summaries 1..N, which already *is* the position,
+  and it is handed no chapter records to read the field off.
 - `workers` in relationship/coref config directly impact RAM usage.
 - `.studio/config.yaml` and `.studio/runs/` must not be committed.
 - Never add hardcoded word lists to scripts. All vocabulary belongs in `wiki_creator/cue_words/<lang>.json` (language-wide) or the book YAML `classification` section (book-specific). No script may define a fallback vocabulary constant — if a key is absent from cue_words, degrade gracefully to an empty collection.
@@ -777,6 +930,21 @@ Inside `wiki-resolution`, order matters:
   injects only under an exactly-`Relations` heading (an LLM-drifted heading is
   silently skipped, same tolerance as collapsible gating). Pure logic in
   `wiki_creator/spoiler_blocks.py`; section→heading map in `wiki_creator/sections.py`.
+- Extraction is keyed on its config (STU-560): `entity_extraction.py` writes the
+  resolved `ner` block to `processing_output/<slug>/extraction_config.json`
+  (`ner.extraction_fingerprint`), and `run_wiki.py` re-runs `wiki-extraction`
+  when it diverges from the book YAML (`extraction_config_changed`, also true
+  when the file is absent — an artifact that names no backend is stale by
+  definition). Extraction has no cache of its own; the orchestrator's skip was
+  `status == "completed"` + `required_files` present, so a correct `ner` flip was
+  read, applied to nothing, and never reported: the **three** books with an
+  extraction cache were all rendering spaCy-typed entities while configured for
+  GLiNER — Garrow ORG again, the STU-537 bug verbatim. Same rule as the STU-529/
+  539/488 caches, one layer down: a cache is keyed on the config that produced
+  it. The fingerprint holds only `ner` because that is what the class of bug is
+  about — widen it when another config key silently outlives its artifact, not
+  before. `make run-extraction` shells `studio run` directly and always
+  re-extracts, so this only ever bites through `run_wiki.py`.
 - Subset test runs (STU-497): two independent axes make any feature cheap to exercise.
   (1) Chapters — `WIKI_MAX_CHAPTERS=N` caps extraction to the first N chapters
   (`parse_epub._env_max_chapters` → truncation, the single source of truth); every
@@ -864,6 +1032,29 @@ Inside `wiki-resolution`, order matters:
   relation**, not just the hop — a path is nothing but its edge types, so a hole
   leaves the LLM to fill it. The target itself isn't dropped: the next fully-typed
   simple path to it is used if there is one.
+- A Studio failure is not a decline (STU-562): a pair the classifier never judged
+  — a subprocess timeout, an unrecoverable stdout — used to be appended untyped
+  with a `[WARN]` nobody reads, so STU-501 omitted it exactly as it omits a pair
+  the model *did* read and decline. Both were `relationship_type: null`, and the
+  artifact recorded no difference: the next person measuring the graph could not
+  tell loss-with-judgment from loss-with-none-behind-it. Two halves.
+  (1) **Retry.** `_run_studio_classifier_item` retries a *transient* failure
+  (`studio_run_timeout` / `studio_run_failed` / `studio_run_output_missing`) once
+  — `studio_cli_missing` is terminal and is not retried, since retrying an absent
+  binary only stalls. This is the outer, subprocess-level retry; it is distinct
+  from the pipeline's RALPH loop (`max_attempts: 3`), which catches an off-schema
+  *agent output*, not a killed `studio run`. STU-564's log recovery already
+  absorbs most of what used to surface as a parse error, so the timeout is the
+  live case. (2) **Mark.** A pair that still fails is stamped
+  `classification_error` (a new optional `Relationship` field), so the artifact
+  distinguishes it from a decline — a retry that does not persist the distinction
+  leaves the same fog. `_load_done_keys` treats a stamped pair as **unfinished**:
+  it drops it from both the resume keys and the kept list, so a re-run retries it
+  once more without duplicating it. The field is `null` on every declined and
+  typed pair, so it changes no reader surface (STU-501 still omits the untyped
+  pair) and no golden (relationship typing is an LLM stage, off the golden path).
+  Related: `stats.classified` is vestigial (STU-563) — the counter that would
+  have surfaced this reads 0 on every real run.
 - Editorial stance (STU-507): whether pages speak from inside the fiction is
   **declared** in the book YAML (`generation.editorial_stance`), not inherited
   from anti-hallucination prompting. `wiki_creator/editorial_stance.py` holds the
@@ -976,10 +1167,43 @@ by someone who has read the novel and nothing else.
 ## Working Norms
 
 - **ALWAYS use a git worktree for every task.** Start each task in its own isolated worktree/branch off `main` — never work directly on a shared or unrelated branch. This keeps every change scoped to a single issue and prevents mixing concerns.
+  - **A worktree runs its own `scripts/` against the checkout `pip install -e .` pinned (STU-569).** The editable install records one absolute path for the whole interpreter, so a subprocess (`studio run`, `python scripts/...`, `run_wiki.py`) imports `wiki_creator` from *that* tree, not the worktree it was launched from. `make` and the pytest `conftest` prepend the right tree, so those paths are correct by construction; anything else needs `PYTHONPATH=$(pwd)`. `wiki_creator/__init__.py` now fails loudly when the imported package is not the one under the cwd (`WIKI_CREATOR_ALLOW_FOREIGN_CHECKOUT=1` opts out) — the silent case (unchanged signature, changed body, green suite on code the branch never ran) is what this closes.
 - Prefer `rg` for search.
 - Use `apply_patch` for manual edits.
 - Do not assume docs are current; verify against `Makefile`, pipeline YAML, and tests.
 - Before claiming a fix, rerun the relevant tests and ideally `pytest -q`.
+
+## Where a Task Runs: `claude:local` vs `claude:web`
+
+Every actionable wiki-creator issue in Linear carries one of two labels under the
+`claude` group, so it is unambiguous before starting whether a task can be *both
+done and verified* in a Claude Code **web** sandbox or must run on a **local**
+machine. The web sandbox has **no torch/GLiNER, no GPU, no `library/` EPUBs, no
+gold corpus, no `models/`, no API key** — all gitignored or absent by
+construction — and cannot install or run any of them.
+
+The test is verification, not just editing: if you can write the change on web
+but cannot prove it works there, it is `claude:local`.
+
+- **`claude:local`** — the deliverable or its verification needs any of: GLiNER /
+  torch / a GPU (NER, extraction re-runs, the label sweep, the OOM/device bug);
+  LoRA / Ollama training or benchmarking; the gitignored assets (EPUBs,
+  `research/ner-eval` gold, `models/`); or a **full live-LLM run over real books**
+  to produce or measure the result (relation-typing accuracy, alias-adjudication
+  precision across the library, embedding disambiguation, GraphRAG eval,
+  orchestrator parity when removing `run_wiki.py`). A number the norms require
+  ("load-bearing and swept, not guessed") is a local number.
+- **`claude:web`** — self-contained: pure logic + deterministic tests (`pytest`
+  with `en_core_web_sm`), YAML/config covered by `make golden` / `make smoke`
+  (LLM-free by construction), rendering/goldens, docs, refactors, wiring tests.
+  A change whose whole proof is the test suite on the committed fixture novella is
+  a web task.
+
+Rule of thumb: **STU-571 is the archetype `claude:local`** — the fix is a one-line
+`gliner_label` edit, but the norm forbids shipping it without re-running
+`research/ner-eval/sweep_labels.py` against GLiNER + gold, none of which the
+sandbox has. A task is not web just because the *edit* is small; it is web only if
+its *evidence* is reachable there.
 
 ## Personal Working Style — Ariane
 

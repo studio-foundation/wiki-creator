@@ -108,10 +108,48 @@ def _person_entity():
 
 
 def test_bind_overwrites_swapped_nom():
-    page = {"infobox_fields": {"nom": "Kaltain", "affiliation": "Adarlan"}}
+    page = {"infobox_fields": {"nom": "Kaltain", "rôle": "Espionne"}}
     gwp._bind_batch_fields(page, _person_entity(), {})
     assert page["infobox_fields"]["nom"] == "Verin"          # overwritten from batch
-    assert page["infobox_fields"]["affiliation"] == "Adarlan"  # non-batch-bound untouched
+    assert page["infobox_fields"]["rôle"] == "Espionne"      # non-pipeline-owned untouched
+
+
+def test_bind_clears_writer_owned_extracted_fact_when_pipeline_has_none():
+    # STU-572: species/affiliation are extracted-fact but the pipeline computes
+    # neither here, so a writer-supplied value is cleared, not kept — the writer
+    # never owns a slot whose provenance promises a grounded fact.
+    page = {"infobox_fields": {"species": "Fae", "affiliation": "Adarlan"}}
+    gwp._bind_batch_fields(page, _person_entity(), {})
+    assert "species" not in page["infobox_fields"]
+    assert "affiliation" not in page["infobox_fields"]
+
+
+def test_bind_clears_writer_titles_when_extraction_found_none():
+    # STU-572: titles IS pipeline-computed, but when extraction found none the
+    # writer's guess is still cleared rather than surviving.
+    entity = {"canonical_name": "Nehemia", "type": "PERSON",
+              "importance": "secondary", "aliases": [], "titles": []}
+    page = {"infobox_fields": {"titles": "Princesse"}}
+    gwp._bind_batch_fields(page, entity, {})
+    assert "titles" not in page["infobox_fields"]
+
+
+def test_bind_extracted_fact_present_still_overwrites_writer():
+    entity = {"canonical_name": "Chaol Westfall", "type": "PERSON",
+              "importance": "secondary", "aliases": [], "titles": ["Captain"]}
+    page = {"infobox_fields": {"titles": "Roi"}}
+    gwp._bind_batch_fields(page, entity, {})
+    assert page["infobox_fields"]["titles"] == "Captain"
+
+
+def test_bind_clears_an_undecided_affiliation():
+    """STU-551: `affiliation` is pipeline-owned, so an undecided character must not
+    keep the writer's guess. This assertion used to say the opposite — it pinned the
+    hole, because `_bind_batch_fields` only overwrites when it HAS a value and
+    base.yaml's infobox brief and few-shot show the writer how to invent one."""
+    page = {"infobox_fields": {"affiliation": "Adarlan"}}
+    gwp._bind_batch_fields(page, _person_entity(), {})
+    assert "affiliation" not in page["infobox_fields"]
 
 
 def test_bind_sets_alias_and_skips_type():
@@ -195,7 +233,8 @@ def test_bind_omits_titles_when_absent():
 def test_extracted_fact_value_titles_and_unknown():
     assert gwp._extracted_fact_value({"titles": ["Captain", "Duke"]}, "titles", "fr") == "Captain, Duke"
     assert gwp._extracted_fact_value({"titles": []}, "titles", "fr") is None
-    assert gwp._extracted_fact_value({"affiliation": "X"}, "affiliation", "fr") is None
+    assert gwp._extracted_fact_value({"affiliation": "Varden"}, "affiliation", "fr") == "Varden"
+    assert gwp._extracted_fact_value({}, "affiliation", "fr") is None
 
 
 def test_generation_profile_in_universe_drops_out_of_universe_sections():

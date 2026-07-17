@@ -19,6 +19,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+import yaml
+
+from wiki_creator.ner import EXTRACTION_CONFIG_FILE, extraction_fingerprint
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.series import discover_series_books
 
@@ -31,6 +34,7 @@ def required_files(book_path: str) -> dict[str, list[str]]:
         "wiki-extraction": [
             str(p.processing / "splits.json"),
             str(p.processing / "epub_data.json"),
+            str(p.processing / EXTRACTION_CONFIG_FILE),
         ],
         "wiki-resolution": [
             str(p.processing / "entities_classified.json"),
@@ -62,6 +66,7 @@ def clean_files(book_path: str) -> dict[str, list[str]]:
             str(p.processing / "splits.json"),
             str(p.processing / "epub_data.json"),
             str(p.processing / "chapter_summaries.json"),
+            str(p.processing / EXTRACTION_CONFIG_FILE),
         ],
         "wiki-resolution": [
             str(p.processing / "entities_classified.json"),
@@ -86,6 +91,7 @@ PRE_STEPS: dict[str, list[list[str]]] = {
     ],
     "wiki-preparation": [
         ["python", "scripts/entity_status.py", "--book"],
+        ["python", "scripts/entity_affiliation.py", "--book"],
         ["python", "scripts/classify_relationships.py", "--book"],
         ["python", "scripts/build_event_layer.py", "--book"],
     ],
@@ -144,6 +150,24 @@ def check_outputs(pipeline: str, book_path: str) -> list[str]:
     return [f for f in required_files(book_path).get(pipeline, []) if not os.path.exists(f)]
 
 
+def extraction_config_changed(book_path: str) -> bool:
+    """Does the book YAML ask for an extraction the artifacts on disk are not?
+
+    Keyed on the config itself, like every other cache here (STU-539, STU-488):
+    a flip of `ner.invented_names` used to leave the completed stage skipped and
+    the old backend's entities rendering, silently (STU-560).
+    """
+    p = book_paths_from_yaml(book_path)
+    recorded_path = p.processing / EXTRACTION_CONFIG_FILE
+    if not recorded_path.exists():
+        return True
+    with open(recorded_path) as f:
+        recorded = json.load(f)
+    with open(book_path) as f:
+        book_config = yaml.safe_load(f) or {}
+    return recorded != extraction_fingerprint(book_config)
+
+
 def print_status(book_path: str) -> None:
     state = load_state(book_path)
     print(f"\nBook: {state.get('book', '?')}")
@@ -186,10 +210,12 @@ def run_book(book_path: str, *, restart: str | None, retries: int, clean: bool) 
         # Skip if already completed AND output files are still present
         if stage_state.get("status") == "completed":
             missing = check_outputs(pipeline, book_path)
-            if not missing:
+            stale = pipeline == "wiki-extraction" and not missing and extraction_config_changed(book_path)
+            if not missing and not stale:
                 print(f"  {pipeline}: already completed, skipping")
                 continue
-            print(f"  {pipeline}: outputs missing ({', '.join(missing)}), re-running")
+            reason = "config changed since extraction" if stale else f"outputs missing ({', '.join(missing)})"
+            print(f"  {pipeline}: {reason}, re-running")
             state["stages"][pipeline] = {}
             save_state(book_path, state)
 
