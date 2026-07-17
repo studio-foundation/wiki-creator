@@ -77,6 +77,12 @@ library/**/output/
 library/**/registry.json
 .wiki_runs/
 
+# Fandom survey corpus — regenerable from scripts/fandom_wikis.yaml, and large
+# (raw_wikitext per page + every infobox Template: page, per wiki). The curated
+# datasets under processing_output/fandom/ stay tracked; this is the scratch
+# survey, not a deliverable.
+processing_output/fandom_corpus/
+
 # Scratch audits at repo root; per-book audit logs under library/ stay tracked
 /audits/
 # Research eval outputs: per-book arm extractions + the oracle verdicts (STU-535)
