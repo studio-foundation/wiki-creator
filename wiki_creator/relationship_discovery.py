@@ -65,6 +65,58 @@ def chunk_chapters(chapters: list[dict], size: int) -> list[dict]:
     return out
 
 
+def build_roster(entities: list[dict]) -> tuple[set[str], dict[str, str], list[str]]:
+    """Build the PERSON roster the discovery prompt reads.
+
+    Only interpersonal relations are discovered, so only PERSON entities enter the
+    roster. Returns ``(canonical_names, alias_to_canonical, prompt_lines)``:
+    ``alias_to_canonical`` maps every surface form (and the canonical name itself)
+    back to the canonical name so a reply naming a known alias resolves; each
+    ``prompt_line`` is ``"Name (also called: a, b)"`` or bare ``"Name"``.
+    """
+    names: set[str] = set()
+    alias_to_canonical: dict[str, str] = {}
+    lines: list[str] = []
+    for entity in entities:
+        if entity.get("entity_type") != "PERSON":
+            continue
+        canonical = entity["canonical_name"]
+        names.add(canonical)
+        alias_to_canonical[canonical] = canonical
+        extra = [a for a in entity.get("aliases") or [] if a and a != canonical]
+        for alias in extra:
+            alias_to_canonical[alias] = canonical
+        line = canonical
+        if extra:
+            line += f" (also called: {', '.join(extra)})"
+        lines.append(line)
+    return names, alias_to_canonical, lines
+
+
+def canonicalize_relations(raw: object, alias_to_canonical: dict[str, str]) -> list[dict]:
+    """Rewrite each relation's entity names through the alias→canonical map.
+
+    A name the model returned as a known surface form becomes its canonical name;
+    an unknown name is left untouched (``valid_relations`` drops it against the
+    roster). Non-dict / non-string entries pass through for ``valid_relations`` to
+    reject with a reason.
+    """
+    if not isinstance(raw, list):
+        return raw  # type: ignore[return-value]
+    out: list[dict] = []
+    for rel in raw:
+        if not isinstance(rel, dict):
+            out.append(rel)
+            continue
+        resolved = dict(rel)
+        for key in ("entity_a", "entity_b"):
+            name = rel.get(key)
+            if isinstance(name, str):
+                resolved[key] = alias_to_canonical.get(name.strip(), name.strip())
+        out.append(resolved)
+    return out
+
+
 def valid_relations(
     raw: object, roster_names: set[str], allowed_types: Iterable[str]
 ) -> tuple[list[dict], list[str]]:

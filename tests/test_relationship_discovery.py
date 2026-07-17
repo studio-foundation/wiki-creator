@@ -7,6 +7,8 @@ typed pair. No LLM here.
 """
 from wiki_creator.relationship_discovery import (
     aggregate,
+    build_roster,
+    canonicalize_relations,
     chunk_chapters,
     flip,
     valid_relations,
@@ -129,6 +131,60 @@ def test_aggregate_caps_sample_contexts_at_three():
              for i in range(5)]
     pairs = aggregate(votes, ROSTER)
     assert len(pairs[0]["sample_contexts"]) == 3
+
+
+# --- build_roster -----------------------------------------------------------
+
+
+def test_build_roster_keeps_only_persons():
+    entities = [
+        {"canonical_name": "Eragon", "entity_type": "PERSON", "aliases": ["Eragon"]},
+        {"canonical_name": "Alagaësia", "entity_type": "PLACE", "aliases": []},
+    ]
+    names, _, _ = build_roster(entities)
+    assert names == {"Eragon"}
+
+
+def test_build_roster_maps_aliases_to_canonical():
+    entities = [{"canonical_name": "Brom", "entity_type": "PERSON",
+                 "aliases": ["Brom", "Neal", "the old man"]}]
+    _, alias_to_canonical, _ = build_roster(entities)
+    assert alias_to_canonical["Neal"] == "Brom"
+    assert alias_to_canonical["the old man"] == "Brom"
+    assert alias_to_canonical["Brom"] == "Brom"
+
+
+def test_build_roster_prompt_line_lists_aliases():
+    entities = [{"canonical_name": "Brom", "entity_type": "PERSON",
+                 "aliases": ["Brom", "Neal"]}]
+    _, _, lines = build_roster(entities)
+    assert lines == ["Brom (also called: Neal)"]
+
+
+def test_build_roster_prompt_line_bare_when_no_alias():
+    entities = [{"canonical_name": "Eragon", "entity_type": "PERSON",
+                 "aliases": ["Eragon"]}]
+    _, _, lines = build_roster(entities)
+    assert lines == ["Eragon"]
+
+
+# --- canonicalize_relations -------------------------------------------------
+
+
+def test_canonicalize_maps_surface_form_to_canonical():
+    raw = [{"entity_a": "Neal", "entity_b": "Eragon",
+            "relationship_type": "mentor", "direction": "A→B"}]
+    alias_to_canonical = {"Neal": "Brom", "Brom": "Brom", "Eragon": "Eragon"}
+    out = canonicalize_relations(raw, alias_to_canonical)
+    assert out[0]["entity_a"] == "Brom"
+    assert out[0]["entity_b"] == "Eragon"
+
+
+def test_canonicalize_leaves_unknown_name_untouched():
+    raw = [{"entity_a": "Ghost", "entity_b": "Eragon",
+            "relationship_type": "friend", "direction": "symétrique"}]
+    out = canonicalize_relations(raw, {"Eragon": "Eragon"})
+    assert out[0]["entity_a"] == "Ghost"  # dropped later by valid_relations
 
 
 def test_aggregate_orders_pairs_by_chapter_breadth():

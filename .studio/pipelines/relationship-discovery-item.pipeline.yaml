@@ -1,0 +1,14 @@
+name: relationship-discovery-item
+description: Discover and type the interpersonal relations one passage evidences
+version: 1
+
+stages:
+  - name: relationship-discovery
+    kind: analysis
+    agent: relationship-discovery
+    contract: relationship-discovery-item
+    ralph:
+      max_attempts: 3
+    context:
+      include:
+        - input
