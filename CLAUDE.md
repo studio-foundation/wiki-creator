@@ -408,8 +408,29 @@ Inside `wiki-resolution`, order matters:
   killed), and Morzan/Marian both died before the book begins and have no death
   chapter at all. The place where the text states a fact is not the place where
   the fact happens, so deriving a chapter from the quoting snippet does not
-  work. The in-universe death circumstance ("Killed by Durza at Farthen Dûr")
-  is STU-552 — it needs grounded prose, not a derived infobox slot.
+  work. The in-universe circumstance ("Tué par Durza à Farthen Dûr") replaced it in
+  STU-552, and **not as prose**: the ticket proposed the STU-481 `## Déroulement`
+  shape, but free prose in an infobox slot is the one non-grounded field, which
+  is what `_extracted_fact_value` exists to prevent. It is two optional fields —
+  `agent`, `place` — on the verdict this same call already returns, so it costs
+  no stage and no LLM call, and there is **no `cause` enum**: an agent means
+  someone killed them, a place means they died there, and a death by illness
+  renders "Mort à X", which stays true whatever the cause. Each field clears
+  three gates: `status == "deceased"`, the name is on the **type-scoped** roster
+  (PERSON for `agent`, PLACE for `place`, alias → canonical), and it is
+  **verbatim in that verdict's own quote**. The quote gate is the load-bearing
+  one and is deliberately stricter than "somewhere in the entity's snippets":
+  the slot asserts a link between two facts, and "they rode to Farthen Dûr" one
+  sentence from "Durza's blade took Brom" would render where he rode, not where
+  he died. A field failing a gate is dropped and the verdict survives — a wrong
+  `agent` costs the circumstance, never the `status`. Names render **plain, never
+  wikilinked** (`event_infobox_fields`'s precedent): a collated entity has no
+  page, so a link would be red, and no edge is drawn, so the STU-501 rule never
+  engages. The cache gained a `CACHE_VERSION` because the rows did **not** change
+  — same roster, new question — so roster-keying alone would have replayed a
+  pre-STU-552 verdict forever and silently. The infobox is not spoiler-gated
+  (`content_units` skips it by construction), so the circumstance leaks the death
+  exactly as `Statut : Décédé` already does; gating the infobox is its own ticket.
 
 - Name-collision policy (STU-506): `registry.py::_merge_duplicate_canonicals`
   used to fold two entities on `canonical_name.casefold()` alone — a PERSON and
