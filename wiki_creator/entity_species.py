@@ -1,22 +1,25 @@
-"""Decide which faction a character belongs to at the end of this tome.
+"""Decide which species/race a character is.
 
-The `affiliation` infobox slot has been declared and inert since STU-504. STU-551
-asked for a dated edge; it is a scalar. The wiki is per-tome and earlier tomes are
-never regenerated, so "tome 3's faction on tome 3's page" is true by construction —
-and STU-488 measured that dating a fact from the snippet that quotes it does not
-work (3 of 4 derived chapters wrong: the place where the text states a fact is not
-the place where the fact happens).
+The `species` infobox slot is declared, `genre_gated: true`, and inert since
+STU-504 — STU-571 assumed the value was already collected into the FACTION bucket
+(`Elves`, `Dwarves`) and a typing fix would feed it. It would not: `Elves` the
+collective noun is an *entity* with its own page; Eragon's `human` is an
+*attribute* of the Eragon PERSON. This is per-character attribution, a
+classification task independent of NER typing (STU-574).
 
-Snippet selection is single-source where `status` is two-source: no sentence proves
-"no affiliation", so there is no `alive`-analogue proved by acting late. Marker-bearing
-snippets, latest-first — which is what makes the scalar mean "end of tome" and absorbs
-an intra-tome switch without dating it.
+Same shape as `entity_affiliation` (STU-551), because the verdict is the same
+kind of thing — a name the model reads off the text, not an enum member. Snippet
+selection is single-source (marker-bearing only), and a verdict survives only
+when the species it returns is literally in the quote it cites. Species is
+atemporal — a character's race does not change across the tome — so `latest_first`
+here only bounds the selected set deterministically; it carries no "end of tome"
+meaning as it does for `status`/`affiliation`.
 
 The marker vocabulary only **retrieves**; the classifier decides. STU-538 measured
 that lesson at 340 fires and 0 true positives when a pattern *was* the verdict.
 
-Every helper here fails toward an omitted slot. `affiliation` is OPT with no declared
-fallback: a false affiliation puts a character in the wrong army on a page nobody will
+Every helper here fails toward an omitted slot. `species` is OPT with no declared
+fallback: a false species labels a character the wrong race on a page nobody will
 reread, and reads as fact; an absent one says nothing.
 """
 
@@ -31,22 +34,21 @@ from wiki_creator.roster import (
     quote_names_value,
 )
 
-# This stage's verdict schema. Its own number, not entity_status's: each stage's
-# verdict evolves on its own (STU-552 bumped `status` to 2 when it added the
-# death circumstance; that says nothing about `affiliation`).
+# This stage's verdict schema. Its own number, per the roster.load_cache contract.
 CACHE_VERSION = 1
 
 SNIPPETS_PER_ENTITY = 5
 SNIPPET_CHARS = 300
 
 
-def select_affiliation_snippets(snippets: list[dict], markers: list[str]) -> list[dict]:
-    """Up to ``SNIPPETS_PER_ENTITY`` marker-bearing snippets, latest-first.
+def select_species_snippets(snippets: list[dict], markers: list[str]) -> list[dict]:
+    """Up to ``SNIPPETS_PER_ENTITY`` marker-bearing snippets.
 
-    Single-source, unlike `select_status_snippets`. `status` needs the latest
-    snippets too because `alive` is proved by a character acting late; nothing
-    proves the absence of an affiliation, so a snippet with no marker can only
-    confirm the character exists.
+    Single-source, like `select_affiliation_snippets`: nothing proves the absence
+    of a species, so a snippet with no marker can only confirm the character
+    exists. ``latest_first`` only makes the cap deterministic here — species does
+    not change across the tome, so which marker-bearing snippets are kept does not
+    change the answer, only bounds the budget.
 
     Snippets are ``{"text": str, "chapter_id": str}``.
     """
@@ -72,7 +74,7 @@ def roster_rows(
         {
             "name": entity["canonical_name"],
             "aliases": sorted(a for a in (entity.get("aliases") or []) if a),
-            "snippets": select_affiliation_snippets(
+            "snippets": select_species_snippets(
                 contexts.get(entity["canonical_name"], []), markers
             ),
         }
@@ -80,7 +82,7 @@ def roster_rows(
     ]
 
 
-def parse_affiliation_verdict(payload: object, rows: list[dict]) -> dict[str, dict]:
+def parse_species_verdict(payload: object, rows: list[dict]) -> dict[str, dict]:
     """Map the classifier's reply to verified verdicts, keyed by roster name.
 
     A name absent from the result renders no slot; unparseable input verdicts
@@ -89,10 +91,9 @@ def parse_affiliation_verdict(payload: object, rows: list[dict]) -> dict[str, di
     1. its name is on the roster (the model hallucinates characters);
     2. its quote is verbatim in **that entity's own** snippets (STU-539: these
        novels are in the model's training data);
-    3. **the affiliation is literally in the quote.** This is the rule `status`
-       does not need. Its value is an enum member, so verifying the quote verifies
-       the verdict; here the value is a name, so the model can quote a real
-       sentence and infer the wrong faction from it.
+    3. **the species is literally in the quote.** The value is a name, so the
+       model can quote a real sentence — "Eragon killed the Urgal" — and pin the
+       wrong race to the character it names.
     """
     if isinstance(payload, str):
         try:
@@ -101,7 +102,7 @@ def parse_affiliation_verdict(payload: object, rows: list[dict]) -> dict[str, di
             return {}
     if not isinstance(payload, dict):
         return {}
-    entries = payload.get("affiliation")
+    entries = payload.get("species")
     if not isinstance(entries, list):
         return {}
 
@@ -111,14 +112,14 @@ def parse_affiliation_verdict(payload: object, rows: list[dict]) -> dict[str, di
         if not isinstance(entry, dict):
             continue
         name = str(entry.get("name", "")).strip()
-        affiliation = str(entry.get("affiliation", "") or "").strip()
+        species = str(entry.get("species", "") or "").strip()
         quote = str(entry.get("quote", "") or "").strip()
         row = rows_by_name.get(name)
-        if row is None or name in verdicts or not affiliation:
+        if row is None or name in verdicts or not species:
             continue
         if not is_quoted(quote, row["snippets"]):
             continue
-        if not quote_names_value(quote, affiliation):
+        if not quote_names_value(quote, species):
             continue
-        verdicts[name] = {"affiliation": affiliation, "quote": quote}
+        verdicts[name] = {"species": species, "quote": quote}
     return verdicts

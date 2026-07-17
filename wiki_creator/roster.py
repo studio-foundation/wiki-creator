@@ -92,6 +92,33 @@ def is_quoted(quote: str, snippets: list[dict]) -> bool:
     return any(needle in normalize(snippet.get("text")) for snippet in snippets)
 
 
+# Tokenizes on word characters, so a value's punctuation never welds itself to
+# the sentence: "…joined the Varden." must still name `Varden`.
+_WORD_RE = re.compile(r"\w+")
+
+
+def quote_names_value(quote: str, value: str) -> bool:
+    """True iff ``value``'s tokens appear contiguously in ``quote``.
+
+    The companion of `is_quoted`: that verifies the quote is real, this verifies
+    the quote actually names the value a name-returning stage claims from it. A
+    stage whose verdict is an enum member (`status`) does not need it; one whose
+    verdict is a name — the faction the model infers, the species it reads off —
+    can quote a real sentence and pin the wrong value to it (STU-551).
+
+    Whole tokens, never a substring (STU-541, same reason): `beaver` inside
+    `Beavers`, or `Order` off *"he ordered the villagers"*, is an accident of
+    spelling, not a mention.
+    """
+    group = _WORD_RE.findall(normalize(value))
+    if not group:
+        return False
+    words = _WORD_RE.findall(normalize(quote))
+    return any(
+        words[i:i + len(group)] == group for i in range(len(words) - len(group) + 1)
+    )
+
+
 def load_cache(path: Path | str, rows: list[dict], version: int) -> dict[str, dict] | None:
     """Cached verdicts for exactly this roster and this verdict schema, or None.
 

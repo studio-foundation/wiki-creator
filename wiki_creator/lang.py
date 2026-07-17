@@ -57,6 +57,7 @@ OPTIONAL_KEYS = frozenset(
         "geographic_keywords",
         "status_markers",
         "affiliation_markers",
+        "species_markers",
     }
 )
 
