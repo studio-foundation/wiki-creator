@@ -320,6 +320,50 @@ Inside `wiki-resolution`, order matters:
   merges and must keep merging: `Mr Tumnus` → `Tumnus` (one side titled, no conflict),
   `Captain Westfall` → `Chaol Westfall`.
 
+- A species is not a role (STU-559): `pure_title` merged **the Shade into a sword
+  and the Urgals into a mountain** on Eragon. Its premise — a bare role name
+  designates a named character — is true only of a role exactly one character
+  wears, and it read that off `role_words`, where `01_eragon.yaml` declares
+  `rider`, `elf`, `urgal`, `shade` beside `king` and `queen`. So the book YAML
+  now declares the property directly: `classification.roles_naming_one_character`
+  lists the roles **this novel** uses, bare, as a name for one character — the
+  "Config Is Read By People Who Know Books" rule, since a reader of Eragon knows
+  without hesitation that `king` designates a man and `urgal` a species. An
+  undeclared book merges nothing here (STU-539's asymmetry: a false merge invents
+  a character and deletes a real one; a false negative leaves two pages that are
+  each still correct), so only `throne-of-glass` declares it — `crown prince` and
+  `captain`, its two measured true positives. `_detect_pure_title_in_context` no
+  longer takes `role_words` **at all**: the two vocabularies being confusable is
+  the defect, so the parameter is gone rather than filtered. That also drops
+  STU-471's head-noun inference from this path — a declared phrase is matched
+  whole (`_is_pure_title` keeps it, for `_pick_canonical_name`).
+  **The config gate is not enough, and the second cause is separately measured.**
+  `_is_apposition` took a comma for apposition: between `Zar'roc` and `Shade` in
+  *"As for Zar'roc, the Shade might have it"* sit only `,` and `the`, so
+  adjacency was declared apposition — the STU-536/STU-538 shape one layer down.
+  A reader would plausibly declare `shade` (the Shade *is* Durza), which brings
+  the sword merge straight back, so `_tokens_between_are_connective` now refuses
+  **a comma plus a determiner**: apposition renames without re-determining
+  (`Dorian Havilliard, Crown Prince of Adarlan`), while a comma followed by a
+  fresh determined noun phrase opens a phrase that heads its own clause (`the
+  Shade might have`, `the Urgals ceased`). **The comma is the gate, not the
+  determiner** — `Brullo — the Master —` is the appositive dash form STU-281 was
+  built for and keeps merging. Measured by replaying the deterministic chain on
+  full rosters (ToG 60 ch, Eragon 67 ch, Narnia 20 ch — the 5-chapter caches
+  answer a different question, per STU-539): **5 fires / 2 true → 2 fires / 2
+  true**, both true positives kept. `alias-adjudication` is not a substitute: it
+  runs *after* this stage (so a false merge is already baked into the roster it
+  reads) and returned `merge: null` on every cached book.
+  **`Queen` → `Lucy` is not the true positive STU-559 recorded**, which is why
+  Narnia declares nothing: the novel writes `Queen Lucy` 5 times and `Queen
+  Susan` 4, so bare `Queen` names neither sister and the merge steals Susan's
+  mentions — STU-541's Mr/Mrs Beaver, reached through the other detector. The
+  question `roles_naming_one_character` asks is "does this word, bare, name one
+  character in **this** novel", not "is it a title": `king` is a title in ToG and
+  still names nobody there (Adarlan's king and Brannon both wear it), which is
+  why splitting `role_words` into titles-vs-species — the shape the ticket
+  proposed — would have kept `King` → `Brannon`.
+
 - Contextual alias adjudication (STU-539): the alias pair no rule proposes is
   decided by one `studio run alias-adjudication-item` per book, over the **whole
   PERSON roster** — the `section-filter` shape (STU-529), with the opposite bias:
