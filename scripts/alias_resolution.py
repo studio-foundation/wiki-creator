@@ -20,6 +20,7 @@ from wiki_creator import studio_io
 from wiki_creator.lang import load_lang_config, infer_language
 from wiki_creator.llm import ollama
 from wiki_creator.registry import EntityRecord, Registry, normalize_name
+from wiki_creator.tokens import contains_token_run
 
 
 def _empty_stats() -> dict:
@@ -411,22 +412,6 @@ def _entity_roles(names: list[str], role_words: list[str]) -> set[str]:
     return {role for name in names if (role := _leading_role(name, role_words))}
 
 
-def _contains_token_run(name: str, run: str) -> bool:
-    """Return True if run's tokens appear contiguously among name's tokens.
-
-    Whole tokens, never substrings: "Beavers" is the couple, and "beaver" being a
-    substring of it says nothing about either spouse.
-    """
-    tokens = name.lower().split()
-    run_tokens = run.split()
-    if not run_tokens:
-        return False
-    return any(
-        tokens[i:i + len(run_tokens)] == run_tokens
-        for i in range(len(tokens) - len(run_tokens) + 1)
-    )
-
-
 def _ambiguous_remainders(entities: list[dict], role_words: list[str]) -> frozenset[str]:
     """Return the remainders the roster attaches to two or more different titles.
 
@@ -489,7 +474,7 @@ def _detect_title_alias(
             for full_name in names_full:
                 if remainder in ambiguous_remainders and full_name.lower() == remainder:
                     continue
-                if _contains_token_run(full_name, remainder):
+                if contains_token_run(full_name.lower(), remainder):
                     return {
                         "method": "title_alias",
                         "confidence": "medium",
