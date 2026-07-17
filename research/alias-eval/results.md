@@ -114,6 +114,40 @@ STU-538 chose; this is what it costs.
   two entities it does not name is judged by a human, and a merge nobody proposed is
   invisible to both.
 
+## The fix (STU-544)
+
+The class this measured is not scored by a code gate — a quote that *proves* one
+person cannot be told from one that merely *contains* both names deterministically.
+The two candidate shapes STU-544 proposed:
+
+1. **Ask the classifier for the relationship between the names**, not just a quote
+   containing both. Shipped as a prompt change: `THE TEST` now reads the quote for
+   what it says (`"A was B"` merges; `"A, a B"` / `"A as a B"` / `"call you B"` do
+   not), and two `NEVER merge` rules name the exact failure modes — a title/class
+   more than one character holds (`Ebrithil`, `Fury`, `Daughter of Eve`), and a name
+   used to address or ask about a *second* person (Solembum with the arrow reversed).
+2. **Refuse a merge whose quote names a third roster character** — measured and
+   **dropped**. Over these 18 verdicts it catches **0 of the 3 false positives**
+   (their quotes name no roster third: `Garzhvog` is off-roster, `she` is unnamed,
+   `Fury` is not a name) while killing **6 true positives** whose quotes legitimately
+   name a bystander (`Eragon = Argetlam` names Saphira, `The Witch = White Witch`
+   names Aslan, `Roran = Stronghammer` names Eragon). It only ever caught the
+   earlier-run `Daughter of Eve`, which the Narnia gold already forbids by name.
+
+**Live confirmation.** One `studio run alias-adjudication-item` over a synthetic
+roster carrying the three trap quotes plus one true cover-identity pair
+(`Lillian Gordaina was Celaena Sardothien`), on `claude-haiku-4-5`, merges **only**
+the cover identity and rejects all three traps — stable across repeated runs.
+
+**Scoreability.** `Eragon = Uluthrek` is now scored `false_positive`
+(`identity_confusion_forbidden: ["alias: Uluthrek"]` under Eragon — Uluthrek is
+Angela's Urgal name, a later-book confusion hosted on a book-1 character), so
+precision-on-the-judged reads 4/5 on the pre-fix verdicts and the shape is visible
+to `score.py`. `Glaedr = Ebrithil` and `Nausicaä = Fury` stay human-judged: the gold
+is book-1-scoped, and neither has a book-1 host (Glaedr enters in book 2; hollow_star
+ships no corpus). The prompt fix targets all three; only Uluthrek can be scored
+without expanding the corpus with book knowledge outside this change.
+
 ## Running it
 
 Every `invented_names` book loads GLiNER from HuggingFace, so an expired HF token
