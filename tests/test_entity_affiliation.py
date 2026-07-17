@@ -282,3 +282,64 @@ def test_person_declares_the_affiliation_slot():
     slots = {s["token"]: s for s in person["infobox"]}
     assert slots["affiliation"]["provenance"] == "extracted-fact"
     assert slots["affiliation"]["obligation"] == "OPT"
+
+
+def test_the_value_must_match_whole_tokens_not_a_substring():
+    """STU-541's rule, for STU-541's reason: `beaver` inside `Beavers` is an
+    accident of spelling. A raw substring test accepts `Order` off "he ordered
+    the villagers", inventing a faction out of a verb — which is exactly what
+    rule 3 exists to reject."""
+    rows = roster_rows(
+        [{"canonical_name": "Roran", "aliases": []}],
+        {"Roran": [_snip("Roran betrayed nothing as he ordered the villagers to march.", "ch10")]},
+        MARKERS + ["betrayed"],
+    )
+    quote = "Roran betrayed nothing as he ordered the villagers to march."
+    for invented in ("Order", "a", "der"):
+        verdicts = parse_affiliation_verdict(
+            {"affiliation": [{"name": "Roran", "affiliation": invented, "quote": quote}]}, rows
+        )
+        assert verdicts == {}, f"{invented!r} was accepted out of 'ordered'"
+
+
+def test_a_multi_word_faction_must_appear_contiguously():
+    rows = roster_rows(
+        [{"canonical_name": "Angela", "aliases": []}],
+        {"Angela": [_snip("Angela joined Du Vrangr Gata that spring.", "ch10")]},
+        MARKERS,
+    )
+    quote = "Angela joined Du Vrangr Gata that spring."
+    assert parse_affiliation_verdict(
+        {"affiliation": [{"name": "Angela", "affiliation": "Du Vrangr Gata", "quote": quote}]}, rows
+    )["Angela"]["affiliation"] == "Du Vrangr Gata"
+    # tokens present but not contiguous -> not named by the quote
+    assert parse_affiliation_verdict(
+        {"affiliation": [{"name": "Angela", "affiliation": "Du Gata", "quote": quote}]}, rows
+    ) == {}
+
+
+def test_an_undecided_affiliation_clears_the_writers_guess():
+    """THE BLOCKER (final review). base.yaml's infobox brief and few-shot show the
+    writer how to invent an affiliation, and `_bind_batch_fields` only overwrites
+    when the pipeline HAS a value. Without the clear, an undecided character
+    renders the LLM's inference — the ungrounded fact this whole stage exists to
+    prevent, arriving by the one path the design did not look at."""
+    import scripts.generate_wiki_pages as gwp
+
+    book_config = {}
+    entity = {"canonical_name": "Eragon", "type": "PERSON", "importance": "principal"}
+    page = {"infobox_fields": {"affiliation": "Les Varden"}}  # the writer's guess
+    gwp._bind_batch_fields(page, entity, book_config)
+    assert "affiliation" not in page["infobox_fields"]
+
+
+def test_a_decided_affiliation_overwrites_the_writers_guess():
+    import scripts.generate_wiki_pages as gwp
+
+    entity = {
+        "canonical_name": "Brom", "type": "PERSON", "importance": "principal",
+        "affiliation": "Varden",
+    }
+    page = {"infobox_fields": {"affiliation": "Les Ombres"}}
+    gwp._bind_batch_fields(page, entity, {})
+    assert page["infobox_fields"]["affiliation"] == "Varden"

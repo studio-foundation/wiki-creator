@@ -23,11 +23,16 @@ reread, and reads as fact; an absent one says nothing.
 from __future__ import annotations
 
 import json
+import re
 
 from wiki_creator.roster import has_marker, is_quoted, latest_first, normalize
 
 SNIPPETS_PER_ENTITY = 5
 SNIPPET_CHARS = 300
+
+# Tokenizes on word characters, so the sentence's punctuation never welds itself
+# to the faction: "…joined the Varden." must still name `Varden`.
+_WORD_RE = re.compile(r"\w+")
 
 
 def select_affiliation_snippets(snippets: list[dict], markers: list[str]) -> list[dict]:
@@ -70,11 +75,28 @@ def roster_rows(
     ]
 
 
+def _quote_names(quote: str, affiliation: str) -> bool:
+    """True iff ``affiliation``'s tokens appear contiguously in ``quote``.
+
+    Whole tokens, never a substring — STU-541's rule, for STU-541's reason: `beaver`
+    sitting inside `Beavers` is an accident of spelling. Here a raw substring test
+    accepts `Order` off *"Roran betrayed nothing as he **order**ed the villagers"*,
+    which is the invented faction this rule exists to reject.
+    """
+    group = _WORD_RE.findall(normalize(affiliation))
+    if not group:
+        return False
+    words = _WORD_RE.findall(normalize(quote))
+    return any(
+        words[i:i + len(group)] == group for i in range(len(words) - len(group) + 1)
+    )
+
+
 def parse_affiliation_verdict(payload: object, rows: list[dict]) -> dict[str, dict]:
     """Map the classifier's reply to verified verdicts, keyed by roster name.
 
     A name absent from the result renders no slot; unparseable input verdicts
-    nothing. A verdict survives three rules:
+    nothing. A verdict survives three rules (see `_quote_names` for rule 3):
 
     1. its name is on the roster (the model hallucinates characters);
     2. its quote is verbatim in **that entity's own** snippets (STU-539: these
@@ -108,7 +130,7 @@ def parse_affiliation_verdict(payload: object, rows: list[dict]) -> dict[str, di
             continue
         if not is_quoted(quote, row["snippets"]):
             continue
-        if normalize(affiliation) not in normalize(quote):
+        if not _quote_names(quote, affiliation):
             continue
         verdicts[name] = {"affiliation": affiliation, "quote": quote}
     return verdicts
