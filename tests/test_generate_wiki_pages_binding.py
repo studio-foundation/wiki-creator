@@ -193,9 +193,9 @@ def test_bind_omits_titles_when_absent():
 
 
 def test_extracted_fact_value_titles_and_unknown():
-    assert gwp._extracted_fact_value({"titles": ["Captain", "Duke"]}, "titles") == "Captain, Duke"
-    assert gwp._extracted_fact_value({"titles": []}, "titles") is None
-    assert gwp._extracted_fact_value({"affiliation": "X"}, "affiliation") is None
+    assert gwp._extracted_fact_value({"titles": ["Captain", "Duke"]}, "titles", "fr") == "Captain, Duke"
+    assert gwp._extracted_fact_value({"titles": []}, "titles", "fr") is None
+    assert gwp._extracted_fact_value({"affiliation": "X"}, "affiliation", "fr") is None
 
 
 def test_generation_profile_in_universe_drops_out_of_universe_sections():

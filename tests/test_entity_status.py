@@ -354,3 +354,65 @@ def test_a_successful_verdict_is_cached_and_replayed(tmp_path):
         second = resolve_status(_rows(), "Eragon", cache)
     run.assert_not_called()
     assert second == first
+
+
+from scripts.generate_wiki_pages import _extracted_fact_value
+from wiki_creator.entity_status import death_label, status_label
+from wiki_creator.page_templates import load_base_template
+
+
+def test_every_enum_value_has_a_label_in_both_languages():
+    # No French string literal may live in a .py — the labels are data.
+    chrome = load_base_template()["chrome"]
+    for status in STATUS_VALUES:
+        entry = chrome[f"status_{status}"]
+        assert entry["fr"] and entry["en"]
+
+
+def test_status_label_is_localized():
+    assert status_label("deceased", "en") == "Deceased"
+    assert status_label("deceased", "fr") == "Décédé"
+
+
+def test_an_absent_status_renders_the_declared_fallback():
+    # base.yaml declares `fallback: unknown` on the slot; MIN means it renders.
+    assert status_label(None, "en") == status_label("unknown", "en")
+    assert status_label("", "en") == status_label("unknown", "en")
+
+
+def test_death_label_carries_the_chapter():
+    assert "12" in death_label(12, "en")
+    assert "12" in death_label(12, "fr")
+
+
+def test_death_label_is_none_without_a_chapter():
+    assert death_label(None, "fr") is None
+
+
+def test_the_binder_renders_status_from_the_batch_entity():
+    entity = {"status": "deceased", "death_chapter": 38}
+    assert _extracted_fact_value(entity, "status", "fr") == "Décédé"
+    assert "38" in _extracted_fact_value(entity, "death", "fr")
+
+
+def test_the_binder_renders_unknown_for_an_unstamped_entity():
+    # A book that never ran the stage, and a verdict that was rejected, render
+    # the same thing.
+    assert _extracted_fact_value({}, "status", "en") == status_label("unknown", "en")
+
+
+def test_the_death_slot_is_omitted_without_a_chapter():
+    assert _extracted_fact_value({"status": "alive"}, "death", "fr") is None
+
+
+def test_titles_still_binds():
+    assert _extracted_fact_value({"titles": ["Roi"]}, "titles", "fr") == "Roi"
+
+
+def test_person_declares_both_slots():
+    person = load_base_template()["entity_types"]["PERSON"]
+    slots = {s["token"]: s for s in person["infobox"]}
+    assert slots["status"]["provenance"] == "extracted-fact"
+    assert slots["death"]["provenance"] == "extracted-fact"
+    assert slots["death"]["obligation"] == "OPT"
+    assert "{{{death|}}}" in person["export"]["infobox_source"]

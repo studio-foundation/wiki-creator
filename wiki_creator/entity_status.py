@@ -23,6 +23,7 @@ import re
 from pathlib import Path
 
 from wiki_creator.chapters import chapter_number
+from wiki_creator.page_templates import chrome_label
 
 STATUS_VALUES = ("alive", "deceased", "missing", "unknown", "undead")
 DEFAULT_STATUS = "unknown"
@@ -200,3 +201,20 @@ def save_status_cache(path: Path | str, rows: list[dict], verdicts: dict[str, di
         json.dumps({"roster": rows, "verdicts": verdicts}, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
+
+
+def status_label(status: str | None, lang: str) -> str:
+    """The localized enum label. An absent or unrecognized status renders the
+    slot's declared fallback (`unknown`) — a book that never ran the stage and a
+    verdict that was rejected must render the same thing."""
+    value = str(status or "").strip().lower()
+    if value not in STATUS_VALUES:
+        value = DEFAULT_STATUS
+    return chrome_label(f"status_{value}", lang)
+
+
+def death_label(chapter: int | None, lang: str) -> str | None:
+    """The localized death line, or None when there is no chapter to name."""
+    if chapter is None:
+        return None
+    return chrome_label("death_chapter", lang).format(chapter=chapter)

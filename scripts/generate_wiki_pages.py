@@ -53,6 +53,7 @@ from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.provenance import content_units, relation_units
 from wiki_creator import studio_io
 from wiki_creator.entity_links import link_first_mentions
+from wiki_creator.entity_status import death_label, status_label
 from wiki_creator.registry import Registry, normalize_name
 from wiki_creator.spoiler_blocks import relationship_index_lines, per_relation_prose_enabled
 from wiki_creator.relationship_types import usable_relationship_type
@@ -731,13 +732,19 @@ def _batch_bound_value(entity: dict, token: str, lang: str = "fr") -> str | None
     return None
 
 
-def _extracted_fact_value(entity: dict, token: str) -> str | None:
+def _extracted_fact_value(entity: dict, token: str, lang: str) -> str | None:
     """Value for an extracted-fact infobox token, sourced from facts the pipeline
     produced into the batch entity. None when the fact is absent (slot omitted).
-    `status`, `affiliation`, and the specific `type` are future slices."""
+    `affiliation` and the specific `type` are future slices."""
     if token == "titles":
         titles = [t for t in (entity.get("titles") or []) if t]
         return ", ".join(titles) if titles else None
+    if token == "status":
+        # MIN with a declared fallback: an unstamped entity renders `unknown`
+        # rather than dropping the slot (STU-488).
+        return status_label(entity.get("status"), lang)
+    if token == "death":
+        return death_label(entity.get("death_chapter"), lang)
     return None
 
 
@@ -755,7 +762,7 @@ def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> No
         if slot.provenance == "batch-bound":
             value = _batch_bound_value(entity, slot.token, lang)
         elif slot.provenance == "extracted-fact":
-            value = _extracted_fact_value(entity, slot.token)
+            value = _extracted_fact_value(entity, slot.token, lang)
         else:
             continue
         if value:
