@@ -1,6 +1,9 @@
 """STU-488: per-tome entity status (the `status` / `death` infobox slots)."""
 import json
+import subprocess
+from unittest.mock import patch
 
+from scripts.entity_status import contexts_by_entity, resolve_status
 from wiki_creator.entity_status import (
     DEFAULT_STATUS,
     SNIPPETS_PER_ENTITY,
@@ -12,6 +15,7 @@ from wiki_creator.entity_status import (
     save_status_cache,
     select_status_snippets,
 )
+from wiki_creator.registry import EntityRecord, Mention, Registry
 
 MARKERS = ["died", "killed", "dead"]
 
@@ -257,3 +261,96 @@ def test_a_missing_or_corrupt_cache_is_a_miss_not_a_crash(tmp_path):
     corrupt = tmp_path / "corrupt.json"
     corrupt.write_text("{not json", encoding="utf-8")
     assert load_cached_status(corrupt, _rows()) is None
+
+
+def _registry():
+    return Registry(entities=[
+        EntityRecord(
+            entity_id="brom",
+            canonical_name="Brom",
+            entity_type="PERSON",
+            aliases=["the storyteller"],
+            mentions=[
+                Mention(surface="Brom", chapter_id="chapter_38", context=BROM_QUOTE),
+                Mention(surface="Brom", chapter_id="chapter_2", context=None),
+                Mention(surface="Brom", chapter_id="chapter_2", context="   "),
+            ],
+        ),
+        EntityRecord(
+            entity_id="tronjheim",
+            canonical_name="Tronjheim",
+            entity_type="PLACE",
+            mentions=[Mention(surface="Tronjheim", chapter_id="chapter_40", context="The city stood.")],
+        ),
+    ])
+
+
+def test_contexts_come_from_person_mentions_with_their_chapter():
+    contexts = contexts_by_entity(_registry())
+    assert contexts["Brom"] == [{"text": BROM_QUOTE, "chapter_id": "chapter_38"}]
+
+
+def test_non_person_entities_have_no_context():
+    # `status` is declared on PERSON only; no other type has the slot.
+    assert "Tronjheim" not in contexts_by_entity(_registry())
+
+
+def test_every_studio_failure_leaves_the_roster_unknown(tmp_path):
+    # Missing CLI, timeout, non-zero exit, unparseable output, missing stage
+    # output: each renders `unknown`, which is the slot's declared fallback.
+    # A false `deceased` kills a living character on a page nobody will reread.
+    for error in [
+        FileNotFoundError(),
+        subprocess.TimeoutExpired(cmd="studio", timeout=1),
+    ]:
+        with patch("scripts.entity_status.subprocess.run", side_effect=error):
+            assert resolve_status(_rows(), "Eragon", tmp_path / "s.json") == {}
+
+    class _Result:
+        returncode = 1
+        stdout = ""
+        stderr = "boom"
+
+    with patch("scripts.entity_status.subprocess.run", return_value=_Result()):
+        assert resolve_status(_rows(), "Eragon", tmp_path / "s.json") == {}
+
+    class _Garbage:
+        returncode = 0
+        stdout = "not json at all"
+        stderr = ""
+
+    with patch("scripts.entity_status.subprocess.run", return_value=_Garbage()):
+        assert resolve_status(_rows(), "Eragon", tmp_path / "s.json") == {}
+
+
+def test_a_failed_run_is_not_cached(tmp_path):
+    # Caching a failure would make the next run replay it silently.
+    cache = tmp_path / "s.json"
+    with patch("scripts.entity_status.subprocess.run", side_effect=FileNotFoundError()):
+        resolve_status(_rows(), "Eragon", cache)
+    assert not cache.exists()
+
+
+def test_a_successful_verdict_is_cached_and_replayed(tmp_path):
+    cache = tmp_path / "s.json"
+    stage_output = {"status": [{"name": "Brom", "status": "deceased", "quote": BROM_QUOTE}]}
+
+    class _Ok:
+        returncode = 0
+        stdout = json.dumps({
+            "id": "run-1",
+            "stages": [
+                {"stage_name": "entity-status-item", "status": "success", "output": stage_output},
+            ],
+        })
+        stderr = ""
+
+    with patch("scripts.entity_status.subprocess.run", return_value=_Ok()) as run:
+        first = resolve_status(_rows(), "Eragon", cache)
+    assert first["Brom"]["status"] == "deceased"
+    assert first["Brom"]["chapter"] == 38
+
+    with patch("scripts.entity_status.subprocess.run") as run:
+        second = resolve_status(_rows(), "Eragon", cache)
+    run.assert_not_called()
+    assert second == first
