@@ -1,6 +1,22 @@
-# STU-488 — Entity status per tome (`status` / `death` infobox slots)
+# STU-488 — Entity status per tome (`status` infobox slot)
 
 Ticket: [STU-488](https://linear.app/studioag/issue/STU-488/multi-livres-55-evolution-perso-and-conflits-inter-tomes)
+
+> **Post-ship correction (`9399cbe`):** this design also shipped a `death` slot
+> (the chapter of the snippet the verdict quotes), described throughout the
+> sections below. Measured on Eragon's 4 verified verdicts, 3 of 4 derived
+> chapters were wrong: Brom dies around chapter 37 but his slot read "Chapter
+> 61" — a character *saying*, later, that he was killed; Morzan and Marian both
+> died before the book begins and have no death chapter at all. The place
+> where the text states a fact is not the place where the fact happens, so
+> deriving a chapter from the quoting snippet does not work, and no amount of
+> gating rationale fixes a wrong number. `death` was deleted; `status` keeps
+> its snippet selection, quote verification, and cache exactly as designed
+> below. The in-universe death circumstance is split out as **STU-552** — it
+> needs grounded prose (the STU-481 `## Déroulement` shape), not a derived
+> infobox slot. Passages below that still describe `death` are kept as the
+> record of what was tried and why it failed, marked inline; they are not the
+> shipped behavior.
 
 ## What this closes, and what it does not
 
@@ -60,9 +76,9 @@ French string literals in `.py` (STU-510).
 
 The fact is consumed at preparation, not resolution: `titles` is computed in
 `wiki_preparation.py` while building the batch entity, and `_extracted_fact_value`
-reads it back off `entity["titles"]`. `status`/`death` take the same path. The
-difference is that ours needs one LLM call, so it is its own script rather than an
-inline helper.
+reads it back off `entity["titles"]`. `status` takes the same path (originally
+`death` too — see the post-ship correction above). The difference is that ours
+needs one LLM call, so it is its own script rather than an inline helper.
 
 ```
 wiki-resolution                          (unchanged)
@@ -76,11 +92,11 @@ PRE_STEPS["wiki-preparation"]            (run_wiki.py)
        → processing_output/<slug>/entity_status.json
 
 wiki_preparation.py
-  └─ reads entity_status.json, stamps status/death on the batch entity
-     (beside `titles`)
+  └─ reads entity_status.json, stamps status on the batch entity
+     (beside `titles`) — originally status/death, death removed post-ship
 
 generate_wiki_pages.py::_extracted_fact_value
-  └─ token "status"/"death" → entity["status"] / entity["death"]
+  └─ token "status" → entity["status"] — originally "status"/"death", see above
 ```
 
 **Why a preparation pre-step and not a `wiki-resolution` stage like
@@ -151,9 +167,18 @@ One row per entity, three fields:
 ```
 
 No chapter field in the reply. Snippets are built from `context_by_chapter`, so each
-already knows its `chapter_id`; `death` is derived by code — the chapter of the snippet
-containing the quote, rendered via `chapter_number`. The LLM judges, the code formats,
-as with every other extracted-fact.
+already knows its `chapter_id`.
+
+**As designed, and removed post-ship:** `death` was derived by code — the chapter of
+the snippet containing the quote, rendered via `chapter_number` — on the reasoning
+"the LLM judges, the code formats", as with every other extracted-fact. That reasoning
+does not hold for a *when*: the snippet that proves a death is the one that quotes
+someone stating it, and a character can state a death chapters after it happened, or
+before the book even opens. Measured on Eragon, 3 of 4 derived chapters were wrong (see
+the post-ship correction at the top of this document). `death` is deleted; `status`'s
+derivation (the enum value itself, stated directly by the model and verified against
+the snippet) is unaffected — the failure is specific to *dating* a fact from where it
+is quoted, not to trusting the model's read of the snippet.
 
 **Three rejection rules, each falling back to `unknown`:**
 
@@ -181,6 +206,9 @@ roster and a full roster share no verdict.
 
 ## Rendering
 
+**As designed, and removed post-ship** (see the correction at the top of this
+document — kept as the record of what was tried):
+
 ```yaml
 # base.yaml, PERSON.mediawiki source — one added row
 | '''Décès''' || {{{death|}}}
@@ -197,7 +225,10 @@ cleanly by `_bind_batch_fields`. `status` stays `MIN` with its fallback — it r
 `_extracted_fact_value` gains two branches beside `titles`, and its comment
 ("`status`, `affiliation`, and the specific `type` are future slices") loses `status`.
 
-### `death` renders the chapter, ungated
+**What actually shipped**: only the `status` row and slot above. No `Décès` row was
+added to `person.mediawiki`, and `_extracted_fact_value` gained one branch, not two.
+
+### `death` renders the chapter, ungated — moot, but the reasoning is kept
 
 An earlier draft of this design gated `death` on `editorial_stance` (STU-507), on the
 grounds that "Chapter 40" is meta-narrative and contradicts an `in_universe` posture.
@@ -214,14 +245,20 @@ That was wrong on three counts:
 
 So gating `death` would build a new mechanism, for a mode nobody declares, next to a
 slot that already does the same thing ungated. If `in_universe` ever becomes real,
-`apparition` and `death` get gated together, in a ticket that has a reason.
+`apparition` gets gated on its own — `death` no longer exists to gate alongside it.
 
-### Known limitation: the infobox is not chapter-gated
+This whole question is now moot: `death` was removed for being *wrong*, not for being
+ungated. Kept here because the reasoning about `apparition`/stance gating outlives the
+slot that prompted it, and applies verbatim to any future slot naming a chapter.
+
+### Known limitation: the infobox is not chapter-gated — no longer applicable
 
 STU-492 collapses chapter-gated *sections* behind `mw-collapsible` when a book sets
-`generation.spoiler.collapse_after_chapter: N`. The infobox is not gated, so a `death`
-slot naming chapter 40 would bypass it. **No book declares `collapse_after_chapter`
-today**, so this is theoretical; recorded, not designed for.
+`generation.spoiler.collapse_after_chapter: N`. This was recorded as a theoretical gap
+for the `death` slot naming a chapter; with `death` removed, the infobox carries no
+chapter-bearing extracted fact, so the gap it named no longer exists. `apparition`
+(tome span, not a chapter number) is the closest thing left, and was never in scope
+for this note.
 
 ## Testing
 
@@ -237,34 +274,70 @@ Unit tests over the pure logic in `wiki_creator/entity_status.py`:
 | A name off the roster is rejected | Hallucination |
 | A status outside the enum is rejected | — |
 | Every failure path (missing CLI, timeout, unparseable JSON, empty) leaves the whole roster `unknown` | **The load-bearing test.** This is the asymmetry above; if it breaks, the feature kills living characters |
-| `death` is the chapter of the snippet carrying the quote | Deterministic derivation |
 | Cache keyed on roster rows: a changed roster misses the cache | The truncated-extraction trap |
 | `status_markers` absent from cue_words → empty collection, no marker selection, no crash | CLAUDE.md rule |
+
+(`death` is the chapter of the snippet carrying the quote — pinned, then deleted along
+with the slot; see the post-ship correction above.)
 
 Two wiring tests — the STU-512 lesson (*without them the whole feature was deletable
 with the suite green*):
 
-1. `wiki_preparation` stamps `status`/`death` onto the batch entity.
-2. `_extracted_fact_value` renders the slot from those fields.
+1. `wiki_preparation` stamps `status` onto the batch entity (originally `status`/`death`).
+2. `_extracted_fact_value` renders the slot from that field.
 
 ### Measurement
 
 STU-538 fired 340 times for 0 true positives and nobody knew for months, because nobody
 counted. Here the ground truth is free, unlike STU-537's oracle roster: **we know who
-dies**. Eragon has cached extraction, Brom and Garrow die in it, and the rest of the
-roster is alive.
+dies**. So: run the stage on `01_eragon`, check the roster by hand, report the numbers in
+the MR. No `research/` harness, no gold corpus. Not a CI metric — the control that stops
+us shipping another STU-538.
 
-So: run the stage on `01_eragon`, check the roster by hand, and report in the MR
-description — how many `deceased`, how many real. No `research/` harness, no gold
-corpus. If the stage returns `deceased` for anything but Brom and Garrow, that is a
-false positive and it is visible by eye. This is not a CI metric; it is the control that
-stops us shipping another STU-538.
+**As predicted, and wrong on both counts.** This section planned to score against "Brom
+and Garrow die, the rest of the roster is alive; anything else returning `deceased` is a
+false positive". Neither half survived contact:
+
+* **Garrow is not on the PERSON roster** — he is typed `ORG`, 113 mentions. That is the
+  STU-537 bug verbatim, and `01_eragon.yaml` does declare `invented_names: true`; the
+  book's cached extraction simply predates the flip, so the registry is spaCy-typed. One
+  of the two expected true positives was not measurable at all.
+* **The roster's real deaths are not two.** Tornac, Morzan, Marian, Vrael and Haeg all die
+  or are dead, most in backstory. Scoring "anything but Brom and Garrow is a false
+  positive" would have counted five true verdicts as failures.
+
+A prediction written before reading the artifact is a hypothesis, not a rubric — the same
+error STU-539 recorded (its premise was measured against a 5-chapter extraction and was
+false). **Read the roster first, then score.**
+
+**What the measurement actually bought** — it found a real bug, which is the whole point:
+
+Pre-fix, six live runs returned `4/62`, `5/62`, a `studio_run_failed`, and `0/62`.
+The Studio journal for the `0/62` run showed the model had answered correctly:
+
+```json
+{"status": [{"name": "Brom", "status": "deceased",
+             "quote": "\"Brom's dead,\" said Eragon abruptly. \"The Ra'zac killed him.\""}]}
+```
+
+`parse_status_verdict` rejected it. The EPUB carries **typographic quotes**
+(`“Brom's dead,” said Eragon abruptly.`); the model echoes straight ones; `_normalize`
+folded only whitespace and case, so the needle was not a substring of its own snippet.
+Every verdict whose evidence sat inside **dialogue** was silently dropped — in a novel,
+where deaths are announced in dialogue. Every surviving verdict across those runs was a
+fragment containing no quotation mark at all. The fix folds typographic variants
+symmetrically on both sides (`99a6a71`); it cannot make an invented sentence match,
+because the folding is many-to-one on typography only.
+
+Post-fix: `7/62` and `6/62` decided, Brom in both, every verdict hand-checked true —
+**0 false positives**, and `alive` (Eragon, Saphira, Arya) confirms the two-source
+snippet selection works as designed. Recall is not stable run to run; precision is.
 
 ## Acceptance
 
-A character who dies in tome 2 renders `status: Décédé` and `death: Chapitre N` on their
-tome 2 page, and is untouched on their tome 1 page (which is never regenerated). Every
-failure path renders `unknown`.
+A character who dies in tome 2 renders `status: Décédé` on their tome 2 page, and is
+untouched on their tome 1 page (which is never regenerated). Every failure path renders
+`unknown`.
 
 ## Split out of this ticket
 

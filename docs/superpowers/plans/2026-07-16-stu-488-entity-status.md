@@ -1,8 +1,26 @@
 # Entity Status Per Tome Implementation Plan
 
+> **Executed and superseded — kept as the record of what was planned.** Read the
+> spec (`docs/superpowers/specs/2026-07-16-stu-488-entity-status-design.md`) and
+> CLAUDE.md for the shipped behavior. Three things below are not what shipped:
+>
+> 1. **The `death` slot was removed** (`9399cbe`). Every step here that adds it,
+>    stamps `death_chapter`, or derives a chapter from the quoting snippet is dead
+>    text. The measurement showed the derived chapter is wrong for 3 of 4 verdicts —
+>    the place where the text states a fact is not the place where the fact happens.
+>    The in-universe death circumstance is STU-552.
+> 2. **`_normalize` folds typographic characters** (`99a6a71`). The plan's verbatim
+>    check rejected every verdict evidenced inside dialogue, because the EPUB carries
+>    curly quotes and the model echoes straight ones.
+> 3. **Task 5's `base.yaml` step names a `mediawiki` key that does not exist** — the
+>    real path is `entity_types.PERSON.export.infobox_source` (STU-505). Task 6's
+>    wiring test as written passes with the wiring deleted; it was rewritten during
+>    execution. The measurement section's prediction ("Brom and Garrow") was
+>    falsified: Garrow is typed ORG and is not on the roster.
+>
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Fill the declared-but-inert `status` infobox slot with a per-tome death verdict, plus a new `death` slot carrying the chapter.
+**Goal:** Fill the declared-but-inert `status` infobox slot with a per-tome death verdict.
 
 **Architecture:** A new `entity_status.py` pre-step to `wiki-preparation` sends the book's PERSON roster to one `studio run entity-status-item` call, verifies each verdict against the snippets it was shown, and caches the result keyed on the roster. `wiki_preparation.py` stamps `status`/`death_chapter` onto the batch entity beside `titles`; `generate_wiki_pages.py::_extracted_fact_value` renders them. A 1:1 mirror of `alias_adjudication` (STU-539), with the same fail-toward-nothing asymmetry.
 
@@ -27,7 +45,7 @@
 
 | File | Responsibility |
 |---|---|
-| Create `wiki_creator/entity_status.py` | Pure logic: enum, snippet selection, roster rendering, verdict parsing + verification, cache. No I/O beyond the cache file, no LLM, no Registry import. |
+| Create `wiki_creator/entity_status.py` | Pure logic: enum, snippet selection, roster rendering, verdict parsing + verification, cache. No LLM, no Registry import. (As shipped it also reads `base.yaml` via `chrome_label` for the enum's labels — the "no I/O beyond the cache file" claim was never true.) |
 | Create `scripts/entity_status.py` | Runner: read registry.json → roster → one `studio run` → write `entity_status.json`. Owns every failure path. |
 | Create `.studio/agents/entity-status.agent.yaml` | The prompt. |
 | Create `.studio/contracts/entity-status-item.contract.yaml` | Output contract (`status` field required). |
