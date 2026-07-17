@@ -33,8 +33,19 @@ wikis surveyed. Real names in use include `Personnage` (singular, fr),
 `The Shadowhunter Chronicles characters`. A wrong name is silent — the
 category returns 0 members and the wiki yields no pages.
 
+`infobox_templates` names the templates that ARE infoboxes but say so nowhere a
+test can read — `Charcat` on warriors, whose markup lives one transclusion away.
+Everything else is derived: a template is an infobox if its title contains
+"infobox", or its source carries Portable Infobox `<infobox>` markup.
+
 Non-English wikis are served under a path, not a subdomain: give the full
-`https://enkidiev.fandom.com/fr` as `wiki`.
+`https://enkidiev.fandom.com/fr` as `wiki`. Their Template: namespace is
+localized too (`Modèle:`), which is why the namespace name is read from the API
+rather than assumed.
+
+Re-parsing the corpus already on disk, without rescraping any page:
+    python scrape_fandom_bulk.py --wikis wikis.yaml \\
+        --out-dir processing_output/fandom_corpus --reparse
 
 Per-page record schema (one JSON object per line in lora_dataset_fandom.jsonl):
     source, wiki_slug, page_title, entity_type, content_lang, scraped_at
@@ -56,8 +67,8 @@ Outputs:
                                                          users, independent of the
                                                          page sample scraped
     {out_dir}/{wiki_slug}/templates/*.json            — canonical schema source: every
-                                                         Template: page with "infobox"
-                                                         in its title, + its /doc
+                                                         Template: page identified as an
+                                                         infobox, + its /doc
                                                          subpage if present. Shows what
                                                          fields the template SUPPORTS,
                                                          not just what got filled in on
@@ -92,16 +103,85 @@ DEFAULT_CATEGORIES = {
 
 RATE_LIMIT_SECONDS = 1
 MAX_SAMPLE_VALUES_PER_FIELD = 25  # cap so field_report.json doesn't explode on free-text fields
+MAX_TITLES_PER_QUERY = 50  # MediaWiki's ceiling for a multi-title query
 
 
 # --------------------------------------------------------------------------
 # Wikitext parsing (same logic as the single-wiki script)
 # --------------------------------------------------------------------------
 
-def parse_infobox(wikitext: str) -> dict:
+_PORTABLE_INFOBOX_MARKUP = re.compile(r"<infobox\b", re.IGNORECASE)
+
+
+def normalize_template_name(name: str) -> str:
+    """Fold a template name the way MediaWiki folds a page title: underscores
+    are spaces, and only the FIRST letter is case-insensitive.
+    """
+    normalized = " ".join(name.replace("_", " ").split())
+    return normalized[:1].upper() + normalized[1:]
+
+
+def is_infobox_template(title: str, source: str | None) -> bool:
+    """Is this Template: page an infobox? Two independent tests, unioned.
+
+    "infobox" in the title is a convention, not a rule — the template is very
+    often just `Character`. Portable Infobox markup (`<infobox>`) is a rule, but
+    only for wikis that migrated. Neither test alone reaches even half the
+    corpus; the union reaches 4 of the 5 conventions in it. The fifth is
+    Warriors' `Charcat`, whose own source is one call to `Charcat/deep`: the
+    `<infobox>` is real but one transclusion away, so neither test can see it.
+
+    Following transclusions is what that seems to ask for, and it was measured
+    and rejected: transcluding an infobox is not being one. On Warriors' 954
+    templates, one level adds 6 names to the 23 the direct tests find — `Charcat`
+    and 5 `/doc` and `/preload` subpages. Iterating to a fixpoint adds 85, since
+    `Charcat` then promotes each of its 78 `Charcat/<cat name>` subpages. Either
+    way the one real name arrives indistinguishable from the noise, so `Charcat`
+    is declared instead, like `categories` — derive what is derivable, declare
+    the rest.
+
+    Deliberately NOT a param-count test: a well-filled `Dialogue` or `Quote`
+    would pass one. Param count measured the size of this hole; it does not
+    close it.
+    """
+    if "infobox" in title.lower():
+        return True
+    return bool(source) and _PORTABLE_INFOBOX_MARKUP.search(source) is not None
+
+
+class WikiInfoboxTemplates:
+    """The template names that are infoboxes on one wiki, unprefixed — a page
+    calls `{{Character}}`, never `{{Template:Character}}`.
+    """
+
+    def __init__(self, names: set[str], namespace_prefix: str = "Template:"):
+        self.names = {normalize_template_name(n) for n in names}
+        self.namespace_prefix = namespace_prefix
+
+    def titles(self) -> list[str]:
+        return sorted(self.namespace_prefix + name for name in self.names)
+
+    def is_infobox(self, template_name: str) -> bool:
+        return normalize_template_name(template_name) in self.names
+
+
+def zero_infobox_reason(templates: WikiInfoboxTemplates) -> str:
+    """Why a wiki produced no infobox_fields at all. The two causes are opposite
+    — we failed to identify the template, or the pages really carry none — and a
+    wiki sitting at 0.0 must say which one it is rather than go quiet.
+    """
+    if not templates.names:
+        return ("no infobox template found on this wiki: no title says 'infobox', no "
+                "source carries <infobox> markup, and the wiki declares no "
+                "'infobox_templates'")
+    return (f"{len(templates.names)} infobox templates identified on this wiki, but no "
+            "scraped page calls one — the pages sampled carry no infobox")
+
+
+def parse_infobox(wikitext: str, templates: WikiInfoboxTemplates) -> dict:
     parsed = mwparserfromhell.parse(wikitext)
     for template in parsed.filter_templates():
-        if "infobox" in template.name.strip().lower():
+        if templates.is_infobox(str(template.name)):
             return {
                 str(param.name).strip(): param.value.strip_code().strip()
                 for param in template.params
@@ -283,6 +363,7 @@ def scrape_page(
     entity_type: str,
     wiki_slug: str,
     lang: str,
+    templates: WikiInfoboxTemplates,
 ) -> dict | None:
     page_data = fetch_page_full(api_url, title)
     if page_data is None:
@@ -290,7 +371,7 @@ def scrape_page(
     wikitext = page_data["wikitext"]
     if wikitext is None or is_redirect(wikitext):
         return None
-    infobox = parse_infobox(wikitext)
+    infobox = parse_infobox(wikitext, templates)
     all_templates = parse_all_templates(wikitext)
     body = parse_body(wikitext)
     if is_stub(body):
@@ -335,13 +416,10 @@ def load_already_scraped_titles(out_path: Path) -> set[str]:
     return seen
 
 
-def fetch_infobox_template_titles(api_url: str) -> list[str]:
-    """List every page in the Template: namespace (ns=10) whose title contains
-    "infobox" — this is the canonical schema definition, not just what got
-    filled in on character pages. Case-insensitive substring match because
-    naming varies by wiki ("Infobox character", "Character infobox",
-    "CharacterBox", etc. are all possible; we fetch the full namespace list
-    once and filter client-side rather than guessing a prefix).
+def fetch_template_namespace_titles(api_url: str) -> list[str]:
+    """List every page in the Template: namespace (ns=10). Unfiltered: a
+    template's title does not say whether it is an infobox (STU-557), so the
+    filtering happens in `resolve_infobox_templates`, against the source.
     """
     titles = []
     params: dict = {
@@ -361,8 +439,66 @@ def fetch_infobox_template_titles(api_url: str) -> list[str]:
         if "continue" not in data:
             break
         params["apcontinue"] = data["continue"]["apcontinue"]
+    return titles
 
-    return [t for t in titles if "infobox" in t.lower()]
+
+def fetch_template_namespace_prefix(api_url: str) -> str:
+    """The Template: namespace's name on this wiki. It is localized — `Modèle:`
+    on a French wiki — so stripping the literal "Template:" drops the whole
+    namespace on those wikis. Only the namespace NUMBER (10) is the rule.
+    """
+    resp = requests.get(api_url, params={
+        "action": "query",
+        "meta": "siteinfo",
+        "siprop": "namespaces",
+        "format": "json",
+    }, timeout=30)
+    resp.raise_for_status()
+    time.sleep(RATE_LIMIT_SECONDS)
+    namespace = resp.json().get("query", {}).get("namespaces", {}).get("10", {})
+    return namespace.get("*") or "Template"
+
+
+def fetch_pages_batch(api_url: str, titles: list[str]) -> dict[str, str | None]:
+    """Fetch many pages' wikitext in as few calls as possible.
+
+    Reading every template's source is what makes the markup test affordable:
+    one page per call would cost ~34 min on Harry Potter's 2041 templates; at
+    the API's 50-titles-per-call ceiling it costs ~25s.
+    """
+    sources: dict[str, str | None] = {}
+    for i in range(0, len(titles), MAX_TITLES_PER_QUERY):
+        chunk = titles[i:i + MAX_TITLES_PER_QUERY]
+        resp = requests.get(api_url, params={
+            "action": "query",
+            "prop": "revisions",
+            "rvprop": "content",
+            "titles": "|".join(chunk),
+            "format": "json",
+        }, timeout=60)
+        resp.raise_for_status()
+        time.sleep(RATE_LIMIT_SECONDS)
+        for page in resp.json().get("query", {}).get("pages", {}).values():
+            revisions = page.get("revisions")
+            sources[page["title"]] = revisions[0].get("*") if revisions else None
+    return sources
+
+
+def resolve_infobox_templates(api_url: str, declared: list[str] | None = None) -> WikiInfoboxTemplates:
+    """Which template names are infoboxes on this wiki: read the whole Template:
+    namespace and test each one's title AND source, then add whatever the wiki
+    declares (the templates neither test can see).
+    """
+    prefix = fetch_template_namespace_prefix(api_url) + ":"
+    titles = fetch_template_namespace_titles(api_url)
+    sources = fetch_pages_batch(api_url, titles)
+    names = {
+        title.removeprefix(prefix)
+        for title in titles
+        if is_infobox_template(title, sources.get(title))
+    }
+    names.update(declared or [])
+    return WikiInfoboxTemplates(names, namespace_prefix=prefix)
 
 
 def sanitize_filename(name: str) -> str:
@@ -370,19 +506,19 @@ def sanitize_filename(name: str) -> str:
     return re.sub(r"[^A-Za-z0-9_-]+", "_", name).strip("_") or "template"
 
 
-def scrape_infobox_templates(api_url: str, wiki_out_dir: Path) -> dict:
-    """Fetch every infobox-related Template: page (+ its /doc subpage if any)
-    and write each as its own JSON file under {wiki_out_dir}/templates/.
-    This is the canonical schema source — what fields the template *supports*
-    — as opposed to lora_dataset_fandom.jsonl, which only shows what fields
-    got *filled in* on any given character page.
+def scrape_infobox_templates(api_url: str, wiki_out_dir: Path, templates: WikiInfoboxTemplates) -> dict:
+    """Fetch every infobox Template: page (+ its /doc subpage if any) and write
+    each as its own JSON file under {wiki_out_dir}/templates/. This is the
+    canonical schema source — what fields the template *supports* — as opposed
+    to lora_dataset_fandom.jsonl, which only shows what fields got *filled in*
+    on any given character page.
 
     Returns a summary dict for the run log. Never raises.
     """
     templates_dir = wiki_out_dir / "templates"
     summary = {"templates_found": 0, "templates_written": 0, "errors": []}
     try:
-        titles = fetch_infobox_template_titles(api_url)
+        titles = templates.titles()
         summary["templates_found"] = len(titles)
         if not titles:
             return summary
@@ -453,12 +589,26 @@ def scrape_one_wiki(entry: dict, out_dir: Path, limit_per_wiki: int | None) -> d
             with stats_path.open("w", encoding="utf-8") as f:
                 json.dump(wiki_stats, f, ensure_ascii=False, indent=2)
 
-    template_summary = scrape_infobox_templates(api_url, wiki_out_dir)
+    try:
+        templates = resolve_infobox_templates(api_url, entry.get("infobox_templates"))
+    except requests.RequestException as e:
+        return {
+            "wiki": wiki_url,
+            "slug": slug,
+            "written_this_run": 0,
+            "total_written": len(load_already_scraped_titles(out_path)),
+            "errors": [f"fatal: infobox template resolution failed: {e}"],
+            "out_path": str(out_path),
+        }
+
+    template_summary = scrape_infobox_templates(api_url, wiki_out_dir, templates)
 
     already_scraped = load_already_scraped_titles(out_path)
     written_this_run = 0
     total_written = len(already_scraped)
     errors: list[str] = []
+
+    written_with_infobox = 0
 
     try:
         with out_path.open("a", encoding="utf-8") as out_file:
@@ -482,7 +632,7 @@ def scrape_one_wiki(entry: dict, out_dir: Path, limit_per_wiki: int | None) -> d
                     if title in already_scraped:
                         continue
                     try:
-                        record = scrape_page(api_url, title, entity_type, slug, lang)
+                        record = scrape_page(api_url, title, entity_type, slug, lang, templates)
                     except requests.RequestException as e:
                         errors.append(f"page '{title}' fetch failed: {e}")
                         continue
@@ -493,9 +643,12 @@ def scrape_one_wiki(entry: dict, out_dir: Path, limit_per_wiki: int | None) -> d
                     already_scraped.add(title)
                     written_this_run += 1
                     total_written += 1
+                    written_with_infobox += 1 if record["infobox_fields"] else 0
     except Exception as e:  # noqa: BLE001 — last-resort guard, one wiki must not kill the run
         errors.append(f"fatal: {e}")
 
+    if written_this_run and not written_with_infobox:
+        errors.append(zero_infobox_reason(templates))
     errors.extend(template_summary.get("errors", []))
 
     return {
@@ -508,6 +661,60 @@ def scrape_one_wiki(entry: dict, out_dir: Path, limit_per_wiki: int | None) -> d
         "errors": errors,
         "out_path": str(out_path),
     }
+
+
+def reparse_one_wiki(entry: dict, out_dir: Path) -> dict:
+    """Re-derive infobox_fields from the raw_wikitext already on disk.
+
+    `raw_wikitext` is captured precisely so a better answer to "which template is
+    the infobox" can be applied without rescraping any page. Only the template
+    sources are fetched. Never raises.
+    """
+    slug = entry.get("slug") or derive_wiki_slug(entry["wiki"])
+    out_path = out_dir / slug / "lora_dataset_fandom.jsonl"
+    summary = {"wiki": entry["wiki"], "slug": slug, "errors": [], "out_path": str(out_path)}
+    if not out_path.exists():
+        summary["errors"].append("nothing on disk to reparse")
+        return summary
+
+    try:
+        templates = resolve_infobox_templates(
+            entry["wiki"].rstrip("/") + "/api.php", entry.get("infobox_templates")
+        )
+    except requests.RequestException as e:
+        summary["errors"].append(f"fatal: infobox template resolution failed: {e}")
+        return summary
+
+    pages = filled_before = filled_after = 0
+    tmp_path = out_path.with_suffix(".jsonl.tmp")
+    try:
+        with out_path.open("r", encoding="utf-8") as src, tmp_path.open("w", encoding="utf-8") as dst:
+            for line in src:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rec = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                pages += 1
+                filled_before += 1 if rec.get("infobox_fields") else 0
+                wikitext = rec.get("raw_wikitext")
+                if wikitext is not None:
+                    rec["infobox_fields"] = parse_infobox(wikitext, templates)
+                filled_after += 1 if rec.get("infobox_fields") else 0
+                dst.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        tmp_path.replace(out_path)
+    except Exception as e:  # noqa: BLE001 — one wiki must not kill the run
+        tmp_path.unlink(missing_ok=True)
+        summary["errors"].append(f"fatal: {e}")
+        return summary
+
+    if pages and not filled_after:
+        summary["errors"].append(zero_infobox_reason(templates))
+    summary.update(pages=pages, pages_with_infobox_before=filled_before,
+                   pages_with_infobox_after=filled_after, infobox_templates=len(templates.names))
+    return summary
 
 
 # --------------------------------------------------------------------------
@@ -698,6 +905,10 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--out-dir", required=True, help="Directory to write per-wiki jsonl + reports")
     parser.add_argument("--limit-per-wiki", type=int, default=None, help="Max pages to scrape per wiki")
     parser.add_argument("--workers", type=int, default=3, help="Number of wikis to scrape in parallel")
+    parser.add_argument("--reparse", action="store_true",
+                        help="Re-derive infobox_fields from the raw_wikitext already on disk "
+                             "and rebuild the reports. Fetches template sources only; no page "
+                             "is rescraped.")
     args = parser.parse_args(argv)
 
     out_dir = Path(args.out_dir)
@@ -705,6 +916,11 @@ def main(argv: list[str] | None = None) -> None:
 
     wikis = load_wikis_config(Path(args.wikis))
     print(f"Loaded {len(wikis)} wikis from {args.wikis}")
+
+    if args.reparse:
+        reparse_corpus(wikis, out_dir, args.workers)
+        write_reports(out_dir)
+        return
 
     run_log_path = out_dir / "run_log.jsonl"
     summaries = []
@@ -738,6 +954,38 @@ def main(argv: list[str] | None = None) -> None:
     print(f"\nDone scraping. {total_new} new pages this run, {total_all} total across all wikis, "
           f"{total_templates} infobox template definitions captured.")
 
+    write_reports(out_dir)
+
+
+def reparse_corpus(wikis: list[dict], out_dir: Path, workers: int) -> None:
+    """Apply the current infobox identification to the corpus already on disk."""
+    summaries = []
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = {executor.submit(reparse_one_wiki, entry, out_dir): entry for entry in wikis}
+        for future in as_completed(futures):
+            entry = futures[future]
+            try:
+                summary = future.result()
+            except Exception as e:  # noqa: BLE001 — guard against unexpected worker crash
+                summary = {"wiki": entry.get("wiki"), "errors": [f"unhandled: {e}"]}
+            summaries.append(summary)
+            before = summary.get("pages_with_infobox_before", 0)
+            after = summary.get("pages_with_infobox_after", 0)
+            print(f"[{summary.get('slug')}] {summary.get('pages', 0)} pages, "
+                  f"infobox parsed {before} -> {after} "
+                  f"({summary.get('infobox_templates', 0)} infobox templates on wiki)")
+            for err in summary.get("errors", [])[:5]:
+                print(f"    ! {err}")
+
+    pages = sum(s.get("pages", 0) for s in summaries)
+    before = sum(s.get("pages_with_infobox_before", 0) for s in summaries)
+    after = sum(s.get("pages_with_infobox_after", 0) for s in summaries)
+    print(f"\nReparsed {pages} pages across {len(summaries)} wikis. "
+          f"Pages with a parsed infobox: {before} -> {after}"
+          + (f" ({100 * before / pages:.0f}% -> {100 * after / pages:.0f}%)" if pages else ""))
+
+
+def write_reports(out_dir: Path) -> None:
     print("Building aggregate field report...")
     report = build_field_report(out_dir)
     report_json_path = out_dir / "field_report.json"
