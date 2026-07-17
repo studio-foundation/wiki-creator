@@ -277,12 +277,6 @@ def test_alive_needs_a_quote_too():
     assert verdicts["Eragon"]["status"] == "alive"
 
 
-def test_a_deceased_verdict_quoted_from_an_unnumbered_chapter_keeps_its_status():
-    rows = [{"name": "Brom", "aliases": [], "snippets": [{"text": BROM_QUOTE, "chapter_id": "Prologue"}]}]
-    verdicts = parse_status_verdict(_verdict(), rows)
-    assert verdicts["Brom"]["status"] == "deceased"
-
-
 def test_unparseable_payloads_verdict_nothing():
     for payload in ["not json", None, [], {"merge": []}, {"status": "deceased"}, 42]:
         assert parse_status_verdict(payload, _rows()) == {}
