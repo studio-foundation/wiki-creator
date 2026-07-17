@@ -11,3 +11,4 @@ retype_verdicts.json
 adjudication.json
 votes.json
 predictions.cooccurrence_classified.json
+verdicts.*.json

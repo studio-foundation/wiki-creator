@@ -192,7 +192,11 @@ def test_script_stdin_contract_reads_registry_from_processing_dir(tmp_path: Path
     }
     payload = {
         "previous_outputs": {"resolve-clusters": {"entities": [title_entity, named_entity], "narrator": None}},
-        "additional_context": f"file_path: {book_yaml}\n",
+        "additional_context": (
+            f"file_path: {book_yaml}\n"
+            "classification:\n"
+            "  roles_naming_one_character: [captain]\n"
+        ),
     }
     result = subprocess.run(
         [sys.executable, "scripts/alias_resolution.py"],
@@ -1014,7 +1018,10 @@ def test_detect_pure_title_in_context_master_brullo():
             }
         },
     })
-    result = _detect_pure_title_in_context(brullo, master, persons_full, role_words=["master"])
+    result = _detect_pure_title_in_context(
+        brullo, master, persons_full, roles_naming_one_character=["master"],
+        connective_words=["the"],
+    )
     assert result is not None
     assert result["method"] == "pure_title"
     assert result["confidence"] == "medium"
@@ -1033,7 +1040,10 @@ def test_detect_pure_title_in_context_no_match_when_name_absent_from_context():
             "mentions_by_chapter": {"ch05": ["Brullo watched the competitors."]}
         },
     })
-    result = _detect_pure_title_in_context(brullo, master, persons_full, role_words=["master"])
+    result = _detect_pure_title_in_context(
+        brullo, master, persons_full, roles_naming_one_character=["master"],
+        connective_words=["the"],
+    )
     assert result is None
 
 
@@ -1042,7 +1052,9 @@ def test_detect_pure_title_in_context_not_triggered_for_title_with_surname():
     from scripts.alias_resolution import _detect_pure_title_in_context
     captain = {"canonical_name": "Captain Westfall", "aliases": ["Captain Westfall"], "source_ids": []}
     chaol = {"canonical_name": "Chaol Westfall", "aliases": ["Chaol Westfall"], "source_ids": []}
-    result = _detect_pure_title_in_context(captain, chaol, {}, role_words=["captain"])
+    result = _detect_pure_title_in_context(
+        captain, chaol, {}, roles_naming_one_character=["captain"]
+    )
     assert result is None
 
 
@@ -1073,7 +1085,9 @@ def test_detect_pure_title_in_context_multi_word_phrase_title():
         },
     })
     result = _detect_pure_title_in_context(
-        dorian, crown_prince, persons_full, role_words=["crown prince", "prince", "king"]
+        dorian, crown_prince, persons_full,
+        roles_naming_one_character=["crown prince"],
+        connective_words=["the"],
     )
     assert result is not None
     assert result["method"] == "pure_title"
@@ -1114,8 +1128,9 @@ def test_detect_pure_title_in_context_finds_apposition_in_proper_entity_snippets
     })
     result = _detect_pure_title_in_context(
         dorian, crown_prince, persons_full,
-        role_words=["crown prince", "prince"],
+        roles_naming_one_character=["crown prince"],
         connective_words=["the", "of"],
+        determiners=["the"],
     )
     assert result is not None
     assert result["method"] == "pure_title"
@@ -1152,7 +1167,8 @@ def test_detect_pure_title_in_context_no_match_when_names_in_different_sentences
         },
     })
     result = _detect_pure_title_in_context(
-        cain, crown_prince, persons_full, role_words=["crown prince", "prince"]
+        cain, crown_prince, persons_full,
+        roles_naming_one_character=["crown prince"],
     )
     assert result is None
 
@@ -1191,7 +1207,8 @@ def test_resolve_aliases_pure_title_auto_merges_without_llm():
         [brullo, master],
         persons_full=persons_full,
         llm_confirmer=None,
-        role_words=["master"],
+        roles_naming_one_character=["master"],
+        connective_words=["the"],
     )
     assert len(result["entities"]) == 1
     entity = result["entities"][0]
@@ -1258,13 +1275,132 @@ def test_resolve_aliases_merges_crown_prince_without_phrase_in_role_words():
         persons_full=persons_full,
         llm_confirmer=None,
         role_words=["prince", "king", "captain", "lord"],
+        roles_naming_one_character=["crown prince"],
         connective_words=["the", "of"],
+        determiners=["the"],
     )
     assert len(result["entities"]) == 1
     entity = result["entities"][0]
     assert entity["canonical_name"] == "Dorian Havilliard"
     assert "Crown Prince" in entity["aliases"]
     assert result["stats"]["merges_by_method"].get("pure_title", 0) == 1
+
+
+# ---------------------------------------------------------------------------
+# STU-559: a species is not a role
+# ---------------------------------------------------------------------------
+
+def _eragon_pair(title: str, other: str, sentence: str) -> tuple[dict, dict, dict]:
+    title_entity = {
+        "canonical_name": title, "type": "PERSON", "aliases": [title],
+        "source_ids": ["e_title"], "relevant": True,
+    }
+    other_entity = {
+        "canonical_name": other, "type": "PERSON", "aliases": [other],
+        "source_ids": ["e_other"], "relevant": True,
+    }
+    persons_full = _pf({
+        "e_title": {"mentions_by_chapter": {"ch01": [sentence]}},
+        "e_other": {"mentions_by_chapter": {"ch01": []}},
+    })
+    return title_entity, other_entity, persons_full
+
+
+def test_pure_title_never_fires_for_a_role_the_book_does_not_declare():
+    """An undeclared book merges nothing here. 'rider' reaches role_words like any
+    other role, but Eragon, Brom and Morzan are all Riders, so the bare name
+    designates nobody — and the apposition ('a young Rider, Morzan') is genuine, so
+    the apposition rule cannot catch this one."""
+    from scripts.alias_resolution import _detect_pure_title_in_context
+    rider, morzan, persons_full = _eragon_pair(
+        "Rider", "Morzan",
+        "Then through some ill fortune he met a young Rider, Morzan—strong of body.",
+    )
+    assert _detect_pure_title_in_context(
+        rider, morzan, persons_full,
+        roles_naming_one_character=[], connective_words=["the", "a"], determiners=["the", "a"],
+    ) is None
+    # …and fires once the book declares the role names one character.
+    assert _detect_pure_title_in_context(
+        rider, morzan, persons_full,
+        roles_naming_one_character=["rider"], connective_words=["the", "a"],
+        determiners=["the", "a"],
+    ) is not None
+
+
+def test_a_title_two_characters_wear_names_neither():
+    """Narnia declares no role: it writes 'Queen Lucy' and 'Queen Susan' both, so bare
+    'Queen' names neither sister and merging it into Lucy steals Susan's mentions —
+    STU-541's Mr/Mrs Beaver, reached through this detector. The question the book
+    answers is whether the word names ONE character, not whether it is a title."""
+    from scripts.alias_resolution import _detect_pure_title_in_context
+    queen, lucy, persons_full = _eragon_pair("Queen", "Lucy", "Long Live Queen Lucy!")
+    assert _detect_pure_title_in_context(
+        queen, lucy, persons_full, roles_naming_one_character=[],
+    ) is None
+
+
+def test_pure_title_reads_the_declared_roles_not_role_words():
+    """The two vocabularies must not be confusable: role_words carries the species
+    that caused the defect, so it is not what gates this path."""
+    from scripts.alias_resolution import _detect_pure_title_in_context
+    shade, zarroc, persons_full = _eragon_pair(
+        "Shade", "Zar'roc", "The Shade Durza raised his blade.",
+    )
+    assert _detect_pure_title_in_context(
+        shade, zarroc, persons_full, roles_naming_one_character=["urgal"],
+    ) is None
+
+
+def test_a_comma_plus_a_determiner_is_enumeration_not_apposition():
+    """Even when the book declares the role, a comma followed by a fresh determined
+    noun phrase opens a new phrase that heads its own clause — the title is the
+    subject of 'might have' / 'ceased', not a second name for the entity before it.
+    Both sentences are live merges on main before STU-559: the antagonist into a
+    sword, a species into a mountain."""
+    from scripts.alias_resolution import _detect_pure_title_in_context
+    for title, other, sentence in [
+        ("Shade", "Zar'roc", "As for Zar'roc, the Shade might have it with him ."),
+        ("Urgal", "Farthen Dûr",
+         "When the Shade's spirits flew across Farthen Dûr, the Urgals ceased fighting."),
+    ]:
+        title_entity, other_entity, persons_full = _eragon_pair(title, other, sentence)
+        assert _detect_pure_title_in_context(
+            title_entity, other_entity, persons_full,
+            roles_naming_one_character=[title.lower()],
+            connective_words=["the", "a", "of"], determiners=["the", "a"],
+        ) is None, sentence
+
+
+def test_a_dash_keeps_its_determiner():
+    """The comma is the gate, not the determiner: 'Brullo — the Master —' is the
+    appositive dash form STU-281 was built for and must keep merging."""
+    from scripts.alias_resolution import _detect_pure_title_in_context
+    master, brullo, persons_full = _eragon_pair(
+        "Master", "Brullo", "Brullo — the Master — nodded at Celaena.",
+    )
+    assert _detect_pure_title_in_context(
+        master, brullo, persons_full,
+        roles_naming_one_character=["master"],
+        connective_words=["the"], determiners=["the"],
+    ) is not None
+
+
+def test_apposition_that_renames_without_re_determining_still_merges():
+    """The measured true positives: no determiner after the comma."""
+    from scripts.alias_resolution import _detect_pure_title_in_context
+    for title, other, sentence in [
+        ("Crown Prince", "Dorian Havilliard",
+         "I'm Dorian Havilliard, Crown Prince of Adarlan, perhaps now Crown Prince of Erilea."),
+        ("Captain", "Chaol Westfall",
+         "He introduced himself as Chaol Westfall, Captain of the Royal Guard, and bowed."),
+    ]:
+        title_entity, other_entity, persons_full = _eragon_pair(title, other, sentence)
+        assert _detect_pure_title_in_context(
+            title_entity, other_entity, persons_full,
+            roles_naming_one_character=[title.lower()],
+            connective_words=["the", "of"], determiners=["the"],
+        ) is not None, sentence
 
 
 # ---------------------------------------------------------------------------
@@ -1303,7 +1439,7 @@ def test_detect_pure_title_in_context_no_match_when_title_and_name_conjoined():
     })
     result = _detect_pure_title_in_context(
         crown_prince, perrington, persons_full,
-        role_words=["crown prince", "prince", "duke"],
+        roles_naming_one_character=["crown prince"],
         connective_words=["the", "a", "an", "of"],
     )
     assert result is None
@@ -1344,7 +1480,7 @@ def test_resolve_aliases_does_not_merge_conjoined_title_and_name():
         [crown_prince, perrington],
         persons_full=persons_full,
         llm_confirmer=None,
-        role_words=["crown prince", "prince", "duke"],
+        roles_naming_one_character=["crown prince"],
         connective_words=["the", "a", "an", "of"],
     )
     names = sorted(e["canonical_name"] for e in result["entities"])
@@ -1366,7 +1502,7 @@ def test_detect_pure_title_in_context_matches_apposition_with_connectors():
     })
     result = _detect_pure_title_in_context(
         brullo, master, persons_full,
-        role_words=["master"], connective_words=["the", "a", "an"],
+        roles_naming_one_character=["master"], connective_words=["the", "a", "an"],
     )
     assert result is not None
     assert result["method"] == "pure_title"
@@ -1454,8 +1590,10 @@ def test_detect_pure_title_in_context_no_match_when_sentences_split_by_curly_quo
         "aliases": ["Philippa"],
         "source_ids": [],
     }
-    role_words = ["Crown Prince", "crown", "prince"]
-    result = _detect_pure_title_in_context(crown_prince, philippa, persons_full=persons_full, role_words=role_words)
+    result = _detect_pure_title_in_context(
+        crown_prince, philippa, persons_full=persons_full,
+        roles_naming_one_character=["crown prince"],
+    )
     assert result is None, f"Should not merge across curly-quote sentence boundary, got: {result}"
 
 

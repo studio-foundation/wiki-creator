@@ -16,6 +16,7 @@ def test_both_languages_declare_affiliation_markers():
 import pytest
 
 from wiki_creator.entity_affiliation import (
+    CACHE_VERSION,
     SNIPPETS_PER_ENTITY,
     parse_affiliation_verdict,
     roster_rows,
@@ -141,15 +142,15 @@ def test_cache_is_keyed_on_the_roster_rows(tmp_path):
     because it was measured on a 5-chapter extraction."""
     cache = tmp_path / "entity_affiliation.json"
     verdicts = {"Eragon": {"affiliation": "Varden", "quote": "Eragon joined the Varden."}}
-    save_cache(cache, _rows(), verdicts)
-    assert load_cache(cache, _rows()) == verdicts
+    save_cache(cache, _rows(), verdicts, CACHE_VERSION)
+    assert load_cache(cache, _rows(), CACHE_VERSION) == verdicts
 
     other = roster_rows(
         [{"canonical_name": "Eragon", "aliases": []}],
         {"Eragon": [_snip("Eragon joined the Empire.", "ch10")]},
         MARKERS,
     )
-    assert load_cache(cache, other) is None
+    assert load_cache(cache, other, CACHE_VERSION) is None
 
 
 def test_render_roster_shows_names_aliases_and_snippets():
@@ -224,7 +225,7 @@ def test_a_stale_cache_from_another_roster_is_deleted_not_replayed(tmp_path):
     path that left the old artifact in place would let it replay a verdict made
     for a different roster."""
     cache = tmp_path / "entity_affiliation.json"
-    save_cache(cache, _rows(), {"Eragon": {"affiliation": "Varden", "quote": "x"}})
+    save_cache(cache, _rows(), {"Eragon": {"affiliation": "Varden", "quote": "x"}}, CACHE_VERSION)
     other = roster_rows(
         [{"canonical_name": "Murtagh", "aliases": []}],
         {"Murtagh": [_snip("Murtagh joined the Empire.", "ch40")]},

@@ -24,7 +24,7 @@ class TestChapterNumber:
 
 
 def test_relation_revealed_at_is_first_appearance():
-    assert relation_revealed_at({"chapters": ["ch03", "ch01", "ch05"]}) == 1
+    assert relation_revealed_at({"chapters": [3, 1, 5]}) == 1
     assert relation_revealed_at({"chapters": []}) is None
     assert relation_revealed_at({}) is None
 
@@ -32,10 +32,10 @@ def test_relation_revealed_at_is_first_appearance():
 class TestSectionRevealedAt:
     def _entity(self):
         return {
-            "relationships": [{"chapters": ["ch03", "ch01"]}, {"chapters": ["ch05"]}],
+            "relationships": [{"chapters": [3, 1]}, {"chapters": [5]}],
             "entity_events": [{"chapter": 4}, {"chapter": 2}],
-            "context_by_chapter": {"chapter_6": [], "chapter_2": []},
-            "chapter_summary_context": [{"chapter_key": "chapter_2"}],
+            "context_chapters": [2, 6],
+            "chapter_summary_context": [{"revealed_at_chapter": 2}],
         }
 
     def test_relationships_use_first_appearance(self):
@@ -47,15 +47,15 @@ class TestSectionRevealedAt:
     def test_backstory_uses_first_flashback_chapter(self):
         entity = {
             "chapter_summary_context": [
-                {"chapter_key": "chapter_2", "temporal_context": "present"},
-                {"chapter_key": "chapter_8", "temporal_context": "flashback"},
-                {"chapter_key": "chapter_5", "temporal_context": "flashback"},
+                {"revealed_at_chapter": 2, "temporal_context": "present"},
+                {"revealed_at_chapter": 8, "temporal_context": "flashback"},
+                {"revealed_at_chapter": 5, "temporal_context": "flashback"},
             ],
         }
         assert section_revealed_at("backstory", entity) == 5
 
     def test_backstory_none_without_flashback(self):
-        entity = {"chapter_summary_context": [{"chapter_key": "chapter_2", "temporal_context": "present"}]}
+        entity = {"chapter_summary_context": [{"revealed_at_chapter": 2, "temporal_context": "present"}]}
         assert section_revealed_at("backstory", entity) is None
 
     def test_prose_section_uses_context_and_summaries(self):
@@ -67,7 +67,7 @@ class TestSectionRevealedAt:
 
 
 def test_content_units_skips_infobox_and_references():
-    entity = {"context_by_chapter": {"chapter_2": []}}
+    entity = {"context_chapters": [2]}
     units = content_units(["infobox", "biography", "references"], entity)
     assert units == [{"section": "biography", "revealed_at_chapter": 2}]
 
@@ -81,11 +81,11 @@ def _rel_entity():
         "aliases": ["Captain Westfall"],
         "relationships": [
             {"entity_a": "Chaol", "entity_b": "Celaena",
-             "relationship_type": "amoureux", "chapters": ["ch01", "ch55"]},
+             "relationship_type": "amoureux", "chapters": [1, 55]},
             {"entity_a": "Cain", "entity_b": "Captain Westfall",
-             "relationship_type": "antagoniste", "chapters": ["ch07"]},
+             "relationship_type": "antagoniste", "chapters": [7]},
             {"entity_a": "Chaol", "entity_b": "Dorian",
-             "relationship_type": None, "chapters": ["ch02"]},
+             "relationship_type": None, "chapters": [2]},
             {"entity_a": "Chaol", "entity_b": "Nox",
              "relationship_type": "ami", "chapters": []},
         ],

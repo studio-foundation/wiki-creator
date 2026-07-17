@@ -27,6 +27,7 @@ import yaml
 
 from wiki_creator import studio_io
 from wiki_creator.entity_affiliation import (
+    CACHE_VERSION,
     parse_affiliation_verdict,
     roster_rows,
 )
@@ -65,7 +66,7 @@ def resolve_affiliation(rows: list[dict], book_title: str, cache_path: Path) -> 
     Never raises. Every failure path returns {} — every character then renders no
     `affiliation` slot, which is what an OPT slot with no value does.
     """
-    cached = load_cache(cache_path, rows)
+    cached = load_cache(cache_path, rows, CACHE_VERSION)
     if cached is not None:
         return cached
     # A verdict for another roster must not survive a failure below:
@@ -107,7 +108,7 @@ def resolve_affiliation(rows: list[dict], book_title: str, cache_path: Path) -> 
         return _give_up("studio_run_output_missing", rows)
 
     verdicts = parse_affiliation_verdict(stage_output, rows)
-    save_cache(cache_path, rows, verdicts)
+    save_cache(cache_path, rows, verdicts, CACHE_VERSION)
     return verdicts
 
 

@@ -27,6 +27,11 @@ import re
 
 from wiki_creator.roster import has_marker, is_quoted, latest_first, normalize
 
+# This stage's verdict schema. Its own number, not entity_status's: each stage's
+# verdict evolves on its own (STU-552 bumped `status` to 2 when it added the
+# death circumstance; that says nothing about `affiliation`).
+CACHE_VERSION = 1
+
 SNIPPETS_PER_ENTITY = 5
 SNIPPET_CHARS = 300
 

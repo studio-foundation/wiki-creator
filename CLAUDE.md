@@ -320,6 +320,50 @@ Inside `wiki-resolution`, order matters:
   merges and must keep merging: `Mr Tumnus` → `Tumnus` (one side titled, no conflict),
   `Captain Westfall` → `Chaol Westfall`.
 
+- A species is not a role (STU-559): `pure_title` merged **the Shade into a sword
+  and the Urgals into a mountain** on Eragon. Its premise — a bare role name
+  designates a named character — is true only of a role exactly one character
+  wears, and it read that off `role_words`, where `01_eragon.yaml` declares
+  `rider`, `elf`, `urgal`, `shade` beside `king` and `queen`. So the book YAML
+  now declares the property directly: `classification.roles_naming_one_character`
+  lists the roles **this novel** uses, bare, as a name for one character — the
+  "Config Is Read By People Who Know Books" rule, since a reader of Eragon knows
+  without hesitation that `king` designates a man and `urgal` a species. An
+  undeclared book merges nothing here (STU-539's asymmetry: a false merge invents
+  a character and deletes a real one; a false negative leaves two pages that are
+  each still correct), so only `throne-of-glass` declares it — `crown prince` and
+  `captain`, its two measured true positives. `_detect_pure_title_in_context` no
+  longer takes `role_words` **at all**: the two vocabularies being confusable is
+  the defect, so the parameter is gone rather than filtered. That also drops
+  STU-471's head-noun inference from this path — a declared phrase is matched
+  whole (`_is_pure_title` keeps it, for `_pick_canonical_name`).
+  **The config gate is not enough, and the second cause is separately measured.**
+  `_is_apposition` took a comma for apposition: between `Zar'roc` and `Shade` in
+  *"As for Zar'roc, the Shade might have it"* sit only `,` and `the`, so
+  adjacency was declared apposition — the STU-536/STU-538 shape one layer down.
+  A reader would plausibly declare `shade` (the Shade *is* Durza), which brings
+  the sword merge straight back, so `_tokens_between_are_connective` now refuses
+  **a comma plus a determiner**: apposition renames without re-determining
+  (`Dorian Havilliard, Crown Prince of Adarlan`), while a comma followed by a
+  fresh determined noun phrase opens a phrase that heads its own clause (`the
+  Shade might have`, `the Urgals ceased`). **The comma is the gate, not the
+  determiner** — `Brullo — the Master —` is the appositive dash form STU-281 was
+  built for and keeps merging. Measured by replaying the deterministic chain on
+  full rosters (ToG 60 ch, Eragon 67 ch, Narnia 20 ch — the 5-chapter caches
+  answer a different question, per STU-539): **5 fires / 2 true → 2 fires / 2
+  true**, both true positives kept. `alias-adjudication` is not a substitute: it
+  runs *after* this stage (so a false merge is already baked into the roster it
+  reads) and returned `merge: null` on every cached book.
+  **`Queen` → `Lucy` is not the true positive STU-559 recorded**, which is why
+  Narnia declares nothing: the novel writes `Queen Lucy` 5 times and `Queen
+  Susan` 4, so bare `Queen` names neither sister and the merge steals Susan's
+  mentions — STU-541's Mr/Mrs Beaver, reached through the other detector. The
+  question `roles_naming_one_character` asks is "does this word, bare, name one
+  character in **this** novel", not "is it a title": `king` is a title in ToG and
+  still names nobody there (Adarlan's king and Brannon both wear it), which is
+  why splitting `role_words` into titles-vs-species — the shape the ticket
+  proposed — would have kept `King` → `Brannon`.
+
 - Contextual alias adjudication (STU-539): the alias pair no rule proposes is
   decided by one `studio run alias-adjudication-item` per book, over the **whole
   PERSON roster** — the `section-filter` shape (STU-529), with the opposite bias:
@@ -408,8 +452,29 @@ Inside `wiki-resolution`, order matters:
   killed), and Morzan/Marian both died before the book begins and have no death
   chapter at all. The place where the text states a fact is not the place where
   the fact happens, so deriving a chapter from the quoting snippet does not
-  work. The in-universe death circumstance ("Killed by Durza at Farthen Dûr")
-  is STU-552 — it needs grounded prose, not a derived infobox slot.
+  work. The in-universe circumstance ("Tué par Durza à Farthen Dûr") replaced it in
+  STU-552, and **not as prose**: the ticket proposed the STU-481 `## Déroulement`
+  shape, but free prose in an infobox slot is the one non-grounded field, which
+  is what `_extracted_fact_value` exists to prevent. It is two optional fields —
+  `agent`, `place` — on the verdict this same call already returns, so it costs
+  no stage and no LLM call, and there is **no `cause` enum**: an agent means
+  someone killed them, a place means they died there, and a death by illness
+  renders "Mort à X", which stays true whatever the cause. Each field clears
+  three gates: `status == "deceased"`, the name is on the **type-scoped** roster
+  (PERSON for `agent`, PLACE for `place`, alias → canonical), and it is
+  **verbatim in that verdict's own quote**. The quote gate is the load-bearing
+  one and is deliberately stricter than "somewhere in the entity's snippets":
+  the slot asserts a link between two facts, and "they rode to Farthen Dûr" one
+  sentence from "Durza's blade took Brom" would render where he rode, not where
+  he died. A field failing a gate is dropped and the verdict survives — a wrong
+  `agent` costs the circumstance, never the `status`. Names render **plain, never
+  wikilinked** (`event_infobox_fields`'s precedent): a collated entity has no
+  page, so a link would be red, and no edge is drawn, so the STU-501 rule never
+  engages. The cache gained a `CACHE_VERSION` because the rows did **not** change
+  — same roster, new question — so roster-keying alone would have replayed a
+  pre-STU-552 verdict forever and silently. The infobox is not spoiler-gated
+  (`content_units` skips it by construction), so the circumstance leaks the death
+  exactly as `Statut : Décédé` already does; gating the infobox is its own ticket.
 
 - Affiliation is a scalar, not a dated edge (STU-551): the `affiliation` slot is
   filled by one `studio run entity-affiliation-item` per book over the PERSON
@@ -781,6 +846,37 @@ Inside `wiki-resolution`, order matters:
   and **43 of ~50 resolve on neither book**. That path is low-yield by
   construction and is not what fixes Narnia; matching markers against titles is a
   separate ticket.
+- The number is assigned once, in `section_filter` (STU-550): `chapters.number_chapters`
+  stamps `chapter_number` on each narrative chapter right after the front-matter
+  verdict — the only place both the reading order and that verdict are known. It
+  reaches `epub_data.json`, and `chapter_number_index` (ids **and** titles, since
+  `chapter_summaries` is title-keyed on some books) resolves a reference to it.
+  This closes STU-546's shape in the two places it was still live.
+  **`sorted(context_by_chapter)` was sorting section ids as strings, not chapters**
+  — `bookcontent10_0` before `bookcontent2_0`. Above
+  `chapter_summary_max_chapters_per_entity` (8) chapters per entity, i.e. exactly
+  the principals, the truncation then kept the lexicographic middle: Lucy's page was
+  written from Narnia's chapters 9-16, never the wardrobe. Whether it fired was
+  decided by the publisher's zero-padding (throne-of-glass `C01.xhtml` is padded and
+  is the book we look at, so it was invisible), and nothing warned — the prompt
+  looked full.
+  **The bundle is the boundary.** `wiki_preparation` resolves every chapter
+  reference it emits (`relationships[].chapters`, the new `context_chapters`,
+  `chapter_summary_context[].revealed_at_chapter`), so `provenance`,
+  `spoiler_blocks` and `generate_wiki_pages` read numbers and no longer call
+  `chapter_number` at all. That is what makes the STU-492 gate honest: it compares
+  the book YAML's `collapse_after_chapter: N` — set by someone who read the novel
+  and means "chapter 20" — against a number in the same unit, where `x101.xhtml`
+  used to yield 101. Latent (no book sets the key today), but a config key silently
+  in a different unit than the code is the defect.
+  **An unresolvable reference warns and is dropped**, never numbered by whatever
+  digits it carries — `resolve_chapter_number` is the whole point, and falling back
+  to digits is the bug being closed. `chapters.chapter_number` survives for
+  `entity_status`, which sorts snippets by id digits: digits are monotone with
+  position on every book in the library, so that use is accidentally safe, like
+  `generate_wiki_pages`' relation ordering was. `event_layer._chapter_numbers` also
+  stays — it numbers the ordered summaries 1..N, which already *is* the position,
+  and it is handed no chapter records to read the field off.
 - `workers` in relationship/coref config directly impact RAM usage.
 - `.studio/config.yaml` and `.studio/runs/` must not be committed.
 - Never add hardcoded word lists to scripts. All vocabulary belongs in `wiki_creator/cue_words/<lang>.json` (language-wide) or the book YAML `classification` section (book-specific). No script may define a fallback vocabulary constant — if a key is absent from cue_words, degrade gracefully to an empty collection.

@@ -125,6 +125,13 @@ classification:
     - captain
     - guard
     - master
+  # Roles this novel uses, bare, as a name for one particular character: "the
+  # Crown Prince" is always Dorian, "the Captain" always Chaol. Not "king" —
+  # Adarlan's king and Brannon both wear it, so bare "King" names nobody.
+  roles_naming_one_character:
+    - crown prince
+    - captain
+
   role_patterns:
     - '\b[a-z][a-z''\- ]*assassin\b'
     - '\b[a-z][a-z''\- ]*champion\b'

@@ -46,11 +46,11 @@ def _entity():
         "aliases": ["Lillian Gordaina"],
         "relationships": [
             {"entity_a": "Celaena Sardothien", "entity_b": "Chaol",
-             "relationship_type": "amoureux", "chapters": ["C01.xhtml", "C55.xhtml"]},
+             "relationship_type": "amoureux", "chapters": [1, 55]},
             {"entity_a": "Cain", "entity_b": "Celaena Sardothien",
-             "relationship_type": "antagoniste", "chapters": ["C07.xhtml"]},
+             "relationship_type": "antagoniste", "chapters": [7]},
             {"entity_a": "Celaena Sardothien", "entity_b": "Ghost",
-             "relationship_type": None, "chapters": ["C03.xhtml"]},
+             "relationship_type": None, "chapters": [3]},
             {"entity_a": "Celaena Sardothien", "entity_b": "NoChap",
              "relationship_type": "ami", "chapters": []},
         ],
@@ -73,7 +73,7 @@ def test_relationship_index_lines_localizes_canonical_token():
         "canonical_name": "Celaena",
         "relationships": [
             {"entity_a": "Celaena", "entity_b": "Chaol",
-             "relationship_type": "strained_friendship", "chapters": ["C01.xhtml"]},
+             "relationship_type": "strained_friendship", "chapters": [1]},
         ],
     }
     assert relationship_index_lines(entity, "fr") == ["* [[Chaol]] — Amitié tendue (ch.1)"]
@@ -90,7 +90,7 @@ def test_relationship_index_lines_excludes_null_sentinel():
         "canonical_name": "Celaena Sardothien",
         "relationships": [
             {"entity_a": "Celaena Sardothien", "entity_b": "King of Adarlan",
-             "relationship_type": "null", "chapters": ["C10.xhtml", "C52.xhtml"]},
+             "relationship_type": "null", "chapters": [10, 52]},
         ],
     }
     assert relationship_index_lines(entity) == []

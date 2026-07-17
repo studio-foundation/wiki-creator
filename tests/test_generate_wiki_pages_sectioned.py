@@ -60,7 +60,7 @@ def test_generate_one_section_omits_on_persistent_forbidden(monkeypatch):
 def _entity(rels=None):
     return {"canonical_name": "Chaol", "type": "PERSON", "importance": "principal",
             "aliases": ["Captain Westfall"], "titles": ["Captain"],
-            "context_by_chapter": {"C01": ["ctx"]}, "relationships": rels or []}
+            "context_by_chapter": {"C01": ["ctx"]}, "context_chapters": [1], "relationships": rels or []}
 
 
 def _sectioned(monkeypatch, produced):
@@ -107,7 +107,7 @@ def test_narrative_role_prompt_carries_salience_tiers_and_rule():
 
 def test_sectioned_page_carries_content_units(monkeypatch):
     """STU-491: page output tags each emitted section with its reveal chapter."""
-    entity = _entity(rels=[{"chapters": ["ch03", "ch02"]}])
+    entity = _entity(rels=[{"chapters": [3, 2]}])
     entity["entity_events"] = [{"chapter": 4}]
     _sectioned(monkeypatch, {})
     from pathlib import Path
@@ -203,10 +203,10 @@ def test_sectioned_page_carries_relationship_index(monkeypatch):
     monkeypatch.setattr(gwp, "_generate_one_section", lambda **kw: ("## Biographie\n\nBio.", None))
     entity = {
         "canonical_name": "Celaena", "type": "PERSON", "importance": "principal",
-        "aliases": [], "context_by_chapter": {"C01.xhtml": ["ctx"]},
+        "aliases": [], "context_by_chapter": {"C01.xhtml": ["ctx"]}, "context_chapters": [1],
         "relationships": [
             {"entity_a": "Celaena", "entity_b": "Chaol",
-             "relationship_type": "amoureux", "chapters": ["C01.xhtml", "C55.xhtml"]},
+             "relationship_type": "amoureux", "chapters": [1, 55]},
         ],
     }
     page = gwp._run_generation_sectioned(
@@ -261,11 +261,11 @@ def test_generate_relationships_subsections_concatenates(monkeypatch):
     entity = {"canonical_name": "Chaol", "type": "PERSON", "aliases": [],
               "relationships": [
                   {"entity_a": "Chaol", "entity_b": "Celaena", "relationship_type": "amoureux",
-                   "chapters": ["ch55"]},
+                   "chapters": [55]},
                   {"entity_a": "Cain", "entity_b": "Chaol", "relationship_type": "antagoniste",
-                   "chapters": ["ch07"]},
+                   "chapters": [7]},
                   {"entity_a": "Chaol", "entity_b": "Nox", "relationship_type": None,
-                   "chapters": ["ch02"]}]}
+                   "chapters": [2]}]}
     monkeypatch.setattr(gwp, "_generate_one_relation",
                         lambda **kw: f"### [[{kw['other']}]]\n\nprose {kw['other']}")
     out = gwp._generate_relationships_subsections(
@@ -278,9 +278,9 @@ def test_generate_relationships_subsections_concatenates(monkeypatch):
 def test_sectioned_per_relation_prose_when_enabled(monkeypatch):
     entity = _entity(rels=[
         {"entity_a": "Chaol", "entity_b": "Celaena", "relationship_type": "amoureux",
-         "chapters": ["ch55"]},
+         "chapters": [55]},
         {"entity_a": "Cain", "entity_b": "Chaol", "relationship_type": "antagoniste",
-         "chapters": ["ch07"]}])
+         "chapters": [7]}])
     def fake(**kw):
         sec = kw["sections"][0]
         if sec == "relationships" and kw.get("prompt_override"):
@@ -306,7 +306,7 @@ def test_sectioned_per_relation_prose_when_enabled(monkeypatch):
 
 def test_sectioned_per_relation_off_keeps_single_block(monkeypatch):
     entity = _entity(rels=[{"entity_a": "Chaol", "entity_b": "Celaena",
-                            "relationship_type": "amoureux", "chapters": ["ch55"]}])
+                            "relationship_type": "amoureux", "chapters": [55]}])
     _sectioned(monkeypatch, {"relationships": "## Relations\n\nProse unique."})
     from pathlib import Path
     page = gwp._run_generation_sectioned(
@@ -354,7 +354,7 @@ def test_biography_failure_records_the_evidence(monkeypatch, tmp_path):
                "run_metadata": {"run_id": "d9f310e4"}}
     monkeypatch.setattr(gwp, "_run_wiki_page_item", lambda **kw: failure)
     entity = {"canonical_name": "Lucy", "type": "PERSON", "importance": "principal",
-              "context_by_chapter": {"C01": ["ctx"]}, "relationships": []}
+              "context_by_chapter": {"C01": ["ctx"]}, "context_chapters": [1], "relationships": []}
 
     page = gwp._run_generation_sectioned(
         entity=entity, book_title="Narnia", model="m", timeout=10,

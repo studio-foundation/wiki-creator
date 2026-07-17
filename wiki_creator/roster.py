@@ -92,12 +92,17 @@ def is_quoted(quote: str, snippets: list[dict]) -> bool:
     return any(needle in normalize(snippet.get("text")) for snippet in snippets)
 
 
-def load_cache(path: Path | str, rows: list[dict]) -> dict[str, dict] | None:
-    """Cached verdicts for exactly this roster, or None.
+def load_cache(path: Path | str, rows: list[dict], version: int) -> dict[str, dict] | None:
+    """Cached verdicts for exactly this roster and this verdict schema, or None.
 
     Keyed on the rows themselves: the roster changes with WIKI_MAX_CHAPTERS and
     with every upstream extraction fix, and a verdict returned for a different
     roster must not be replayed onto it.
+
+    ``version`` is the caller's *verdict schema* — not this module's. STU-552
+    widened `status`'s verdict to carry a death circumstance, so a v1 entry has
+    no `agent`/`place` and must not be replayed into code that reads them. Each
+    stage owns its own number, because each stage's verdict evolves on its own.
     """
     try:
         cached = json.loads(Path(path).read_text(encoding="utf-8"))
@@ -105,14 +110,22 @@ def load_cache(path: Path | str, rows: list[dict]) -> dict[str, dict] | None:
         return None
     if not isinstance(cached, dict) or cached.get("roster") != rows:
         return None
+    if cached.get("version") != version:
+        return None
     verdicts = cached.get("verdicts")
     return verdicts if isinstance(verdicts, dict) else None
 
 
-def save_cache(path: Path | str, rows: list[dict], verdicts: dict[str, dict]) -> None:
+def save_cache(
+    path: Path | str, rows: list[dict], verdicts: dict[str, dict], version: int
+) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        json.dumps({"roster": rows, "verdicts": verdicts}, ensure_ascii=False, indent=2),
+        json.dumps(
+            {"version": version, "roster": rows, "verdicts": verdicts},
+            ensure_ascii=False,
+            indent=2,
+        ),
         encoding="utf-8",
     )

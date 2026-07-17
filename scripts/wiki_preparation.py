@@ -43,7 +43,7 @@ from wiki_creator.facts import extract_titles
 from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator.page_templates import output_language
 from wiki_creator.confidence import relationship_confidence
-from wiki_creator.chapters import chapter_number
+from wiki_creator.chapters import chapter_number_index, resolve_chapter_number
 from wiki_creator.provenance import relation_revealed_at
 from wiki_creator.registry import Registry
 from wiki_creator.types import ChapterSummary, ClassifiedBundle, EventBundle, RelationshipBundle
@@ -282,6 +282,7 @@ def build_chapter_summary_context(
     chapter_summaries: dict[str, dict],
     chapter_summary_max: int,
     context_by_chapter: dict[str, list[str]],
+    chapter_numbers: dict[str, int],
     chapter_id_to_title: dict[str, str] | None = None,
 ) -> list[dict]:
     if entity.get("type") != "PERSON":
@@ -291,9 +292,13 @@ def build_chapter_summary_context(
         for summary in chapter_summaries.values()
         if isinstance(summary, dict) and str(summary.get("chapter_id", "")).strip()
     }
-    chapter_keys = sorted(context_by_chapter.keys())[:chapter_summary_max]
+    # Sorting section ids as strings is not sorting them as chapters: on a book
+    # whose ids are not zero-padded, `bookcontent10_0` sorts before
+    # `bookcontent2_0` and the truncation below keeps the middle of the novel.
+    numbered = [(resolve_chapter_number(k, chapter_numbers), k) for k in context_by_chapter]
+    numbered.sort(key=lambda pair: (pair[0] is None, pair[0] or 0))
     result = []
-    for chapter_key in chapter_keys:
+    for number, chapter_key in numbered[:chapter_summary_max]:
         label = _epub_key_to_chapter_label(chapter_key)
         title_from_map = (chapter_id_to_title or {}).get(chapter_key)
         summary = (
@@ -312,7 +317,7 @@ def build_chapter_summary_context(
             continue
         result.append({
             "chapter_key": chapter_key,
-            "revealed_at_chapter": chapter_number(chapter_key),
+            "revealed_at_chapter": number,
             "summary_bullets": bullets,
             "temporal_context": summary.get("temporal_context", "unknown"),
             "pov": summary.get("pov", "unknown"),
@@ -347,7 +352,7 @@ def events_for_entity(canonical_name: str, events: list[dict]) -> list[dict]:
     """Events where the entity participates or that occur at the entity (PLACE),
     sorted by chapter. The channel Plot Spine projections (SP1-SP4) consume."""
     hits = [
-        {**e, "revealed_at_chapter": chapter_number(e.get("chapter"))}
+        {**e, "revealed_at_chapter": e.get("chapter")}
         for e in events
         if canonical_name in e.get("participants", [])
         or canonical_name in e.get("places", [])
@@ -395,6 +400,7 @@ def build_entity_bundle(
     entities_by_name: dict[str, dict],
     chapter_summaries: dict[str, dict] | None = None,
     chapter_summary_max: int = DEFAULT_CHAPTER_SUMMARY_MAX,
+    chapter_numbers: dict[str, int] | None = None,
     chapter_id_to_title: dict[str, str] | None = None,
     graph: "CharacterGraph | None" = None,
     role_words: list[str] | None = None,
@@ -403,7 +409,17 @@ def build_entity_bundle(
     affiliation_verdicts: dict[str, dict] | None = None,
 ) -> dict:
     canonical_name = entity["canonical_name"]
+    chapter_numbers = chapter_numbers or {}
     context_by_chapter = extract_context(entity, persons, places, orgs, events)
+    # The bundle is the boundary: every chapter reference leaving it is a
+    # chapter number, so no consumer has to read one back out of a section id.
+    entity_relationships = [
+        {**r, "chapters": [
+            n for n in (resolve_chapter_number(k, chapter_numbers) for k in r.get("chapters") or [])
+            if n is not None
+        ]}
+        for r in filter_relationships(canonical_name, relationships, aliases=entity.get("aliases"))
+    ]
     return {
         "canonical_name": canonical_name,
         "type": entity.get("type", "OTHER"),
@@ -418,13 +434,19 @@ def build_entity_bundle(
         ),
         "status": (status_verdicts or {}).get(canonical_name, {}).get("status", DEFAULT_STATUS),
         "affiliation": (affiliation_verdicts or {}).get(canonical_name, {}).get("affiliation"),
+        "death_agent": (status_verdicts or {}).get(canonical_name, {}).get("agent"),
+        "death_place": (status_verdicts or {}).get(canonical_name, {}).get("place"),
         "total_mentions": entity.get("total_mentions", 0),
         "chapters_present": entity.get("chapters_present", 0),
         "first_seen": get_first_seen(entity, persons, places, orgs, events),
         "context_by_chapter": context_by_chapter,
+        "context_chapters": sorted(
+            n for n in (resolve_chapter_number(k, chapter_numbers) for k in context_by_chapter)
+            if n is not None
+        ),
         "relationships": [
             {**r, "confidence": relationship_confidence(r), "revealed_at_chapter": relation_revealed_at(r)}
-            for r in filter_relationships(canonical_name, relationships, aliases=entity.get("aliases"))
+            for r in entity_relationships
         ],
         "indirect_relationships": [
             asdict(r) for r in (
@@ -447,6 +469,7 @@ def build_entity_bundle(
             chapter_summaries=chapter_summaries or {},
             chapter_summary_max=chapter_summary_max,
             context_by_chapter=context_by_chapter,
+            chapter_numbers=chapter_numbers,
             chapter_id_to_title=chapter_id_to_title,
         ),
         "entity_events": events_for_entity(canonical_name, list(plot_events or [])),
@@ -676,18 +699,26 @@ def main() -> None:
             print("wiki-preparation: chapter_summaries.json not found — chapter_summary_context will be empty", file=sys.stderr)
 
     chapter_id_to_title: dict[str, str] = {}
+    chapter_numbers: dict[str, int] = {}
     _epub_data_file = paths.processing / "epub_data.json"
     if _epub_data_file.exists():
         try:
             with open(_epub_data_file, encoding="utf-8") as _f:
                 _epub_data = json.load(_f)
+            _epub_chapters = _epub_data.get("chapters", [])
             chapter_id_to_title = {
                 ch["id"]: ch["title"]
-                for ch in _epub_data.get("chapters", [])
+                for ch in _epub_chapters
                 if ch.get("id") and ch.get("title")
             }
+            chapter_numbers = chapter_number_index(_epub_chapters)
         except (OSError, json.JSONDecodeError, KeyError):
             pass
+    if not chapter_numbers:
+        print(
+            "wiki-preparation: no chapter numbers in epub_data.json — chapter provenance will be empty",
+            file=sys.stderr,
+        )
 
     entity_bundles = [
         build_entity_bundle(
@@ -700,6 +731,7 @@ def main() -> None:
             entities_by_name,
             chapter_summaries=chapter_summaries,
             chapter_summary_max=chapter_summary_max,
+            chapter_numbers=chapter_numbers,
             chapter_id_to_title=chapter_id_to_title,
             graph=_series_graph,
             role_words=role_words,
