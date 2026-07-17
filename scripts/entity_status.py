@@ -71,6 +71,11 @@ def resolve_status(rows: list[dict], book_title: str, cache_path: Path) -> dict[
     cached = load_cached_status(cache_path, rows)
     if cached is not None:
         return cached
+    # A verdict for another roster must not survive a failure below: every
+    # `_give_up` path returns without writing, so a stale artifact from a
+    # prior roster (WIKI_MAX_CHAPTERS, an extraction fix) would otherwise be
+    # replayed by `wiki_preparation.load_status_verdicts`, which is roster-blind.
+    Path(cache_path).unlink(missing_ok=True)
 
     item_input = {"book_title": book_title, "roster": render_roster(rows)}
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".yaml", delete=False) as tmp:
@@ -124,6 +129,8 @@ def main() -> None:
     book_cfg = yaml.safe_load(Path(args.book).read_text(encoding="utf-8")) or {}
     paths = book_paths_from_yaml(args.book)
 
+    cache_path = paths.processing / "entity_status.json"
+
     registry = Registry.load_from_processing(paths.processing)
     if registry is None:
         print(
@@ -131,6 +138,7 @@ def main() -> None:
             "every character stays `unknown`",
             file=sys.stderr,
         )
+        Path(cache_path).unlink(missing_ok=True)
         return
 
     lang_cfg = load_lang_config(book_language(book_cfg))
@@ -150,13 +158,14 @@ def main() -> None:
     ]
     if not persons:
         print("[entity-status] no PERSON entity with context — nothing to decide", file=sys.stderr)
+        Path(cache_path).unlink(missing_ok=True)
         return
 
     rows = roster_rows(persons, contexts, status_markers)
     verdicts = resolve_status(
         rows,
         book_title=str(book_cfg.get("title") or paths.processing.name),
-        cache_path=paths.processing / "entity_status.json",
+        cache_path=cache_path,
     )
 
     decided = {name: v["status"] for name, v in verdicts.items()}

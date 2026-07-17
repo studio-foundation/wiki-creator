@@ -399,6 +399,22 @@ def test_a_failed_run_is_not_cached(tmp_path):
     assert not cache.exists()
 
 
+def test_a_stale_verdict_for_another_roster_does_not_survive_a_failed_retry(tmp_path):
+    # A full run leaves an artifact for roster R1. A re-run with a changed
+    # roster (WIKI_MAX_CHAPTERS, an extraction fix) R2 misses the cache and
+    # then fails the `studio run` — `load_status_verdicts` is roster-blind, so
+    # any artifact left on disk here would be replayed onto R2 by the consumer.
+    cache = tmp_path / "s.json"
+    save_status_cache(cache, _rows(), {"Brom": {"status": "deceased", "quote": BROM_QUOTE}})
+
+    other_rows = _rows()
+    other_rows[0]["snippets"] = [{"text": "Brom rode north.", "chapter_id": "chapter_2"}]
+
+    with patch("scripts.entity_status.subprocess.run", side_effect=FileNotFoundError()):
+        resolve_status(other_rows, "Eragon", cache)
+    assert not cache.exists()
+
+
 def test_a_successful_verdict_is_cached_and_replayed(tmp_path):
     cache = tmp_path / "s.json"
     stage_output = {"status": [{"name": "Brom", "status": "deceased", "quote": BROM_QUOTE}]}
