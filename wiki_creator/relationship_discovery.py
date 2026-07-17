@@ -214,31 +214,45 @@ def aggregate(votes: list[dict], roster_names: set[str]) -> list[dict]:
     return pairs
 
 
-def load_votes_cache(path: Path | str, roster_lines: list[str]) -> dict[str, list[dict]]:
-    """Cached per-chunk votes for exactly this roster, or empty.
+def load_votes_cache(
+    path: Path | str, roster_lines: list[str], prompt_key: str
+) -> dict[str, list[dict]]:
+    """Cached per-chunk votes for exactly this roster and this prompt, or empty.
 
-    Keyed on the roster injected into every chunk prompt, not the chunk id alone:
-    an alias merge changes the roster without changing chunk text (same ids), and
-    a vote the model made for a different roster must not be replayed onto this one
-    (STU-529/539 pattern — ``roster.load_cache`` does the same for whole-roster
-    verdicts). Roster mismatch ⇒ every chunk re-runs.
+    Keyed on the two inputs the model actually reads, not the chunk id alone:
+    - ``roster_lines`` — an alias merge changes the roster without changing chunk
+      text (same ids), and a vote made for a different roster must not be replayed
+      (STU-529/539 pattern — ``roster.load_cache`` does the same for whole-roster
+      verdicts).
+    - ``prompt_key`` — a fingerprint of the discovery prompt and type vocabulary, so
+      editing the agent prompt re-runs every chunk instead of silently replaying
+      votes the old prompt produced (STU-560: a cache is keyed on the config that
+      produced it). This is what makes prompt iteration on a chapter subset honest.
+
+    Either mismatch ⇒ every chunk re-runs.
     """
     try:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return {}
-    if not isinstance(data, dict) or data.get("roster") != roster_lines:
+    if not isinstance(data, dict):
+        return {}
+    if data.get("roster") != roster_lines or data.get("prompt") != prompt_key:
         return {}
     votes = data.get("votes")
     return votes if isinstance(votes, dict) else {}
 
 
 def save_votes_cache(
-    path: Path | str, roster_lines: list[str], votes: dict[str, list[dict]]
+    path: Path | str, roster_lines: list[str], prompt_key: str, votes: dict[str, list[dict]]
 ) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        json.dumps({"roster": roster_lines, "votes": votes}, ensure_ascii=False, indent=2),
+        json.dumps(
+            {"roster": roster_lines, "prompt": prompt_key, "votes": votes},
+            ensure_ascii=False,
+            indent=2,
+        ),
         encoding="utf-8",
     )

@@ -24,6 +24,7 @@ Usage:
     python scripts/discover_relationships.py --book library/.../book.yaml --workers 6
 """
 import argparse
+import hashlib
 import json
 import subprocess
 import sys
@@ -54,6 +55,18 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 DEFAULT_CHUNK_CHARS = 6000
 _TIMEOUT_SECONDS = 120
+_AGENT_YAML = PROJECT_ROOT / ".studio" / "agents" / "relationship-discovery.agent.yaml"
+
+
+def _prompt_fingerprint(type_defs: list[dict]) -> str:
+    """Fingerprint the discovery prompt + type vocabulary the votes were made under.
+
+    The votes cache busts when either changes, so a prompt edit re-runs the chunks
+    instead of replaying stale votes (STU-560). Hashes the agent yaml (the system
+    prompt) and the injected type definitions."""
+    agent = _AGENT_YAML.read_bytes() if _AGENT_YAML.exists() else b""
+    types = json.dumps(type_defs, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    return hashlib.sha256(agent + b"\x00" + types).hexdigest()
 
 
 def _narrative_chapters(epub_data: dict) -> list[dict]:
@@ -106,6 +119,11 @@ def main() -> None:
     parser.add_argument("--book", required=True, help="Path to book YAML")
     parser.add_argument("--chunk-chars", type=int, default=DEFAULT_CHUNK_CHARS)
     parser.add_argument("--workers", type=int, default=1)
+    parser.add_argument(
+        "--max-chapters", type=int, default=None,
+        help="Discover over only the first N narrative chapters — a cheap prompt "
+             "smoke (~15 chunks) that seeds the shared cache for a later full run.",
+    )
     args = parser.parse_args()
 
     book_paths = book_paths_from_yaml(args.book)
@@ -139,12 +157,15 @@ def main() -> None:
     allowed_types = set(relationship_tokens(book_config=book_cfg))
 
     chapters = _narrative_chapters(epub_data)
+    if args.max_chapters is not None:
+        chapters = chapters[: args.max_chapters]
     chunks = chunk_chapters(chapters, args.chunk_chars)
     if not chunks:
         print("[discover-relationships] no narrative chapters — nothing to discover", file=sys.stderr)
         return
 
-    cache = load_votes_cache(votes_path, roster_lines)
+    prompt_key = _prompt_fingerprint(type_defs)
+    cache = load_votes_cache(votes_path, roster_lines, prompt_key)
     todo = [c for c in chunks if c["id"] not in cache]
     print(
         f"[discover-relationships] {len(chunks)} chunks | {len(cache)} cached | "
@@ -161,7 +182,7 @@ def main() -> None:
         with lock:
             done[0] += 1
             cache[chunk["id"]] = kept
-            save_votes_cache(votes_path, roster_lines, cache)
+            save_votes_cache(votes_path, roster_lines, prompt_key, cache)
             print(f"  [{done[0]}/{len(todo)}] {chunk['id']}: {len(kept)}", file=sys.stderr)
         return chunk["id"], kept
 

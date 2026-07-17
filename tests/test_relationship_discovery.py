@@ -203,21 +203,29 @@ def test_aggregate_orders_pairs_by_chapter_breadth():
 # --- votes cache is keyed on the roster (STU-556) ---------------------------
 
 
-def test_votes_cache_roundtrips_for_same_roster(tmp_path):
+def test_votes_cache_roundtrips_for_same_roster_and_prompt(tmp_path):
     path = tmp_path / "votes.json"
     roster = ["Eragon", "Brom (also called: Neal)"]
     votes = {"ch1:0": [{"entity_a": "Eragon", "entity_b": "Brom"}]}
-    save_votes_cache(path, roster, votes)
-    assert load_votes_cache(path, roster) == votes
+    save_votes_cache(path, roster, "p1", votes)
+    assert load_votes_cache(path, roster, "p1") == votes
 
 
 def test_votes_cache_busts_when_roster_changes(tmp_path):
     path = tmp_path / "votes.json"
-    save_votes_cache(path, ["Eragon", "Brom"], {"ch1:0": [{"entity_a": "Eragon"}]})
+    save_votes_cache(path, ["Eragon", "Brom"], "p1", {"ch1:0": [{"entity_a": "Eragon"}]})
     # An alias merge changed the roster without changing chunk ids — stale votes
     # for the old roster must not replay.
-    assert load_votes_cache(path, ["Eragon"]) == {}
+    assert load_votes_cache(path, ["Eragon"], "p1") == {}
+
+
+def test_votes_cache_busts_when_prompt_changes(tmp_path):
+    path = tmp_path / "votes.json"
+    save_votes_cache(path, ["Eragon"], "p1", {"ch1:0": [{"entity_a": "Eragon"}]})
+    # The discovery prompt was edited — votes made under the old prompt must re-run,
+    # or a prompt iteration on a subset silently sees stale results (STU-560).
+    assert load_votes_cache(path, ["Eragon"], "p2") == {}
 
 
 def test_votes_cache_missing_file_is_empty(tmp_path):
-    assert load_votes_cache(tmp_path / "absent.json", ["Eragon"]) == {}
+    assert load_votes_cache(tmp_path / "absent.json", ["Eragon"], "p1") == {}
