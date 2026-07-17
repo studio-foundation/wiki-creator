@@ -2,12 +2,12 @@
 
 Ticket: [STU-551](https://linear.app/studioag/issue/STU-551/faction-change-as-a-dated-edge-affiliation-slot)
 
-> **Open question, deliberately not closed here.** The choice between grounding the
-> value on the entity roster (A) and reading it free-text from the snippets (B) rests
-> on a measurement this design could not run: the GPU was held by concurrent runs.
-> The measurement is **step 1 of the implementation plan**, not a spec-time exercise —
-> STU-488 measured in exactly that position and reported in its MR. Everything else
-> below is settled and does not depend on the outcome. See *The unresolved choice*.
+> **Measured, and closed: B.** The choice between grounding the value on the entity
+> roster (A) and reading it free-text from the snippets (B) was left open here because
+> the GPU was held by concurrent runs. It has since been measured — see
+> *Measurement result* at the bottom, which supersedes *The unresolved choice*. The
+> answer is **B**, and the first draft's reasoning for B was wrong even though its
+> conclusion was right.
 
 ## What this ticket becomes
 
@@ -310,3 +310,58 @@ regenerated. Every failure path omits the slot.
   — `device = "cuda" if torch.cuda.is_available() else "cpu"`, no config key, so
   concurrent runs on one 6 GB GPU OOM each other with no way to place them. The same
   shape as the coref device bug.
+
+## Measurement result — the choice is B
+
+Re-extracted `01_eragon` and `01-throne-of-glass` under GLiNER on 2026-07-16, after
+STU-560 (`4d0dda9`). `extraction_config.json` confirms the arm:
+`{invented_names: true, model: urchade/gliner_large-v2.1, threshold: 0.5}`.
+
+| Book | FACTION | ORG |
+|---|---|---|
+| `01_eragon` | **10** — `Urgals` 201, `Varden` 144, `Ra'zac` 111, `Riders` 51, `Twins` 11, `Forsworn` 6, `People` 4, `Elves` 4, `Du Vrangr Gata` 4, `Dwarves` 3 | **1** — `Empire` 116 |
+| `01-throne-of-glass` | **2** — `Fae` 11, `Champions` 10 | **1** — `King of Adarlan` 5 |
+
+**The pre-STU-560 numbers this design was written on were the bug, and they were wrong
+in both directions.** Eragon measured 0 FACTION and 13 ORG (`Varden` and `Empire` typed
+ORG beside `Garrow`, `Utgard` and `ALFRED A. KNOPF`). Under GLiNER, Alagaësia's factions
+are all there, correctly typed, and every piece of spaCy junk is gone — including
+`Garrow`, the STU-537 canonical example. **A was condemned on a false reading.**
+
+**And it still loses, for a reason the first draft never had.** The two books disagree:
+
+* On Eragon the roster is excellent and A would work beautifully.
+* On **throne-of-glass** — the Makefile's default `BOOK` — the entire vocabulary is
+  `Fae` (a species), `Champions`, and `King of Adarlan`, **which is a person**.
+  Celaena's real affiliations (Adarlan, the assassins' guild) are not entities at all.
+
+So A fails on three counts, none of them the one this design originally gave:
+
+1. **The roster is not universal.** A book with no faction entities renders nothing
+   under A. That is not a tail case — it is the default book.
+2. **A would offer a PERSON as an affiliation candidate.** Priming the model with
+   `King of Adarlan` on the default book manufactures the exact false positive the
+   whole design guards against.
+3. **A's marginal grounding is near zero.** Rule 3 — the value must be verbatim in the
+   quote — already does the work A would buy. On Eragon the model quotes `Varden`
+   either way; on throne-of-glass, A would *block* `Adarlan`, a legitimate answer that
+   happens not to be an entity.
+
+**Decision: B.** Free text from the snippets, verified by rules 2 and 3. The design
+above stands unchanged; no fourth rule, no roster in the prompt.
+
+### What this corrects in the sections above
+
+*The unresolved choice* says "if `Varden`/`Empire` type FACTION or ORG cleanly and the
+junk is gone → **A**". They do, it is, and the answer is still B — because that rule was
+written from Eragon alone and throne-of-glass is the book that decides. **A one-book
+measurement is a hypothesis.** This design recorded that lesson twice (STU-539's premise,
+STU-488's prediction) and its own decision rule still had it.
+
+Also corrected: *Follow-ups* calls the taxonomy defect "the reason choice A is in doubt".
+It is not. On Eragon the taxonomy works — `FACTION` holds real factions and `ORG` holds
+the Empire. The defect is narrower than stated: `FACTION`'s `gliner_label`
+(`"people, race, or order"`) still admits species (`Elves`, `Dwarves`, `People` on Eragon;
+`Fae` on throne-of-glass), and `ORG` mistyped a person on throne-of-glass. Worth its own
+ticket, but it does not block this slot, and the Narnia red-flag check in the measurement
+section stands.
