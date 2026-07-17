@@ -365,3 +365,79 @@ the Empire. The defect is narrower than stated: `FACTION`'s `gliner_label`
 `Fae` on throne-of-glass), and `ORG` mistyped a person on throne-of-glass. Worth its own
 ticket, but it does not block this slot, and the Narnia red-flag check in the measurement
 section stands.
+
+## Measurement result — the stage, on `01_eragon`
+
+Ran the real stage on a full GLiNER re-extraction + resolution of `01_eragon`
+(47 PERSON roster entries). Two runs, because the first prompted a vocabulary fix:
+
+| Run | Roster | With ≥1 marker snippet | Verdicts | False positives |
+|---|---|---|---|---|
+| 1 (first marker list) | 47 | 25 | **1** — `Brom: the Varden` | **0** |
+| 2 (after the marker fix) | 47 | 15 | **0** | **0** |
+
+`Brom: the Varden` is **true** — Brom served the Varden and helped found them.
+Precision is 1/1 then 0/0. **Zero false positives across both runs**, which is the
+declared ship gate.
+
+### The recall is ~0, and the book is why — not the code
+
+**Read the artifact, then score.** This design says that twice, quoting STU-539 and
+STU-488. It then predicted "Eragon joins the Varden, so the protagonist is an easy true
+positive" — and that prediction is **false**, from memory of the series rather than the
+text of book 1.
+
+Grepping the whole 907k-char corpus, `join*` within a sentence of `Varden` occurs **five
+times**, and not one states an affiliation:
+
+```
+"Will you join the Varden?"                                        — a question
+"Whether to join the Varden," said Brom.                           — Brom naming the topic
+Eragon knew the best way to gain sanctuary might be to join the
+  Varden, but he did not want to spend his entire life fighting
+  the Empire like they did.                                        — considering, and refusing
+"So why don't you join the Varden?"                                — a question
+Deynor, Ajihad's predecessor, allowed them to join the Varden…     — about spellcasters
+```
+
+**In *Eragon*, Eragon does not join the Varden.** That is *Eldest*. Book 1 ends with him
+arriving at Farthen Dûr, allegiance unresolved — the novel is *about* a boy who has not
+chosen a side. A stage that renders no affiliation for him is **correct**, and the
+`OPT`-with-no-fallback contract renders nothing, exactly as designed.
+
+This is the error the agent prompt itself forbids — *"a character whose allegiance you
+know because you have read this novel before; your memory of the plot is not evidence"* —
+committed by the author of the prompt, in the prompt's own measurement plan.
+
+### What the runs did find, which is a real defect and is fixed
+
+The first marker list broke a rule worth stating: **a marker must name the RELATION
+(joining, serving, swearing), never the GROUP (army, guild, order, band, ranks, side).**
+The group noun is what the *value* will contain; only the relation proves membership.
+
+`side` alone fired on **28 of the ~70 selected snippets** — "his side burned sharply",
+"at her side", "the other side of the river" — crowding real statements out of the
+5-snippet budget. `a72369e` cuts the group nouns and the prose-ambiguous single verbs
+("join" also matches *"where its neck and shoulders joined"*, which was Eragon's **only**
+marker snippet).
+
+The fix is **not** tuned against the metric: the metric cannot tell the two lists apart
+(1 verdict vs 0), and Brom's one true hit moved between runs on identical evidence — LLM
+nondeterminism, the same instability STU-488 recorded (*"recall is not stable run to run;
+precision is"*). The old list is wrong on a stated principle and measurably
+noise-dominated. That is the entire argument for the change.
+
+### What was not measured, and should be before this is trusted
+
+* **Narnia's species red-flag check did not run.** It needs its own GLiNER re-extraction
+  and resolution; the session ended first. It remains the right check — `Sons of Adam`,
+  `Humans` and `Fauns` are obvious candidates and all belong to the `species` slot.
+* **No later tome was measured.** `01_eragon` is close to a worst case: a book whose
+  premise is an unaffiliated protagonist. `02_eldest` (Eragon joins the Varden and is
+  sworn to Nasuada) or `05_murtagh` would exercise the stage where affiliations are
+  actually stated. **This is the measurement that decides whether the slot earns its LLM
+  call**, and it is not done.
+
+So this ships on **precision, not on demonstrated usefulness**. The honest summary: the
+stage never lied across two runs on 47 characters, and it has not yet been shown to say
+anything on a book that has something to say.
