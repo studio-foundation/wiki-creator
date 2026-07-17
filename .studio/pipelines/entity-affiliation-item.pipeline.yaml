@@ -1,0 +1,14 @@
+name: entity-affiliation-item
+description: Decide which faction each PERSON roster entry belongs to at the end of this book — one call per book
+version: 1
+
+stages:
+  - name: entity-affiliation-item
+    kind: analysis
+    agent: entity-affiliation
+    contract: entity-affiliation-item
+    ralph:
+      max_attempts: 3
+    context:
+      include:
+        - input

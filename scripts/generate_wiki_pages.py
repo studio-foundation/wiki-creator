@@ -734,7 +734,7 @@ def _batch_bound_value(entity: dict, token: str, lang: str = "fr") -> str | None
 def _extracted_fact_value(entity: dict, token: str, lang: str) -> str | None:
     """Value for an extracted-fact infobox token, sourced from facts the pipeline
     produced into the batch entity. None when the fact is absent (slot omitted).
-    `affiliation` and the specific `type` are future slices."""
+    The specific `type` is a future slice."""
     if token == "titles":
         titles = [t for t in (entity.get("titles") or []) if t]
         return ", ".join(titles) if titles else None
@@ -742,16 +742,32 @@ def _extracted_fact_value(entity: dict, token: str, lang: str) -> str | None:
         # MIN with a declared fallback: an unstamped entity renders `unknown`
         # rather than dropping the slot (STU-488).
         return status_label(entity.get("status"), lang)
+    if token == "affiliation":
+        # OPT with no declared fallback: an undecided character drops the slot
+        # (STU-551). Plain text — no infobox slot carries a wikilink today.
+        return (entity.get("affiliation") or "").strip() or None
     if token == "death":
         # OPT, unlike `status`: no grounded circumstance renders no row (STU-552).
         return death_label(entity.get("death_agent"), entity.get("death_place"), lang)
     return None
 
 
+# Extracted-fact tokens the pipeline actually computes. Such a slot must never
+# fall back to the writer's guess: `_bind_batch_fields` only *overwrites* when it
+# has a value, so without this an undecided fact renders whatever the LLM inferred
+# — and base.yaml's infobox brief and few-shot show the writer how to invent an
+# affiliation (STU-551). The other extracted-fact slots (`species`, `location`,
+# `leaders`) are declared but nothing computes them, so clearing those would delete
+# rendering content with no replacement; `titles` has the same hole and is left
+# alone here for the same reason. Both are STU-572.
+_PIPELINE_OWNED_FACTS = frozenset({"affiliation"})
+
+
 def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> None:
     """Overwrite pipeline-sourced infobox tokens with authoritative values, per
     the resolved template: `batch-bound` from the batch identity, `extracted-fact`
     from facts the pipeline produced. `llm-prose` slots are left to the LLM.
+    A `_PIPELINE_OWNED_FACTS` token with no value is cleared, not left to the LLM.
     No-op when book_config is None."""
     if book_config is None:
         return
@@ -763,6 +779,8 @@ def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> No
             value = _batch_bound_value(entity, slot.token, lang)
         elif slot.provenance == "extracted-fact":
             value = _extracted_fact_value(entity, slot.token, lang)
+            if not value and slot.token in _PIPELINE_OWNED_FACTS:
+                page["infobox_fields"].pop(slot.token, None)
         else:
             continue
         if value:

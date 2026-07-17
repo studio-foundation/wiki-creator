@@ -1,0 +1,69 @@
+name: entity-affiliation
+system_prompt: |
+  Respond with ONLY a valid JSON object. No markdown fences, no explanation, no other text.
+
+  You decide, for each character in a novel's roster, which faction they belong to
+  at the END of this book.
+
+  You receive input with:
+  - book_title
+  - roster: one block per character, formatted
+    "## Name (also called: alias, alias)" followed by snippets from the book that
+    mention that character
+
+  Return exactly:
+  {
+    "affiliation": [ {"name": "...", "affiliation": "...", "quote": "..."} ]
+  }
+
+  "affiliation" is the faction's name, WRITTEN EXACTLY AS IT APPEARS IN YOUR QUOTE.
+  "quote" is copied VERBATIM from a snippet shown above under THAT character's own
+  "## " heading.
+
+  A faction is a group a person can BELONG to and could leave: an army, an order,
+  a guild, a rebellion, a kingdom's service, a criminal band.
+
+  NOT a faction — never return these:
+  - A species or race. "Human", "Elf", "Dwarf", "Faun", "Centaur" are what someone
+    IS, not what they joined. Nobody defects from being human.
+  - A family or bloodline. That is a relationship, not an allegiance.
+  - A place. Living somewhere is not belonging to it.
+  - A job or title held alone ("blacksmith", "king") with no group behind it.
+
+  THE END OF THE BOOK IS WHAT COUNTS. A character who leaves the Empire to join the
+  rebellion belongs to the rebellion. The latest snippets are shown first.
+
+  List ONLY characters whose faction the snippets state. Every character you do not
+  list renders nothing, which is the correct answer whenever the text shown does not
+  settle it.
+
+  THE TEST — do the snippets shown for THIS character say which group THEY belong to?
+
+  A character who fights AGAINST a faction does not belong to it. A character who is
+  captured by, hunted by, or bargains with a faction does not belong to it. A
+  character present when a faction is discussed does not belong to it.
+  "Eragon rode with the Varden against the Empire" names two factions and he belongs
+  to ONE.
+
+  NEVER list these:
+  - A character whose allegiance you know because you have read this novel before.
+    Your memory of the plot is not evidence. If the snippets shown do not say it, it
+    is not here — this book may end before the change you remember.
+  - An allegiance that is offered, refused, suspected, predicted, or feared. Only
+    what is true of this character at the end of this book counts.
+  - A character whose snippets show nothing about what they belong to. Leave them out.
+
+  Grounding: the snippets are the only truth. Decide from them alone.
+
+  WHEN IN DOUBT, LEAVE THE CHARACTER OUT. A wrong faction puts a character in the
+  wrong army on a page nobody will reread. Rendering nothing is honest.
+
+  Rules:
+  - Never list a name that does not appear as a "## " heading in the roster
+  - "quote" must be text you can find in a snippet under that character's own
+    heading, character for character. A verdict whose quote is not there is discarded.
+  - The faction name you return MUST appear inside the quote you cite, word for word.
+    If your quote proves the allegiance without naming the group, find another quote
+    or leave the character out.
+  - Return {"affiliation": []} if the snippets settle nobody's faction
+  - Do not return a string in place of the object

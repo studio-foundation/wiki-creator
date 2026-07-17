@@ -476,6 +476,63 @@ Inside `wiki-resolution`, order matters:
   (`content_units` skips it by construction), so the circumstance leaks the death
   exactly as `Statut : Décédé` already does; gating the infobox is its own ticket.
 
+- Affiliation is a scalar, not a dated edge (STU-551): the `affiliation` slot is
+  filled by one `studio run entity-affiliation-item` per book over the PERSON
+  roster — the STU-488 shape, a pre-step to wiki-preparation so resolution stays
+  LLM-free. The ticket asked for a **dated edge** and three findings refused it.
+  (1) Its own acceptance test — tome 3's faction on tome 3's page, tome 1's on
+  tome 1's — is true **by construction** under a per-tome wiki, exactly as for
+  `status`. (2) The intra-tome date is what STU-488 measured unbuildable: its
+  `death` slot derived the chapter from the snippet its verdict quoted and got 3
+  of 4 wrong, because the place where the text states a fact is not the place
+  where the fact happens; a dated edge has no other date source. (3) There is no
+  edge to date — `relationship_extraction.py` filters the co-occurrence graph to
+  `type == "PERSON"` in hard code, so no PERSON-ORG edge exists in any artifact.
+  Snippet selection is **single-source** where `status` is two-source: nothing
+  proves the *absence* of an affiliation, so there is no `alive`-analogue proved
+  by acting late. Marker-bearing snippets, latest-first — the latest-first is what
+  makes the scalar mean "end of tome" and absorbs an intra-tome switch without
+  dating it. **A third rejection rule exists here that `status` does not need**:
+  `status` returns an enum member, so verifying the quote verifies the verdict;
+  `affiliation` returns a **name**, so the model can quote a real sentence and
+  infer the wrong faction from it. The rendered value must appear in the quote,
+  verbatim, and **as whole tokens** — a raw substring test accepted `Order` off
+  "he ordered the villagers" (STU-541's rule, STU-541's reason).
+  **The slot was never "inert", and that nearly shipped a lie.** `base.yaml`
+  tells the writer to fill `affiliation` (the infobox brief names it; the
+  few-shot demonstrates one), and `_bind_batch_fields` only *overwrites* an
+  extracted-fact token when the pipeline has a value — so an undecided character
+  rendered the **writer's** inference, which with this stage's ~0 recall is
+  almost every character. `status` is immune only by accident of being
+  `MIN`/`fallback: unknown`, so `status_label` always returns a string. A
+  pipeline-owned fact with no value is now **cleared**
+  (`_PIPELINE_OWNED_FACTS`); `species`/`location`/`leaders` are declared
+  extracted-fact with nothing computing them, and `titles` has the same hole —
+  STU-572. Shared roster plumbing lives in
+  `wiki_creator/roster.py` (`normalize`, `has_marker`, `latest_first`,
+  `render_roster`, `is_quoted`, `load_cache`, `save_cache`), extracted from
+  `entity_status` rather than copied — `normalize`'s typographic folding is the
+  `99a6a71` fix and must exist once.
+  **A marker names the relation, never the group.** The first vocabulary included
+  `side`, `order`, `band`, `army`, `ranks`, `guild`: `side` alone fired on 28 of
+  the ~70 selected snippets ("his side burned sharply", "at her side"), crowding
+  real statements out of the 5-snippet budget. Group nouns are what the *value*
+  contains; only the relation (joining, serving, swearing, betraying) proves
+  membership. Prose-ambiguous single verbs go too — `join` also matches "where its
+  neck and shoulders joined", which was Eragon's only marker snippet.
+  **Measured: 0 false positives over 2 runs on 47 characters, and ~0 recall —
+  because of the book.** `01_eragon` is near worst-case: `join*` pairs with
+  `Varden` in five sentences of 907k chars and **none states an affiliation** (two
+  are questions; one is Eragon considering it and refusing). **Eragon does not
+  join the Varden in book 1** — that is Eldest. The design predicted he did, from
+  memory of the series rather than book 1's text: the exact error the agent prompt
+  forbids by name, made by the prompt's author in its own measurement plan. So the
+  slot rendering nothing there is correct, and the feature **has not been shown
+  useful** — a later tome (`02_eldest`, `05_murtagh`) is the measurement that
+  would decide, and it is not done. Narnia's species red-flag check is also
+  outstanding. Recall is unstable run to run (Brom's one true hit moved on
+  identical evidence); precision is not — STU-488 recorded the same asymmetry.
+
 - Name-collision policy (STU-506): `registry.py::_merge_duplicate_canonicals`
   used to fold two entities on `canonical_name.casefold()` alone — a PERSON and
   a PLACE homonym became one false entity. Policy is now declared in the book
