@@ -92,6 +92,7 @@ PRE_STEPS: dict[str, list[list[str]]] = {
     "wiki-preparation": [
         ["python", "scripts/entity_status.py", "--book"],
         ["python", "scripts/entity_affiliation.py", "--book"],
+        ["python", "scripts/entity_species.py", "--book"],
         ["python", "scripts/classify_relationships.py", "--book"],
         ["python", "scripts/build_event_layer.py", "--book"],
     ],

@@ -746,6 +746,10 @@ def _extracted_fact_value(entity: dict, token: str, lang: str) -> str | None:
         # OPT with no declared fallback: an undecided character drops the slot
         # (STU-551). Plain text — no infobox slot carries a wikilink today.
         return (entity.get("affiliation") or "").strip() or None
+    if token == "species":
+        # OPT, genre-gated: a book with no invented species never ran the stage,
+        # so the slot drops (STU-574). Plain text, like `affiliation`.
+        return (entity.get("species") or "").strip() or None
     if token == "death":
         # OPT, unlike `status`: no grounded circumstance renders no row (STU-552).
         return death_label(entity.get("death_agent"), entity.get("death_place"), lang)
