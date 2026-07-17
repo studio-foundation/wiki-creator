@@ -8,7 +8,7 @@ Input:  processing_output/<slug>/registry.json
 Output: processing_output/<slug>/entity_status.json
 
 Runs before wiki-preparation, which stamps the verdict onto the batch entity so
-`generate_wiki_pages.py` can render the `status` / `death` infobox slots.
+`generate_wiki_pages.py` can render the `status` infobox slot.
 
 It is a pre-step and not a wiki-resolution stage on purpose. `alias-adjudication`
 sits inside resolution because it changes identity — entity-classification reads
@@ -46,8 +46,7 @@ _TIMEOUT_SECONDS = 600
 def contexts_by_entity(registry: Registry) -> dict[str, list[dict]]:
     """Per-PERSON context sentences with the chapter each came from.
 
-    The chapter rides along because the `death` slot is derived from the snippet
-    the verdict quotes — the model is never asked for a chapter.
+    The chapter rides along because `select_status_snippets` sorts by it.
     """
     contexts: dict[str, list[dict]] = {}
     for record in registry.entities:
@@ -168,8 +167,7 @@ def main() -> None:
         file=sys.stderr,
     )
     for name, verdict in sorted(verdicts.items()):
-        chapter = f" (chapter {verdict['chapter']})" if verdict["chapter"] is not None else ""
-        print(f"[entity-status]   {name}: {verdict['status']}{chapter}", file=sys.stderr)
+        print(f"[entity-status]   {name}: {verdict['status']}", file=sys.stderr)
 
 
 if __name__ == "__main__":

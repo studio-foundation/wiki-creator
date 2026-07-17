@@ -43,8 +43,6 @@ entity_types:
         |-
         | '''Affiliation''' || {{{affiliation|}}}
         |-
-        | '''Décès''' || {{{death|}}}
-        |-
         | '''Première apparition''' || {{{first_seen|}}}
         |}
         </includeonly>
@@ -54,7 +52,6 @@ entity_types:
       - {token: alias,       group: infobox, provenance: batch-bound,    obligation: OPT, tiers: [figurant, secondary, principal]}
       - {token: apparition,  group: infobox, provenance: batch-bound,    obligation: OPT, tiers: [figurant, secondary, principal]}
       - {token: status,      group: infobox, provenance: extracted-fact, obligation: MIN, fallback: unknown, tiers: [figurant, secondary, principal]}
-      - {token: death,       group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [figurant, secondary, principal]}
       - {token: species,     group: infobox, provenance: extracted-fact, obligation: OPT, genre_gated: true, tiers: [secondary, principal]}
       - {token: affiliation, group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
       - {token: titles,      group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
@@ -372,14 +369,13 @@ chrome:
   reveal:    {fr: "Chapitre {chapter} — révéler", en: "Chapter {chapter} — reveal"}
   collapse:  {fr: "Masquer", en: "Hide"}
   evolution: {fr: "Évolution :", en: "Evolution:"}
-  # STU-488: the `status` / `death` infobox slots. Reader-facing chrome, so the
+  # STU-488: the `status` infobox slot. Reader-facing chrome, so the
   # enum's labels are data — the enum itself lives in wiki_creator/entity_status.py.
   status_alive:    {fr: "Vivant",   en: "Alive"}
   status_deceased: {fr: "Décédé",   en: "Deceased"}
   status_missing:  {fr: "Disparu",  en: "Missing"}
   status_unknown:  {fr: "Inconnu",  en: "Unknown"}
   status_undead:   {fr: "Mort-vivant", en: "Undead"}
-  death_chapter:   {fr: "Chapitre {chapter}", en: "Chapter {chapter}"}
   # STU-514: Main_Page navigation, showcase headings, and statistics. Reader-facing
   # chrome — localized by output_language, was hardcoded French in export_helpers.py.
   main_characters:    {fr: "Personnages principaux", en: "Main characters"}

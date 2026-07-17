@@ -66,7 +66,7 @@ def select_status_snippets(snippets: list[dict], status_markers: list[str]) -> l
     latest evidence decides.
 
     Snippets are ``{"text": str, "chapter_id": str}``; the chapter rides along
-    because the caller derives the `death` slot from it, never from the model.
+    because `_latest_first` sorts by it.
     """
     marked: list[dict] = []
     plain: list[dict] = []
@@ -102,8 +102,8 @@ def roster_rows(
 
 
 def render_roster(rows: list[dict]) -> str:
-    """The roster block the classifier reads. Text only — the chapter is derived
-    by the caller from the snippet the verdict quotes, never reported by the model."""
+    """The roster block the classifier reads. Text only — the chapter is never
+    shown or reported by the model."""
     blocks = []
     for row in rows:
         header = row["name"]
@@ -118,11 +118,7 @@ def render_roster(rows: list[dict]) -> str:
 
 
 def _quoted_snippet(quote: str, snippets: list[dict]) -> dict | None:
-    """The entity's own snippet holding ``quote`` verbatim, or None.
-
-    Verification and dating are one lookup: the snippet that proves the verdict
-    is the snippet that dates it.
-    """
+    """The entity's own snippet holding ``quote`` verbatim, or None."""
     needle = _normalize(quote)
     if not needle:
         return None
@@ -169,11 +165,7 @@ def parse_status_verdict(payload: object, rows: list[dict]) -> dict[str, dict]:
         snippet = _quoted_snippet(quote, row["snippets"])
         if snippet is None:
             continue
-        verdicts[name] = {
-            "status": status,
-            "quote": quote,
-            "chapter": chapter_number(snippet.get("chapter_id")) if status == "deceased" else None,
-        }
+        verdicts[name] = {"status": status, "quote": quote}
     return verdicts
 
 
@@ -211,10 +203,3 @@ def status_label(status: str | None, lang: str) -> str:
     if value not in STATUS_VALUES:
         value = DEFAULT_STATUS
     return chrome_label(f"status_{value}", lang)
-
-
-def death_label(chapter: int | None, lang: str) -> str | None:
-    """The localized death line, or None when there is no chapter to name."""
-    if chapter is None:
-        return None
-    return chrome_label("death_chapter", lang).format(chapter=chapter)

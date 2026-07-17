@@ -410,7 +410,6 @@ def build_entity_bundle(
             role_words or [],
         ),
         "status": (status_verdicts or {}).get(canonical_name, {}).get("status", DEFAULT_STATUS),
-        "death_chapter": (status_verdicts or {}).get(canonical_name, {}).get("chapter"),
         "total_mentions": entity.get("total_mentions", 0),
         "chapters_present": entity.get("chapters_present", 0),
         "first_seen": get_first_seen(entity, persons, places, orgs, events),

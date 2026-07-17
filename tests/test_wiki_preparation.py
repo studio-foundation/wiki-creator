@@ -880,16 +880,15 @@ def test_build_entity_bundle_titles_empty_without_role_words():
     assert bundle["titles"] == []
 
 
-def test_build_entity_bundle_stamps_status_and_death_chapter():
+def test_build_entity_bundle_stamps_status():
     """STU-488: the entity_status.py verdict must reach the batch entity."""
     persons, places, orgs, events = _registries()
     entity = {"canonical_name": "Brom", "type": "PERSON", "importance": "principal"}
     bundle = build_entity_bundle(
         entity, [], persons, places, orgs, events, {"Brom": entity},
-        status_verdicts={"Brom": {"status": "deceased", "chapter": 38}},
+        status_verdicts={"Brom": {"status": "deceased"}},
     )
     assert bundle["status"] == "deceased"
-    assert bundle["death_chapter"] == 38
 
 
 def test_build_entity_bundle_defaults_status_without_a_verdict():
@@ -900,7 +899,6 @@ def test_build_entity_bundle_defaults_status_without_a_verdict():
         entity, [], persons, places, orgs, events, {"Brom": entity},
     )
     assert bundle["status"] == DEFAULT_STATUS
-    assert bundle["death_chapter"] is None
 
 
 def test_main_binds_identity_from_registry(tmp_path: Path, monkeypatch):

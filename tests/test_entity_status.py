@@ -1,4 +1,4 @@
-"""STU-488: per-tome entity status (the `status` / `death` infobox slots)."""
+"""STU-488: per-tome entity status (the `status` infobox slot)."""
 import json
 import subprocess
 from unittest.mock import patch
@@ -140,15 +140,14 @@ def test_render_roster_shows_names_aliases_and_snippet_text():
 
 
 def test_render_roster_never_shows_the_chapter():
-    # The chapter is derived by code from the quoted snippet. Showing it would
-    # invite the model to report one instead of quoting.
+    # The classifier is never shown the chapter. Showing it would invite the
+    # model to report one instead of quoting.
     assert "chapter_38" not in render_roster(_rows())
 
 
-def test_a_verified_deceased_verdict_carries_the_quoted_snippets_chapter():
+def test_a_verified_deceased_verdict_is_accepted():
     verdicts = parse_status_verdict(_verdict(), _rows())
     assert verdicts["Brom"]["status"] == "deceased"
-    assert verdicts["Brom"]["chapter"] == 38
 
 
 def test_a_json_string_payload_is_parsed():
@@ -209,20 +208,10 @@ def test_alive_needs_a_quote_too():
     assert verdicts["Eragon"]["status"] == "alive"
 
 
-def test_only_deceased_carries_a_death_chapter():
-    # The slot's label is "Died". `missing` and `undead` have no death chapter.
-    verdicts = parse_status_verdict(
-        {"status": [{"name": "Eragon", "status": "alive", "quote": "Eragon rode on alone."}]},
-        _rows(),
-    )
-    assert verdicts["Eragon"]["chapter"] is None
-
-
 def test_a_deceased_verdict_quoted_from_an_unnumbered_chapter_keeps_its_status():
     rows = [{"name": "Brom", "aliases": [], "snippets": [{"text": BROM_QUOTE, "chapter_id": "Prologue"}]}]
     verdicts = parse_status_verdict(_verdict(), rows)
     assert verdicts["Brom"]["status"] == "deceased"
-    assert verdicts["Brom"]["chapter"] is None
 
 
 def test_unparseable_payloads_verdict_nothing():
@@ -241,7 +230,7 @@ def test_a_malformed_entry_does_not_sink_its_neighbours():
 
 
 def test_cache_round_trips(tmp_path):
-    rows, verdicts = _rows(), {"Brom": {"status": "deceased", "quote": BROM_QUOTE, "chapter": 38}}
+    rows, verdicts = _rows(), {"Brom": {"status": "deceased", "quote": BROM_QUOTE}}
     path = tmp_path / "entity_status.json"
     save_status_cache(path, rows, verdicts)
     assert load_cached_status(path, rows) == verdicts
@@ -252,7 +241,7 @@ def test_a_changed_roster_misses_the_cache(tmp_path):
     # verdict returned for a different roster must not be replayed onto it —
     # STU-539's premise was measured false against a 5-chapter extraction.
     path = tmp_path / "entity_status.json"
-    save_status_cache(path, _rows(), {"Brom": {"status": "deceased", "quote": BROM_QUOTE, "chapter": 38}})
+    save_status_cache(path, _rows(), {"Brom": {"status": "deceased", "quote": BROM_QUOTE}})
     other = _rows()
     other[0]["snippets"] = [{"text": "Brom rode north.", "chapter_id": "chapter_2"}]
     assert load_cached_status(path, other) is None
@@ -350,7 +339,6 @@ def test_a_successful_verdict_is_cached_and_replayed(tmp_path):
     with patch("scripts.entity_status.subprocess.run", return_value=_Ok()) as run:
         first = resolve_status(_rows(), "Eragon", cache)
     assert first["Brom"]["status"] == "deceased"
-    assert first["Brom"]["chapter"] == 38
 
     with patch("scripts.entity_status.subprocess.run") as run:
         second = resolve_status(_rows(), "Eragon", cache)
@@ -359,7 +347,7 @@ def test_a_successful_verdict_is_cached_and_replayed(tmp_path):
 
 
 from scripts.generate_wiki_pages import _extracted_fact_value
-from wiki_creator.entity_status import death_label, status_label
+from wiki_creator.entity_status import status_label
 from wiki_creator.page_templates import load_base_template
 
 
@@ -382,19 +370,9 @@ def test_an_absent_status_renders_the_declared_fallback():
     assert status_label("", "en") == status_label("unknown", "en")
 
 
-def test_death_label_carries_the_chapter():
-    assert "12" in death_label(12, "en")
-    assert "12" in death_label(12, "fr")
-
-
-def test_death_label_is_none_without_a_chapter():
-    assert death_label(None, "fr") is None
-
-
 def test_the_binder_renders_status_from_the_batch_entity():
-    entity = {"status": "deceased", "death_chapter": 38}
+    entity = {"status": "deceased"}
     assert _extracted_fact_value(entity, "status", "fr") == "Décédé"
-    assert "38" in _extracted_fact_value(entity, "death", "fr")
 
 
 def test_the_binder_renders_unknown_for_an_unstamped_entity():
@@ -403,21 +381,16 @@ def test_the_binder_renders_unknown_for_an_unstamped_entity():
     assert _extracted_fact_value({}, "status", "en") == status_label("unknown", "en")
 
 
-def test_the_death_slot_is_omitted_without_a_chapter():
-    assert _extracted_fact_value({"status": "alive"}, "death", "fr") is None
-
-
 def test_titles_still_binds():
     assert _extracted_fact_value({"titles": ["Roi"]}, "titles", "fr") == "Roi"
 
 
-def test_person_declares_both_slots():
+def test_person_declares_the_status_slot():
     person = load_base_template()["entity_types"]["PERSON"]
     slots = {s["token"]: s for s in person["infobox"]}
     assert slots["status"]["provenance"] == "extracted-fact"
-    assert slots["death"]["provenance"] == "extracted-fact"
-    assert slots["death"]["obligation"] == "OPT"
-    assert "{{{death|}}}" in person["export"]["infobox_source"]
+    assert "death" not in slots
+    assert "{{{death|}}}" not in person["export"]["infobox_source"]
 
 
 def test_the_pre_step_is_registered_before_wiki_preparation():
@@ -431,13 +404,12 @@ def test_load_status_verdicts_reads_the_artifact(tmp_path):
     (tmp_path / "entity_status.json").write_text(
         json.dumps({
             "roster": [],
-            "verdicts": {"Brom": {"status": "deceased", "quote": BROM_QUOTE, "chapter": 38}},
+            "verdicts": {"Brom": {"status": "deceased", "quote": BROM_QUOTE}},
         }),
         encoding="utf-8",
     )
     verdicts = load_status_verdicts(tmp_path)
     assert verdicts["Brom"]["status"] == "deceased"
-    assert verdicts["Brom"]["chapter"] == 38
 
 
 def test_a_missing_or_corrupt_status_artifact_leaves_every_entity_unknown(tmp_path):

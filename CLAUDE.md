@@ -83,6 +83,7 @@ library/sarah_j_maas/throne-of-glass/output/01-throne-of-glass/
 - [scripts/generate_book_synopsis.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_book_synopsis.py): book synopsis page from `events.json` (SP4/STU-482), writes `book_synopsis.json`; pure logic in `wiki_creator/synopsis.py`
 - [scripts/generate_event_pages.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_event_pages.py): one `EVENT` page per high-salience event from `events.json` (SP3/STU-481), writes `event_pages.json`; pure logic in `wiki_creator/event_pages.py`
 - [scripts/consolidate_editorial_stance.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/consolidate_editorial_stance.py): post-generation editorial-stance consolidation pass (STU-508), writes `editorial_stance_report.json`; pure logic in `wiki_creator/consolidation.py`
+- [scripts/entity_status.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/entity_status.py): per-tome character status pre-step (STU-488), writes `entity_status.json`; pure logic in `wiki_creator/entity_status.py`
 - [scripts/wiki_export.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/wiki_export.py): Markdown -> wikitext
 - [scripts/resolve_clusters.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/resolve_clusters.py): resolves NER clusters
 - [scripts/merge_entities.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/merge_entities.py): merges cluster outputs into unified entity list
@@ -318,6 +319,53 @@ Inside `wiki-resolution`, order matters:
   is the anti-theatre rule applied to a claim rather than a tool call. Merges do not
   chain: A=B then B=C is skipped, because the classifier judged the roster it was
   shown and was never asked for a transitive claim.
+
+- Entity status (STU-488): the `status` infobox slot was declared `MIN` with
+  `fallback: unknown` in STU-504 and never populated. It is filled by one
+  `studio run entity-status-item` per book over the PERSON roster — the
+  STU-529/STU-539 shape — as a **pre-step to wiki-preparation**, not a
+  wiki-resolution stage: it changes no identity (unlike `alias-adjudication`,
+  which entity-classification reads), and resolution is the chain `make golden`
+  runs, so it stays LLM-free by construction. Enum is the fandom-wiki convention
+  (`alive | deceased | missing | unknown | undead`), labels in
+  `base.yaml#chrome.status_*`. **The marker vocabulary retrieves, it does not
+  decide** (`cue_words/<lang>.json#status_markers`): that is the whole
+  difference from STU-538, which measured 340 fires and 0 true positives when a
+  pattern *was* the verdict. "Eragon watched Brom die" carries a death marker in
+  both characters' contexts and kills one; the model reads the subject, the
+  regex cannot. A marker missing from the vocabulary means a death is never
+  surfaced, which means `unknown` — the forgiving direction. Snippet selection
+  is two-source because the enum asks two questions: marker-bearing snippets
+  prove `deceased`/`missing`/`undead`, the **latest** snippets prove `alive` (a
+  novel never says "Eragon is alive"). Both are latest-first — status is the
+  state at the *end* of the tome. **A verdict must quote text we showed the
+  model** (`parse_status_verdict` rejects any quote not verbatim in that
+  entity's *own* snippets): these novels are in the model's training data, so a
+  verdict from its memory of the plot and one from this run's text are
+  otherwise indistinguishable. **Every failure path renders `unknown`**, the
+  slot's own declared fallback: a false `deceased` kills a living character on
+  a page nobody will reread and `Registry.accumulate` would carry it forward; a
+  false `unknown` says "we don't know". The cache
+  (`processing_output/<slug>/entity_status.json`) is keyed on the roster rows,
+  so `WIKI_MAX_CHAPTERS` cannot replay a verdict made for a different roster —
+  STU-539's premise was measured false precisely because it was measured on a
+  5-chapter extraction.
+  **The series registry does not carry status**: the wiki is per-tome
+  (`output/<slug>/`) while the registry is per-series, so "dead in tome 2 without
+  erasing tome 1" is true by construction — tome 1 is never regenerated. The
+  ticket's "series page" does not exist (STU-553 decides whether it should, and
+  it conflicts with STU-232). `affiliation` is NOT a third slot of this shape:
+  `FACTION` is an entity type since STU-505, so a faction change is a dated edge,
+  not a scalar (STU-551).
+  **The `death` slot (rendering the chapter the verdict quotes) shipped
+  alongside `status` and was removed**: measured on Eragon's 4 verified
+  verdicts, 3 of 4 derived chapters were wrong — Brom dies around chapter 37 but
+  his death slot read "Chapter 61" (where a character later *says* he was
+  killed), and Morzan/Marian both died before the book begins and have no death
+  chapter at all. The place where the text states a fact is not the place where
+  the fact happens, so deriving a chapter from the quoting snippet does not
+  work. The in-universe death circumstance ("Killed by Durza at Farthen Dûr")
+  is STU-552 — it needs grounded prose, not a derived infobox slot.
 
 - Name-collision policy (STU-506): `registry.py::_merge_duplicate_canonicals`
   used to fold two entities on `canonical_name.casefold()` alone — a PERSON and
