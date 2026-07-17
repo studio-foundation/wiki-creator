@@ -22,8 +22,16 @@ import json
 import re
 from pathlib import Path
 
-from wiki_creator.chapters import chapter_number
 from wiki_creator.page_templates import chrome_label
+from wiki_creator.roster import (
+    has_marker,
+    is_quoted,
+    latest_first,
+    load_cache,
+    normalize,
+    render_roster,
+    save_cache,
+)
 
 STATUS_VALUES = ("alive", "deceased", "missing", "unknown", "undead")
 DEFAULT_STATUS = "unknown"
@@ -33,52 +41,8 @@ CACHE_VERSION = 2
 SNIPPETS_PER_ENTITY = 5
 SNIPPET_CHARS = 300
 
-_WHITESPACE_RE = re.compile(r"\s+")
-
-# An EPUB's typesetting uses curly quotes/dashes; the model echoes the same
-# sentence back in plain ASCII. Folding both to one form is what lets a
-# verbatim quote inside dialogue still match its source snippet.
-_TYPOGRAPHIC_TRANSLATION = str.maketrans(
-    {
-        "‘": "'",
-        "’": "'",
-        "‚": "'",
-        "‛": "'",
-        "“": '"',
-        "”": '"',
-        "„": '"',
-        "‟": '"',
-        "′": "'",
-        "″": '"',
-        "…": "...",
-        "–": "-",
-        "—": "-",
-        "‑": "-",
-    }
-)
-
-
-def _normalize(text: object) -> str:
-    folded = str(text or "").translate(_TYPOGRAPHIC_TRANSLATION)
-    return _WHITESPACE_RE.sub(" ", folded).strip().casefold()
-
-
-def _has_marker(text: str, status_markers: list[str]) -> bool:
-    return any(
-        re.search(r"\b" + re.escape(marker) + r"\b", text, re.IGNORECASE)
-        for marker in status_markers
-        if marker
-    )
-
-
-def _latest_first(snippets: list[dict]) -> list[dict]:
-    """Sorted by chapter, latest first. An unnumbered chapter (``Prologue``)
-    sorts earliest. Stable, so same-chapter snippets keep source order."""
-    return sorted(
-        snippets,
-        key=lambda snippet: chapter_number(snippet.get("chapter_id")) or 0,
-        reverse=True,
-    )
+# The two types a death circumstance can name (STU-552).
+_CIRCUMSTANCE_TYPES = ("PERSON", "PLACE")
 
 
 def select_status_snippets(snippets: list[dict], status_markers: list[str]) -> list[dict]:
@@ -91,16 +55,16 @@ def select_status_snippets(snippets: list[dict], status_markers: list[str]) -> l
     latest evidence decides.
 
     Snippets are ``{"text": str, "chapter_id": str}``; the chapter rides along
-    because `_latest_first` sorts by it.
+    because `latest_first` sorts by it.
     """
     marked: list[dict] = []
     plain: list[dict] = []
     for snippet in snippets or []:
         text = str(snippet.get("text") or "")
-        (marked if _has_marker(text, status_markers or []) else plain).append(snippet)
+        (marked if has_marker(text, status_markers or []) else plain).append(snippet)
 
-    chosen = _latest_first(marked)[:SNIPPETS_PER_ENTITY]
-    chosen += _latest_first(plain)[: SNIPPETS_PER_ENTITY - len(chosen)]
+    chosen = latest_first(marked)[:SNIPPETS_PER_ENTITY]
+    chosen += latest_first(plain)[: SNIPPETS_PER_ENTITY - len(chosen)]
     return [
         {"text": str(snippet.get("text") or "")[:SNIPPET_CHARS], "chapter_id": snippet.get("chapter_id")}
         for snippet in chosen
@@ -126,33 +90,6 @@ def roster_rows(
     ]
 
 
-def render_roster(rows: list[dict]) -> str:
-    """The roster block the classifier reads. Text only — the chapter is never
-    shown or reported by the model."""
-    blocks = []
-    for row in rows:
-        header = row["name"]
-        if row["aliases"]:
-            header += f" (also called: {', '.join(row['aliases'])})"
-        lines = [f"## {header}"]
-        lines.extend(f"- {snippet['text']}" for snippet in row["snippets"])
-        if not row["snippets"]:
-            lines.append("- (no snippet found for this character)")
-        blocks.append("\n".join(lines))
-    return "\n\n".join(blocks)
-
-
-def _is_quoted(quote: str, snippets: list[dict]) -> bool:
-    """True iff ``quote`` is verbatim in one of the entity's own ``snippets``."""
-    needle = _normalize(quote)
-    if not needle:
-        return False
-    return any(needle in _normalize(snippet.get("text")) for snippet in snippets)
-
-
-_CIRCUMSTANCE_TYPES = ("PERSON", "PLACE")
-
-
 def build_name_index(entities: list[dict]) -> dict[str, dict[str, str]]:
     """{entity_type: {normalized surface: canonical_name}} for the two types a
     death circumstance can name. Aliases map to their canonical name, so a
@@ -167,7 +104,7 @@ def build_name_index(entities: list[dict]) -> dict[str, dict[str, str]]:
         if not canonical:
             continue
         for surface in (canonical, *(entity.get("aliases") or [])):
-            key = _normalize(surface)
+            key = normalize(surface)
             if key:
                 names.setdefault(key, canonical)
     return index
@@ -186,11 +123,11 @@ def _grounded_name(value: object, quote: str, names: dict[str, str]) -> str | No
     still crosses a possessive apostrophe ("Durza**'s**"), so a name owning the
     sentence keeps grounding.
     """
-    surface = _normalize(value)
+    surface = normalize(value)
     if not surface:
         return None
     canonical = names.get(surface)
-    if canonical is None or not re.search(r"\b" + re.escape(surface) + r"\b", _normalize(quote)):
+    if canonical is None or not re.search(r"\b" + re.escape(surface) + r"\b", normalize(quote)):
         return None
     return canonical
 
@@ -235,12 +172,12 @@ def parse_status_verdict(
             continue
         if status not in STATUS_VALUES or status == DEFAULT_STATUS:
             continue
-        if not _is_quoted(quote, row["snippets"]):
+        if not is_quoted(quote, row["snippets"]):
             continue
         verdict = {"status": status, "quote": quote}
         if status == "deceased":
             agent = _grounded_name(entry.get("agent"), quote, name_index["PERSON"])
-            if agent is not None and _normalize(agent) == _normalize(name):
+            if agent is not None and normalize(agent) == normalize(name):
                 agent = None
             place = _grounded_name(entry.get("place"), quote, name_index["PLACE"])
             if agent:
@@ -259,29 +196,11 @@ def load_cached_status(path: Path | str, rows: list[dict]) -> dict[str, dict] | 
     roster must not be replayed onto it. The version covers what the rows
     cannot — STU-552 changed what we ask, not who we ask it about.
     """
-    try:
-        cached = json.loads(Path(path).read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return None
-    if not isinstance(cached, dict) or cached.get("roster") != rows:
-        return None
-    if cached.get("version") != CACHE_VERSION:
-        return None
-    verdicts = cached.get("verdicts")
-    return verdicts if isinstance(verdicts, dict) else None
+    return load_cache(path, rows, CACHE_VERSION)
 
 
 def save_status_cache(path: Path | str, rows: list[dict], verdicts: dict[str, dict]) -> None:
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(
-            {"version": CACHE_VERSION, "roster": rows, "verdicts": verdicts},
-            ensure_ascii=False,
-            indent=2,
-        ),
-        encoding="utf-8",
-    )
+    save_cache(path, rows, verdicts, CACHE_VERSION)
 
 
 def status_label(status: str | None, lang: str) -> str:

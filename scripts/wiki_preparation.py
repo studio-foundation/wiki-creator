@@ -375,6 +375,21 @@ def load_status_verdicts(processing_dir: Path) -> dict[str, dict]:
     return verdicts if isinstance(verdicts, dict) else {}
 
 
+def load_affiliation_verdicts(processing_dir: Path) -> dict[str, dict]:
+    """Per-character faction decided by the entity-affiliation pre-step (STU-551).
+
+    Absent or unreadable artifact -> {} -> no character renders the slot. A book
+    that never ran the stage is not an error.
+    """
+    path = Path(processing_dir) / "entity_affiliation.json"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    verdicts = payload.get("verdicts") if isinstance(payload, dict) else None
+    return verdicts if isinstance(verdicts, dict) else {}
+
+
 def build_entity_bundle(
     entity: dict,
     relationships: list[dict],
@@ -391,6 +406,7 @@ def build_entity_bundle(
     role_words: list[str] | None = None,
     plot_events: list[dict] | None = None,
     status_verdicts: dict[str, dict] | None = None,
+    affiliation_verdicts: dict[str, dict] | None = None,
 ) -> dict:
     canonical_name = entity["canonical_name"]
     chapter_numbers = chapter_numbers or {}
@@ -417,6 +433,7 @@ def build_entity_bundle(
             role_words or [],
         ),
         "status": (status_verdicts or {}).get(canonical_name, {}).get("status", DEFAULT_STATUS),
+        "affiliation": (affiliation_verdicts or {}).get(canonical_name, {}).get("affiliation"),
         "death_agent": (status_verdicts or {}).get(canonical_name, {}).get("agent"),
         "death_place": (status_verdicts or {}).get(canonical_name, {}).get("place"),
         "total_mentions": entity.get("total_mentions", 0),
@@ -640,6 +657,12 @@ def main() -> None:
         file=sys.stderr,
     )
 
+    affiliation_verdicts = load_affiliation_verdicts(paths.processing)
+    print(
+        f"wiki-preparation: {len(affiliation_verdicts)} character affiliation verdict(s) loaded",
+        file=sys.stderr,
+    )
+
     plot_events = read_plot_events(paths.processing / "events.json")
     dedicated, collated, dropped = partition_by_collation(
         relevant_entities, collation_config(book_cfg), plot_events
@@ -714,6 +737,7 @@ def main() -> None:
             role_words=role_words,
             plot_events=plot_events,
             status_verdicts=status_verdicts,
+            affiliation_verdicts=affiliation_verdicts,
         )
         for e in dedicated
     ]

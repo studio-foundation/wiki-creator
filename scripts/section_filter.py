@@ -58,15 +58,7 @@ def _run_section_filter(rows: list[dict], book_title: str) -> tuple[dict[str, st
 
     if result.returncode != 0:
         return {}, "studio_run_failed"
-    run_payload = studio_io.extract_first_json_object(result.stdout or "")
-    if run_payload is None:
-        return {}, "studio_output_json_parse_error"
-
-    stage_output = studio_io.extract_stage_output_from_run_payload(run_payload, "section-filter-item")
-    if stage_output is None:
-        run_id = str(run_payload.get("id") or "").strip()
-        if run_id:
-            stage_output = studio_io.load_studio_stage_output(run_id, "section-filter-item")
+    stage_output = studio_io.stage_output_from_stdout(result.stdout or "", "section-filter-item")
     if stage_output is None:
         return {}, "studio_run_output_missing"
 

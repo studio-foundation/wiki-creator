@@ -142,6 +142,16 @@ def test_bind_extracted_fact_present_still_overwrites_writer():
     assert page["infobox_fields"]["titles"] == "Captain"
 
 
+def test_bind_clears_an_undecided_affiliation():
+    """STU-551: `affiliation` is pipeline-owned, so an undecided character must not
+    keep the writer's guess. This assertion used to say the opposite — it pinned the
+    hole, because `_bind_batch_fields` only overwrites when it HAS a value and
+    base.yaml's infobox brief and few-shot show the writer how to invent one."""
+    page = {"infobox_fields": {"affiliation": "Adarlan"}}
+    gwp._bind_batch_fields(page, _person_entity(), {})
+    assert "affiliation" not in page["infobox_fields"]
+
+
 def test_bind_sets_alias_and_skips_type():
     page = {"infobox_fields": {}}
     gwp._bind_batch_fields(page, _person_entity(), {})
@@ -223,7 +233,8 @@ def test_bind_omits_titles_when_absent():
 def test_extracted_fact_value_titles_and_unknown():
     assert gwp._extracted_fact_value({"titles": ["Captain", "Duke"]}, "titles", "fr") == "Captain, Duke"
     assert gwp._extracted_fact_value({"titles": []}, "titles", "fr") is None
-    assert gwp._extracted_fact_value({"affiliation": "X"}, "affiliation", "fr") is None
+    assert gwp._extracted_fact_value({"affiliation": "Varden"}, "affiliation", "fr") == "Varden"
+    assert gwp._extracted_fact_value({}, "affiliation", "fr") is None
 
 
 def test_generation_profile_in_universe_drops_out_of_universe_sections():

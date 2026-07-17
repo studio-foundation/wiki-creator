@@ -81,6 +81,36 @@ def test_studio_run_log_path_and_load_stage_output(tmp_path, monkeypatch):
     assert studio_io.studio_run_log_path("nope") is None
 
 
+def test_stage_output_from_stdout_recovers_from_log_when_stdout_truncated(tmp_path, monkeypatch):
+    """STU-564: the run id from the raw text reaches the complete JSONL log even
+    when the stdout echo is cut before its `stages` ever close."""
+    runs_dir = tmp_path / ".studio" / "runs"
+    runs_dir.mkdir(parents=True)
+    (runs_dir / "20260712-abc12345.jsonl").write_text(
+        json.dumps(
+            {"event": "stage_complete", "stage": "s", "status": "success", "output": {"ok": True}}
+        )
+    )
+    monkeypatch.setattr(studio_io, "PROJECT_ROOT", tmp_path)
+    truncated = '{"id": "abc12345", "status": "success", "stages": [{"stage_name": "s", "outp'
+    assert studio_io.extract_first_json_object(truncated) is None  # the echo is unusable
+    assert studio_io.stage_output_from_stdout(truncated, "s") == {"ok": True}
+
+
+def test_stage_output_from_stdout_falls_back_to_stdout_echo(tmp_path, monkeypatch):
+    """No log on disk: recover from the complete stdout echo."""
+    (tmp_path / ".studio" / "runs").mkdir(parents=True)
+    monkeypatch.setattr(studio_io, "PROJECT_ROOT", tmp_path)
+    stdout = json.dumps(
+        {"id": "x", "stages": [{"stage_name": "s", "status": "success", "output": {"y": 2}}]}
+    )
+    assert studio_io.stage_output_from_stdout(stdout, "s") == {"y": 2}
+
+
+def test_stage_output_from_stdout_returns_none_when_unrecoverable():
+    assert studio_io.stage_output_from_stdout("not json at all", "s") is None
+
+
 def test_slugify_filename():
     assert studio_io.slugify_filename("Chaol Westfall!") == "Chaol_Westfall"
     assert studio_io.slugify_filename("  ") == "untitled"

@@ -504,8 +504,8 @@ def _run_studio_chapter_summary_item(*, chapter: dict, config: ChapterSummaryCon
             pass
 
     combined_output = (result.stdout or "") + (("\n" + result.stderr) if result.stderr else "")
+    run_id = studio_io.extract_run_id(result.stdout or "")
     run_payload = studio_io.extract_first_json_object(result.stdout or "")
-    run_id = str((run_payload or {}).get("id") or "").strip()
     run_metadata = {
         "command": cmd,
         "returncode": result.returncode,
@@ -519,23 +519,7 @@ def _run_studio_chapter_summary_item(*, chapter: dict, config: ChapterSummaryCon
             "run_metadata": run_metadata,
         }
 
-    if run_payload is None:
-        return {
-            "error": "studio_output_json_parse_error",
-            "raw_response": combined_output.strip(),
-            "run_metadata": run_metadata,
-        }
-
-    if not run_id:
-        return {
-            "error": "studio_run_missing_id",
-            "raw_response": combined_output.strip(),
-            "run_metadata": run_metadata,
-        }
-
-    payload = studio_io.extract_stage_output_from_run_payload(run_payload, "chapter-summary-item")
-    if payload is None:
-        payload = studio_io.load_studio_stage_output(run_id, "chapter-summary-item")
+    payload = studio_io.stage_output_from_stdout(result.stdout or "", "chapter-summary-item")
     if payload is None:
         return {
             "error": "studio_run_output_missing",
