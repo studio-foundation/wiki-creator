@@ -52,7 +52,7 @@ from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.provenance import content_units, relation_units
 from wiki_creator import studio_io
 from wiki_creator.entity_links import link_first_mentions
-from wiki_creator.entity_status import status_label
+from wiki_creator.entity_status import death_label, status_label
 from wiki_creator.registry import Registry, normalize_name
 from wiki_creator.spoiler_blocks import relationship_index_lines, per_relation_prose_enabled
 from wiki_creator.relationship_types import usable_relationship_type
@@ -742,6 +742,9 @@ def _extracted_fact_value(entity: dict, token: str, lang: str) -> str | None:
         # MIN with a declared fallback: an unstamped entity renders `unknown`
         # rather than dropping the slot (STU-488).
         return status_label(entity.get("status"), lang)
+    if token == "death":
+        # OPT, unlike `status`: no grounded circumstance renders no row (STU-552).
+        return death_label(entity.get("death_agent"), entity.get("death_place"), lang)
     return None
 
 
