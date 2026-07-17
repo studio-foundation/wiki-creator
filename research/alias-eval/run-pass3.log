@@ -1,0 +1,2429 @@
+
+=== 01_a-dark-and-hollow-star
+
+✓ Input collected
+
+
+Running pipeline: wiki-extraction
+
+[1/6] epub-parse ......................... ...
+  - Thinking... (0s)
+  ✓ (656ms)
+[2/6] section-filter ..................... ...
+  - Thinking... (0s)
+  ✓ (120ms)
+[3/6] entity-extraction .................. ...
+  - Thinking... (0s)
+  ✓ (30s)
+[4/6] entity-clustering .................. ...
+  - Thinking... (0s)
+  ✓ (262ms)
+[5/6] verify-entity-types ................ ...
+  - Thinking... (0s)
+  ✓ (80ms)
+[6/6] split-clusters ..................... ...
+  - Thinking... (0s)
+  ✓ (174ms)
+
+✓ Pipeline completed (31s)
+
+Pipeline: wiki-extraction
+Status:   ✓ success
+Duration: 31s
+
+Stages:
+  [1/6] epub-parse .................... ✓ (1 attempt)
+  [2/6] section-filter ................ ✓ (1 attempt)
+  [3/6] entity-extraction ............. ✓ (1 attempt)
+  [4/6] entity-clustering ............. ✓ (1 attempt)
+  [5/6] verify-entity-types ........... ✓ (1 attempt)
+  [6/6] split-clusters ................ ✓ (1 attempt)
+
+
+Run ID: aa9e7e94-2a72-4b7d-8e20-f6df6a91629d
+View details: studio status aa9e7e94-2a72-4b7d-8e20-f6df6a91629d
+
+✓ Input collected
+
+
+Running pipeline: wiki-resolution
+
+[1/9] resolve-clusters ................... ...
+  - Thinking... (0s)
+  ✓ (185ms)
+[2/9] merge-entities ..................... ...
+  - Thinking... (0s)
+  ✓ (21ms)
+[3/9] relationship-extraction ............ ...
+  - Thinking... (0s)
+  ✓ (5s)
+[4/9] alias-resolution ................... ...
+  - Thinking... (0s)
+  ✓ (817ms)
+[5/9] alias-adjudication ................. ...
+  - Thinking... (0s)
+  ✓ (3m09s)
+[6/9] entity-classification .............. ...
+  - Thinking... (0s)
+  ✓ (335ms)
+[7/9] build-character-graph .............. ...
+  - Thinking... (0s)
+  ✓ (199ms)
+[8/9] save-relationships ................. ...
+  - Thinking... (0s)
+  ✓ (144ms)
+[9/9] write-registry ..................... ...
+  - Thinking... (0s)
+  ✓ (858ms)
+
+✓ Pipeline completed (3m17s)
+
+Pipeline: wiki-resolution
+Status:   ✓ success
+Duration: 3m17s
+
+Stages:
+  [1/9] resolve-clusters .............. ✓ (1 attempt)
+  [2/9] merge-entities ................ ✓ (1 attempt)
+  [3/9] relationship-extraction ....... ✓ (1 attempt)
+  [4/9] alias-resolution .............. ✓ (1 attempt)
+  [5/9] alias-adjudication ............ ✓ (1 attempt)
+  [6/9] entity-classification ......... ✓ (1 attempt)
+  [7/9] build-character-graph ......... ✓ (1 attempt)
+  [8/9] save-relationships ............ ✓ (1 attempt)
+  [9/9] write-registry ................ ✓ (1 attempt)
+
+
+Run ID: 11992338-10c7-4343-80b6-ff7d02a5e9d1
+View details: studio status 11992338-10c7-4343-80b6-ff7d02a5e9d1
+[ok] 01_a-dark-and-hollow-star in 230s
+
+=== 02_a-cruel-and-fated-light
+
+✓ Input collected
+
+
+Running pipeline: wiki-extraction
+
+[1/6] epub-parse ......................... ...
+  - Thinking... (0s)
+  ✓ (960ms)
+[2/6] section-filter ..................... ...
+  - Thinking... (0s)
+  ✓ (168ms)
+[3/6] entity-extraction .................. ...
+  - Thinking... (0s)
+  ✓ (37s)
+[4/6] entity-clustering .................. ...
+  - Thinking... (0s)
+  ✓ (289ms)
+[5/6] verify-entity-types ................ ...
+  - Thinking... (0s)
+  ✓ (83ms)
+[6/6] split-clusters ..................... ...
+  - Thinking... (0s)
+  ✓ (185ms)
+
+✓ Pipeline completed (39s)
+
+Pipeline: wiki-extraction
+Status:   ✓ success
+Duration: 39s
+
+Stages:
+  [1/6] epub-parse .................... ✓ (1 attempt)
+  [2/6] section-filter ................ ✓ (1 attempt)
+  [3/6] entity-extraction ............. ✓ (1 attempt)
+  [4/6] entity-clustering ............. ✓ (1 attempt)
+  [5/6] verify-entity-types ........... ✓ (1 attempt)
+  [6/6] split-clusters ................ ✓ (1 attempt)
+
+
+Run ID: 581a43a6-b507-428d-b25a-6e5247e69d52
+View details: studio status 581a43a6-b507-428d-b25a-6e5247e69d52
+
+✓ Input collected
+
+
+Running pipeline: wiki-resolution
+
+[1/9] resolve-clusters ................... ...
+  - Thinking... (0s)
+  ✓ (199ms)
+[2/9] merge-entities ..................... ...
+  - Thinking... (0s)
+  ✓ (23ms)
+[3/9] relationship-extraction ............ ...
+  - Thinking... (0s)
+  ✓ (6s)
+[4/9] alias-resolution ................... ...
+  - Thinking... (0s)
+  ✓ (892ms)
+[5/9] alias-adjudication ................. ...
+  - Thinking... (0s)
+  ✓ (2m25s)
+[6/9] entity-classification .............. ...
+  - Thinking... (0s)
+  ✓ (384ms)
+[7/9] build-character-graph .............. ...
+  - Thinking... (0s)
+  ✓ (239ms)
+[8/9] save-relationships ................. ...
+  - Thinking... (0s)
+  ✓ (162ms)
+[9/9] write-registry ..................... ...
+  - Thinking... (0s)
+  ✓ (948ms)
+
+✓ Pipeline completed (2m35s)
+
+Pipeline: wiki-resolution
+Status:   ✓ success
+Duration: 2m35s
+
+Stages:
+  [1/9] resolve-clusters .............. ✓ (1 attempt)
+  [2/9] merge-entities ................ ✓ (1 attempt)
+  [3/9] relationship-extraction ....... ✓ (1 attempt)
+  [4/9] alias-resolution .............. ✓ (1 attempt)
+  [5/9] alias-adjudication ............ ✓ (1 attempt)
+  [6/9] entity-classification ......... ✓ (1 attempt)
+  [7/9] build-character-graph ......... ✓ (1 attempt)
+  [8/9] save-relationships ............ ✓ (1 attempt)
+  [9/9] write-registry ................ ✓ (1 attempt)
+
+
+Run ID: ec774528-4089-4244-babc-b8658244eb58
+View details: studio status ec774528-4089-4244-babc-b8658244eb58
+[ok] 02_a-cruel-and-fated-light in 196s
+
+=== 03_a-grim-and-sunken-vow
+
+✓ Input collected
+
+
+Running pipeline: wiki-extraction
+
+[1/6] epub-parse ......................... ...
+  - Thinking... (0s)
+  ✓ (902ms)
+[2/6] section-filter ..................... ...
+  - Thinking... (0s)
+  ✓ (135ms)
+[3/6] entity-extraction .................. ...
+  - Thinking... (0s)
+  ✓ (37s)
+[4/6] entity-clustering .................. ...
+  - Thinking... (0s)
+  ✓ (291ms)
+[5/6] verify-entity-types ................ ...
+  - Thinking... (0s)
+  ✓ (90ms)
+[6/6] split-clusters ..................... ...
+  - Thinking... (0s)
+  ✓ (198ms)
+
+✓ Pipeline completed (38s)
+
+Pipeline: wiki-extraction
+Status:   ✓ success
+Duration: 38s
+
+Stages:
+  [1/6] epub-parse .................... ✓ (1 attempt)
+  [2/6] section-filter ................ ✓ (1 attempt)
+  [3/6] entity-extraction ............. ✓ (1 attempt)
+  [4/6] entity-clustering ............. ✓ (1 attempt)
+  [5/6] verify-entity-types ........... ✓ (1 attempt)
+  [6/6] split-clusters ................ ✓ (1 attempt)
+
+
+Run ID: c9bfd8b9-9ac7-4602-a7bc-5e603513a951
+View details: studio status c9bfd8b9-9ac7-4602-a7bc-5e603513a951
+
+✓ Input collected
+
+
+Running pipeline: wiki-resolution
+
+[1/9] resolve-clusters ................... ...
+  - Thinking... (0s)
+  ✓ (196ms)
+[2/9] merge-entities ..................... ...
+  - Thinking... (0s)
+  ✓ (24ms)
+[3/9] relationship-extraction ............ ...
+  - Thinking... (0s)
+  ✓ (7s)
+[4/9] alias-resolution ................... ...
+  - Thinking... (0s)
+  ✓ (1s)
+[5/9] alias-adjudication ................. ...
+  - Thinking... (0s)
+  ✓ (2m04s)
+[6/9] entity-classification .............. ...
+  - Thinking... (0s)
+  ✓ (394ms)
+[7/9] build-character-graph .............. ...
+  - Thinking... (0s)
+  ✓ (209ms)
+[8/9] save-relationships ................. ...
+  - Thinking... (0s)
+  ✓ (188ms)
+[9/9] write-registry ..................... ...
+  - Thinking... (0s)
+  ✓ (950ms)
+
+✓ Pipeline completed (2m14s)
+
+Pipeline: wiki-resolution
+Status:   ✓ success
+Duration: 2m14s
+
+Stages:
+  [1/9] resolve-clusters .............. ✓ (1 attempt)
+  [2/9] merge-entities ................ ✓ (1 attempt)
+  [3/9] relationship-extraction ....... ✓ (1 attempt)
+  [4/9] alias-resolution .............. ✓ (1 attempt)
+  [5/9] alias-adjudication ............ ✓ (1 attempt)
+  [6/9] entity-classification ......... ✓ (1 attempt)
+  [7/9] build-character-graph ......... ✓ (1 attempt)
+  [8/9] save-relationships ............ ✓ (1 attempt)
+  [9/9] write-registry ................ ✓ (1 attempt)
+
+
+Run ID: ec844bda-17d7-42c6-91af-22da18c27e85
+View details: studio status ec844bda-17d7-42c6-91af-22da18c27e85
+[ok] 03_a-grim-and-sunken-vow in 175s
+
+=== 04_a-wild-and-ruined-song
+
+✓ Input collected
+
+
+Running pipeline: wiki-extraction
+
+[1/6] epub-parse ......................... ...
+  - Thinking... (0s)
+  ✓ (670ms)
+[2/6] section-filter ..................... ...
+  - Thinking... (0s)
+  ✓ (115ms)
+[3/6] entity-extraction .................. ...
+  - Thinking... (0s)
+  ✓ (24s)
+[4/6] entity-clustering .................. ...
+  - Thinking... (0s)
+  ✓ (242ms)
+[5/6] verify-entity-types ................ ...
+  - Thinking... (0s)
+  ✓ (74ms)
+[6/6] split-clusters ..................... ...
+  - Thinking... (0s)
+  ✓ (169ms)
+
+✓ Pipeline completed (25s)
+
+Pipeline: wiki-extraction
+Status:   ✓ success
+Duration: 25s
+
+Stages:
+  [1/6] epub-parse .................... ✓ (1 attempt)
+  [2/6] section-filter ................ ✓ (1 attempt)
+  [3/6] entity-extraction ............. ✓ (1 attempt)
+  [4/6] entity-clustering ............. ✓ (1 attempt)
+  [5/6] verify-entity-types ........... ✓ (1 attempt)
+  [6/6] split-clusters ................ ✓ (1 attempt)
+
+
+Run ID: 2e0fb72d-c30f-43ff-9031-b129b6fa49b9
+View details: studio status 2e0fb72d-c30f-43ff-9031-b129b6fa49b9
+
+✓ Input collected
+
+
+Running pipeline: wiki-resolution
+
+[1/9] resolve-clusters ................... ...
+  - Thinking... (0s)
+  ✓ (185ms)
+[2/9] merge-entities ..................... ...
+  - Thinking... (0s)
+  ✓ (22ms)
+[3/9] relationship-extraction ............ ...
+  - Thinking... (0s)
+  ✓ (3s)
+[4/9] alias-resolution ................... ...
+  - Thinking... (0s)
+  ✓ (462ms)
+[5/9] alias-adjudication ................. ...
+  - Thinking... (0s)
+  ✓ (2m41s)
+[6/9] entity-classification .............. ...
+  - Thinking... (0s)
+  ✓ (291ms)
+[7/9] build-character-graph .............. ...
+  - Thinking... (0s)
+  ✓ (174ms)
+[8/9] save-relationships ................. ...
+  - Thinking... (0s)
+  ✓ (119ms)
+[9/9] write-registry ..................... ...
+  - Thinking... (0s)
+  ✓ (786ms)
+
+✓ Pipeline completed (2m47s)
+
+Pipeline: wiki-resolution
+Status:   ✓ success
+Duration: 2m47s
+
+Stages:
+  [1/9] resolve-clusters .............. ✓ (1 attempt)
+  [2/9] merge-entities ................ ✓ (1 attempt)
+  [3/9] relationship-extraction ....... ✓ (1 attempt)
+  [4/9] alias-resolution .............. ✓ (1 attempt)
+  [5/9] alias-adjudication ............ ✓ (1 attempt)
+  [6/9] entity-classification ......... ✓ (1 attempt)
+  [7/9] build-character-graph ......... ✓ (1 attempt)
+  [8/9] save-relationships ............ ✓ (1 attempt)
+  [9/9] write-registry ................ ✓ (1 attempt)
+
+
+Run ID: bdeeb405-361c-4f74-b68c-6b3b19e401ff
+View details: studio status bdeeb405-361c-4f74-b68c-6b3b19e401ff
+[ok] 04_a-wild-and-ruined-song in 194s
+
+=== 01-the_way_of_kings
+
+✓ Input collected
+
+
+Running pipeline: wiki-extraction
+
+[1/6] epub-parse ......................... ...
+  - Thinking... (0s)
+  ✓ (1s)
+[2/6] section-filter ..................... ...
+  - Thinking... (0s)
+  ✓ (183ms)
+[3/6] entity-extraction .................. ...
+  - Thinking... (0s)
+  ✓ (1m11s)
+[4/6] entity-clustering .................. ...
+  - Thinking... (0s)
+  ✓ (359ms)
+[5/6] verify-entity-types ................ ...
+  - Thinking... (0s)
+  ✓ (75ms)
+[6/6] split-clusters ..................... ...
+  - Thinking... (0s)
+  ✓ (185ms)
+
+✓ Pipeline completed (1m13s)
+
+Pipeline: wiki-extraction
+Status:   ✓ success
+Duration: 1m13s
+
+Stages:
+  [1/6] epub-parse .................... ✓ (1 attempt)
+  [2/6] section-filter ................ ✓ (1 attempt)
+  [3/6] entity-extraction ............. ✓ (1 attempt)
+  [4/6] entity-clustering ............. ✓ (1 attempt)
+  [5/6] verify-entity-types ........... ✓ (1 attempt)
+  [6/6] split-clusters ................ ✓ (1 attempt)
+
+
+Run ID: ad49c5b8-146d-40c5-913e-3143aefad98a
+View details: studio status ad49c5b8-146d-40c5-913e-3143aefad98a
+
+✓ Input collected
+
+
+Running pipeline: wiki-resolution
+
+[1/9] resolve-clusters ................... ...
+  - Thinking... (0s)
+  ✓ (189ms)
+[2/9] merge-entities ..................... ...
+  - Thinking... (0s)
+  ✓ (23ms)
+[3/9] relationship-extraction ............ ...
+  - Thinking... (0s)
+  ✓ (15s)
+[4/9] alias-resolution ................... ...
+  - Thinking... (0s)
+  ✓ (2s)
+[5/9] alias-adjudication ................. ...
+  - Thinking... (0s)
+  ✓ (21s)
+[6/9] entity-classification .............. ...
+  - Thinking... (0s)
+  ✓ (501ms)
+[7/9] build-character-graph .............. ...
+  - Thinking... (0s)
+  ✓ (194ms)
+[8/9] save-relationships ................. ...
+  - Thinking... (0s)
+  ✓ (180ms)
+[9/9] write-registry ..................... ...
+  - Thinking... (0s)
+  ✓ (1s)
+
+✓ Pipeline completed (40s)
+
+Pipeline: wiki-resolution
+Status:   ✓ success
+Duration: 40s
+
+Stages:
+  [1/9] resolve-clusters .............. ✓ (1 attempt)
+  [2/9] merge-entities ................ ✓ (1 attempt)
+  [3/9] relationship-extraction ....... ✓ (1 attempt)
+  [4/9] alias-resolution .............. ✓ (1 attempt)
+  [5/9] alias-adjudication ............ ✓ (1 attempt)
+  [6/9] entity-classification ......... ✓ (1 attempt)
+  [7/9] build-character-graph ......... ✓ (1 attempt)
+  [8/9] save-relationships ............ ✓ (1 attempt)
+  [9/9] write-registry ................ ✓ (1 attempt)
+
+
+Run ID: 424ff903-c270-4a9e-8d3b-25ac5a409ee6
+View details: studio status 424ff903-c270-4a9e-8d3b-25ac5a409ee6
+[ok] 01-the_way_of_kings in 116s
+
+=== 01-the_lion_the_witch_and_the_wardrobe
+
+✓ Input collected
+
+
+Running pipeline: wiki-extraction
+
+[1/6] epub-parse ......................... ...
+  - Thinking... (0s)
+  ✓ (252ms)
+[2/6] section-filter ..................... ...
+  - Thinking... (0s)
+  ✓ (80ms)
+[3/6] entity-extraction .................. ...
+  - Thinking... (0s)
+  ✗ retry (Script exited with code 1: /home/arianeguay/.local/lib/python3.14/site-packages/confection/__init__.py:38: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  from pydantic.v1 import BaseModel, Extra, ValidationError, create_model
+[nlp] loaded 'en_core_web_lg' components=['tok2vec', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner'] ner_labels=['EVENT', 'FACTION', 'ORG', 'PERSON', 'PLACE']
+Skipping import of cpp extensions due to incompatible torch version. Please upgrade to torch >= 2.11.0 (found 2.10.0+cu128).
+Traceback (most recent call last):
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 403, in hf_raise_for_status
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/site-packages/requests/models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 401 Client Error: Unauthorized for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 758, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 722, in main
+    result = extract_entities(
+        chapters, nlp, cue_words=cue_words, retag_from_context=not ner.invented_names
+    )
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 524, in extract_entities
+    doc = nlp(chapter["content"])
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1058, in __call__
+    error_handler(name, proc, [doc], e)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/util.py", line 1780, in raise_error
+    raise e
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1053, in __call__
+    doc = proc(doc, **component_cfg.get(name, {}))  # type: ignore[call-arg]
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 99, in __call__
+    predictions = self._load().inference(
+                  ~~~~~~~~~~^^
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 90, in _load
+    self._model = GLiNER.from_pretrained(self.model_name).to(device)
+                  ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 4789, in from_pretrained
+    return gliner_class.from_pretrained(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        model_id=model_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<23 lines>...
+        **model_kwargs,
+        ^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 1182, in from_pretrained
+    tokenizer = cls._load_tokenizer(config, model_dir, cache_dir, local_files_only=local_files_only)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 756, in _load_tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(
+        config.model_name,
+        cache_dir=cache_dir,
+        local_files_only=local_files_only,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/auto/tokenization_auto.py", line 1175, in from_pretrained
+    return tokenizer_class_fast.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/tokenization_utils_base.py", line 2039, in from_pretrained
+    for template in list_repo_templates(
+                    ~~~~~~~~~~~~~~~~~~~^
+        pretrained_model_name_or_path,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    ):
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/utils/hub.py", line 169, in list_repo_templates
+    for entry in list_repo_tree(
+                 ~~~~~~~~~~~~~~^
+        repo_id=repo_id,
+        ^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/hf_api.py", line 3191, in list_repo_tree
+    for path_info in paginate(path=tree_url, headers=headers, params={"recursive": recursive, "expand": expand}):
+                     ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_pagination.py", line 37, in paginate
+    hf_raise_for_status(r)
+    ~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 453, in hf_raise_for_status
+    raise _format(RepositoryNotFoundError, message, response) from e
+huggingface_hub.errors.RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6a5a19a1-0e8efdff3bc37e5d12755732;b5c49899-8d25-4754-8016-71e4f7fe5592)
+
+Repository Not Found for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False.
+Please make sure you specified the correct `repo_id` and `repo_type`.
+If you are trying to access a private or gated repo, make sure you are authenticated. For more details, see https://huggingface.co/docs/huggingface_hub/authentication
+OAuth token signature verification failed: signature verification failed)
+  ✗ retry (Script exited with code 1: /home/arianeguay/.local/lib/python3.14/site-packages/confection/__init__.py:38: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  from pydantic.v1 import BaseModel, Extra, ValidationError, create_model
+[nlp] loaded 'en_core_web_lg' components=['tok2vec', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner'] ner_labels=['EVENT', 'FACTION', 'ORG', 'PERSON', 'PLACE']
+Skipping import of cpp extensions due to incompatible torch version. Please upgrade to torch >= 2.11.0 (found 2.10.0+cu128).
+Traceback (most recent call last):
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 403, in hf_raise_for_status
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/site-packages/requests/models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 401 Client Error: Unauthorized for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 758, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 722, in main
+    result = extract_entities(
+        chapters, nlp, cue_words=cue_words, retag_from_context=not ner.invented_names
+    )
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 524, in extract_entities
+    doc = nlp(chapter["content"])
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1058, in __call__
+    error_handler(name, proc, [doc], e)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/util.py", line 1780, in raise_error
+    raise e
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1053, in __call__
+    doc = proc(doc, **component_cfg.get(name, {}))  # type: ignore[call-arg]
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 99, in __call__
+    predictions = self._load().inference(
+                  ~~~~~~~~~~^^
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 90, in _load
+    self._model = GLiNER.from_pretrained(self.model_name).to(device)
+                  ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 4789, in from_pretrained
+    return gliner_class.from_pretrained(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        model_id=model_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<23 lines>...
+        **model_kwargs,
+        ^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 1182, in from_pretrained
+    tokenizer = cls._load_tokenizer(config, model_dir, cache_dir, local_files_only=local_files_only)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 756, in _load_tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(
+        config.model_name,
+        cache_dir=cache_dir,
+        local_files_only=local_files_only,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/auto/tokenization_auto.py", line 1175, in from_pretrained
+    return tokenizer_class_fast.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/tokenization_utils_base.py", line 2039, in from_pretrained
+    for template in list_repo_templates(
+                    ~~~~~~~~~~~~~~~~~~~^
+        pretrained_model_name_or_path,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    ):
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/utils/hub.py", line 169, in list_repo_templates
+    for entry in list_repo_tree(
+                 ~~~~~~~~~~~~~~^
+        repo_id=repo_id,
+        ^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/hf_api.py", line 3191, in list_repo_tree
+    for path_info in paginate(path=tree_url, headers=headers, params={"recursive": recursive, "expand": expand}):
+                     ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_pagination.py", line 37, in paginate
+    hf_raise_for_status(r)
+    ~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 453, in hf_raise_for_status
+    raise _format(RepositoryNotFoundError, message, response) from e
+huggingface_hub.errors.RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6a5a19a1-0e8efdff3bc37e5d12755732;b5c49899-8d25-4754-8016-71e4f7fe5592)
+
+Repository Not Found for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False.
+Please make sure you specified the correct `repo_id` and `repo_type`.
+If you are trying to access a private or gated repo, make sure you are authenticated. For more details, see https://huggingface.co/docs/huggingface_hub/authentication
+OAuth token signature verification failed: signature verification failed)
+  ✗ failed (25s)
+
+✗ Pipeline failed (25s)
+
+Pipeline: wiki-extraction
+Status:   ✗ failed
+Duration: 25s
+
+Stages:
+  [1/3] epub-parse .................... ✓ (1 attempt)
+  [2/3] section-filter ................ ✓ (1 attempt)
+  [3/3] entity-extraction ............. ✗ FAILED (3 attempts exhausted)
+
+
+Run ID: b05ad6b7-6127-4ab1-899d-aa90867ee7d3
+View details: studio status b05ad6b7-6127-4ab1-899d-aa90867ee7d3
+[FAIL] 01-the_lion_the_witch_and_the_wardrobe — pipeline failed
+
+=== 02-le-jeu-de-lange
+
+✓ Input collected
+
+
+Running pipeline: wiki-extraction
+
+[1/6] epub-parse ......................... ...
+  - Thinking... (0s)
+  ✓ (613ms)
+[2/6] section-filter ..................... ...
+  - Thinking... (0s)
+  ✓ (121ms)
+[3/6] entity-extraction .................. ...
+  - Thinking... (0s)
+  ✓ (31s)
+[4/6] entity-clustering .................. ...
+  - Thinking... (0s)
+  ✓ (175ms)
+[5/6] verify-entity-types ................ ...
+  - Thinking... (0s)
+  ✓ (77ms)
+[6/6] split-clusters ..................... ...
+  - Thinking... (0s)
+  ✓ (167ms)
+
+✓ Pipeline completed (32s)
+
+Pipeline: wiki-extraction
+Status:   ✓ success
+Duration: 32s
+
+Stages:
+  [1/6] epub-parse .................... ✓ (1 attempt)
+  [2/6] section-filter ................ ✓ (1 attempt)
+  [3/6] entity-extraction ............. ✓ (1 attempt)
+  [4/6] entity-clustering ............. ✓ (1 attempt)
+  [5/6] verify-entity-types ........... ✓ (1 attempt)
+  [6/6] split-clusters ................ ✓ (1 attempt)
+
+
+Run ID: 80241cd4-0a5f-4572-81ee-8afb8301d5ae
+View details: studio status 80241cd4-0a5f-4572-81ee-8afb8301d5ae
+
+✓ Input collected
+
+
+Running pipeline: wiki-resolution
+
+[1/9] resolve-clusters ................... ...
+  - Thinking... (0s)
+  ✓ (179ms)
+[2/9] merge-entities ..................... ...
+  - Thinking... (0s)
+  ✓ (22ms)
+[3/9] relationship-extraction ............ ...
+  - Thinking... (0s)
+  ✓ (4s)
+[4/9] alias-resolution ................... ...
+  - Thinking... (0s)
+  ✓ (424ms)
+[5/9] alias-adjudication ................. ...
+  - Thinking... (0s)
+  ✓ (1m32s)
+[6/9] entity-classification .............. ...
+  - Thinking... (0s)
+  ✓ (249ms)
+[7/9] build-character-graph .............. ...
+  - Thinking... (0s)
+  ✓ (177ms)
+[8/9] save-relationships ................. ...
+  - Thinking... (0s)
+  ✓ (111ms)
+[9/9] write-registry ..................... ...
+  - Thinking... (0s)
+  ✓ (498ms)
+
+✓ Pipeline completed (1m38s)
+
+Pipeline: wiki-resolution
+Status:   ✓ success
+Duration: 1m38s
+
+Stages:
+  [1/9] resolve-clusters .............. ✓ (1 attempt)
+  [2/9] merge-entities ................ ✓ (1 attempt)
+  [3/9] relationship-extraction ....... ✓ (1 attempt)
+  [4/9] alias-resolution .............. ✓ (1 attempt)
+  [5/9] alias-adjudication ............ ✓ (1 attempt)
+  [6/9] entity-classification ......... ✓ (1 attempt)
+  [7/9] build-character-graph ......... ✓ (1 attempt)
+  [8/9] save-relationships ............ ✓ (1 attempt)
+  [9/9] write-registry ................ ✓ (1 attempt)
+
+
+Run ID: c6798eec-955a-404d-8e46-d4930bcf7444
+View details: studio status c6798eec-955a-404d-8e46-d4930bcf7444
+[ok] 02-le-jeu-de-lange in 133s
+
+=== 01_eragon
+
+✓ Input collected
+
+
+Running pipeline: wiki-extraction
+
+[1/6] epub-parse ......................... ...
+  - Thinking... (0s)
+  ✓ (616ms)
+[2/6] section-filter ..................... ...
+  - Thinking... (0s)
+  ✓ (121ms)
+[3/6] entity-extraction .................. ...
+  - Thinking... (0s)
+  ✗ retry (Script exited with code 1: /home/arianeguay/.local/lib/python3.14/site-packages/confection/__init__.py:38: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  from pydantic.v1 import BaseModel, Extra, ValidationError, create_model
+[nlp] loaded 'en_core_web_lg' components=['tok2vec', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner'] ner_labels=['EVENT', 'FACTION', 'ORG', 'PERSON', 'PLACE']
+Skipping import of cpp extensions due to incompatible torch version. Please upgrade to torch >= 2.11.0 (found 2.10.0+cu128).
+Traceback (most recent call last):
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 403, in hf_raise_for_status
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/site-packages/requests/models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 401 Client Error: Unauthorized for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 758, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 722, in main
+    result = extract_entities(
+        chapters, nlp, cue_words=cue_words, retag_from_context=not ner.invented_names
+    )
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 524, in extract_entities
+    doc = nlp(chapter["content"])
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1058, in __call__
+    error_handler(name, proc, [doc], e)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/util.py", line 1780, in raise_error
+    raise e
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1053, in __call__
+    doc = proc(doc, **component_cfg.get(name, {}))  # type: ignore[call-arg]
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 99, in __call__
+    predictions = self._load().inference(
+                  ~~~~~~~~~~^^
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 90, in _load
+    self._model = GLiNER.from_pretrained(self.model_name).to(device)
+                  ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 4789, in from_pretrained
+    return gliner_class.from_pretrained(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        model_id=model_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<23 lines>...
+        **model_kwargs,
+        ^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 1182, in from_pretrained
+    tokenizer = cls._load_tokenizer(config, model_dir, cache_dir, local_files_only=local_files_only)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 756, in _load_tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(
+        config.model_name,
+        cache_dir=cache_dir,
+        local_files_only=local_files_only,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/auto/tokenization_auto.py", line 1175, in from_pretrained
+    return tokenizer_class_fast.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/tokenization_utils_base.py", line 2039, in from_pretrained
+    for template in list_repo_templates(
+                    ~~~~~~~~~~~~~~~~~~~^
+        pretrained_model_name_or_path,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    ):
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/utils/hub.py", line 169, in list_repo_templates
+    for entry in list_repo_tree(
+                 ~~~~~~~~~~~~~~^
+        repo_id=repo_id,
+        ^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/hf_api.py", line 3191, in list_repo_tree
+    for path_info in paginate(path=tree_url, headers=headers, params={"recursive": recursive, "expand": expand}):
+                     ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_pagination.py", line 37, in paginate
+    hf_raise_for_status(r)
+    ~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 453, in hf_raise_for_status
+    raise _format(RepositoryNotFoundError, message, response) from e
+huggingface_hub.errors.RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6a5a1a3f-55e3e47f1934ac6a67179698;f30ac670-80c2-4d8b-ae15-97335502eea5)
+
+Repository Not Found for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False.
+Please make sure you specified the correct `repo_id` and `repo_type`.
+If you are trying to access a private or gated repo, make sure you are authenticated. For more details, see https://huggingface.co/docs/huggingface_hub/authentication
+OAuth token signature verification failed: signature verification failed)
+  ✗ retry (Script exited with code 1: /home/arianeguay/.local/lib/python3.14/site-packages/confection/__init__.py:38: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  from pydantic.v1 import BaseModel, Extra, ValidationError, create_model
+[nlp] loaded 'en_core_web_lg' components=['tok2vec', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner'] ner_labels=['EVENT', 'FACTION', 'ORG', 'PERSON', 'PLACE']
+Skipping import of cpp extensions due to incompatible torch version. Please upgrade to torch >= 2.11.0 (found 2.10.0+cu128).
+Traceback (most recent call last):
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 403, in hf_raise_for_status
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/site-packages/requests/models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 401 Client Error: Unauthorized for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 758, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 722, in main
+    result = extract_entities(
+        chapters, nlp, cue_words=cue_words, retag_from_context=not ner.invented_names
+    )
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 524, in extract_entities
+    doc = nlp(chapter["content"])
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1058, in __call__
+    error_handler(name, proc, [doc], e)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/util.py", line 1780, in raise_error
+    raise e
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1053, in __call__
+    doc = proc(doc, **component_cfg.get(name, {}))  # type: ignore[call-arg]
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 99, in __call__
+    predictions = self._load().inference(
+                  ~~~~~~~~~~^^
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 90, in _load
+    self._model = GLiNER.from_pretrained(self.model_name).to(device)
+                  ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 4789, in from_pretrained
+    return gliner_class.from_pretrained(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        model_id=model_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<23 lines>...
+        **model_kwargs,
+        ^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 1182, in from_pretrained
+    tokenizer = cls._load_tokenizer(config, model_dir, cache_dir, local_files_only=local_files_only)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 756, in _load_tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(
+        config.model_name,
+        cache_dir=cache_dir,
+        local_files_only=local_files_only,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/auto/tokenization_auto.py", line 1175, in from_pretrained
+    return tokenizer_class_fast.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/tokenization_utils_base.py", line 2039, in from_pretrained
+    for template in list_repo_templates(
+                    ~~~~~~~~~~~~~~~~~~~^
+        pretrained_model_name_or_path,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    ):
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/utils/hub.py", line 169, in list_repo_templates
+    for entry in list_repo_tree(
+                 ~~~~~~~~~~~~~~^
+        repo_id=repo_id,
+        ^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/hf_api.py", line 3191, in list_repo_tree
+    for path_info in paginate(path=tree_url, headers=headers, params={"recursive": recursive, "expand": expand}):
+                     ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_pagination.py", line 37, in paginate
+    hf_raise_for_status(r)
+    ~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 453, in hf_raise_for_status
+    raise _format(RepositoryNotFoundError, message, response) from e
+huggingface_hub.errors.RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6a5a1a3f-55e3e47f1934ac6a67179698;f30ac670-80c2-4d8b-ae15-97335502eea5)
+
+Repository Not Found for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False.
+Please make sure you specified the correct `repo_id` and `repo_type`.
+If you are trying to access a private or gated repo, make sure you are authenticated. For more details, see https://huggingface.co/docs/huggingface_hub/authentication
+OAuth token signature verification failed: signature verification failed)
+  ✗ failed (24s)
+
+✗ Pipeline failed (24s)
+
+Pipeline: wiki-extraction
+Status:   ✗ failed
+Duration: 24s
+
+Stages:
+  [1/3] epub-parse .................... ✓ (1 attempt)
+  [2/3] section-filter ................ ✓ (1 attempt)
+  [3/3] entity-extraction ............. ✗ FAILED (3 attempts exhausted)
+
+
+Run ID: 86d87231-818f-4ad8-8a2b-84a7311a8e20
+View details: studio status 86d87231-818f-4ad8-8a2b-84a7311a8e20
+[FAIL] 01_eragon — pipeline failed
+
+=== 02_eldest
+
+✓ Input collected
+
+
+Running pipeline: wiki-extraction
+
+[1/6] epub-parse ......................... ...
+  - Thinking... (0s)
+  ✓ (634ms)
+[2/6] section-filter ..................... ...
+  - Thinking... (0s)
+  ✓ (145ms)
+[3/6] entity-extraction .................. ...
+  - Thinking... (0s)
+  ✗ retry (Script exited with code 1: /home/arianeguay/.local/lib/python3.14/site-packages/confection/__init__.py:38: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  from pydantic.v1 import BaseModel, Extra, ValidationError, create_model
+[nlp] loaded 'en_core_web_lg' components=['tok2vec', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner'] ner_labels=['EVENT', 'FACTION', 'ORG', 'PERSON', 'PLACE']
+Skipping import of cpp extensions due to incompatible torch version. Please upgrade to torch >= 2.11.0 (found 2.10.0+cu128).
+Traceback (most recent call last):
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 403, in hf_raise_for_status
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/site-packages/requests/models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 401 Client Error: Unauthorized for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 758, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 722, in main
+    result = extract_entities(
+        chapters, nlp, cue_words=cue_words, retag_from_context=not ner.invented_names
+    )
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 524, in extract_entities
+    doc = nlp(chapter["content"])
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1058, in __call__
+    error_handler(name, proc, [doc], e)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/util.py", line 1780, in raise_error
+    raise e
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1053, in __call__
+    doc = proc(doc, **component_cfg.get(name, {}))  # type: ignore[call-arg]
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 99, in __call__
+    predictions = self._load().inference(
+                  ~~~~~~~~~~^^
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 90, in _load
+    self._model = GLiNER.from_pretrained(self.model_name).to(device)
+                  ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 4789, in from_pretrained
+    return gliner_class.from_pretrained(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        model_id=model_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<23 lines>...
+        **model_kwargs,
+        ^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 1182, in from_pretrained
+    tokenizer = cls._load_tokenizer(config, model_dir, cache_dir, local_files_only=local_files_only)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 756, in _load_tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(
+        config.model_name,
+        cache_dir=cache_dir,
+        local_files_only=local_files_only,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/auto/tokenization_auto.py", line 1175, in from_pretrained
+    return tokenizer_class_fast.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/tokenization_utils_base.py", line 2039, in from_pretrained
+    for template in list_repo_templates(
+                    ~~~~~~~~~~~~~~~~~~~^
+        pretrained_model_name_or_path,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    ):
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/utils/hub.py", line 169, in list_repo_templates
+    for entry in list_repo_tree(
+                 ~~~~~~~~~~~~~~^
+        repo_id=repo_id,
+        ^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/hf_api.py", line 3191, in list_repo_tree
+    for path_info in paginate(path=tree_url, headers=headers, params={"recursive": recursive, "expand": expand}):
+                     ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_pagination.py", line 37, in paginate
+    hf_raise_for_status(r)
+    ~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 453, in hf_raise_for_status
+    raise _format(RepositoryNotFoundError, message, response) from e
+huggingface_hub.errors.RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6a5a1a59-51cc1fdd398920af4e8c4995;fa99e555-ab4b-47db-84bf-bfaf3a6a33bb)
+
+Repository Not Found for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False.
+Please make sure you specified the correct `repo_id` and `repo_type`.
+If you are trying to access a private or gated repo, make sure you are authenticated. For more details, see https://huggingface.co/docs/huggingface_hub/authentication
+OAuth token signature verification failed: signature verification failed)
+  ✗ retry (Script exited with code 1: /home/arianeguay/.local/lib/python3.14/site-packages/confection/__init__.py:38: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  from pydantic.v1 import BaseModel, Extra, ValidationError, create_model
+[nlp] loaded 'en_core_web_lg' components=['tok2vec', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner'] ner_labels=['EVENT', 'FACTION', 'ORG', 'PERSON', 'PLACE']
+Skipping import of cpp extensions due to incompatible torch version. Please upgrade to torch >= 2.11.0 (found 2.10.0+cu128).
+Traceback (most recent call last):
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 403, in hf_raise_for_status
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/site-packages/requests/models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 401 Client Error: Unauthorized for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 758, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 722, in main
+    result = extract_entities(
+        chapters, nlp, cue_words=cue_words, retag_from_context=not ner.invented_names
+    )
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 524, in extract_entities
+    doc = nlp(chapter["content"])
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1058, in __call__
+    error_handler(name, proc, [doc], e)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/util.py", line 1780, in raise_error
+    raise e
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1053, in __call__
+    doc = proc(doc, **component_cfg.get(name, {}))  # type: ignore[call-arg]
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 99, in __call__
+    predictions = self._load().inference(
+                  ~~~~~~~~~~^^
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 90, in _load
+    self._model = GLiNER.from_pretrained(self.model_name).to(device)
+                  ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 4789, in from_pretrained
+    return gliner_class.from_pretrained(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        model_id=model_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<23 lines>...
+        **model_kwargs,
+        ^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 1182, in from_pretrained
+    tokenizer = cls._load_tokenizer(config, model_dir, cache_dir, local_files_only=local_files_only)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 756, in _load_tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(
+        config.model_name,
+        cache_dir=cache_dir,
+        local_files_only=local_files_only,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/auto/tokenization_auto.py", line 1175, in from_pretrained
+    return tokenizer_class_fast.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/tokenization_utils_base.py", line 2039, in from_pretrained
+    for template in list_repo_templates(
+                    ~~~~~~~~~~~~~~~~~~~^
+        pretrained_model_name_or_path,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    ):
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/utils/hub.py", line 169, in list_repo_templates
+    for entry in list_repo_tree(
+                 ~~~~~~~~~~~~~~^
+        repo_id=repo_id,
+        ^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/hf_api.py", line 3191, in list_repo_tree
+    for path_info in paginate(path=tree_url, headers=headers, params={"recursive": recursive, "expand": expand}):
+                     ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_pagination.py", line 37, in paginate
+    hf_raise_for_status(r)
+    ~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 453, in hf_raise_for_status
+    raise _format(RepositoryNotFoundError, message, response) from e
+huggingface_hub.errors.RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6a5a1a59-51cc1fdd398920af4e8c4995;fa99e555-ab4b-47db-84bf-bfaf3a6a33bb)
+
+Repository Not Found for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False.
+Please make sure you specified the correct `repo_id` and `repo_type`.
+If you are trying to access a private or gated repo, make sure you are authenticated. For more details, see https://huggingface.co/docs/huggingface_hub/authentication
+OAuth token signature verification failed: signature verification failed)
+  ✗ failed (25s)
+
+✗ Pipeline failed (26s)
+
+Pipeline: wiki-extraction
+Status:   ✗ failed
+Duration: 26s
+
+Stages:
+  [1/3] epub-parse .................... ✓ (1 attempt)
+  [2/3] section-filter ................ ✓ (1 attempt)
+  [3/3] entity-extraction ............. ✗ FAILED (3 attempts exhausted)
+
+
+Run ID: 63dcc878-a90b-4972-b0cc-067285509a1f
+View details: studio status 63dcc878-a90b-4972-b0cc-067285509a1f
+[FAIL] 02_eldest — pipeline failed
+
+=== 03_brisingr
+
+✓ Input collected
+
+
+Running pipeline: wiki-extraction
+
+[1/6] epub-parse ......................... ...
+  - Thinking... (0s)
+  ✓ (773ms)
+[2/6] section-filter ..................... ...
+  - Thinking... (0s)
+  ✓ (158ms)
+[3/6] entity-extraction .................. ...
+  - Thinking... (0s)
+  ✗ retry (Script exited with code 1: /home/arianeguay/.local/lib/python3.14/site-packages/confection/__init__.py:38: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  from pydantic.v1 import BaseModel, Extra, ValidationError, create_model
+[nlp] loaded 'en_core_web_lg' components=['tok2vec', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner'] ner_labels=['EVENT', 'FACTION', 'ORG', 'PERSON', 'PLACE']
+Skipping import of cpp extensions due to incompatible torch version. Please upgrade to torch >= 2.11.0 (found 2.10.0+cu128).
+Traceback (most recent call last):
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 403, in hf_raise_for_status
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/site-packages/requests/models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 401 Client Error: Unauthorized for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 758, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 722, in main
+    result = extract_entities(
+        chapters, nlp, cue_words=cue_words, retag_from_context=not ner.invented_names
+    )
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 524, in extract_entities
+    doc = nlp(chapter["content"])
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1058, in __call__
+    error_handler(name, proc, [doc], e)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/util.py", line 1780, in raise_error
+    raise e
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1053, in __call__
+    doc = proc(doc, **component_cfg.get(name, {}))  # type: ignore[call-arg]
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 99, in __call__
+    predictions = self._load().inference(
+                  ~~~~~~~~~~^^
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 90, in _load
+    self._model = GLiNER.from_pretrained(self.model_name).to(device)
+                  ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 4789, in from_pretrained
+    return gliner_class.from_pretrained(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        model_id=model_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<23 lines>...
+        **model_kwargs,
+        ^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 1182, in from_pretrained
+    tokenizer = cls._load_tokenizer(config, model_dir, cache_dir, local_files_only=local_files_only)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 756, in _load_tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(
+        config.model_name,
+        cache_dir=cache_dir,
+        local_files_only=local_files_only,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/auto/tokenization_auto.py", line 1175, in from_pretrained
+    return tokenizer_class_fast.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/tokenization_utils_base.py", line 2039, in from_pretrained
+    for template in list_repo_templates(
+                    ~~~~~~~~~~~~~~~~~~~^
+        pretrained_model_name_or_path,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    ):
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/utils/hub.py", line 169, in list_repo_templates
+    for entry in list_repo_tree(
+                 ~~~~~~~~~~~~~~^
+        repo_id=repo_id,
+        ^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/hf_api.py", line 3191, in list_repo_tree
+    for path_info in paginate(path=tree_url, headers=headers, params={"recursive": recursive, "expand": expand}):
+                     ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_pagination.py", line 37, in paginate
+    hf_raise_for_status(r)
+    ~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 453, in hf_raise_for_status
+    raise _format(RepositoryNotFoundError, message, response) from e
+huggingface_hub.errors.RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6a5a1a75-7044e47f398ac6075274904c;d77b6041-8c0c-425c-a0bf-07997dbebf2f)
+
+Repository Not Found for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False.
+Please make sure you specified the correct `repo_id` and `repo_type`.
+If you are trying to access a private or gated repo, make sure you are authenticated. For more details, see https://huggingface.co/docs/huggingface_hub/authentication
+OAuth token signature verification failed: signature verification failed)
+  ✗ retry (Script exited with code 1: /home/arianeguay/.local/lib/python3.14/site-packages/confection/__init__.py:38: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  from pydantic.v1 import BaseModel, Extra, ValidationError, create_model
+[nlp] loaded 'en_core_web_lg' components=['tok2vec', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner'] ner_labels=['EVENT', 'FACTION', 'ORG', 'PERSON', 'PLACE']
+Skipping import of cpp extensions due to incompatible torch version. Please upgrade to torch >= 2.11.0 (found 2.10.0+cu128).
+Traceback (most recent call last):
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 403, in hf_raise_for_status
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/site-packages/requests/models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 401 Client Error: Unauthorized for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 758, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 722, in main
+    result = extract_entities(
+        chapters, nlp, cue_words=cue_words, retag_from_context=not ner.invented_names
+    )
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 524, in extract_entities
+    doc = nlp(chapter["content"])
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1058, in __call__
+    error_handler(name, proc, [doc], e)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/util.py", line 1780, in raise_error
+    raise e
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1053, in __call__
+    doc = proc(doc, **component_cfg.get(name, {}))  # type: ignore[call-arg]
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 99, in __call__
+    predictions = self._load().inference(
+                  ~~~~~~~~~~^^
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 90, in _load
+    self._model = GLiNER.from_pretrained(self.model_name).to(device)
+                  ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 4789, in from_pretrained
+    return gliner_class.from_pretrained(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        model_id=model_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<23 lines>...
+        **model_kwargs,
+        ^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 1182, in from_pretrained
+    tokenizer = cls._load_tokenizer(config, model_dir, cache_dir, local_files_only=local_files_only)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 756, in _load_tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(
+        config.model_name,
+        cache_dir=cache_dir,
+        local_files_only=local_files_only,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/auto/tokenization_auto.py", line 1175, in from_pretrained
+    return tokenizer_class_fast.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/tokenization_utils_base.py", line 2039, in from_pretrained
+    for template in list_repo_templates(
+                    ~~~~~~~~~~~~~~~~~~~^
+        pretrained_model_name_or_path,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    ):
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/utils/hub.py", line 169, in list_repo_templates
+    for entry in list_repo_tree(
+                 ~~~~~~~~~~~~~~^
+        repo_id=repo_id,
+        ^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/hf_api.py", line 3191, in list_repo_tree
+    for path_info in paginate(path=tree_url, headers=headers, params={"recursive": recursive, "expand": expand}):
+                     ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_pagination.py", line 37, in paginate
+    hf_raise_for_status(r)
+    ~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 453, in hf_raise_for_status
+    raise _format(RepositoryNotFoundError, message, response) from e
+huggingface_hub.errors.RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6a5a1a75-7044e47f398ac6075274904c;d77b6041-8c0c-425c-a0bf-07997dbebf2f)
+
+Repository Not Found for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False.
+Please make sure you specified the correct `repo_id` and `repo_type`.
+If you are trying to access a private or gated repo, make sure you are authenticated. For more details, see https://huggingface.co/docs/huggingface_hub/authentication
+OAuth token signature verification failed: signature verification failed)
+  ✗ failed (26s)
+
+✗ Pipeline failed (27s)
+
+Pipeline: wiki-extraction
+Status:   ✗ failed
+Duration: 27s
+
+Stages:
+  [1/3] epub-parse .................... ✓ (1 attempt)
+  [2/3] section-filter ................ ✓ (1 attempt)
+  [3/3] entity-extraction ............. ✗ FAILED (3 attempts exhausted)
+
+
+Run ID: 31efbfc3-383d-496f-8695-cab8b5d0a9e3
+View details: studio status 31efbfc3-383d-496f-8695-cab8b5d0a9e3
+[FAIL] 03_brisingr — pipeline failed
+
+=== 04_inheritance
+
+✓ Input collected
+
+
+Running pipeline: wiki-extraction
+
+[1/6] epub-parse ......................... ...
+  - Thinking... (0s)
+  ✓ (1s)
+[2/6] section-filter ..................... ...
+  - Thinking... (0s)
+  ✓ (173ms)
+[3/6] entity-extraction .................. ...
+  - Thinking... (0s)
+  ✗ retry (Script exited with code 1: /home/arianeguay/.local/lib/python3.14/site-packages/confection/__init__.py:38: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  from pydantic.v1 import BaseModel, Extra, ValidationError, create_model
+[nlp] loaded 'en_core_web_lg' components=['tok2vec', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner'] ner_labels=['EVENT', 'FACTION', 'ORG', 'PERSON', 'PLACE']
+Skipping import of cpp extensions due to incompatible torch version. Please upgrade to torch >= 2.11.0 (found 2.10.0+cu128).
+Traceback (most recent call last):
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 403, in hf_raise_for_status
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/site-packages/requests/models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 401 Client Error: Unauthorized for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 758, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 722, in main
+    result = extract_entities(
+        chapters, nlp, cue_words=cue_words, retag_from_context=not ner.invented_names
+    )
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 524, in extract_entities
+    doc = nlp(chapter["content"])
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1058, in __call__
+    error_handler(name, proc, [doc], e)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/util.py", line 1780, in raise_error
+    raise e
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1053, in __call__
+    doc = proc(doc, **component_cfg.get(name, {}))  # type: ignore[call-arg]
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 99, in __call__
+    predictions = self._load().inference(
+                  ~~~~~~~~~~^^
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 90, in _load
+    self._model = GLiNER.from_pretrained(self.model_name).to(device)
+                  ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 4789, in from_pretrained
+    return gliner_class.from_pretrained(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        model_id=model_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<23 lines>...
+        **model_kwargs,
+        ^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 1182, in from_pretrained
+    tokenizer = cls._load_tokenizer(config, model_dir, cache_dir, local_files_only=local_files_only)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 756, in _load_tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(
+        config.model_name,
+        cache_dir=cache_dir,
+        local_files_only=local_files_only,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/auto/tokenization_auto.py", line 1175, in from_pretrained
+    return tokenizer_class_fast.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/tokenization_utils_base.py", line 2039, in from_pretrained
+    for template in list_repo_templates(
+                    ~~~~~~~~~~~~~~~~~~~^
+        pretrained_model_name_or_path,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    ):
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/utils/hub.py", line 169, in list_repo_templates
+    for entry in list_repo_tree(
+                 ~~~~~~~~~~~~~~^
+        repo_id=repo_id,
+        ^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/hf_api.py", line 3191, in list_repo_tree
+    for path_info in paginate(path=tree_url, headers=headers, params={"recursive": recursive, "expand": expand}):
+                     ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_pagination.py", line 37, in paginate
+    hf_raise_for_status(r)
+    ~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 453, in hf_raise_for_status
+    raise _format(RepositoryNotFoundError, message, response) from e
+huggingface_hub.errors.RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6a5a1a91-715805080eed0ff003680806;5907442d-b5f5-49dc-a57c-f2d452615b10)
+
+Repository Not Found for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False.
+Please make sure you specified the correct `repo_id` and `repo_type`.
+If you are trying to access a private or gated repo, make sure you are authenticated. For more details, see https://huggingface.co/docs/huggingface_hub/authentication
+OAuth token signature verification failed: signature verification failed)
+  ✗ retry (Script exited with code 1: /home/arianeguay/.local/lib/python3.14/site-packages/confection/__init__.py:38: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  from pydantic.v1 import BaseModel, Extra, ValidationError, create_model
+[nlp] loaded 'en_core_web_lg' components=['tok2vec', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner'] ner_labels=['EVENT', 'FACTION', 'ORG', 'PERSON', 'PLACE']
+Skipping import of cpp extensions due to incompatible torch version. Please upgrade to torch >= 2.11.0 (found 2.10.0+cu128).
+Traceback (most recent call last):
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 403, in hf_raise_for_status
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/site-packages/requests/models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 401 Client Error: Unauthorized for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 758, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 722, in main
+    result = extract_entities(
+        chapters, nlp, cue_words=cue_words, retag_from_context=not ner.invented_names
+    )
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 524, in extract_entities
+    doc = nlp(chapter["content"])
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1058, in __call__
+    error_handler(name, proc, [doc], e)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/util.py", line 1780, in raise_error
+    raise e
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1053, in __call__
+    doc = proc(doc, **component_cfg.get(name, {}))  # type: ignore[call-arg]
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 99, in __call__
+    predictions = self._load().inference(
+                  ~~~~~~~~~~^^
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 90, in _load
+    self._model = GLiNER.from_pretrained(self.model_name).to(device)
+                  ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 4789, in from_pretrained
+    return gliner_class.from_pretrained(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        model_id=model_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<23 lines>...
+        **model_kwargs,
+        ^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 1182, in from_pretrained
+    tokenizer = cls._load_tokenizer(config, model_dir, cache_dir, local_files_only=local_files_only)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 756, in _load_tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(
+        config.model_name,
+        cache_dir=cache_dir,
+        local_files_only=local_files_only,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/auto/tokenization_auto.py", line 1175, in from_pretrained
+    return tokenizer_class_fast.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/tokenization_utils_base.py", line 2039, in from_pretrained
+    for template in list_repo_templates(
+                    ~~~~~~~~~~~~~~~~~~~^
+        pretrained_model_name_or_path,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    ):
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/utils/hub.py", line 169, in list_repo_templates
+    for entry in list_repo_tree(
+                 ~~~~~~~~~~~~~~^
+        repo_id=repo_id,
+        ^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/hf_api.py", line 3191, in list_repo_tree
+    for path_info in paginate(path=tree_url, headers=headers, params={"recursive": recursive, "expand": expand}):
+                     ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_pagination.py", line 37, in paginate
+    hf_raise_for_status(r)
+    ~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 453, in hf_raise_for_status
+    raise _format(RepositoryNotFoundError, message, response) from e
+huggingface_hub.errors.RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6a5a1a91-715805080eed0ff003680806;5907442d-b5f5-49dc-a57c-f2d452615b10)
+
+Repository Not Found for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False.
+Please make sure you specified the correct `repo_id` and `repo_type`.
+If you are trying to access a private or gated repo, make sure you are authenticated. For more details, see https://huggingface.co/docs/huggingface_hub/authentication
+OAuth token signature verification failed: signature verification failed)
+  ✗ failed (25s)
+
+✗ Pipeline failed (27s)
+
+Pipeline: wiki-extraction
+Status:   ✗ failed
+Duration: 27s
+
+Stages:
+  [1/3] epub-parse .................... ✓ (1 attempt)
+  [2/3] section-filter ................ ✓ (1 attempt)
+  [3/3] entity-extraction ............. ✗ FAILED (3 attempts exhausted)
+
+
+Run ID: 5235c951-a802-4308-a16a-19e9c890935f
+View details: studio status 5235c951-a802-4308-a16a-19e9c890935f
+[FAIL] 04_inheritance — pipeline failed
+
+=== 04.5_tales-of-alagaesia
+
+✓ Input collected
+
+
+Running pipeline: wiki-extraction
+
+[1/6] epub-parse ......................... ...
+  - Thinking... (0s)
+  ✓ (315ms)
+[2/6] section-filter ..................... ...
+  - Thinking... (0s)
+  ✓ (85ms)
+[3/6] entity-extraction .................. ...
+  - Thinking... (0s)
+  ✗ retry (Script exited with code 1: /home/arianeguay/.local/lib/python3.14/site-packages/confection/__init__.py:38: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  from pydantic.v1 import BaseModel, Extra, ValidationError, create_model
+[nlp] loaded 'en_core_web_lg' components=['tok2vec', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner'] ner_labels=['EVENT', 'FACTION', 'ORG', 'PERSON', 'PLACE']
+Skipping import of cpp extensions due to incompatible torch version. Please upgrade to torch >= 2.11.0 (found 2.10.0+cu128).
+Traceback (most recent call last):
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 403, in hf_raise_for_status
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/site-packages/requests/models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 401 Client Error: Unauthorized for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 758, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 722, in main
+    result = extract_entities(
+        chapters, nlp, cue_words=cue_words, retag_from_context=not ner.invented_names
+    )
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 524, in extract_entities
+    doc = nlp(chapter["content"])
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1058, in __call__
+    error_handler(name, proc, [doc], e)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/util.py", line 1780, in raise_error
+    raise e
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1053, in __call__
+    doc = proc(doc, **component_cfg.get(name, {}))  # type: ignore[call-arg]
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 99, in __call__
+    predictions = self._load().inference(
+                  ~~~~~~~~~~^^
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 90, in _load
+    self._model = GLiNER.from_pretrained(self.model_name).to(device)
+                  ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 4789, in from_pretrained
+    return gliner_class.from_pretrained(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        model_id=model_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<23 lines>...
+        **model_kwargs,
+        ^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 1182, in from_pretrained
+    tokenizer = cls._load_tokenizer(config, model_dir, cache_dir, local_files_only=local_files_only)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 756, in _load_tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(
+        config.model_name,
+        cache_dir=cache_dir,
+        local_files_only=local_files_only,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/auto/tokenization_auto.py", line 1175, in from_pretrained
+    return tokenizer_class_fast.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/tokenization_utils_base.py", line 2039, in from_pretrained
+    for template in list_repo_templates(
+                    ~~~~~~~~~~~~~~~~~~~^
+        pretrained_model_name_or_path,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    ):
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/utils/hub.py", line 169, in list_repo_templates
+    for entry in list_repo_tree(
+                 ~~~~~~~~~~~~~~^
+        repo_id=repo_id,
+        ^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/hf_api.py", line 3191, in list_repo_tree
+    for path_info in paginate(path=tree_url, headers=headers, params={"recursive": recursive, "expand": expand}):
+                     ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_pagination.py", line 37, in paginate
+    hf_raise_for_status(r)
+    ~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 453, in hf_raise_for_status
+    raise _format(RepositoryNotFoundError, message, response) from e
+huggingface_hub.errors.RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6a5a1aac-74d4e216096210995bda2a1b;03f231f1-15f3-4d19-be3a-0983ff64e42f)
+
+Repository Not Found for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False.
+Please make sure you specified the correct `repo_id` and `repo_type`.
+If you are trying to access a private or gated repo, make sure you are authenticated. For more details, see https://huggingface.co/docs/huggingface_hub/authentication
+OAuth token signature verification failed: signature verification failed)
+  ✗ retry (Script exited with code 1: /home/arianeguay/.local/lib/python3.14/site-packages/confection/__init__.py:38: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  from pydantic.v1 import BaseModel, Extra, ValidationError, create_model
+[nlp] loaded 'en_core_web_lg' components=['tok2vec', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner'] ner_labels=['EVENT', 'FACTION', 'ORG', 'PERSON', 'PLACE']
+Skipping import of cpp extensions due to incompatible torch version. Please upgrade to torch >= 2.11.0 (found 2.10.0+cu128).
+Traceback (most recent call last):
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 403, in hf_raise_for_status
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/site-packages/requests/models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 401 Client Error: Unauthorized for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 758, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 722, in main
+    result = extract_entities(
+        chapters, nlp, cue_words=cue_words, retag_from_context=not ner.invented_names
+    )
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 524, in extract_entities
+    doc = nlp(chapter["content"])
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1058, in __call__
+    error_handler(name, proc, [doc], e)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/util.py", line 1780, in raise_error
+    raise e
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1053, in __call__
+    doc = proc(doc, **component_cfg.get(name, {}))  # type: ignore[call-arg]
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 99, in __call__
+    predictions = self._load().inference(
+                  ~~~~~~~~~~^^
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 90, in _load
+    self._model = GLiNER.from_pretrained(self.model_name).to(device)
+                  ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 4789, in from_pretrained
+    return gliner_class.from_pretrained(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        model_id=model_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<23 lines>...
+        **model_kwargs,
+        ^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 1182, in from_pretrained
+    tokenizer = cls._load_tokenizer(config, model_dir, cache_dir, local_files_only=local_files_only)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 756, in _load_tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(
+        config.model_name,
+        cache_dir=cache_dir,
+        local_files_only=local_files_only,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/auto/tokenization_auto.py", line 1175, in from_pretrained
+    return tokenizer_class_fast.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/tokenization_utils_base.py", line 2039, in from_pretrained
+    for template in list_repo_templates(
+                    ~~~~~~~~~~~~~~~~~~~^
+        pretrained_model_name_or_path,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    ):
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/utils/hub.py", line 169, in list_repo_templates
+    for entry in list_repo_tree(
+                 ~~~~~~~~~~~~~~^
+        repo_id=repo_id,
+        ^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/hf_api.py", line 3191, in list_repo_tree
+    for path_info in paginate(path=tree_url, headers=headers, params={"recursive": recursive, "expand": expand}):
+                     ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_pagination.py", line 37, in paginate
+    hf_raise_for_status(r)
+    ~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 453, in hf_raise_for_status
+    raise _format(RepositoryNotFoundError, message, response) from e
+huggingface_hub.errors.RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6a5a1aac-74d4e216096210995bda2a1b;03f231f1-15f3-4d19-be3a-0983ff64e42f)
+
+Repository Not Found for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False.
+Please make sure you specified the correct `repo_id` and `repo_type`.
+If you are trying to access a private or gated repo, make sure you are authenticated. For more details, see https://huggingface.co/docs/huggingface_hub/authentication
+OAuth token signature verification failed: signature verification failed)
+  ✗ failed (26s)
+
+✗ Pipeline failed (27s)
+
+Pipeline: wiki-extraction
+Status:   ✗ failed
+Duration: 27s
+
+Stages:
+  [1/3] epub-parse .................... ✓ (1 attempt)
+  [2/3] section-filter ................ ✓ (1 attempt)
+  [3/3] entity-extraction ............. ✗ FAILED (3 attempts exhausted)
+
+
+Run ID: b5f82a3e-5910-458c-b628-729354dbe95f
+View details: studio status b5f82a3e-5910-458c-b628-729354dbe95f
+[FAIL] 04.5_tales-of-alagaesia — pipeline failed
+
+=== 05_murtagh
+
+✓ Input collected
+
+
+Running pipeline: wiki-extraction
+
+[1/6] epub-parse ......................... ...
+  - Thinking... (0s)
+  ✓ (967ms)
+[2/6] section-filter ..................... ...
+  - Thinking... (0s)
+  ✓ (24s)
+[3/6] entity-extraction .................. ...
+  - Thinking... (0s)
+  ✗ retry (Script exited with code 1: /home/arianeguay/.local/lib/python3.14/site-packages/confection/__init__.py:38: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  from pydantic.v1 import BaseModel, Extra, ValidationError, create_model
+[nlp] loaded 'en_core_web_lg' components=['tok2vec', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner'] ner_labels=['EVENT', 'FACTION', 'ORG', 'PERSON', 'PLACE']
+Skipping import of cpp extensions due to incompatible torch version. Please upgrade to torch >= 2.11.0 (found 2.10.0+cu128).
+Traceback (most recent call last):
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 403, in hf_raise_for_status
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/site-packages/requests/models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 401 Client Error: Unauthorized for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 758, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 722, in main
+    result = extract_entities(
+        chapters, nlp, cue_words=cue_words, retag_from_context=not ner.invented_names
+    )
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 524, in extract_entities
+    doc = nlp(chapter["content"])
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1058, in __call__
+    error_handler(name, proc, [doc], e)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/util.py", line 1780, in raise_error
+    raise e
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1053, in __call__
+    doc = proc(doc, **component_cfg.get(name, {}))  # type: ignore[call-arg]
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 99, in __call__
+    predictions = self._load().inference(
+                  ~~~~~~~~~~^^
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 90, in _load
+    self._model = GLiNER.from_pretrained(self.model_name).to(device)
+                  ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 4789, in from_pretrained
+    return gliner_class.from_pretrained(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        model_id=model_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<23 lines>...
+        **model_kwargs,
+        ^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 1182, in from_pretrained
+    tokenizer = cls._load_tokenizer(config, model_dir, cache_dir, local_files_only=local_files_only)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 756, in _load_tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(
+        config.model_name,
+        cache_dir=cache_dir,
+        local_files_only=local_files_only,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/auto/tokenization_auto.py", line 1175, in from_pretrained
+    return tokenizer_class_fast.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/tokenization_utils_base.py", line 2039, in from_pretrained
+    for template in list_repo_templates(
+                    ~~~~~~~~~~~~~~~~~~~^
+        pretrained_model_name_or_path,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    ):
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/utils/hub.py", line 169, in list_repo_templates
+    for entry in list_repo_tree(
+                 ~~~~~~~~~~~~~~^
+        repo_id=repo_id,
+        ^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/hf_api.py", line 3191, in list_repo_tree
+    for path_info in paginate(path=tree_url, headers=headers, params={"recursive": recursive, "expand": expand}):
+                     ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_pagination.py", line 37, in paginate
+    hf_raise_for_status(r)
+    ~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 453, in hf_raise_for_status
+    raise _format(RepositoryNotFoundError, message, response) from e
+huggingface_hub.errors.RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6a5a1ae0-1d6de8ba1d1dda2c2f34aa24;d7798b3b-fce8-4ee4-9755-5b0f24ff9079)
+
+Repository Not Found for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False.
+Please make sure you specified the correct `repo_id` and `repo_type`.
+If you are trying to access a private or gated repo, make sure you are authenticated. For more details, see https://huggingface.co/docs/huggingface_hub/authentication
+OAuth token signature verification failed: signature verification failed)
+  ✗ retry (Script exited with code 1: /home/arianeguay/.local/lib/python3.14/site-packages/confection/__init__.py:38: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  from pydantic.v1 import BaseModel, Extra, ValidationError, create_model
+[nlp] loaded 'en_core_web_lg' components=['tok2vec', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner'] ner_labels=['EVENT', 'FACTION', 'ORG', 'PERSON', 'PLACE']
+Skipping import of cpp extensions due to incompatible torch version. Please upgrade to torch >= 2.11.0 (found 2.10.0+cu128).
+Traceback (most recent call last):
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 403, in hf_raise_for_status
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/site-packages/requests/models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 401 Client Error: Unauthorized for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 758, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 722, in main
+    result = extract_entities(
+        chapters, nlp, cue_words=cue_words, retag_from_context=not ner.invented_names
+    )
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 524, in extract_entities
+    doc = nlp(chapter["content"])
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1058, in __call__
+    error_handler(name, proc, [doc], e)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/util.py", line 1780, in raise_error
+    raise e
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1053, in __call__
+    doc = proc(doc, **component_cfg.get(name, {}))  # type: ignore[call-arg]
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 99, in __call__
+    predictions = self._load().inference(
+                  ~~~~~~~~~~^^
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 90, in _load
+    self._model = GLiNER.from_pretrained(self.model_name).to(device)
+                  ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 4789, in from_pretrained
+    return gliner_class.from_pretrained(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        model_id=model_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<23 lines>...
+        **model_kwargs,
+        ^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 1182, in from_pretrained
+    tokenizer = cls._load_tokenizer(config, model_dir, cache_dir, local_files_only=local_files_only)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 756, in _load_tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(
+        config.model_name,
+        cache_dir=cache_dir,
+        local_files_only=local_files_only,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/auto/tokenization_auto.py", line 1175, in from_pretrained
+    return tokenizer_class_fast.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/tokenization_utils_base.py", line 2039, in from_pretrained
+    for template in list_repo_templates(
+                    ~~~~~~~~~~~~~~~~~~~^
+        pretrained_model_name_or_path,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    ):
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/utils/hub.py", line 169, in list_repo_templates
+    for entry in list_repo_tree(
+                 ~~~~~~~~~~~~~~^
+        repo_id=repo_id,
+        ^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/hf_api.py", line 3191, in list_repo_tree
+    for path_info in paginate(path=tree_url, headers=headers, params={"recursive": recursive, "expand": expand}):
+                     ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_pagination.py", line 37, in paginate
+    hf_raise_for_status(r)
+    ~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 453, in hf_raise_for_status
+    raise _format(RepositoryNotFoundError, message, response) from e
+huggingface_hub.errors.RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6a5a1ae0-1d6de8ba1d1dda2c2f34aa24;d7798b3b-fce8-4ee4-9755-5b0f24ff9079)
+
+Repository Not Found for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False.
+Please make sure you specified the correct `repo_id` and `repo_type`.
+If you are trying to access a private or gated repo, make sure you are authenticated. For more details, see https://huggingface.co/docs/huggingface_hub/authentication
+OAuth token signature verification failed: signature verification failed)
+  ✗ failed (24s)
+
+✗ Pipeline failed (50s)
+
+Pipeline: wiki-extraction
+Status:   ✗ failed
+Duration: 50s
+
+Stages:
+  [1/3] epub-parse .................... ✓ (1 attempt)
+  [2/3] section-filter ................ ✓ (1 attempt)
+  [3/3] entity-extraction ............. ✗ FAILED (3 attempts exhausted)
+
+
+Run ID: 512b2681-bb92-4bbd-9176-f335cf79319d
+View details: studio status 512b2681-bb92-4bbd-9176-f335cf79319d
+[FAIL] 05_murtagh — pipeline failed
+
+=== 00-the_hobbit
+
+✓ Input collected
+
+
+Running pipeline: wiki-extraction
+
+[1/6] epub-parse ......................... ...
+  - Thinking... (0s)
+  ✓ (324ms)
+[2/6] section-filter ..................... ...
+  - Thinking... (0s)
+  ✓ (95ms)
+[3/6] entity-extraction .................. ...
+  - Thinking... (0s)
+  ✓ (19s)
+[4/6] entity-clustering .................. ...
+  - Thinking... (0s)
+  ✓ (152ms)
+[5/6] verify-entity-types ................ ...
+  - Thinking... (0s)
+  ✓ (73ms)
+[6/6] split-clusters ..................... ...
+  - Thinking... (0s)
+  ✓ (172ms)
+
+✓ Pipeline completed (19s)
+
+Pipeline: wiki-extraction
+Status:   ✓ success
+Duration: 19s
+
+Stages:
+  [1/6] epub-parse .................... ✓ (1 attempt)
+  [2/6] section-filter ................ ✓ (1 attempt)
+  [3/6] entity-extraction ............. ✓ (1 attempt)
+  [4/6] entity-clustering ............. ✓ (1 attempt)
+  [5/6] verify-entity-types ........... ✓ (1 attempt)
+  [6/6] split-clusters ................ ✓ (1 attempt)
+
+
+Run ID: 8779cd0a-25c3-4f25-9dba-4ee691098254
+View details: studio status 8779cd0a-25c3-4f25-9dba-4ee691098254
+
+✓ Input collected
+
+
+Running pipeline: wiki-resolution
+
+[1/9] resolve-clusters ................... ...
+  - Thinking... (0s)
+  ✓ (183ms)
+[2/9] merge-entities ..................... ...
+  - Thinking... (0s)
+  ✓ (23ms)
+[3/9] relationship-extraction ............ ...
+  - Thinking... (0s)
+  ✓ (3s)
+[4/9] alias-resolution ................... ...
+  - Thinking... (0s)
+  ✓ (267ms)
+[5/9] alias-adjudication ................. ...
+  - Thinking... (0s)
+  ✓ (362ms)
+[6/9] entity-classification .............. ...
+  - Thinking... (0s)
+  ✓ (303ms)
+[7/9] build-character-graph .............. ...
+  - Thinking... (0s)
+  ✓ (196ms)
+[8/9] save-relationships ................. ...
+  - Thinking... (0s)
+  ✓ (133ms)
+[9/9] write-registry ..................... ...
+  - Thinking... (0s)
+  ✓ (626ms)
+
+✓ Pipeline completed (5s)
+
+Pipeline: wiki-resolution
+Status:   ✓ success
+Duration: 5s
+
+Stages:
+  [1/9] resolve-clusters .............. ✓ (1 attempt)
+  [2/9] merge-entities ................ ✓ (1 attempt)
+  [3/9] relationship-extraction ....... ✓ (1 attempt)
+  [4/9] alias-resolution .............. ✓ (1 attempt)
+  [5/9] alias-adjudication ............ ✓ (1 attempt)
+  [6/9] entity-classification ......... ✓ (1 attempt)
+  [7/9] build-character-graph ......... ✓ (1 attempt)
+  [8/9] save-relationships ............ ✓ (1 attempt)
+  [9/9] write-registry ................ ✓ (1 attempt)
+
+
+Run ID: eda9e2de-efe8-46f7-8ff6-60f817977457
+View details: studio status eda9e2de-efe8-46f7-8ff6-60f817977457
+[ok] 00-the_hobbit in 26s
+
+=== 01-throne-of-glass
+
+✓ Input collected
+
+
+Running pipeline: wiki-extraction
+
+[1/6] epub-parse ......................... ...
+  - Thinking... (0s)
+  ✓ (570ms)
+[2/6] section-filter ..................... ...
+  - Thinking... (0s)
+  ✓ (123ms)
+[3/6] entity-extraction .................. ...
+  - Thinking... (0s)
+  ✗ retry (Script exited with code 1: /home/arianeguay/.local/lib/python3.14/site-packages/confection/__init__.py:38: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  from pydantic.v1 import BaseModel, Extra, ValidationError, create_model
+[nlp] loaded 'en_core_web_lg' components=['tok2vec', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner'] ner_labels=['EVENT', 'FACTION', 'ORG', 'PERSON', 'PLACE']
+Skipping import of cpp extensions due to incompatible torch version. Please upgrade to torch >= 2.11.0 (found 2.10.0+cu128).
+Traceback (most recent call last):
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 403, in hf_raise_for_status
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/site-packages/requests/models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 401 Client Error: Unauthorized for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 758, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 722, in main
+    result = extract_entities(
+        chapters, nlp, cue_words=cue_words, retag_from_context=not ner.invented_names
+    )
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 524, in extract_entities
+    doc = nlp(chapter["content"])
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1058, in __call__
+    error_handler(name, proc, [doc], e)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/util.py", line 1780, in raise_error
+    raise e
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1053, in __call__
+    doc = proc(doc, **component_cfg.get(name, {}))  # type: ignore[call-arg]
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 99, in __call__
+    predictions = self._load().inference(
+                  ~~~~~~~~~~^^
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 90, in _load
+    self._model = GLiNER.from_pretrained(self.model_name).to(device)
+                  ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 4789, in from_pretrained
+    return gliner_class.from_pretrained(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        model_id=model_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<23 lines>...
+        **model_kwargs,
+        ^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 1182, in from_pretrained
+    tokenizer = cls._load_tokenizer(config, model_dir, cache_dir, local_files_only=local_files_only)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 756, in _load_tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(
+        config.model_name,
+        cache_dir=cache_dir,
+        local_files_only=local_files_only,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/auto/tokenization_auto.py", line 1175, in from_pretrained
+    return tokenizer_class_fast.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/tokenization_utils_base.py", line 2039, in from_pretrained
+    for template in list_repo_templates(
+                    ~~~~~~~~~~~~~~~~~~~^
+        pretrained_model_name_or_path,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    ):
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/utils/hub.py", line 169, in list_repo_templates
+    for entry in list_repo_tree(
+                 ~~~~~~~~~~~~~~^
+        repo_id=repo_id,
+        ^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/hf_api.py", line 3191, in list_repo_tree
+    for path_info in paginate(path=tree_url, headers=headers, params={"recursive": recursive, "expand": expand}):
+                     ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_pagination.py", line 37, in paginate
+    hf_raise_for_status(r)
+    ~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 453, in hf_raise_for_status
+    raise _format(RepositoryNotFoundError, message, response) from e
+huggingface_hub.errors.RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6a5a1b16-0a896e08610abfea32f092c2;fa1805ce-1e54-4011-9bc3-4d2c53b41ef8)
+
+Repository Not Found for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False.
+Please make sure you specified the correct `repo_id` and `repo_type`.
+If you are trying to access a private or gated repo, make sure you are authenticated. For more details, see https://huggingface.co/docs/huggingface_hub/authentication
+OAuth token signature verification failed: signature verification failed)
+  ✗ retry (Script exited with code 1: /home/arianeguay/.local/lib/python3.14/site-packages/confection/__init__.py:38: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  from pydantic.v1 import BaseModel, Extra, ValidationError, create_model
+[nlp] loaded 'en_core_web_lg' components=['tok2vec', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner'] ner_labels=['EVENT', 'FACTION', 'ORG', 'PERSON', 'PLACE']
+Skipping import of cpp extensions due to incompatible torch version. Please upgrade to torch >= 2.11.0 (found 2.10.0+cu128).
+Traceback (most recent call last):
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 403, in hf_raise_for_status
+    response.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/site-packages/requests/models.py", line 1026, in raise_for_status
+    raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 401 Client Error: Unauthorized for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 758, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 722, in main
+    result = extract_entities(
+        chapters, nlp, cue_words=cue_words, retag_from_context=not ner.invented_names
+    )
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 524, in extract_entities
+    doc = nlp(chapter["content"])
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1058, in __call__
+    error_handler(name, proc, [doc], e)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/util.py", line 1780, in raise_error
+    raise e
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1053, in __call__
+    doc = proc(doc, **component_cfg.get(name, {}))  # type: ignore[call-arg]
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 99, in __call__
+    predictions = self._load().inference(
+                  ~~~~~~~~~~^^
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 90, in _load
+    self._model = GLiNER.from_pretrained(self.model_name).to(device)
+                  ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 4789, in from_pretrained
+    return gliner_class.from_pretrained(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        model_id=model_id,
+        ^^^^^^^^^^^^^^^^^^
+    ...<23 lines>...
+        **model_kwargs,
+        ^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 1182, in from_pretrained
+    tokenizer = cls._load_tokenizer(config, model_dir, cache_dir, local_files_only=local_files_only)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 756, in _load_tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(
+        config.model_name,
+        cache_dir=cache_dir,
+        local_files_only=local_files_only,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/auto/tokenization_auto.py", line 1175, in from_pretrained
+    return tokenizer_class_fast.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/tokenization_utils_base.py", line 2039, in from_pretrained
+    for template in list_repo_templates(
+                    ~~~~~~~~~~~~~~~~~~~^
+        pretrained_model_name_or_path,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    ):
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/utils/hub.py", line 169, in list_repo_templates
+    for entry in list_repo_tree(
+                 ~~~~~~~~~~~~~~^
+        repo_id=repo_id,
+        ^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        token=token,
+        ^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/hf_api.py", line 3191, in list_repo_tree
+    for path_info in paginate(path=tree_url, headers=headers, params={"recursive": recursive, "expand": expand}):
+                     ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_pagination.py", line 37, in paginate
+    hf_raise_for_status(r)
+    ~~~~~~~~~~~~~~~~~~~^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/utils/_http.py", line 453, in hf_raise_for_status
+    raise _format(RepositoryNotFoundError, message, response) from e
+huggingface_hub.errors.RepositoryNotFoundError: 401 Client Error. (Request ID: Root=1-6a5a1b16-0a896e08610abfea32f092c2;fa1805ce-1e54-4011-9bc3-4d2c53b41ef8)
+
+Repository Not Found for url: https://huggingface.co/api/models/microsoft/deberta-v3-large/tree/main/additional_chat_templates?recursive=False&expand=False.
+Please make sure you specified the correct `repo_id` and `repo_type`.
+If you are trying to access a private or gated repo, make sure you are authenticated. For more details, see https://huggingface.co/docs/huggingface_hub/authentication
+OAuth token signature verification failed: signature verification failed)
+  ✗ failed (28s)
+
+✗ Pipeline failed (29s)
+
+Pipeline: wiki-extraction
+Status:   ✗ failed
+Duration: 29s
+
+Stages:
+  [1/3] epub-parse .................... ✓ (1 attempt)
+  [2/3] section-filter ................ ✓ (1 attempt)
+  [3/3] entity-extraction ............. ✗ FAILED (3 attempts exhausted)
+
+
+Run ID: 6165bb6b-b62f-4496-929a-091c612ba303
+View details: studio status 6165bb6b-b62f-4496-929a-091c612ba303
+[FAIL] 01-throne-of-glass — pipeline failed

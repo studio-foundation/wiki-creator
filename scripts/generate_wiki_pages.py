@@ -994,11 +994,7 @@ def _execute_wiki_page_item(item_input: dict, entity: dict, timeout: int) -> dic
             "run_metadata": run_metadata,
         }
 
-    # STU-533: the JSONL log is complete on disk; the stdout --json echo is a
-    # redundant duplicate of it, cut at 8192 bytes whenever the run is large.
-    payload = studio_io.load_studio_stage_output(run_id, "wiki-page-item")
-    if payload is None and run_payload is not None:
-        payload = studio_io.extract_stage_output_from_run_payload(run_payload, "wiki-page-item")
+    payload = studio_io.stage_output_from_stdout(result.stdout or "", "wiki-page-item")
     if payload is None:
         return {
             "error": "studio_run_output_missing",

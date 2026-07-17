@@ -7,6 +7,7 @@ nothing in `wiki_creator/` or `scripts/` may import from here.
 |---|---|
 | `ner-eval/` | which NER backend finds the entities (STU-470, STU-521) |
 | `relation-eval/` | which mechanism discovers relations (STU-467) |
+| `alias-eval/` | what contextual alias adjudication decides, library-wide (STU-543) |
 
 ## Each eval runs in its own process
 

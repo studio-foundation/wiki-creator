@@ -1,0 +1,1101 @@
+
+=== 01_a-dark-and-hollow-star
+
+✓ Input collected
+
+
+Running pipeline: wiki-extraction
+
+[1/6] epub-parse ......................... ...
+  - Thinking... (0s)
+  ✓ (1s)
+[2/6] section-filter ..................... ...
+  - Thinking... (0s)
+  ✓ (268ms)
+[3/6] entity-extraction .................. ...
+  - Thinking... (0s)
+  ✓ (1m00s)
+[4/6] entity-clustering .................. ...
+  - Thinking... (0s)
+  ✓ (602ms)
+[5/6] verify-entity-types ................ ...
+  - Thinking... (0s)
+  ✓ (155ms)
+[6/6] split-clusters ..................... ...
+  - Thinking... (0s)
+  ✓ (426ms)
+
+✓ Pipeline completed (1m03s)
+
+Pipeline: wiki-extraction
+Status:   ✓ success
+Duration: 1m03s
+
+Stages:
+  [1/6] epub-parse .................... ✓ (1 attempt)
+  [2/6] section-filter ................ ✓ (1 attempt)
+  [3/6] entity-extraction ............. ✓ (1 attempt)
+  [4/6] entity-clustering ............. ✓ (1 attempt)
+  [5/6] verify-entity-types ........... ✓ (1 attempt)
+  [6/6] split-clusters ................ ✓ (1 attempt)
+
+
+Run ID: dcb8eeea-bbd7-4bf6-b79e-f71ca3b3325a
+View details: studio status dcb8eeea-bbd7-4bf6-b79e-f71ca3b3325a
+
+✓ Input collected
+
+
+Running pipeline: wiki-resolution
+
+[1/9] resolve-clusters ................... ...
+  - Thinking... (0s)
+  ✓ (318ms)
+[2/9] merge-entities ..................... ...
+  - Thinking... (0s)
+  ✓ (37ms)
+[3/9] relationship-extraction ............ ...
+  - Thinking... (0s)
+  ✓ (11s)
+[4/9] alias-resolution ................... ...
+  - Thinking... (0s)
+  ✓ (1s)
+[5/9] alias-adjudication ................. ...
+  - Thinking... (0s)
+  ✓ (3m13s)
+[6/9] entity-classification .............. ...
+  - Thinking... (0s)
+  ✓ (343ms)
+[7/9] build-character-graph .............. ...
+  - Thinking... (0s)
+  ✓ (207ms)
+[8/9] save-relationships ................. ...
+  - Thinking... (0s)
+  ✓ (147ms)
+[9/9] write-registry ..................... ...
+  - Thinking... (0s)
+  ✓ (900ms)
+
+✓ Pipeline completed (3m28s)
+
+Pipeline: wiki-resolution
+Status:   ✓ success
+Duration: 3m28s
+
+Stages:
+  [1/9] resolve-clusters .............. ✓ (1 attempt)
+  [2/9] merge-entities ................ ✓ (1 attempt)
+  [3/9] relationship-extraction ....... ✓ (1 attempt)
+  [4/9] alias-resolution .............. ✓ (1 attempt)
+  [5/9] alias-adjudication ............ ✓ (1 attempt)
+  [6/9] entity-classification ......... ✓ (1 attempt)
+  [7/9] build-character-graph ......... ✓ (1 attempt)
+  [8/9] save-relationships ............ ✓ (1 attempt)
+  [9/9] write-registry ................ ✓ (1 attempt)
+
+
+Run ID: 629fed6e-1c92-4356-a735-4042d9baa803
+View details: studio status 629fed6e-1c92-4356-a735-4042d9baa803
+[FAIL] 01_a-dark-and-hollow-star — no verdict written (stage merged nothing)
+
+=== 02_a-cruel-and-fated-light
+
+✓ Input collected
+
+
+Running pipeline: wiki-extraction
+
+[1/6] epub-parse ......................... ...
+  - Thinking... (0s)
+  ✓ (1s)
+[2/6] section-filter ..................... ...
+  - Thinking... (0s)
+  ✓ (144ms)
+[3/6] entity-extraction .................. ...
+  - Thinking... (0s)
+  ✓ (39s)
+[4/6] entity-clustering .................. ...
+  - Thinking... (0s)
+  ✓ (297ms)
+[5/6] verify-entity-types ................ ...
+  - Thinking... (0s)
+  ✓ (87ms)
+[6/6] split-clusters ..................... ...
+  - Thinking... (0s)
+  ✓ (193ms)
+
+✓ Pipeline completed (41s)
+
+Pipeline: wiki-extraction
+Status:   ✓ success
+Duration: 41s
+
+Stages:
+  [1/6] epub-parse .................... ✓ (1 attempt)
+  [2/6] section-filter ................ ✓ (1 attempt)
+  [3/6] entity-extraction ............. ✓ (1 attempt)
+  [4/6] entity-clustering ............. ✓ (1 attempt)
+  [5/6] verify-entity-types ........... ✓ (1 attempt)
+  [6/6] split-clusters ................ ✓ (1 attempt)
+
+
+Run ID: 58493c35-ada9-49da-af28-63495bbc6a54
+View details: studio status 58493c35-ada9-49da-af28-63495bbc6a54
+
+✓ Input collected
+
+
+Running pipeline: wiki-resolution
+
+[1/9] resolve-clusters ................... ...
+  - Thinking... (0s)
+  ✓ (198ms)
+[2/9] merge-entities ..................... ...
+  - Thinking... (0s)
+  ✓ (24ms)
+[3/9] relationship-extraction ............ ...
+  - Thinking... (0s)
+  ✓ (6s)
+[4/9] alias-resolution ................... ...
+  - Thinking... (0s)
+  ✓ (912ms)
+[5/9] alias-adjudication ................. ...
+  - Thinking... (0s)
+  ✓ (1m48s)
+[6/9] entity-classification .............. ...
+  - Thinking... (0s)
+  ✓ (346ms)
+[7/9] build-character-graph .............. ...
+  - Thinking... (0s)
+  ✓ (238ms)
+[8/9] save-relationships ................. ...
+  - Thinking... (0s)
+  ✓ (182ms)
+[9/9] write-registry ..................... ...
+  - Thinking... (0s)
+  ✓ (896ms)
+
+✓ Pipeline completed (1m58s)
+
+Pipeline: wiki-resolution
+Status:   ✓ success
+Duration: 1m58s
+
+Stages:
+  [1/9] resolve-clusters .............. ✓ (1 attempt)
+  [2/9] merge-entities ................ ✓ (1 attempt)
+  [3/9] relationship-extraction ....... ✓ (1 attempt)
+  [4/9] alias-resolution .............. ✓ (1 attempt)
+  [5/9] alias-adjudication ............ ✓ (1 attempt)
+  [6/9] entity-classification ......... ✓ (1 attempt)
+  [7/9] build-character-graph ......... ✓ (1 attempt)
+  [8/9] save-relationships ............ ✓ (1 attempt)
+  [9/9] write-registry ................ ✓ (1 attempt)
+
+
+Run ID: 9fe12de9-754d-4aee-ab62-93bdeea6ace1
+View details: studio status 9fe12de9-754d-4aee-ab62-93bdeea6ace1
+[FAIL] 02_a-cruel-and-fated-light — no verdict written (stage merged nothing)
+
+=== 03_a-grim-and-sunken-vow
+
+✓ Input collected
+
+
+Running pipeline: wiki-extraction
+
+[1/6] epub-parse ......................... ...
+  - Thinking... (0s)
+  ✓ (828ms)
+[2/6] section-filter ..................... ...
+  - Thinking... (0s)
+  ✓ (133ms)
+[3/6] entity-extraction .................. ...
+  - Thinking... (0s)
+  ✓ (35s)
+[4/6] entity-clustering .................. ...
+  - Thinking... (0s)
+  ✓ (267ms)
+[5/6] verify-entity-types ................ ...
+  - Thinking... (0s)
+  ✓ (80ms)
+[6/6] split-clusters ..................... ...
+  - Thinking... (0s)
+  ✓ (176ms)
+
+✓ Pipeline completed (36s)
+
+Pipeline: wiki-extraction
+Status:   ✓ success
+Duration: 36s
+
+Stages:
+  [1/6] epub-parse .................... ✓ (1 attempt)
+  [2/6] section-filter ................ ✓ (1 attempt)
+  [3/6] entity-extraction ............. ✓ (1 attempt)
+  [4/6] entity-clustering ............. ✓ (1 attempt)
+  [5/6] verify-entity-types ........... ✓ (1 attempt)
+  [6/6] split-clusters ................ ✓ (1 attempt)
+
+
+Run ID: 6d5f044f-9794-4afa-a5e8-948e8dccfe02
+View details: studio status 6d5f044f-9794-4afa-a5e8-948e8dccfe02
+
+✓ Input collected
+
+
+Running pipeline: wiki-resolution
+
+[1/9] resolve-clusters ................... ...
+  - Thinking... (0s)
+  ✓ (184ms)
+[2/9] merge-entities ..................... ...
+  - Thinking... (0s)
+  ✓ (22ms)
+[3/9] relationship-extraction ............ ...
+  - Thinking... (0s)
+  ✓ (7s)
+[4/9] alias-resolution ................... ...
+  - Thinking... (0s)
+  ✓ (1s)
+[5/9] alias-adjudication ................. ...
+  - Thinking... (0s)
+  ✓ (2m57s)
+[6/9] entity-classification .............. ...
+  - Thinking... (0s)
+  ✓ (444ms)
+[7/9] build-character-graph .............. ...
+  - Thinking... (0s)
+  ✓ (227ms)
+[8/9] save-relationships ................. ...
+  - Thinking... (0s)
+  ✓ (199ms)
+[9/9] write-registry ..................... ...
+  - Thinking... (0s)
+  ✓ (1s)
+
+✓ Pipeline completed (3m07s)
+
+Pipeline: wiki-resolution
+Status:   ✓ success
+Duration: 3m07s
+
+Stages:
+  [1/9] resolve-clusters .............. ✓ (1 attempt)
+  [2/9] merge-entities ................ ✓ (1 attempt)
+  [3/9] relationship-extraction ....... ✓ (1 attempt)
+  [4/9] alias-resolution .............. ✓ (1 attempt)
+  [5/9] alias-adjudication ............ ✓ (1 attempt)
+  [6/9] entity-classification ......... ✓ (1 attempt)
+  [7/9] build-character-graph ......... ✓ (1 attempt)
+  [8/9] save-relationships ............ ✓ (1 attempt)
+  [9/9] write-registry ................ ✓ (1 attempt)
+
+
+Run ID: dfc54d59-ddf8-4e69-b253-01ee3614b1d7
+View details: studio status dfc54d59-ddf8-4e69-b253-01ee3614b1d7
+[FAIL] 03_a-grim-and-sunken-vow — no verdict written (stage merged nothing)
+
+=== 04_a-wild-and-ruined-song
+
+✓ Input collected
+
+
+Running pipeline: wiki-extraction
+
+[1/6] epub-parse ......................... ...
+  - Thinking... (0s)
+  ✓ (719ms)
+[2/6] section-filter ..................... ...
+  - Thinking... (0s)
+  ✓ (127ms)
+[3/6] entity-extraction .................. ...
+  - Thinking... (0s)
+  ✓ (27s)
+[4/6] entity-clustering .................. ...
+  - Thinking... (0s)
+  ✓ (453ms)
+[5/6] verify-entity-types ................ ...
+  - Thinking... (0s)
+  ✓ (107ms)
+[6/6] split-clusters ..................... ...
+  - Thinking... (0s)
+  ✓ (347ms)
+
+✓ Pipeline completed (29s)
+
+Pipeline: wiki-extraction
+Status:   ✓ success
+Duration: 29s
+
+Stages:
+  [1/6] epub-parse .................... ✓ (1 attempt)
+  [2/6] section-filter ................ ✓ (1 attempt)
+  [3/6] entity-extraction ............. ✓ (1 attempt)
+  [4/6] entity-clustering ............. ✓ (1 attempt)
+  [5/6] verify-entity-types ........... ✓ (1 attempt)
+  [6/6] split-clusters ................ ✓ (1 attempt)
+
+
+Run ID: 17d54bc8-e271-4633-a957-08ecfdecc8cf
+View details: studio status 17d54bc8-e271-4633-a957-08ecfdecc8cf
+
+✓ Input collected
+
+
+Running pipeline: wiki-resolution
+
+[1/9] resolve-clusters ................... ...
+  - Thinking... (0s)
+  ✓ (203ms)
+[2/9] merge-entities ..................... ...
+  - Thinking... (0s)
+  ✓ (24ms)
+[3/9] relationship-extraction ............ ...
+  - Thinking... (0s)
+  ✓ (4s)
+[4/9] alias-resolution ................... ...
+  - Thinking... (0s)
+  ✓ (525ms)
+[5/9] alias-adjudication ................. ...
+  - Thinking... (0s)
+  ✓ (1m55s)
+[6/9] entity-classification .............. ...
+  - Thinking... (0s)
+  ✓ (312ms)
+[7/9] build-character-graph .............. ...
+  - Thinking... (0s)
+  ✓ (209ms)
+[8/9] save-relationships ................. ...
+  - Thinking... (0s)
+  ✓ (130ms)
+[9/9] write-registry ..................... ...
+  - Thinking... (0s)
+  ✓ (879ms)
+
+✓ Pipeline completed (2m01s)
+
+Pipeline: wiki-resolution
+Status:   ✓ success
+Duration: 2m01s
+
+Stages:
+  [1/9] resolve-clusters .............. ✓ (1 attempt)
+  [2/9] merge-entities ................ ✓ (1 attempt)
+  [3/9] relationship-extraction ....... ✓ (1 attempt)
+  [4/9] alias-resolution .............. ✓ (1 attempt)
+  [5/9] alias-adjudication ............ ✓ (1 attempt)
+  [6/9] entity-classification ......... ✓ (1 attempt)
+  [7/9] build-character-graph ......... ✓ (1 attempt)
+  [8/9] save-relationships ............ ✓ (1 attempt)
+  [9/9] write-registry ................ ✓ (1 attempt)
+
+
+Run ID: 4dd44d09-dffc-40e0-bae2-c2ca1309fdb3
+View details: studio status 4dd44d09-dffc-40e0-bae2-c2ca1309fdb3
+[ok] 04_a-wild-and-ruined-song in 153s
+
+=== 01-the_way_of_kings
+
+✓ Input collected
+
+
+Running pipeline: wiki-extraction
+
+[1/6] epub-parse ......................... ...
+  - Thinking... (0s)
+  ✓ (1s)
+[2/6] section-filter ..................... ...
+  - Thinking... (0s)
+  ✓ (201ms)
+[3/6] entity-extraction .................. ...
+  - Thinking... (0s)
+  ✓ (1m16s)
+[4/6] entity-clustering .................. ...
+  - Thinking... (0s)
+  ✓ (392ms)
+[5/6] verify-entity-types ................ ...
+  - Thinking... (0s)
+  ✓ (91ms)
+[6/6] split-clusters ..................... ...
+  - Thinking... (0s)
+  ✓ (191ms)
+
+✓ Pipeline completed (1m19s)
+
+Pipeline: wiki-extraction
+Status:   ✓ success
+Duration: 1m18s
+
+Stages:
+  [1/6] epub-parse .................... ✓ (1 attempt)
+  [2/6] section-filter ................ ✓ (1 attempt)
+  [3/6] entity-extraction ............. ✓ (1 attempt)
+  [4/6] entity-clustering ............. ✓ (1 attempt)
+  [5/6] verify-entity-types ........... ✓ (1 attempt)
+  [6/6] split-clusters ................ ✓ (1 attempt)
+
+
+Run ID: 4b01ff4e-c98e-413c-b02c-f20cd6483433
+View details: studio status 4b01ff4e-c98e-413c-b02c-f20cd6483433
+
+✓ Input collected
+
+
+Running pipeline: wiki-resolution
+
+[1/9] resolve-clusters ................... ...
+  - Thinking... (0s)
+  ✓ (197ms)
+[2/9] merge-entities ..................... ...
+  - Thinking... (0s)
+  ✓ (24ms)
+[3/9] relationship-extraction ............ ...
+  - Thinking... (0s)
+  ✓ (15s)
+[4/9] alias-resolution ................... ...
+  - Thinking... (0s)
+  ✓ (2s)
+[5/9] alias-adjudication ................. ...
+  - Thinking... (0s)
+  ✓ (14s)
+[6/9] entity-classification .............. ...
+  - Thinking... (0s)
+  ✓ (533ms)
+[7/9] build-character-graph .............. ...
+  - Thinking... (0s)
+  ✓ (199ms)
+[8/9] save-relationships ................. ...
+  - Thinking... (0s)
+  ✓ (185ms)
+[9/9] write-registry ..................... ...
+  - Thinking... (0s)
+  ✓ (1s)
+
+✓ Pipeline completed (34s)
+
+Pipeline: wiki-resolution
+Status:   ✓ success
+Duration: 34s
+
+Stages:
+  [1/9] resolve-clusters .............. ✓ (1 attempt)
+  [2/9] merge-entities ................ ✓ (1 attempt)
+  [3/9] relationship-extraction ....... ✓ (1 attempt)
+  [4/9] alias-resolution .............. ✓ (1 attempt)
+  [5/9] alias-adjudication ............ ✓ (1 attempt)
+  [6/9] entity-classification ......... ✓ (1 attempt)
+  [7/9] build-character-graph ......... ✓ (1 attempt)
+  [8/9] save-relationships ............ ✓ (1 attempt)
+  [9/9] write-registry ................ ✓ (1 attempt)
+
+
+Run ID: e801ef52-4759-4ce4-9f57-d7c2c140fcae
+View details: studio status e801ef52-4759-4ce4-9f57-d7c2c140fcae
+[FAIL] 01-the_way_of_kings — no verdict written (stage merged nothing)
+[skip] 01-the_lion_the_witch_and_the_wardrobe — verdict already collected
+[skip] 02-le-jeu-de-lange — verdict already collected
+[skip] 01_eragon — verdict already collected
+
+=== 02_eldest
+
+✓ Input collected
+
+
+Running pipeline: wiki-extraction
+
+[1/6] epub-parse ......................... ...
+  - Thinking... (0s)
+  ✓ (673ms)
+[2/6] section-filter ..................... ...
+  - Thinking... (0s)
+  ✓ (150ms)
+[3/6] entity-extraction .................. ...
+  - Thinking... (0s)
+  ✗ retry (Script exited with code 1: /home/arianeguay/.local/lib/python3.14/site-packages/confection/__init__.py:38: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  from pydantic.v1 import BaseModel, Extra, ValidationError, create_model
+[nlp] loaded 'en_core_web_lg' components=['tok2vec', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner'] ner_labels=['EVENT', 'FACTION', 'ORG', 'PERSON', 'PLACE']
+Skipping import of cpp extensions due to incompatible torch version. Please upgrade to torch >= 2.11.0 (found 2.10.0+cu128).
+/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/file_download.py:949: FutureWarning: `resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.
+  warnings.warn(
+Fetching 4 files:   0%|          | 0/4 [00:00<?, ?it/s]Fetching 4 files: 100%|██████████| 4/4 [00:00<00:00, 90687.65it/s]
+/home/arianeguay/.local/lib/python3.14/site-packages/transformers/convert_slow_tokenizer.py:566: UserWarning: The sentencepiece tokenizer that you are converting to a fast tokenizer uses the byte fallback option which is not implemented in the fast tokenizers. In practice this means that the fast version of the tokenizer can produce unknown tokens whereas the sentencepiece version would have converted these unknown tokens into a sequence of byte tokens matching the original piece of text.
+  warnings.warn(
+[nlp] gliner 'urchade/gliner_large-v2.1' on cuda labels={'person name': 'PERSON', 'place name': 'PLACE', 'kingdom, empire, or government': 'ORG', 'event': 'EVENT', 'people, race, or order': 'FACTION'}
+Asking to truncate to max_length but no maximum length is provided and the model has no predefined maximum length. Default to no truncation.
+Traceback (most recent call last):
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 758, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 722, in main
+    result = extract_entities(
+        chapters, nlp, cue_words=cue_words, retag_from_context=not ner.invented_names
+    )
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 524, in extract_entities
+    doc = nlp(chapter["content"])
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1058, in __call__
+    error_handler(name, proc, [doc], e)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/util.py", line 1780, in raise_error
+    raise e
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1053, in __call__
+    doc = proc(doc, **component_cfg.get(name, {}))  # type: ignore[call-arg]
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 99, in __call__
+    predictions = self._load().inference(
+        [text for _, text in chunks],
+    ...<2 lines>...
+        batch_size=self.batch_size,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 2311, in inference
+    outputs = self._process_batches(
+        data_loader,
+    ...<6 lines>...
+        **external_inputs,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 1991, in _process_batches
+    model_output = self.run_batch(
+        batch,
+    ...<3 lines>...
+        **external_inputs,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 2158, in run_batch
+    model_output = self.model(**model_inputs, threshold=threshold)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/modeling/base.py", line 454, in forward
+    prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(
+                                                                       ~~~~~~~~~~~~~~~~~~~~~~~~^
+        input_ids, attention_mask, text_lengths, words_mask, **encoder_kwargs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/modeling/base.py", line 355, in get_representations
+    token_embeds = self.token_rep_layer(input_ids, attention_mask, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/modeling/encoder.py", line 878, in forward
+    token_embeddings = self.encode_text(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/modeling/encoder.py", line 771, in encode_text
+    token_embeddings = self.bert_layer(
+        input_ids=input_ids,
+        **bert_kwargs,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/modeling/encoder.py", line 231, in forward
+    output = self.model(input_ids, *args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/deberta_v2/modeling_deberta_v2.py", line 784, in forward
+    encoder_outputs = self.encoder(
+        embedding_output,
+    ...<3 lines>...
+        return_dict=return_dict,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/deberta_v2/modeling_deberta_v2.py", line 657, in forward
+    output_states, attn_weights = layer_module(
+                                  ~~~~~~~~~~~~^
+        next_kv,
+        ^^^^^^^^
+    ...<4 lines>...
+        output_attentions=output_attentions,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/modeling_layers.py", line 94, in __call__
+    return super().__call__(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/deberta_v2/modeling_deberta_v2.py", line 436, in forward
+    attention_output, att_matrix = self.attention(
+                                   ~~~~~~~~~~~~~~^
+        hidden_states,
+        ^^^^^^^^^^^^^^
+    ...<4 lines>...
+        rel_embeddings=rel_embeddings,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/deberta_v2/modeling_deberta_v2.py", line 369, in forward
+    self_output, att_matrix = self.self(
+                              ~~~~~~~~~^
+        hidden_states,
+        ^^^^^^^^^^^^^^
+    ...<4 lines>...
+        rel_embeddings=rel_embeddings,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/deberta_v2/modeling_deberta_v2.py", line 250, in forward
+    rel_att = self.disentangled_attention_bias(
+        query_layer, key_layer, relative_pos, rel_embeddings, scale_factor
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/deberta_v2/modeling_deberta_v2.py", line 323, in disentangled_attention_bias
+    c2p_att = torch.gather(
+        c2p_att,
+        dim=-1,
+        index=c2p_pos.squeeze(0).expand([query_layer.size(0), query_layer.size(1), relative_pos.size(-1)]),
+    )
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 82.00 MiB. GPU 0 has a total capacity of 5.65 GiB of which 167.38 MiB is free. Process 37522 has 83.47 MiB memory in use. Process 7777 has 38.34 MiB memory in use. Process 808950 has 74.34 MiB memory in use. Process 490331 has 1.86 GiB memory in use. Including non-PyTorch memory, this process has 2.09 GiB memory in use. Of the allocated memory 1.94 GiB is allocated by PyTorch, and 15.49 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables))
+  ✓ (2m04s)
+[4/6] entity-clustering .................. ...
+  - Thinking... (0s)
+  ✓ (447ms)
+[5/6] verify-entity-types ................ ...
+  - Thinking... (0s)
+  ✓ (90ms)
+[6/6] split-clusters ..................... ...
+  - Thinking... (0s)
+  ✓ (204ms)
+
+✓ Pipeline completed (2m06s)
+
+Pipeline: wiki-extraction
+Status:   ✓ success
+Duration: 2m06s
+
+Stages:
+  [1/6] epub-parse .................... ✓ (1 attempt)
+  [2/6] section-filter ................ ✓ (1 attempt)
+  [3/6] entity-extraction ............. ✓ (2 attempts)
+  [4/6] entity-clustering ............. ✓ (1 attempt)
+  [5/6] verify-entity-types ........... ✓ (1 attempt)
+  [6/6] split-clusters ................ ✓ (1 attempt)
+
+
+Run ID: 27688d27-c3cd-41d6-9c9c-978385b6139e
+View details: studio status 27688d27-c3cd-41d6-9c9c-978385b6139e
+
+✓ Input collected
+
+
+Running pipeline: wiki-resolution
+
+[1/9] resolve-clusters ................... ...
+  - Thinking... (0s)
+  ✓ (217ms)
+[2/9] merge-entities ..................... ...
+  - Thinking... (0s)
+  ✓ (27ms)
+[3/9] relationship-extraction ............ ...
+  - Thinking... (0s)
+  ✓ (13s)
+[4/9] alias-resolution ................... ...
+  - Thinking... (0s)
+  ✓ (1s)
+[5/9] alias-adjudication ................. ...
+  - Thinking... (0s)
+  ✓ (1m39s)
+[6/9] entity-classification .............. ...
+  - Thinking... (0s)
+  ✓ (474ms)
+[7/9] build-character-graph .............. ...
+  - Thinking... (0s)
+  ✓ (214ms)
+[8/9] save-relationships ................. ...
+  - Thinking... (0s)
+  ✓ (199ms)
+[9/9] write-registry ..................... ...
+  - Thinking... (0s)
+  ✓ (1s)
+
+✓ Pipeline completed (1m57s)
+
+Pipeline: wiki-resolution
+Status:   ✓ success
+Duration: 1m57s
+
+Stages:
+  [1/9] resolve-clusters .............. ✓ (1 attempt)
+  [2/9] merge-entities ................ ✓ (1 attempt)
+  [3/9] relationship-extraction ....... ✓ (1 attempt)
+  [4/9] alias-resolution .............. ✓ (1 attempt)
+  [5/9] alias-adjudication ............ ✓ (1 attempt)
+  [6/9] entity-classification ......... ✓ (1 attempt)
+  [7/9] build-character-graph ......... ✓ (1 attempt)
+  [8/9] save-relationships ............ ✓ (1 attempt)
+  [9/9] write-registry ................ ✓ (1 attempt)
+
+
+Run ID: d3061fdc-f543-42de-8cc8-d0ff1c8ba655
+View details: studio status d3061fdc-f543-42de-8cc8-d0ff1c8ba655
+[ok] 02_eldest in 245s
+
+=== 03_brisingr
+
+✓ Input collected
+
+
+Running pipeline: wiki-extraction
+
+[1/6] epub-parse ......................... ...
+  - Thinking... (0s)
+  ✓ (819ms)
+[2/6] section-filter ..................... ...
+  - Thinking... (0s)
+  ✓ (168ms)
+[3/6] entity-extraction .................. ...
+  - Thinking... (0s)
+  ✗ retry (Script exited with code 1: /home/arianeguay/.local/lib/python3.14/site-packages/confection/__init__.py:38: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  from pydantic.v1 import BaseModel, Extra, ValidationError, create_model
+[nlp] loaded 'en_core_web_lg' components=['tok2vec', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner'] ner_labels=['EVENT', 'FACTION', 'ORG', 'PERSON', 'PLACE']
+Skipping import of cpp extensions due to incompatible torch version. Please upgrade to torch >= 2.11.0 (found 2.10.0+cu128).
+/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/file_download.py:949: FutureWarning: `resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.
+  warnings.warn(
+Fetching 4 files:   0%|          | 0/4 [00:00<?, ?it/s]Fetching 4 files: 100%|██████████| 4/4 [00:00<00:00, 19925.43it/s]
+/home/arianeguay/.local/lib/python3.14/site-packages/transformers/convert_slow_tokenizer.py:566: UserWarning: The sentencepiece tokenizer that you are converting to a fast tokenizer uses the byte fallback option which is not implemented in the fast tokenizers. In practice this means that the fast version of the tokenizer can produce unknown tokens whereas the sentencepiece version would have converted these unknown tokens into a sequence of byte tokens matching the original piece of text.
+  warnings.warn(
+[nlp] gliner 'urchade/gliner_large-v2.1' on cuda labels={'person name': 'PERSON', 'place name': 'PLACE', 'kingdom, empire, or government': 'ORG', 'event': 'EVENT', 'people, race, or order': 'FACTION'}
+Asking to truncate to max_length but no maximum length is provided and the model has no predefined maximum length. Default to no truncation.
+Traceback (most recent call last):
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 758, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 722, in main
+    result = extract_entities(
+        chapters, nlp, cue_words=cue_words, retag_from_context=not ner.invented_names
+    )
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 524, in extract_entities
+    doc = nlp(chapter["content"])
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1058, in __call__
+    error_handler(name, proc, [doc], e)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/util.py", line 1780, in raise_error
+    raise e
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1053, in __call__
+    doc = proc(doc, **component_cfg.get(name, {}))  # type: ignore[call-arg]
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 99, in __call__
+    predictions = self._load().inference(
+        [text for _, text in chunks],
+    ...<2 lines>...
+        batch_size=self.batch_size,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 2311, in inference
+    outputs = self._process_batches(
+        data_loader,
+    ...<6 lines>...
+        **external_inputs,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 1991, in _process_batches
+    model_output = self.run_batch(
+        batch,
+    ...<3 lines>...
+        **external_inputs,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 2158, in run_batch
+    model_output = self.model(**model_inputs, threshold=threshold)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/modeling/base.py", line 454, in forward
+    prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(
+                                                                       ~~~~~~~~~~~~~~~~~~~~~~~~^
+        input_ids, attention_mask, text_lengths, words_mask, **encoder_kwargs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/modeling/base.py", line 355, in get_representations
+    token_embeds = self.token_rep_layer(input_ids, attention_mask, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/modeling/encoder.py", line 878, in forward
+    token_embeddings = self.encode_text(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/modeling/encoder.py", line 771, in encode_text
+    token_embeddings = self.bert_layer(
+        input_ids=input_ids,
+        **bert_kwargs,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/modeling/encoder.py", line 231, in forward
+    output = self.model(input_ids, *args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/deberta_v2/modeling_deberta_v2.py", line 784, in forward
+    encoder_outputs = self.encoder(
+        embedding_output,
+    ...<3 lines>...
+        return_dict=return_dict,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/deberta_v2/modeling_deberta_v2.py", line 657, in forward
+    output_states, attn_weights = layer_module(
+                                  ~~~~~~~~~~~~^
+        next_kv,
+        ^^^^^^^^
+    ...<4 lines>...
+        output_attentions=output_attentions,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/modeling_layers.py", line 94, in __call__
+    return super().__call__(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/deberta_v2/modeling_deberta_v2.py", line 436, in forward
+    attention_output, att_matrix = self.attention(
+                                   ~~~~~~~~~~~~~~^
+        hidden_states,
+        ^^^^^^^^^^^^^^
+    ...<4 lines>...
+        rel_embeddings=rel_embeddings,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/deberta_v2/modeling_deberta_v2.py", line 369, in forward
+    self_output, att_matrix = self.self(
+                              ~~~~~~~~~^
+        hidden_states,
+        ^^^^^^^^^^^^^^
+    ...<4 lines>...
+        rel_embeddings=rel_embeddings,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/deberta_v2/modeling_deberta_v2.py", line 250, in forward
+    rel_att = self.disentangled_attention_bias(
+        query_layer, key_layer, relative_pos, rel_embeddings, scale_factor
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/deberta_v2/modeling_deberta_v2.py", line 328, in disentangled_attention_bias
+    score += c2p_att / scale.to(dtype=c2p_att.dtype)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 70.00 MiB. GPU 0 has a total capacity of 5.65 GiB of which 204.81 MiB is free. Process 37522 has 83.47 MiB memory in use. Process 7777 has 38.34 MiB memory in use. Process 808950 has 74.34 MiB memory in use. Process 537055 has 1.86 GiB memory in use. Including non-PyTorch memory, this process has 2.13 GiB memory in use. Of the allocated memory 1.97 GiB is allocated by PyTorch, and 31.31 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables))
+  ✗ retry (Script exited with code 1: /home/arianeguay/.local/lib/python3.14/site-packages/confection/__init__.py:38: UserWarning: Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  from pydantic.v1 import BaseModel, Extra, ValidationError, create_model
+[nlp] loaded 'en_core_web_lg' components=['tok2vec', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer', 'ner'] ner_labels=['EVENT', 'FACTION', 'ORG', 'PERSON', 'PLACE']
+Skipping import of cpp extensions due to incompatible torch version. Please upgrade to torch >= 2.11.0 (found 2.10.0+cu128).
+/home/arianeguay/.local/lib/python3.14/site-packages/huggingface_hub/file_download.py:949: FutureWarning: `resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.
+  warnings.warn(
+Fetching 4 files:   0%|          | 0/4 [00:00<?, ?it/s]Fetching 4 files: 100%|██████████| 4/4 [00:00<00:00, 19925.43it/s]
+/home/arianeguay/.local/lib/python3.14/site-packages/transformers/convert_slow_tokenizer.py:566: UserWarning: The sentencepiece tokenizer that you are converting to a fast tokenizer uses the byte fallback option which is not implemented in the fast tokenizers. In practice this means that the fast version of the tokenizer can produce unknown tokens whereas the sentencepiece version would have converted these unknown tokens into a sequence of byte tokens matching the original piece of text.
+  warnings.warn(
+[nlp] gliner 'urchade/gliner_large-v2.1' on cuda labels={'person name': 'PERSON', 'place name': 'PLACE', 'kingdom, empire, or government': 'ORG', 'event': 'EVENT', 'people, race, or order': 'FACTION'}
+Asking to truncate to max_length but no maximum length is provided and the model has no predefined maximum length. Default to no truncation.
+Traceback (most recent call last):
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 758, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 722, in main
+    result = extract_entities(
+        chapters, nlp, cue_words=cue_words, retag_from_context=not ner.invented_names
+    )
+  File "/tmp/wt-stu-543/scripts/entity_extraction.py", line 524, in extract_entities
+    doc = nlp(chapter["content"])
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1058, in __call__
+    error_handler(name, proc, [doc], e)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/util.py", line 1780, in raise_error
+    raise e
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/spacy/language.py", line 1053, in __call__
+    doc = proc(doc, **component_cfg.get(name, {}))  # type: ignore[call-arg]
+  File "/tmp/wt-stu-543/wiki_creator/nlp/gliner_ner.py", line 99, in __call__
+    predictions = self._load().inference(
+        [text for _, text in chunks],
+    ...<2 lines>...
+        batch_size=self.batch_size,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 2311, in inference
+    outputs = self._process_batches(
+        data_loader,
+    ...<6 lines>...
+        **external_inputs,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 1991, in _process_batches
+    model_output = self.run_batch(
+        batch,
+    ...<3 lines>...
+        **external_inputs,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/model.py", line 2158, in run_batch
+    model_output = self.model(**model_inputs, threshold=threshold)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/modeling/base.py", line 454, in forward
+    prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(
+                                                                       ~~~~~~~~~~~~~~~~~~~~~~~~^
+        input_ids, attention_mask, text_lengths, words_mask, **encoder_kwargs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/modeling/base.py", line 355, in get_representations
+    token_embeds = self.token_rep_layer(input_ids, attention_mask, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/modeling/encoder.py", line 878, in forward
+    token_embeddings = self.encode_text(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/modeling/encoder.py", line 771, in encode_text
+    token_embeddings = self.bert_layer(
+        input_ids=input_ids,
+        **bert_kwargs,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/gliner/modeling/encoder.py", line 231, in forward
+    output = self.model(input_ids, *args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/deberta_v2/modeling_deberta_v2.py", line 784, in forward
+    encoder_outputs = self.encoder(
+        embedding_output,
+    ...<3 lines>...
+        return_dict=return_dict,
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/deberta_v2/modeling_deberta_v2.py", line 657, in forward
+    output_states, attn_weights = layer_module(
+                                  ~~~~~~~~~~~~^
+        next_kv,
+        ^^^^^^^^
+    ...<4 lines>...
+        output_attentions=output_attentions,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/modeling_layers.py", line 94, in __call__
+    return super().__call__(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/deberta_v2/modeling_deberta_v2.py", line 436, in forward
+    attention_output, att_matrix = self.attention(
+                                   ~~~~~~~~~~~~~~^
+        hidden_states,
+        ^^^^^^^^^^^^^^
+    ...<4 lines>...
+        rel_embeddings=rel_embeddings,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/deberta_v2/modeling_deberta_v2.py", line 369, in forward
+    self_output, att_matrix = self.self(
+                              ~~~~~~~~~^
+        hidden_states,
+        ^^^^^^^^^^^^^^
+    ...<4 lines>...
+        rel_embeddings=rel_embeddings,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/deberta_v2/modeling_deberta_v2.py", line 250, in forward
+    rel_att = self.disentangled_attention_bias(
+        query_layer, key_layer, relative_pos, rel_embeddings, scale_factor
+    )
+  File "/home/arianeguay/.local/lib/python3.14/site-packages/transformers/models/deberta_v2/modeling_deberta_v2.py", line 328, in disentangled_attention_bias
+    score += c2p_att / scale.to(dtype=c2p_att.dtype)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 70.00 MiB. GPU 0 has a total capacity of 5.65 GiB of which 204.81 MiB is free. Process 37522 has 83.47 MiB memory in use. Process 7777 has 38.34 MiB memory in use. Process 808950 has 74.34 MiB memory in use. Process 537055 has 1.86 GiB memory in use. Including non-PyTorch memory, this process has 2.13 GiB memory in use. Of the allocated memory 1.97 GiB is allocated by PyTorch, and 31.31 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables))
+  ✗ failed (51s)
+
+✗ Pipeline failed (53s)
+
+Pipeline: wiki-extraction
+Status:   ✗ failed
+Duration: 52s
+
+Stages:
+  [1/3] epub-parse .................... ✓ (1 attempt)
+  [2/3] section-filter ................ ✓ (1 attempt)
+  [3/3] entity-extraction ............. ✗ FAILED (3 attempts exhausted)
+
+
+Run ID: 4ceb7c9b-adcf-4760-8d4a-18d380ab905b
+View details: studio status 4ceb7c9b-adcf-4760-8d4a-18d380ab905b
