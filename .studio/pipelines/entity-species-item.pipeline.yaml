@@ -1,0 +1,14 @@
+name: entity-species-item
+description: Decide which species/race each PERSON roster entry is — one call per book
+version: 1
+
+stages:
+  - name: entity-species-item
+    kind: analysis
+    agent: entity-species
+    contract: entity-species-item
+    ralph:
+      max_attempts: 3
+    context:
+      include:
+        - input
