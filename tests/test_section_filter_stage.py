@@ -124,3 +124,18 @@ def test_stage_fails_when_there_are_no_chapters(monkeypatch, book):
     monkeypatch.setattr("sys.stdout", io.StringIO())
     with pytest.raises(SystemExit):
         stage.main()
+
+
+def test_stage_numbers_the_narrative_chapters(monkeypatch, book):
+    """STU-550: the number is assigned here — the only place both the reading
+    order and the front-matter verdict are known."""
+    epub, processing, epub_data = book
+    save_drop_cache(processing / "section_filter.json", section_rows(CHAPTERS), {"cop": "copyright page"})
+    _forbid_network(monkeypatch)
+
+    result = _run(monkeypatch, _payload(epub, epub_data))
+
+    assert "chapter_number" not in result["chapters"][0]
+    assert result["chapters"][1]["chapter_number"] == 1
+    on_disk = json.loads((processing / "epub_data.json").read_text(encoding="utf-8"))
+    assert on_disk["chapters"][1]["chapter_number"] == 1

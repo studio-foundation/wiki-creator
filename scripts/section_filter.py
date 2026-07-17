@@ -21,6 +21,7 @@ from pathlib import Path
 
 import yaml
 
+from wiki_creator.chapters import number_chapters
 from wiki_creator.section_filter import (
     apply_frontmatter,
     load_cached_drops,
@@ -125,6 +126,9 @@ def main() -> None:
         book_title=str(epub_data.get("title") or ""),
         cache_path=paths.processing / "section_filter.json",
     )
+    # The only place both the reading order and the front-matter verdict are
+    # known — every later stage reads the field instead of re-deriving it.
+    number_chapters(chapters)
 
     # epub_data.json is the on-disk source for the stages that do not read stdin
     # (chapter_summary --book, wiki_preparation); the tags have to reach it too.

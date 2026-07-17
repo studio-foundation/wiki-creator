@@ -36,7 +36,6 @@ from pathlib import Path
 import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-from wiki_creator.chapters import chapter_number
 from wiki_creator.lang import load_lang_config
 from wiki_creator.editorial_stance import GROUNDING_BLOCK, EditorialStance, editorial_stance
 from wiki_creator.page_templates import (
@@ -1139,7 +1138,7 @@ def _generate_relationships_subsections(
     for rel in entity.get("relationships") or []:
         if not usable_relationship_type(rel.get("relationship_type")):
             continue
-        chapters = [n for n in (chapter_number(k) for k in rel.get("chapters") or []) if n is not None]
+        chapters = [n for n in (rel.get("chapters") or []) if isinstance(n, int)]
         other = rel["entity_b"] if rel.get("entity_a") in own else rel["entity_a"]
         typed.append((max(chapters) if chapters else -1, other, rel))
     typed.sort(key=lambda t: t[0], reverse=True)

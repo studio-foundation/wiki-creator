@@ -28,6 +28,7 @@ def _place_entity():
         "type": "PLACE",
         "importance": "principal",
         "context_by_chapter": {"C01": ["Eyllwe résiste à Adarlan."]},
+        "context_chapters": [1],
         "relationships": [],
     }
 
@@ -68,7 +69,7 @@ def test_person_entity_routes_to_sectioned(monkeypatch):
     monkeypatch.setattr(gwp, "_run_generation_for_entity",
                         lambda **kw: {"_which": "single_shot"})
     entity = {"canonical_name": "Chaol", "type": "PERSON", "importance": "principal",
-              "context_by_chapter": {"C01": ["ctx"]}, "relationships": []}
+              "context_by_chapter": {"C01": ["ctx"]}, "context_chapters": [1], "relationships": []}
     page = gwp._run_generation(
         entity=entity, book_title="ToG", model="m", timeout=10,
         sections=["infobox", "biography"], max_tokens=800,
