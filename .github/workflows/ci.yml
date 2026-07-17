@@ -36,6 +36,8 @@ jobs:
       - name: Research eval suites
         run: |
           for eval in research/*-eval; do
+            # a research-only spike ships no tests/ (graph-eval, STU-469)
+            [ -d "$eval/tests" ] || continue
             echo "::group::$eval"
             (cd "$eval" && PYTHONPATH="$GITHUB_WORKSPACE" python -m pytest tests/ -q)
             echo "::endgroup::"
