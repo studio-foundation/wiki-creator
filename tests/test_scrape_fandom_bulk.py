@@ -1,8 +1,12 @@
-"""Tests for scripts/scrape_fandom_bulk.py — infobox identification (STU-557)."""
+"""Tests for scripts/scrape_fandom_bulk.py — infobox identification (STU-557)
+and page enumeration (STU-558)."""
 from unittest.mock import patch
 
 from scripts.scrape_fandom_bulk import (
     WikiInfoboxTemplates,
+    declared_infobox_names,
+    entity_page_source,
+    fetch_entity_titles,
     is_infobox_template,
     normalize_template_name,
     parse_infobox,
@@ -168,3 +172,70 @@ def test_zero_infobox_reason_names_pages_that_carry_no_infobox():
     # are stubs that call none. A different failure, and not ours.
     reason = zero_infobox_reason(WikiInfoboxTemplates({"Character"}))
     assert "the pages sampled carry no infobox" in reason
+
+
+def test_entity_page_source_defaults_to_the_category():
+    kind, names = entity_page_source({"wiki": "https://throneofglass.fandom.com"}, "PERSON")
+    assert (kind, names) == ("category", ["Characters"])
+
+
+def test_entity_page_source_uses_the_declared_category_name():
+    entry = {"categories": {"PERSON": "Personnage"}}
+    assert entity_page_source(entry, "PERSON") == ("category", ["Personnage"])
+
+
+def test_entity_page_source_enumerates_from_infoboxes_when_no_category_names_the_type():
+    # Pern files its cast by in-world era (`Ninth Pass`), so no category name is
+    # the one to override — the infobox its character pages carry is.
+    entry = {"infoboxes": {"PERSON": ["Infobox show character", "Infobox show dragonkind"]}}
+    kind, names = entity_page_source(entry, "PERSON")
+    assert kind == "infoboxes"
+    assert names == ["Infobox show character", "Infobox show dragonkind"]
+
+
+def test_entity_page_source_keeps_the_category_when_the_entry_names_both():
+    # Warriors names `Charcat` only so the infobox identification can see it
+    # (STU-557); its `Characters` category is still the entry point.
+    entry = {"categories": {"PERSON": "Characters"}, "infoboxes": {"PERSON": ["Charcat"]}}
+    assert entity_page_source(entry, "PERSON") == ("category", ["Characters"])
+
+
+def test_entity_page_source_is_decided_per_type():
+    # A wiki can name a category for one type and only infoboxes for another.
+    entry = {"categories": {"PLACE": "Places"}, "infoboxes": {"PERSON": ["Character"]}}
+    assert entity_page_source(entry, "PERSON") == ("infoboxes", ["Character"])
+    assert entity_page_source(entry, "PLACE") == ("category", ["Places"])
+
+
+def test_declared_infobox_names_flattens_every_type():
+    entry = {"infoboxes": {"PERSON": ["Human infobox", "Vampire infobox"], "ORG": ["Coven infobox"]}}
+    assert declared_infobox_names(entry) == ["Human infobox", "Vampire infobox", "Coven infobox"]
+
+
+def test_declared_infobox_names_of_an_entry_that_declares_none():
+    assert declared_infobox_names({"wiki": "https://throneofglass.fandom.com"}) == []
+
+
+def test_fetch_entity_titles_unions_a_types_infoboxes_without_duplicating_a_page():
+    # Twilight types its cast by species; a hybrid page carries two of them.
+    pages = {
+        "Template:Human infobox": ["Bella Swan", "Renesmee Cullen"],
+        "Template:Hybrid infobox": ["Renesmee Cullen", "Nahuel"],
+    }
+    with patch("scripts.scrape_fandom_bulk.fetch_transclusions", side_effect=lambda _api, t: pages[t]):
+        titles = fetch_entity_titles(
+            "http://x/api.php", "infoboxes", ["Human infobox", "Hybrid infobox"], "Template:"
+        )
+    assert titles == ["Bella Swan", "Renesmee Cullen", "Nahuel"]
+
+
+def test_fetch_entity_titles_prefixes_a_localized_template_namespace():
+    with patch("scripts.scrape_fandom_bulk.fetch_transclusions", return_value=[]) as fetch:
+        fetch_entity_titles("http://x/api.php", "infoboxes", ["Roi+Dieu"], "Modèle:")
+    fetch.assert_called_once_with("http://x/api.php", "Modèle:Roi+Dieu")
+
+
+def test_fetch_entity_titles_reads_the_category_in_category_mode():
+    with patch("scripts.scrape_fandom_bulk.fetch_category_members", return_value=["Aelin"]) as fetch:
+        assert fetch_entity_titles("http://x/api.php", "category", ["Characters"], "Template:") == ["Aelin"]
+    fetch.assert_called_once_with("http://x/api.php", "Characters")
