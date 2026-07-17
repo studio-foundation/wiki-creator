@@ -33,9 +33,35 @@ SNIPPET_CHARS = 300
 
 _WHITESPACE_RE = re.compile(r"\s+")
 
+# An EPUB's typesetting uses curly quotes/dashes; the model echoes the same
+# sentence back in plain ASCII. Folding both to one form is what lets a
+# verbatim quote inside dialogue still match its source snippet.
+_TYPOGRAPHIC_TRANSLATION = str.maketrans(
+    {
+        "‘": "'",
+        "’": "'",
+        "‚": "'",
+        "‛": "'",
+        "“": '"',
+        "”": '"',
+        "„": '"',
+        "‟": '"',
+        "′": "'",
+        "″": '"',
+        "…": "...",
+        "–": "-",
+        "—": "-",
+        "‑": "-",
+        " ": " ",
+        " ": " ",
+        " ": " ",
+    }
+)
+
 
 def _normalize(text: object) -> str:
-    return _WHITESPACE_RE.sub(" ", str(text or "")).strip().casefold()
+    folded = str(text or "").translate(_TYPOGRAPHIC_TRANSLATION)
+    return _WHITESPACE_RE.sub(" ", folded).strip().casefold()
 
 
 def _has_marker(text: str, status_markers: list[str]) -> bool:

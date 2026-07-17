@@ -178,6 +178,83 @@ def test_quote_matching_ignores_whitespace_and_case():
     assert verdicts["Brom"]["status"] == "deceased"
 
 
+def test_the_eragon_regression_brom_quote_survives_curly_source_quotes():
+    # STU-488 real run: the EPUB snippet carries curly quotes and an em dash;
+    # the model echoed the same sentence back in straight ASCII. This is the
+    # exact snippet/reply pair that scored 0/62 verdicts before the fix.
+    rows = [
+        {
+            "name": "Brom",
+            "aliases": [],
+            "snippets": [
+                {
+                    "text": (
+                        "Saphira … I like the name—fitting for a dragon.” "
+                        "“Brom's dead,” said Eragon abruptly. “The Ra'zac killed him.”"
+                    ),
+                    "chapter_id": "chapter_32",
+                }
+            ],
+        }
+    ]
+    verdict = _verdict(
+        quote="\"Brom's dead,\" said Eragon abruptly. \"The Ra'zac killed him.\""
+    )
+    verdicts = parse_status_verdict(verdict, rows)
+    assert verdicts["Brom"]["status"] == "deceased"
+
+
+def test_curly_apostrophe_folds_to_straight():
+    rows = [
+        {"name": "Brom", "aliases": [], "snippets": [{"text": "Brom’s hand went still.", "chapter_id": "c1"}]}
+    ]
+    verdicts = parse_status_verdict(_verdict(quote="Brom's hand went still."), rows)
+    assert verdicts["Brom"]["status"] == "deceased"
+
+
+def test_ellipsis_folds_to_three_dots():
+    rows = [
+        {
+            "name": "Brom",
+            "aliases": [],
+            "snippets": [{"text": "Brom fell silent… then died.", "chapter_id": "c1"}],
+        }
+    ]
+    verdicts = parse_status_verdict(_verdict(quote="Brom fell silent... then died."), rows)
+    assert verdicts["Brom"]["status"] == "deceased"
+
+
+def test_em_dash_folds_to_hyphen():
+    rows = [
+        {
+            "name": "Brom",
+            "aliases": [],
+            "snippets": [{"text": "Brom—dying—spoke once more.", "chapter_id": "c1"}],
+        }
+    ]
+    verdicts = parse_status_verdict(_verdict(quote="Brom-dying-spoke once more."), rows)
+    assert verdicts["Brom"]["status"] == "deceased"
+
+
+def test_non_breaking_space_folds_to_a_plain_space():
+    rows = [
+        {"name": "Brom", "aliases": [], "snippets": [{"text": "Brom died at dawn.", "chapter_id": "c1"}]}
+    ]
+    verdicts = parse_status_verdict(_verdict(quote="Brom died at dawn."), rows)
+    assert verdicts["Brom"]["status"] == "deceased"
+
+
+def test_folding_does_not_relax_the_check_for_invented_text():
+    # Folding only equates two spellings of the SAME sentence. A sentence the
+    # model invented must still be rejected, even one that also carries a
+    # typographic apostrophe.
+    rows = [
+        {"name": "Brom", "aliases": [], "snippets": [{"text": "Brom’s hand went still.", "chapter_id": "c1"}]}
+    ]
+    verdicts = parse_status_verdict(_verdict(quote="Brom's heart stopped beating."), rows)
+    assert verdicts == {}
+
+
 def test_a_name_off_the_roster_is_rejected():
     verdicts = parse_status_verdict(_verdict(name="Durza"), _rows())
     assert verdicts == {}
