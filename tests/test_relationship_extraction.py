@@ -739,6 +739,47 @@ def test_run_studio_classifier_item_degrades_on_studio_missing():
 
 
 # ---------------------------------------------------------------------------
+# STU-562: transient Studio failures are retried; a missing CLI is not
+# ---------------------------------------------------------------------------
+
+_SUCCESS_STDOUT = json.dumps({
+    "stages": [{
+        "stage_name": "relationship-classifier",
+        "status": "success",
+        "output": {"relationship_type": "ami"},
+    }]
+})
+
+
+def test_run_studio_classifier_item_retries_transient_then_succeeds():
+    """A timeout on the first attempt is retried and the second succeeds."""
+    rel = {"entity_a": "A", "entity_b": "B", "sample_contexts": [], "cooccurrence_count": 1}
+    ok = MagicMock(returncode=0, stdout=_SUCCESS_STDOUT, stderr="")
+    with patch("subprocess.run", side_effect=[subprocess.TimeoutExpired("studio", 120), ok]) as run:
+        result = _run_studio_classifier_item(rel, novel_summary="", additional_context="")
+    assert result["relationship_type"] == "ami"
+    assert run.call_count == 2
+
+
+def test_run_studio_classifier_item_returns_error_after_exhausting_retries():
+    """Every attempt times out — the error is returned, not swallowed."""
+    rel = {"entity_a": "A", "entity_b": "B", "sample_contexts": [], "cooccurrence_count": 1}
+    with patch("subprocess.run", side_effect=subprocess.TimeoutExpired("studio", 120)) as run:
+        result = _run_studio_classifier_item(rel, novel_summary="", additional_context="")
+    assert result.get("error") == "studio_run_timeout"
+    assert run.call_count == 2
+
+
+def test_run_studio_classifier_item_does_not_retry_missing_cli():
+    """A missing binary is terminal — retrying an absent CLI only stalls."""
+    rel = {"entity_a": "A", "entity_b": "B", "sample_contexts": [], "cooccurrence_count": 1}
+    with patch("subprocess.run", side_effect=FileNotFoundError) as run:
+        result = _run_studio_classifier_item(rel, novel_summary="", additional_context="")
+    assert result.get("error") == "studio_cli_missing"
+    assert run.call_count == 1
+
+
+# ---------------------------------------------------------------------------
 # STU-286: filter PLACE/OTHER entities before classification
 # ---------------------------------------------------------------------------
 

@@ -76,20 +76,27 @@ def _load_done_keys(output_path: Path) -> tuple[set[tuple[str, str]], list[dict]
 
     Malformed pairs (missing entity_a/entity_b) are skipped individually — they do NOT
     cause a full reset of resume state.
+
+    A pair carrying a ``classification_error`` (STU-562) is a Studio failure, not a
+    verdict: it is dropped from both the done-keys and the kept list so a re-run
+    retries it instead of resuming it as settled — and it is not duplicated.
     """
     if not output_path.exists():
         return set(), []
     try:
         data = json.loads(output_path.read_text(encoding="utf-8"))
         pairs = data.get("relationships", [])
-        keys = {
-            (p["entity_a"], p["entity_b"])
-            for p in pairs
-            if "entity_a" in p and "entity_b" in p
-        }
-        return keys, pairs
     except json.JSONDecodeError:
         return set(), []
+    keys: set[tuple[str, str]] = set()
+    kept: list[dict] = []
+    for p in pairs:
+        if p.get("classification_error"):
+            continue
+        kept.append(p)
+        if "entity_a" in p and "entity_b" in p:
+            keys.add((p["entity_a"], p["entity_b"]))
+    return keys, kept
 
 
 def _save(output_path: Path, base: dict, classified: list[dict]) -> None:
@@ -209,14 +216,13 @@ def main() -> None:
                     }
                     result = {**pair, **classification}
                 else:
-                    print(
-                        f"\n  [WARN] Studio failed for {label}: "
-                        f"{classification.get('error', 'unknown') if classification else 'no response'}",
-                        file=sys.stderr,
-                    )
-                    result = pair
+                    error = classification.get("error", "unknown") if classification else "no_response"
+                    print(f"\n  [WARN] Studio failed for {label}: {error}", file=sys.stderr)
+                    # STU-562: mark the pair so the artifact distinguishes an
+                    # unjudged Studio failure from a real decline (both untyped).
+                    result = {**pair, "classification_error": error}
                 classified.append(result)
-                status = result.get("relationship_type") or "null"
+                status = result.get("relationship_type") or result.get("classification_error") or "null"
                 print(f" → {status}", file=sys.stderr)
             _save(output_path, base, classified)
     except KeyboardInterrupt:
@@ -226,10 +232,11 @@ def main() -> None:
         )
 
     succeeded = sum(1 for r in classified if r.get("relationship_type") is not None)
-    print(
-        f"\n[classify-relationships] Done — {len(classified)} total, {succeeded} classified",
-        file=sys.stderr,
-    )
+    errored = sum(1 for r in classified if r.get("classification_error"))
+    summary = f"\n[classify-relationships] Done — {len(classified)} total, {succeeded} classified"
+    if errored:
+        summary += f", {errored} unjudged (Studio error)"
+    print(summary, file=sys.stderr)
 
 
 if __name__ == "__main__":
