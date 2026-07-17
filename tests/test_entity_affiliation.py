@@ -162,3 +162,74 @@ def test_render_roster_shows_names_aliases_and_snippets():
     )
     assert "## Eragon (also called: Shadeslayer)" in rendered
     assert "- Eragon joined the Varden." in rendered
+
+
+import json as _json
+from unittest.mock import patch
+
+from scripts.entity_affiliation import resolve_affiliation
+
+
+def _ok_payload():
+    class _Ok:
+        returncode = 0
+        stdout = _json.dumps({
+            "stages": [{
+                "stage_name": "entity-affiliation-item",
+                "status": "success",
+                "output": {"affiliation": [
+                    {"name": "Eragon", "affiliation": "Varden",
+                     "quote": "Eragon joined the Varden."}
+                ]},
+            }]
+        })
+        stderr = ""
+    return _Ok()
+
+
+def test_resolve_caches_and_does_not_call_twice(tmp_path):
+    cache = tmp_path / "entity_affiliation.json"
+    with patch("scripts.entity_affiliation.subprocess.run", return_value=_ok_payload()):
+        first = resolve_affiliation(_rows(), "Eragon", cache)
+    assert first["Eragon"]["affiliation"] == "Varden"
+
+    with patch("scripts.entity_affiliation.subprocess.run") as run:
+        second = resolve_affiliation(_rows(), "Eragon", cache)
+    run.assert_not_called()
+    assert second == first
+
+
+@pytest.mark.parametrize("boom", [FileNotFoundError, __import__("subprocess").TimeoutExpired("studio", 1)])
+def test_every_failure_path_omits_the_slot_for_everyone(tmp_path, boom):
+    """THE LOAD-BEARING TEST. A false affiliation puts a character in the wrong
+    army on a page nobody will reread; an absent one says nothing. The run must
+    never fail."""
+    cache = tmp_path / "entity_affiliation.json"
+    with patch("scripts.entity_affiliation.subprocess.run", side_effect=boom):
+        assert resolve_affiliation(_rows(), "Eragon", cache) == {}
+
+
+def test_a_nonzero_exit_omits_the_slot_for_everyone(tmp_path):
+    class _Fail:
+        returncode = 1
+        stdout = ""
+        stderr = "boom"
+    cache = tmp_path / "entity_affiliation.json"
+    with patch("scripts.entity_affiliation.subprocess.run", return_value=_Fail()):
+        assert resolve_affiliation(_rows(), "Eragon", cache) == {}
+
+
+def test_a_stale_cache_from_another_roster_is_deleted_not_replayed(tmp_path):
+    """wiki_preparation.load_affiliation_verdicts is roster-blind, so a give-up
+    path that left the old artifact in place would let it replay a verdict made
+    for a different roster."""
+    cache = tmp_path / "entity_affiliation.json"
+    save_cache(cache, _rows(), {"Eragon": {"affiliation": "Varden", "quote": "x"}})
+    other = roster_rows(
+        [{"canonical_name": "Murtagh", "aliases": []}],
+        {"Murtagh": [_snip("Murtagh joined the Empire.", "ch40")]},
+        MARKERS,
+    )
+    with patch("scripts.entity_affiliation.subprocess.run", side_effect=FileNotFoundError):
+        assert resolve_affiliation(other, "Eragon", cache) == {}
+    assert not cache.exists()
