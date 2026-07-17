@@ -1,0 +1,2 @@
+# Provided by the project's `embeddings` extra: pip install -e '.[embeddings]'
+sentence-transformers
