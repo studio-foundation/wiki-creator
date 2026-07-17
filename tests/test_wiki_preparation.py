@@ -1175,6 +1175,36 @@ def test_build_entity_bundle_hands_chapter_numbers_out_not_section_ids():
     assert bundle["context_chapters"] == [1, 2]
 
 
+def test_build_entity_bundle_maps_context_ids_to_chapter_positions():
+    """STU-580: the bundle carries a section id -> position map for the entity's
+    own context, so the label generator never counts digits out of the id.
+    `bookcontent2_0` is the first narrative chapter (front matter precedes it),
+    hence position 1 — not 2."""
+    persons = _pf({
+        "p1": {
+            "first_seen": "bookcontent2_0",
+            "mentions_by_chapter": {
+                "bookcontent2_0": ["Lucy stepped through the wardrobe."],
+                "bookcontent3_0": ["Lucy met the faun."],
+            },
+        },
+    })
+    entity = {
+        "canonical_name": "Lucy Pevensie",
+        "type": "PERSON",
+        "importance": "principal",
+        "source_ids": ["p1"],
+    }
+
+    bundle = build_entity_bundle(
+        entity, [], persons, {}, {}, {}, {"Lucy Pevensie": entity},
+        chapter_numbers={"bookcontent2_0": 1, "bookcontent3_0": 2},
+    )
+
+    assert bundle["context_chapter_numbers"] == {"bookcontent2_0": 1, "bookcontent3_0": 2}
+    assert bundle["context_chapters"] == [1, 2]
+
+
 def test_build_entity_bundle_drops_a_chapter_reference_it_cannot_resolve(capsys):
     """STU-550: an unresolvable reference warns; it is never numbered by its digits."""
     persons, places, orgs, events = _registries()
