@@ -439,11 +439,23 @@ Inside `wiki-resolution`, order matters:
   and STU-564 (truncated-echo recovery) each fail safe, so the stage warned, merged
   nothing, and every pipeline stayed green — the feature did not exist on the large
   books and no reading of the prompt would have said so.
-  One loose thread: with STU-564 fixed, `section-filter`'s verdict survives, the
-  extraction changes, and **`alias-resolution` now folds `Celaena`/`Lillian Gordaina`
-  upstream by itself** — so Throne of Glass correctly yields 0 merges, and STU-539's
-  premise that "no signal even proposes that pair today" is false on a correctly
-  filtered extraction.
+  One loose thread, measured and reversed (STU-573): with STU-564 fixed, Throne of
+  Glass yields **0 adjudication merges**, which looks like the deterministic upstream
+  now folds `Celaena`/`Lillian Gordaina` on its own — it does not. `entity-clustering`
+  is **seeded** from the series registry (`Registry.load_seed_table`), and a re-run of
+  tome 1 self-seeds from its own prior `registry.json`, so the pair arrives at
+  clustering already joined. Rebuild the cluster with `seed=None` and it splits back
+  into `Celaena/Sardothien` + `Lillian Gordaina/Lady Lillian/Lillian`:
+  `Celaena Sardothien` and `Lillian Gordaina` share no token, so jaro-winkler keeps
+  them apart, and `alias-resolution`'s lexical rules cannot bridge them either
+  (`role_symmetric` needs `_names_share_token`; `reveal_words` — `true name`, `real
+  name`, `alias` — are absent from *"Lillian Gordaina **was** Celaena Sardothien"*, so
+  `_detect_reveal_signal` never fires). The identity in the seed traces to a **prior
+  adjudication verdict** (registry decision `strategy: context_adjudication`, the C40
+  quote), cached by `write-registry` and replayed by seeding. So STU-539's premise —
+  "no deterministic signal proposes that pair" — is **still true**; the `0 merges` is
+  seed-replay of the LLM verdict adjudication earned once, not a rule discovering it.
+  Adjudication is not redundant. The fold does not survive a cold (registry-less) run.
 
 - A quote that is present is not a quote that proves (STU-544): the STU-539 grounding
   check verifies the cited quote is verbatim in the snippets — *did this come from the
