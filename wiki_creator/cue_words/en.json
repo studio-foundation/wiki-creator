@@ -412,5 +412,10 @@
   "placeholder_markers": [
     "if known",
     "content in english based only on the excerpts"
+  ],
+  "status_markers": [
+    "died", "dies", "die", "dying", "dead", "death", "killed", "kill", "slain",
+    "slew", "murdered", "perished", "corpse", "grave", "buried", "funeral",
+    "missing", "vanished", "disappeared", "undead", "revived", "resurrected"
   ]
 }

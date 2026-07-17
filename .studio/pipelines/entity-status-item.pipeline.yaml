@@ -1,0 +1,14 @@
+name: entity-status-item
+description: Decide which PERSON roster entries are dead by the end of this book — one call per book
+version: 1
+
+stages:
+  - name: entity-status-item
+    kind: analysis
+    agent: entity-status
+    contract: entity-status-item
+    ralph:
+      max_attempts: 3
+    context:
+      include:
+        - input

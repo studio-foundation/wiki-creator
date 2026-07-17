@@ -18,6 +18,7 @@ from scripts.wiki_preparation import (
     write_batches,
 )
 from wiki_creator import studio_io
+from wiki_creator.entity_status import DEFAULT_STATUS
 from wiki_creator.types import EntityFull
 
 
@@ -878,6 +879,27 @@ def test_build_entity_bundle_titles_empty_without_role_words():
         entity, [], persons, places, orgs, events, {"Chaol": entity},
     )
     assert bundle["titles"] == []
+
+
+def test_build_entity_bundle_stamps_status():
+    """STU-488: the entity_status.py verdict must reach the batch entity."""
+    persons, places, orgs, events = _registries()
+    entity = {"canonical_name": "Brom", "type": "PERSON", "importance": "principal"}
+    bundle = build_entity_bundle(
+        entity, [], persons, places, orgs, events, {"Brom": entity},
+        status_verdicts={"Brom": {"status": "deceased"}},
+    )
+    assert bundle["status"] == "deceased"
+
+
+def test_build_entity_bundle_defaults_status_without_a_verdict():
+    """A book that never ran entity_status.py renders every entity unknown."""
+    persons, places, orgs, events = _registries()
+    entity = {"canonical_name": "Brom", "type": "PERSON", "importance": "principal"}
+    bundle = build_entity_bundle(
+        entity, [], persons, places, orgs, events, {"Brom": entity},
+    )
+    assert bundle["status"] == DEFAULT_STATUS
 
 
 def test_main_binds_identity_from_registry(tmp_path: Path, monkeypatch):

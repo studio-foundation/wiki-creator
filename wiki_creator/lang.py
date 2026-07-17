@@ -55,6 +55,7 @@ OPTIONAL_KEYS = frozenset(
         "feminine_titles",
         "title_prefixes",
         "geographic_keywords",
+        "status_markers",
     }
 )
 
