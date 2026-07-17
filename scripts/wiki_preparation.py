@@ -40,6 +40,7 @@ from wiki_creator.collation import (
     collective_pages,
     partition_by_collation,
 )
+from wiki_creator.entity_status import DEFAULT_STATUS
 from wiki_creator.facts import extract_titles
 from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator.page_templates import output_language
@@ -363,6 +364,21 @@ def events_for_entity(canonical_name: str, events: list[dict]) -> list[dict]:
     return sorted(hits, key=lambda e: e.get("chapter", 0))
 
 
+def load_status_verdicts(processing_dir: Path) -> dict[str, dict]:
+    """Per-character status decided by the entity-status pre-step (STU-488).
+
+    Absent or unreadable artifact -> {} -> every character renders the slot's
+    declared fallback, `unknown`. A book that never ran the stage is not an error.
+    """
+    path = Path(processing_dir) / "entity_status.json"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    verdicts = payload.get("verdicts") if isinstance(payload, dict) else None
+    return verdicts if isinstance(verdicts, dict) else {}
+
+
 def build_entity_bundle(
     entity: dict,
     relationships: list[dict],
@@ -377,6 +393,7 @@ def build_entity_bundle(
     graph: "CharacterGraph | None" = None,
     role_words: list[str] | None = None,
     plot_events: list[dict] | None = None,
+    status_verdicts: dict[str, dict] | None = None,
 ) -> dict:
     canonical_name = entity["canonical_name"]
     context_by_chapter = extract_context(entity, persons, places, orgs, events)
@@ -392,6 +409,8 @@ def build_entity_bundle(
             [canonical_name, *entity.get("aliases", []), *entity.get("raw_mentions", [])],
             role_words or [],
         ),
+        "status": (status_verdicts or {}).get(canonical_name, {}).get("status", DEFAULT_STATUS),
+        "death_chapter": (status_verdicts or {}).get(canonical_name, {}).get("chapter"),
         "total_mentions": entity.get("total_mentions", 0),
         "chapters_present": entity.get("chapters_present", 0),
         "first_seen": get_first_seen(entity, persons, places, orgs, events),
@@ -592,6 +611,12 @@ def main() -> None:
             file=sys.stderr,
         )
 
+    status_verdicts = load_status_verdicts(paths.processing)
+    print(
+        f"wiki-preparation: {len(status_verdicts)} character status verdict(s) loaded",
+        file=sys.stderr,
+    )
+
     plot_events = read_plot_events(paths.processing / "events.json")
     dedicated, collated, dropped = partition_by_collation(
         relevant_entities, collation_config(book_cfg), plot_events
@@ -656,6 +681,7 @@ def main() -> None:
             graph=_series_graph,
             role_words=role_words,
             plot_events=plot_events,
+            status_verdicts=status_verdicts,
         )
         for e in dedicated
     ]

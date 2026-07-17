@@ -3,7 +3,9 @@ import json
 import subprocess
 from unittest.mock import patch
 
+import run_wiki
 from scripts.entity_status import contexts_by_entity, resolve_status
+from scripts.wiki_preparation import load_status_verdicts
 from wiki_creator.entity_status import (
     DEFAULT_STATUS,
     SNIPPETS_PER_ENTITY,
@@ -416,3 +418,29 @@ def test_person_declares_both_slots():
     assert slots["death"]["provenance"] == "extracted-fact"
     assert slots["death"]["obligation"] == "OPT"
     assert "{{{death|}}}" in person["export"]["infobox_source"]
+
+
+def test_the_pre_step_is_registered_before_wiki_preparation():
+    # STU-512's lesson: without this, the whole feature is deletable with the
+    # suite green.
+    commands = [" ".join(cmd) for cmd in run_wiki.PRE_STEPS["wiki-preparation"]]
+    assert any("scripts/entity_status.py" in cmd for cmd in commands)
+
+
+def test_the_batch_entity_carries_the_verdict(tmp_path):
+    (tmp_path / "entity_status.json").write_text(
+        json.dumps({
+            "roster": [],
+            "verdicts": {"Brom": {"status": "deceased", "quote": BROM_QUOTE, "chapter": 38}},
+        }),
+        encoding="utf-8",
+    )
+    verdicts = load_status_verdicts(tmp_path)
+    assert verdicts["Brom"]["status"] == "deceased"
+    assert verdicts["Brom"]["chapter"] == 38
+
+
+def test_a_missing_or_corrupt_status_artifact_leaves_every_entity_unknown(tmp_path):
+    assert load_status_verdicts(tmp_path) == {}
+    (tmp_path / "entity_status.json").write_text("{not json", encoding="utf-8")
+    assert load_status_verdicts(tmp_path) == {}
