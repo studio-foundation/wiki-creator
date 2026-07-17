@@ -140,15 +140,12 @@ def render_roster(rows: list[dict]) -> str:
     return "\n\n".join(blocks)
 
 
-def _quoted_snippet(quote: str, snippets: list[dict]) -> dict | None:
-    """The entity's own snippet holding ``quote`` verbatim, or None."""
+def _is_quoted(quote: str, snippets: list[dict]) -> bool:
+    """True iff ``quote`` is verbatim in one of the entity's own ``snippets``."""
     needle = _normalize(quote)
     if not needle:
-        return None
-    for snippet in snippets:
-        if needle in _normalize(snippet.get("text")):
-            return snippet
-    return None
+        return False
+    return any(needle in _normalize(snippet.get("text")) for snippet in snippets)
 
 
 def parse_status_verdict(payload: object, rows: list[dict]) -> dict[str, dict]:
@@ -185,8 +182,7 @@ def parse_status_verdict(payload: object, rows: list[dict]) -> dict[str, dict]:
             continue
         if status not in STATUS_VALUES or status == DEFAULT_STATUS:
             continue
-        snippet = _quoted_snippet(quote, row["snippets"])
-        if snippet is None:
+        if not _is_quoted(quote, row["snippets"]):
             continue
         verdicts[name] = {"status": status, "quote": quote}
     return verdicts
