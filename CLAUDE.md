@@ -724,6 +724,37 @@ Inside `wiki-resolution`, order matters:
   and **43 of ~50 resolve on neither book**. That path is low-yield by
   construction and is not what fixes Narnia; matching markers against titles is a
   separate ticket.
+- The number is assigned once, in `section_filter` (STU-550): `chapters.number_chapters`
+  stamps `chapter_number` on each narrative chapter right after the front-matter
+  verdict — the only place both the reading order and that verdict are known. It
+  reaches `epub_data.json`, and `chapter_number_index` (ids **and** titles, since
+  `chapter_summaries` is title-keyed on some books) resolves a reference to it.
+  This closes STU-546's shape in the two places it was still live.
+  **`sorted(context_by_chapter)` was sorting section ids as strings, not chapters**
+  — `bookcontent10_0` before `bookcontent2_0`. Above
+  `chapter_summary_max_chapters_per_entity` (8) chapters per entity, i.e. exactly
+  the principals, the truncation then kept the lexicographic middle: Lucy's page was
+  written from Narnia's chapters 9-16, never the wardrobe. Whether it fired was
+  decided by the publisher's zero-padding (throne-of-glass `C01.xhtml` is padded and
+  is the book we look at, so it was invisible), and nothing warned — the prompt
+  looked full.
+  **The bundle is the boundary.** `wiki_preparation` resolves every chapter
+  reference it emits (`relationships[].chapters`, the new `context_chapters`,
+  `chapter_summary_context[].revealed_at_chapter`), so `provenance`,
+  `spoiler_blocks` and `generate_wiki_pages` read numbers and no longer call
+  `chapter_number` at all. That is what makes the STU-492 gate honest: it compares
+  the book YAML's `collapse_after_chapter: N` — set by someone who read the novel
+  and means "chapter 20" — against a number in the same unit, where `x101.xhtml`
+  used to yield 101. Latent (no book sets the key today), but a config key silently
+  in a different unit than the code is the defect.
+  **An unresolvable reference warns and is dropped**, never numbered by whatever
+  digits it carries — `resolve_chapter_number` is the whole point, and falling back
+  to digits is the bug being closed. `chapters.chapter_number` survives for
+  `entity_status`, which sorts snippets by id digits: digits are monotone with
+  position on every book in the library, so that use is accidentally safe, like
+  `generate_wiki_pages`' relation ordering was. `event_layer._chapter_numbers` also
+  stays — it numbers the ordered summaries 1..N, which already *is* the position,
+  and it is handed no chapter records to read the field off.
 - `workers` in relationship/coref config directly impact RAM usage.
 - `.studio/config.yaml` and `.studio/runs/` must not be committed.
 - Never add hardcoded word lists to scripts. All vocabulary belongs in `wiki_creator/cue_words/<lang>.json` (language-wide) or the book YAML `classification` section (book-specific). No script may define a fallback vocabulary constant — if a key is absent from cue_words, degrade gracefully to an empty collection.
