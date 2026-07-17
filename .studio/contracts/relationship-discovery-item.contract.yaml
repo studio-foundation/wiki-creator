@@ -1,0 +1,9 @@
+name: relationship-discovery-item
+version: 1
+schema:
+  required_fields:
+    - relations
+# relations: list (possibly empty) of {entity_a, entity_b, relationship_type,
+# direction, evidence}. The stage re-validates each relation against the roster and
+# the type vocabulary (wiki_creator.relationship_discovery.valid_relations), so the
+# contract only pins that the key is present.

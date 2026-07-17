@@ -8,7 +8,9 @@ import scripts.classify_relationships as clf
 from scripts.classify_relationships import (
     _entity_role_contexts,
     _load_done_keys,
+    _merge_classification,
     _save,
+    _select_input,
 )
 from wiki_creator import studio_io
 from wiki_creator.registry import EntityRecord, Mention, Registry
@@ -40,6 +42,50 @@ def test_load_done_keys_returns_empty_on_corrupt_file(tmp_path):
     keys, pairs = _load_done_keys(output)
     assert keys == set()
     assert pairs == []
+
+
+def test_select_input_prefers_discovered(tmp_path):
+    """STU-556: the schema-discovered typed graph wins over co-occurrence."""
+    (tmp_path / "relationships.json").write_text("{}")
+    (tmp_path / "relationships_discovered.json").write_text("{}")
+    path, pre_typed = _select_input(tmp_path)
+    assert path.name == "relationships_discovered.json"
+    assert pre_typed is True
+
+
+def test_select_input_falls_back_to_cooccurrence(tmp_path):
+    """No discovery artifact → the deterministic co-occurrence graph, untyped."""
+    (tmp_path / "relationships.json").write_text("{}")
+    path, pre_typed = _select_input(tmp_path)
+    assert path.name == "relationships.json"
+    assert pre_typed is False
+
+
+def test_merge_pretyped_keeps_discovery_type_and_takes_prose():
+    """A discovered pair's type/direction is authoritative; the classifier only
+    contributes prose and the confidence grade — it cannot overwrite the type."""
+    pair = {"entity_a": "A", "entity_b": "B", "relationship_type": "mentor",
+            "direction": "A→B", "evidence": "discovered quote"}
+    classification = {"relationship_type": "friend", "direction": "symétrique",
+                      "evidence": "other", "evolution": "grows warmer",
+                      "key_moments": ["ch1: meet"], "confidence": "inferred"}
+    merged = _merge_classification(pair, classification, pre_typed=True)
+    assert merged["relationship_type"] == "mentor"
+    assert merged["direction"] == "A→B"
+    assert merged["evidence"] == "discovered quote"
+    assert merged["evolution"] == "grows warmer"
+    assert merged["key_moments"] == ["ch1: meet"]
+    assert merged["confidence"] == "inferred"
+
+
+def test_merge_untyped_takes_classifier_type():
+    """The co-occurrence fallback pair has no type; the classifier types it (legacy)."""
+    pair = {"entity_a": "A", "entity_b": "B", "relationship_type": None}
+    classification = {"relationship_type": "friend", "direction": "symétrique",
+                      "evolution": "grows", "key_moments": [], "confidence": "inferred"}
+    merged = _merge_classification(pair, classification, pre_typed=False)
+    assert merged["relationship_type"] == "friend"
+    assert merged["direction"] == "symétrique"
 
 
 def test_load_done_keys_skips_malformed_pairs(tmp_path):

@@ -1044,6 +1044,12 @@ def _run_studio_classifier_item(
         "novel_summary": novel_summary or "",
         "relationship_types": relationship_definitions(book_config=book_config),
         "confidence_levels": confidence_definitions(),
+        # STU-556: when the schema-discovery pass already typed the pair, its type
+        # and direction are authoritative — the classifier writes prose and grades
+        # confidence for THIS type rather than deciding it. null ⇒ legacy typing.
+        "relationship_type": rel.get("relationship_type"),
+        "direction": rel.get("direction"),
+        "evidence": rel.get("evidence"),
     }
 
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".yaml", delete=False) as tmp:
