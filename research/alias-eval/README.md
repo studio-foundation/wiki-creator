@@ -11,9 +11,18 @@ eval buys a number, not a safety net.
 
 ## Run it
 
-    PYTHONPATH=../.. python run_books.py          # every book, full text
+    HF_HUB_OFFLINE=1 PYTHONPATH=../.. python run_books.py    # every book, full text
     PYTHONPATH=../.. python run_books.py --only 01_eragon
     PYTHONPATH=../.. python score.py
+    PYTHONPATH=../.. python -m pytest tests/ -q              # this eval's own logic
+
+No `requirements.txt`: unlike the other evals, this one drives the pipeline instead
+of replacing a piece of it, so it needs nothing beyond the repo's own install.
+
+`HF_HUB_OFFLINE=1` because every `invented_names` book loads GLiNER from
+HuggingFace, and an expired HF token fails all 8 of them at `entity-extraction`
+(`401 ... OAuth token signature verification failed`) — loudly, which is correct
+(STU-521: a backend must not silently fall back). The models are cached.
 
 `run_books.py` calls the two real pipelines (`wiki-extraction`, `wiki-resolution`)
 per book — nothing here reimplements a stage — and copies each
