@@ -148,7 +148,48 @@ def _is_quoted(quote: str, snippets: list[dict]) -> bool:
     return any(needle in _normalize(snippet.get("text")) for snippet in snippets)
 
 
-def parse_status_verdict(payload: object, rows: list[dict]) -> dict[str, dict]:
+_CIRCUMSTANCE_TYPES = ("PERSON", "PLACE")
+
+
+def build_name_index(entities: list[dict]) -> dict[str, dict[str, str]]:
+    """{entity_type: {normalized surface: canonical_name}} for the two types a
+    death circumstance can name. Aliases map to their canonical name, so a
+    circumstance renders `Chaol Westfall` where the text said `Captain Westfall`.
+    """
+    index: dict[str, dict[str, str]] = {etype: {} for etype in _CIRCUMSTANCE_TYPES}
+    for entity in entities:
+        names = index.get(str(entity.get("entity_type") or ""))
+        if names is None:
+            continue
+        canonical = str(entity.get("canonical_name") or "").strip()
+        if not canonical:
+            continue
+        for surface in (canonical, *(entity.get("aliases") or [])):
+            key = _normalize(surface)
+            if key:
+                names.setdefault(key, canonical)
+    return index
+
+
+def _grounded_name(value: object, quote: str, names: dict[str, str]) -> str | None:
+    """The canonical name this value denotes, or None.
+
+    Two gates: it is on the type's roster, and it is verbatim in the quote the
+    verdict already had to prove. A name sourced from a neighbouring snippet
+    would render where the character *was*, not where they died.
+    """
+    surface = _normalize(value)
+    if not surface:
+        return None
+    canonical = names.get(surface)
+    if canonical is None or surface not in _normalize(quote):
+        return None
+    return canonical
+
+
+def parse_status_verdict(
+    payload: object, rows: list[dict], name_index: dict[str, dict[str, str]]
+) -> dict[str, dict]:
     """Map the classifier's reply to verified verdicts, keyed by roster name.
 
     A name absent from the result is `unknown`; unparseable input verdicts
@@ -157,6 +198,10 @@ def parse_status_verdict(payload: object, rows: list[dict]) -> dict[str, dict]:
     entity's own** snippets. The model has read these novels: without the quote
     check, a verdict from its memory of the plot and one from this run's text
     are indistinguishable afterwards.
+
+    A `deceased` verdict may also carry `agent` / `place` — each kept only when
+    `name_index` knows it under the right type and the quote names it. A field
+    failing either gate is dropped; the verdict survives (STU-552).
     """
     if isinstance(payload, str):
         try:
@@ -184,7 +229,15 @@ def parse_status_verdict(payload: object, rows: list[dict]) -> dict[str, dict]:
             continue
         if not _is_quoted(quote, row["snippets"]):
             continue
-        verdicts[name] = {"status": status, "quote": quote}
+        verdict = {"status": status, "quote": quote}
+        if status == "deceased":
+            agent = _grounded_name(entry.get("agent"), quote, name_index["PERSON"])
+            place = _grounded_name(entry.get("place"), quote, name_index["PLACE"])
+            if agent:
+                verdict["agent"] = agent
+            if place:
+                verdict["place"] = place
+        verdicts[name] = verdict
     return verdicts
 
 
