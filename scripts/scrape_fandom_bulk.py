@@ -133,12 +133,13 @@ def is_infobox_template(title: str, source: str | None) -> bool:
 
     Following transclusions is what that seems to ask for, and it was measured
     and rejected: transcluding an infobox is not being one. On Warriors' 954
-    templates, one level adds 6 names to the 23 the direct tests find — `Charcat`
-    and 5 `/doc` and `/preload` subpages. Iterating to a fixpoint adds 85, since
-    `Charcat` then promotes each of its 78 `Charcat/<cat name>` subpages. Either
-    way the one real name arrives indistinguishable from the noise, so `Charcat`
-    is declared instead, like `categories` — derive what is derivable, declare
-    the rest.
+    templates, one level adds 16 names to the 23 the direct tests find, and only
+    one is `Charcat`. The wiki's `Image`, `Book` and `Location` are themselves
+    portable infoboxes, so the level sweeps in whatever shows a picture or cites
+    a tome — `Official Site`, `StaffBox`, `Prey`, `R`. Iterating to a fixpoint
+    adds 278, including 79 `Charcat/<cat name>` subpages. Either way the one real
+    name arrives indistinguishable from the noise, so `Charcat` is declared
+    instead, like `categories` — derive what is derivable, declare the rest.
 
     Deliberately NOT a param-count test: a well-filled `Dialogue` or `Quote`
     would pass one. Param count measured the size of this hole; it does not
