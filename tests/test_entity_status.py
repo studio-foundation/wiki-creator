@@ -1,7 +1,11 @@
 """STU-488: per-tome entity status (the `status` infobox slot)."""
 import json
+import re
 import subprocess
+from pathlib import Path
 from unittest.mock import patch
+
+import yaml
 
 import run_wiki
 from scripts.entity_status import contexts_by_entity, resolve_status
@@ -24,6 +28,13 @@ from wiki_creator.registry import EntityRecord, Mention, Registry
 
 MARKERS = ["died", "killed", "dead"]
 
+STATUS_PROMPT = (
+    Path(__file__).resolve().parents[1]
+    / ".studio"
+    / "agents"
+    / "entity-status.agent.yaml"
+)
+
 
 def _snippet(text, chapter):
     return {"text": text, "chapter_id": f"chapter_{chapter}"}
@@ -32,6 +43,37 @@ def _snippet(text, chapter):
 def test_status_enum_is_the_fandom_vocabulary():
     assert STATUS_VALUES == ("alive", "deceased", "missing", "unknown", "undead")
     assert DEFAULT_STATUS == "unknown"
+
+
+def _prompt_status_mentions() -> set[str]:
+    """Status tokens the prompt names as the values it may return.
+
+    Mechanical, never a hand-kept list — a second copy of the enum is the drift
+    STU-548 closed on the relationship prompt, and it would rot the same way. The
+    tokens are read out of the prompt's own instruction grammar: the `exactly one
+    of:` roster (the returnable statuses; `unknown` is deliberately absent — it is
+    the non-answer `parse_status_verdict` renders for a name it never lists).
+    """
+    prompt = yaml.safe_load(STATUS_PROMPT.read_text(encoding="utf-8"))["system_prompt"]
+    listed = re.search(r"exactly one of:\s*(.+)", prompt)
+    assert listed, "prompt no longer states an `exactly one of:` status roster"
+    return {token.strip() for token in listed.group(1).split(",")}
+
+
+def test_prompt_names_only_declared_status_values():
+    """The prompt is a second consumer of the status enum after `parse_status_verdict`,
+    which drops any status outside `STATUS_VALUES`.
+
+    STU-548's shape: rename a member (`deceased` → `dead`) in `STATUS_VALUES` and the
+    prompt keeps ordering `deceased`; the parser then discards every death verdict and
+    the whole roster renders `unknown`, silently, with the suite green. `rg` skips
+    `.studio/` and no test read the prompt, so nothing caught it. This fails the moment
+    the prompt names a status absent from the enum.
+    """
+    mentions = _prompt_status_mentions()
+    assert mentions, "extracted no status tokens from the prompt — the instruction grammar moved"
+    undeclared = mentions - set(STATUS_VALUES)
+    assert undeclared == set(), f"prompt names statuses absent from STATUS_VALUES: {sorted(undeclared)}"
 
 
 def test_marker_bearing_snippets_come_before_plain_ones():
