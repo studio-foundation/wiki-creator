@@ -959,6 +959,19 @@ Inside `wiki-resolution`, order matters:
   about — widen it when another config key silently outlives its artifact, not
   before. `make run-extraction` shells `studio run` directly and always
   re-extracts, so this only ever bites through `run_wiki.py`.
+- GLiNER device placement (STU-570): `WIKI_NER_DEVICE=auto|cpu|cuda` (default
+  `auto` — the pre-STU-570 behavior, take the GPU when there is one) picks where
+  `gliner_ner.py` runs. It is **not** a book YAML key — the device is a property
+  of the machine and the moment, not the novel, and a reader cannot answer "which
+  device". Without it GLiNER always grabbed the GPU, so concurrent extractions
+  across worktrees (a normal state here — a worktree per task) OOM each other on
+  one 6 GB GPU, and the loser burns its 3 RALPH attempts. `cpu` *places* the
+  second run instead of hiding the GPU with `CUDA_VISIBLE_DEVICES=""` (which only
+  worked by accident, via `torch.cuda.is_available()` going False). Same root as
+  the coref device bug, mirror image: device hardcoded, no config. An unknown
+  value **raises** — a silently ignored device is the `ner`-block degradation rule
+  one layer down. Env var, so it propagates to `studio run` subprocesses like
+  `WIKI_MAX_CHAPTERS`; no CLI flag.
 - Subset test runs (STU-497): two independent axes make any feature cheap to exercise.
   (1) Chapters — `WIKI_MAX_CHAPTERS=N` caps extraction to the first N chapters
   (`parse_epub._env_max_chapters` → truncation, the single source of truth); every
