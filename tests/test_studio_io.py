@@ -81,6 +81,39 @@ def test_studio_run_log_path_and_load_stage_output(tmp_path, monkeypatch):
     assert studio_io.studio_run_log_path("nope") is None
 
 
+def _write_run_log(tmp_path, run_id: str, stage: str, output: dict) -> None:
+    runs_dir = tmp_path / ".studio" / "runs"
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    (runs_dir / f"20260717-{run_id}.jsonl").write_text(
+        json.dumps({"event": "stage_complete", "stage": stage, "status": "success", "output": output})
+    )
+
+
+def test_stage_output_from_stdout_recovers_a_truncated_echo(tmp_path, monkeypatch):
+    """The whole point: the run the echo truncates is the run that needs the log.
+
+    A caller that reads the run id out of the *parsed* payload recovers only from
+    truncations it already survived — on a real oversized run the parse returns
+    None and the log is never opened (STU-564).
+    """
+    monkeypatch.setattr(studio_io, "PROJECT_ROOT", tmp_path)
+    _write_run_log(tmp_path, "abc12345", "s", {"merge": ["from the log"]})
+    truncated = '{"id": "abc12345", "status": "success", "stages": [{"stage_name": "s", "outp'
+    assert studio_io.extract_first_json_object(truncated) is None
+    assert studio_io.stage_output_from_stdout(truncated, "s") == {"merge": ["from the log"]}
+
+
+def test_stage_output_from_stdout_falls_back_to_the_echo_without_a_log(tmp_path, monkeypatch):
+    monkeypatch.setattr(studio_io, "PROJECT_ROOT", tmp_path)
+    (tmp_path / ".studio" / "runs").mkdir(parents=True)
+    intact = json.dumps(
+        {"id": "nolog123", "stages": [{"stage_name": "s", "status": "success", "output": {"ok": True}}]}
+    )
+    assert studio_io.stage_output_from_stdout(intact, "s") == {"ok": True}
+    assert studio_io.stage_output_from_stdout(intact, "other") is None
+    assert studio_io.stage_output_from_stdout("not json at all", "s") is None
+
+
 def test_slugify_filename():
     assert studio_io.slugify_filename("Chaol Westfall!") == "Chaol_Westfall"
     assert studio_io.slugify_filename("  ") == "untitled"

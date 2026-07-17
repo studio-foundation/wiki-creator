@@ -1057,22 +1057,10 @@ def _run_studio_classifier_item(
     if result.returncode != 0:
         return {"error": "studio_run_failed", "stderr": result.stderr}
 
-    try:
-        run_payload = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        return {"error": "studio_output_json_parse_error"}
-
-    stages = run_payload.get("stages", [])
-    if not isinstance(stages, list):
-        return {"error": "studio_run_output_missing"}
-    for stage in stages:
-        if not isinstance(stage, dict):
-            continue
-        if stage.get("stage_name") in ("relationship-classifier", "relationship-classifier-item"):
-            if stage.get("status") == "success":
-                output = stage.get("output")
-                if isinstance(output, dict):
-                    return output
+    for stage_name in ("relationship-classifier", "relationship-classifier-item"):
+        output = studio_io.stage_output_from_stdout(result.stdout or "", stage_name)
+        if output is not None:
+            return output
     return {"error": "studio_run_output_missing"}
 
 
