@@ -752,23 +752,13 @@ def _extracted_fact_value(entity: dict, token: str, lang: str) -> str | None:
     return None
 
 
-# Extracted-fact tokens the pipeline actually computes. Such a slot must never
-# fall back to the writer's guess: `_bind_batch_fields` only *overwrites* when it
-# has a value, so without this an undecided fact renders whatever the LLM inferred
-# — and base.yaml's infobox brief and few-shot show the writer how to invent an
-# affiliation (STU-551). The other extracted-fact slots (`species`, `location`,
-# `leaders`) are declared but nothing computes them, so clearing those would delete
-# rendering content with no replacement; `titles` has the same hole and is left
-# alone here for the same reason. Both are STU-572.
-_PIPELINE_OWNED_FACTS = frozenset({"affiliation"})
-
-
 def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> None:
     """Overwrite pipeline-sourced infobox tokens with authoritative values, per
     the resolved template: `batch-bound` from the batch identity, `extracted-fact`
-    from facts the pipeline produced. `llm-prose` slots are left to the LLM.
-    A `_PIPELINE_OWNED_FACTS` token with no value is cleared, not left to the LLM.
-    No-op when book_config is None."""
+    from facts the pipeline produced. An `extracted-fact` slot the pipeline cannot
+    fill is *cleared*, not left to the writer — the writer never owns a slot whose
+    provenance promises a grounded fact (STU-572). `llm-prose` slots are left to
+    the LLM. No-op when book_config is None."""
     if book_config is None:
         return
     page.setdefault("infobox_fields", {})
@@ -777,14 +767,20 @@ def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> No
     for slot in resolved.infobox():
         if slot.provenance == "batch-bound":
             value = _batch_bound_value(entity, slot.token, lang)
+            if value:
+                page["infobox_fields"][slot.token] = value
         elif slot.provenance == "extracted-fact":
+            # The pipeline owns this slot: both its value and its absence are
+            # authoritative. A present value overwrites; an absent one clears
+            # whatever the writer put there, rather than leaving an ungrounded
+            # fact under a provenance that promises a grounded one (STU-572).
+            # A slot the pipeline never computes (species, location, leaders)
+            # is therefore always empty until it is computed.
             value = _extracted_fact_value(entity, slot.token, lang)
-            if not value and slot.token in _PIPELINE_OWNED_FACTS:
+            if value:
+                page["infobox_fields"][slot.token] = value
+            else:
                 page["infobox_fields"].pop(slot.token, None)
-        else:
-            continue
-        if value:
-            page["infobox_fields"][slot.token] = value
 
 
 # The neutral error codes check_identity_match emits (scripts/wiki_page_validator.py).

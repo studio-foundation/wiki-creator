@@ -108,10 +108,38 @@ def _person_entity():
 
 
 def test_bind_overwrites_swapped_nom():
-    page = {"infobox_fields": {"nom": "Kaltain", "species": "Fae"}}
+    page = {"infobox_fields": {"nom": "Kaltain", "rôle": "Espionne"}}
     gwp._bind_batch_fields(page, _person_entity(), {})
-    assert page["infobox_fields"]["nom"] == "Verin"      # overwritten from batch
-    assert page["infobox_fields"]["species"] == "Fae"    # nothing computes it — left to the writer
+    assert page["infobox_fields"]["nom"] == "Verin"          # overwritten from batch
+    assert page["infobox_fields"]["rôle"] == "Espionne"      # non-pipeline-owned untouched
+
+
+def test_bind_clears_writer_owned_extracted_fact_when_pipeline_has_none():
+    # STU-572: species/affiliation are extracted-fact but the pipeline computes
+    # neither here, so a writer-supplied value is cleared, not kept — the writer
+    # never owns a slot whose provenance promises a grounded fact.
+    page = {"infobox_fields": {"species": "Fae", "affiliation": "Adarlan"}}
+    gwp._bind_batch_fields(page, _person_entity(), {})
+    assert "species" not in page["infobox_fields"]
+    assert "affiliation" not in page["infobox_fields"]
+
+
+def test_bind_clears_writer_titles_when_extraction_found_none():
+    # STU-572: titles IS pipeline-computed, but when extraction found none the
+    # writer's guess is still cleared rather than surviving.
+    entity = {"canonical_name": "Nehemia", "type": "PERSON",
+              "importance": "secondary", "aliases": [], "titles": []}
+    page = {"infobox_fields": {"titles": "Princesse"}}
+    gwp._bind_batch_fields(page, entity, {})
+    assert "titles" not in page["infobox_fields"]
+
+
+def test_bind_extracted_fact_present_still_overwrites_writer():
+    entity = {"canonical_name": "Chaol Westfall", "type": "PERSON",
+              "importance": "secondary", "aliases": [], "titles": ["Captain"]}
+    page = {"infobox_fields": {"titles": "Roi"}}
+    gwp._bind_batch_fields(page, entity, {})
+    assert page["infobox_fields"]["titles"] == "Captain"
 
 
 def test_bind_clears_an_undecided_affiliation():
