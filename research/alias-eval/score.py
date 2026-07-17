@@ -4,17 +4,20 @@
     PYTHONPATH=../.. python score.py
 
 Three books ship a hand-written gold (`library/<author>/<series>/books/ground-truth/`),
-each file naming one character and every name book 1 calls it. That is exactly the
-question adjudication answers, so it judges a merge without an oracle:
+each entry naming one character, every name book 1 calls it
+(`canonical_aliases_book1`), and the identity confusions a page must never make
+(`identity_confusion_forbidden`, e.g. `"alias: Daughter of Eve"` under Lucy). That is
+exactly the question adjudication answers, so it judges a merge without an oracle:
 
-* both names are aliases of the SAME gold character   -> true positive
-* they are aliases of DIFFERENT gold characters       -> false positive
-* one of them is not in the gold at all               -> unjudged, listed for a human
+* both names are aliases of the SAME gold character            -> true positive
+* they are aliases of DIFFERENT gold characters                -> false positive
+* the gold forbids this very confusion for one of them         -> false positive
+* one of them is not in the gold at all                        -> unjudged, for a human
 
-The gold covers a handful of characters per book, never the whole roster, so
-`unjudged` is the normal case and is reported, never scored as a pass. Recall is
-reported only where the gold can see it: two roster rows that are aliases of one
-gold character and that no merge joined.
+The gold covers a handful of characters per book, never a whole roster, so `unjudged`
+is the normal case and is reported, never scored as a pass. Recall is reported only
+where the gold can see it: two roster rows that are aliases of one gold character
+and that no merge joined.
 """
 from __future__ import annotations
 
@@ -26,53 +29,76 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERDICTS = Path(__file__).parent / "verdicts"
 
-_ARTICLE_RE = re.compile(r"^(the|a|an)\s+", re.IGNORECASE)
+_ARTICLE_RE = re.compile(r"^(the|a|an|la|le|les)\s+", re.IGNORECASE)
+_FORBIDDEN_ALIAS_RE = re.compile(r"^alias\s*:\s*(.+)$", re.IGNORECASE)
 
 
 def _key(name: str) -> str:
     return _ARTICLE_RE.sub("", name.strip()).casefold()
 
 
-def gold_by_series() -> dict[str, dict[str, str]]:
-    """series dir name -> {normalized alias: gold character}."""
-    golds: dict[str, dict[str, str]] = {}
+def _entries(data: object):
+    """Every gold character in a file — top-level, or one per nested sub-object."""
+    if not isinstance(data, dict):
+        return
+    if data.get("canonical_aliases_book1"):
+        yield data.get("entity"), data
+    for key, value in data.items():
+        if isinstance(value, dict) and value.get("canonical_aliases_book1"):
+            yield value.get("entity") or key, value
+
+
+class Gold:
+    """One book's gold: who each name is, and the confusions it forbids."""
+
+    def __init__(self) -> None:
+        self.who: dict[str, str] = {}
+        self.forbidden: set[tuple[str, str]] = set()
+
+    def add(self, name: str, entry: dict) -> None:
+        for alias in [name, *entry["canonical_aliases_book1"]]:
+            self.who[_key(alias)] = name
+        for line in entry.get("identity_confusion_forbidden", []):
+            match = _FORBIDDEN_ALIAS_RE.match(str(line).strip())
+            if match:
+                self.forbidden.add((_key(name), _key(match.group(1))))
+
+    def judge(self, name_a: str, name_b: str) -> str:
+        key_a, key_b = _key(name_a), _key(name_b)
+        who_a, who_b = self.who.get(key_a), self.who.get(key_b)
+        for owner, forbidden in ((who_a, key_b), (who_b, key_a)):
+            if owner and (_key(owner), forbidden) in self.forbidden:
+                return "false_positive"
+        if who_a is None or who_b is None:
+            return "unjudged"
+        return "true_positive" if who_a == who_b else "false_positive"
+
+
+def gold_by_series() -> dict[str, Gold]:
+    golds: dict[str, Gold] = {}
     for path in sorted(REPO_ROOT.glob("library/*/*/books/ground-truth/*.json")):
-        series = path.parents[2].name
         data = json.loads(path.read_text(encoding="utf-8"))
-        aliases = data.get("canonical_aliases_book1")
-        if not data.get("entity") or not aliases:
-            continue
-        table = golds.setdefault(series, {})
-        for alias in [data["entity"], *aliases]:
-            table[_key(alias)] = data["entity"]
+        for name, entry in _entries(data):
+            if name:
+                golds.setdefault(path.parents[2].name, Gold()).add(name, entry)
     return golds
 
 
-def judge(merge: dict, gold: dict[str, str]) -> str:
-    who_a = gold.get(_key(merge["a"]))
-    who_b = gold.get(_key(merge["b"]))
-    if who_a is None or who_b is None:
-        return "unjudged"
-    return "true_positive" if who_a == who_b else "false_positive"
-
-
-def missed_merges(roster: list[dict], merges: list[dict], gold: dict[str, str]) -> list[tuple]:
+def missed_merges(roster: list[dict], merges: list[dict], gold: Gold) -> list[tuple]:
     """Roster rows the gold says are one character, that no merge joined."""
     merged = {frozenset((m["a"], m["b"])) for m in merges}
     by_character: dict[str, list[str]] = {}
     for row in roster:
-        who = gold.get(_key(row["name"]))
+        who = gold.who.get(_key(row["name"]))
         if who:
             by_character.setdefault(who, []).append(row["name"])
-    missed = []
-    for who, names in by_character.items():
-        if len(names) < 2:
-            continue
-        for i, name_a in enumerate(names):
-            for name_b in names[i + 1:]:
-                if frozenset((name_a, name_b)) not in merged:
-                    missed.append((who, name_a, name_b))
-    return missed
+    return [
+        (who, name_a, name_b)
+        for who, names in by_character.items()
+        for i, name_a in enumerate(names)
+        for name_b in names[i + 1:]
+        if frozenset((name_a, name_b)) not in merged
+    ]
 
 
 def main() -> None:
@@ -84,13 +110,13 @@ def main() -> None:
         series, _, book = path.stem.partition("__")
         data = json.loads(path.read_text(encoding="utf-8"))
         roster, merges = data["roster"], data["merge"]
-        gold = golds.get(series, {})
-        covered = sum(1 for row in roster if _key(row["name"]) in gold)
+        gold = golds.get(series, Gold())
+        covered = sum(1 for row in roster if _key(row["name"]) in gold.who)
 
         print(f"\n## {series}/{book}")
         print(f"roster {len(roster)} ({covered} in gold) — {len(merges)} merge(s)")
         for merge in merges:
-            verdict = judge(merge, gold)
+            verdict = gold.judge(merge["a"], merge["b"])
             totals[verdict] += 1
             print(f"  [{verdict}] {merge['a']} = {merge['b']}")
             print(f"      quote: {merge['quote'][:160]}")
@@ -102,9 +128,9 @@ def main() -> None:
     judged = totals["true_positive"] + totals["false_positive"]
     print("\n## totals")
     print(f"merges: {judged + totals['unjudged']} "
-          f"({judged} judgeable by gold, {totals['unjudged']} need a human)")
+          f"({judged} judged by gold, {totals['unjudged']} need a human)")
     if judged:
-        print(f"precision on the judgeable: {totals['true_positive']}/{judged}")
+        print(f"precision on the judged: {totals['true_positive']}/{judged}")
     print(f"missed merges the gold can see: {all_missed}")
 
 
