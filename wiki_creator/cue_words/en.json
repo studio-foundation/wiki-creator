@@ -417,5 +417,15 @@
     "died", "dies", "die", "dying", "dead", "death", "killed", "kill", "slain",
     "slew", "murdered", "perished", "corpse", "grave", "buried", "funeral",
     "missing", "vanished", "disappeared", "undead", "revived", "resurrected"
+  ],
+  "affiliation_markers": [
+    "joined", "join", "joins", "joining", "rejoined",
+    "member", "members", "belonged", "belongs", "belong",
+    "served", "serves", "serve", "serving", "service",
+    "loyal", "loyalty", "allegiance", "sworn", "swore", "oath", "pledged",
+    "follower", "followers", "recruit", "recruited",
+    "ranks", "band", "order", "guild", "army", "forces",
+    "betrayed", "defected", "deserted", "renounced", "abandoned",
+    "fought for", "fights for", "sided", "side"
   ]
 }

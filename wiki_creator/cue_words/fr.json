@@ -454,5 +454,15 @@
     "tué", "tuée", "tuer", "assassiné", "assassinée", "cadavre", "tombe",
     "enterré", "enterrée", "funérailles", "périt", "périr",
     "disparu", "disparue", "disparaît", "ressuscité", "revenant"
+  ],
+  "affiliation_markers": [
+    "rejoint", "rejoignit", "rejoindre", "rejoignirent",
+    "membre", "membres", "appartient", "appartenait", "appartenir",
+    "servi", "sert", "servir", "servait", "service",
+    "loyal", "loyale", "loyauté", "allégeance", "serment", "juré", "jura",
+    "partisan", "partisans", "recrue", "recruté",
+    "rangs", "bande", "ordre", "guilde", "armée", "forces",
+    "trahi", "trahit", "déserté", "renié", "abandonné",
+    "combattu pour", "combat pour", "rallié", "camp"
   ]
 }
