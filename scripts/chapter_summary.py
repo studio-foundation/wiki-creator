@@ -38,7 +38,7 @@ import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
-from wiki_creator.paths import book_paths_from_yaml
+from wiki_creator.paths import BookPaths, book_paths_from_yaml
 from wiki_creator.lang import load_lang_config, infer_language
 from wiki_creator.pov_attribution import attribute_pov_character
 from wiki_creator import studio_io
@@ -183,9 +183,8 @@ def _load_classified_entities(path: Path) -> list[dict]:
         bundle = studio_io.load_artifact(path, ClassifiedBundle)
     except (OSError, json.JSONDecodeError):
         return []
-    # dict-only boundary: build_entity_importance_index (pure, shared with the
-    # in-memory previous_outputs path) consumes plain entity dicts — validated
-    # on load above.
+    # dict-only boundary: build_entity_importance_index (pure) consumes plain
+    # entity dicts — validated on load above.
     return studio_io.to_dict(bundle.entities)
 
 
@@ -735,36 +734,23 @@ def summarize_chapter_from_item_result(
     }
 
 
-def _epub_output_from_payload(payload: dict) -> dict:
-    all_outputs = payload.get("all_stage_outputs", {})
-    if isinstance(all_outputs, dict):
-        stage = all_outputs.get("epub-parse")
-        if isinstance(stage, dict) and stage.get("chapters") is not None:
-            return stage
-
-    prev_outputs = payload.get("previous_outputs", {})
-    if isinstance(prev_outputs, dict):
-        stage = prev_outputs.get("epub-parse")
-        if isinstance(stage, dict) and stage.get("chapters") is not None:
-            return stage
-
-    prev_stage = payload.get("previous_stage_output", {})
-    if isinstance(prev_stage, dict) and prev_stage.get("chapters") is not None:
-        return prev_stage
-
-    return {}
+def _read_epub_data(paths: BookPaths) -> dict:
+    """epub_data.json, written by the epub-parse stage of wiki-extraction."""
+    path = paths.processing / "epub_data.json"
+    if not path.exists():
+        print(
+            f"[ERROR] {path} not found. Run wiki-extraction first:\n"
+            "  studio run wiki-extraction --input-file <book.yaml>",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _main_from_book(book_path: str) -> None:
     """Standalone entry point: reads epub_data.json from disk, runs summarization."""
     paths = book_paths_from_yaml(book_path)
-
-    epub_data_file = paths.processing / "epub_data.json"
-    if not epub_data_file.exists():
-        print(f"[ERROR] epub_data.json not found: {epub_data_file}", file=sys.stderr)
-        sys.exit(1)
-    epub_data = json.loads(epub_data_file.read_text(encoding="utf-8"))
-    chapters = epub_data.get("chapters", [])
+    chapters = _read_epub_data(paths).get("chapters", [])
 
     with open(book_path, encoding="utf-8") as f:
         book_cfg = yaml.safe_load(f) or {}
@@ -832,8 +818,8 @@ def main() -> None:
 
     # Studio stdin mode (legacy — called from wiki-preparation pipeline)
     payload = studio_io.read_payload()
-    epub_data = _epub_output_from_payload(payload)
-    chapters = epub_data.get("chapters", [])
+    paths = studio_io.paths_from_payload(payload)
+    chapters = _read_epub_data(paths).get("chapters", [])
     config = _chapter_summary_config_from_payload(payload)
 
     ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
@@ -852,15 +838,9 @@ def main() -> None:
         | set(lang_config.get("pronouns", []))
     )
 
-    paths = studio_io.paths_from_payload(payload)
-
-    # STU-433: weight toward important entities if classification is available —
-    # from the payload's stage outputs, else from disk. Degrades to no weighting.
-    all_outputs = payload.get("all_stage_outputs", {})
-    classification = all_outputs.get("entity-classification", {}) if isinstance(all_outputs, dict) else {}
-    classified_entities = classification.get("entities") if isinstance(classification, dict) else None
-    if not classified_entities:
-        classified_entities = _load_classified_entities(paths.processing / "entities_classified.json")
+    # STU-433: weight toward important entities. Degrades to no weighting when
+    # the classification artifact is absent.
+    classified_entities = _load_classified_entities(paths.processing / "entities_classified.json")
     entity_index = build_entity_importance_index(classified_entities)
 
     out_file = paths.processing / "chapter_summaries.json"

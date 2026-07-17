@@ -9,20 +9,9 @@ in the extraction pipeline). This script just maps them to the resolved entity f
 Singles (entity_count == 1) come pre-resolved in singles_resolved and are included as-is.
 Multi-clusters: each cluster → one entity. No splitting, no inventing. Pure mapping.
 
-Input (Studio stdin):
-  {
-    "previous_outputs": {
-      "split-clusters": {
-        "singles_resolved": [...],
-        "PERSON": [...clusters...],
-        "PLACE": [...clusters...],
-        "ORG": [...clusters...],
-        "EVENT": [...clusters...],
-        "OTHER": [...clusters...],
-        "stats": {...}
-      }
-    }
-  }
+Input: splits.json on disk, written by the split-clusters stage of the
+wiki-extraction pipeline. It is a different `studio run`, so its stage output
+never reaches this pipeline's context.
 
 Output (stdout):
   { "entities": [...all resolved...], "narrator": null }
@@ -35,8 +24,10 @@ from pathlib import Path
 import yaml
 
 
+from wiki_creator import studio_io
 from wiki_creator.entity_taxonomy import resolution_types
 from wiki_creator.lang import load_lang_config
+from wiki_creator.types import Splits
 
 
 def _default_noise_words() -> frozenset[str]:
@@ -94,12 +85,17 @@ def resolve(splits: dict, noise_words: frozenset[str] = _NOISE_WORDS) -> dict:
 
 
 def main() -> None:
-    payload = json.load(sys.stdin)
-    previous_outputs = payload.get("previous_outputs", {})
-    splits = previous_outputs.get("split-clusters", {})
-
-    if not splits:
-        print("Warning: split-clusters output not found in previous_outputs", file=sys.stderr)
+    payload = studio_io.read_payload()
+    paths = studio_io.paths_from_payload(payload)
+    splits_path = paths.processing / "splits.json"
+    if not splits_path.exists():
+        print(
+            f"[ERROR] {splits_path} not found. Run wiki-extraction first:\n"
+            "  studio run wiki-extraction --input-file <book.yaml>",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    splits = studio_io.to_dict(studio_io.load_artifact(splits_path, Splits))
 
     noise_words = _NOISE_WORDS
     raw_context = payload.get("additional_context", "")
