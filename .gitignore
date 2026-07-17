@@ -87,3 +87,7 @@ processing_output/fandom_corpus/
 /audits/
 # Research eval outputs: per-book arm extractions + the oracle verdicts (STU-535)
 research/*/arms/
+# alias-eval: per-book adjudication verdicts + run log (STU-543). Regenerable by
+# run_books.py; the judged numbers live in research/alias-eval/results.md.
+research/alias-eval/verdicts/
+research/alias-eval/run.log
