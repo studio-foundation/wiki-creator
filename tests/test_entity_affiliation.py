@@ -233,3 +233,52 @@ def test_a_stale_cache_from_another_roster_is_deleted_not_replayed(tmp_path):
     with patch("scripts.entity_affiliation.subprocess.run", side_effect=FileNotFoundError):
         assert resolve_affiliation(other, "Eragon", cache) == {}
     assert not cache.exists()
+
+
+from scripts.generate_wiki_pages import _extracted_fact_value
+from scripts.wiki_preparation import build_entity_bundle, load_affiliation_verdicts
+
+
+def test_the_binder_renders_affiliation_from_the_batch_entity():
+    assert _extracted_fact_value({"affiliation": "Varden"}, "affiliation", "fr") == "Varden"
+
+
+def test_an_unstamped_entity_renders_no_affiliation():
+    # OPT with no declared fallback: _bind_batch_fields omits a falsy value.
+    assert _extracted_fact_value({}, "affiliation", "fr") is None
+    assert _extracted_fact_value({"affiliation": ""}, "affiliation", "fr") is None
+
+
+def test_preparation_stamps_affiliation_onto_the_batch_entity():
+    bundle = build_entity_bundle(
+        entity={"canonical_name": "Eragon", "type": "PERSON", "importance": "principal"},
+        relationships=[],
+        persons={}, places={}, orgs={}, events={},
+        entities_by_name={},
+        affiliation_verdicts={"Eragon": {"affiliation": "Varden", "quote": "x"}},
+    )
+    assert bundle["affiliation"] == "Varden"
+
+
+def test_preparation_stamps_nothing_for_an_undecided_character():
+    bundle = build_entity_bundle(
+        entity={"canonical_name": "Murtagh", "type": "PERSON", "importance": "secondary"},
+        relationships=[],
+        persons={}, places={}, orgs={}, events={},
+        entities_by_name={},
+        affiliation_verdicts={},
+    )
+    assert bundle["affiliation"] is None
+
+
+def test_load_affiliation_verdicts_degrades_on_an_absent_artifact(tmp_path):
+    # A book that never ran the stage is not an error.
+    assert load_affiliation_verdicts(tmp_path) == {}
+
+
+def test_person_declares_the_affiliation_slot():
+    from wiki_creator.page_templates import load_base_template
+    person = load_base_template()["entity_types"]["PERSON"]
+    slots = {s["token"]: s for s in person["infobox"]}
+    assert slots["affiliation"]["provenance"] == "extracted-fact"
+    assert slots["affiliation"]["obligation"] == "OPT"
