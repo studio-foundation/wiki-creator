@@ -10,6 +10,7 @@ from wiki_creator.entity_status import (
     DEFAULT_STATUS,
     SNIPPETS_PER_ENTITY,
     STATUS_VALUES,
+    death_label,
     load_cached_status,
     parse_status_verdict,
     render_roster,
@@ -503,3 +504,29 @@ def test_a_missing_or_corrupt_status_artifact_leaves_every_entity_unknown(tmp_pa
     assert load_status_verdicts(tmp_path) == {}
     (tmp_path / "entity_status.json").write_text("{not json", encoding="utf-8")
     assert load_status_verdicts(tmp_path) == {}
+
+
+def test_death_label_renders_both_fields():
+    assert death_label("Durza", "Farthen Dûr", "fr") == "Tué par Durza à Farthen Dûr"
+    assert death_label("Durza", "Farthen Dûr", "en") == "Killed by Durza at Farthen Dûr"
+
+
+def test_death_label_renders_the_agent_alone():
+    assert death_label("Durza", None, "fr") == "Tué par Durza"
+
+
+def test_death_label_renders_the_place_alone():
+    # A death with no killer — illness, drowning. "Mort à X" stays true whatever
+    # the cause, which is why there is no cause enum.
+    assert death_label(None, "Terím", "fr") == "Mort à Terím"
+
+
+def test_death_label_is_none_without_a_field():
+    assert death_label(None, None, "fr") is None
+    assert death_label("", "  ", "fr") is None
+
+
+def test_death_label_falls_back_to_fr_for_an_unknown_lang():
+    # chrome_label's own fallback chain; the slot must not vanish for a book
+    # whose output_language has no chrome entry.
+    assert death_label("Durza", None, "de") == "Tué par Durza"

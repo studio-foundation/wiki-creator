@@ -222,3 +222,20 @@ def status_label(status: str | None, lang: str) -> str:
     if value not in STATUS_VALUES:
         value = DEFAULT_STATUS
     return chrome_label(f"status_{value}", lang)
+
+
+def death_label(agent: str | None, place: str | None, lang: str) -> str | None:
+    """The localized death circumstance, or None when neither field is grounded.
+
+    OPT, unlike `status_label`: a character the text never says died renders no
+    row at all rather than a fallback.
+    """
+    who = str(agent or "").strip()
+    where = str(place or "").strip()
+    if who and where:
+        return chrome_label("death_by_at", lang).format(agent=who, place=where)
+    if who:
+        return chrome_label("death_by", lang).format(agent=who)
+    if where:
+        return chrome_label("death_at", lang).format(place=where)
+    return None
