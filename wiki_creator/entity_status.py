@@ -28,6 +28,8 @@ from wiki_creator.page_templates import chrome_label
 STATUS_VALUES = ("alive", "deceased", "missing", "unknown", "undead")
 DEFAULT_STATUS = "unknown"
 
+CACHE_VERSION = 2
+
 SNIPPETS_PER_ENTITY = 5
 SNIPPET_CHARS = 300
 
@@ -242,17 +244,20 @@ def parse_status_verdict(
 
 
 def load_cached_status(path: Path | str, rows: list[dict]) -> dict[str, dict] | None:
-    """Cached verdicts for exactly this roster, or None.
+    """Cached verdicts for exactly this roster and this question, or None.
 
     Keyed on the rows themselves: the roster changes with WIKI_MAX_CHAPTERS and
     with every upstream extraction fix, and a verdict returned for a different
-    roster must not be replayed onto it.
+    roster must not be replayed onto it. The version covers what the rows
+    cannot — STU-552 changed what we ask, not who we ask it about.
     """
     try:
         cached = json.loads(Path(path).read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
     if not isinstance(cached, dict) or cached.get("roster") != rows:
+        return None
+    if cached.get("version") != CACHE_VERSION:
         return None
     verdicts = cached.get("verdicts")
     return verdicts if isinstance(verdicts, dict) else None
@@ -262,7 +267,11 @@ def save_status_cache(path: Path | str, rows: list[dict], verdicts: dict[str, di
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        json.dumps({"roster": rows, "verdicts": verdicts}, ensure_ascii=False, indent=2),
+        json.dumps(
+            {"version": CACHE_VERSION, "roster": rows, "verdicts": verdicts},
+            ensure_ascii=False,
+            indent=2,
+        ),
         encoding="utf-8",
     )
 

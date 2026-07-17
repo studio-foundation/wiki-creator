@@ -7,6 +7,7 @@ import run_wiki
 from scripts.entity_status import contexts_by_entity, resolve_status
 from scripts.wiki_preparation import load_status_verdicts
 from wiki_creator.entity_status import (
+    CACHE_VERSION,
     DEFAULT_STATUS,
     SNIPPETS_PER_ENTITY,
     STATUS_VALUES,
@@ -655,3 +656,31 @@ def test_the_name_index_folds_typography_and_case():
 def test_the_name_index_ignores_types_that_are_not_person_or_place():
     index = build_name_index([{"entity_type": "ORG", "canonical_name": "Varden", "aliases": []}])
     assert index == {"PERSON": {}, "PLACE": {}}
+
+
+def test_a_cache_from_an_older_question_is_not_replayed(tmp_path):
+    # STU-552 changed what we ask, not the roster we ask it about. Without the
+    # version, a pre-STU-552 cache validates and renders no circumstance forever.
+    rows = _gated_rows("Brom is dead")
+    path = tmp_path / "entity_status.json"
+    path.write_text(
+        json.dumps({"version": 1, "roster": rows, "verdicts": {"Brom": {"status": "deceased"}}}),
+        encoding="utf-8",
+    )
+    assert load_cached_status(path, rows) is None
+
+
+def test_a_cache_without_a_version_is_not_replayed(tmp_path):
+    rows = _gated_rows("Brom is dead")
+    path = tmp_path / "entity_status.json"
+    path.write_text(json.dumps({"roster": rows, "verdicts": {}}), encoding="utf-8")
+    assert load_cached_status(path, rows) is None
+
+
+def test_a_saved_cache_round_trips(tmp_path):
+    rows = _gated_rows("Durza's blade took Brom at Farthen Dûr")
+    verdicts = {"Brom": {"status": "deceased", "quote": "x", "agent": "Durza"}}
+    path = tmp_path / "entity_status.json"
+    save_status_cache(path, rows, verdicts)
+    assert json.loads(path.read_text(encoding="utf-8"))["version"] == CACHE_VERSION
+    assert load_cached_status(path, rows) == verdicts
