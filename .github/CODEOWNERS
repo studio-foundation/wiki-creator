@@ -1,0 +1,4 @@
+# Default owner for everything in the repo.
+# Establishes the review mechanism; branch protection makes it binding
+# (see docs/branch-protection.md).
+* @arianeguay
