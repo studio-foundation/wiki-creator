@@ -39,6 +39,33 @@ _KNOWN_CLASSIFICATION_KEYS = frozenset(
     {"relationship_type", "direction", "evolution", "key_moments", "evidence", "confidence"}
 )
 
+# STU-556: a pair discovered by the schema pass is already typed and directed
+# (20/20 against a human gold on Eragon), so the demoted classifier contributes
+# only prose and the confidence grade — it must not overwrite the type it was
+# handed. A co-occurrence-fallback pair carries no type, so the classifier still
+# types it (legacy path) via the full key set above.
+_PROSE_KEYS = frozenset({"evolution", "key_moments", "confidence"})
+
+
+def _select_input(processing: Path) -> tuple[Path, bool]:
+    """Choose the relation graph to classify: the schema-discovered typed graph if
+    present (STU-556), else the deterministic co-occurrence graph. Returns
+    ``(path, pre_typed)`` — ``pre_typed`` is True when the pairs already carry a
+    type the classifier must preserve rather than decide."""
+    discovered = processing / "relationships_discovered.json"
+    if discovered.exists():
+        return discovered, True
+    return processing / "relationships.json", False
+
+
+def _merge_classification(pair: dict, classification: dict, *, pre_typed: bool) -> dict:
+    """Fold the classifier's contribution onto a pair. For a discovered pair only
+    prose + confidence are taken (the discovered type/direction/evidence stand);
+    for a co-occurrence pair the classifier's type/direction too."""
+    keys = _PROSE_KEYS if pre_typed else _KNOWN_CLASSIFICATION_KEYS
+    contrib = {k: v for k, v in classification.items() if k in keys and v is not None}
+    return {**pair, **contrib}
+
 # STU-496: how many per-entity role/status excerpts to surface to the classifier.
 _MAX_ROLE_CONTEXTS = 6
 
@@ -124,12 +151,18 @@ def main() -> None:
     args = parser.parse_args()
 
     book_paths = book_paths_from_yaml(args.book)
-    input_path = book_paths.processing / "relationships.json"
+    input_path, pre_typed = _select_input(book_paths.processing)
     output_path = book_paths.processing / "relationships_classified.json"
 
     if not input_path.exists():
         print(f"[ERROR] Input not found: {input_path}", file=sys.stderr)
         sys.exit(1)
+
+    print(
+        f"[classify-relationships] Source: {input_path.name} "
+        f"({'schema-discovered, typed' if pre_typed else 'co-occurrence, untyped'})",
+        file=sys.stderr,
+    )
 
     # dict-only boundary: the incremental per-pair classify/resume loop below
     # merges LLM classification dicts into relationship dicts (_load_done_keys/
@@ -210,11 +243,7 @@ def main() -> None:
                     book_config=book_cfg,
                 )
                 if classification and not classification.get("error"):
-                    classification = {
-                        k: v for k, v in classification.items()
-                        if k in _KNOWN_CLASSIFICATION_KEYS and v is not None
-                    }
-                    result = {**pair, **classification}
+                    result = _merge_classification(pair, classification, pre_typed=pre_typed)
                 else:
                     error = classification.get("error", "unknown") if classification else "no_response"
                     print(f"\n  [WARN] Studio failed for {label}: {error}", file=sys.stderr)

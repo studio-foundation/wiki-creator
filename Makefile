@@ -123,6 +123,9 @@ test-clustering:
 test-relationships:
 	python scripts/relationship_extraction.py --test
 
+discover-relationships:
+	python scripts/discover_relationships.py --book $(BOOK)
+
 classify-relationships:
 	python scripts/classify_relationships.py --book $(BOOK)
 
