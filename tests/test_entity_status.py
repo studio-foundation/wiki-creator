@@ -361,7 +361,7 @@ def test_every_studio_failure_leaves_the_roster_unknown(tmp_path):
         subprocess.TimeoutExpired(cmd="studio", timeout=1),
     ]:
         with patch("scripts.entity_status.subprocess.run", side_effect=error):
-            assert resolve_status(_rows(), "Eragon", tmp_path / "s.json") == {}
+            assert resolve_status(_rows(), "Eragon", tmp_path / "s.json", _index()) == {}
 
     class _Result:
         returncode = 1
@@ -369,7 +369,7 @@ def test_every_studio_failure_leaves_the_roster_unknown(tmp_path):
         stderr = "boom"
 
     with patch("scripts.entity_status.subprocess.run", return_value=_Result()):
-        assert resolve_status(_rows(), "Eragon", tmp_path / "s.json") == {}
+        assert resolve_status(_rows(), "Eragon", tmp_path / "s.json", _index()) == {}
 
     class _Garbage:
         returncode = 0
@@ -377,14 +377,14 @@ def test_every_studio_failure_leaves_the_roster_unknown(tmp_path):
         stderr = ""
 
     with patch("scripts.entity_status.subprocess.run", return_value=_Garbage()):
-        assert resolve_status(_rows(), "Eragon", tmp_path / "s.json") == {}
+        assert resolve_status(_rows(), "Eragon", tmp_path / "s.json", _index()) == {}
 
 
 def test_a_failed_run_is_not_cached(tmp_path):
     # Caching a failure would make the next run replay it silently.
     cache = tmp_path / "s.json"
     with patch("scripts.entity_status.subprocess.run", side_effect=FileNotFoundError()):
-        resolve_status(_rows(), "Eragon", cache)
+        resolve_status(_rows(), "Eragon", cache, _index())
     assert not cache.exists()
 
 
@@ -400,7 +400,7 @@ def test_a_stale_verdict_for_another_roster_does_not_survive_a_failed_retry(tmp_
     other_rows[0]["snippets"] = [{"text": "Brom rode north.", "chapter_id": "chapter_2"}]
 
     with patch("scripts.entity_status.subprocess.run", side_effect=FileNotFoundError()):
-        resolve_status(other_rows, "Eragon", cache)
+        resolve_status(other_rows, "Eragon", cache, _index())
     assert not cache.exists()
 
 
@@ -419,11 +419,11 @@ def test_a_successful_verdict_is_cached_and_replayed(tmp_path):
         stderr = ""
 
     with patch("scripts.entity_status.subprocess.run", return_value=_Ok()) as run:
-        first = resolve_status(_rows(), "Eragon", cache)
+        first = resolve_status(_rows(), "Eragon", cache, _index())
     assert first["Brom"]["status"] == "deceased"
 
     with patch("scripts.entity_status.subprocess.run") as run:
-        second = resolve_status(_rows(), "Eragon", cache)
+        second = resolve_status(_rows(), "Eragon", cache, _index())
     run.assert_not_called()
     assert second == first
 
