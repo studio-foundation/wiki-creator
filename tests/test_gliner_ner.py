@@ -8,7 +8,13 @@ import pytest
 import spacy
 
 from wiki_creator.entity_taxonomy import gliner_label_map, ner_label_map
-from wiki_creator.nlp.gliner_ner import GlinerNer, attach, windows
+from wiki_creator.nlp.gliner_ner import (
+    DEVICE_ENV,
+    GlinerNer,
+    attach,
+    resolve_device,
+    windows,
+)
 
 from _markers import requires_gliner
 
@@ -69,6 +75,29 @@ def test_duplicate_gliner_label_raises():
 def test_type_without_gliner_label_is_not_asked_for():
     base = {"entity_types": {"PERSON": {"gliner_label": "person"}, "COLLATION": {}}}
     assert gliner_label_map(base) == {"person": "PERSON"}
+
+
+# --- device (STU-570) --------------------------------------------------------
+
+@pytest.mark.parametrize("value", ["cpu", "cuda", " CUDA "])
+def test_declared_device_is_taken_without_asking_torch(monkeypatch, value):
+    """An explicit device never probes CUDA — that is the whole point: a second
+    run on a busy GPU is told `cpu` while `torch.cuda.is_available()` is True."""
+    monkeypatch.setenv(DEVICE_ENV, value)
+    assert resolve_device() == value.strip().lower()
+
+
+@pytest.mark.parametrize("value", ["", "   "])
+def test_unset_or_blank_device_is_auto(monkeypatch, value):
+    pytest.importorskip("torch")
+    monkeypatch.setenv(DEVICE_ENV, value)
+    assert resolve_device() in ("cpu", "cuda")
+
+
+def test_unknown_device_raises_instead_of_falling_back_to_auto(monkeypatch):
+    monkeypatch.setenv(DEVICE_ENV, "gpu")
+    with pytest.raises(ValueError, match=DEVICE_ENV):
+        resolve_device()
 
 
 # --- windows -----------------------------------------------------------------

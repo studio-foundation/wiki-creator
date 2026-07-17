@@ -21,13 +21,20 @@ chapters, so text is cut into sentence-aligned windows here. Windows are slices 
 `doc.text` by character offset rather than re-joined sentences: STU-489 persists
 mention offsets into the chapter text saved to `chapters.json`, so a window that
 does not map back exactly would corrupt them.
+
+Where it runs is read from `WIKI_NER_DEVICE` (STU-570) — a property of the
+machine and the moment, so it is neither a book YAML key nor a constant.
 """
 from __future__ import annotations
 
+import os
 import sys
 
 from spacy.language import Language
 from spacy.util import filter_spans
+
+DEVICE_ENV = "WIKI_NER_DEVICE"
+DEVICES = ("auto", "cpu", "cuda")
 
 DEFAULT_MODEL = "urchade/gliner_large-v2.1"
 DEFAULT_THRESHOLD = 0.5
@@ -36,6 +43,27 @@ DEFAULT_THRESHOLD = 0.5
 # eval never saw.
 DEFAULT_CHUNK_CHARS = 1600
 DEFAULT_BATCH_SIZE = 8
+
+
+def resolve_device() -> str:
+    """Where GLiNER runs, from ``WIKI_NER_DEVICE``: ``auto`` (default) | cpu | cuda.
+
+    `auto` is the pre-STU-570 behavior — take the GPU when there is one. It is
+    the wrong answer for a second concurrent run: one 6 GB GPU cannot hold two
+    models, and the run that loses the race burns its RALPH attempts on
+    ``torch.OutOfMemoryError``. `cpu` places it instead of hiding the GPU.
+
+    An unknown value raises: a device silently ignored is the misconfiguration
+    the `ner` block already refuses to degrade on.
+    """
+    raw = os.environ.get(DEVICE_ENV, "").strip().lower() or "auto"
+    if raw not in DEVICES:
+        raise ValueError(f"{DEVICE_ENV} must be one of {', '.join(DEVICES)}, got {raw!r}")
+    if raw != "auto":
+        return raw
+    import torch
+
+    return "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def windows(doc, chunk_chars: int = DEFAULT_CHUNK_CHARS) -> list[tuple[int, str]]:
@@ -83,10 +111,9 @@ class GlinerNer:
 
     def _load(self):
         if self._model is None:
-            import torch
             from gliner import GLiNER
 
-            device = "cuda" if torch.cuda.is_available() else "cpu"
+            device = resolve_device()
             self._model = GLiNER.from_pretrained(self.model_name).to(device)
             print(f"[nlp] gliner '{self.model_name}' on {device} "
                   f"labels={self.label_to_type}", file=sys.stderr)
