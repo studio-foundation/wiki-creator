@@ -1,4 +1,5 @@
 from wiki_creator.spoiler_blocks import (
+    gate_infobox_spoilers,
     inject_relationship_index,
     relationship_index_lines,
     spoiler_collapse_after,
@@ -10,6 +11,36 @@ BODY = (
     "== Biographie ==\n\nNé au chapitre 1.\n\n"
     "== Pouvoirs ==\n\nRévélés plus tard."
 )
+
+
+def test_gate_infobox_collapses_status_and_death():
+    fields = {"nom": "Brom", "status": "Décédé", "death": "Tué par Durza à Farthen Dûr"}
+    out = gate_infobox_spoilers(fields, lang="fr")
+    # identity fields untouched
+    assert out["nom"] == "Brom"
+    # status + death wrapped in an inline collapsible, value preserved inside
+    for token in ("status", "death"):
+        assert out[token].startswith('<span class="mw-collapsible mw-collapsed"')
+        assert 'data-expandtext="Spoiler — révéler"' in out[token]
+        assert 'data-collapsetext="Masquer"' in out[token]
+    assert "Décédé</span>" in out["status"]
+    assert "Tué par Durza à Farthen Dûr</span>" in out["death"]
+
+
+def test_gate_infobox_leaves_unknown_status_open():
+    out = gate_infobox_spoilers({"status": "Inconnu"}, lang="fr")
+    assert out["status"] == "Inconnu"  # unknown is not a spoiler
+
+
+def test_gate_infobox_gates_alive_status():
+    out = gate_infobox_spoilers({"status": "Vivant"}, lang="fr")
+    assert out["status"].startswith('<span class="mw-collapsible mw-collapsed"')
+    assert "Vivant</span>" in out["status"]
+
+
+def test_gate_infobox_absent_tokens_are_noop():
+    fields = {"nom": "Nehemia", "alias": "Neith"}
+    assert gate_infobox_spoilers(fields, lang="fr") == fields
 
 
 def test_wrap_gates_block_above_threshold():
