@@ -1242,6 +1242,16 @@ Only stop and ask for: irreversible/destructive actions (force-push, history rew
 - Commit trailer: `Co-Authored-By: <model name> <noreply@anthropic.com>` — derive the name from the model actually running the session, never hardcode a version string that goes stale.
 - **Always tag the Linear issue in the MR description** — reference the issue key (e.g. `STU-515`) in the merge/pull request body so Linear links the MR to the issue.
 
+### Linear Issues
+
+Every issue created or updated carries the full metadata, not just a title and description. An issue missing these is incomplete — fill them at creation, don't defer:
+
+- **Labels** — defects get `bug`; feature/refactor tasks don't. On wiki-creator, every actionable issue also carries `claude:local` or `claude:web` (see "Where a Task Runs" above).
+- **Estimate** — always set, even if rough.
+- **Priority** — always set, never left at "No priority".
+- **Project / cycle** — assign when one applies.
+- **Relations** — encode ordering as `blockedBy`, never as prose in the description.
+
 ### Presenting Trade-offs
 
 When there are 2+ options to choose between (architecture picks, "swap A for B", design decisions), use a side-by-side pros/cons layout, not narrative paragraphs:
