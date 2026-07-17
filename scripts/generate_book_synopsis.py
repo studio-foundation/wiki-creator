@@ -4,7 +4,7 @@
 Projects events.json (SP0 Event Layer) — all events ordered by chapter —
 through the wiki-page-item pipeline (anchored writer LLM + validator) into a
 single spoiler-safe plot-summary page, written to
-<processing>/book_synopsis.json. scripts/load_wiki_pages.py appends the page
+<processing>/book_synopsis.json. scripts/assemble_wiki_pages.py appends the page
 to the export flow, where it is rendered at the wiki root as Synopsis.wiki.
 
 Runs after scripts/generate_wiki_pages.py (both are wiki-generation

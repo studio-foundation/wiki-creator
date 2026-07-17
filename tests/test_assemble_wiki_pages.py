@@ -1,4 +1,4 @@
-"""Tests for load_wiki_pages.py — _failed page filtering at pipeline entry point."""
+"""Tests for assemble_wiki_pages.py — _failed page filtering at pipeline entry point."""
 import io
 import json
 import sys
@@ -10,7 +10,7 @@ import yaml
 from wiki_creator import studio_io
 from wiki_creator.types import WikiPage
 
-from scripts.load_wiki_pages import _filter_failed_pages, _read_pages, main
+from scripts.assemble_wiki_pages import _filter_failed_pages, _read_pages, main
 
 
 def _page(**overrides) -> WikiPage:
@@ -75,7 +75,7 @@ def test_read_pages_rejects_schema_drift(tmp_path):
 
 # --- SP4 synopsis page (STU-482) ---
 
-from scripts.load_wiki_pages import _load_synopsis_page
+from scripts.assemble_wiki_pages import _load_synopsis_page
 
 
 def _synopsis_page(**extra):
@@ -113,7 +113,7 @@ def test_load_synopsis_page_tolerates_bad_json(tmp_path):
 
 # --- STU-511: collective pages ---
 
-from scripts.load_wiki_pages import _load_extra_pages
+from scripts.assemble_wiki_pages import _load_extra_pages
 
 
 def _collation_page(**extra):
@@ -136,7 +136,7 @@ def test_load_collation_pages_absent(tmp_path):
 
 
 def _run_main(tmp_path, monkeypatch, capsys, naming_cfg=None):
-    """Drive load_wiki_pages.main end-to-end with two homonym pages."""
+    """Drive assemble_wiki_pages.main end-to-end with two homonym pages."""
     processing = tmp_path / "library" / "a" / "s" / "processing_output" / "01"
     processing.mkdir(parents=True)
     (processing / "wiki_pages.json").write_text(json.dumps({"pages": [

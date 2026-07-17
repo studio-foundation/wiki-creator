@@ -7,7 +7,7 @@ stages:
     kind: extraction
     executor: script
     runtime: python
-    script: scripts/load_wiki_pages.py
+    script: scripts/assemble_wiki_pages.py
     contract: wiki-page
     context:
       include:
