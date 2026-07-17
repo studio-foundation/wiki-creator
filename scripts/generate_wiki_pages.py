@@ -751,8 +751,10 @@ def _extracted_fact_value(entity: dict, token: str, lang: str) -> str | None:
 def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> None:
     """Overwrite pipeline-sourced infobox tokens with authoritative values, per
     the resolved template: `batch-bound` from the batch identity, `extracted-fact`
-    from facts the pipeline produced. `llm-prose` slots are left to the LLM.
-    No-op when book_config is None."""
+    from facts the pipeline produced. An `extracted-fact` slot the pipeline cannot
+    fill is *cleared*, not left to the writer — the writer never owns a slot whose
+    provenance promises a grounded fact (STU-572). `llm-prose` slots are left to
+    the LLM. No-op when book_config is None."""
     if book_config is None:
         return
     page.setdefault("infobox_fields", {})
@@ -761,12 +763,20 @@ def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> No
     for slot in resolved.infobox():
         if slot.provenance == "batch-bound":
             value = _batch_bound_value(entity, slot.token, lang)
+            if value:
+                page["infobox_fields"][slot.token] = value
         elif slot.provenance == "extracted-fact":
+            # The pipeline owns this slot: both its value and its absence are
+            # authoritative. A present value overwrites; an absent one clears
+            # whatever the writer put there, rather than leaving an ungrounded
+            # fact under a provenance that promises a grounded one (STU-572).
+            # A slot the pipeline never computes (species, location, leaders)
+            # is therefore always empty until it is computed.
             value = _extracted_fact_value(entity, slot.token, lang)
-        else:
-            continue
-        if value:
-            page["infobox_fields"][slot.token] = value
+            if value:
+                page["infobox_fields"][slot.token] = value
+            else:
+                page["infobox_fields"].pop(slot.token, None)
 
 
 # The neutral error codes check_identity_match emits (scripts/wiki_page_validator.py).
