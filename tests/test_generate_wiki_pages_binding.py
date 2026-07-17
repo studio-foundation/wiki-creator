@@ -108,10 +108,20 @@ def _person_entity():
 
 
 def test_bind_overwrites_swapped_nom():
-    page = {"infobox_fields": {"nom": "Kaltain", "affiliation": "Adarlan"}}
+    page = {"infobox_fields": {"nom": "Kaltain", "species": "Fae"}}
     gwp._bind_batch_fields(page, _person_entity(), {})
-    assert page["infobox_fields"]["nom"] == "Verin"          # overwritten from batch
-    assert page["infobox_fields"]["affiliation"] == "Adarlan"  # non-batch-bound untouched
+    assert page["infobox_fields"]["nom"] == "Verin"      # overwritten from batch
+    assert page["infobox_fields"]["species"] == "Fae"    # nothing computes it — left to the writer
+
+
+def test_bind_clears_an_undecided_affiliation():
+    """STU-551: `affiliation` is pipeline-owned, so an undecided character must not
+    keep the writer's guess. This assertion used to say the opposite — it pinned the
+    hole, because `_bind_batch_fields` only overwrites when it HAS a value and
+    base.yaml's infobox brief and few-shot show the writer how to invent one."""
+    page = {"infobox_fields": {"affiliation": "Adarlan"}}
+    gwp._bind_batch_fields(page, _person_entity(), {})
+    assert "affiliation" not in page["infobox_fields"]
 
 
 def test_bind_sets_alias_and_skips_type():
