@@ -468,8 +468,16 @@ def test_person_declares_the_status_slot():
     person = load_base_template()["entity_types"]["PERSON"]
     slots = {s["token"]: s for s in person["infobox"]}
     assert slots["status"]["provenance"] == "extracted-fact"
-    assert "death" not in slots
-    assert "{{{death|}}}" not in person["export"]["infobox_source"]
+
+
+def test_person_declares_the_death_slot_as_optional():
+    # OPT, so `validate_template`'s MIN-needs-a-fallback rule does not apply and
+    # an absent circumstance renders no row (STU-552).
+    person = load_base_template()["entity_types"]["PERSON"]
+    slots = {s["token"]: s for s in person["infobox"]}
+    assert slots["death"]["provenance"] == "extracted-fact"
+    assert slots["death"]["obligation"] == "OPT"
+    assert "{{{death|}}}" in person["export"]["infobox_source"]
 
 
 def test_the_pre_step_is_registered_before_wiki_preparation():

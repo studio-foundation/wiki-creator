@@ -35,6 +35,8 @@ entity_types:
         |-
         | '''Statut''' || {{{status|}}}
         |-
+        | '''Décès''' || {{{death|}}}
+        |-
         | '''Espèce/Race''' || {{{species|}}}
         |-
         | '''Occupation''' || {{{occupation|}}}
@@ -52,6 +54,7 @@ entity_types:
       - {token: alias,       group: infobox, provenance: batch-bound,    obligation: OPT, tiers: [figurant, secondary, principal]}
       - {token: apparition,  group: infobox, provenance: batch-bound,    obligation: OPT, tiers: [figurant, secondary, principal]}
       - {token: status,      group: infobox, provenance: extracted-fact, obligation: MIN, fallback: unknown, tiers: [figurant, secondary, principal]}
+      - {token: death,       group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [figurant, secondary, principal]}
       - {token: species,     group: infobox, provenance: extracted-fact, obligation: OPT, genre_gated: true, tiers: [secondary, principal]}
       - {token: affiliation, group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
       - {token: titles,      group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
@@ -339,6 +342,7 @@ labels:
   alias:         {en: Aliases,     fr: Alias}
   apparition:    {en: Appearance,  fr: Apparition}
   status:        {en: Status,      fr: Statut}
+  death:         {en: Death,       fr: Décès}
   species:       {en: Species,     fr: Espèce}
   affiliation:   {en: Affiliation, fr: Affiliation}
   titles:        {en: Titles,      fr: Titres}
@@ -376,6 +380,9 @@ chrome:
   status_missing:  {fr: "Disparu",  en: "Missing"}
   status_unknown:  {fr: "Inconnu",  en: "Unknown"}
   status_undead:   {fr: "Mort-vivant", en: "Undead"}
+  death_by_at:     {fr: "Tué par {agent} à {place}", en: "Killed by {agent} at {place}"}
+  death_by:        {fr: "Tué par {agent}",           en: "Killed by {agent}"}
+  death_at:        {fr: "Mort à {place}",            en: "Died at {place}"}
   # STU-514: Main_Page navigation, showcase headings, and statistics. Reader-facing
   # chrome — localized by output_language, was hardcoded French in export_helpers.py.
   main_characters:    {fr: "Personnages principaux", en: "Main characters"}
