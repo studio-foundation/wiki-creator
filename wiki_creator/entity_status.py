@@ -52,9 +52,6 @@ _TYPOGRAPHIC_TRANSLATION = str.maketrans(
         "–": "-",
         "—": "-",
         "‑": "-",
-        " ": " ",
-        " ": " ",
-        " ": " ",
     }
 )
 

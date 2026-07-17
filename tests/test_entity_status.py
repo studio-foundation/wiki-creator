@@ -236,14 +236,6 @@ def test_em_dash_folds_to_hyphen():
     assert verdicts["Brom"]["status"] == "deceased"
 
 
-def test_non_breaking_space_folds_to_a_plain_space():
-    rows = [
-        {"name": "Brom", "aliases": [], "snippets": [{"text": "Brom died at dawn.", "chapter_id": "c1"}]}
-    ]
-    verdicts = parse_status_verdict(_verdict(quote="Brom died at dawn."), rows)
-    assert verdicts["Brom"]["status"] == "deceased"
-
-
 def test_folding_does_not_relax_the_check_for_invented_text():
     # Folding only equates two spellings of the SAME sentence. A sentence the
     # model invented must still be rejected, even one that also carries a
