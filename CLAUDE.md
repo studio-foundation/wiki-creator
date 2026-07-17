@@ -1246,7 +1246,7 @@ Only stop and ask for: irreversible/destructive actions (force-push, history rew
 
 Every issue created or updated carries the full metadata, not just a title and description. An issue missing these is incomplete — fill them at creation, don't defer:
 
-- **Labels** — defects get `bug`; feature/refactor tasks don't.
+- **Labels** — defects get `bug`; feature/refactor tasks don't. On wiki-creator, every actionable issue also carries `claude:local` or `claude:web` (see "Where a Task Runs" above).
 - **Estimate** — always set, even if rough.
 - **Priority** — always set, never left at "No priority".
 - **Project / cycle** — assign when one applies.
