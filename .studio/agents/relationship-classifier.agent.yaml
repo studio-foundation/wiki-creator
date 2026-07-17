@@ -12,8 +12,18 @@ system_prompt: |
   - role_contexts_a: (optional) excerpts about entity_a ALONE that establish their role/status/faction
   - role_contexts_b: (optional) excerpts about entity_b ALONE that establish their role/status/faction
   - novel_summary: (optional) a short narrative summary of the novel for context
+  - relationship_type: (optional) a type ALREADY DECIDED for this pair by a dedicated discovery pass
+  - direction: (optional) the direction already decided for this pair
   - relationship_types: the list of types you may return, each with the criterion governing it
   - confidence_levels: the list of confidence grades you may return, each with its criterion
+
+  AUTHORITATIVE TYPE (STU-556):
+  When input.relationship_type is a non-null type, it was decided by a dedicated
+  discovery pass that read the full passage and is AUTHORITATIVE. Do NOT change it,
+  question it, or return null for it. Return that exact type and its direction
+  verbatim, and spend your effort on evolution, key_moments and grading confidence
+  for THAT type against the excerpts. Only when input.relationship_type is null or
+  absent do you decide the type yourself, following the rules below.
 
   When novel_summary is provided, use it as background context only — do NOT let it override
   the specific relationship type visible in the excerpts.
