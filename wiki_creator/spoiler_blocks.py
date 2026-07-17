@@ -67,6 +67,37 @@ def wrap_collapsible(body: str, content_units: list[dict], collapse_after: int, 
     return "".join(out)
 
 
+_SPOILER_INFOBOX_TOKENS = ("status", "death")
+
+
+def gate_infobox_spoilers(fields: dict, lang: str = "fr") -> dict:
+    """Collapse the spoiler-bearing infobox values behind an inline mw-collapsible.
+
+    ``status`` and ``death`` (STU-488/STU-552) are the only infobox rows that leak
+    an end-of-tome fact — that a character dies, and by whose hand. This is the
+    Fandom convention for a status row: the value collapses, the label stays.
+
+    No reveal chapter is computed. A whole-tome status verdict has no sound
+    intra-tome chapter — STU-488 measured deriving one from the quoting snippet
+    3/4 wrong — so the rows are gated unconditionally whenever spoiler mode is on,
+    treated as revealed at the end of the tome. An ``unknown`` status is not a
+    spoiler and is left open. Only PERSON pages carry these tokens.
+    """
+    gated = dict(fields)
+    unknown = chrome_label("status_unknown", lang)
+    expand = chrome_label("reveal_spoiler", lang)
+    collapse = chrome_label("collapse", lang)
+    for token in _SPOILER_INFOBOX_TOKENS:
+        value = gated.get(token)
+        if not value or (token == "status" and value == unknown):
+            continue
+        gated[token] = (
+            f'<span class="mw-collapsible mw-collapsed" '
+            f'data-expandtext="{expand}" data-collapsetext="{collapse}">{value}</span>'
+        )
+    return gated
+
+
 def relationship_index_lines(
     entity: dict, lang: str = "fr", book_config: dict | None = None
 ) -> list[str]:

@@ -472,9 +472,23 @@ Inside `wiki-resolution`, order matters:
   page, so a link would be red, and no edge is drawn, so the STU-501 rule never
   engages. The cache gained a `CACHE_VERSION` because the rows did **not** change
   — same roster, new question — so roster-keying alone would have replayed a
-  pre-STU-552 verdict forever and silently. The infobox is not spoiler-gated
-  (`content_units` skips it by construction), so the circumstance leaks the death
-  exactly as `Statut : Décédé` already does; gating the infobox is its own ticket.
+  pre-STU-552 verdict forever and silently. The infobox leaked the death exactly
+  as `Statut : Décédé` already did, until STU-567 gated it (below).
+
+- The infobox is spoiler-gated per-row (STU-567): `content_units` still skips the
+  infobox by construction (it is not a section), so `wiki_export.render_page`
+  gates it directly — `gate_infobox_spoilers` wraps the `status` (unless
+  `unknown`) and `death` values in an inline `mw-collapsible` span when
+  `generation.spoiler.collapse_after_chapter` is set (byte-identical output
+  otherwise). This is the Fandom convention: the value collapses behind a reveal
+  toggle, the `Statut`/`Décès` label stays. **No reveal chapter is computed** —
+  STU-488 measured deriving one from the quoting snippet 3/4 wrong (the text
+  *states* a death nowhere near where it *happens*), and a whole-tome status
+  verdict has no sound intra-tome chapter, so the rows are treated as revealed at
+  end-of-tome and gated unconditionally. A reader past the death point pays one
+  click; the alternative leaks it. Only PERSON declares `status`/`death` infobox
+  tokens, so keying on them is inherently scoped. `unknown` is not a spoiler and
+  stays open. Toggle chrome is chapter-less: `chrome.reveal_spoiler`.
 
 - Affiliation is a scalar, not a dated edge (STU-551): the `affiliation` slot is
   filled by one `studio run entity-affiliation-item` per book over the PERSON

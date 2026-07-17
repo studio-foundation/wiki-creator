@@ -182,6 +182,31 @@ def test_render_page_collapses_late_sections_when_configured():
     assert "mw-collapsible mw-collapsed\">\n== Biographie" not in content
 
 
+# --- STU-567: infobox status/death gated by spoiler mode ---
+
+
+def _person_with_status():
+    page = _page()
+    page["infobox_fields"] = {"nom": "Brom", "status": "Décédé",
+                              "death": "Tué par Durza à Farthen Dûr"}
+    return page
+
+
+def test_render_page_gates_infobox_status_when_spoiler_on():
+    _, content = render_page(_person_with_status(), LABELS, collapse_after=5)
+    assert '|status=<span class="mw-collapsible mw-collapsed"' in content
+    assert '|death=<span class="mw-collapsible mw-collapsed"' in content
+    assert "Décédé</span>" in content
+    assert "|nom=Brom" in content  # identity row untouched
+
+
+def test_render_page_infobox_status_open_when_spoiler_off():
+    _, content = render_page(_person_with_status(), LABELS)
+    assert "|status=Décédé" in content
+    assert "|death=Tué par Durza à Farthen Dûr" in content
+    assert "mw-collapsible" not in content
+
+
 # --- STU-494: per-relation subsection collapsibles ---
 
 

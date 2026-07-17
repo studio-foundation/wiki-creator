@@ -28,6 +28,7 @@ from wiki_creator.spoiler_blocks import (
     wrap_collapsible,
     wrap_relation_collapsibles,
     inject_relationship_index,
+    gate_infobox_spoilers,
     spoiler_collapse_after,
 )
 
@@ -105,7 +106,10 @@ def render_page(
     if entity_type in ("SYNOPSIS", "COLLATION"):
         return filename, body
 
-    infobox = make_infobox_call(entity_type, page.get("infobox_fields", {}))
+    infobox_fields = page.get("infobox_fields", {})
+    if collapse_after is not None:
+        infobox_fields = gate_infobox_spoilers(infobox_fields, lang)
+    infobox = make_infobox_call(entity_type, infobox_fields)
     cats = category_tags(
         entity_type, page.get("importance", "secondary"), labels, page.get("books"),
         expose_importance_tier=stance.expose_importance_tier,

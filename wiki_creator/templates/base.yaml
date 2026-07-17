@@ -371,6 +371,7 @@ language_names:
 # index label). Localized like the rest of the output, never hardcoded in Python.
 chrome:
   reveal:    {fr: "Chapitre {chapter} — révéler", en: "Chapter {chapter} — reveal"}
+  reveal_spoiler: {fr: "Spoiler — révéler", en: "Spoiler — reveal"}
   collapse:  {fr: "Masquer", en: "Hide"}
   evolution: {fr: "Évolution :", en: "Evolution:"}
   # STU-488: the `status` infobox slot. Reader-facing chrome, so the
