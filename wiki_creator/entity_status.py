@@ -19,10 +19,10 @@ Every helper here fails toward `unknown`. The asymmetry is STU-539's: a false
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
 
 from wiki_creator.page_templates import chrome_label
+from wiki_creator.tokens import contains_token_run
 from wiki_creator.roster import (
     has_marker,
     is_quoted,
@@ -117,9 +117,9 @@ def _grounded_name(value: object, quote: str, names: dict[str, str]) -> str | No
     verdict already had to prove. A name sourced from a neighbouring snippet
     would render where the character *was*, not where they died.
 
-    The quote check is a whole-token match (STU-541's `_contains_token_run`,
-    same bug): a roster name like "Son" — a spaCy-mistyped common noun kept on
-    the PERSON roster — sits inside "per**son**" with no relation to it. `\b`
+    The quote check is a whole-token match (shared with STU-541, same bug): a
+    roster name like "Son" — a spaCy-mistyped common noun kept on the PERSON
+    roster — sits inside "per**son**" with no relation to it. `boundary="word"`
     still crosses a possessive apostrophe ("Durza**'s**"), so a name owning the
     sentence keeps grounding.
     """
@@ -127,7 +127,7 @@ def _grounded_name(value: object, quote: str, names: dict[str, str]) -> str | No
     if not surface:
         return None
     canonical = names.get(surface)
-    if canonical is None or not re.search(r"\b" + re.escape(surface) + r"\b", normalize(quote)):
+    if canonical is None or not contains_token_run(normalize(quote), surface, boundary="word"):
         return None
     return canonical
 
