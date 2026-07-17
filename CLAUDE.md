@@ -364,6 +364,43 @@ Inside `wiki-resolution`, order matters:
   chain: A=B then B=C is skipped, because the classifier judged the roster it was
   shown and was never asked for a transitive claim.
 
+- Adjudication is worth **0.83 precision**, and its errors are one shape (STU-543):
+  measured over all 15 books, full text, rosters 17–174 (`research/alias-eval`, run
+  it with `HF_HUB_OFFLINE=1`). **18 merges, 15 true, 3 false.** Four are judged
+  without an oracle — the ground-truth corpora already write down both halves, every
+  name book 1 calls a character (`canonical_aliases_book1`) and the confusions a page
+  must never make (`identity_confusion_forbidden: ["alias: Daughter of Eve"]` under
+  Lucy). **Roster size is not the failure axis STU-543 expected**: 174 entities works
+  (Way of Kings), and the 3 false positives come from rosters of 49, 90 and 101.
+  It earns its keep on the pair the lexical rules cannot reach: `Wit = Hoid` is found
+  from the very sentence STU-538 quoted as *out* of a regex's reach, plus `Brom = Neal`
+  / `Eragon = Evan` (the false names they travel under), `Saphira = Bjartskular`,
+  `The Witch = White Witch`.
+  **All 3 false positives are a character merged into a title held by more than one
+  person** — `Nausicaä = Fury` (there are three: Alecto, Tisiphone, Megaera),
+  `Glaedr = Ebrithil` ("master": Arya says it to Oromis, Saphira to Glaedr),
+  `Eragon = Uluthrek` (Uluthrek is **Angela** — *"Farewell, Firesword. Farewell,
+  Uluthrek"*, two people in sequence; the cited quote is *"why did Garzhvog call
+  **you** Uluthrek?"*, Eragon asking *her*, which is Solembum with the arrow
+  reversed). Each quote is verbatim in the snippets, so the STU-539 grounding check
+  passed all three — **presence was all it ever measured** (STU-544). This is
+  STU-541's rule from the other end: a title designating **one** person
+  (`Captain of the Guard`, `Argetlam`, `Bjartskular`) is most of what the stage buys;
+  a title shared by **many** has no referent to merge into.
+  Recall is the cost of STU-538's anti-merge bias: 6 pairs the gold names go unmerged,
+  all `Eragon`/`Shadeslayer`/`Argetlam` across tomes — `Argetlam` merges in 02_eldest
+  and not in 03_brisingr, because the snippets differ per tome.
+  **The measurement's first finding was that there was nothing to measure**: 5 of the
+  first 8 books produced no verdict at all. STU-561 (argv `E2BIG`, fixed in Studio)
+  and STU-564 (truncated-echo recovery) each fail safe, so the stage warned, merged
+  nothing, and every pipeline stayed green — the feature did not exist on the large
+  books and no reading of the prompt would have said so.
+  One loose thread: with STU-564 fixed, `section-filter`'s verdict survives, the
+  extraction changes, and **`alias-resolution` now folds `Celaena`/`Lillian Gordaina`
+  upstream by itself** — so Throne of Glass correctly yields 0 merges, and STU-539's
+  premise that "no signal even proposes that pair today" is false on a correctly
+  filtered extraction.
+
 - Entity status (STU-488): the `status` infobox slot was declared `MIN` with
   `fallback: unknown` in STU-504 and never populated. It is filled by one
   `studio run entity-status-item` per book over the PERSON roster — the
