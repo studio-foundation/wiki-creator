@@ -579,6 +579,30 @@ def test_a_name_absent_from_the_quote_is_dropped():
     assert "place" not in verdicts["Brom"]
 
 
+def test_a_name_from_a_neighbouring_snippet_is_dropped():
+    # Gate 3 again, but the place is real evidence — just not evidence of the
+    # death. It must be checked against the quote alone, not the snippet pool.
+    quote = "Durza's blade took Brom in the side"
+    rows = [
+        {
+            "name": "Brom",
+            "aliases": [],
+            "snippets": [
+                {"text": quote, "chapter_id": "ch37"},
+                {"text": "They rode hard for Farthen Dûr", "chapter_id": "ch36"},
+            ],
+        }
+    ]
+    verdicts = parse_status_verdict(
+        {"status": [{"name": "Brom", "status": "deceased", "quote": quote, "place": "Farthen Dûr"}]},
+        rows,
+        _index(),
+    )
+    assert "place" not in verdicts["Brom"]
+    assert verdicts["Brom"]["status"] == "deceased"
+    assert verdicts["Brom"]["quote"] == quote
+
+
 def test_a_name_off_the_roster_is_dropped():
     quote = "Galbatorix's blade took Brom in the side"
     verdicts = _gated_verdict(
