@@ -44,6 +44,8 @@ from wiki_creator.relationship_discovery import (
     build_roster,
     canonicalize_relations,
     chunk_chapters,
+    load_votes_cache,
+    save_votes_cache,
     valid_relations,
 )
 from wiki_creator.types import Relationship, RelationshipBundle
@@ -99,21 +101,6 @@ def _run_discovery_chunk(chunk: dict, roster_lines: list[str], type_defs: list[d
     return stage_output.get("relations")
 
 
-def _load_votes_cache(path: Path) -> dict[str, list[dict]]:
-    if not path.exists():
-        return {}
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-        return data if isinstance(data, dict) else {}
-    except (OSError, ValueError):
-        return {}
-
-
-def _save_votes_cache(path: Path, votes: dict[str, list[dict]]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(votes, ensure_ascii=False, indent=2), encoding="utf-8")
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(description="Schema-guided relation discovery (STU-556).")
     parser.add_argument("--book", required=True, help="Path to book YAML")
@@ -157,7 +144,7 @@ def main() -> None:
         print("[discover-relationships] no narrative chapters — nothing to discover", file=sys.stderr)
         return
 
-    cache = _load_votes_cache(votes_path)
+    cache = load_votes_cache(votes_path, roster_lines)
     todo = [c for c in chunks if c["id"] not in cache]
     print(
         f"[discover-relationships] {len(chunks)} chunks | {len(cache)} cached | "
@@ -174,7 +161,7 @@ def main() -> None:
         with lock:
             done[0] += 1
             cache[chunk["id"]] = kept
-            _save_votes_cache(votes_path, cache)
+            save_votes_cache(votes_path, roster_lines, cache)
             print(f"  [{done[0]}/{len(todo)}] {chunk['id']}: {len(kept)}", file=sys.stderr)
         return chunk["id"], kept
 

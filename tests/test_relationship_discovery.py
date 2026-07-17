@@ -11,6 +11,8 @@ from wiki_creator.relationship_discovery import (
     canonicalize_relations,
     chunk_chapters,
     flip,
+    load_votes_cache,
+    save_votes_cache,
     valid_relations,
 )
 
@@ -196,3 +198,26 @@ def test_aggregate_orders_pairs_by_chapter_breadth():
     pairs = aggregate(votes, ROSTER)
     # Saphira pair spans 2 chapters, Brom pair 1 → Saphira first.
     assert (pairs[0]["entity_a"], pairs[0]["entity_b"]) == ("Eragon", "Saphira")
+
+
+# --- votes cache is keyed on the roster (STU-556) ---------------------------
+
+
+def test_votes_cache_roundtrips_for_same_roster(tmp_path):
+    path = tmp_path / "votes.json"
+    roster = ["Eragon", "Brom (also called: Neal)"]
+    votes = {"ch1:0": [{"entity_a": "Eragon", "entity_b": "Brom"}]}
+    save_votes_cache(path, roster, votes)
+    assert load_votes_cache(path, roster) == votes
+
+
+def test_votes_cache_busts_when_roster_changes(tmp_path):
+    path = tmp_path / "votes.json"
+    save_votes_cache(path, ["Eragon", "Brom"], {"ch1:0": [{"entity_a": "Eragon"}]})
+    # An alias merge changed the roster without changing chunk ids — stale votes
+    # for the old roster must not replay.
+    assert load_votes_cache(path, ["Eragon"]) == {}
+
+
+def test_votes_cache_missing_file_is_empty(tmp_path):
+    assert load_votes_cache(tmp_path / "absent.json", ["Eragon"]) == {}
