@@ -179,12 +179,18 @@ def _grounded_name(value: object, quote: str, names: dict[str, str]) -> str | No
     Two gates: it is on the type's roster, and it is verbatim in the quote the
     verdict already had to prove. A name sourced from a neighbouring snippet
     would render where the character *was*, not where they died.
+
+    The quote check is a whole-token match (STU-541's `_contains_token_run`,
+    same bug): a roster name like "Son" — a spaCy-mistyped common noun kept on
+    the PERSON roster — sits inside "per**son**" with no relation to it. `\b`
+    still crosses a possessive apostrophe ("Durza**'s**"), so a name owning the
+    sentence keeps grounding.
     """
     surface = _normalize(value)
     if not surface:
         return None
     canonical = names.get(surface)
-    if canonical is None or surface not in _normalize(quote):
+    if canonical is None or not re.search(r"\b" + re.escape(surface) + r"\b", _normalize(quote)):
         return None
     return canonical
 
@@ -234,6 +240,8 @@ def parse_status_verdict(
         verdict = {"status": status, "quote": quote}
         if status == "deceased":
             agent = _grounded_name(entry.get("agent"), quote, name_index["PERSON"])
+            if agent is not None and _normalize(agent) == _normalize(name):
+                agent = None
             place = _grounded_name(entry.get("place"), quote, name_index["PLACE"])
             if agent:
                 verdict["agent"] = agent

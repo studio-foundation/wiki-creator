@@ -541,6 +541,9 @@ def _index():
             {"entity_type": "PERSON", "canonical_name": "Durza", "aliases": []},
             {"entity_type": "PERSON", "canonical_name": "Brom", "aliases": []},
             {"entity_type": "PERSON", "canonical_name": "Chaol Westfall", "aliases": ["Captain Westfall"]},
+            # A spaCy-mistyped common noun kept on the PERSON roster (STU-537):
+            # "Son" sits inside "per-son" with no relation to it.
+            {"entity_type": "PERSON", "canonical_name": "Son", "aliases": []},
             {"entity_type": "PLACE", "canonical_name": "Farthen Dûr", "aliases": []},
         ]
     )
@@ -656,6 +659,39 @@ def test_the_name_index_folds_typography_and_case():
 def test_the_name_index_ignores_types_that_are_not_person_or_place():
     index = build_name_index([{"entity_type": "ORG", "canonical_name": "Varden", "aliases": []}])
     assert index == {"PERSON": {}, "PLACE": {}}
+
+
+def test_an_agent_that_is_only_a_substring_of_a_quote_word_is_dropped():
+    # A spaCy-mistyped common noun ("Son") can sit on the PERSON roster; it must
+    # not ground on a word it merely sits inside of, like "per-son".
+    quote = "Brom's chest rose one last time, and then was still, a person no more"
+    verdicts = _gated_verdict(
+        {"name": "Brom", "status": "deceased", "quote": quote, "agent": "Son"},
+        quote,
+    )
+    assert "agent" not in verdicts["Brom"]
+
+
+def test_a_multiword_agent_still_grounds_after_the_boundary_fix():
+    # Guards against the token-boundary fix breaking a real multi-word match.
+    quote = "Durza's blade took Brom in the side at Farthen Dûr"
+    verdicts = _gated_verdict(
+        {"name": "Brom", "status": "deceased", "quote": quote, "place": "Farthen Dûr"},
+        quote,
+    )
+    assert verdicts["Brom"]["place"] == "Farthen Dûr"
+
+
+def test_an_agent_equal_to_the_dead_character_is_dropped():
+    # The subject's own name is the one name guaranteed to clear the quote gate
+    # (the snippets are selected because they mention the subject) — it must
+    # never render as its own killer.
+    quote = "Brom is dead"
+    verdicts = _gated_verdict(
+        {"name": "Brom", "status": "deceased", "quote": quote, "agent": "Brom"},
+        quote,
+    )
+    assert verdicts["Brom"] == {"status": "deceased", "quote": quote}
 
 
 def test_a_cache_from_an_older_question_is_not_replayed(tmp_path):
