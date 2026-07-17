@@ -1,0 +1,212 @@
+# Curated fandom.com wiki list for scrape_fandom_bulk.py.
+#
+#   python scripts/scrape_fandom_bulk.py --wikis scripts/fandom_wikis.yaml \
+#       --out-dir processing_output/fandom_corpus --workers 3
+#
+# Hand-curated, not generated. Slug guessing from a title was tried and does not
+# work: the guessable slug is often a squatted namesake, and every gate we can
+# automate (does it resolve, does it have members) confirms a wiki is ALIVE,
+# never that it is the RIGHT one. Measured: "Malazan Book of the Fallen" guesses
+# `mbf` -> "Matthew Ballester Fragments Wiki" (32 articles); "Hollow Star Saga"
+# guesses `hss` -> "High School Story Wiki" (685 articles, 50 characters, passes
+# every check). Every slug below was verified against action=query&meta=siteinfo
+# and its sitename read.
+#
+# `categories` is per-wiki because a category name is a property of the wiki, not
+# a fact we can derive. Verified via list=allcategories on each: the plain
+# "Characters"/"Locations"/"Organizations" default holds on barely half of them.
+# Real names in use: `Personnage` (singular, fr), `Humans`, `Character` (singular),
+# `Places`, `Geography`, `Groups`, `Factions`, and prefixed forms like
+# `The Shadowhunter Chronicles characters`.
+#
+# Book wikis only. Wikis whose subject is the screen adaptation are excluded even
+# when they are larger: `gameofthrones` (Wiki of Westeros, 5576 articles) covers
+# the TV series, so A Song of Ice and Fire points at `iceandfire` (2562) instead.
+
+- wiki: https://acourtofthornsandroses.fandom.com
+  lang: en
+  types: [PERSON, PLACE]
+  categories: {PERSON: Characters, PLACE: Locations}
+
+- wiki: https://allsoulstrilogy.fandom.com
+  lang: en
+  categories: {PERSON: Characters, PLACE: Locations, ORG: Organization}
+
+- wiki: https://beyonders.fandom.com
+  lang: en
+  categories: {PERSON: Characters, PLACE: Locations, ORG: Organization}
+
+- wiki: https://blackcompany.fandom.com
+  lang: en
+  categories: {PERSON: Characters, PLACE: All locations, ORG: Organizations}
+
+- wiki: https://darktower.fandom.com
+  lang: en
+  categories:
+    PERSON: The Dark Tower Characters
+    PLACE: The Dark Tower Locations
+    ORG: Factions
+
+- wiki: https://deltoraquest.fandom.com
+  lang: en
+  types: [PERSON, PLACE]
+  categories: {PERSON: Characters, PLACE: Locations}
+
+- wiki: https://discworld.fandom.com
+  lang: en
+  categories: {PERSON: Characters, PLACE: Locations, ORG: Organisations}
+
+- wiki: https://dresdenfiles.fandom.com
+  lang: en
+  types: [PERSON, PLACE]
+  categories: {PERSON: Characters, PLACE: Locations}
+
+- wiki: https://enkidiev.fandom.com/fr
+  lang: fr
+  types: [PERSON, PLACE]
+  categories: {PERSON: Personnage, PLACE: Lieux}
+
+- wiki: https://fablehaven.fandom.com
+  lang: en
+  types: [PERSON, PLACE]
+  categories: {PERSON: Characters, PLACE: Locations}
+
+- wiki: https://firstlaw.fandom.com
+  lang: en
+  categories: {PERSON: Characters, PLACE: Geography, ORG: Organizations}
+
+- wiki: https://grishaverse.fandom.com
+  lang: en
+  categories: {PERSON: Characters, PLACE: Locations, ORG: Organizations}
+
+- wiki: https://hisdarkmaterials.fandom.com
+  lang: en
+  categories: {PERSON: Humans, PLACE: Locations, ORG: Organisations}
+
+- wiki: https://hollowstar.fandom.com
+  lang: en
+  types: [PERSON]
+  categories: {PERSON: Characters}
+
+- wiki: https://houseofnight.fandom.com
+  lang: en
+  types: [PERSON, ORG]
+  categories: {PERSON: Characters, ORG: Groups}
+
+- wiki: https://iceandfire.fandom.com
+  lang: en
+  categories: {PERSON: Characters, PLACE: Locations, ORG: Families and Groups}
+
+- wiki: https://inheritance.fandom.com
+  lang: en
+  types: [PERSON, PLACE]
+  categories: {PERSON: Characters, PLACE: Places}
+
+- wiki: https://kingkiller.fandom.com
+  lang: en
+  categories: {PERSON: Characters, PLACE: Locations, ORG: Groups}
+
+- wiki: https://malazan.fandom.com
+  lang: en
+  types: [PERSON, PLACE]
+  categories: {PERSON: Humans, PLACE: Locations}
+
+- wiki: https://mistborn.fandom.com
+  lang: en
+  categories: {PERSON: Character, PLACE: Location, ORG: Organization}
+
+- wiki: https://outlander.fandom.com
+  lang: en
+  types: [PERSON, PLACE]
+  categories: {PERSON: Characters, PLACE: Locations}
+
+- wiki: https://riordan.fandom.com
+  lang: en
+  types: [PERSON, ORG]
+  categories: {PERSON: Characters, ORG: Groups}
+
+- wiki: https://shadesofmagic.fandom.com
+  lang: en
+  types: [PERSON, PLACE]
+  categories: {PERSON: Characters, PLACE: Locations}
+
+- wiki: https://shadowhunters.fandom.com
+  lang: en
+  types: [PERSON]
+  categories: {PERSON: The Shadowhunter Chronicles characters}
+
+- wiki: https://shannara.fandom.com
+  lang: en
+  types: [PERSON, PLACE]
+  categories: {PERSON: Characters, PLACE: Locations}
+
+- wiki: https://sot.fandom.com
+  lang: en
+  categories: {PERSON: Characters, PLACE: Places, ORG: Organization}
+
+- wiki: https://spiderwick.fandom.com
+  lang: en
+  categories: {PERSON: Characters, PLACE: Locations, ORG: Organisation}
+
+- wiki: https://stormlightarchive.fandom.com
+  lang: en
+  categories: {PERSON: Characters, PLACE: Locations, ORG: Groups}
+
+- wiki: https://the-folk-of-the-air.fandom.com
+  lang: en
+  types: [PERSON, PLACE]
+  categories: {PERSON: Characters, PLACE: Locations}
+
+- wiki: https://thelandofstories.fandom.com
+  lang: en
+  categories: {PERSON: Humans, PLACE: Locations, ORG: Organizations}
+
+- wiki: https://themagicians.fandom.com
+  lang: en
+  categories: {PERSON: Humans, PLACE: Locations, ORG: Organizations}
+
+- wiki: https://throneofglass.fandom.com
+  lang: en
+  types: [PERSON, PLACE]
+  categories: {PERSON: Characters, PLACE: Locations}
+
+- wiki: https://vampireacademy.fandom.com
+  lang: en
+  types: [PERSON]
+  categories: {PERSON: Characters}
+
+- wiki: https://warriors.fandom.com
+  lang: en
+  types: [PERSON]
+  categories: {PERSON: Characters}
+
+# ---------------------------------------------------------------------------
+# Verified to exist, deliberately NOT listed — a category name override cannot
+# reach them. These wikis have no character/location category root at all: they
+# partition the cast on a different axis, so no single category names it.
+#
+#   harrypotter     24612 articles. 6987 categories, none a character root; the
+#                   cast lives under profession (`Wizards`, 3795).
+#   wot             6562. Partitions by gender: `Men` (1213) / `Women` (1284).
+#   pern            3247. Partitions by in-world era and role: `Dragonrider`
+#                   (299), `Holder` (241), `Ninth Pass` (738).
+#   thehungergames  911. Partitions per book (`Sunrise on the Reaping
+#                   characters`, 100) and by status (`Deceased characters`, 192).
+#   twilightsaga    895. Only `Minor characters` (144) / `Mentioned characters`
+#                   (89); `Humans` (128) excludes the vampires, i.e. the cast.
+#
+# Reaching them needs a different entry point, not a longer category list:
+# `list=embeddedin` on the infobox template. Pages transcluding
+# `Template:Infobox character` ARE the character pages regardless of how the
+# wiki files them, and scrape_fandom_bulk.py already fetches that template list
+# (fetch_infobox_template_titles) — it just doesn't enumerate from it. Verified
+# on pern, which has zero usable categories and a clean template taxonomy:
+# `Infobox show character` -> 500+ pages, `Infobox show hold` -> 135,
+# `Infobox show place` -> 65.
+#
+# Excluded for other reasons:
+#   wicked          768 articles, but the subject is the musical, not the
+#                   novels (`Actors from Wicked`, 330).
+#   Ranger's        No wiki found. Every candidate slug failed; `ranger`
+#     Apprentice    resolves to RangerWiki (26362 articles) — Power Rangers.
+# ---------------------------------------------------------------------------
