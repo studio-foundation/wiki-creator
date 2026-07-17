@@ -29,7 +29,6 @@ Output (stdout):
     "stats": {
       "total_pairs_checked": 120,
       "pairs_above_threshold": 18,
-      "classified": 0,
       "window_size": 5,
       "threshold": 5
     }
@@ -37,7 +36,6 @@ Output (stdout):
 
 Standalone test:
   python scripts/relationship_extraction.py --test
-  python scripts/relationship_extraction.py --test --classify --model qwen2.5
   python scripts/relationship_extraction.py --test --window 3 --threshold 2
   python scripts/relationship_extraction.py --test --coref
   python scripts/relationship_extraction.py --live --coref
@@ -67,7 +65,6 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 from wiki_creator.paths import book_paths_from_yaml, BookPaths
 from wiki_creator.lang import load_lang_config, infer_language
-from wiki_creator.llm import ollama
 from wiki_creator.nlp.loader import load_spacy_model
 from wiki_creator.page_templates import confidence_definitions, relationship_definitions
 from wiki_creator import studio_io
@@ -78,7 +75,6 @@ DEFAULT_THRESHOLD = 5
 DEFAULT_MIN_COOCCURRENCE = 3
 DEFAULT_MIN_CHAPTERS_TOGETHER = 2
 _MAX_DIRECT_INTERACTION_GAP = 1  # max sentence distance to qualify as direct interaction
-_OLLAMA_URL = ollama.DEFAULT_URL
 
 _SENTENCIZER = None
 
@@ -346,7 +342,6 @@ def build_cooccurrence_graph(
     stats = {
         "total_pairs_checked": total_pairs_checked,
         "pairs_above_threshold": pairs_above,
-        "classified": 0,
         "window_size": window_size,
         "threshold": effective_min_cooc,
         "min_cooccurrence": effective_min_cooc,
@@ -976,28 +971,6 @@ def run_test_mode(
             all_ok = False
     print(f"\n{'All expected pairs found.' if all_ok else 'SOME PAIRS MISSING — check algorithm.'}")
 
-    if "--classify" in sys.argv:
-        try:
-            model_idx = sys.argv.index("--model")
-            cli_model = sys.argv[model_idx + 1] if model_idx + 1 < len(sys.argv) else None
-        except ValueError:
-            cli_model = None
-        if not cli_model:
-            print(
-                "[ERROR] --classify requires --model <model_name> (e.g. --model qwen2.5)",
-                file=sys.stderr,
-            )
-            sys.exit(1)
-        print("\n=== CLASSIFY MODE ===")
-        relationships = classify_relationships(relationships, model=cli_model)
-        classified_count = sum(1 for r in relationships if r.get("relationship_type"))
-        print(f"Classified {classified_count}/{len(relationships)} relationships")
-        for r in relationships[:5]:
-            print(f"  {r['entity_a']} ↔ {r['entity_b']}: {r['relationship_type']} ({r['direction']})")
-            if r.get("evolution"):
-                print(f"    evolution: {r['evolution']}")
-        stats["classified"] = classified_count
-
     print(f"\n=== STATS ===")
     for k, v in stats.items():
         print(f"  {k}: {v}")
@@ -1075,71 +1048,6 @@ def _should_classify_pair(rel: dict, entity_types: dict[str, str]) -> bool:
         if etype in _NON_INTERPERSONAL_TYPES:
             return False
     return True
-
-
-def classify_relationships(
-    relationships: list[dict],
-    *,
-    model: str,
-    ollama_url: str = _OLLAMA_URL,
-    novel_summary: str | None = None,
-    additional_context: str = "",
-    entity_types: dict[str, str] | None = None,
-    book_config: dict | None = None,
-) -> list[dict]:
-    """Classify relationships using Studio relationship-classifier-item pipeline.
-
-    ``model`` and ``ollama_url`` are kept for API compatibility but unused —
-    the model is now configured in the relationship-classifier agent YAML.
-    """
-    _etypes = entity_types or {}
-    missing = 0
-    total_typed = 0
-    result = []
-    for rel in relationships:
-        if not _should_classify_pair(rel, _etypes):
-            result.append(rel)
-            continue
-        classification = _run_studio_classifier_item(
-            rel,
-            novel_summary=novel_summary or "",
-            additional_context=additional_context,
-            book_config=book_config,
-        )
-        if classification and not classification.get("error"):
-            rel = {
-                **rel,
-                "relationship_type": classification.get("relationship_type"),
-                "direction": classification.get("direction"),
-                "evolution": classification.get("evolution"),
-                "key_moments": classification.get("key_moments", []),
-                "evidence": classification.get("evidence"),
-                "confidence": classification.get("confidence"),
-            }
-            if rel["relationship_type"]:
-                total_typed += 1
-                if not rel["evidence"]:
-                    missing += 1
-                    print(
-                        f"  [WARN] evidence absent pour {rel['entity_a']} ↔ {rel['entity_b']} "
-                        f"(type={rel['relationship_type']})",
-                        file=sys.stderr,
-                    )
-        else:
-            print(
-                f"  [WARN] Studio classification failed for "
-                f"{rel['entity_a']}↔{rel['entity_b']}: "
-                f"{classification.get('error', 'unknown')}",
-                file=sys.stderr,
-            )
-        result.append(rel)
-
-    if missing:
-        print(
-            f"  [WARN] evidence absent : {missing}/{total_typed} relations classifiées",
-            file=sys.stderr,
-        )
-    return result
 
 
 def _load_mentions_from_files(processing_dir: Path) -> dict[str, dict[str, list[str]]]:
@@ -1446,28 +1354,19 @@ def main() -> None:
         json.dump({"error": "missing alias-resolution or merge-entities output"}, sys.stdout, ensure_ascii=False)
         sys.exit(1)
 
-    # Parse classify flag from additional_context (YAML string)
-    do_classify = False
     do_coref = False
     min_cooccurrence_val = None
     min_chapters_together = DEFAULT_MIN_CHAPTERS_TOGETHER
     spacy_model = "fr_core_news_lg"
     coref_max_chars = 8000
     coref_device: str | None = None
-    llm_model: str | None = None
-    ollama_url = os.environ.get("OLLAMA_URL", _OLLAMA_URL)
     pronouns: frozenset = frozenset(load_lang_config("fr").get("pronouns", []))
-    novel_summary: str | None = None
     book_config: dict = {}
     raw_context = payload.get("additional_context", "")
     if raw_context:
         try:
             additional = yaml.safe_load(raw_context) or {}
             book_config = additional
-            do_classify = bool(additional.get("classify", False))
-            llm_model = additional.get("llm_model") or additional.get("model")
-            novel_summary = (additional.get("novel_summary") or "").strip() or None
-            ollama_url = additional.get("ollama_url", os.environ.get("OLLAMA_URL", _OLLAMA_URL))
             do_coref = bool(additional.get("coref", False))
             coref_max_chars = int(additional.get("coref_max_chars", 8000))
             coref_device = additional.get("coref_device")
@@ -1513,22 +1412,6 @@ def main() -> None:
         min_chapters_together=min_chapters_together,
         mentions_by_entity=mentions_by_entity,
     )
-
-    if do_classify:
-        if not llm_model:
-            print(
-                "  [ERROR] classify=true but no llm_model/model in additional_context — classification skipped.",
-                file=sys.stderr,
-            )
-        else:
-            relationships = classify_relationships(
-                relationships,
-                model=llm_model,
-                ollama_url=ollama_url,
-                novel_summary=novel_summary,
-                book_config=book_config,
-            )
-            stats["classified"] = sum(1 for r in relationships if r.get("relationship_type"))
 
     narrator = resolution_output.get("narrator", None)
 

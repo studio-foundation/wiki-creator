@@ -16,7 +16,6 @@ ner:
   invented_names: true
 coref: true
 use_llm: true
-classify: false  # classification handled by scripts/classify_relationships.py (pre-step in run_wiki.py)
 llm_model: mistral:7b-instruct
 novel_summary: |
   After serving out a year of hard labor in the salt mines of Endovier for her crimes, 18-year-old assassin Celaena Sardothien is dragged before the Crown Prince.
