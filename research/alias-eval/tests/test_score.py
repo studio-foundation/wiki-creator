@@ -3,7 +3,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from score import Gold, _entries, missed_merges  # noqa: E402
+from score import Gold, _entries, gold_by_series, missed_merges  # noqa: E402
 
 
 def gold_of(*entries) -> Gold:
@@ -70,6 +70,15 @@ def test_entries_reads_both_gold_shapes():
         "note": "a string sub-value must not be read as an entry",
     }
     assert sorted(name for name, _ in _entries(nested)) == ["Lucy", "peter"]
+
+
+def test_inheritance_gold_forbids_eragon_uluthrek():
+    """STU-544: Uluthrek is Angela's Urgal name; `Eragon = Uluthrek` is the FP the
+    quote check let through. The gold entry is what makes that merge scoreable — a
+    later-book confusion forbidden under a book-1 character (Eragon)."""
+    gold = gold_by_series().get("inheritance")
+    assert gold is not None, "inheritance ground-truth corpus not found"
+    assert gold.judge("Eragon", "Uluthrek") == "false_positive"
 
 
 def test_missed_merges_are_only_the_pairs_the_gold_can_see():

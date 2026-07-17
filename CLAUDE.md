@@ -445,6 +445,32 @@ Inside `wiki-resolution`, order matters:
   premise that "no signal even proposes that pair today" is false on a correctly
   filtered extraction.
 
+- A quote that is present is not a quote that proves (STU-544): the STU-539 grounding
+  check verifies the cited quote is verbatim in the snippets — *did this come from the
+  text or your memory of the plot* — not that the text *supports* the merge. STU-543's
+  3 false positives are one shape it cannot see: a character merged into a title held
+  by more than one person. The fix is in the **prompt**, not a code gate — proof that a
+  quote binds two names to one person is semantic and undecidable deterministically.
+  `alias-adjudication.agent.yaml`'s `THE TEST` now reads the quote for the relationship
+  (`"A was B"` merges; `"A, a B"` / `"A as a B"` / `"call you B"` do not), and two
+  `NEVER merge` rules name the failure modes: a title/class several characters hold
+  (`Ebrithil`="master", `Fury` is one of three, `Daughter of Eve`), and a name used to
+  **address or ask about a second person** (`"why did they call you X"` — Solembum with
+  the arrow reversed). Live on `claude-haiku-4-5`, the new prompt rejects all three
+  traps and keeps a genuine cover identity, stable across runs.
+  **The deterministic filter STU-544 floated second — refuse a quote naming a third
+  roster character — was measured and dropped**: over the 18 verdicts it catches 0 of
+  the 3 false positives (their quotes name no roster third) and kills 6 true positives
+  whose quotes legitimately name a bystander (`Eragon = Argetlam` names Saphira,
+  `The Witch = White Witch` names Aslan). Option 1 only.
+  Scoreability: `Eragon = Uluthrek` is now `false_positive` in `score.py` via a
+  `identity_confusion_forbidden` entry under Eragon (Uluthrek is Angela's, a
+  later-book name hosted on a book-1 character). `Ebrithil`/`Fury` stay human-judged —
+  the gold is book-1-scoped and neither has a book-1 host, so scoring them would mean
+  inventing hand-written truth. The verdict cache is keyed on the roster, not the
+  prompt, so re-measuring the fix requires re-extraction (which regenerates it), not
+  just a re-run.
+
 - Entity status (STU-488): the `status` infobox slot was declared `MIN` with
   `fallback: unknown` in STU-504 and never populated. It is filled by one
   `studio run entity-status-item` per book over the PERSON roster — the

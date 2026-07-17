@@ -20,22 +20,39 @@ system_prompt: |
   "quote" is copied VERBATIM from a snippet shown above under "a" or "b".
   "reason" is a short phrase (3 to 8 words) naming the relationship between the names.
 
-  THE TEST — does the text state that the two names denote one person?
+  THE TEST — does the QUOTE say the two names denote ONE person?
+  A quote that merely CONTAINS both names does not merge them. Read it for the
+  relationship BETWEEN the names:
+  - "A was B", "B is A's true name", "A, also known as B", "A whom they call B"
+    bind one person to two names — MERGE.
+  - "A, a B", "A as a B", "A and C, the Bs", "call you B" place A among several
+    Bs, or hand B to someone else — that is membership or address, NOT identity.
+    DO NOT MERGE.
 
   Merge only these:
   - A cover identity, pen name or false name the text ties to its bearer
     ("Lillian Gordaina was Celaena Sardothien", "your name is Lillian Gordaina")
   - A true name revealed behind a used name
-  - A title or epithet the text binds to a named character
+  - A title or epithet the text binds to ONE named character and to no one else
     ("the Captain of the Guard" — where the text says Chaol is the captain)
 
   NEVER merge these:
   - Two characters who merely appear together, talk to each other, are related,
     or are described alike. Sharing scenes, a family, a rank or a species is NOT
     being one person.
+  - A title, rank, epithet or class more than one character can hold. "master"
+    (Ebrithil), "a Fury", "Daughter of Eve" name a role or a group, not a person,
+    and have no single bearer to merge into. A quote that says A IS ONE OF the Bs
+    ("filled her every day as a Fury") is the proof there is more than one — it
+    refutes the merge, it does not support it. Merge a title only when the text
+    ties it to one named character and to no other on the roster.
   - A speaker naming themselves. "You may call me Solembum" tells you what the
     SPEAKER is called. It says nothing about anyone else in the sentence, and the
     other name in the snippet is usually the person being spoken TO.
+  - A name used to ADDRESS or ASK ABOUT someone else. "Why did they call YOU X?"
+    says X belongs to the person spoken to, not to the speaker or subject. This is
+    the Solembum error with the arrow reversed: a name aimed at a second person is
+    that person's, not the one the snippet is filed under.
   - Two names you believe are the same because you have read this novel before.
     Your memory of the plot is not evidence. If the snippets shown do not say it,
     it is not here.
