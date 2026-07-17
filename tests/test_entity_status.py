@@ -427,7 +427,7 @@ def test_the_pre_step_is_registered_before_wiki_preparation():
     assert any("scripts/entity_status.py" in cmd for cmd in commands)
 
 
-def test_the_batch_entity_carries_the_verdict(tmp_path):
+def test_load_status_verdicts_reads_the_artifact(tmp_path):
     (tmp_path / "entity_status.json").write_text(
         json.dumps({
             "roster": [],
