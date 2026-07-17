@@ -4,8 +4,9 @@ Scores the shipped co-occurrence discovery against GLiREL and schema-guided LLM
 extraction, on a book none of them was tuned on. Research only — nothing here runs
 in the pipeline.
 
-Two verdicts, in order. Read them in order; the second one contradicts the first
-on purpose, because the first one's own fixes changed the answer.
+Three verdicts, in order. Read them in order; the second one contradicts the first
+on purpose, because the first one's own fixes changed the answer, and the third
+measures the loss the second one charged.
 
 1. **STU-467, the spike — fix the window, buy nothing.** Sliding it over the
    chapter instead of over an entity-ordered list takes detection F1 from 0.200 to
@@ -19,7 +20,13 @@ on purpose, because the first one's own fixes changed the answer.
    an LLM one, which is what the spike could not do. [decision.md](decision.md),
    priced by [cost.md](cost.md).
 
-The two do not conflict. The spike measured raw co-occurrence against an LLM and
+3. **STU-554, measuring what the classifier returns.** The pair the window found
+   and the classifier dropped: 55% of Eragon's classifiable pairs are declined by
+   the model itself, in valid JSON — not lost to a contract or prompt defect.
+   [classifier_verdicts.md](classifier_verdicts.md) (measured by
+   `runners/measure_classifier_verdicts.py`).
+
+The first two do not conflict. The spike measured raw co-occurrence against an LLM and
 said the gap was mostly a bug; the bug was fixed, and what the fixed pipeline
 actually ships still loses to a schema-guided pass by 118 pairs to 80.
 
