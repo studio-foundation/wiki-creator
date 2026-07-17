@@ -1055,3 +1055,42 @@ def test_full_file_spans_round_trip(tmp_path):
     records = studio_io.load_full_file(p, "persons_full")
     span = records["e1"].mention_spans_by_chapter["c1"][0]
     assert span == MentionSpan(surface="Celaena", start=10, end=17)
+
+
+@requires_en_sm
+def test_main_records_the_ner_config_it_extracted_under(tmp_path, monkeypatch):
+    """Without it, a `ner` flip leaves the cached extraction standing (STU-560)."""
+    import io
+    import json as _json
+
+    import yaml as _yaml
+
+    from scripts import entity_extraction as stage
+    from wiki_creator.ner import EXTRACTION_CONFIG_FILE
+
+    books_dir = tmp_path / "author" / "series" / "books"
+    books_dir.mkdir(parents=True)
+    epub = books_dir / "01-a-book.epub"
+    epub.write_bytes(b"not a real epub - only the path is used")
+    processing = tmp_path / "author" / "series" / "processing_output" / "01-a-book"
+
+    chapters = [
+        {
+            "id": "c01",
+            "title": "Chapter 1",
+            "content": "Harry Potter lived at number four, Privet Drive. Harry Potter was a wizard.",
+        }
+    ]
+    payload = {
+        "additional_context": _yaml.safe_dump(
+            {"file_path": str(epub), "language": "en", "spacy_model": "en_core_web_sm", "min_mentions_absolute": 1}
+        ),
+        "previous_outputs": {"epub-parse": {"chapters": chapters}},
+    }
+    monkeypatch.setattr("sys.stdin", io.StringIO(_json.dumps(payload)))
+    monkeypatch.setattr("sys.stdout", io.StringIO())
+
+    stage.main()
+
+    recorded = _json.loads((processing / EXTRACTION_CONFIG_FILE).read_text())
+    assert recorded == {"ner": {"invented_names": False, "model": stage._ner_config(None).model, "threshold": 0.5}}

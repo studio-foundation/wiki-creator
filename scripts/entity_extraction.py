@@ -41,6 +41,7 @@ from wiki_creator.entity_taxonomy import (
     ner_types,
 )
 from wiki_creator.lang import book_language as _book_language, load_lang_config as _load_lang_config
+from wiki_creator.ner import EXTRACTION_CONFIG_FILE, extraction_fingerprint
 from wiki_creator.ner import ner_config as _ner_config
 from wiki_creator.nlp.loader import (
     ensure_sentencizer as _ensure_sentencizer,
@@ -749,6 +750,9 @@ def main() -> None:
             json.dump({json_key: payload}, f, ensure_ascii=False)
 
     save_chapters_json(chapters, path=str(paths.processing / "chapters.json"))
+
+    with open(paths.processing / EXTRACTION_CONFIG_FILE, "w", encoding="utf-8") as f:
+        json.dump(extraction_fingerprint(input_data), f, ensure_ascii=False)
 
     # Output lightweight entities to stdout → becomes entity-resolution's previous_stage_output
     json.dump({"entities_for_resolution": entities_for_resolution}, sys.stdout, ensure_ascii=False)

@@ -740,6 +740,21 @@ Inside `wiki-resolution`, order matters:
   injects only under an exactly-`Relations` heading (an LLM-drifted heading is
   silently skipped, same tolerance as collapsible gating). Pure logic in
   `wiki_creator/spoiler_blocks.py`; section→heading map in `wiki_creator/sections.py`.
+- Extraction is keyed on its config (STU-560): `entity_extraction.py` writes the
+  resolved `ner` block to `processing_output/<slug>/extraction_config.json`
+  (`ner.extraction_fingerprint`), and `run_wiki.py` re-runs `wiki-extraction`
+  when it diverges from the book YAML (`extraction_config_changed`, also true
+  when the file is absent — an artifact that names no backend is stale by
+  definition). Extraction has no cache of its own; the orchestrator's skip was
+  `status == "completed"` + `required_files` present, so a correct `ner` flip was
+  read, applied to nothing, and never reported: the **three** books with an
+  extraction cache were all rendering spaCy-typed entities while configured for
+  GLiNER — Garrow ORG again, the STU-537 bug verbatim. Same rule as the STU-529/
+  539/488 caches, one layer down: a cache is keyed on the config that produced
+  it. The fingerprint holds only `ner` because that is what the class of bug is
+  about — widen it when another config key silently outlives its artifact, not
+  before. `make run-extraction` shells `studio run` directly and always
+  re-extracts, so this only ever bites through `run_wiki.py`.
 - Subset test runs (STU-497): two independent axes make any feature cheap to exercise.
   (1) Chapters — `WIKI_MAX_CHAPTERS=N` caps extraction to the first N chapters
   (`parse_epub._env_max_chapters` → truncation, the single source of truth); every
