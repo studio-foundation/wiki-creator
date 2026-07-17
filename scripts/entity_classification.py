@@ -409,9 +409,9 @@ def _normalize_entity_type(
     return current_type
 
 
-# A role-named entity whose merge fails but who co-occurs with at least this many
-# distinct PERSONs is treated as a standalone character known only by their title
-# (e.g. "King of Adarlan") rather than an alias fragment to discard (STU-431).
+# A role-named entity co-occurring with at least this many distinct PERSONs is treated
+# as a standalone character known only by their title (e.g. "King of Adarlan") rather
+# than an alias fragment to discard (STU-431).
 MIN_DISTINCT_PERSONS_FOR_STANDALONE_ROLE = 3
 
 
@@ -532,18 +532,25 @@ def _merge_entity_fields(target: dict, source: dict) -> None:
 def _canonicalize_role_entities(
     entities: list[dict],
     relationships: list[dict],
-    persons_full: dict,
-    places_full: dict,
-    orgs_full: dict,
-    events_full: dict,
     role_words=None,
     role_patterns=None,
-) -> tuple[list[dict], list[dict], dict[str, str]]:
+) -> list[dict]:
+    """Mark as ignored the role entities that name nobody; keep the ones that name a character.
+
+    A role entity is never merged into another entity here (STU-549). Merging it into
+    its dominant co-occurrence partner deleted the antagonist: 'King Galbatorix' shares
+    scenes with Eragon above all, because that is what a protagonist is, so the rule
+    named the protagonist every time. Measured over the cached books it fired 3 times
+    with 0 true positives — 'King Galbatorix' and 'The Shade' into Eragon, 'Mr Tumnus'
+    into Lucy — and it read no sentence saying the two names are one person. The paths
+    that do read one run earlier, in alias-resolution: _detect_title_alias matches the
+    remainder lexically ('Captain Westfall' / 'Chaol Westfall'), _detect_pure_title_in_context
+    requires apposition.
+
+    A role entity co-occurring with fewer than MIN_DISTINCT_PERSONS_FOR_STANDALONE_ROLE
+    distinct PERSONs is a noise fragment; above that it is a character known only by
+    their title (e.g. "King of Adarlan") and stays (STU-431).
     """
-    Merge unambiguous role entities into PERSON entities; otherwise mark role entities ignored.
-    """
-    by_name = {e.get("canonical_name", ""): e for e in entities if e.get("canonical_name")}
-    merge_map: dict[str, str] = {}
     person_names = {e.get("canonical_name", "") for e in entities if e.get("type") == "PERSON"}
 
     for entity in entities:
@@ -551,46 +558,17 @@ def _canonicalize_role_entities(
         if not name or not _is_role_entity_name(name, role_words=role_words, role_patterns=role_patterns):
             continue
 
-        candidates: list[tuple[int, str]] = []
-        for rel in relationships:
-            a, b = rel.get("entity_a"), rel.get("entity_b")
-            if a == name and b in person_names:
-                candidates.append((int(rel.get("cooccurrence_count", 0) or 0), b))
-            elif b == name and a in person_names:
-                candidates.append((int(rel.get("cooccurrence_count", 0) or 0), a))
-        if not candidates:
+        partners = {
+            other
+            for rel in relationships
+            for this, other in ((rel.get("entity_a"), rel.get("entity_b")), (rel.get("entity_b"), rel.get("entity_a")))
+            if this == name and other in person_names
+        }
+        if len(partners) < MIN_DISTINCT_PERSONS_FOR_STANDALONE_ROLE:
             entity["type"] = "OTHER"
             entity["relevant"] = False
-            continue
 
-        counts: dict[str, int] = defaultdict(int)
-        for score, candidate in candidates:
-            counts[candidate] += score
-        ranked = sorted(counts.items(), key=lambda x: x[1], reverse=True)
-        top_name, top_score = ranked[0]
-        second_score = ranked[1][1] if len(ranked) > 1 else 0
-
-        context = " ".join(
-            _collect_context_sentences(entity, persons_full, places_full, orgs_full, events_full)
-        ).lower()
-        target = by_name.get(top_name, {})
-        target_mentions = [target.get("canonical_name", "")] + list(target.get("aliases", []))
-        mention_support = sum(1 for token in target_mentions if token and token.lower() in context)
-
-        # Strong-majority merge rule: dominant relationship + textual support in role contexts.
-        if top_score >= 3 and top_score >= (second_score * 2 if second_score > 0 else 3) and mention_support >= 1:
-            _merge_entity_fields(target, entity)
-            merge_map[name] = top_name
-            entity["relevant"] = False
-        elif len(counts) < MIN_DISTINCT_PERSONS_FOR_STANDALONE_ROLE:
-            entity["type"] = "OTHER"
-            entity["relevant"] = False
-        # else: unmerged role entity co-occurring with many distinct persons is a
-        # character known only by their title (e.g. "King of Adarlan") — keep it (STU-431).
-
-    filtered = [e for e in entities if e.get("canonical_name") not in merge_map]
-    rewritten = _rewrite_relationships(relationships, merge_map)
-    return filtered, rewritten, merge_map
+    return entities
 
 
 def _apply_entity_overrides(
@@ -768,14 +746,10 @@ def run_studio_mode() -> None:
     llm_corrections = _load_type_corrections(paths.processing)
     _apply_llm_type_corrections(entities, llm_corrections)
 
-    # Role/title entities should not become autonomous pages; merge unambiguous aliases.
-    entities, relationships, _ = _canonicalize_role_entities(
+    # A role entity naming too few people to be a character should not become a page.
+    entities = _canonicalize_role_entities(
         entities,
         relationships,
-        persons_full,
-        places_full,
-        orgs_full,
-        events_full,
         role_words=role_words,
         role_patterns=role_patterns,
     )

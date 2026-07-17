@@ -420,31 +420,33 @@ def test_normalize_entity_type_keeps_person_when_context_has_generic_geo_words()
     assert new_type == "PERSON"
 
 
-def test_canonicalize_role_entities_merges_unambiguous_assassin_alias():
+def test_canonicalize_role_entities_never_merges_a_role_into_its_co_occurrence_partner():
+    """Co-occurrence is not identity (STU-549).
+
+    'King Galbatorix' is the antagonist; he shares scenes with the protagonist more
+    than with anyone else, which is exactly what a protagonist means. Merging on that
+    signal made him an alias of Eragon and deleted the character.
+    """
     entities = [
-        {"canonical_name": "Celaena", "type": "PERSON", "aliases": [], "source_ids": ["e1"], "relevant": True},
-        {"canonical_name": "Assassin", "type": "PERSON", "aliases": [], "source_ids": ["e2"], "relevant": True},
+        {"canonical_name": "Eragon", "type": "PERSON", "aliases": [], "source_ids": ["e1"], "relevant": True},
+        {"canonical_name": "Brom", "type": "PERSON", "aliases": [], "source_ids": ["e2"], "relevant": True},
+        {"canonical_name": "Murtagh", "type": "PERSON", "aliases": [], "source_ids": ["e3"], "relevant": True},
+        {"canonical_name": "King Galbatorix", "type": "PERSON", "aliases": [], "source_ids": ["e4"], "relevant": True},
     ]
     relationships = [
-        {"entity_a": "Assassin", "entity_b": "Celaena", "cooccurrence_count": 12},
+        {"entity_a": "King Galbatorix", "entity_b": "Eragon", "cooccurrence_count": 120},
+        {"entity_a": "King Galbatorix", "entity_b": "Brom", "cooccurrence_count": 9},
+        {"entity_a": "King Galbatorix", "entity_b": "Murtagh", "cooccurrence_count": 7},
     ]
-    persons_full = _pf({
-        "e2": {
-            "mentions_by_chapter": {
-                "ch01": ["I am Celaena Sardothien, Adarlan's Assassin."],
-            }
-        }
-    })
-
-    out_entities, out_relationships, merge_map = _canonicalize_role_entities(
-        entities, relationships, persons_full, {}, {}, {},
+    out_entities = _canonicalize_role_entities(
+        entities, relationships,
         role_words=_ROLE_WORDS, role_patterns=_ROLE_PATTERNS,
     )
-    assert merge_map == {"Assassin": "Celaena"}
-    assert all(e["canonical_name"] != "Assassin" for e in out_entities)
-    celaena = next(e for e in out_entities if e["canonical_name"] == "Celaena")
-    assert "Assassin" in celaena["aliases"]
-    assert out_relationships == []
+    galbatorix = next(e for e in out_entities if e["canonical_name"] == "King Galbatorix")
+    assert galbatorix["type"] == "PERSON"
+    assert galbatorix["relevant"] is True
+    eragon = next(e for e in out_entities if e["canonical_name"] == "Eragon")
+    assert eragon["aliases"] == []
 
 
 def test_apply_entity_overrides_force_type_exclude_and_merge():
@@ -526,52 +528,16 @@ def test_canonicalize_role_entities_does_not_swallow_titled_full_name():
     relationships = [
         {"entity_a": "Captain Elias Thorn", "entity_b": "Mira Vale", "cooccurrence_count": 14},
     ]
-    persons_full = _pf({
-        "e2": {
-            "mentions_by_chapter": {
-                "ch01": ["Captain Elias Thorn stood on the deck. Mira Vale walked to the rail."],
-            }
-        }
-    })
 
-    out_entities, out_relationships, merge_map = _canonicalize_role_entities(
-        entities, relationships, persons_full, {}, {}, {},
+    out_entities = _canonicalize_role_entities(
+        entities, relationships,
         role_words=_ROLE_WORDS, role_patterns=_ROLE_PATTERNS,
     )
-    assert merge_map == {}
     names = {e["canonical_name"] for e in out_entities}
     assert names == {"Mira Vale", "Captain Elias Thorn"}
     thorn = next(e for e in out_entities if e["canonical_name"] == "Captain Elias Thorn")
     assert thorn["relevant"] is True
     assert thorn["type"] == "PERSON"
-    assert out_relationships == relationships
-
-
-def test_canonicalize_role_entities_merges_role_surname_into_full_name():
-    """'Captain Westfall' should merge into 'Chaol Westfall' via surname match + relational support."""
-    entities = [
-        {"canonical_name": "Chaol Westfall", "type": "PERSON", "aliases": [], "source_ids": ["e1"], "relevant": True},
-        {"canonical_name": "Captain Westfall", "type": "PERSON", "aliases": [], "source_ids": ["e2"], "relevant": True},
-    ]
-    relationships = [
-        {"entity_a": "Captain Westfall", "entity_b": "Chaol Westfall", "cooccurrence_count": 10},
-    ]
-    persons_full = _pf({
-        "e2": {
-            "mentions_by_chapter": {
-                "ch01": ["Captain Westfall arrived. Chaol Westfall was loyal."],
-            }
-        }
-    })
-
-    out_entities, out_relationships, merge_map = _canonicalize_role_entities(
-        entities, relationships, persons_full, {}, {}, {},
-        role_words=_ROLE_WORDS, role_patterns=_ROLE_PATTERNS,
-    )
-    assert merge_map == {"Captain Westfall": "Chaol Westfall"}
-    assert all(e["canonical_name"] != "Captain Westfall" for e in out_entities)
-    chaol = next(e for e in out_entities if e["canonical_name"] == "Chaol Westfall")
-    assert "Captain Westfall" in chaol["aliases"]
 
 
 # --- STU-431: title-only characters must survive role canonicalization ---
@@ -593,11 +559,10 @@ def test_canonicalize_role_entities_keeps_title_only_character_with_broad_cooccu
         {"entity_a": "Cain", "entity_b": "King of Adarlan", "cooccurrence_count": 27},
     ]
 
-    out_entities, _, merge_map = _canonicalize_role_entities(
-        entities, relationships, {}, {}, {}, {},
+    out_entities = _canonicalize_role_entities(
+        entities, relationships,
         role_words=_ROLE_WORDS, role_patterns=_ROLE_PATTERNS,
     )
-    assert "King of Adarlan" not in merge_map
     king = next(e for e in out_entities if e["canonical_name"] == "King of Adarlan")
     assert king["relevant"] is True
     assert king["type"] == "PERSON"
@@ -617,11 +582,10 @@ def test_canonicalize_role_entities_ignores_unmerged_role_with_narrow_cooccurren
         {"entity_a": "Head Guard", "entity_b": "Nehemia", "cooccurrence_count": 3},
     ]
 
-    out_entities, _, merge_map = _canonicalize_role_entities(
-        entities, relationships, {}, {}, {}, {},
+    out_entities = _canonicalize_role_entities(
+        entities, relationships,
         role_words=_ROLE_WORDS, role_patterns=_ROLE_PATTERNS,
     )
-    assert "Head Guard" not in merge_map
     guard = next(e for e in out_entities if e["canonical_name"] == "Head Guard")
     assert guard["relevant"] is False
     assert guard["type"] == "OTHER"
@@ -635,11 +599,10 @@ def test_canonicalize_role_entities_marks_compound_role_noun_as_other():
     ]
     relationships = []  # no relational support
 
-    out_entities, _, merge_map = _canonicalize_role_entities(
-        entities, relationships, {}, {}, {}, {},
+    out_entities = _canonicalize_role_entities(
+        entities, relationships,
         role_words=_ROLE_WORDS, role_patterns=_ROLE_PATTERNS,
     )
-    assert "Royal Guard" not in merge_map
     royal_guard = next(e for e in out_entities if e["canonical_name"] == "Royal Guard")
     assert royal_guard["relevant"] is False
     assert royal_guard["type"] == "OTHER"
