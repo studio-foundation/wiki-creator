@@ -4,7 +4,7 @@ Standalone pre-processing script: generate wiki pages via Ollama.
 
 Run this BEFORE the wiki-generation Studio pipeline.
 Results are saved to <book processing dir>/wiki_pages.json and loaded
-by load_wiki_pages.py inside the pipeline.
+by assemble_wiki_pages.py inside the pipeline.
 
 Usage:
     python scripts/generate_wiki_pages.py --book library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml

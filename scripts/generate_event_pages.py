@@ -4,7 +4,7 @@
 Projects events.json (SP0 Event Layer) — each event of salience >= threshold —
 through the wiki-page-item pipeline (anchored writer LLM + validator) into a
 dedicated spoiler-safe "Event" page (prose + deterministic infobox), written
-to <processing>/event_pages.json. scripts/load_wiki_pages.py appends the pages
+to <processing>/event_pages.json. scripts/assemble_wiki_pages.py appends the pages
 to the export flow, where each is rendered under output/wiki/events/.
 
 Runs after scripts/generate_wiki_pages.py (both are wiki-generation pre-steps

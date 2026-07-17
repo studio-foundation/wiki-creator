@@ -1,13 +1,16 @@
 """Tests for scripts/chapter_summary.py."""
 
 import json
+from types import SimpleNamespace
+
+import pytest
 
 from scripts.chapter_summary import (
     ChapterSummaryConfig,
     _chapter_summary_config_from_payload,
     _detect_temporal_context,
-    _epub_output_from_payload,
     _parse_llm_summary_response_text,
+    _read_epub_data,
     _score_sentence,
     summarize_chapters_incrementally,
     summarize_chapter,
@@ -306,13 +309,19 @@ def test_extract_stage_output_from_run_payload_reads_successful_stage_output() -
     }
 
 
-def test_epub_output_from_payload_prefers_all_stage_outputs():
-    payload = {
-        "all_stage_outputs": {"epub-parse": {"chapters": [{"id": "ch01", "content": "x"}]}},
-        "previous_outputs": {"epub-parse": {"chapters": [{"id": "ch02", "content": "y"}]}},
-    }
-    out = _epub_output_from_payload(payload)
+def test_read_epub_data_reads_the_artifact(tmp_path):
+    processing = tmp_path / "processing_output" / "book"
+    processing.mkdir(parents=True)
+    (processing / "epub_data.json").write_text(
+        json.dumps({"chapters": [{"id": "ch01", "content": "x"}]}), encoding="utf-8"
+    )
+    out = _read_epub_data(SimpleNamespace(processing=processing))
     assert out["chapters"][0]["id"] == "ch01"
+
+
+def test_read_epub_data_exits_when_extraction_has_not_run(tmp_path):
+    with pytest.raises(SystemExit):
+        _read_epub_data(SimpleNamespace(processing=tmp_path))
 
 
 def test_chapter_summary_config_defaults_when_missing() -> None:

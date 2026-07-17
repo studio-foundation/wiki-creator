@@ -2,14 +2,12 @@
 """
 Stage: wiki-preparation (script executor, no LLM)
 
-Reads entity-classification output + *_full.json files on disk.
 Pre-extracts per-entity context sentences and builds batch input files
 for child wiki-page pipeline runs.
 
-Input (Studio stdin):
-  previous_outputs["entity-classification"]:
-    { "entities": [...with importance field], "relationships": [...], "narrator": ..., "stats": ... }
-  Files on disk: persons_full.json, places_full.json, orgs_full.json, events_full.json
+Input (files on disk): entities_classified.json (written by the
+  entity-classification stage of wiki-resolution, a different `studio run`),
+  persons_full.json, places_full.json, orgs_full.json, events_full.json
 
 Output (stdout):
   {
@@ -47,7 +45,7 @@ from wiki_creator.confidence import relationship_confidence
 from wiki_creator.chapters import chapter_number
 from wiki_creator.provenance import relation_revealed_at
 from wiki_creator.registry import Registry
-from wiki_creator.types import ChapterSummary, EventBundle, RelationshipBundle
+from wiki_creator.types import ChapterSummary, ClassifiedBundle, EventBundle, RelationshipBundle
 
 BATCH_SIZE_BY_IMPORTANCE = {
     "principal": 3,   # full template ~1500 tokens × 3 = 4500 tokens — safe under 8192
@@ -199,26 +197,19 @@ def chapter_summary_limit_from_config(book_cfg: dict) -> int:
     return limit
 
 
-def stage_outputs_from_payload(payload: dict) -> tuple[dict, dict]:
-    prev_outputs = payload.get("previous_outputs", {})
+def chapter_summary_output_from_payload(payload: dict) -> dict:
+    """The chapter-summary stage's output — a real in-pipeline producer, unlike
+    entity-classification, which this stage reads from disk."""
     all_outputs = payload.get("all_stage_outputs", {})
+    if isinstance(all_outputs, dict) and all_outputs.get("chapter-summary"):
+        return all_outputs["chapter-summary"]
+    prev_outputs = payload.get("previous_outputs", {})
+    if isinstance(prev_outputs, dict) and prev_outputs.get("chapter-summary"):
+        return prev_outputs["chapter-summary"]
     prev_stage_output = payload.get("previous_stage_output", {})
-    classification_output = {}
-    chapter_summary_output = {}
-
-    if isinstance(all_outputs, dict):
-        classification_output = all_outputs.get("entity-classification", {}) or {}
-        chapter_summary_output = all_outputs.get("chapter-summary", {}) or {}
-    if not classification_output and isinstance(prev_outputs, dict):
-        classification_output = prev_outputs.get("entity-classification", {}) or {}
-    if not chapter_summary_output and isinstance(prev_outputs, dict):
-        chapter_summary_output = prev_outputs.get("chapter-summary", {}) or {}
-    if not classification_output and isinstance(prev_stage_output, dict) and prev_stage_output.get("entities"):
-        classification_output = prev_stage_output
-    if not chapter_summary_output and isinstance(prev_stage_output, dict) and prev_stage_output.get("chapter_summaries") is not None:
-        chapter_summary_output = prev_stage_output
-
-    return classification_output, chapter_summary_output
+    if isinstance(prev_stage_output, dict) and prev_stage_output.get("chapter_summaries") is not None:
+        return prev_stage_output
+    return {}
 
 
 def _support_snippets_for_entity(
@@ -450,7 +441,7 @@ def _flush_batch(
 
 def write_collation_pages(entities: list[dict], book_cfg: dict, paths: "BookPaths") -> list[dict]:
     """Collective pages (STU-511) written to collation_pages.json for
-    load_wiki_pages.py. Deleted when empty: a stale file from an earlier
+    assemble_wiki_pages.py. Deleted when empty: a stale file from an earlier
     `collective` run must not resurrect its pages once the config goes back to
     `dedicated`.
     """
@@ -513,21 +504,31 @@ def main() -> None:
     payload = studio_io.read_payload()
     _ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
     role_words = load_lang_config(book_language(_ctx)).get("role_words", [])
-    classification_output, chapter_summary_output = stage_outputs_from_payload(payload)
+    chapter_summary_output = chapter_summary_output_from_payload(payload)
+    paths = studio_io.paths_from_payload(payload)
 
-    entities = classification_output.get("entities", [])
-    relationships = classification_output.get("relationships", [])
-    narrator = classification_output.get("narrator", None)
+    classified_file = paths.processing / "entities_classified.json"
+    if not classified_file.exists():
+        print(
+            f"[ERROR] {classified_file} not found. Run wiki-resolution first:\n"
+            "  studio run wiki-resolution --input-file <book.yaml>",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    # dict-only boundary: batch building below spreads entities and relationships
+    # into computed output dicts — validated on load here.
+    classification = studio_io.load_artifact(classified_file, ClassifiedBundle)
+    entities = studio_io.to_dict(classification.entities)
+    relationships = studio_io.to_dict(classification.relationships)
+    narrator = classification.narrator
 
     if not entities:
-        print("Warning: no entities in entity-classification output", file=sys.stderr)
+        print("Warning: no entities in entities_classified.json", file=sys.stderr)
         json.dump({"batches": [], "total_entities": 0, "narrator": None}, sys.stdout)
         return
 
-    paths = studio_io.paths_from_payload(payload)
-
     # Prefer relationships_classified.json (enriched with type/evolution/key_moments)
-    # over the unclassified relationships forwarded by the entity-classification stage.
+    # over the unclassified relationships the classification artifact carries.
     _rc_file = paths.processing / "relationships_classified.json"
     if _rc_file.exists():
         # dict-only boundary: batch building below spreads relationships into

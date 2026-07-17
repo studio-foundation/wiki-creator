@@ -155,13 +155,8 @@ def main() -> None:
         json.dump(gate_error, sys.stdout, ensure_ascii=False)
         sys.exit(1)
 
-    pages = (
-        prev.get("copyright-check", {}).get("pages")
-        or prev.get("wiki-generation", {}).get("pages")
-        or []
-    )
-    pages = _filter_exportable_pages(pages)
-    epub = prev.get("epub-parse") or _load_epub_data(paths)
+    pages = _filter_exportable_pages(prev.get("copyright-check", {}).get("pages") or [])
+    epub = _load_epub_data(paths)
     book_title = epub.get("title", "Wiki")
     author = epub.get("author", "")
 

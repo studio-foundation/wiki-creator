@@ -52,6 +52,35 @@ Primary workflow:
 
 Important:
 - `.studio/pipelines/wiki-generation.pipeline.yaml` still exists, but the repo-level workflow uses the split path above.
+- **Disk is the bus across pipelines (STU-455).** A stage reads an artifact written
+  by an *earlier pipeline* from disk, never from Studio's context — those are
+  separate `studio run` invocations, so `previous_outputs`/`all_stage_outputs`
+  are empty of it by construction. Studio's context is only for stages that
+  really do chain in memory inside one pipeline (resolve-clusters →
+  merge-entities, chapter-summary → wiki-preparation).
+  Four `load_*.py` stages existed to fake the difference: they re-read a JSON the
+  previous pipeline had already written and re-emitted it as a stage output, so
+  the YAML declared a graph the filesystem was actually carrying. Three were pure
+  passe-plat and are deleted; their consumers (`resolve_clusters`,
+  `chapter_summary`, `wiki_preparation`, `wiki_export`) read the artifact
+  themselves — which several already did as a fallback, and that fallback was the
+  only path that ever ran.
+  The fourth, `load_wiki_pages.py`, was **not** a loader and is renamed
+  `assemble_wiki_pages.py`: it assembles the export's page set from four
+  artifacts, drops `_failed` pages, and does the STU-506 title disambiguation.
+  Deleting the stage would have dropped its `wiki-page` contract check — the
+  point was to stop lying about propagation, not to lose validation.
+  The ticket proposed a second model — Studio context carrying artifact
+  *references* (path + schema). Rejected: `paths_from_payload` already derives
+  every path from `additional_context`, so a reference is a layer transporting
+  what the payload transports, and it needs a Studio capability nobody needs.
+  **A wiring test pins each disk read against a contradictory in-memory payload**
+  (`test_main_reads_splits_from_disk_not_from_stage_context`) — without it, a
+  reinstated loader passes the whole suite green, goldens included: the golden
+  chain spans pipelines and hands `previous_outputs` to every stage.
+  Reading the artifact also puts it through STU-447 validation, which the
+  in-memory path skipped — an entity missing `total_mentions` now fails at
+  wiki-preparation instead of reaching a page.
 
 ## Path Model
 
@@ -349,7 +378,7 @@ Inside `wiki-resolution`, order matters:
   arbitrates via the configured order. `from_artifacts(..., policy=)` defaults to
   the safe posture (goldens unchanged — the fixture has no cross-type homonym);
   `write_registry.py` passes `naming_policy(book_cfg)`. Title disambiguation runs
-  once in `load_wiki_pages.py` (the `wiki-page` stage the `unique-page-title`
+  once in `assemble_wiki_pages.py` (the `wiki-page` stage the `unique-page-title`
   validator checks and export renders): different-type pages that would share a
   `page_filename` get the type label appended, so the flat MediaWiki namespace
   stays collision-free. Scope is `from_artifacts` only — cross-tome type
@@ -499,8 +528,8 @@ Inside `wiki-resolution`, order matters:
 - `merge_entities.py` passes through only the current `resolve-clusters` output shape (runs before `alias-resolution` per the STU-276 pipeline order; STU-447 dropped the older `split-clusters` + `entity-resolution-*` compat branch and a vestigial `alias-resolution` priority check that predated STU-276 and never fired in production).
 - `split_clusters.py`, `relationship_extraction.py`, and `verify_entity_types.py` are intentionally tolerant of missing `file_path` in unit-test mode.
 - `generate_wiki_pages.py` must run after `wiki-preparation`; it consumes `wiki_inputs/<slug>/batch_*.json`.
-- `generate_book_synopsis.py` (SP4) consumes `events.json` (SP0) and writes `processing_output/<slug>/book_synopsis.json`; `load_wiki_pages.py` appends that page to the export flow and `wiki_export.py` renders it at the wiki root (`Synopsis.wiki`, no infobox/categories, `entity_type: SYNOPSIS`). If `events.json` is absent, the stage warns and skips — it never fails the run.
-- `generate_event_pages.py` (SP3/STU-481, STU-502) consumes `events.json` (SP0) and writes `processing_output/<slug>/event_pages.json` — one `EVENT` page per event with `salience >= threshold` (default `0.7`, raised from `0.6` in STU-502 to drop the low-value long tail) that has ≥1 participant. Title and infobox `{participants, lieu, chapitre, issue}` are built deterministically from the event; the writer LLM only authors the `## Déroulement` prose (grounded, spoiler-safe via forbidden_names). To stop the writer paraphrasing the title (STU-502), `build_event_prompt` injects the `DEFAULT_CONTEXT_WINDOW` (=3) neighbouring events before/after in narrative order as **read-only** NARRATIVE CONTEXT — background to situate the event (what leads up to it / what it brings about), never facts to attribute to it; `neighbor_context` windows the full events list, so context spans below-threshold neighbours too. `load_wiki_pages.py` appends the pages; `wiki_export.py` renders each under `output/wiki/events/` with `Infobox_event` + `[[Category:Événements]]`. Thresholds are configurable via book YAML `generation.event_pages` (`salience_threshold`, `max_pages`, `max_tokens`). Absent/empty `events.json` warns and skips — never fails the run. Titles are the full event description (grounded, unique) — LLM-named events are a possible fast-follow.
+- `generate_book_synopsis.py` (SP4) consumes `events.json` (SP0) and writes `processing_output/<slug>/book_synopsis.json`; `assemble_wiki_pages.py` appends that page to the export flow and `wiki_export.py` renders it at the wiki root (`Synopsis.wiki`, no infobox/categories, `entity_type: SYNOPSIS`). If `events.json` is absent, the stage warns and skips — it never fails the run.
+- `generate_event_pages.py` (SP3/STU-481, STU-502) consumes `events.json` (SP0) and writes `processing_output/<slug>/event_pages.json` — one `EVENT` page per event with `salience >= threshold` (default `0.7`, raised from `0.6` in STU-502 to drop the low-value long tail) that has ≥1 participant. Title and infobox `{participants, lieu, chapitre, issue}` are built deterministically from the event; the writer LLM only authors the `## Déroulement` prose (grounded, spoiler-safe via forbidden_names). To stop the writer paraphrasing the title (STU-502), `build_event_prompt` injects the `DEFAULT_CONTEXT_WINDOW` (=3) neighbouring events before/after in narrative order as **read-only** NARRATIVE CONTEXT — background to situate the event (what leads up to it / what it brings about), never facts to attribute to it; `neighbor_context` windows the full events list, so context spans below-threshold neighbours too. `assemble_wiki_pages.py` appends the pages; `wiki_export.py` renders each under `output/wiki/events/` with `Infobox_event` + `[[Category:Événements]]`. Thresholds are configurable via book YAML `generation.event_pages` (`salience_threshold`, `max_pages`, `max_tokens`). Absent/empty `events.json` warns and skips — never fails the run. Titles are the full event description (grounded, unique) — LLM-named events are a possible fast-follow.
 - Notability tiers (STU-509): the book YAML `notability` block is the single source
   for importance thresholds — it replaced `thresholds: auto`, whose explicit form
   (`characters`/`locations`/`organizations`, keyed by domain nouns) was deleted. That
@@ -580,7 +609,7 @@ Inside `wiki-resolution`, order matters:
   `processing_output/<slug>/collation_pages.json` (rewritten every run, deleted
   when empty, so flipping back to `dedicated` can't resurrect stale pages).
   Entries are name + aliases + mention/chapter counts, zero LLM; prose entries
-  are a possible fast-follow. `load_wiki_pages.py` appends the pages,
+  are a possible fast-follow. `assemble_wiki_pages.py` appends the pages,
   `wiki_export.py` renders them at the wiki root body-only (like `SYNOPSIS`) and
   `main_page_content` links them under Navigation — they carry no category, so
   that link is their only entry point. Titles come from

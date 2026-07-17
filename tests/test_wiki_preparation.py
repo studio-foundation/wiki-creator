@@ -10,15 +10,28 @@ import pytest
 from scripts.wiki_preparation import (
     build_chapter_summary_context,
     build_entity_bundle,
+    chapter_summary_output_from_payload,
     events_for_entity,
     extract_context,
     filter_relationships,
     read_plot_events,
-    stage_outputs_from_payload,
     write_batches,
 )
 from wiki_creator import studio_io
 from wiki_creator.types import EntityFull
+
+
+def _write_classified(paths, entities, relationships=()) -> None:
+    """Write entities_classified.json the way wiki-resolution's entity-classification
+    stage does — main() reads it from disk, not from stage context (STU-455)."""
+    (Path(paths.processing) / "entities_classified.json").write_text(
+        json.dumps({
+            "entities": list(entities),
+            "relationships": list(relationships),
+            "narrator": None,
+        }),
+        encoding="utf-8",
+    )
 
 
 def _pf(records: dict) -> dict:
@@ -596,16 +609,20 @@ def test_write_batches_counts_chapter_summary_context_chars_for_splitting(tmp_pa
     assert len(batches) == 2
 
 
-def test_stage_outputs_from_payload_reads_all_stage_outputs():
+def test_chapter_summary_output_from_payload_reads_all_stage_outputs():
     payload = {
         "all_stage_outputs": {
-            "entity-classification": {"entities": [{"canonical_name": "Dorian"}]},
             "chapter-summary": {"chapter_summaries": {"ch01": {"summary_bullets": ["x"]}}},
         }
     }
-    classification, chapter_summary = stage_outputs_from_payload(payload)
-    assert len(classification["entities"]) == 1
-    assert "ch01" in chapter_summary["chapter_summaries"]
+    assert "ch01" in chapter_summary_output_from_payload(payload)["chapter_summaries"]
+
+
+def test_chapter_summary_output_from_payload_ignores_a_non_chapter_summary_previous_stage():
+    """STU-455: entity-classification is read from disk now, so a previous stage
+    carrying its shape must not be mistaken for a chapter-summary output."""
+    payload = {"previous_stage_output": {"entities": [{"canonical_name": "Dorian"}]}}
+    assert chapter_summary_output_from_payload(payload) == {}
 
 
 def test_build_chapter_summary_context_uses_chapter_id_to_title_when_heuristic_fails():
@@ -705,17 +722,9 @@ def test_main_injects_chapter_id_to_title_from_epub_data(tmp_path: Path, monkeyp
         }
     }
     (processing / "persons_full.json").write_text(json.dumps(persons_data), encoding="utf-8")
+    _write_classified(_FakePaths, [entity])
 
-    payload = {
-        "additional_context": "file_path: fake.epub",
-        "all_stage_outputs": {
-            "entity-classification": {
-                "entities": [entity],
-                "relationships": [],
-                "narrator": None,
-            },
-        },
-    }
+    payload = {"additional_context": "file_path: fake.epub"}
 
     stdin_backup = sys.stdin
     stdout_backup = sys.stdout
@@ -786,17 +795,9 @@ def test_main_falls_back_to_disk_when_chapter_summary_stage_output_is_empty(tmp_
         "chapters_present": 1,
         "aliases": [],
     }
-    payload = {
-        "additional_context": "file_path: fake.epub",
-        "all_stage_outputs": {
-            "entity-classification": {
-                "entities": [entity],
-                "relationships": [],
-                "narrator": None,
-            },
-            # chapter-summary stage output intentionally absent / empty
-        },
-    }
+    _write_classified(_FakePaths, [entity])
+    # chapter-summary stage output intentionally absent / empty
+    payload = {"additional_context": "file_path: fake.epub"}
 
     stdin_backup = sys.stdin
     stdout_backup = sys.stdout
@@ -920,11 +921,12 @@ def test_main_binds_identity_from_registry(tmp_path: Path, monkeypatch):
     monkeypatch.setattr(wp.studio_io, "paths_from_payload", lambda _payload: _FakePaths())
     monkeypatch.setattr(wp, "load_book_config_from_payload", lambda _payload: {})
 
-    payload = {"additional_context": "file_path: fake.epub", "all_stage_outputs": {
-        "entity-classification": {"entities": [{
-            "canonical_name": "Celaena", "type": "PERSON", "importance": "principal",
-            "source_ids": ["p1"], "relevant": True, "aliases": [],
-        }], "relationships": [], "narrator": None}}}
+    _write_classified(_FakePaths, [{
+        "canonical_name": "Celaena", "type": "PERSON", "importance": "principal",
+        "source_ids": ["p1"], "relevant": True, "aliases": [],
+        "total_mentions": 1, "chapters_present": 1,
+    }])
+    payload = {"additional_context": "file_path: fake.epub"}
 
     stdin_backup, stdout_backup = sys.stdin, sys.stdout
     try:
@@ -1014,11 +1016,10 @@ def test_write_collation_pages_removes_a_stale_artifact(tmp_path: Path):
 def _run_main_with(monkeypatch, paths, book_cfg, entities, relationships=()):
     for name in ("persons_full", "places_full", "orgs_full", "events_full"):
         (paths.processing / f"{name}.json").write_text(json.dumps({name: {}}), encoding="utf-8")
+    _write_classified(paths, entities, relationships)
     monkeypatch.setattr(wp.studio_io, "paths_from_payload", lambda _payload: paths)
     monkeypatch.setattr(wp, "load_book_config_from_payload", lambda _payload: book_cfg)
-    payload = {"additional_context": "file_path: fake.epub", "all_stage_outputs": {
-        "entity-classification": {"entities": entities, "relationships": list(relationships),
-                                  "narrator": None}}}
+    payload = {"additional_context": "file_path: fake.epub"}
     stdin_backup, stdout_backup = sys.stdin, sys.stdout
     try:
         sys.stdin = io.StringIO(json.dumps(payload))

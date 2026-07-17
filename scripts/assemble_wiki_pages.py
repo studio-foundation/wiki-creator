@@ -2,10 +2,12 @@
 """
 Stage: wiki-generation (script executor, no LLM)
 
-Loads pre-generated wiki pages from <series_dir>/processing_output/wiki_pages.json.
-Run scripts/generate_wiki_pages.py first to generate the pages.
+Assembles the export's page set from the four artifacts that hold pages —
+wiki_pages.json (scripts/generate_wiki_pages.py), book_synopsis.json,
+event_pages.json, collation_pages.json — dropping the ones that failed
+generation, and disambiguating titles that would collide (STU-506).
 
-Input (Studio stdin): consumed and ignored
+Input (files on disk + the book config on stdin)
 Output (stdout): {"pages": [...]}
 """
 
@@ -37,13 +39,13 @@ def _load_synopsis_page(processing_dir) -> dict | None:
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
-        print(f"[load-wiki-pages] Could not read {path} — skipping synopsis", file=sys.stderr)
+        print(f"[assemble-wiki-pages] Could not read {path} — skipping synopsis", file=sys.stderr)
         return None
     page = data.get("page") if isinstance(data, dict) else None
     if not isinstance(page, dict):
         return None
     if page.get("_failed"):
-        print("[load-wiki-pages] Skipping _failed synopsis page", file=sys.stderr)
+        print("[assemble-wiki-pages] Skipping _failed synopsis page", file=sys.stderr)
         return None
     return page
 
@@ -66,7 +68,7 @@ def _load_extra_pages(processing_dir, filename: str, label: str) -> list[dict]:
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
-        print(f"[load-wiki-pages] Could not read {path} — skipping {label}", file=sys.stderr)
+        print(f"[assemble-wiki-pages] Could not read {path} — skipping {label}", file=sys.stderr)
         return []
     pages = data.get("pages") if isinstance(data, dict) else None
     if not isinstance(pages, list):
@@ -81,14 +83,14 @@ def _filter_failed_pages(pages: list[WikiPage]) -> list[WikiPage]:
     if skipped:
         failed_titles = [p.title for p in pages if p._failed]
         print(
-            f"[load-wiki-pages] Skipping {skipped} _failed page(s): {', '.join(failed_titles)}",
+            f"[assemble-wiki-pages] Skipping {skipped} _failed page(s): {', '.join(failed_titles)}",
             file=sys.stderr,
         )
     return exportable
 
 
 def main() -> None:
-    payload = studio_io.read_payload()  # consume stdin (Studio requires it)
+    payload = studio_io.read_payload()
     paths = studio_io.paths_from_payload(payload)
     output_file = paths.processing / "wiki_pages.json"
 
@@ -109,18 +111,18 @@ def main() -> None:
     if synopsis is not None:
         output_pages.append(synopsis)
         print(
-            f"[load-wiki-pages] Added synopsis page '{synopsis.get('title', '')}'",
+            f"[assemble-wiki-pages] Added synopsis page '{synopsis.get('title', '')}'",
             file=sys.stderr,
         )
     event_pages = _load_extra_pages(paths.processing, "event_pages.json", "event pages")
     if event_pages:
         output_pages.extend(event_pages)
-        print(f"[load-wiki-pages] Added {len(event_pages)} event page(s)", file=sys.stderr)
+        print(f"[assemble-wiki-pages] Added {len(event_pages)} event page(s)", file=sys.stderr)
     collation_pages = _load_extra_pages(paths.processing, "collation_pages.json", "collation pages")
     if collation_pages:
         output_pages.extend(collation_pages)
-        print(f"[load-wiki-pages] Added {len(collation_pages)} collective page(s)", file=sys.stderr)
-    print(f"[load-wiki-pages] Loaded {len(output_pages)} pages from {output_file}", file=sys.stderr)
+        print(f"[assemble-wiki-pages] Added {len(collation_pages)} collective page(s)", file=sys.stderr)
+    print(f"[assemble-wiki-pages] Loaded {len(output_pages)} pages from {output_file}", file=sys.stderr)
 
     # STU-506: keep the flat MediaWiki title namespace collision-free. Two
     # different-type homonyms (a PERSON and a PLACE both named "X") now reach
@@ -134,7 +136,7 @@ def main() -> None:
         if labels_cfg.get(key)
     }
     for old, new in disambiguate_page_titles(output_pages, naming_policy(cfg), type_labels):
-        print(f"[load-wiki-pages] Disambiguated title '{old}' → '{new}'", file=sys.stderr)
+        print(f"[assemble-wiki-pages] Disambiguated title '{old}' → '{new}'", file=sys.stderr)
 
     json.dump({"pages": output_pages}, sys.stdout, ensure_ascii=False)
 
