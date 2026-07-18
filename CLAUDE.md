@@ -1250,6 +1250,35 @@ Inside `wiki-resolution`, order matters:
   EVENT full-registries; a FACTION entity's counts come from the surface index,
   not its `*_full.json` — a possible fast-follow.
 
+## A Long Run Persists As It Goes, Never All-Or-Nothing
+
+An LLM stage over a book is a long run — tens to hundreds of per-unit calls
+(chunks, roster rows, sections), each network-bound and each able to time out.
+So **every such stage writes each unit's result to disk the moment it lands, not
+at the end**, and re-reads that cache on the next invocation to run only what is
+missing. A timeout, a crash, a `Ctrl-C`, or a machine going to sleep mid-run
+costs the units in flight, never the hundred already done. `discover-relationships`
+is the canonical shape: `save_votes_cache` runs inside the per-chunk lock right
+after each chunk (`scripts/discover_relationships.py`), so
+`45 chunks | 12 cached | 33 to run` is a resume, and three `FAILED: TimeoutExpired`
+chunks just re-run next pass while the other 42 stay done.
+
+This is the base principle the caches already documented in Gotchas are each one
+instance of — `section-filter`, `alias-adjudication`, `entity-status`,
+`entity-affiliation`, `entity-species`, extraction (STU-529/539/488/551/574/560).
+Two rules travel with it, and both are load-bearing:
+
+- **The cache is keyed on the inputs that produced it**, never on the book slug
+  alone — the roster rows, the prompt fingerprint, a `CACHE_VERSION` when the
+  rows are unchanged but the question is not (STU-552). A cache keyed on identity
+  instead of inputs replays a verdict made for a different roster or a different
+  prompt, silently — that is the STU-497/539 subset-run trap.
+- **A per-unit failure fails that unit, never the run.** The stage records the
+  failure (a warn, a `classification_error` stamp per STU-562) and keeps going;
+  the reader-facing bias on the missing unit is the stage's own safe default
+  (keep the section, merge nothing, render `unknown`). Restarting the whole run
+  because one call died is the anti-pattern this principle exists to kill.
+
 ## Config Is Read By People Who Know Books, Not Pipelines
 
 The book YAML is the project's user interface, and its users are readers and

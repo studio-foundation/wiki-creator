@@ -7,6 +7,7 @@ import pytest
 
 from scripts.chapter_summary import (
     ChapterSummaryConfig,
+    _FALLBACK_BULLET,
     _chapter_summary_config_from_payload,
     _detect_temporal_context,
     _parse_llm_summary_response_text,
@@ -165,6 +166,57 @@ def test_summarize_chapters_incrementally_resumes_from_existing_file(tmp_path) -
 
     assert summaries["Chapter 1"]["summary_bullets"] == ["Existing summary."]
     assert "Chapter 2" in summaries
+
+
+def test_summarize_chapters_incrementally_retries_failed_llm_on_resume(tmp_path, monkeypatch) -> None:
+    output_file = tmp_path / "chapter_summaries.json"
+    output_file.write_text(
+        json.dumps(
+            {
+                "chapter_summaries": {
+                    "Chapter 1": {
+                        "chapter_id": "ch01", "chapter_title": "Chapter 1",
+                        "summary_bullets": ["Extractive stand-in."],
+                        "summary_method": "extractive_fallback",
+                        "quality_flags": ["studio_run_timeout", "fallback_used"],
+                    },
+                    "Chapter 2": {
+                        "chapter_id": "ch02", "chapter_title": "Chapter 2",
+                        "summary_bullets": [_FALLBACK_BULLET],
+                        "summary_method": "llm", "quality_flags": ["studio_run_failed"],
+                    },
+                    "Chapter 3": {
+                        "chapter_id": "ch03", "chapter_title": "Chapter 3",
+                        "summary_bullets": ["A real LLM summary."],
+                        "summary_method": "llm", "quality_flags": [],
+                    },
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    chapters = [
+        {"id": "ch01", "title": "Chapter 1", "content": "Celaena enters the vault."},
+        {"id": "ch02", "title": "Chapter 2", "content": "Chaol warns the king."},
+        {"id": "ch03", "title": "Chapter 3", "content": "Dorian reads the letter."},
+    ]
+    retried: list[str] = []
+
+    def fake_runner(*, chapter, config):
+        retried.append(chapter["title"])
+        return {"summary_bullets": [f"Recovered {chapter['title']}."]}
+
+    monkeypatch.setattr("scripts.chapter_summary._run_chapter_summary_item", fake_runner)
+
+    summaries = summarize_chapters_incrementally(
+        chapters, output_file=output_file,
+        config=ChapterSummaryConfig(mode="llm", max_bullets=3, llm_fallback_to_extractive=True),
+    )
+
+    assert sorted(retried) == ["Chapter 1", "Chapter 2"]  # both failures retried
+    assert summaries["Chapter 1"]["summary_bullets"] == ["Recovered Chapter 1."]
+    assert summaries["Chapter 2"]["summary_bullets"] == ["Recovered Chapter 2."]
+    assert summaries["Chapter 3"]["summary_bullets"] == ["A real LLM summary."]  # success untouched
 
 
 def test_summarize_chapters_incrementally_saves_after_each_new_chapter(tmp_path, monkeypatch) -> None:
