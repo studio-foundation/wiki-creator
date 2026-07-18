@@ -1,0 +1,13 @@
+name: entity-species-item
+version: 1
+schema:
+  required_fields:
+    - species
+# species: list of {name: string, species: string, quote: string} — the roster
+# entries whose species/race the snippets state.
+# An empty list is valid and means the snippets settle nobody's species; no
+# character then renders the slot, which is what an OPT slot with no value does.
+# Names absent from the roster, quotes absent from the snippets shown, and values
+# absent from their own quote are discarded by the caller
+# (scripts/entity_species.py), not rejected here: a hallucinated verdict must not
+# fail a run, it must render nothing.

@@ -92,6 +92,7 @@ PRE_STEPS: dict[str, list[list[str]]] = {
     "wiki-preparation": [
         ["python", "scripts/entity_status.py", "--book"],
         ["python", "scripts/entity_affiliation.py", "--book"],
+        ["python", "scripts/entity_species.py", "--book"],
         # STU-556: schema-guided discovery types the relation graph, then the
         # demoted classifier reads it (relationships_discovered.json) and adds
         # prose. Must run before classify.

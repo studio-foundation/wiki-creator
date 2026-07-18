@@ -622,6 +622,42 @@ Inside `wiki-resolution`, order matters:
   outstanding. Recall is unstable run to run (Brom's one true hit moved on
   identical evidence); precision is not — STU-488 recorded the same asymmetry.
 
+- Species is an attribute, not the collective entity (STU-574): the `species`
+  PERSON infobox slot (declared, `genre_gated: true`, inert since STU-504) is
+  filled by one `studio run entity-species-item` per book over the PERSON roster
+  — the STU-551 shape: single-source marker snippets, and a verdict survives only
+  when its species is verbatim in a quote from that entity's own snippets
+  (`quote_names_value`, lifted to `roster.py` and shared with `affiliation`; it is
+  the companion of `is_quoted` — one checks the quote is real, the other that the
+  quote names the value). STU-571 assumed the value was already collected into the
+  FACTION bucket (`Elves`, `Dwarves`) and a typing fix would feed it: `Elves` the
+  collective noun is an *entity* with its own page; Eragon's `human` is an
+  *attribute* of the Eragon PERSON, so extracting the collective says nothing about
+  the character. **Genre-gated on `ner.invented_names`**, checked before any
+  registry read — a real-world-cast book has no species to attribute, skips the
+  stage, and the OPT slot clears (STU-572). Pure logic in
+  `wiki_creator/entity_species.py`; pre-step to wiki-preparation, so resolution
+  stays LLM-free.
+  **Measured precision 7/7, 0 false positives, over the 3 books with a cached
+  registry** (Eragon 6/6: dragon/dwarf/Ra'zac; Narnia 1/1: Tumnus=Faun; ToG 0,
+  human cast). Precision is the invariant — a wrong species reads as fact on a page
+  nobody rereads — and it is the STU-543/551 anti-false bias, 0-FP.
+  **Recall is structurally low, two buckets.** (1) The unmarked human default: a
+  novel never says "Eragon was a human", so the slot fills for marked species and
+  stays empty on humans — correct for a fantasy infobox. (2) A species absent from
+  the language-wide `species_markers` (`cue_words/<lang>.json`): Narnia misses
+  `Aslan`=lion, `Beavers`=beaver, `Maugrim`=wolf — those words are not in the
+  retrieval net. That is STU-535/537's lesson from the other side: `invented_names`
+  is a property of the *world*, but the species *vocabulary* is a property of the
+  *book*. A language list covers fantasy staples (elf/dwarf/dragon/faun/giant/
+  centaur), not a given novel's named animals; chasing lion/beaver/wolf into
+  `en.json` would put book-specific vocab in a language list, which STU-559 forbids.
+  The recall lever is per-book species markers in the book YAML (STU-559 shape), a
+  fast-follow — not the language net. Shipped precision-first, like `affiliation`
+  and `status` before it. Measurement runs the standalone stage on cached
+  registries (1 LLM call/book, no re-extraction); no species gold exists, so
+  precision is human-judged against canon like STU-543.
+
 - Name-collision policy (STU-506): `registry.py::_merge_duplicate_canonicals`
   used to fold two entities on `canonical_name.casefold()` alone — a PERSON and
   a PLACE homonym became one false entity. Policy is now declared in the book
