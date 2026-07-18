@@ -603,6 +603,16 @@ def _is_summary_complete(summary: dict) -> bool:
     return any(isinstance(bullet, str) and bullet.strip() for bullet in bullets)
 
 
+def _is_failed_llm_summary(summary: dict) -> bool:
+    """A summary standing in for a failed LLM call — the extractive fallback or
+    the stub. Kept as the current answer, but retried on resume rather than
+    frozen (persist-as-you-go: a failure must not permanently freeze its unit)."""
+    method = summary.get("summary_method")
+    if method == "extractive_fallback":
+        return True
+    return method == "llm" and summary.get("summary_bullets") == [_FALLBACK_BULLET]
+
+
 def summarize_chapters_incrementally(
     chapters: list[dict],
     *,
@@ -615,10 +625,12 @@ def summarize_chapters_incrementally(
     exclusion_words: tuple[str, ...] = (),
     entity_index: tuple[tuple[re.Pattern[str], float], ...] = (),
 ) -> dict[str, dict]:
+    retry_failed_llm = (config or ChapterSummaryConfig()).mode == "llm"
     result = {
         key: value
         for key, value in _load_existing_chapter_summaries(output_file).items()
         if isinstance(key, str) and isinstance(value, dict) and _is_summary_complete(value)
+        and not (retry_failed_llm and _is_failed_llm_summary(value))
     }
 
     pending = [
