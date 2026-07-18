@@ -409,6 +409,20 @@
       "edition"
     ]
   },
+  "pipeline_metric_terms": [
+    "common mentions",
+    "common mention",
+    "shared mentions",
+    "shared mention",
+    "co-mentions",
+    "cooccurrence",
+    "cooccurrences",
+    "co-occurrence",
+    "co-occurrences",
+    "cooccurrence count",
+    "cooccurrence_count",
+    "mention count"
+  ],
   "placeholder_markers": [
     "if known",
     "content in english based only on the excerpts"

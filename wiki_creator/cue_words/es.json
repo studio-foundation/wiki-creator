@@ -391,6 +391,18 @@
       "editorial"
     ]
   },
+  "pipeline_metric_terms": [
+    "menciones comunes",
+    "mención común",
+    "menciones compartidas",
+    "coocurrencia",
+    "coocurrencias",
+    "co-ocurrencia",
+    "co-ocurrencias",
+    "cooccurrence count",
+    "cooccurrence_count",
+    "recuento de menciones"
+  ],
   "placeholder_markers": [
     "si se conoce",
     "contenido en español basado únicamente en los extractos"

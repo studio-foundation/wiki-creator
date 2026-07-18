@@ -11,13 +11,17 @@ Deterministic and zero-LLM: the marker vocabulary lives in
 The Fable frugality constraint — one pass, not a verifier per page — holds by
 construction. Absent vocabulary degrades to no findings.
 
-Two independent axes, each tied to a stance rule:
+Three independent axes:
 - ``meta_narrative`` / ``reader_address`` markers speak of the text as text or
   address the reader — forbidden by the in-universe rule (everywhere in
   ``in_universe``; outside the exception sections in ``hybrid``; never flagged
   in ``out_of_universe``).
 - ``author`` markers name the real-world author/publisher/edition — forbidden
   whenever ``stance.forbid_author_mentions``, regardless of mode or section.
+- ``pipeline_metric`` (STU-579) flags a raw mention/cooccurrence count leaked
+  into prose (a number next to a metric term, e.g. "503 mentions communes").
+  Stance-independent: an internal pipeline metric is never reader-facing text
+  in any mode or section, so it is always flagged.
 """
 
 from __future__ import annotations
@@ -32,11 +36,16 @@ from wiki_creator.page_templates import slot_label
 
 _INUNIVERSE_CATEGORIES = ("meta_narrative", "reader_address")
 _AUTHOR_CATEGORY = "author"
+_PIPELINE_METRIC_CATEGORY = "pipeline_metric"
 
 # Characters of context kept on each side of a matched marker in the quote.
 QUOTE_RADIUS = 45
 
 _HEADING_RE = re.compile(r"(?m)^#{2,6}\s*(.+?)\s*$")
+
+# A raw integer, tolerating thousands separators and thin/no-break spaces
+# ("1234", "1,234", "1.234", "1\u00a0234").
+_NUMBER = "\\d[\\d.,\u00a0\u202f\u2009 ]*"
 
 
 @dataclass(frozen=True)
@@ -77,6 +86,29 @@ def _category_regexes(markers: dict[str, list[str]]) -> dict[str, re.Pattern]:
         if rx is not None:
             out[category] = rx
     return out
+
+
+def load_pipeline_metric_terms(lang: str) -> list[str]:
+    """``pipeline_metric_terms`` from cue_words — metric nouns ("cooccurrence",
+    "mentions communes", …) that mark a leaked internal count when a raw number
+    sits next to them. Empty when the key is absent (the metric scan then finds
+    nothing), matching the graceful-degradation contract of ``load_markers``."""
+    raw = load_lang_config(lang).get("pipeline_metric_terms") or []
+    return [t for t in raw if isinstance(t, str)]
+
+
+def _pipeline_metric_regex(terms: list[str]) -> re.Pattern | None:
+    """Match a raw pipeline metric leaked into prose: a number adjacent to a
+    metric term, in either order ("503 mentions communes", "cooccurrence
+    count: 42"). Returns ``None`` when there is no vocabulary to match."""
+    parts = sorted({t.replace("’", "'") for t in terms if t and t.strip()}, key=len, reverse=True)
+    if not parts:
+        return None
+    alt = "|".join(re.escape(p) for p in parts)
+    return re.compile(
+        rf"(?<!\w)(?:{_NUMBER}\s*(?:{alt})|(?:{alt})[\s:=_-]*{_NUMBER})(?!\w)",
+        re.IGNORECASE,
+    )
 
 
 def _allowed_oou_headings(stance: EditorialStance, lang: str) -> frozenset[str]:
@@ -121,6 +153,7 @@ def scan_page(
     *,
     regexes: dict[str, re.Pattern] | None = None,
     allowed_headings: frozenset[str] | None = None,
+    metric_regex: re.Pattern | None = None,
 ) -> list[StanceFinding]:
     content = str(page.get("content") or "")
     if not content.strip():
@@ -129,6 +162,8 @@ def scan_page(
         regexes = _category_regexes(load_markers(lang))
     if allowed_headings is None:
         allowed_headings = _allowed_oou_headings(stance, lang)
+    if metric_regex is None:
+        metric_regex = _pipeline_metric_regex(load_pipeline_metric_terms(lang))
 
     title = str(page.get("title") or "")
     etype = str(page.get("entity_type") or "")
@@ -146,6 +181,18 @@ def scan_page(
                 findings.append(
                     StanceFinding(title, etype, heading, category, m.group(0), _quote(region, m))
                 )
+        # STU-579: a raw mention/cooccurrence count in reader-facing prose is a
+        # leaked pipeline metric. Stance-independent — never legitimate in any
+        # mode or section, so it is scanned unconditionally (unlike meta/reader,
+        # which out-of-universe and exception sections sanction).
+        if metric_regex is not None:
+            for m in metric_regex.finditer(region):
+                findings.append(
+                    StanceFinding(
+                        title, etype, heading, _PIPELINE_METRIC_CATEGORY,
+                        m.group(0), _quote(region, m),
+                    )
+                )
     return findings
 
 
@@ -154,10 +201,16 @@ def scan_pages(
 ) -> list[StanceFinding]:
     regexes = _category_regexes(load_markers(lang))
     allowed_headings = _allowed_oou_headings(stance, lang)
+    metric_regex = _pipeline_metric_regex(load_pipeline_metric_terms(lang))
     findings: list[StanceFinding] = []
     for page in pages:
         findings.extend(
-            scan_page(page, stance, lang, regexes=regexes, allowed_headings=allowed_headings)
+            scan_page(
+                page, stance, lang,
+                regexes=regexes,
+                allowed_headings=allowed_headings,
+                metric_regex=metric_regex,
+            )
         )
     return findings
 
@@ -166,6 +219,7 @@ _CATEGORY_LABEL = {
     "meta_narrative": "speaks of the text as a text (novel/chapter/narration)",
     "reader_address": "addresses the reader",
     "author": "names the real-world author/edition",
+    "pipeline_metric": "exposes a raw pipeline metric (mention/cooccurrence count)",
 }
 
 

@@ -58,6 +58,7 @@ OPTIONAL_KEYS = frozenset(
         "status_markers",
         "affiliation_markers",
         "species_markers",
+        "pipeline_metric_terms",
     }
 )
 

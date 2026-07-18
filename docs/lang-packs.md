@@ -81,6 +81,7 @@ A pack may omit these; the consumer degrades to an empty collection.
 | `first_person_artifact_tails` | extraction | Verb tails that flag a false "I …" entity artifact; language-specific. |
 | `language_id_markers` | wiki page validator | Copula phrases (`is the`, `was a`) used to sanity-check generated prose language. |
 | `placeholder_markers` | page generation | Prompt-placeholder phrases (`si connu`, `if known`) that flag a leaked template when echoed into a page. |
+| `pipeline_metric_terms` | editorial consolidation | Metric nouns (`cooccurrence`, `mentions communes`) that flag a leaked pipeline count when a raw number sits next to them (STU-579). Absent → the metric scan finds nothing. |
 | `title_prefixes` | clustering | Leading honorifics/particles/articles stripped before name comparison (`m.`, `monsieur`, `don`, `le`). Unioned with `person_cue_words` (which also carries strippable titles like `king`). Absent → only `person_cue_words` is stripped. |
 | `masculine_titles` | clustering | Gendered honorifics marking a masculine title (`m.`, `monsieur`, Spanish `don`/`señor`) — used to block a masculine/feminine merge. No hardcoded default; each pack declares its own. |
 | `feminine_titles` | clustering | Gendered honorifics marking a feminine title (`mme`, `madame`, Spanish `doña`/`señora`). Counterpart of `masculine_titles`. |
