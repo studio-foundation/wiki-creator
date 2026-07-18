@@ -390,6 +390,21 @@ def load_affiliation_verdicts(processing_dir: Path) -> dict[str, dict]:
     return verdicts if isinstance(verdicts, dict) else {}
 
 
+def load_species_verdicts(processing_dir: Path) -> dict[str, dict]:
+    """Per-character species decided by the entity-species pre-step (STU-574).
+
+    Absent or unreadable artifact -> {} -> no character renders the slot. A book
+    whose world has no invented species never ran the stage; that is not an error.
+    """
+    path = Path(processing_dir) / "entity_species.json"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    verdicts = payload.get("verdicts") if isinstance(payload, dict) else None
+    return verdicts if isinstance(verdicts, dict) else {}
+
+
 def build_entity_bundle(
     entity: dict,
     relationships: list[dict],
@@ -407,10 +422,20 @@ def build_entity_bundle(
     plot_events: list[dict] | None = None,
     status_verdicts: dict[str, dict] | None = None,
     affiliation_verdicts: dict[str, dict] | None = None,
+    species_verdicts: dict[str, dict] | None = None,
 ) -> dict:
     canonical_name = entity["canonical_name"]
     chapter_numbers = chapter_numbers or {}
     context_by_chapter = extract_context(entity, persons, places, orgs, events)
+    # Resolve each context section id to its chapter *position* once, so every
+    # consumer of the bundle reads a number instead of counting digits out of the
+    # id (STU-580, same class as STU-550). generate_wiki_pages labels excerpts
+    # from this map, never from the id.
+    context_chapter_numbers = {
+        key: number
+        for key in context_by_chapter
+        if (number := resolve_chapter_number(key, chapter_numbers)) is not None
+    }
     # The bundle is the boundary: every chapter reference leaving it is a
     # chapter number, so no consumer has to read one back out of a section id.
     entity_relationships = [
@@ -434,16 +459,15 @@ def build_entity_bundle(
         ),
         "status": (status_verdicts or {}).get(canonical_name, {}).get("status", DEFAULT_STATUS),
         "affiliation": (affiliation_verdicts or {}).get(canonical_name, {}).get("affiliation"),
+        "species": (species_verdicts or {}).get(canonical_name, {}).get("species"),
         "death_agent": (status_verdicts or {}).get(canonical_name, {}).get("agent"),
         "death_place": (status_verdicts or {}).get(canonical_name, {}).get("place"),
         "total_mentions": entity.get("total_mentions", 0),
         "chapters_present": entity.get("chapters_present", 0),
         "first_seen": get_first_seen(entity, persons, places, orgs, events),
         "context_by_chapter": context_by_chapter,
-        "context_chapters": sorted(
-            n for n in (resolve_chapter_number(k, chapter_numbers) for k in context_by_chapter)
-            if n is not None
-        ),
+        "context_chapters": sorted(context_chapter_numbers.values()),
+        "context_chapter_numbers": context_chapter_numbers,
         "relationships": [
             {**r, "confidence": relationship_confidence(r), "revealed_at_chapter": relation_revealed_at(r)}
             for r in entity_relationships
@@ -663,6 +687,12 @@ def main() -> None:
         file=sys.stderr,
     )
 
+    species_verdicts = load_species_verdicts(paths.processing)
+    print(
+        f"wiki-preparation: {len(species_verdicts)} character species verdict(s) loaded",
+        file=sys.stderr,
+    )
+
     plot_events = read_plot_events(paths.processing / "events.json")
     dedicated, collated, dropped = partition_by_collation(
         relevant_entities, collation_config(book_cfg), plot_events
@@ -738,6 +768,7 @@ def main() -> None:
             plot_events=plot_events,
             status_verdicts=status_verdicts,
             affiliation_verdicts=affiliation_verdicts,
+            species_verdicts=species_verdicts,
         )
         for e in dedicated
     ]

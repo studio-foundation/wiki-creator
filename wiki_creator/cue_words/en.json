@@ -487,5 +487,32 @@
     "fighting for",
     "sided with",
     "rode with"
+  ],
+  "species_markers": [
+    "human",
+    "humans",
+    "elf",
+    "elves",
+    "elven",
+    "dwarf",
+    "dwarves",
+    "dragon",
+    "dragons",
+    "faun",
+    "fauns",
+    "centaur",
+    "centaurs",
+    "giant",
+    "giants",
+    "mortal",
+    "mortals",
+    "immortal",
+    "immortals",
+    "race",
+    "races",
+    "kindred",
+    "bloodline",
+    "half-elf",
+    "half-dwarf"
   ]
 }

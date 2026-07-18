@@ -36,6 +36,7 @@ from pathlib import Path
 import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+from wiki_creator.chapters import resolve_chapter_number
 from wiki_creator.lang import load_lang_config
 from wiki_creator.editorial_stance import GROUNDING_BLOCK, EditorialStance, editorial_stance
 from wiki_creator.page_templates import (
@@ -142,10 +143,20 @@ def _isolate_section(content: str, section: str, lang: str = "fr") -> str | None
     return None
 
 
-def _label_chapter_key(key: str) -> str:
-    """Convert EPUB file IDs like C25.xhtml to readable labels like Chapter 25."""
-    m = re.match(r'^[Cc](\d+)\.xhtml$', key)
-    return f"Chapter {int(m.group(1))}" if m else key
+def _label_chapter_key(key: str, chapter_numbers: dict[str, int] | None = None) -> str:
+    """Readable "Chapter N" label for a context section id, numbered by the
+    chapter's *position* in the book — never by digits read out of the id
+    itself (STU-580, same defect class as STU-550: `C25.xhtml` on a book with
+    front matter before it, or `bookcontent2_0`, is not chapter 25/2).
+
+    `chapter_numbers` is the bundle's `context_chapter_numbers` map (section id
+    → position), produced by wiki_preparation. A key it doesn't cover — or an
+    absent map, e.g. a pre-STU-580 batch — keeps its raw id rather than a label
+    invented from its digits."""
+    if not chapter_numbers:
+        return key
+    number = resolve_chapter_number(key, chapter_numbers)
+    return f"Chapter {number}" if number is not None else key
 
 
 # STU-438: how many top relations (already sorted by cooccurrence desc) get
@@ -300,13 +311,14 @@ def build_prompt(
     importance = entity["importance"]
     aliases = entity.get("aliases", [])
     context = entity.get("context_by_chapter", {})
+    context_chapter_numbers = entity.get("context_chapter_numbers", {})
     related_context = entity.get("related_context", [])
     chapter_summary_context = entity.get("chapter_summary_context", [])
 
     # --- Blocs de contexte ---
     context_lines = []
     for chapter, mentions in list(context.items())[:15]:
-        label = _label_chapter_key(chapter)
+        label = _label_chapter_key(chapter, context_chapter_numbers)
         for mention in mentions[:3]:
             context_lines.append(f"  [{label}] {mention}")
     context_block = "\n".join(context_lines) if context_lines else "  (no excerpts available)"
@@ -752,6 +764,10 @@ def _extracted_fact_value(entity: dict, token: str, lang: str) -> str | None:
         # OPT with no declared fallback: an undecided character drops the slot
         # (STU-551). Plain text — no infobox slot carries a wikilink today.
         return (entity.get("affiliation") or "").strip() or None
+    if token == "species":
+        # OPT, genre-gated: a book with no invented species never ran the stage,
+        # so the slot drops (STU-574). Plain text, like `affiliation`.
+        return (entity.get("species") or "").strip() or None
     if token == "death":
         # OPT, unlike `status`: no grounded circumstance renders no row (STU-552).
         return death_label(entity.get("death_agent"), entity.get("death_place"), lang)

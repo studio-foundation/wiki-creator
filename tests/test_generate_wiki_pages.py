@@ -10,6 +10,7 @@ from scripts.generate_wiki_pages import (
     _contains_template_placeholder,
     _force_correct_identity,
     _is_page_complete,
+    _label_chapter_key,
     _narrative_events,
     _nom_matches_identity,
     _print_generation_summary,
@@ -223,6 +224,40 @@ def test_build_prompt_never_leaks_high_cooccurrence_count_into_related_block():
     assert "mentions communes" not in related_block.lower()
     # Order still reflects prominence: the top related entity comes first.
     assert related_block.index("Celaena") < related_block.index("Chaol")
+
+
+def test_label_chapter_key_numbers_by_position_not_id_digits():
+    # STU-580: `bookcontent2_0` is the FIRST narrative chapter (front matter
+    # sits before it), so its label is "Chapter 1" — never "Chapter 2" read out
+    # of the id. Resolution comes from the bundle's context_chapter_numbers map.
+    chapter_numbers = {"bookcontent2_0": 1, "bookcontent3_0": 2}
+    assert _label_chapter_key("bookcontent2_0", chapter_numbers) == "Chapter 1"
+    assert _label_chapter_key("bookcontent3_0", chapter_numbers) == "Chapter 2"
+
+
+def test_label_chapter_key_falls_back_to_raw_id_when_unresolved():
+    # An id absent from the map (or an absent map, e.g. a pre-STU-580 batch)
+    # keeps its raw id — it is never numbered by whatever digits it contains.
+    assert _label_chapter_key("C25.xhtml", {"C25.xhtml": 3}) == "Chapter 3"
+    assert _label_chapter_key("C25.xhtml", {}) == "C25.xhtml"
+    assert _label_chapter_key("frontmatter_0", {"C01.xhtml": 1}) == "frontmatter_0"
+
+
+def test_build_prompt_labels_chapters_by_position_not_id_digits():
+    # End-to-end through build_prompt on a Narnia-like book whose section ids are
+    # not `C\d+`: the excerpt injected into the classifier prompt must be tagged
+    # by real chapter position, not by the digits in the id.
+    entity = {
+        "canonical_name": "Lucy Pevensie",
+        "importance": "principal",
+        "type": "PERSON",
+        "aliases": [],
+        "context_by_chapter": {"bookcontent2_0": ["Lucy stepped through the wardrobe."]},
+        "context_chapter_numbers": {"bookcontent2_0": 1},
+    }
+    prompt = build_prompt(entity, "The Lion, the Witch and the Wardrobe", sections=["biography"])
+    assert "[Chapter 1] Lucy stepped through the wardrobe." in prompt
+    assert "Chapter 2" not in prompt  # the id's digit-derived (wrong) number never appears
 
 
 def test_build_prompt_includes_chapter_summary_context_block_and_rules():
@@ -902,7 +937,11 @@ def test_build_prompt_grounding_excerpts_header_is_prominent():
     assert "GROUNDING EXCERPTS" in prompt
 
 
-def test_build_prompt_normalizes_xhtml_chapter_keys():
+def test_build_prompt_labels_xhtml_chapter_keys_by_position():
+    # STU-580: xhtml ids become readable labels from the bundle's position map,
+    # not from their digits. Here C25/C03 are the 2nd/1st narrative chapters
+    # (front matter shifts them), so the labels are Chapter 2 / Chapter 1 — the
+    # digit-derived "Chapter 25"/"Chapter 3" must never appear.
     entity = {
         "canonical_name": "Celaena",
         "importance": "principal",
@@ -912,6 +951,7 @@ def test_build_prompt_normalizes_xhtml_chapter_keys():
             "C25.xhtml": ["She crossed the hall."],
             "C03.xhtml": ["She entered the palace."],
         },
+        "context_chapter_numbers": {"C25.xhtml": 2, "C03.xhtml": 1},
         "chapter_summary_context": [],
         "related_context": [],
         "relationships": [],
@@ -919,8 +959,10 @@ def test_build_prompt_normalizes_xhtml_chapter_keys():
     prompt = build_prompt(entity, "Throne of Glass", ["biography"])
     assert "C25.xhtml" not in prompt
     assert "C03.xhtml" not in prompt
-    assert "Chapter 25" in prompt
-    assert "Chapter 3" in prompt
+    assert "[Chapter 2] She crossed the hall." in prompt
+    assert "[Chapter 1] She entered the palace." in prompt
+    assert "Chapter 25" not in prompt
+    assert "Chapter 3" not in prompt
 
 
 def test_build_prompt_keeps_non_xhtml_chapter_keys_unchanged():
@@ -955,17 +997,22 @@ def test_build_prompt_warns_against_citing_chapter_labels():
     assert "never mention" in prompt.lower() and "internal reference" in prompt.lower()
 
 
-@pytest.mark.parametrize("key,expected", [
-    ("C25.xhtml", "Chapter 25"),
-    ("C03.xhtml", "Chapter 3"),
-    ("c1.xhtml", "Chapter 1"),
-    ("sinopsis.xhtml", "sinopsis.xhtml"),
-    ("Chapter 5", "Chapter 5"),
-    ("", ""),
+# STU-580: the label is the chapter's POSITION (from the bundle map), never a
+# number read out of the id's digits. Two ids whose digits disagree with their
+# position — `C25.xhtml` at position 2, `bookcontent2_0` at position 1 — pin
+# that down; unmapped ids keep their raw key.
+@pytest.mark.parametrize("key,chapter_numbers,expected", [
+    ("C25.xhtml", {"C25.xhtml": 2}, "Chapter 2"),
+    ("C03.xhtml", {"C03.xhtml": 1}, "Chapter 1"),
+    ("bookcontent2_0", {"bookcontent2_0": 1}, "Chapter 1"),
+    ("sinopsis.xhtml", {"C01.xhtml": 1}, "sinopsis.xhtml"),
+    ("C25.xhtml", {}, "C25.xhtml"),
+    ("Chapter 5", {"Chapter 5": 5}, "Chapter 5"),
+    ("", {}, ""),
 ])
-def test_label_chapter_key(key, expected):
+def test_label_chapter_key(key, chapter_numbers, expected):
     from scripts.generate_wiki_pages import _label_chapter_key
-    assert _label_chapter_key(key) == expected
+    assert _label_chapter_key(key, chapter_numbers) == expected
 
 
 def _celaena_with_flashback() -> dict:
