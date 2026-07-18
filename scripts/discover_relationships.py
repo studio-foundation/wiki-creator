@@ -177,6 +177,8 @@ def main() -> None:
 
     def run(chunk: dict) -> tuple[str, list[dict]]:
         raw = _run_discovery_chunk(chunk, roster_lines, type_defs)
+        if raw is None:
+            return chunk["id"], []  # failed unit — not cached, retried next run
         resolved = canonicalize_relations(raw, alias_to_canonical)
         kept, _ = valid_relations(resolved, roster_names, allowed_types)
         with lock:
