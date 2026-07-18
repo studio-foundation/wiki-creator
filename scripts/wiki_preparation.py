@@ -427,6 +427,15 @@ def build_entity_bundle(
     canonical_name = entity["canonical_name"]
     chapter_numbers = chapter_numbers or {}
     context_by_chapter = extract_context(entity, persons, places, orgs, events)
+    # Resolve each context section id to its chapter *position* once, so every
+    # consumer of the bundle reads a number instead of counting digits out of the
+    # id (STU-580, same class as STU-550). generate_wiki_pages labels excerpts
+    # from this map, never from the id.
+    context_chapter_numbers = {
+        key: number
+        for key in context_by_chapter
+        if (number := resolve_chapter_number(key, chapter_numbers)) is not None
+    }
     # The bundle is the boundary: every chapter reference leaving it is a
     # chapter number, so no consumer has to read one back out of a section id.
     entity_relationships = [
@@ -457,10 +466,8 @@ def build_entity_bundle(
         "chapters_present": entity.get("chapters_present", 0),
         "first_seen": get_first_seen(entity, persons, places, orgs, events),
         "context_by_chapter": context_by_chapter,
-        "context_chapters": sorted(
-            n for n in (resolve_chapter_number(k, chapter_numbers) for k in context_by_chapter)
-            if n is not None
-        ),
+        "context_chapters": sorted(context_chapter_numbers.values()),
+        "context_chapter_numbers": context_chapter_numbers,
         "relationships": [
             {**r, "confidence": relationship_confidence(r), "revealed_at_chapter": relation_revealed_at(r)}
             for r in entity_relationships
