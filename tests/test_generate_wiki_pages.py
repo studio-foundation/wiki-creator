@@ -178,8 +178,51 @@ def test_build_prompt_includes_related_context_block_and_strict_rules():
 
     assert "Related entities (disambiguation only — do not derive narrative from cooccurrence):" in prompt
     assert "Name: Celaena" in prompt
-    assert "Cooccurrence count: 175" in prompt
+    # STU-579: the raw cooccurrence_count must NOT be injected into the related
+    # context block — a pipeline metric in the prompt gets echoed into prose.
+    assert "Cooccurrence count" not in prompt
+    assert "175" not in prompt
     assert "Do NOT turn cooccurrence between entities into narrative causality." in prompt
+
+
+def test_build_prompt_never_leaks_high_cooccurrence_count_into_related_block():
+    """STU-579 non-regression: a high cooccurrence_count must never surface as a
+    raw number in the writer prompt. Related entities stay ordered by prominence
+    (the source rows are pre-sorted), but the count itself is not injected."""
+    entity = {
+        "canonical_name": "Dorian Havilliard",
+        "importance": "principal",
+        "type": "PERSON",
+        "aliases": ["Dorian"],
+        "context_by_chapter": {"ch01": ["Dorian entra dans la salle du conseil."]},
+        "related_context": [
+            {
+                "related_name": "Celaena",
+                "cooccurrence_count": 503,
+                "related_type": "PERSON",
+                "related_importance": "principal",
+                "support_snippets": ["Celaena observa Dorian sans parler."],
+            },
+            {
+                "related_name": "Chaol",
+                "cooccurrence_count": 42,
+                "related_type": "PERSON",
+                "related_importance": "secondary",
+                "support_snippets": [],
+            },
+        ],
+    }
+    prompt = build_prompt(entity, "Mon Livre", sections=["infobox", "biography", "relationships"])
+
+    related_block = prompt.split("Related entities", 1)[1].split("Typed relationships", 1)[0]
+    assert "Celaena" in related_block and "Chaol" in related_block
+    # No raw cooccurrence number, and none of the known leak phrasings.
+    assert "503" not in related_block
+    assert "42" not in related_block
+    assert "Cooccurrence count" not in related_block
+    assert "mentions communes" not in related_block.lower()
+    # Order still reflects prominence: the top related entity comes first.
+    assert related_block.index("Celaena") < related_block.index("Chaol")
 
 
 def test_build_prompt_includes_chapter_summary_context_block_and_rules():

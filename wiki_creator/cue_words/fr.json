@@ -445,6 +445,18 @@
       "maison d'édition"
     ]
   },
+  "pipeline_metric_terms": [
+    "mentions communes",
+    "mention commune",
+    "mentions en commun",
+    "mention en commun",
+    "cooccurrence",
+    "cooccurrences",
+    "co-occurrence",
+    "co-occurrences",
+    "cooccurrence count",
+    "cooccurrence_count"
+  ],
   "placeholder_markers": [
     "si connu",
     "contenu en français basé uniquement sur les extraits"

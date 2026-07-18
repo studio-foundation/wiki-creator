@@ -312,15 +312,21 @@ def build_prompt(
     context_block = "\n".join(context_lines) if context_lines else "  (no excerpts available)"
 
     related_lines = []
+    # STU-579: never inject the raw cooccurrence_count here. This block is
+    # disambiguation-only, and a pipeline metric placed in front of the writer
+    # ends up echoed verbatim in prose (STU-475's "503 mentions communes",
+    # STU-501/528). The rows already arrive pre-sorted by cooccurrence
+    # descending (wiki_preparation.build_related_context), so their ORDER
+    # carries the prominence signal — the raw number was redundant as well as
+    # leak-prone.
     for rel in related_context[:5]:
         related_name = rel.get("related_name", "").strip()
         if not related_name:
             continue
         related_type = rel.get("related_type") or "unknown"
         related_importance = rel.get("related_importance") or "unknown"
-        cooccurrence = rel.get("cooccurrence_count", 0)
         related_lines.append(
-            f"  - Name: {related_name} | Type: {related_type} | Importance: {related_importance} | Cooccurrence count: {cooccurrence}"
+            f"  - Name: {related_name} | Type: {related_type} | Importance: {related_importance}"
         )
         for snippet in rel.get("support_snippets", [])[:2]:
             related_lines.append(f"    - Snippet: {snippet}")

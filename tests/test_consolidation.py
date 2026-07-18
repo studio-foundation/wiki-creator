@@ -109,3 +109,61 @@ def test_unknown_language_raises_loudly():
     stance = EditorialStance(mode="in_universe", hybrid_exceptions=frozenset())
     with pytest.raises(LangPackError):
         scan_pages([_page("le roman")], stance, "xx")
+
+
+# --- STU-579: leaked pipeline metric (raw mention/cooccurrence count) ---
+
+
+def _metric_findings(findings):
+    return [f for f in findings if f.category == "pipeline_metric"]
+
+
+def test_flags_raw_mentions_count_leaked_into_prose():
+    stance = EditorialStance()  # hybrid — the axis is stance-independent
+    findings = scan_page(
+        _page("Proche de [[Chaol]] (503 mentions communes) tout au long du récit."),
+        stance,
+        "fr",
+    )
+    metric = _metric_findings(findings)
+    assert metric, "a raw '503 mentions communes' must be flagged as a pipeline metric"
+    assert "503" in metric[0].marker
+    assert metric[0].quote  # page/deviation/quote, not just a score
+
+
+def test_flags_cooccurrence_count_label_and_number():
+    stance = EditorialStance()
+    findings = scan_page(_page("Relation forte, cooccurrence count: 42."), stance, "fr")
+    assert any("42" in f.marker for f in _metric_findings(findings))
+
+
+def test_metric_leak_flagged_even_out_of_universe():
+    # meta/reader/author can be legitimate out-of-universe, but a raw pipeline
+    # metric never is — it must still be flagged.
+    stance = EditorialStance(mode="out_of_universe")
+    findings = scan_page(_page("Allié de [[Dorian]] — 175 cooccurrences."), stance, "fr")
+    assert _metric_findings(findings)
+
+
+def test_clean_number_near_no_metric_term_is_not_flagged():
+    stance = EditorialStance(mode="out_of_universe")
+    # A number that is not a leaked count (age) must not trip the detector.
+    assert _metric_findings(scan_page(_page("Âgée de 42 ans, elle règne."), stance, "fr")) == []
+
+
+def test_metric_leak_flagged_in_english_and_spanish():
+    stance_en = EditorialStance(mode="out_of_universe")
+    en = scan_page(_page("A close ally (503 common mentions).", entity_type="PERSON"), stance_en, "en")
+    assert _metric_findings(en)
+    stance_es = EditorialStance(mode="out_of_universe")
+    es = scan_page(_page("Aliada cercana (503 menciones comunes).", entity_type="PERSON"), stance_es, "es")
+    assert _metric_findings(es)
+
+
+def test_metric_leak_surfaces_in_report_and_summary():
+    stance = EditorialStance(mode="out_of_universe")
+    pages = [_page("Proche de [[Chaol]] (503 mentions communes).", title="Celaena")]
+    report = build_report(scan_pages(pages, stance, "fr"), stance, pages_scanned=1)
+    assert report["drift_count"] >= 1
+    assert any(f["category"] == "pipeline_metric" for f in report["findings"])
+    assert "503" in format_summary(report)
