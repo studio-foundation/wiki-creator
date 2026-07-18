@@ -169,6 +169,26 @@ def valid_relations(
     return kept, rejected
 
 
+def fold_chunk_result(
+    raw: object,
+    alias_to_canonical: dict[str, str],
+    roster_names: set[str],
+    allowed_types: Iterable[str],
+) -> list[dict] | None:
+    """Canonicalize + validate a chunk's raw relations, or ``None`` on failure.
+
+    ``None`` in (a subprocess timeout / missing CLI / unparseable output) yields
+    ``None`` out — the caller must NOT cache it, so a re-run retries the chunk
+    instead of replaying an empty vote read as a genuine 0 (STU-562 shape). A
+    successful call with no relations returns ``[]``, which IS cached.
+    """
+    if raw is None:
+        return None
+    resolved = canonicalize_relations(raw, alias_to_canonical)
+    kept, _ = valid_relations(resolved, roster_names, allowed_types)
+    return kept
+
+
 def aggregate(votes: list[dict], roster_names: set[str]) -> list[dict]:
     """Fold per-chunk relation votes into book-level ``Relationship`` dicts.
 

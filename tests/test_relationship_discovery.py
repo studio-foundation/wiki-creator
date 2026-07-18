@@ -11,6 +11,7 @@ from wiki_creator.relationship_discovery import (
     canonicalize_relations,
     chunk_chapters,
     flip,
+    fold_chunk_result,
     load_votes_cache,
     save_votes_cache,
     valid_relations,
@@ -229,3 +230,36 @@ def test_votes_cache_busts_when_prompt_changes(tmp_path):
 
 def test_votes_cache_missing_file_is_empty(tmp_path):
     assert load_votes_cache(tmp_path / "absent.json", ["Eragon"], "p1") == {}
+
+
+# --- fold_chunk_result: a transient failure is not a genuine empty vote -------
+
+
+def test_fold_chunk_failure_returns_none_not_cached():
+    # None in (subprocess timeout / missing CLI / unparseable output) → None out,
+    # so the caller leaves the chunk uncached and a re-run retries it (STU-562).
+    assert fold_chunk_result(None, {}, ROSTER, TYPES) is None
+
+
+def test_fold_chunk_success_with_no_relations_returns_empty_list():
+    # A successful call that found nothing returns [] — cached as a genuine 0,
+    # distinct from the failure above.
+    assert fold_chunk_result([], {}, ROSTER, TYPES) == []
+
+
+def test_fold_chunk_canonicalizes_and_validates():
+    raw = [{
+        "entity_a": "the boy",  # alias → Eragon
+        "entity_b": "Brom",
+        "relationship_type": "mentor",
+        "direction": "B→A",
+        "evidence": "Brom taught the boy to fight.",
+    }]
+    kept = fold_chunk_result(raw, {"the boy": "Eragon"}, ROSTER, TYPES)
+    assert kept == [{
+        "entity_a": "Eragon",
+        "entity_b": "Brom",
+        "relationship_type": "mentor",
+        "direction": "B→A",
+        "evidence": "Brom taught the boy to fight.",
+    }]

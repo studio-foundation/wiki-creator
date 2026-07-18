@@ -43,11 +43,10 @@ from wiki_creator.registry import Registry
 from wiki_creator.relationship_discovery import (
     aggregate,
     build_roster,
-    canonicalize_relations,
     chunk_chapters,
+    fold_chunk_result,
     load_votes_cache,
     save_votes_cache,
-    valid_relations,
 )
 from wiki_creator.types import Relationship, RelationshipBundle
 
@@ -177,12 +176,15 @@ def main() -> None:
 
     def run(chunk: dict) -> tuple[str, list[dict]]:
         raw = _run_discovery_chunk(chunk, roster_lines, type_defs)
-        if raw is None:
-            return chunk["id"], []  # failed unit — not cached, retried next run
-        resolved = canonicalize_relations(raw, alias_to_canonical)
-        kept, _ = valid_relations(resolved, roster_names, allowed_types)
+        kept = fold_chunk_result(raw, alias_to_canonical, roster_names, allowed_types)
         with lock:
             done[0] += 1
+            if kept is None:
+                # Transient failure — leave the chunk out of the cache so a re-run
+                # retries it, instead of poisoning it with an empty vote a later run
+                # reads as a genuine 0 (STU-562 shape).
+                print(f"  [{done[0]}/{len(todo)}] {chunk['id']}: FAILED — not cached, will retry", file=sys.stderr)
+                return chunk["id"], []
             cache[chunk["id"]] = kept
             save_votes_cache(votes_path, roster_lines, prompt_key, cache)
             print(f"  [{done[0]}/{len(todo)}] {chunk['id']}: {len(kept)}", file=sys.stderr)
