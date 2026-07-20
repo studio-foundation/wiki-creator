@@ -2076,9 +2076,11 @@ def test_generate_pages_dry_run_skips_runner(tmp_path):
 
 def test_generate_pages_resumes_completed_pages(tmp_path):
     output_file = tmp_path / "wiki_pages.json"
+    fingerprint = _gwp._page_prompt_fingerprint(_config(tmp_path))
     output_file.write_text(
         json.dumps({"pages": [{"title": "Rifthold", "importance": "secondary",
-                                "entity_type": "PLACE", "content": "## Description\n\nDéjà fait."}]}),
+                                "entity_type": "PLACE", "content": "## Description\n\nDéjà fait.",
+                                "_prompt": fingerprint}]}),
         encoding="utf-8",
     )
     runner = _FakeRunner()
@@ -2087,6 +2089,42 @@ def test_generate_pages_resumes_completed_pages(tmp_path):
     assert runner.run_calls == []  # already-done page not regenerated
     assert [p["title"] for p in pages] == ["Rifthold"]
     assert "Déjà fait." in pages[0]["content"]
+
+
+def test_generate_pages_regenerates_on_prompt_fingerprint_change(tmp_path):
+    """STU-589: a page whose stored fingerprint no longer matches the run's config is
+    regenerated, not resumed — a changed prompt cannot replay stale pages."""
+    output_file = tmp_path / "wiki_pages.json"
+    output_file.write_text(
+        json.dumps({"pages": [{"title": "Rifthold", "importance": "secondary",
+                                "entity_type": "PLACE", "content": "## Description\n\nStale.",
+                                "_prompt": "stale-fingerprint"}]}),
+        encoding="utf-8",
+    )
+    runner = _FakeRunner()
+    pages = generate_pages(_place_batch(), _config(tmp_path), runner)
+
+    assert runner.run_calls == ["Rifthold"]  # stale fingerprint → regenerated
+    assert "Stale." not in pages[0]["content"]
+
+
+def test_generate_pages_preserves_unfiltered_stale_pages(tmp_path):
+    """A stale page outside the current (filtered) batch rides through verbatim — the
+    targeted-regeneration contract wins over the fingerprint bust."""
+    output_file = tmp_path / "wiki_pages.json"
+    output_file.write_text(
+        json.dumps({"pages": [{"title": "Endovier", "importance": "secondary",
+                                "entity_type": "PLACE", "content": "## Description\n\nPreserved.",
+                                "_prompt": "stale-fingerprint"}]}),
+        encoding="utf-8",
+    )
+    runner = _FakeRunner()
+    pages = generate_pages(_named_place_batch("Rifthold"), _config(tmp_path), runner)
+
+    titles = {p["title"] for p in pages}
+    assert titles == {"Rifthold", "Endovier"}  # Endovier preserved though stale
+    endovier = next(p for p in pages if p["title"] == "Endovier")
+    assert "Preserved." in endovier["content"]
 
 
 # --- STU-497: small-dataset subset re-run (--entities / --force) ---
@@ -2102,11 +2140,15 @@ def _named_place_batch(name):
     return [("batch_00.json", {"batch_id": "batch_00", "entities": [entity]})]
 
 
-def _seed_pages(output_file, titles):
+def _seed_pages(output_file, titles, fingerprint=None):
+    # STU-589: seed pages carry the current fingerprint so resume treats them as
+    # produced under this run's prompt (an unfingerprinted page is regenerated).
+    if fingerprint is None:
+        fingerprint = _gwp._page_prompt_fingerprint(_config(output_file.parent))
     output_file.write_text(
         json.dumps({"pages": [
             {"title": t, "importance": "secondary", "entity_type": "PLACE",
-             "content": f"## Description\n\nPage originale de {t}."}
+             "content": f"## Description\n\nPage originale de {t}.", "_prompt": fingerprint}
             for t in titles
         ]}),
         encoding="utf-8",
