@@ -320,6 +320,25 @@ Inside `wiki-resolution`, order matters:
   merges and must keep merging: `Mr Tumnus` → `Tumnus` (one side titled, no conflict),
   `Captain Westfall` → `Chaol Westfall`.
 
+- STU-541's rule lived only in `alias-resolution`; `entity-clustering` remarried the
+  Beavers one stage upstream (STU-585). The clustering matcher already refuses a union
+  when both names bear **conflicting gender titles** (`has_conflicting_gender_title`,
+  the M./Mme Vidal machinery), and `split_conflicting_first_names` splits a cluster
+  that a bare surname bridged transitively — the honorific-per-entity rule STU-541
+  describes, already in place. It failed on English only because the vocabulary was
+  misaligned: `person_cue_words` carries **bare** `mr`/`mrs`/`miss` (so `Mr Beaver`
+  strips to `beaver` and clusters with `Beaver` — needed for `Mr Tumnus` → `Tumnus`),
+  but `masculine_titles`/`feminine_titles` held only the period forms `mr.`/`mrs.`, so
+  the extracted bare `mr`/`mrs` matched no gender set and the conflict was invisible.
+  Fix is data, not code: `en.json` gender sets now carry the bare forms beside the
+  period ones. **The apparent `mr.`/`mr` duplication is load-bearing** — the gender set
+  must match the token `extract_leading_titles` yields, which is the bare honorific
+  `person_cue_words` strips; drop the bare form and the Beavers remarry. Adding
+  `mr`/`mrs` to `title_prefixes` would instead make `Mr Beaver` and `Mrs Beaver`
+  *identical* after stripping — the merge, not the fix. French was already aligned
+  (`mme`, `madame` in both `person_cue_words` and `feminine_titles`), which is why the
+  bug was English-only. `make golden` unchanged (fixture novella has no Mr/Mrs).
+
 - A species is not a role (STU-559): `pure_title` merged **the Shade into a sword
   and the Urgals into a mountain** on Eragon. Its premise — a bare role name
   designates a named character — is true only of a role exactly one character

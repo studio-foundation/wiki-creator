@@ -357,11 +357,14 @@
     "dr"
   ],
   "masculine_titles": [
-    "mr."
+    "mr.",
+    "mr"
   ],
   "feminine_titles": [
     "mrs.",
-    "ms."
+    "ms.",
+    "mrs",
+    "miss"
   ],
   "geographic_keywords": [
     "street",
