@@ -4,3 +4,10 @@ schema:
   required_fields:
     - entities_for_resolution
 # Semantic guard: entities_for_resolution not empty — checked in script (entity_extraction.py)
+expected_outputs:
+  files:
+    # entity-extraction (entity_extraction.py) stamps the extraction fingerprint
+    # to processing_output/<slug>/extraction_config.json (ner.EXTRACTION_CONFIG_FILE)
+    # — the cache key every re-run keys off. Moved here from run_wiki.py
+    # required_files() (STU-600). Glob: per-book slug, cwd = repo root.
+    - "library/*/*/processing_output/*/extraction_config.json"

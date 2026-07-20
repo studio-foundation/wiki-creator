@@ -21,3 +21,9 @@ schema:
 validators:
   - name: classified-entities-shape
     command: PYTHONPATH=. python3 scripts/validate_classified_entities.py
+expected_outputs:
+  files:
+    # entity-classification (entity_classification.py) writes entities_classified.json
+    # into processing_output/<slug>/. Moved here from run_wiki.py required_files()
+    # (STU-600). Glob: per-book slug, cwd = repo root.
+    - "library/*/*/processing_output/*/entities_classified.json"
