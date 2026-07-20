@@ -124,6 +124,8 @@ library/sarah_j_maas/throne-of-glass/output/01-throne-of-glass/
 - [run_wiki.py](/home/arianeguay/dev/src/wiki-creator-by-studio/run_wiki.py): local orchestrator
 - [scripts/entity_extraction.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/entity_extraction.py): writes per-book `*_full.json`, `chapters.json`
 - [scripts/relationship_extraction.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/relationship_extraction.py): co-occurrence graph, optional coref, CLI/live mode
+- [scripts/discover_relationships.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/discover_relationships.py): schema-guided typed relation discovery, one `studio run` per chunk (STU-556), writes `relationships_discovered.json`; pure logic in `wiki_creator/relationship_discovery.py`
+- [scripts/build_character_graph.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/build_character_graph.py): series character graph pre-step, runs after typing (STU-575), writes `character_graph.json` + `character_graph_delta.json`; pure logic in `wiki_creator/character_graph.py`
 - [scripts/chapter_summary.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/chapter_summary.py): chapter summaries used during preparation
 - [scripts/wiki_preparation.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/wiki_preparation.py): batch generation
 - [scripts/generate_wiki_pages.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_wiki_pages.py): standalone generation (shells out to `studio run wiki-page-item` per entity)
@@ -1202,6 +1204,32 @@ Inside `wiki-resolution`, order matters:
   pair) and no golden (relationship typing is an LLM stage, off the golden path).
   Related: `stats.classified` is vestigial (STU-563) — the counter that would
   have surfaced this reads 0 on every real run.
+- The character graph is built after typing, not before (STU-575):
+  `build_character_graph.py` is a **wiki-preparation pre-step**, running after
+  `discover-relationships`/`classify-relationships`, and reads
+  `relationships_classified.json` (falling back to
+  `relationships_discovered.json`). It used to be a `wiki-resolution` stage
+  reading `entity-classification`'s relationships — which are the co-occurrence
+  graph, because typing happens one pipeline later — so **every edge it ever
+  built carried `relationship_type: null`** (78/78 on Narnia). `wiki_preparation`
+  reads that graph back and `indirect_relationships` drops any path with an
+  untyped hop (STU-528), so the feature returned `[]` on every book in the
+  library and nothing said so: an empty list is a legal answer. Ordering is the
+  whole fix — 0 typed edges of 78 → 18 of 18, indirect relations 0 → 3.
+  **`merge_book` never merged the typed fields**, so a graph already on disk kept
+  its `null` forever and the move alone would never have reached an existing
+  artifact; it now fills a type only when the edge has none, since a type already
+  there is an earlier tome's verdict. **No typed source writes nothing** and
+  warns, leaving the artifacts intact — rebuilding the untyped graph is the state
+  this exists to end (STU-470's rule: a silent degradation is the bug).
+  The stage left the golden chain because its input is an LLM artifact and the
+  chain is LLM-free by construction, so its Studio contract went with it and the
+  script calls `character_graph_errors` itself — deleting a stage must not delete
+  its validation (STU-590).
+  **Only 18 of Narnia's 32 discovered pairs reach the graph** (STU-602, open):
+  `discover_relationships` builds its roster from `registry.json` while the graph
+  gates edges on `entities_classified.json`'s PERSON set, and the two artifacts
+  disagree on who is a character (`Witch`, `Beavers`).
 - Editorial stance (STU-507): whether pages speak from inside the fiction is
   **declared** in the book YAML (`generation.editorial_stance`), not inherited
   from anti-hallucination prompting. `wiki_creator/editorial_stance.py` holds the
