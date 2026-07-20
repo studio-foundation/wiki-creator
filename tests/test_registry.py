@@ -1133,3 +1133,64 @@ def test_seed_table_maps_normalized_aliases_to_records():
     assert table[normalize_name("ADARLAN'S ASSASSÍN")].entity_id == "celaena_sardothien"
     assert table[normalize_name("celaena sardothien")].entity_id == "celaena_sardothien"
     assert normalize_name("Nehemia") not in table
+
+
+def _registry_with_decision(strategy: str) -> Registry:
+    """Lucy carrying the alias Peter, justified by one decision (STU-584)."""
+    evidence = "her own people called her Queen Lucy the Valiant"
+    d_id = _decision_id(strategy, ("lucy", "peter"), evidence)
+    return Registry(
+        entities=[
+            EntityRecord(
+                entity_id="lucy",
+                canonical_name="Lucy",
+                entity_type="PERSON",
+                aliases=["Lucy", "Peter"],
+                decisions=[d_id],
+            )
+        ],
+        decisions={
+            d_id: MergeDecision(
+                decision_id=d_id,
+                strategy=strategy,
+                inputs=("lucy", "peter"),
+                evidence=evidence,
+                confidence="high",
+            )
+        },
+    )
+
+
+def test_seed_table_ignores_the_retired_strategy_filter():
+    """accumulate() matches on the unfiltered table — the alias is on the record."""
+    table = _registry_with_decision("pattern").seed_table()
+    assert normalize_name("Peter") in table
+
+
+def test_load_seed_table_refuses_a_union_backed_by_a_retired_strategy(tmp_path, capsys):
+    path = tmp_path / "registry.json"
+    _registry_with_decision("pattern").save(path)
+    table = Registry.load_seed_table(path)
+    assert normalize_name("Lucy") in table
+    assert normalize_name("Peter") not in table
+    assert "retired strategy 'pattern'" in capsys.readouterr().err
+
+
+def test_load_seed_table_keeps_a_union_backed_by_a_live_strategy(tmp_path):
+    path = tmp_path / "registry.json"
+    _registry_with_decision("context_adjudication").save(path)
+    assert normalize_name("Peter") in Registry.load_seed_table(path)
+
+
+def test_live_merge_strategies_covers_every_method_the_scripts_emit():
+    """A detector whose method is missing here has its unions silently refused."""
+    import re
+    from pathlib import Path
+
+    from wiki_creator.registry import LIVE_MERGE_STRATEGIES
+
+    scripts = Path(__file__).resolve().parent.parent / "scripts"
+    emitted: set[str] = set()
+    for name in ("alias_resolution.py", "alias_adjudication.py"):
+        emitted |= set(re.findall(r'"method":\s*"([a-z_]+)"', (scripts / name).read_text()))
+    assert emitted <= LIVE_MERGE_STRATEGIES

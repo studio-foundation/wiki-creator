@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import sys
 import unicodedata
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
@@ -25,6 +26,32 @@ if TYPE_CHECKING:
 from wiki_creator.entity_taxonomy import resolution_types
 
 REGISTRY_VERSION = 1
+
+# Every strategy a HEAD code path can attach to a MergeDecision: the
+# alias-resolution methods that reach ``_merge_entities``, alias-adjudication's
+# verdict, and the strategies this module emits itself.
+#
+# A registry decision is a cache of a verdict, so it is only replayable while
+# the code that produced it exists (STU-584): a strategy absent from this set
+# names a deleted detector — ``pattern`` was deleted by STU-538 yet kept
+# merging Lucy into Peter through seeding on every Narnia run.
+LIVE_MERGE_STRATEGIES = frozenset(
+    {
+        "series_seed",
+        "cooccurrence",
+        "title_alias",
+        "pure_title",
+        "embedding_disambiguation",
+        "role_symmetric",
+        "llm",
+        "context_adjudication",
+        "cluster_jw",
+        "extraction_grouping",
+        "series_accumulation",
+        "manual",
+        "unknown",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -200,6 +227,30 @@ class Registry:
             for alias in record.aliases:
                 table.setdefault(normalize_name(alias), record)
         return table
+
+    def retired_seed_aliases(self) -> dict[str, str]:
+        """normalize_name(alias) → strategy, for every alias whose *only*
+        justification is a decision no live code path can produce (STU-584).
+
+        The canonical name is never listed — it is the record's own identity,
+        not a merge. An alias backed by at least one live decision is kept: the
+        union has a justification the current code still stands behind.
+        """
+        retired: dict[str, str] = {}
+        for record in self.entities:
+            backing: dict[str, set[str]] = {}
+            for decision_id in record.decisions:
+                decision = self.decisions.get(decision_id)
+                if decision is None:
+                    continue
+                backing.setdefault(decision.inputs[1], set()).add(decision.strategy)
+            for alias in record.aliases:
+                if alias == record.canonical_name:
+                    continue
+                strategies = backing.get(entity_slug(alias))
+                if strategies and not (strategies & LIVE_MERGE_STRATEGIES):
+                    retired[normalize_name(alias)] = sorted(strategies)[0]
+        return retired
 
     def accumulate(self, book: "Registry", *, later_tome_overrides: bool = False) -> dict:
         """Fold a per-book registry into this series registry (STU-485).
@@ -573,14 +624,29 @@ class Registry:
     def load_seed_table(cls, path: Path | str) -> dict[str, "EntityRecord"]:
         """Load ``path`` (the series registry) and return its ``seed_table()``,
         or {} when the file is absent or unreadable — single-book runs and
-        pre-STU-485 series degrade gracefully to unseeded resolution."""
+        pre-STU-485 series degrade gracefully to unseeded resolution.
+
+        Unions backed only by a retired strategy are refused here rather than
+        in ``seed_table``: this is the replay surface, while ``accumulate``
+        needs the unfiltered table to keep matching the aliases already on the
+        record (STU-584).
+        """
         p = Path(path)
         if not p.exists():
             return {}
         try:
-            return cls.load(p).seed_table()
+            registry = cls.load(p)
         except (OSError, ValueError, json.JSONDecodeError):
             return {}
+        table = registry.seed_table()
+        for alias, strategy in registry.retired_seed_aliases().items():
+            table.pop(alias, None)
+            print(
+                f"[WARN] seed union refused: alias '{alias}' is justified only by "
+                f"the retired strategy '{strategy}' (no live code path produces it)",
+                file=sys.stderr,
+            )
+        return table
 
     @classmethod
     def from_artifacts(
