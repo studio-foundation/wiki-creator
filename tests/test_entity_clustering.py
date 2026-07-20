@@ -638,7 +638,7 @@ def _seed_registry():
         "decisions": [
             {
                 "decision_id": "d_a",
-                "strategy": "pattern",
+                "strategy": "title_alias",
                 "inputs": ["eragon", "argetlam"],
                 "evidence": "e",
                 "confidence": "high",
@@ -646,7 +646,7 @@ def _seed_registry():
             },
             {
                 "decision_id": "d_b",
-                "strategy": "pattern",
+                "strategy": "title_alias",
                 "inputs": ["eragon", "shadeslayer"],
                 "evidence": "e",
                 "confidence": "high",
