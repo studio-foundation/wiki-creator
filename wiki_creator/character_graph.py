@@ -77,6 +77,13 @@ class CharacterGraph:
                 e = self._g.edges[a, b]
                 # Sum counts
                 e["cooccurrence_count"] = e.get("cooccurrence_count", 0) + attrs.get("cooccurrence_count", 0)
+                # Fill the typed fields when the existing edge has none — a graph
+                # built before STU-575 carries null on every edge, and without this
+                # it keeps it forever, so the types discovery finds never land.
+                # A type already there is a verdict on an earlier tome and stands.
+                for key in ("relationship_type", "direction", "evolution"):
+                    if not e.get(key) and attrs.get(key):
+                        e[key] = attrs[key]
                 # Merge chapter_weights (sum same keys)
                 cw = dict(e.get("chapter_weights", {}))
                 for chapter, count in attrs.get("chapter_weights", {}).items():

@@ -64,17 +64,6 @@ stages:
         - input
         - all_stage_outputs
 
-  - name: build-character-graph
-    kind: extraction
-    executor: script
-    runtime: python
-    script: scripts/build_character_graph.py
-    contract: build-character-graph
-    context:
-      include:
-        - input
-        - all_stage_outputs
-
   - name: write-registry
     kind: extraction
     executor: script

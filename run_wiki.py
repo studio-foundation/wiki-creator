@@ -96,6 +96,9 @@ PRE_STEPS: dict[str, list[list[str]]] = {
         # prose. Must run before classify.
         ["python", "scripts/discover_relationships.py", "--book"],
         ["python", "scripts/classify_relationships.py", "--book"],
+        # STU-575: the graph is built here, not in wiki-resolution, because the
+        # types it needs only exist once the two stages above have run.
+        ["python", "scripts/build_character_graph.py", "--book"],
         ["python", "scripts/build_event_layer.py", "--book"],
     ],
     "pages-export": [

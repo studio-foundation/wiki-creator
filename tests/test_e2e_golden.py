@@ -61,7 +61,9 @@ CHAIN = [
     ("relationship-extraction", "relationship_extraction.py"),
     ("alias-resolution", "alias_resolution.py"),
     ("entity-classification", "entity_classification.py"),
-    ("build-character-graph", "build_character_graph.py"),
+    # build-character-graph left the chain in STU-575: it is a wiki-preparation
+    # pre-step now, and its input is an LLM artifact, which the golden chain is
+    # LLM-free by construction. Covered by tests/test_build_character_graph.py.
     ("write-registry", "write_registry.py"),
 ]
 
