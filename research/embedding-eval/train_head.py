@@ -25,7 +25,6 @@ same way, which is the acceptance criterion the issue names.
 """
 from __future__ import annotations
 
-import itertools
 import json
 from pathlib import Path
 
@@ -34,13 +33,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from pairs import half_centroids, mask_name, normalize, score
 from wiki_creator.embedding_disambiguation import EmbeddingBackend
 
 HERE = Path(__file__).parent
 CORPUS = HERE / "corpus"
 CACHE = HERE / "corpus" / "encoded"
 FIXTURE = Path("tests/fixtures/embedding_golden_pairs.json")
-MASK = "[NAME]"
 PROJECTION_DIM = 128
 EPOCHS = 120
 BATCH = 256
@@ -111,41 +110,6 @@ def train(vectors: np.ndarray, labels: list[str], device: str, seed: int) -> tup
     return head, final
 
 
-def _normalize(vectors: np.ndarray) -> np.ndarray:
-    norms = np.linalg.norm(vectors, axis=-1, keepdims=True)
-    return vectors / np.where(norms == 0, 1, norms)
-
-
-def half_centroids(vectors, labels, chapters) -> dict[str, tuple[np.ndarray, np.ndarray]]:
-    """Two centroids per entity, from disjoint chapters. Entities in <2 chapters drop."""
-    by_entity: dict[str, dict[str, list[int]]] = {}
-    for i, (entity, chapter) in enumerate(zip(labels, chapters)):
-        by_entity.setdefault(entity, {}).setdefault(chapter, []).append(i)
-    out = {}
-    for entity, by_chapter in by_entity.items():
-        keys = sorted(by_chapter)
-        if len(keys) < 2:
-            continue
-        half = len(keys) // 2
-        left = [i for k in keys[:half] for i in by_chapter[k]]
-        right = [i for k in keys[half:] for i in by_chapter[k]]
-        out[entity] = (
-            _normalize(vectors[left].mean(axis=0)),
-            _normalize(vectors[right].mean(axis=0)),
-        )
-    return out
-
-
-def score(centroids: dict[str, tuple[np.ndarray, np.ndarray]]) -> tuple[float, float, int, int]:
-    same = [float(a @ b) for a, b in centroids.values()]
-    diff = [
-        float(centroids[x][0] @ centroids[y][1])
-        for x, y in itertools.permutations(centroids, 2)
-    ]
-    wins = sum(float(np.searchsorted(np.sort(diff), s, side="left")) for s in same)
-    return min(same) - max(diff), wins / (len(same) * len(diff)), len(same), len(diff)
-
-
 def apply_head(head: Head | None, vectors: np.ndarray, device: str) -> np.ndarray:
     if head is None:
         return vectors
@@ -162,27 +126,13 @@ def fixture_arm(head: Head | None, backend: EmbeddingBackend, device: str) -> tu
         flat.extend(mask_name(name, c) for c in contexts)
         spans[name] = (start, len(flat))
     vectors = apply_head(head, backend.encode(flat), device)
-    centroids = {n: _normalize(vectors[s:e].mean(axis=0)) for n, (s, e) in spans.items()}
+    centroids = {n: normalize(vectors[s:e].mean(axis=0)) for n, (s, e) in spans.items()}
     same, diff = [], []
     for pair in spec["pairs"]:
         value = float(centroids[pair["a"]] @ centroids[pair["b"]])
         (same if pair["label"] == "same" else diff).append(value)
     wins = sum(s > d for s in same for d in diff)
     return min(same) - max(diff), wins / (len(same) * len(diff))
-
-
-def mask_name(name: str, context: str) -> str:
-    low, target = context.lower(), name.lower()
-    i = low.find(target)
-    if i >= 0:
-        return context[:i] + MASK + context[i + len(name):]
-    for token in sorted(name.split(), key=len, reverse=True):
-        if len(token) <= 3:
-            continue
-        i = low.find(token.lower())
-        if i >= 0:
-            return context[:i] + MASK + context[i + len(token):]
-    return context
 
 
 def main() -> None:
