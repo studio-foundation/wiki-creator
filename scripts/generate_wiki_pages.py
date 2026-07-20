@@ -1632,6 +1632,33 @@ class GenerationConfig:
     force: bool = False
 
 
+_AGENTS_DIR = PROJECT_ROOT / ".studio" / "agents"
+
+
+def _page_prompt_fingerprint(config: GenerationConfig) -> str:
+    """Fingerprint the prompt + config every page in the artifact was generated under.
+
+    The resume state is the output artifact itself, keyed per page title — so before
+    STU-589 an edited page prompt or a changed generation profile (sections, lengths,
+    editorial stance, language, model, spoiler/grounding config) replayed the stale
+    pages silently. A page whose stored fingerprint no longer matches is regenerated
+    rather than resumed (the per-entity context is the item input and re-keys itself).
+    """
+    return studio_io.prompt_fingerprint(
+        agents=[
+            _AGENTS_DIR / "wiki-page-item.agent.yaml",
+            _AGENTS_DIR / "wiki-page-validator.agent.yaml",
+        ],
+        config={
+            "generation": config.generation_cfg,
+            "language": config.language,
+            "model": config.model,
+            "forbidden_names": config.forbidden_names,
+            "grounding": config.grounding,
+        },
+    )
+
+
 def generate_pages(
     batches: list[tuple[str, dict]],
     config: GenerationConfig,
@@ -1644,8 +1671,29 @@ def generate_pages(
     runner = runner or StudioRunner()
     _reset_safety_net_telemetry()
 
+    fingerprint = _page_prompt_fingerprint(config)
+
     # Resume: keep already-generated complete pages, regenerate failed/empty.
-    all_pages = [p for p in _load_existing(config.output_file) if not p.get("_failed") and _is_page_complete(p)]
+    # STU-589: a page produced under a different prompt/config (stale fingerprint)
+    # is dropped only when this run would regenerate it — i.e. its entity is in the
+    # current (possibly filtered) batches. Pages outside the filter ride through
+    # verbatim, honoring the targeted-regeneration contract; a full run refreshes
+    # every stale page.
+    regenerable = {
+        e.get("canonical_name", "")
+        for _, batch in batches
+        for e in batch.get("entities", [])
+    }
+    all_pages = [
+        p for p in _load_existing(config.output_file)
+        if not p.get("_failed") and _is_page_complete(p)
+        and not (p.get("title") in regenerable and p.get("_prompt") != fingerprint)
+    ]
+
+    def _commit(page: dict) -> None:
+        page["_prompt"] = fingerprint
+        all_pages.append(page)
+        _save(all_pages, config.output_file)
 
     # --force: evict ONLY the targeted entities (those present in the filtered
     # batches) so they regenerate; every other existing page rides through
@@ -1689,16 +1737,14 @@ def generate_pages(
                 if not context:
                     print(f"  [STUB] {name} (no context)", file=sys.stderr)
                     page = make_stub_page(entity, lang=config.language)
-                    all_pages.append(page)
-                    _save(all_pages, config.output_file)
+                    _commit(page)
                     done_titles.add(name)
                     continue
 
                 if config.dry_run:
                     print(f"  [DRY]  {name}", file=sys.stderr)
                     page = make_stub_page(entity, lang=config.language)
-                    all_pages.append(page)
-                    _save(all_pages, config.output_file)
+                    _commit(page)
                     done_titles.add(name)
                     continue
 
@@ -1729,8 +1775,7 @@ def generate_pages(
                         book_config=config.book_config,
                         runner=runner,
                     )
-                    all_pages.append(page)
-                    _save(all_pages, config.output_file)
+                    _commit(page)
                     if not page.get("_failed"):
                         done_titles.add(name)
                         print(" ✓", file=sys.stderr)
@@ -1739,8 +1784,7 @@ def generate_pages(
                 except Exception as e:
                     print(f" ✗ {e}", file=sys.stderr)
                     page = make_stub_page(entity, failed=True, lang=config.language)
-                    all_pages.append(page)
-                    _save(all_pages, config.output_file)
+                    _commit(page)
                     # Do NOT add to done_titles — will be retried on next run
     except KeyboardInterrupt:
         print(f"\n[generate-wiki-pages] Interrupted — {len(all_pages)} pages saved", file=sys.stderr)
