@@ -9,10 +9,6 @@ spacy_model: fr_core_news_lg
 coref: true
 workers: 8
 
-# Verify entity types after clustering (corrects PERSON misclassified as PLACE/ORG)
-verify_entity_types: true
-ollama_model: mistral:7b-instruct
-
 # Absolute pre-filter applied before clustering/classification:
 # entities with total mentions below this value are dropped early.
 min_mentions_absolute: 3

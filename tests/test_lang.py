@@ -67,7 +67,7 @@ def test_es_pack_repatriated_spanish_snippets():
     # entity_clustering gendered title sets
     assert "don" in cfg["masculine_titles"] and "señor" in cfg["masculine_titles"]
     assert "doña" in cfg["feminine_titles"] and "señora" in cfg["feminine_titles"]
-    # verify_entity_types GEOGRAPHIC_KEYWORDS
+    # place_cue_words geographic nouns
     for w in ("calle", "plaza", "barrio"):
         assert w in cfg["place_cue_words"], f"missing place noun: {w}"
 
