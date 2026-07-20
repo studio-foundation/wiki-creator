@@ -91,3 +91,6 @@ research/*/arms/
 # run_books.py; the judged numbers live in research/alias-eval/results.md.
 research/alias-eval/verdicts/
 research/alias-eval/run.log
+# embedding-eval: masked mention windows + their encodings (STU-576). Regenerable by
+# build_corpus.py from the processing_output caches, which are themselves gitignored.
+research/embedding-eval/corpus/
