@@ -4,23 +4,23 @@
 
 > **Status: Active development.** This project is a work in progress and is not feature-complete. Expect rough edges and breaking changes.
 
-Wiki Creator takes EPUB books and automatically extracts characters, locations, organizations, and their relationships, then generates complete wiki pages with infoboxes and wikitext export. It combines Python NLP (spaCy NER, coreference resolution) with LLM-powered agents orchestrated by Studio pipelines that validate every output against contracts.
+Wiki Creator takes EPUB books and automatically extracts characters, locations, organizations, and their relationships, then generates complete wiki pages with infoboxes and wikitext export. It combines Python NLP (spaCy, GLiNER, coreference resolution) with LLM-powered agents orchestrated by Studio pipelines that validate every output against contracts.
 
 ---
 
 ## How it works
 
-The workflow is split into four Studio pipelines, each with structurally validated stages:
+The workflow is split into five Studio pipelines, each with structurally validated stages. Every stage declares the files it writes (`expected_outputs.files` in its contract), so a missing artifact fails the stage that owns it.
 
-1. **wiki-extraction** -- Parses the EPUB, runs spaCy NER to extract entities, clusters them, verifies entity types, and splits by category (persons, places, organizations).
+1. **wiki-extraction** -- Parses the EPUB, classifies front/back matter out of the narrative, extracts entities, clusters them, and splits by category (persons, places, organizations, factions, events).
 
-2. **wiki-resolution** -- Resolves entity clusters (alias detection, merge), extracts inter-entity relationships from chapter text, and classifies entities using an LLM agent with a RALPH validation loop.
+2. **wiki-resolution** -- Summarizes each chapter, resolves entity clusters, extracts the inter-entity co-occurrence graph, merges aliases (lexical rules, then a contextual LLM adjudication pass), classifies entities using an LLM agent with a RALPH validation loop, and accumulates the series registry across tomes. Every stage up to the adjudication one is deterministic and offline.
 
-3. **wiki-preparation** -- Loads classified entities and EPUB data, generates chapter summaries (LLM agent with retry/validation), then batches everything into wiki input files.
+3. **wiki-preparation** -- Discovers and types the relationships, fills the per-book infobox facts (status, affiliation, species), builds the character graph and the event layer, then batches everything into wiki input files.
 
 4. **wiki-page-item** -- Generates individual wiki pages using an LLM agent inside a generation-validation group (max 3 iterations). A validator checks each page; rejected pages trigger a group retry with accumulated feedback. Validation includes anti-hallucination grounding against the source excerpts: proper nouns that never appear in the excerpts are rejected outright, and an optional LLM check (`validation.grounding.llm: true` in the book YAML, Ollama-backed) verifies that factual claims are supported by the excerpts.
 
-5. **pages-export** -- Loads generated wiki pages, runs a copyright check (no verbatim passages from the source), and exports to wikitext format.
+5. **pages-export** -- Assembles the generated pages, runs a copyright check (no verbatim passages from the source), and exports to wikitext format.
 
 ## Getting started
 
@@ -32,6 +32,10 @@ The workflow is split into four Studio pipelines, each with structurally validat
   (`en_core_web_lg`, `fr_core_news_lg`; ~1 GB). Skipping it does not fail the
   run: a missing model falls back to a smaller sibling of the same language and
   warns, so the book runs on a model it did not declare.
+- [GLiNER](https://github.com/urchade/GLiNER) — only for books whose YAML sets
+  `ner.invented_names: true`, i.e. novels whose proper nouns a stock model never
+  memorized. There, GLiNER finds the entities by prompt and spaCy keeps doing the
+  tokenizing, tagging and sentence splitting. Optional extra (pulls torch).
 
 > **Language support:** the pipeline is French-first — page generation and
 > validation target French output by default. Set a top-level `language:` key
@@ -45,8 +49,9 @@ The workflow is split into four Studio pipelines, each with structurally validat
 git clone https://github.com/studio-foundation/wiki-creator.git
 cd wiki-creator
 pip install -e ".[models]"
-# Optional: coreference resolution support (pulls torch, large download)
-pip install -e ".[coref]"
+# Optional, each pulls torch (large download):
+pip install -e ".[gliner]"   # books with ner.invented_names: true
+pip install -e ".[coref]"    # books with coref: true
 studio config set provider anthropic --api-key $ANTHROPIC_API_KEY
 ```
 
@@ -56,7 +61,7 @@ Place a book YAML config in `library/<author>/<series>/books/` with the correspo
 
 ```bash
 # Full pipeline (extraction through export)
-make run BOOK=library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml
+make run BOOK=library/c_w_lewis/narnia/books/01-the_lion_the_witch_and_the_wardrobe.yaml
 
 # Or run individual stages
 make run-extraction
@@ -74,6 +79,10 @@ pytest -q
 # End-to-end smoke test — runs the EPUB parse + NER extraction stages on a
 # small committed fixture novella, no real book or LLM required
 make smoke
+
+# Golden regression — chains the deterministic resolution stages on the same
+# fixture and diffs every stage output against committed goldens
+make golden
 ```
 
 ## Project structure

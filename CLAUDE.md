@@ -4,7 +4,7 @@
 
 - Repo: `wiki-creator-by-studio`
 - Purpose: extract entities from EPUB novels, classify them, generate wiki pages, export wikitext
-- Current verified state on 2026-07-15: `pytest -q` => `1604 passed, 1 skipped`
+- Current verified state on 2026-07-20: `pytest -q` => `2005 passed, 1 skipped`
   (skip count depends on which optional models/extras are installed; see `tests/_markers.py`)
 
 ## Commands
@@ -38,7 +38,7 @@ make golden-update  # regenerate goldens after an INTENTIONAL behavior change, t
 Default `BOOK` in the `Makefile`:
 
 ```bash
-library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml
+library/c_w_lewis/narnia/books/01-the_lion_the_witch_and_the_wardrobe.yaml
 ```
 
 The Makefile is a front door, not a sequencer (STU-592). Two facts about it are
@@ -70,6 +70,15 @@ Important:
   `generate_book_synopsis`, `generate_event_pages`, `consolidate_editorial_stance`)
   are now pre-steps of `pages-export` in `run_wiki.py`, converging it with the
   `make run-generation` graph. Restart the generation phase with `--restart pages-export`.
+- **A stage declares the files it writes (STU-600).** `expected_outputs.files` in
+  `.studio/contracts/*.contract.yaml` names them per *stage*, not per pipeline —
+  `splits.json` is written by `split-clusters`, so a missing file fails that stage
+  and names it, inside the RALPH loop where the miss enriches retry feedback.
+  `run_wiki.py`'s `required_files()`/`check_outputs()` are deleted: an orchestrator
+  responsibility implemented outside the orchestrator was the whole thesis of
+  STU-457. `clean_files()` **stays and deliberately diverges** — which artifacts a
+  `--clean` restart deletes is a different question from which a stage must write
+  (`chapter_summaries.json` is cleaned from `wiki-extraction` but asserted nowhere).
 - **Disk is the bus across pipelines (STU-455).** A stage reads an artifact written
   by an *earlier pipeline* from disk, never from Studio's context — those are
   separate `studio run` invocations, so `previous_outputs`/`all_stage_outputs`
