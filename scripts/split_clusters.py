@@ -58,12 +58,7 @@ def split_clusters(clusters: list[dict]) -> dict:
 def main() -> None:
     payload = studio_io.read_payload()
     prev = payload.get("previous_outputs", {})
-    # verify-entity-types (if present) sits between entity-clustering and split-clusters
-    # and emits the same clusters shape — prefer it as the source of truth.
-    clusters = (
-        prev.get("verify-entity-types", {}).get("clusters")
-        or prev.get("entity-clustering", {}).get("clusters", [])
-    )
+    clusters = prev.get("entity-clustering", {}).get("clusters", [])
 
     if not clusters:
         print("Warning: no clusters in entity-clustering output", file=sys.stderr)
@@ -72,13 +67,6 @@ def main() -> None:
     empty_names = [s for s in result["singles_resolved"] if not s["canonical_name"]]
     if empty_names:
         print(f"Warning: {len(empty_names)} singles have empty canonical_name", file=sys.stderr)
-
-    # Pass through pov_detection from epub-parse so entity-resolution-PERSON
-    # can detect narrator without needing a named stage reference (which doesn't
-    # work inside group stages in Studio).
-    pov_detection = prev.get("epub-parse", {}).get("pov_detection")
-    if pov_detection is not None:
-        result["pov_detection"] = pov_detection
 
     paths = studio_io.paths_from_payload(payload, strict=False)
     if paths is not None:
@@ -90,7 +78,6 @@ def main() -> None:
                 for t, clusters in result["by_type"].items()
             },
             stats=result["stats"],
-            pov_detection=result.get("pov_detection"),
         )
         studio_io.save_artifact(paths.processing / "splits.json", splits_obj, Splits)
 

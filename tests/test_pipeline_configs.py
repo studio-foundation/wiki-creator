@@ -100,7 +100,7 @@ def test_wiki_resolution_pipeline_alias_resolution_runs_after_merge_and_relation
     stage_names = [stage.get("name") for stage in doc.get("stages", [])]
 
     assert "alias-resolution" in stage_names
-    assert stage_names.index("merge-entities") < stage_names.index("alias-resolution")
+    assert stage_names.index("resolve-clusters") < stage_names.index("relationship-extraction")
     assert stage_names.index("relationship-extraction") < stage_names.index("alias-resolution")
     assert stage_names.index("alias-resolution") < stage_names.index("entity-classification")
 

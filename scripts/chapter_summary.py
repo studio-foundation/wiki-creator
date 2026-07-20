@@ -54,6 +54,8 @@ _DEFAULT_LLM_TIMEOUT_SECONDS = 45
 _VALID_SUMMARY_MODES = {"extractive", "llm"}
 OLLAMA_URL = "http://localhost:11434"
 
+_AGENTS_DIR = PROJECT_ROOT / ".studio" / "agents"
+
 # STU-433: extractive sentence-selection bonus per entity importance tier.
 # Numeric weights only — the entity surface forms come from entity-classification
 # output, not a hardcoded vocabulary.
@@ -575,13 +577,51 @@ def summarize_chapters(chapters: list[dict], config: ChapterSummaryConfig | None
     return result
 
 
-def _save_chapter_summaries(chapter_summaries: dict[str, dict], output_file: Path) -> None:
+def summary_prompt_fingerprint(config: "ChapterSummaryConfig", language: str) -> str:
+    """Fingerprint the prompt + config every summary in the artifact was written under.
+
+    The resume state is the output artifact itself, keyed per chapter — so before
+    STU-589 an edited chapter-summary prompt, a mode flip (extractive↔llm) or a
+    changed max_bullets/model replayed the stale summaries silently. This busts the
+    whole resume when any of them moves (chapter content is the per-item input and
+    already re-keys itself)."""
+    return studio_io.prompt_fingerprint(
+        agents=[
+            _AGENTS_DIR / "chapter-summary.agent.yaml",
+            _AGENTS_DIR / "chapter-summary-validator.agent.yaml",
+        ],
+        config={
+            "mode": config.mode,
+            "max_bullets": config.max_bullets,
+            "llm_model": config.llm_model,
+            "language": language,
+        },
+    )
+
+
+def _stored_summary_fingerprint(output_file: Path) -> str | None:
+    if not output_file.exists():
+        return None
+    try:
+        with open(output_file, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return None
+    return data.get("prompt") if isinstance(data, dict) else None
+
+
+def _save_chapter_summaries(
+    chapter_summaries: dict[str, dict], output_file: Path, fingerprint: str | None = None
+) -> None:
     output_file.parent.mkdir(parents=True, exist_ok=True)
     records = {key: ChapterSummary(**summary) for key, summary in chapter_summaries.items()}
     payload = studio_io.to_dict(records)
     studio_io.from_dict(dict[str, ChapterSummary], payload)  # self-check: never write off-schema
+    out: dict = {"chapter_summaries": payload}
+    if fingerprint is not None:
+        out["prompt"] = fingerprint
     with open(output_file, "w", encoding="utf-8") as f:
-        json.dump({"chapter_summaries": payload}, f, ensure_ascii=False, indent=2)
+        json.dump(out, f, ensure_ascii=False, indent=2)
 
 
 def _load_existing_chapter_summaries(output_file: Path) -> dict[str, dict]:
@@ -624,11 +664,20 @@ def summarize_chapters_incrementally(
     thought_markers: tuple[str, ...] = (),
     exclusion_words: tuple[str, ...] = (),
     entity_index: tuple[tuple[re.Pattern[str], float], ...] = (),
+    fingerprint: str | None = None,
 ) -> dict[str, dict]:
     retry_failed_llm = (config or ChapterSummaryConfig()).mode == "llm"
+    # STU-589: a stored fingerprint that no longer matches means the prompt or config
+    # changed since these summaries were written — discard the resume so every chapter
+    # re-summarizes instead of replaying answers the old prompt produced.
+    existing = (
+        {}
+        if fingerprint is not None and _stored_summary_fingerprint(output_file) != fingerprint
+        else _load_existing_chapter_summaries(output_file)
+    )
     result = {
         key: value
-        for key, value in _load_existing_chapter_summaries(output_file).items()
+        for key, value in existing.items()
         if isinstance(key, str) and isinstance(value, dict) and _is_summary_complete(value)
         and not (retry_failed_llm and _is_failed_llm_summary(value))
     }
@@ -655,7 +704,7 @@ def summarize_chapters_incrementally(
             result[key] = summarize_chapter_from_item_result(chapter, item_result, config=config, action_cues=action_cues, flashback_cues=flashback_cues, thought_markers=thought_markers, exclusion_words=exclusion_words, entity_index=entity_index)
         else:
             result[key] = summarize_chapter(chapter, config=config, action_cues=action_cues, flashback_cues=flashback_cues, thought_markers=thought_markers, exclusion_words=exclusion_words, entity_index=entity_index)
-        _save_chapter_summaries(result, output_file)
+        _save_chapter_summaries(result, output_file, fingerprint)
         if bar is not None:
             bar.set_postfix(chapter=key[:40])
             bar.update(1)
@@ -800,6 +849,7 @@ def _main_from_book(book_path: str) -> None:
         thought_markers=thought_markers,
         exclusion_words=exclusion_words,
         entity_index=entity_index,
+        fingerprint=summary_prompt_fingerprint(config, language),
     )
 
 
@@ -851,6 +901,7 @@ def main() -> None:
         thought_markers=thought_markers,
         exclusion_words=exclusion_words,
         entity_index=entity_index,
+        fingerprint=summary_prompt_fingerprint(config, language),
     )
     out = {"chapter_summaries": chapter_summaries}
     json.dump(out, sys.stdout, ensure_ascii=False)

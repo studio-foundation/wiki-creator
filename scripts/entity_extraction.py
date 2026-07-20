@@ -5,7 +5,8 @@ Script executor interface: reads JSON from stdin, writes JSON to stdout.
 
 Input (via Studio context):
   additional_context: YAML string with spacy_model
-  previous_outputs.epub-parse: { title, author, chapters: [{id, title, content}] }
+  previous_outputs.section-filter: { title, author, chapters: [{id, title, content}] }
+    (front matter tagged; falls back to epub-parse when section-filter is absent)
 
 Output (stdout — passed to entity-resolution as previous_stage_output):
   {
@@ -677,7 +678,15 @@ def main() -> None:
 
     input_data = yaml.safe_load(payload.get("additional_context", "")) or {}
     prev_outputs = payload.get("previous_outputs", {})
-    epub_output = next(iter(prev_outputs.values()), {}) if prev_outputs else {}
+    # section-filter re-emits epub-parse's payload with front matter tagged; read
+    # it by name, never positionally — insertion order would hand back epub-parse's
+    # untagged chapters if context.include ever gained a stage. Falls back to
+    # epub-parse for runs/tests without the section-filter stage.
+    epub_output = (
+        prev_outputs.get("section-filter")
+        or prev_outputs.get("epub-parse")
+        or {}
+    )
     chapters = epub_output.get("chapters", [])
     spacy_model = input_data.get("spacy_model", "en_core_web_sm")
 

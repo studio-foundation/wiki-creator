@@ -92,7 +92,6 @@ class Splits:
     singles_resolved: list[SplitSingle] = field(default_factory=list)
     by_type: dict[str, list[SplitCluster]] = field(default_factory=dict)
     stats: dict = field(default_factory=dict)
-    pov_detection: dict | None = None
 
 
 @dataclass
@@ -184,6 +183,10 @@ class WikiPage:
     # flags directly onto real page dicts before they're persisted.
     _identity_corrected: bool | None = None
     _spoiler_rejected: bool | None = None
+    # STU-589: the prompt+config fingerprint the page was generated under. Resume
+    # keeps a page only when it still matches the current run's fingerprint, so an
+    # edited prompt regenerates the page instead of replaying the stale one.
+    _prompt: str | None = None
     # _execute_wiki_page_item's success return spreads {**page, "run_metadata": ...}
     # for every non-PERSON entity (PERSON pages are built fresh, section by
     # section, and never carry this key). Free-form: shape is producer telemetry.

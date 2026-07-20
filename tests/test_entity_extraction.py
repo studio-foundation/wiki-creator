@@ -1094,3 +1094,30 @@ def test_main_records_the_ner_config_it_extracted_under(tmp_path, monkeypatch):
 
     recorded = _json.loads((processing / EXTRACTION_CONFIG_FILE).read_text())
     assert recorded == {"ner": {"invented_names": False, "model": stage._ner_config(None).model, "threshold": 0.5}}
+
+
+def test_main_reads_chapters_from_section_filter_not_positionally(monkeypatch):
+    """STU-588: the tagged chapters come from section-filter, read by name — never
+    the positionally-first stage. epub-parse inserted first with chapters, section-
+    filter second with none: keyed read picks section-filter (empty) and exits;
+    the old `next(iter(...))` would have picked epub-parse's untagged chapters."""
+    import io
+    import json as _json
+
+    from scripts import entity_extraction as stage
+
+    payload = {
+        "additional_context": "file_path: dummy.epub\nlanguage: en\n",
+        "previous_outputs": {
+            "epub-parse": {"chapters": [{"id": "c01", "title": "One", "content": "text"}]},
+            "section-filter": {"chapters": []},
+        },
+    }
+    monkeypatch.setattr("sys.stdin", io.StringIO(_json.dumps(payload)))
+    out = io.StringIO()
+    monkeypatch.setattr("sys.stdout", out)
+
+    with pytest.raises(SystemExit) as exc:
+        stage.main()
+    assert exc.value.code == 1
+    assert "chapters" in _json.loads(out.getvalue())["error"]

@@ -8,15 +8,15 @@ wiki-extraction/wiki-resolution pipelines — no spaCy model, no LLM, no network
 and compares each stage's actual output against committed golden files.
 
     seed (frozen entity-extraction output, tests/fixtures/e2e/golden/seed/)
-    → entity-clustering → verify-entity-types → split-clusters
-    → resolve-clusters → merge-entities → relationship-extraction
-    → alias-resolution → entity-classification → build-character-graph
-    → save-relationships → write-registry
+    → entity-clustering → split-clusters → resolve-clusters
+    → relationship-extraction → alias-resolution → entity-classification
+    → build-character-graph → write-registry
 
 Stages are launched exactly like Studio launches them (subprocess, JSON on
 stdin/stdout, YAML additional_context), with `previous_outputs` accumulated in
-pipeline order — so lookup-priority quirks (e.g. merge-entities preferring
-alias-resolution when present) behave as they do in a real run.
+pipeline order — so lookup-priority quirks (e.g. relationship-extraction
+reading resolve-clusters, alias-resolution preferring it when present) behave
+as they do in a real run.
 
 To update goldens after an intentional behavior change:
 
@@ -52,19 +52,16 @@ SEED_FULL_FILES = (
     "events_full.json",
 )
 
-# (stage_name, script) in real pipeline order (STU-276: merge-entities and
-# relationship-extraction before alias-resolution).
+# (stage_name, script) in real pipeline order (STU-276: relationship-extraction
+# before alias-resolution).
 CHAIN = [
     ("entity-clustering", "entity_clustering.py"),
-    ("verify-entity-types", "verify_entity_types.py"),
     ("split-clusters", "split_clusters.py"),
     ("resolve-clusters", "resolve_clusters.py"),
-    ("merge-entities", "merge_entities.py"),
     ("relationship-extraction", "relationship_extraction.py"),
     ("alias-resolution", "alias_resolution.py"),
     ("entity-classification", "entity_classification.py"),
     ("build-character-graph", "build_character_graph.py"),
-    ("save-relationships", "save_relationships.py"),
     ("write-registry", "write_registry.py"),
 ]
 
@@ -199,14 +196,14 @@ def test_clustering_merges_title_variant(chain_run):
 
 
 def test_resolution_preserves_all_entities(chain_run):
-    """Every seed entity must survive to merge-entities (as entity or alias)."""
+    """Every seed entity must survive to resolve-clusters (as entity or alias)."""
     seed = json.loads((SEED_DIR / "extraction_output.json").read_text(encoding="utf-8"))
     seed_mentions = {
         m
         for e in seed["entities_for_resolution"].values()
         for m in e["raw_mentions"]
     }
-    merged = chain_run["outputs"]["merge-entities"]["entities"]
+    merged = chain_run["outputs"]["resolve-clusters"]["entities"]
     covered = {a for e in merged for a in [e["canonical_name"], *e.get("aliases", [])]}
     missing = {m for m in seed_mentions if m not in covered}
     assert not missing, f"entities lost in resolution: {missing}"

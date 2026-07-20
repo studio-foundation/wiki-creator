@@ -62,7 +62,7 @@ Important:
   separate `studio run` invocations, so `previous_outputs`/`all_stage_outputs`
   are empty of it by construction. Studio's context is only for stages that
   really do chain in memory inside one pipeline (resolve-clusters →
-  merge-entities, chapter-summary → wiki-preparation).
+  relationship-extraction, chapter-summary → wiki-preparation).
   Four `load_*.py` stages existed to fake the difference: they re-read a JSON the
   previous pipeline had already written and re-emitted it as a stage output, so
   the YAML declared a graph the filesystem was actually carrying. Three were pure
@@ -120,8 +120,7 @@ library/sarah_j_maas/throne-of-glass/output/01-throne-of-glass/
 - [scripts/entity_status.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/entity_status.py): per-tome character status pre-step (STU-488), writes `entity_status.json`; pure logic in `wiki_creator/entity_status.py`
 - [scripts/wiki_export.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/wiki_export.py): Markdown -> wikitext
 - [scripts/resolve_clusters.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/resolve_clusters.py): resolves NER clusters
-- [scripts/merge_entities.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/merge_entities.py): merges cluster outputs into unified entity list
-- [scripts/alias_resolution.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/alias_resolution.py): conservative PERSON alias merging, runs after merge-entities
+- [scripts/alias_resolution.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/alias_resolution.py): conservative PERSON alias merging, runs after resolve-clusters
 - [scripts/entity_classification.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/entity_classification.py): classifies entities, reads from alias-resolution output
 
 ## Script Executor Conventions
@@ -144,8 +143,9 @@ Typical payload shape:
 ## wiki-resolution Stage Order (as of STU-539)
 
 Inside `wiki-resolution`, order matters:
-1. `merge-entities` + `relationship-extraction` run first
-2. `alias-resolution` runs after — reads entities from merge-entities output (STU-276)
+1. `resolve-clusters` + `relationship-extraction` run first (STU-590 removed the
+   `merge-entities` passthrough; both read `resolve-clusters` output directly)
+2. `alias-resolution` runs after — reads entities from resolve-clusters output (STU-276)
 3. `alias-adjudication` runs after that — re-emits alias-resolution's payload with
    contextual merges applied; the only stage here that needs the network (STU-539)
 4. `entity-classification` reads entities from alias-adjudication (falling back to
@@ -844,8 +844,17 @@ Inside `wiki-resolution`, order matters:
   replay a verdict made for a different section list. It is tags, never removal —
   `chapters.json` stays complete and the STU-489 offsets don't move.
 - `entity_extraction.py` keys chapter mentions by chapter ID, not chapter title.
-- `merge_entities.py` passes through only the current `resolve-clusters` output shape (runs before `alias-resolution` per the STU-276 pipeline order; STU-447 dropped the older `split-clusters` + `entity-resolution-*` compat branch and a vestigial `alias-resolution` priority check that predated STU-276 and never fired in production).
-- `split_clusters.py`, `relationship_extraction.py`, and `verify_entity_types.py` are intentionally tolerant of missing `file_path` in unit-test mode.
+- Three passthrough stages are gone (STU-590): `merge_entities.py`,
+  `save_relationships.py` and `verify_entity_types.py`. `merge-entities` only
+  re-emitted `resolve-clusters`' `{entities, narrator}`, so `relationship-extraction`
+  and `alias-resolution` read `resolve-clusters` directly (the narrator-required
+  assertion is re-asserted by the `alias-resolution` contract). `save-relationships`
+  was a pure passthrough whose only effect was writing `relationships.json`; that
+  disk write is now folded into `relationship_extraction.py:main` (the pattern
+  `entity_classification.py` already uses). `verify-entity-types` was a no-op on the
+  whole library (no book YAML declares `verify_entity_types: true`), so removing it
+  is a pipeline-YAML change; `split_clusters.py` reads `entity-clustering` directly.
+- `split_clusters.py` and `relationship_extraction.py` are intentionally tolerant of missing `file_path` in unit-test mode.
 - `generate_wiki_pages.py` must run after `wiki-preparation`; it consumes `wiki_inputs/<slug>/batch_*.json`.
 - `generate_book_synopsis.py` (SP4) consumes `events.json` (SP0) and writes `processing_output/<slug>/book_synopsis.json`; `assemble_wiki_pages.py` appends that page to the export flow and `wiki_export.py` renders it at the wiki root (`Synopsis.wiki`, no infobox/categories, `entity_type: SYNOPSIS`). If `events.json` is absent, the stage warns and skips — it never fails the run.
 - `generate_event_pages.py` (SP3/STU-481, STU-502) consumes `events.json` (SP0) and writes `processing_output/<slug>/event_pages.json` — one `EVENT` page per event with `salience >= threshold` (default `0.7`, raised from `0.6` in STU-502 to drop the low-value long tail) that has ≥1 participant. Title and infobox `{participants, lieu, chapitre, issue}` are built deterministically from the event; the writer LLM only authors the `## Déroulement` prose (grounded, spoiler-safe via forbidden_names). To stop the writer paraphrasing the title (STU-502), `build_event_prompt` injects the `DEFAULT_CONTEXT_WINDOW` (=3) neighbouring events before/after in narrative order as **read-only** NARRATIVE CONTEXT — background to situate the event (what leads up to it / what it brings about), never facts to attribute to it; `neighbor_context` windows the full events list, so context spans below-threshold neighbours too. `assemble_wiki_pages.py` appends the pages; `wiki_export.py` renders each under `output/wiki/events/` with `Infobox_event` + `[[Category:Événements]]`. Thresholds are configurable via book YAML `generation.event_pages` (`salience_threshold`, `max_pages`, `max_tokens`). Absent/empty `events.json` warns and skips — never fails the run. Titles are the full event description (grounded, unique) — LLM-named events are a possible fast-follow.
