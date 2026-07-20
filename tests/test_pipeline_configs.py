@@ -1,5 +1,6 @@
 """Sanity checks for Studio pipeline YAML files."""
 
+import re
 from pathlib import Path
 
 import yaml
@@ -8,6 +9,7 @@ import yaml
 PIPELINES_DIR = Path(__file__).resolve().parents[1] / ".studio" / "pipelines"
 CONTRACTS_DIR = Path(__file__).resolve().parents[1] / ".studio" / "contracts"
 AGENTS_DIR = Path(__file__).resolve().parents[1] / ".studio" / "agents"
+BASE_YAML = Path(__file__).resolve().parents[1] / "wiki_creator" / "templates" / "base.yaml"
 
 
 def _load_yaml(path: Path) -> dict:
@@ -118,3 +120,96 @@ def test_alias_resolution_contract_exists_with_required_fields() -> None:
     doc = _load_yaml(contract_path)
     required_fields = doc.get("schema", {}).get("required_fields", [])
     assert required_fields == ["entities", "narrator"]
+
+
+def _entity_type_vocab() -> tuple[set[str], set[str]]:
+    """(every declared type, the NER/resolution subset) from base.yaml.
+
+    The NER subset is the types with `ner_labels` — PERSON/PLACE/ORG/EVENT/
+    FACTION — i.e. the live vocabulary a restated `entity_type` enum would list.
+    """
+    types = _load_yaml(BASE_YAML)["entity_types"]
+    all_types = set(types)
+    ner_types = {name for name, cfg in types.items() if cfg.get("ner_labels")}
+    return all_types, ner_types
+
+
+def _comment_blocks(text: str) -> list[str]:
+    """Contiguous runs of full-line YAML comments, each joined by spaces.
+
+    A non-comment line breaks a block, so an enumeration can't bridge across
+    code; joining consecutive comment lines lets a multi-line enum be seen whole.
+    """
+    blocks: list[str] = []
+    current: list[str] = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            current.append(stripped.lstrip("#").strip())
+        elif current:
+            blocks.append(" ".join(current))
+            current = []
+    if current:
+        blocks.append(" ".join(current))
+    return blocks
+
+
+def _enum_restatements(text: str, all_types: set[str], ner_types: set[str]) -> list[str]:
+    """Comment runs that restate the whole NER vocabulary as an enum.
+
+    A run is a maximal sequence of type tokens joined *only* by enum separators
+    (`| , /` + whitespace); prose words between two types break it. A run trips
+    only when it covers every NER type — an outdated quote (missing a
+    later-added type) never does, a fresh exhaustive restatement does.
+    """
+    token = "|".join(sorted(all_types, key=len, reverse=True))
+    run_re = re.compile(rf"\b(?:{token})(?:[\s,|/]+(?:{token}))*\b")
+    type_re = re.compile(rf"\b(?:{token})\b")
+    offenders = []
+    for block in _comment_blocks(text):
+        for match in run_re.finditer(block):
+            if ner_types <= set(type_re.findall(match.group())):
+                offenders.append(match.group())
+    return offenders
+
+
+def test_no_contract_comment_restates_entity_type_enum() -> None:
+    """STU-596: a contract comment must not restate the full entity-type enum.
+
+    Copying the vocabulary into a comment is how `entity_type` drifted three
+    times (wiki-page, entity-classification, resolve-clusters): the enum ships in
+    base.yaml#entity_types and is read at runtime, so a restatement rots the
+    moment a type is added (FACTION, STU-505). This guards against a fourth. The
+    surviving cautionary quotes cite an *incomplete* enum, which by construction
+    can never equal the complete current vocabulary.
+    """
+    all_types, ner_types = _entity_type_vocab()
+    offenders = []
+    for contract_path in sorted(CONTRACTS_DIR.glob("*.contract.yaml")):
+        text = contract_path.read_text(encoding="utf-8")
+        for run in _enum_restatements(text, all_types, ner_types):
+            offenders.append(f"{contract_path.name}: {run!r}")
+    assert not offenders, (
+        "Contract comment restates the full entity-type enum — read it from "
+        "base.yaml#entity_types at runtime instead of copying it:\n"
+        + "\n".join(offenders)
+    )
+
+
+def test_enum_restatement_detector_calibration() -> None:
+    """The detector fires on an exhaustive restatement, not a 1-2 type mention."""
+    all_types, ner_types = _entity_type_vocab()
+
+    def restates(comment: str) -> bool:
+        return bool(_enum_restatements(comment, all_types, ner_types))
+
+    # A fresh full restatement (the bug) — any separator variant trips.
+    assert restates("# entity_type: PERSON | PLACE | ORG | EVENT | FACTION | OTHER")
+    assert restates("# type is one of PERSON, PLACE, ORG, EVENT, FACTION, OTHER")
+    assert restates("# PERSON/PLACE/ORG/EVENT/FACTION")
+    # The historical cautionary quotes (incomplete enums) must NOT trip.
+    assert not restates("# the enum that stood here read PERSON|PLACE|ORG|EVENT|OTHER long after FACTION shipped")
+    assert not restates("# stood here claimed PERSON|PLACE|ORG long after EVENT shipped")
+    # A passing mention of one or two types is fine.
+    assert not restates("# narrator metadata from entity-resolution-PERSON, or null")
+    assert not restates("# adjudicated PERSON and PLACE entries")
