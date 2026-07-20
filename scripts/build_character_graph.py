@@ -1,6 +1,11 @@
 """build_character_graph.py — Studio script.
 
-Reads from stdin: JSON payload with all_stage_outputs containing entity-classification output.
+Reads from stdin: the entity-classification output via ``previous_stage_output``
+(the immediately-preceding stage), falling back to the ``entities_classified.json``
+artifact on disk for a resumed run. It used to read ``all_stage_outputs`` — a
+context key the Studio engine never populates (STU-593) — so it emitted an empty
+graph on every real run (STU-587).
+
 Writes to stdout: JSON with {"graph": <node_link_data>, "delta": <node_link_data>}
 
 Also writes:
@@ -11,12 +16,9 @@ from __future__ import annotations
 
 import json
 import sys
-from pathlib import Path
 
-import yaml
-
+from wiki_creator import studio_io
 from wiki_creator.character_graph import CharacterGraph
-from wiki_creator.paths import book_paths_from_yaml
 
 
 def _build_book_graph(entities: list[dict], relationships: list[dict], book_slug: str) -> CharacterGraph:
@@ -70,57 +72,69 @@ def _build_book_graph(entities: list[dict], relationships: list[dict], book_slug
 
 def main(series_graph_data: dict | None = None) -> None:
     payload = json.load(sys.stdin)
-    all_outputs = payload.get("all_stage_outputs", {})
-    classification = all_outputs.get("entity-classification", {})
+    prev_outputs = payload.get("previous_outputs", {})
+    classification = prev_outputs.get("entity-classification") or {}
+
+    paths = studio_io.paths_from_payload(payload, strict=False)
+
+    # Disk fallback: a resumed run (or an engine that did not chain the stage in
+    # memory) reads the classified set entity-classification always materialises.
+    if not classification.get("entities") and paths is not None:
+        classified_path = paths.processing / "entities_classified.json"
+        if classified_path.exists():
+            try:
+                classification = json.loads(classified_path.read_text())
+            except json.JSONDecodeError:
+                classification = {}
 
     entities = classification.get("entities", [])
     relationships = classification.get("relationships", [])
 
-    # Derive book slug from additional_context YAML
-    ctx = yaml.safe_load(payload.get("additional_context", "")) or {}
-    book_slug = ctx.get("book_slug", "unknown")
+    book_slug = paths.processing.name if paths is not None else "unknown"
 
-    # Build delta for this book
     delta = _build_book_graph(entities, relationships, book_slug)
 
-    # Load existing series graph (if provided or from disk)
+    # In-memory series graph (unit tests) short-circuits disk I/O.
     if series_graph_data is not None:
         series_graph = CharacterGraph.from_json(series_graph_data)
-    else:
-        # Try loading from disk via paths
-        try:
-            yaml_path = ctx.get("yaml_path", "")
-            if yaml_path:
-                paths = book_paths_from_yaml(yaml_path)
-                sgp = paths.series_character_graph
-                if sgp.exists():
-                    series_graph = CharacterGraph.from_json(json.loads(sgp.read_text()))
-                    # Atomic write after merge
-                    series_graph.merge_book(delta)
-                    tmp = sgp.with_suffix(".json.tmp")
-                    try:
-                        tmp.write_text(json.dumps(series_graph.to_json(), ensure_ascii=False))
-                        tmp.rename(sgp)
-                    except Exception:
-                        if tmp.exists():
-                            tmp.unlink()
-                        raise
-                    # Write delta
-                    paths.book_graph_delta.parent.mkdir(parents=True, exist_ok=True)
-                    paths.book_graph_delta.write_text(
-                        json.dumps(delta.to_json(), ensure_ascii=False)
-                    )
-                    json.dump({"graph": series_graph.to_json(), "delta": delta.to_json()}, sys.stdout, ensure_ascii=False)
-                    return
-                else:
-                    series_graph = CharacterGraph()
-            else:
-                series_graph = CharacterGraph()
-        except Exception as e:
-            print(f"build-character-graph: could not load series graph — {e}", file=sys.stderr)
-            series_graph = CharacterGraph()
+        series_graph.merge_book(delta)
+        json.dump(
+            {"graph": series_graph.to_json(), "delta": delta.to_json()},
+            sys.stdout,
+            ensure_ascii=False,
+        )
+        return
 
+    if paths is None:
+        series_graph = CharacterGraph()
+        series_graph.merge_book(delta)
+        json.dump(
+            {"graph": series_graph.to_json(), "delta": delta.to_json()},
+            sys.stdout,
+            ensure_ascii=False,
+        )
+        return
+
+    sgp = paths.series_character_graph
+    if sgp.exists():
+        series_graph = CharacterGraph.from_json(json.loads(sgp.read_text()))
+    else:
+        series_graph = CharacterGraph()
     series_graph.merge_book(delta)
+
+    sgp.parent.mkdir(parents=True, exist_ok=True)
+    tmp = sgp.with_suffix(".json.tmp")
+    try:
+        tmp.write_text(json.dumps(series_graph.to_json(), ensure_ascii=False))
+        tmp.rename(sgp)
+    except Exception:
+        if tmp.exists():
+            tmp.unlink()
+        raise
+
+    paths.book_graph_delta.parent.mkdir(parents=True, exist_ok=True)
+    paths.book_graph_delta.write_text(json.dumps(delta.to_json(), ensure_ascii=False))
+
     json.dump(
         {"graph": series_graph.to_json(), "delta": delta.to_json()},
         sys.stdout,
