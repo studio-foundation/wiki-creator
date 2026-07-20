@@ -34,7 +34,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from pairs import half_centroids, mask_name, normalize, score
-from wiki_creator.embedding_disambiguation import EmbeddingBackend
+from backend import EmbeddingBackend
 
 HERE = Path(__file__).parent
 CORPUS = HERE / "corpus"

@@ -24,7 +24,7 @@ from pathlib import Path
 
 import numpy as np
 
-from wiki_creator.embedding_disambiguation import EmbeddingBackend, cosine, _mean_pool_normalize
+from backend import EmbeddingBackend, cosine, _mean_pool_normalize
 
 FIXTURE = Path("tests/fixtures/embedding_golden_pairs.json")
 WINDOWS = [None, 80, 60, 40, 25, 15]  # None = full context (baseline)
