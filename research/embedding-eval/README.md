@@ -35,3 +35,19 @@ No arm separates. Best margin −0.025 (`win±15`), best AUROC 0.73 — both wit
 noise of the STU-468 baseline (margin −0.040, AUROC 0.67). The mention window does
 not rescue e5-small disambiguation; mean-removal makes the threshold unusable.
 **Switch stays default OFF** (`embedding_disambiguation` is opt-in and untouched).
+
+## STU-577: does a stronger *backend* rescue it? (see results_backends.md)
+
+`measure_backends.py` keeps this fixture and metric fixed and sweeps the backend
+axis instead of the representation — e5 {small, base, large, large-instruct},
+bge-m3, gte-multilingual, plus two cross-encoders (bge-reranker-v2-m3,
+ms-marco-MiniLM) scoring each pair directly. Also **negative**: no arm separates
+(best margin −0.004, still the wrong sign), scaling e5 does not move the ~0.9 band,
+and the blocking pair is `celaena/chaol` on every backend — the assassin and the
+Captain of the Guard share every scene, so context cannot tell them apart at any
+capacity. Switch stays OFF.
+
+```bash
+PYTHONPATH=$(pwd) python research/embedding-eval/measure_backends.py            # ~9 GB dl first run
+WIKI_EMBEDDING_DEVICE=cpu PYTHONPATH=$(pwd) python research/embedding-eval/measure_backends.py --only e5-base
+```
