@@ -35,7 +35,7 @@ from pathlib import Path
 
 import numpy as np
 
-from wiki_creator.embedding_disambiguation import cosine, _mean_pool_normalize
+from backend import cosine, _mean_pool_normalize
 
 from measure import window  # same directory; run with PYTHONPATH=$(pwd)
 

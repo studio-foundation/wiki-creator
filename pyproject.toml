@@ -55,7 +55,7 @@ coref = [
 gliner = [
     "gliner>=0.2.13",
 ]
-embeddings = ["sentence-transformers>=3"]  # numpy comes transitively via spaCy
+embeddings = ["sentence-transformers>=3"]  # research/embedding-eval only (STU-601); numpy comes transitively via spaCy
 
 [project.urls]
 Homepage = "https://github.com/studio-foundation/wiki-creator"
