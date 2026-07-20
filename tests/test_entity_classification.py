@@ -99,7 +99,7 @@ ORGS_FULL = {"orgs_full": _pf({})}
 def test_get_total_mentions_sums_across_chapters():
     entity = {"type": "PERSON", "source_ids": ["entity_001"]}
     persons = PERSONS_FULL["persons_full"]
-    total, chapters = get_total_mentions(entity, persons, {}, {})
+    total, chapters = get_total_mentions(entity, {"PERSON": persons})
     assert total == 5  # ch01: 2, ch02: 1, ch03: 2
     assert chapters == 3
 
@@ -108,7 +108,7 @@ def test_get_total_mentions_multiple_source_ids():
     # entity_001 has 5 mentions, entity_002 has 1 — combined entity has 6
     entity = {"type": "PERSON", "source_ids": ["entity_001", "entity_002"]}
     persons = PERSONS_FULL["persons_full"]
-    total, chapters = get_total_mentions(entity, persons, {}, {})
+    total, chapters = get_total_mentions(entity, {"PERSON": persons})
     assert total == 6
     assert chapters == 3  # ch01, ch02, ch03 (entity_002's ch02 already counted)
 
@@ -116,23 +116,52 @@ def test_get_total_mentions_multiple_source_ids():
 def test_get_total_mentions_place():
     entity = {"type": "PLACE", "source_ids": ["place_001"]}
     places = PLACES_FULL["places_full"]
-    total, chapters = get_total_mentions(entity, {}, places, {})
+    total, chapters = get_total_mentions(entity, {"PLACE": places})
     assert total == 3
     assert chapters == 2
 
 
 def test_get_total_mentions_unknown_source_id():
     entity = {"type": "PERSON", "source_ids": ["nonexistent"]}
-    total, chapters = get_total_mentions(entity, {}, {}, {})
+    total, chapters = get_total_mentions(entity, {})
     assert total == 0
     assert chapters == 0
 
 
 def test_get_total_mentions_unknown_type():
     entity = {"type": "EVENT", "source_ids": ["entity_001"]}
-    total, chapters = get_total_mentions(entity, {}, {}, {})
+    total, chapters = get_total_mentions(entity, {})
     assert total == 0
     assert chapters == 0
+
+
+def test_get_total_mentions_counts_faction(tmp_path):
+    """STU-586: FACTION is a first-order NER type (STU-505) but its registry was
+    never threaded, so every FACTION entity read total_mentions=0 and got promoted
+    to principal. Its *_full.json mentions must now be counted like any other type."""
+    factions = _pf({
+        "faction_001": {
+            "type": "FACTION",
+            "raw_mentions": ["Humans"],
+            "mentions_by_chapter": {"C01": ["The Humans came.", "Humans fled."], "C02": ["Humans."]},
+        }
+    })
+    entity = {"type": "FACTION", "canonical_name": "Humans", "source_ids": ["faction_001"]}
+    total, chapters = get_total_mentions(entity, {"FACTION": factions})
+    assert total == 3
+    assert chapters == 2
+
+
+def test_load_entity_files_covers_every_ner_type(tmp_path):
+    """STU-586 acceptance: the registry map is derived from the taxonomy, so a new
+    NER type declared in base.yaml is loaded (not silently absent). FACTION, added
+    in STU-505, must be a key even when its file is missing."""
+    from scripts.entity_classification import _load_entity_files
+    from wiki_creator.entity_taxonomy import ner_types
+
+    registries = _load_entity_files(tmp_path)
+    assert set(registries) == set(ner_types())
+    assert "FACTION" in registries
 
 
 # --- STU-474: surface-form aggregation across un-merged clusters ---
@@ -164,7 +193,7 @@ NEHEMIA_PERSONS = _pf({
 def test_get_total_mentions_source_ids_only_undercounts():
     """Baseline: without the surface index a mis-clustered entity reads ~1."""
     entity = {"type": "PERSON", "canonical_name": "Nehemia", "source_ids": ["entity_048"]}
-    total, chapters = get_total_mentions(entity, NEHEMIA_PERSONS, {}, {})
+    total, chapters = get_total_mentions(entity, {"PERSON": NEHEMIA_PERSONS})
     assert total == 1
     assert chapters == 1
 
@@ -175,7 +204,7 @@ def test_get_total_mentions_surface_index_recovers_unmerged_mentions():
     entity = {"type": "PERSON", "canonical_name": "Nehemia", "source_ids": ["entity_048"]}
     index = build_surface_index(NEHEMIA_PERSONS)
     total, chapters = get_total_mentions(
-        entity, NEHEMIA_PERSONS, {}, {}, surface_index=index
+        entity, {"PERSON": NEHEMIA_PERSONS}, surface_index=index
     )
     assert total == 5  # entity_048: 1, entity_216: 3, entity_219: 1
     assert chapters == 4  # C10, C05, C06, C07
@@ -184,7 +213,7 @@ def test_get_total_mentions_surface_index_recovers_unmerged_mentions():
 def test_get_total_mentions_surface_index_matches_aliases():
     entity = {"type": "PERSON", "canonical_name": "Celaena", "aliases": ["Nehemia"]}
     index = build_surface_index(NEHEMIA_PERSONS)
-    total, _ = get_total_mentions(entity, NEHEMIA_PERSONS, {}, {}, surface_index=index)
+    total, _ = get_total_mentions(entity, {"PERSON": NEHEMIA_PERSONS}, surface_index=index)
     assert total == 4  # entity_216 (3) + entity_219 (1) via the alias surface
 
 
@@ -192,7 +221,7 @@ def test_get_total_mentions_surface_index_no_double_count():
     """A cluster reachable via both source_ids and surface is counted once."""
     entity = {"type": "PERSON", "canonical_name": "Nehemia", "source_ids": ["entity_216"]}
     index = build_surface_index(NEHEMIA_PERSONS)
-    total, _ = get_total_mentions(entity, NEHEMIA_PERSONS, {}, {}, surface_index=index)
+    total, _ = get_total_mentions(entity, {"PERSON": NEHEMIA_PERSONS}, surface_index=index)
     assert total == 4  # entity_216 counted once, + entity_219
 
 
@@ -213,7 +242,7 @@ def test_classify_entities_promotes_undercounted_central_character():
         "e2": {"type": "PERSON", "raw_mentions": ["Extra2"], "mentions_by_chapter": {"C01": ["b"]}},
         "e3": {"type": "PERSON", "raw_mentions": ["Extra3"], "mentions_by_chapter": {"C01": ["c"]}},
     }))
-    result = classify_entities(entities, persons, {}, {})
+    result = classify_entities(entities, {"PERSON": persons})
     nehemia = next(e for e in result if e["canonical_name"] == "Nehemia")
     assert nehemia["total_mentions"] == 5
     assert nehemia["importance"] != "figurant"
@@ -356,9 +385,11 @@ def test_classify_entities_enriches_with_importance():
     ]
     enriched = classify_entities(
         entities,
-        PERSONS_FULL["persons_full"],
-        PLACES_FULL["places_full"],
-        ORGS_FULL["orgs_full"],
+        {
+            "PERSON": PERSONS_FULL["persons_full"],
+            "PLACE": PLACES_FULL["places_full"],
+            "ORG": ORGS_FULL["orgs_full"],
+        },
     )
     assert len(enriched) == 2
     martín = next(e for e in enriched if e["canonical_name"] == "David Martín")
@@ -376,7 +407,7 @@ def test_classify_entities_skips_irrelevant():
     entities = [
         {"canonical_name": "Artefact", "type": "PERSON", "source_ids": [], "relevant": False},
     ]
-    enriched = classify_entities(entities, {}, {}, {})
+    enriched = classify_entities(entities, {})
     # Irrelevant entities are still in output but with importance = "ignored"
     assert enriched[0]["importance"] == "ignored"
 
@@ -387,7 +418,7 @@ def test_classify_entities_passthrough_extra_fields():
          "relevant": True, "aliases": ["Martín"]},
     ]
     enriched = classify_entities(
-        entities, PERSONS_FULL["persons_full"], {}, {}
+        entities, {"PERSON": PERSONS_FULL["persons_full"]}
     )
     assert enriched[0]["aliases"] == ["Martín"]
 
@@ -402,7 +433,7 @@ def test_normalize_entity_type_retags_geopolitical_name_to_place():
         }
     })
     entity = {"canonical_name": "Adarlan", "type": "PERSON", "source_ids": ["entity_x"], "aliases": []}
-    new_type = _normalize_entity_type(entity, entities, {}, {}, {})
+    new_type = _normalize_entity_type(entity, {"PERSON": entities})
     assert new_type == "PLACE"
 
 
@@ -416,7 +447,7 @@ def test_normalize_entity_type_keeps_person_when_context_has_generic_geo_words()
         }
     })
     entity = {"canonical_name": "Nehemia", "type": "PERSON", "source_ids": ["entity_n"], "aliases": []}
-    new_type = _normalize_entity_type(entity, entities, {}, {}, {})
+    new_type = _normalize_entity_type(entity, {"PERSON": entities})
     assert new_type == "PERSON"
 
 
@@ -481,7 +512,7 @@ def test_classify_entities_accepts_geo_keywords_param():
     """classify_entities should accept optional geo_keywords without error."""
     from scripts.entity_classification import classify_entities
     entities = [{"canonical_name": "Arendelle", "type": "PLACE", "relevant": True, "aliases": [], "source_ids": []}]
-    result = classify_entities(entities, {}, {}, {}, geo_keywords=frozenset({"glacier"}))
+    result = classify_entities(entities, {}, geo_keywords=frozenset({"glacier"}))
     assert isinstance(result, list)
 
 
@@ -489,7 +520,7 @@ def test_classify_entities_accepts_concept_keywords_param():
     """classify_entities should return OTHER for entities matching concept_keywords."""
     from scripts.entity_classification import classify_entities
     entities = [{"canonical_name": "wyrdmark", "type": "OTHER", "relevant": True, "aliases": [], "source_ids": []}]
-    result = classify_entities(entities, {}, {}, {}, concept_keywords=frozenset({"wyrdmark"}))
+    result = classify_entities(entities, {}, concept_keywords=frozenset({"wyrdmark"}))
     assert result[0]["type"] == "OTHER"
 
 
@@ -616,7 +647,7 @@ def test_normalize_geo_suffix_retags_person_to_place():
         "source_ids": [],
         "aliases": [],
     }
-    new_type = _normalize_entity_type(entity, {}, {}, {}, {}, geo_suffixes=_GEO_SUFFIXES)
+    new_type = _normalize_entity_type(entity, {}, geo_suffixes=_GEO_SUFFIXES)
     assert new_type == "PLACE"
 
 
@@ -628,7 +659,7 @@ def test_normalize_geo_suffix_single_word_place():
         "source_ids": [],
         "aliases": [],
     }
-    new_type = _normalize_entity_type(entity, {}, {}, {}, {}, geo_suffixes=_GEO_SUFFIXES)
+    new_type = _normalize_entity_type(entity, {}, geo_suffixes=_GEO_SUFFIXES)
     assert new_type == "PLACE"
 
 
@@ -640,7 +671,7 @@ def test_normalize_geo_suffix_retags_event_to_place():
         "source_ids": [],
         "aliases": [],
     }
-    new_type = _normalize_entity_type(entity, {}, {}, {}, {}, geo_suffixes=_GEO_SUFFIXES)
+    new_type = _normalize_entity_type(entity, {}, geo_suffixes=_GEO_SUFFIXES)
     assert new_type == "PLACE"
 
 
@@ -652,7 +683,7 @@ def test_normalize_concept_name_retags_place_to_other():
         "source_ids": [],
         "aliases": [],
     }
-    new_type = _normalize_entity_type(entity, {}, {}, {}, {}, concept_keywords=frozenset({"wyrd"}))
+    new_type = _normalize_entity_type(entity, {}, concept_keywords=frozenset({"wyrd"}))
     assert new_type == "OTHER"
 
 
@@ -664,7 +695,7 @@ def test_normalize_no_false_positive_on_plain_person_name():
         "source_ids": [],
         "aliases": [],
     }
-    new_type = _normalize_entity_type(entity, {}, {}, {}, {})
+    new_type = _normalize_entity_type(entity, {})
     assert new_type == "PERSON"
 
 
@@ -696,7 +727,7 @@ def test_normalize_entity_type_retags_place_to_person_when_source_ids_in_persons
         "source_ids": ["entity_017", "entity_018"],
         "aliases": [],
     }
-    new_type = _normalize_entity_type(entity, persons_full, places_full, {}, {})
+    new_type = _normalize_entity_type(entity, {"PERSON": persons_full, "PLACE": places_full})
     assert new_type == "PERSON"
 
 
@@ -715,7 +746,7 @@ def test_normalize_entity_type_no_false_retag_when_persons_full_mentions_are_spa
         "source_ids": ["entity_noise"],
         "aliases": [],
     }
-    new_type = _normalize_entity_type(entity, persons_full, {}, {}, {})
+    new_type = _normalize_entity_type(entity, {"PERSON": persons_full})
     assert new_type == "PLACE"
 
 
@@ -744,7 +775,7 @@ def test_is_role_entity_name_empty_role_words_returns_false():
 
 def test_classify_entities_empty_concept_keywords_does_not_crash():
     entities = [{"canonical_name": "Magic", "type": "OTHER", "source_ids": [], "relevant": True}]
-    result = classify_entities(entities, {}, {}, {}, concept_keywords=frozenset())
+    result = classify_entities(entities, {}, concept_keywords=frozenset())
     assert result[0]["importance"] in ("principal", "secondary", "figurant", "ignored")
 
 
@@ -1193,8 +1224,8 @@ def test_classify_entities_defaults_match_no_config():
         f"e{i}": {"type": "PERSON", "raw_mentions": [n], "mentions_by_chapter": {"C01": ["x"] * (i + 1)}}
         for i, n in enumerate(["A", "B", "C", "D"])
     })
-    assert classify_entities(entities, persons, {}, {}) == classify_entities(
-        entities, persons, {}, {}, notability={}
+    assert classify_entities(entities, {"PERSON": persons}) == classify_entities(
+        entities, {"PERSON": persons}, notability={}
     )
 
 
