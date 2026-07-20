@@ -684,6 +684,26 @@ def test_summarize_chapter_from_item_result_passes_through_temporal_context():
     assert result["flashback_anchor"] == "5 ans avant les événements du ch.01"
 
 
+def test_summarize_chapter_from_item_result_coerces_out_of_enum_to_unknown():
+    chapter = {"id": "ch01", "title": "Chapter 1", "content": "..."}
+    item_result = {
+        "summary_bullets": ["Celaena found a clue."],
+        "temporal_context": "mixte",
+    }
+    result = summarize_chapter_from_item_result(chapter, item_result)
+    assert result["temporal_context"] == "unknown"
+
+
+def test_summarize_chapter_from_item_result_preserves_legitimate_mixed():
+    chapter = {"id": "ch01", "title": "Chapter 1", "content": "..."}
+    item_result = {
+        "summary_bullets": ["Celaena found a clue."],
+        "temporal_context": "mixed",
+    }
+    result = summarize_chapter_from_item_result(chapter, item_result)
+    assert result["temporal_context"] == "mixed"
+
+
 def test_summarize_chapter_from_item_result_defaults_unknown_when_missing():
     chapter = {"id": "ch01", "title": "Chapter 1", "content": "..."}
     item_result = {

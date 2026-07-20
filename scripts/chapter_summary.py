@@ -33,6 +33,7 @@ import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
+from typing import get_args
 
 import yaml
 
@@ -43,7 +44,9 @@ from wiki_creator.lang import load_lang_config, infer_language
 from wiki_creator.pov_attribution import attribute_pov_character
 from wiki_creator import studio_io
 from wiki_creator.chapters import is_frontmatter_chapter
-from wiki_creator.types import ChapterSummary, ClassifiedBundle
+from wiki_creator.types import TEMPORAL, ChapterSummary, ClassifiedBundle
+
+_TEMPORAL_VALUES = frozenset(get_args(TEMPORAL))
 
 _FALLBACK_BULLET = "No reliable summary available for this chapter."
 _MIN_SENTENCE_CHARS = 25
@@ -735,6 +738,8 @@ def summarize_chapter_from_item_result(
         llm_bullets = _sanitize_bullets(item_result.get("summary_bullets"), cfg.max_bullets)
         llm_error = item_result.get("error") or None
         temporal_context = item_result.get("temporal_context") or _detect_temporal_context(chapter.get("content", ""), flashback_cues)
+        if temporal_context not in _TEMPORAL_VALUES:
+            temporal_context = "unknown"
         flashback_anchor = item_result.get("flashback_anchor") or None
 
     _pov = _resolve_pov_fields(
