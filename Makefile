@@ -3,13 +3,17 @@
         run-events generate-synopsis generate-synopsis-dry \
         generate-event-pages generate-event-pages-dry consolidate-stance \
         generate-pages generate-pages-dry generate-pages-primary generate-pages-entity \
-        test test-coref test-coref-parallel \
         smoke golden golden-update eval-relationships \
         clean
 
 #BOOK ?= library/carlos-ruiz-zafon/el-cementerio-de-los-libros-olvidados/books/02-le-jeu-de-lange.yaml
 # BOOK ?= library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml
 SERIES ?= library/christopher_paolini/inheritance
+# run-from-* repart PROPRE depuis la stage: --clean par défaut supprime les
+# artefacts owned par la stage restarted + suivantes (scopé — l'amont est gardé),
+# et run_wiki.py logge chaque suppression `[clean] removing`. Diffère volontairement
+# de `run_wiki.py --restart X` nu, qui RE-ROULE par-dessus sans wipe. Décision
+# assumée (STU-592), pas un accident: pour resumer sans wipe, `CLEAN= make run-from-X`.
 CLEAN ?=--clean
 # BOOK ?= library/brandon_sanderson/the_stormlight_archives/books/01-the_way_of_kings.yaml
 BOOK ?= library/c_w_lewis/narnia/books/01-the_lion_the_witch_and_the_wardrobe.yaml
@@ -109,7 +113,7 @@ run-from-preparation:
 	python run_wiki.py --book $(BOOK) --restart wiki-preparation $(CLEAN)
 
 run-from-generation:
-	python run_wiki.py --book $(BOOK) --restart wiki-generation $(CLEAN)
+	python run_wiki.py --book $(BOOK) --restart pages-export $(CLEAN)
 
 run-status:
 	python run_wiki.py --book $(BOOK) --status
@@ -134,18 +138,6 @@ classify-relationships-dry:
 
 run-events:
 	python scripts/build_event_layer.py --book $(BOOK)
-
-test: test-extraction
-	python scripts/entity_clustering.py --live --book $(BOOK)
-	python scripts/relationship_extraction.py --live --book $(BOOK)
-
-test-coref: test-extraction
-	python scripts/entity_clustering.py --live --book $(BOOK)
-	python scripts/relationship_extraction.py --live --book $(BOOK) --coref
-
-test-coref-parallel: test-extraction
-	python scripts/entity_clustering.py --live --book $(BOOK)
-	python scripts/relationship_extraction.py --live --book $(BOOK) --coref --workers 8
 
 smoke:  ## End-to-end smoke test on the committed fixture novella (no real EPUB needed)
 	python -m pytest tests/test_e2e_smoke.py -q

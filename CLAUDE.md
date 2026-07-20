@@ -41,6 +41,19 @@ Default `BOOK` in the `Makefile`:
 library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml
 ```
 
+The Makefile is a front door, not a sequencer (STU-592). Two facts about it are
+load-bearing. (1) **`run-from-*` restarts CLEAN by default** (`CLEAN ?= --clean`):
+`make run-from-resolution` = `run_wiki.py --restart wiki-resolution --clean`, which
+deletes the artifacts *owned by the restarted stage and its successors* (scoped —
+upstream is kept, each deletion logged `[clean] removing`) and re-runs from clean.
+This differs on purpose from `run_wiki.py --restart X` bare, which re-runs *over* the
+existing artifacts without wiping; to resume without the wipe, `CLEAN= make run-from-X`.
+(2) The `make test` / `test-coref` / `test-coref-parallel` chains are **deleted** —
+they hand-chained `entity_clustering` + `relationship_extraction`, a fourth sequencing
+authority bypassing both Studio and `run_wiki.py`, and `make test` shadowed the pytest
+suite. The single-stage dev tools (`test-extraction`/`test-clustering`/`test-relationships`,
+`--test`/`--live` on one stage) stay — they sequence nothing.
+
 ## Actual Pipeline Layout
 
 Primary workflow:
@@ -51,13 +64,18 @@ Primary workflow:
 5. `pages-export`
 
 Important:
-- `.studio/pipelines/wiki-generation.pipeline.yaml` still exists, but the repo-level workflow uses the split path above.
+- `.studio/pipelines/wiki-generation.pipeline.yaml` is deleted (STU-591): it re-ran
+  chapter-summary/wiki-preparation/assemble/copyright-check/wiki-export a second time
+  per `make run`. The four generation scripts (`generate_wiki_pages`,
+  `generate_book_synopsis`, `generate_event_pages`, `consolidate_editorial_stance`)
+  are now pre-steps of `pages-export` in `run_wiki.py`, converging it with the
+  `make run-generation` graph. Restart the generation phase with `--restart pages-export`.
 - **Disk is the bus across pipelines (STU-455).** A stage reads an artifact written
   by an *earlier pipeline* from disk, never from Studio's context — those are
   separate `studio run` invocations, so `previous_outputs`/`all_stage_outputs`
   are empty of it by construction. Studio's context is only for stages that
   really do chain in memory inside one pipeline (resolve-clusters →
-  merge-entities, chapter-summary → wiki-preparation).
+  relationship-extraction, chapter-summary → wiki-preparation).
   Four `load_*.py` stages existed to fake the difference: they re-read a JSON the
   previous pipeline had already written and re-emitted it as a stage output, so
   the YAML declared a graph the filesystem was actually carrying. Three were pure
@@ -115,8 +133,7 @@ library/sarah_j_maas/throne-of-glass/output/01-throne-of-glass/
 - [scripts/entity_status.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/entity_status.py): per-tome character status pre-step (STU-488), writes `entity_status.json`; pure logic in `wiki_creator/entity_status.py`
 - [scripts/wiki_export.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/wiki_export.py): Markdown -> wikitext
 - [scripts/resolve_clusters.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/resolve_clusters.py): resolves NER clusters
-- [scripts/merge_entities.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/merge_entities.py): merges cluster outputs into unified entity list
-- [scripts/alias_resolution.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/alias_resolution.py): conservative PERSON alias merging, runs after merge-entities
+- [scripts/alias_resolution.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/alias_resolution.py): conservative PERSON alias merging, runs after resolve-clusters
 - [scripts/entity_classification.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/entity_classification.py): classifies entities, reads from alias-resolution output
 
 ## Script Executor Conventions
@@ -139,8 +156,9 @@ Typical payload shape:
 ## wiki-resolution Stage Order (as of STU-539)
 
 Inside `wiki-resolution`, order matters:
-1. `merge-entities` + `relationship-extraction` run first
-2. `alias-resolution` runs after — reads entities from merge-entities output (STU-276)
+1. `resolve-clusters` + `relationship-extraction` run first (STU-590 removed the
+   `merge-entities` passthrough; both read `resolve-clusters` output directly)
+2. `alias-resolution` runs after — reads entities from resolve-clusters output (STU-276)
 3. `alias-adjudication` runs after that — re-emits alias-resolution's payload with
    contextual merges applied; the only stage here that needs the network (STU-539)
 4. `entity-classification` reads entities from alias-adjudication (falling back to
@@ -319,6 +337,25 @@ Inside `wiki-resolution`, order matters:
   the couple, and `beaver` sitting inside it is an accident of spelling. What still
   merges and must keep merging: `Mr Tumnus` → `Tumnus` (one side titled, no conflict),
   `Captain Westfall` → `Chaol Westfall`.
+
+- STU-541's rule lived only in `alias-resolution`; `entity-clustering` remarried the
+  Beavers one stage upstream (STU-585). The clustering matcher already refuses a union
+  when both names bear **conflicting gender titles** (`has_conflicting_gender_title`,
+  the M./Mme Vidal machinery), and `split_conflicting_first_names` splits a cluster
+  that a bare surname bridged transitively — the honorific-per-entity rule STU-541
+  describes, already in place. It failed on English only because the vocabulary was
+  misaligned: `person_cue_words` carries **bare** `mr`/`mrs`/`miss` (so `Mr Beaver`
+  strips to `beaver` and clusters with `Beaver` — needed for `Mr Tumnus` → `Tumnus`),
+  but `masculine_titles`/`feminine_titles` held only the period forms `mr.`/`mrs.`, so
+  the extracted bare `mr`/`mrs` matched no gender set and the conflict was invisible.
+  Fix is data, not code: `en.json` gender sets now carry the bare forms beside the
+  period ones. **The apparent `mr.`/`mr` duplication is load-bearing** — the gender set
+  must match the token `extract_leading_titles` yields, which is the bare honorific
+  `person_cue_words` strips; drop the bare form and the Beavers remarry. Adding
+  `mr`/`mrs` to `title_prefixes` would instead make `Mr Beaver` and `Mrs Beaver`
+  *identical* after stripping — the merge, not the fix. French was already aligned
+  (`mme`, `madame` in both `person_cue_words` and `feminine_titles`), which is why the
+  bug was English-only. `make golden` unchanged (fixture novella has no Mr/Mrs).
 
 - A species is not a role (STU-559): `pure_title` merged **the Shade into a sword
   and the Urgals into a mountain** on Eragon. Its premise — a bare role name
@@ -820,8 +857,17 @@ Inside `wiki-resolution`, order matters:
   replay a verdict made for a different section list. It is tags, never removal —
   `chapters.json` stays complete and the STU-489 offsets don't move.
 - `entity_extraction.py` keys chapter mentions by chapter ID, not chapter title.
-- `merge_entities.py` passes through only the current `resolve-clusters` output shape (runs before `alias-resolution` per the STU-276 pipeline order; STU-447 dropped the older `split-clusters` + `entity-resolution-*` compat branch and a vestigial `alias-resolution` priority check that predated STU-276 and never fired in production).
-- `split_clusters.py`, `relationship_extraction.py`, and `verify_entity_types.py` are intentionally tolerant of missing `file_path` in unit-test mode.
+- Three passthrough stages are gone (STU-590): `merge_entities.py`,
+  `save_relationships.py` and `verify_entity_types.py`. `merge-entities` only
+  re-emitted `resolve-clusters`' `{entities, narrator}`, so `relationship-extraction`
+  and `alias-resolution` read `resolve-clusters` directly (the narrator-required
+  assertion is re-asserted by the `alias-resolution` contract). `save-relationships`
+  was a pure passthrough whose only effect was writing `relationships.json`; that
+  disk write is now folded into `relationship_extraction.py:main` (the pattern
+  `entity_classification.py` already uses). `verify-entity-types` was a no-op on the
+  whole library (no book YAML declares `verify_entity_types: true`), so removing it
+  is a pipeline-YAML change; `split_clusters.py` reads `entity-clustering` directly.
+- `split_clusters.py` and `relationship_extraction.py` are intentionally tolerant of missing `file_path` in unit-test mode.
 - `generate_wiki_pages.py` must run after `wiki-preparation`; it consumes `wiki_inputs/<slug>/batch_*.json`.
 - `generate_book_synopsis.py` (SP4) consumes `events.json` (SP0) and writes `processing_output/<slug>/book_synopsis.json`; `assemble_wiki_pages.py` appends that page to the export flow and `wiki_export.py` renders it at the wiki root (`Synopsis.wiki`, no infobox/categories, `entity_type: SYNOPSIS`). If `events.json` is absent, the stage warns and skips — it never fails the run.
 - `generate_event_pages.py` (SP3/STU-481, STU-502) consumes `events.json` (SP0) and writes `processing_output/<slug>/event_pages.json` — one `EVENT` page per event with `salience >= threshold` (default `0.7`, raised from `0.6` in STU-502 to drop the low-value long tail) that has ≥1 participant. Title and infobox `{participants, lieu, chapitre, issue}` are built deterministically from the event; the writer LLM only authors the `## Déroulement` prose (grounded, spoiler-safe via forbidden_names). To stop the writer paraphrasing the title (STU-502), `build_event_prompt` injects the `DEFAULT_CONTEXT_WINDOW` (=3) neighbouring events before/after in narrative order as **read-only** NARRATIVE CONTEXT — background to situate the event (what leads up to it / what it brings about), never facts to attribute to it; `neighbor_context` windows the full events list, so context spans below-threshold neighbours too. `assemble_wiki_pages.py` appends the pages; `wiki_export.py` renders each under `output/wiki/events/` with `Infobox_event` + `[[Category:Événements]]`. Thresholds are configurable via book YAML `generation.event_pages` (`salience_threshold`, `max_pages`, `max_tokens`). Absent/empty `events.json` warns and skips — never fails the run. Titles are the full event description (grounded, unique) — LLM-named events are a possible fast-follow.
@@ -1177,7 +1223,7 @@ Inside `wiki-resolution`, order matters:
   the consolidation pass (STU-508).
 
 - Editorial-stance consolidation (STU-508): a single post-generation pass
-  (`consolidate_editorial_stance.py`, last `wiki-generation` pre-step in
+  (`consolidate_editorial_stance.py`, last `pages-export` pre-step in
   `run_wiki.py`; `make consolidate-stance`) scans every generated page
   (`wiki_pages`/`book_synopsis`/`event_pages`/`collation_pages`, `_failed`
   skipped) for register that contradicts the declared `editorial_stance.mode`

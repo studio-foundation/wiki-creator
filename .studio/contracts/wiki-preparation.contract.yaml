@@ -8,3 +8,9 @@ schema:
 # batches: [{batch_id, file, entity_count}] — paths to wiki_inputs/batch_*.json files
 # total_entities: number of entities to process (non-ignored)
 # narrator: narrator metadata from entity-resolution-PERSON, or null
+# The batches array-of-objects shape is machine-checked by the validator below.
+# PYTHONPATH pins the check to the tree being run, not to whichever checkout
+# `pip install -e` points at.
+validators:
+  - name: preparation-batches-shape
+    command: PYTHONPATH=. python3 scripts/validate_preparation_batches.py

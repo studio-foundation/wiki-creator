@@ -25,7 +25,7 @@ from wiki_creator.ner import EXTRACTION_CONFIG_FILE, extraction_fingerprint
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.series import discover_series_books
 
-PIPELINES = ["wiki-extraction", "wiki-resolution", "wiki-preparation", "wiki-generation", "pages-export"]
+PIPELINES = ["wiki-extraction", "wiki-resolution", "wiki-preparation", "pages-export"]
 
 
 def required_files(book_path: str) -> dict[str, list[str]]:
@@ -45,10 +45,9 @@ def required_files(book_path: str) -> dict[str, list[str]]:
             str(p.processing / "relationships_classified.json"),
             str(p.wiki_inputs),
         ],
-        "wiki-generation": [
+        "pages-export": [
             str(p.processing / "wiki_pages.json"),
         ],
-        "pages-export": [],
     }
 
 
@@ -76,10 +75,9 @@ def clean_files(book_path: str) -> dict[str, list[str]]:
             str(p.processing / "relationships_classified.json"),
             str(p.wiki_inputs),
         ],
-        "wiki-generation": [
+        "pages-export": [
             str(p.processing / "wiki_pages.json"),
         ],
-        "pages-export": [],
     }
 
 
@@ -100,7 +98,7 @@ PRE_STEPS: dict[str, list[list[str]]] = {
         ["python", "scripts/classify_relationships.py", "--book"],
         ["python", "scripts/build_event_layer.py", "--book"],
     ],
-    "wiki-generation": [
+    "pages-export": [
         ["python", "scripts/generate_wiki_pages.py", "--book"],
         ["python", "scripts/generate_book_synopsis.py", "--book"],
         ["python", "scripts/generate_event_pages.py", "--book"],
@@ -224,7 +222,7 @@ def run_book(book_path: str, *, restart: str | None, retries: int, clean: bool) 
             state["stages"][pipeline] = {}
             save_state(book_path, state)
 
-        # Run pre-steps before the pipeline (e.g. generate_wiki_pages.py before wiki-generation)
+        # Run pre-steps before the pipeline (e.g. generate_wiki_pages.py before pages-export)
         for pre_step in PRE_STEPS.get(pipeline, []):
             pre_cmd = pre_step + [book_path]
             print(f"\n[pre-step] {' '.join(pre_cmd)}", flush=True)

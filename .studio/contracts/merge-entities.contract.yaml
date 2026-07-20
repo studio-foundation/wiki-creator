@@ -1,8 +1,0 @@
-name: merge-entities
-version: 1
-schema:
-  required_fields:
-    - entities
-    - narrator
-# entities: flat list of all resolved entities (singles + LLM-resolved multi-clusters)
-# narrator: narrator metadata from entity-resolution-PERSON, or null

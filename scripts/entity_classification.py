@@ -11,7 +11,8 @@ Input (via Studio context):
     { "entities": [{canonical_name, type, aliases, source_ids, relevant}],
       "relationships": [...], "stats": {...}, "narrator": ... }
   additional_context: YAML string (book.input.yaml) with "notability" key
-  Files: persons_full.json, places_full.json, orgs_full.json, events_full.json (project root)
+  Files: one *_full.json per NER type declared in base.yaml (persons/places/orgs/
+    events/factions), read via the taxonomy — not a hardcoded list (STU-586)
 
 Output (stdout):
   {
@@ -38,7 +39,7 @@ from pathlib import Path
 import yaml
 
 from wiki_creator import studio_io
-from wiki_creator.entity_taxonomy import resolution_types
+from wiki_creator.entity_taxonomy import full_registry_files, resolution_types
 from wiki_creator.lang import load_lang_config, infer_language
 from wiki_creator.registry import normalize_name as _normalize_name
 from wiki_creator.types import ClassifiedBundle, ClassifiedEntity, Relationship
@@ -90,10 +91,7 @@ def _count_entry(entry, chapters: set[str]) -> int:
 
 def get_total_mentions(
     entity: dict,
-    persons_full: dict,
-    places_full: dict,
-    orgs_full: dict,
-    events_full: dict | None = None,
+    registries: Mapping[str, dict],
     surface_index: dict[str, list[dict]] | None = None,
 ) -> tuple[int, int]:
     """Return (total_mentions, chapters_present) for a resolved entity.
@@ -103,22 +101,20 @@ def get_total_mentions(
     surface form matches the entity's canonical_name or aliases (STU-474). The
     latter recovers mentions from un-merged clusters that never made it into
     source_ids, which otherwise under-counts central characters into figurants.
+
+    ``registries`` maps entity_type → its ``*_full.json`` mention registry; it is
+    derived from the taxonomy (STU-586), so a new NER type is counted by
+    construction rather than dropping to 0 behind a hardcoded four-type table.
     """
-    type_to_registry = {
-        "PERSON": persons_full,
-        "PLACE": places_full,
-        "ORG": orgs_full,
-        "EVENT": events_full or {},
-    }
     total = 0
     chapters: set[str] = set()
     counted: set[int] = set()
     for sid in entity.get("source_ids", []):
         # Primary lookup by current type, fallback across registries for retagged entities.
-        entry = type_to_registry.get(entity.get("type", ""), {}).get(sid)
+        entry = registries.get(entity.get("type", ""), {}).get(sid)
         if entry is None:
-            for alt in type_to_registry:
-                candidate = type_to_registry.get(alt, {}).get(sid)
+            for reg in registries.values():
+                candidate = reg.get(sid)
                 if candidate is not None:
                     entry = candidate
                     break
@@ -254,11 +250,8 @@ def assign_importance(
 
 def classify_entities(
     entities: list[dict],
-    persons_full: dict,
-    places_full: dict,
-    orgs_full: dict,
+    registries: Mapping[str, dict],
     notability: dict | None = None,
-    events_full: dict | None = None,
     geo_keywords=None,
     event_keywords=None,
     concept_keywords=None,
@@ -270,7 +263,7 @@ def classify_entities(
 
     Args:
         entities: resolved entities from entity-resolution / relationship-extraction
-        persons_full / places_full / orgs_full / events_full: raw entity registries
+        registries: {entity_type: *_full.json registry}, derived from the taxonomy
         notability: book.input.yaml `notability` block; None yields the defaults
 
     Returns:
@@ -279,15 +272,13 @@ def classify_entities(
     # Step 1: compute mention counts for all entities. The surface index folds
     # in mentions from un-merged extraction clusters (STU-474) so a canonical
     # entity is counted from every surface form of its name, not just source_ids.
-    surface_index = build_surface_index(persons_full, places_full, orgs_full, events_full or {})
+    surface_index = build_surface_index(*registries.values())
     mention_data: list[tuple[str, str, int, int]] = []
     for entity in entities:
         if not entity.get("relevant", True):
             mention_data.append((entity["canonical_name"], entity.get("type", "OTHER"), 0, 0))
             continue
-        total, chapters = get_total_mentions(
-            entity, persons_full, places_full, orgs_full, events_full, surface_index
-        )
+        total, chapters = get_total_mentions(entity, registries, surface_index)
         mention_data.append((entity["canonical_name"], entity.get("type", "OTHER"), total, chapters))
 
     # Step 2: compute thresholds
@@ -308,17 +299,13 @@ def classify_entities(
 
 def _collect_context_sentences(
     entity: dict,
-    persons_full: dict,
-    places_full: dict,
-    orgs_full: dict,
-    events_full: dict,
+    registries: Mapping[str, dict],
     max_sentences: int = 20,
 ) -> list[str]:
     """Collect context snippets for an entity from all registries using source_ids."""
-    registries = (persons_full, places_full, orgs_full, events_full or {})
     snippets: list[str] = []
     for sid in entity.get("source_ids", []):
-        for reg in registries:
+        for reg in registries.values():
             entry = reg.get(sid)
             if entry is None:
                 continue
@@ -332,10 +319,7 @@ def _collect_context_sentences(
 
 def _normalize_entity_type(
     entity: dict,
-    persons_full: dict,
-    places_full: dict,
-    orgs_full: dict,
-    events_full: dict,
+    registries: Mapping[str, dict],
     geo_keywords=None,
     event_keywords=None,
     concept_keywords=None,
@@ -366,7 +350,7 @@ def _normalize_entity_type(
         return "EVENT"
 
     context = " ".join(
-        _collect_context_sentences(entity, persons_full, places_full, orgs_full, events_full)
+        _collect_context_sentences(entity, registries)
     ).lower()
     text = f"{lowered} {context}"
 
@@ -395,6 +379,7 @@ def _normalize_entity_type(
     # Cross-registry retag: PLACE entity whose source_ids include a persons_full entry
     # with ≥3 mentions was likely merged from a bare-name PLACE extraction error.
     if current_type == "PLACE":
+        persons_full = registries.get("PERSON", {})
         persons_mention_count = sum(
             sum(
                 len(v) if isinstance(v, list) else 1
@@ -654,20 +639,19 @@ def _apply_llm_type_corrections(
 
 # --- Studio entrypoint ---
 
-def _load_entity_files(processing_dir: Path) -> tuple[dict, dict, dict, dict]:
-    """Read *_full.json files from the processing directory. Return empty dicts if missing."""
-    def load(name: str, key: str) -> dict:
-        p = processing_dir / name
-        if p.exists():
-            return studio_io.load_full_file(p, key)
-        return {}
+def _load_entity_files(processing_dir: Path) -> dict[str, dict]:
+    """Read every NER type's *_full.json into {entity_type: registry}.
 
-    return (
-        load("persons_full.json", "persons_full"),
-        load("places_full.json", "places_full"),
-        load("orgs_full.json", "orgs_full"),
-        load("events_full.json", "events_full"),
-    )
+    The type→file map is derived from the taxonomy (STU-586): a new NER type
+    declared in base.yaml (e.g. FACTION) is loaded and counted by construction,
+    instead of being dropped by a hardcoded four-type table. Missing files yield
+    an empty registry.
+    """
+    registries: dict[str, dict] = {}
+    for etype, filename, json_key in full_registry_files():
+        p = processing_dir / filename
+        registries[etype] = studio_io.load_full_file(p, json_key) if p.exists() else {}
+    return registries
 
 
 def run_studio_mode() -> None:
@@ -729,12 +713,12 @@ def run_studio_mode() -> None:
     role_patterns = tuple(classification.get("role_patterns", [])) or tuple(lang_cfg.get("role_patterns", []))
 
     paths = studio_io.paths_from_payload(payload)
-    persons_full, places_full, orgs_full, events_full = _load_entity_files(paths.processing)
+    registries = _load_entity_files(paths.processing)
 
     # Deterministic type normalization before scoring.
     for entity in entities:
         entity["type"] = _normalize_entity_type(
-            entity, persons_full, places_full, orgs_full, events_full,
+            entity, registries,
             geo_keywords=geo_keywords,
             event_keywords=event_keywords,
             concept_keywords=concept_keywords,
@@ -763,11 +747,8 @@ def run_studio_mode() -> None:
 
     enriched = classify_entities(
         entities,
-        persons_full,
-        places_full,
-        orgs_full,
+        registries,
         notability,
-        events_full=events_full,
         geo_keywords=geo_keywords,
         event_keywords=event_keywords,
         concept_keywords=concept_keywords,
@@ -832,7 +813,7 @@ def run_test_mode() -> None:
                        "first_seen": "ch05",
                        "mentions_by_chapter": {"ch05": ["l1"]}},
     }
-    enriched = classify_entities(entities, persons_full, {}, {}, events_full={})
+    enriched = classify_entities(entities, {"PERSON": persons_full})
     for e in enriched:
         print(f"{e['canonical_name']:30s}  mentions={e['total_mentions']:3d}  chapters={e['chapters_present']}  importance={e['importance']}")
 

@@ -13,16 +13,6 @@ stages:
       include:
         - input
 
-  - name: merge-entities
-    kind: extraction
-    executor: script
-    runtime: python
-    script: scripts/merge_entities.py
-    contract: merge-entities
-    context:
-      include:
-        - all_stage_outputs
-
   - name: relationship-extraction
     kind: analysis
     executor: script
@@ -80,17 +70,6 @@ stages:
     runtime: python
     script: scripts/build_character_graph.py
     contract: build-character-graph
-    context:
-      include:
-        - input
-        - all_stage_outputs
-
-  - name: save-relationships
-    kind: extraction
-    executor: script
-    runtime: python
-    script: scripts/save_relationships.py
-    contract: save-relationships
     context:
       include:
         - input

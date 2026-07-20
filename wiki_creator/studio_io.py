@@ -21,6 +21,7 @@ Covers three families of duplication:
 from __future__ import annotations
 
 import dataclasses
+import hashlib
 import json
 import re
 import sys
@@ -34,6 +35,25 @@ import yaml
 from wiki_creator.paths import BookPaths, book_paths_from_epub
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+def prompt_fingerprint(agents: list[Path | str], config: Any) -> str:
+    """Fingerprint the agent prompt(s) + injected config a verdict was produced under.
+
+    A resume cache keyed on this busts when the prompt or the injected vocabulary
+    changes (STU-560: a cache is keyed on the config that produced it), so editing a
+    prompt re-runs the stage instead of silently replaying answers the old prompt
+    produced. Mirrors ``discover_relationships._prompt_fingerprint`` — the good
+    version STU-589 generalizes to the three stages that resumed off their output
+    artifact alone.
+    """
+    h = hashlib.sha256()
+    for agent in agents:
+        path = Path(agent)
+        h.update(path.read_bytes() if path.exists() else b"")
+        h.update(b"\x00")
+    h.update(json.dumps(config, ensure_ascii=False, sort_keys=True, default=str).encode("utf-8"))
+    return h.hexdigest()
 
 
 def read_payload(stream: IO[str] | None = None) -> dict:

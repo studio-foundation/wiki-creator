@@ -3,3 +3,8 @@ version: 1
 schema:
   required_fields:
     - registry
+    - series_registry
+# registry: {path, entities, decisions, warnings} — this tome's resolved registry
+# series_registry: {path, entities, matched, added, ...} — the multi-tome
+#   accumulation summary (STU-485), always emitted (write_registry.py), so the
+#   whole series path has a contractual surface

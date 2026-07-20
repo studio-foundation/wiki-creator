@@ -50,17 +50,6 @@ stages:
         - input
         - previous_stage_output
 
-  - name: verify-entity-types
-    kind: extraction
-    executor: script
-    runtime: python
-    script: scripts/verify_entity_types.py
-    contract: verify-entity-types
-    context:
-      include:
-        - input
-        - previous_stage_output
-
   - name: split-clusters
     kind: extraction
     executor: script

@@ -8,3 +8,12 @@ schema:
 # Re-emits the epub-parse payload with `frontmatter: true` set on the sections that
 # are not part of the work, so entity-extraction's previous_stage_output keeps its shape.
 # Sections are tagged, never removed: chapters.json must stay complete.
+# That invariant is machine-checked by the validator below — every emitted
+# chapter must keep a non-empty id and content (a section may be tagged
+# frontmatter, never emptied or dropped), which keeps STU-489 mention offsets
+# stable. Output-only, so it cannot compare counts against the input.
+# PYTHONPATH pins the check to the tree being run, not to whichever checkout
+# `pip install -e` points at.
+validators:
+  - name: sections-complete
+    command: PYTHONPATH=. python3 scripts/validate_sections_complete.py

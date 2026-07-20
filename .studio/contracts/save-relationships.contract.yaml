@@ -1,5 +1,0 @@
-name: save-relationships
-version: 1
-schema:
-  required_fields:
-    - relationships
