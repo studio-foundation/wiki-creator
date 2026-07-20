@@ -92,7 +92,6 @@ class Splits:
     singles_resolved: list[SplitSingle] = field(default_factory=list)
     by_type: dict[str, list[SplitCluster]] = field(default_factory=dict)
     stats: dict = field(default_factory=dict)
-    pov_detection: dict | None = None
 
 
 @dataclass

@@ -90,11 +90,5 @@
   "multi_EVENT": 0,
   "multi_FACTION": 0,
   "multi_OTHER": 0
- },
- "pov_detection": {
-  "pov": "omniscient",
-  "first_person_count": 0,
-  "total_tokens": 327,
-  "confidence": "high"
  }
 }
