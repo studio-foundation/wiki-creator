@@ -735,6 +735,47 @@ def test_main_reads_entities_from_resolve_clusters_when_available(tmp_path):
     assert output["entities"][0]["canonical_name"] == "Brullo"
 
 
+def test_main_reads_relationships_from_previous_outputs_fallback():
+    """STU-588: relationships come from previous_outputs when all_stage_outputs is
+    empty (which it always is across pipelines), so role_symmetric detection fires."""
+    import subprocess, json
+    from pathlib import Path
+    entities = [
+        {"canonical_name": "Brullo", "type": "PERSON",
+         "aliases": ["Brullo"], "source_ids": [], "relevant": True},
+        {"canonical_name": "Old Brullo", "type": "PERSON",
+         "aliases": ["Old Brullo"], "source_ids": [], "relevant": True},
+        {"canonical_name": "Celaena", "type": "PERSON",
+         "aliases": ["Celaena"], "source_ids": [], "relevant": True},
+        {"canonical_name": "Dorian", "type": "PERSON",
+         "aliases": ["Dorian"], "source_ids": [], "relevant": True},
+    ]
+    relationships = [
+        {"entity_a": "Celaena", "entity_b": "Old Brullo", "relationship_type": "mentor/protégé", "cooccurrence_count": 12},
+        {"entity_a": "Brullo", "entity_b": "Celaena", "relationship_type": "mentor/protégé", "cooccurrence_count": 8},
+        {"entity_a": "Dorian", "entity_b": "Old Brullo", "relationship_type": "connaissance", "cooccurrence_count": 3},
+        {"entity_a": "Dorian", "entity_b": "Brullo", "relationship_type": "connaissance", "cooccurrence_count": 2},
+    ]
+    payload = {
+        "additional_context": "file_path: dummy.epub\nuse_llm: false\n",
+        "previous_outputs": {
+            "resolve-clusters": {"entities": entities, "narrator": None},
+            "relationship-extraction": {"relationships": relationships},
+        },
+        "all_stage_outputs": {},
+    }
+    result = subprocess.run(
+        ["python", "scripts/alias_resolution.py"],
+        input=json.dumps(payload),
+        capture_output=True, text=True,
+        cwd=str(Path(__file__).parents[1]),
+    )
+    assert result.returncode == 0, result.stderr
+    output = json.loads(result.stdout)
+    # Without a relationships fallback this stayed 0 forever (all_stage_outputs empty).
+    assert output["stats"]["ambiguous_pairs"] >= 1
+
+
 def test_pick_canonical_name_prefers_proper_name_over_pure_title():
     """'Brullo' must win over 'Master' when 'master' is a role_word."""
     from scripts.alias_resolution import _pick_canonical_name

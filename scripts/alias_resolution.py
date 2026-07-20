@@ -799,8 +799,9 @@ def main() -> None:
     narrator = entity_source.get("narrator")
     # Relationships from relationship-extraction (empty list if stage not run yet).
     relationships: list[dict] = (
-        all_stage_outputs.get("relationship-extraction", {}).get("relationships", [])
-    )
+        all_stage_outputs.get("relationship-extraction", {})
+        or previous_outputs.get("relationship-extraction", {})
+    ).get("relationships", [])
 
     ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
     spacy_model = ctx.get("spacy_model", "en_core_web_lg")

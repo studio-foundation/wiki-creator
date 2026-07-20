@@ -68,13 +68,6 @@ def main() -> None:
     if empty_names:
         print(f"Warning: {len(empty_names)} singles have empty canonical_name", file=sys.stderr)
 
-    # Pass through pov_detection from epub-parse so entity-resolution-PERSON
-    # can detect narrator without needing a named stage reference (which doesn't
-    # work inside group stages in Studio).
-    pov_detection = prev.get("epub-parse", {}).get("pov_detection")
-    if pov_detection is not None:
-        result["pov_detection"] = pov_detection
-
     paths = studio_io.paths_from_payload(payload, strict=False)
     if paths is not None:
         paths.processing.mkdir(parents=True, exist_ok=True)
@@ -85,7 +78,6 @@ def main() -> None:
                 for t, clusters in result["by_type"].items()
             },
             stats=result["stats"],
-            pov_detection=result.get("pov_detection"),
         )
         studio_io.save_artifact(paths.processing / "splits.json", splits_obj, Splits)
 

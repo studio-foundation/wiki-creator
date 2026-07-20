@@ -63,7 +63,6 @@ def test_splits_container_defaults():
     splits = Splits()
     assert splits.singles_resolved == []
     assert splits.by_type == {}
-    assert splits.pov_detection is None
 
 
 def test_classified_entity_importance_literal():
