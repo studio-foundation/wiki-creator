@@ -41,6 +41,19 @@ Default `BOOK` in the `Makefile`:
 library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml
 ```
 
+The Makefile is a front door, not a sequencer (STU-592). Two facts about it are
+load-bearing. (1) **`run-from-*` restarts CLEAN by default** (`CLEAN ?= --clean`):
+`make run-from-resolution` = `run_wiki.py --restart wiki-resolution --clean`, which
+deletes the artifacts *owned by the restarted stage and its successors* (scoped —
+upstream is kept, each deletion logged `[clean] removing`) and re-runs from clean.
+This differs on purpose from `run_wiki.py --restart X` bare, which re-runs *over* the
+existing artifacts without wiping; to resume without the wipe, `CLEAN= make run-from-X`.
+(2) The `make test` / `test-coref` / `test-coref-parallel` chains are **deleted** —
+they hand-chained `entity_clustering` + `relationship_extraction`, a fourth sequencing
+authority bypassing both Studio and `run_wiki.py`, and `make test` shadowed the pytest
+suite. The single-stage dev tools (`test-extraction`/`test-clustering`/`test-relationships`,
+`--test`/`--live` on one stage) stay — they sequence nothing.
+
 ## Actual Pipeline Layout
 
 Primary workflow:
