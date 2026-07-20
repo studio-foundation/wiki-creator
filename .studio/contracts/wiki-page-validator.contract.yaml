@@ -4,4 +4,7 @@ schema:
   required_fields:
     - valid
     - errors
+    - error_codes
     - feedback
+# error_codes: stable neutral codes, one per error (wiki_page_validator.py), always
+#   emitted alongside the localized `errors` messages — the cross-component handle

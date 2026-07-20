@@ -4,10 +4,20 @@ schema:
   required_fields:
     - entities
     - relationships
-  # Each entity must include:
-  #   canonical_name (str), type (str), aliases (list), source_ids (list),
-  #   relevant (bool), total_mentions (int), chapters_present (int), importance (str)
-  # importance values: "principal" | "secondary" | "figurant" | "ignored"
-  # type values: "PERSON" | "PLACE" | "ORG" | "EVENT" | "OTHER"
+    - stats
+    - narrator
+  # Each entity's shape (canonical_name, type, aliases, source_ids, relevant,
+  # total_mentions, chapters_present, importance) and the importance enum are
+  # machine-checked by the validator below.
+  # The type vocabulary is NOT restated here: it is read from
+  # base.yaml#entity_types at execution time. Restating it is how it drifted last
+  # time — the enum that stood here read PERSON|PLACE|ORG|EVENT|OTHER long after
+  # FACTION shipped (STU-505). The wiki-page contract fixed the same drift the
+  # same way.
   # NOTE: the entity-level field is "type" (not "entity_type").
   #   "entity_type" is only used in page objects produced by generate_wiki_pages.py.
+# PYTHONPATH pins the check to the tree being run, not to whichever checkout
+# `pip install -e` points at.
+validators:
+  - name: classified-entities-shape
+    command: PYTHONPATH=. python3 scripts/validate_classified_entities.py
