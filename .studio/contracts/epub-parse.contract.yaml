@@ -5,5 +5,8 @@ schema:
     - title
     - chapters
     - pov_detection
+    - language
 # author intentionally omitted — nullable in some EPUBs
+# language: resolved book language, stamped on the payload (parse_epub.py) — every
+#   downstream stage keys cue-words/models off it (STU-453), so it is not optional
 # Semantic guard: chapters not empty — checked in script (parse_epub.py)
