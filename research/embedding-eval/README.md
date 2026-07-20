@@ -51,3 +51,22 @@ capacity. Switch stays OFF.
 PYTHONPATH=$(pwd) python research/embedding-eval/measure_backends.py            # ~9 GB dl first run
 WIKI_EMBEDDING_DEVICE=cpu PYTHONPATH=$(pwd) python research/embedding-eval/measure_backends.py --only e5-base
 ```
+
+## STU-576: does a *trained* objective rescue it? (see results_contrastive.md)
+
+The last untested axis: a supervised-InfoNCE head over the frozen backbone, instead of
+untrained cosine. It needs a labelled corpus, which the issue called a blocking
+separate build — it is not, `mention_spans_by_chapter` (STU-489) grouped by canonical
+entity is the label, 7962 windows over 77 identities from two cached runs.
+
+Also **negative**, with the first informative failure of the line: the head fits
+(in-domain AUROC 0.68 → 0.94) but the **margin stays negative even in-domain**, so no
+global threshold exists at any training volume. Masked and trained, the blocking
+fixture pair becomes `captain westfall / chaol` — an alias exists *because* the two
+names are used in different situations, so a situation representation measures the
+wrong thing. Switch stays OFF; recommend closing the line.
+
+```bash
+python research/embedding-eval/build_corpus.py library/<author>/<series>/processing_output/<slug> ...
+HF_HUB_OFFLINE=1 PYTHONPATH=$(pwd) python research/embedding-eval/train_head.py
+```
