@@ -26,7 +26,7 @@ Do not treat `README.md` as source of truth when it conflicts with code.
   3. `wiki-preparation`
   4. `scripts/generate_wiki_pages.py`
   5. `pages-export`
-- `wiki-generation.pipeline.yaml` exists but is not the primary workflow used by `Makefile` and `run_wiki.py`.
+- `wiki-generation.pipeline.yaml` was deleted (STU-591); its generation scripts are pre-steps of `pages-export` in `run_wiki.py`.
 - `entity_extraction.py` stores chapter data by chapter ID.
 
 ## Safe Commands
@@ -68,4 +68,4 @@ Current known good baseline:
 - Assuming outputs live at repo root instead of under each series/book directory
 - Forgetting that `generate_wiki_pages.py` is standalone, not a Studio stage
 - Breaking CLI/test compatibility while optimizing for Studio payloads
-- Documenting `wiki-generation` as the main pipeline without checking `Makefile`
+- Documenting a removed `wiki-generation` pipeline as the main workflow without checking `Makefile`

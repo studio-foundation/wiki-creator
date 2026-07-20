@@ -51,7 +51,12 @@ Primary workflow:
 5. `pages-export`
 
 Important:
-- `.studio/pipelines/wiki-generation.pipeline.yaml` still exists, but the repo-level workflow uses the split path above.
+- `.studio/pipelines/wiki-generation.pipeline.yaml` is deleted (STU-591): it re-ran
+  chapter-summary/wiki-preparation/assemble/copyright-check/wiki-export a second time
+  per `make run`. The four generation scripts (`generate_wiki_pages`,
+  `generate_book_synopsis`, `generate_event_pages`, `consolidate_editorial_stance`)
+  are now pre-steps of `pages-export` in `run_wiki.py`, converging it with the
+  `make run-generation` graph. Restart the generation phase with `--restart pages-export`.
 - **Disk is the bus across pipelines (STU-455).** A stage reads an artifact written
   by an *earlier pipeline* from disk, never from Studio's context — those are
   separate `studio run` invocations, so `previous_outputs`/`all_stage_outputs`
@@ -1196,7 +1201,7 @@ Inside `wiki-resolution`, order matters:
   the consolidation pass (STU-508).
 
 - Editorial-stance consolidation (STU-508): a single post-generation pass
-  (`consolidate_editorial_stance.py`, last `wiki-generation` pre-step in
+  (`consolidate_editorial_stance.py`, last `pages-export` pre-step in
   `run_wiki.py`; `make consolidate-stance`) scans every generated page
   (`wiki_pages`/`book_synopsis`/`event_pages`/`collation_pages`, `_failed`
   skipped) for register that contradicts the declared `editorial_stance.mode`
