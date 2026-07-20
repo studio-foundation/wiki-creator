@@ -91,3 +91,6 @@ research/*/arms/
 # run_books.py; the judged numbers live in research/alias-eval/results.md.
 research/alias-eval/verdicts/
 research/alias-eval/run.log
+
+# Local, per-machine agent notes
+CLAUDE.local.md
