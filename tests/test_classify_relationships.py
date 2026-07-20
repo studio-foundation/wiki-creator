@@ -120,6 +120,70 @@ def test_load_done_keys_retries_errored_pairs(tmp_path):
     assert [p.get("entity_a") for p in pairs] == ["A"]
 
 
+def test_load_done_keys_busts_on_fingerprint_mismatch(tmp_path):
+    """STU-589: a changed classifier prompt/vocabulary (new fingerprint) discards the
+    whole resume so every pair re-classifies instead of replaying stale verdicts."""
+    output = tmp_path / "out.json"
+    data = {
+        "stats": {"classifier_prompt": "old"},
+        "relationships": [{"entity_a": "A", "entity_b": "B", "relationship_type": "ami"}],
+    }
+    output.write_text(json.dumps(data))
+    keys, pairs = _load_done_keys(output, expected_fingerprint="new")
+    assert keys == set()
+    assert pairs == []
+
+
+def test_load_done_keys_keeps_on_fingerprint_match(tmp_path):
+    """Same prompt/vocabulary (matching fingerprint) resumes normally."""
+    output = tmp_path / "out.json"
+    data = {
+        "stats": {"classifier_prompt": "fp"},
+        "relationships": [{"entity_a": "A", "entity_b": "B", "relationship_type": "ami"}],
+    }
+    output.write_text(json.dumps(data))
+    keys, pairs = _load_done_keys(output, expected_fingerprint="fp")
+    assert ("A", "B") in keys
+    assert len(pairs) == 1
+
+
+def test_load_done_keys_busts_when_fingerprint_absent(tmp_path):
+    """A pre-STU-589 artifact carries no fingerprint; asking for one busts the resume
+    (an unkeyed cache cannot be trusted to have been made under this prompt)."""
+    output = tmp_path / "out.json"
+    data = {"relationships": [{"entity_a": "A", "entity_b": "B", "relationship_type": "ami"}]}
+    output.write_text(json.dumps(data))
+    keys, pairs = _load_done_keys(output, expected_fingerprint="fp")
+    assert keys == set()
+    assert pairs == []
+
+
+def test_main_persists_classifier_fingerprint(tmp_path, monkeypatch):
+    """STU-589: main() stamps the artifact with the config fingerprint so the next run
+    can tell whether the prompt/vocabulary it would resume was produced under."""
+    series = tmp_path / "library" / "author" / "series"
+    processing = series / "processing_output" / "01-book"
+    processing.mkdir(parents=True)
+    book_yaml = series / "books" / "01-book.yaml"
+    book_yaml.parent.mkdir(parents=True)
+    book_yaml.write_text("novel_summary: A tale.\n", encoding="utf-8")
+
+    input_bundle = RelationshipBundle(relationships=[clf.Relationship(
+        entity_a="Celaena", entity_b="Chaol", cooccurrence_count=9,
+        chapters=["ch01"], sample_contexts=["they spoke"],
+    )])
+    studio_io.save_artifact(processing / "relationships.json", input_bundle, RelationshipBundle)
+
+    monkeypatch.setattr(sys, "argv",
+                        ["classify_relationships.py", "--book", str(book_yaml), "--dry-run"])
+    clf.main()
+
+    written = json.loads((processing / "relationships_classified.json").read_text())
+    assert written["stats"]["classifier_prompt"] == clf._classifier_fingerprint(
+        book_config={"novel_summary": "A tale."}, novel_summary="A tale.", pre_typed=False
+    )
+
+
 def test_save_writes_valid_json(tmp_path):
     output = tmp_path / "out.json"
     base = {"entities": [], "stats": {}, "narrator": None}
