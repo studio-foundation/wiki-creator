@@ -83,7 +83,6 @@
    "series_seed": 0
   },
   "ambiguous_pairs": 0,
-  "embedding_vetoes": 0,
   "llm_attempts": 0,
   "llm_confirmed": 0,
   "llm_failed": 0
