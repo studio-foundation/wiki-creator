@@ -166,6 +166,48 @@ def test_stray_llm_key_does_not_crash_save(tmp_path, monkeypatch):
     assert not hasattr(rel, "reasoning")
 
 
+def test_pretyped_discovered_graph_survives_fold_end_to_end(tmp_path, monkeypatch):
+    """STU-583 wiring: classify_relationships folds the discovered graph before
+    classifying (registry present), and the fold must not wipe the discovered
+    type. Dry-run passes the folded pair through, so the artifact pins that the
+    type/direction reached the output."""
+    series = tmp_path / "library" / "author" / "series"
+    processing = series / "processing_output" / "01-book"
+    processing.mkdir(parents=True)
+    book_yaml = series / "books" / "01-book.yaml"
+    book_yaml.parent.mkdir(parents=True)
+    book_yaml.write_text("novel_summary: A tale.\n", encoding="utf-8")
+
+    Registry(entities=[
+        EntityRecord(entity_id="peter", canonical_name="Peter",
+                     entity_type="PERSON", aliases=["Peter"]),
+        EntityRecord(entity_id="susan", canonical_name="Susan",
+                     entity_type="PERSON", aliases=["Susan"]),
+    ]).save(processing / "registry.json")
+
+    discovered = RelationshipBundle(relationships=[clf.Relationship(
+        entity_a="Peter", entity_b="Susan", cooccurrence_count=3,
+        chapters=["ch01"], sample_contexts=["they are siblings"],
+        relationship_type="family", direction="symétrique",
+    )])
+    studio_io.save_artifact(
+        processing / "relationships_discovered.json", discovered, RelationshipBundle
+    )
+
+    monkeypatch.setattr(
+        sys, "argv",
+        ["classify_relationships.py", "--book", str(book_yaml), "--dry-run"],
+    )
+    clf.main()
+
+    out = studio_io.load_artifact(
+        processing / "relationships_classified.json", RelationshipBundle
+    )
+    rel = out.relationships[0]
+    assert rel.relationship_type == "family"
+    assert rel.direction == "symétrique"
+
+
 def test_studio_error_is_marked_in_artifact(tmp_path, monkeypatch):
     """STU-562: a pair the classifier never judged (Studio error) is stamped with
     classification_error, so it is distinguishable from a real decline (both untyped)."""
