@@ -425,6 +425,89 @@ def test_build_clusters_pedro_vidal_aliases_stay_together():
     assert set(clusters[0]["entity_ids"]) == {"e_pedro", "e_don", "e_vidal", "e_m"}
 
 
+# --- English honorifics: Mr / Mrs are a couple, not a variant (STU-585) ---
+
+_EN_TITLES = load_title_prefixes("en")
+_EN_MASC = load_masculine_titles("en")
+_EN_FEM = load_feminine_titles("en")
+
+
+def test_load_gender_titles_english_bare_forms():
+    # person_cue_words introduces bare "mr"/"mrs"/"miss" (stripped by tokenize and
+    # yielded by extract_leading_titles); the gender sets must carry the same forms
+    # or the honorific conflict is invisible (STU-585).
+    assert "mr" in _EN_MASC
+    assert {"mrs", "miss"} <= _EN_FEM
+
+
+def test_should_cluster_blocks_mr_vs_mrs():
+    # Token path: both strip to "beaver", but the honorific conflict blocks first.
+    assert should_cluster("Mr Beaver", "Mrs Beaver", _EN_TITLES, _EN_MASC, _EN_FEM) is False
+
+
+def test_should_cluster_blocks_mr_vs_miss():
+    assert should_cluster("Mr Beaver", "Miss Beaver", _EN_TITLES, _EN_MASC, _EN_FEM) is False
+
+
+def test_should_cluster_allows_mr_tumnus_to_bare():
+    # One side titled, no conflict → still merges.
+    assert should_cluster("Mr Tumnus", "Tumnus", _EN_TITLES, _EN_MASC, _EN_FEM) is True
+
+
+def test_should_cluster_allows_captain_to_full_name():
+    assert should_cluster("Captain Westfall", "Chaol Westfall", _EN_TITLES, _EN_MASC, _EN_FEM) is True
+
+
+def _cluster_of(clusters, unclustered, eid):
+    for c in clusters:
+        if eid in c["entity_ids"]:
+            return c["cluster_id"]
+    if eid in unclustered:
+        return f"unc_{eid}"
+    return None
+
+
+def test_build_clusters_mr_mrs_beaver_not_remarried():
+    """STU-585: the transitive trap — bare `Beaver` absorbs `Mr Beaver`, then must
+    refuse `Mrs Beaver` (a couple differs only by the honorific)."""
+    entities = {
+        "e_bare": {"type": "PERSON", "raw_mentions": ["Beaver"], "first_seen": "ch01"},
+        "e_mr":   {"type": "PERSON", "raw_mentions": ["Mr Beaver"], "first_seen": "ch01"},
+        "e_mrs":  {"type": "PERSON", "raw_mentions": ["Mrs Beaver"], "first_seen": "ch02"},
+    }
+    clusters, unclustered = build_clusters(entities, language="en")
+
+    mr_cluster = _cluster_of(clusters, unclustered, "e_mr")
+    mrs_cluster = _cluster_of(clusters, unclustered, "e_mrs")
+    bare_cluster = _cluster_of(clusters, unclustered, "e_bare")
+
+    assert mr_cluster != mrs_cluster, "Mr Beaver and Mrs Beaver must not co-cluster"
+    assert bare_cluster == mr_cluster, "bare Beaver, once merged with Mr Beaver, is Mr Beaver"
+    assert bare_cluster != mrs_cluster, "bare Beaver (now Mr Beaver) must refuse Mrs Beaver"
+
+
+def test_build_clusters_mr_tumnus_still_merges():
+    """STU-585 AC: one-sided honorific keeps merging (Mr Tumnus → Tumnus)."""
+    entities = {
+        "e_bare": {"type": "PERSON", "raw_mentions": ["Tumnus"], "first_seen": "ch01"},
+        "e_mr":   {"type": "PERSON", "raw_mentions": ["Mr Tumnus"], "first_seen": "ch01"},
+    }
+    clusters, unclustered = build_clusters(entities, language="en")
+    assert len(clusters) == 1, f"Mr Tumnus and Tumnus must merge: {clusters}"
+    assert set(clusters[0]["entity_ids"]) == {"e_bare", "e_mr"}
+
+
+def test_build_clusters_captain_westfall_still_merges():
+    """STU-585 AC: a role title over a full name keeps merging (Captain Westfall → Chaol Westfall)."""
+    entities = {
+        "e_chaol": {"type": "PERSON", "raw_mentions": ["Chaol Westfall"], "first_seen": "ch01"},
+        "e_capt":  {"type": "PERSON", "raw_mentions": ["Captain Westfall"], "first_seen": "ch01"},
+    }
+    clusters, unclustered = build_clusters(entities, language="en")
+    assert len(clusters) == 1, f"Captain Westfall and Chaol Westfall must merge: {clusters}"
+    assert set(clusters[0]["entity_ids"]) == {"e_chaol", "e_capt"}
+
+
 def test_main_warns_when_no_reduction_and_many_entities():
     """main() must print a stderr warning when reduction_pct==0 with >10 input entities."""
     import subprocess
