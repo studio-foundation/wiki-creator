@@ -1,9 +1,49 @@
 """Tests for run_wiki.py orchestrator configuration."""
 import json
+from pathlib import Path
 
+import pytest
 import yaml
 
 BOOK_PATH = "library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml"
+
+CONTRACTS_DIR = Path(__file__).resolve().parents[1] / ".studio" / "contracts"
+
+
+def _expected_output_files(contract_name: str) -> list[str]:
+    """The expected_outputs.files globs declared by a Studio contract."""
+    doc = yaml.safe_load(
+        (CONTRACTS_DIR / f"{contract_name}.contract.yaml").read_text(encoding="utf-8")
+    )
+    return (doc.get("expected_outputs") or {}).get("files") or []
+
+
+# STU-600: run_wiki.py's required_files()/check_outputs() were retired. Every output
+# they asserted is now declared as expected_outputs.files on the Studio contract of
+# the stage that writes it, checked inside the RALPH loop. This map is the guard
+# against a silent removal — the STU-591 trap: dropping a declaration must break a
+# test, not vanish the only check that the file exists. (batch_ stands for the
+# wiki_inputs/<slug>/batch_*.json files the wiki-preparation stage emits.)
+MOVED_OUTPUT_DECLARATIONS = [
+    ("epub-parse", "epub_data.json"),
+    ("entity-extraction", "extraction_config.json"),
+    ("split-clusters", "splits.json"),
+    ("resolve-clusters", "chapter_summaries.json"),
+    ("entity-classification", "entities_classified.json"),
+    ("write-registry", "registry.json"),
+    ("wiki-preparation", "relationships_classified.json"),
+    ("wiki-preparation", "batch_"),
+    ("wiki-page", "wiki_pages.json"),
+]
+
+
+@pytest.mark.parametrize("contract_name,filename", MOVED_OUTPUT_DECLARATIONS)
+def test_pipeline_outputs_declared_in_contracts(contract_name, filename) -> None:
+    files = _expected_output_files(contract_name)
+    assert any(filename in f for f in files), (
+        f"{contract_name}.contract.yaml must declare an expected_outputs.files entry "
+        f"matching {filename!r} (moved from run_wiki.py required_files(), STU-600)"
+    )
 
 
 def _extracted_book(tmp_path, ner: dict) -> str:
@@ -26,11 +66,14 @@ def _extracted_book(tmp_path, ner: dict) -> str:
     return str(book_yaml)
 
 
-def test_required_files_wiki_resolution_includes_chapter_summaries() -> None:
-    from run_wiki import required_files
-    files = required_files(BOOK_PATH)
-    assert any("chapter_summaries.json" in f for f in files["wiki-resolution"]), (
-        "required_files['wiki-resolution'] must include chapter_summaries.json"
+def test_chapter_summaries_declared_on_wiki_resolution_stage() -> None:
+    """chapter_summaries.json is written by the wiki-resolution pre-step, not by any
+    stage, so it is asserted on resolve-clusters (the first stage) — its absence must
+    still fail the run once run_wiki.py's required_files['wiki-resolution'] is gone
+    (STU-600). Deleting it silently is the STU-591 trap."""
+    files = _expected_output_files("resolve-clusters")
+    assert any("chapter_summaries.json" in f for f in files), (
+        "resolve-clusters.contract.yaml must declare chapter_summaries.json"
     )
 
 
@@ -90,12 +133,12 @@ def test_series_mode_runs_each_tome_in_order(monkeypatch) -> None:
     assert calls == books, "series mode must run each tome in reading order"
 
 
-def test_required_files_wiki_extraction_includes_extraction_config() -> None:
-    from run_wiki import required_files
+def test_extraction_config_declared_on_entity_extraction_stage() -> None:
     from wiki_creator.ner import EXTRACTION_CONFIG_FILE
-    files = required_files(BOOK_PATH)
-    assert any(EXTRACTION_CONFIG_FILE in f for f in files["wiki-extraction"]), (
-        "an extraction that declares no config cannot be invalidated by a config change (STU-560)"
+    files = _expected_output_files("entity-extraction")
+    assert any(EXTRACTION_CONFIG_FILE in f for f in files), (
+        "an extraction that declares no config cannot be invalidated by a config "
+        "change (STU-560); the declaration now lives on entity-extraction (STU-600)"
     )
 
 
@@ -126,13 +169,14 @@ def test_extraction_predating_the_config_is_stale(tmp_path) -> None:
 
 
 def test_completed_extraction_reruns_when_the_config_changed(tmp_path, monkeypatch) -> None:
-    """The skip is `status == completed` + files present; a `ner` flip must break it."""
+    """The skip is `status == completed`; a `ner` flip must still break it (STU-560).
+    Output presence is no longer part of the skip decision — Studio's expected_outputs
+    checks that when the pipeline runs (STU-600)."""
     import run_wiki
 
     book = _extracted_book(tmp_path, {"invented_names": False})
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(run_wiki, "PIPELINES", ["wiki-extraction"])
-    monkeypatch.setattr(run_wiki, "check_outputs", lambda pipeline, book_path: [])
     ran: list[str] = []
     monkeypatch.setattr(run_wiki, "run_pipeline", lambda pipeline, book_path, extra_args=None: ran.append(pipeline) or True)
     run_wiki.save_state(book, {"stages": {"wiki-extraction": {"status": "completed"}}})
@@ -143,6 +187,23 @@ def test_completed_extraction_reruns_when_the_config_changed(tmp_path, monkeypat
     monkeypatch.setattr(run_wiki, "extraction_config_changed", lambda book_path: True)
     run_wiki.run_book(book, restart=None, retries=1, clean=False)
     assert ran == ["wiki-extraction"]
+
+
+def test_clean_reruns_completed_pipeline_without_restart(tmp_path, monkeypatch) -> None:
+    """--clean wipes a pipeline's outputs, so a `completed` pipeline must re-run even
+    without --restart. This used to fall out of the skip check calling check_outputs;
+    with that removed (STU-600), --clean now resets the cleaned pipeline's state."""
+    import run_wiki
+
+    book = _extracted_book(tmp_path, {"invented_names": False})
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(run_wiki, "PIPELINES", ["wiki-extraction"])
+    ran: list[str] = []
+    monkeypatch.setattr(run_wiki, "run_pipeline", lambda pipeline, book_path, extra_args=None: ran.append(pipeline) or True)
+    run_wiki.save_state(book, {"stages": {"wiki-extraction": {"status": "completed"}}})
+
+    run_wiki.run_book(book, restart=None, retries=1, clean=True)
+    assert ran == ["wiki-extraction"], "a cleaned pipeline must re-run, not skip"
 
 
 def test_pre_steps_pages_export_runs_pages_before_synopsis() -> None:

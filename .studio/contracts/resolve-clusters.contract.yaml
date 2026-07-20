@@ -8,3 +8,13 @@ schema:
 #   (base.yaml#entity_types, read at runtime — not restated, so FACTION and any
 #   later type stay covered) + singles
 # Each entity: canonical_name, type, aliases, source_ids, relevant
+expected_outputs:
+  files:
+    # chapter_summaries.json is NOT produced by a resolution stage — it is written
+    # by the wiki-resolution pre-step (scripts/chapter_summary.py, run by run_wiki.py
+    # before this pipeline). No stage here writes or reads it (its consumers live in
+    # wiki-preparation), so it is asserted on resolve-clusters, the first stage: a
+    # pre-step that returns 0 without leaving the file fails fast at pipeline entry
+    # instead of silently, matching run_wiki.py's old required_files() (STU-600).
+    # Glob: per-book slug, cwd = repo root.
+    - "library/*/*/processing_output/*/chapter_summaries.json"

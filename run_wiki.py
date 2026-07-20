@@ -28,29 +28,11 @@ from wiki_creator.series import discover_series_books
 PIPELINES = ["wiki-extraction", "wiki-resolution", "wiki-preparation", "pages-export"]
 
 
-def required_files(book_path: str) -> dict[str, list[str]]:
-    p = book_paths_from_yaml(book_path)
-    return {
-        "wiki-extraction": [
-            str(p.processing / "splits.json"),
-            str(p.processing / "epub_data.json"),
-            str(p.processing / EXTRACTION_CONFIG_FILE),
-        ],
-        "wiki-resolution": [
-            str(p.processing / "entities_classified.json"),
-            str(p.processing / "chapter_summaries.json"),
-            str(p.processing / "registry.json"),
-        ],
-        "wiki-preparation": [
-            str(p.processing / "relationships_classified.json"),
-            str(p.wiki_inputs),
-        ],
-        "pages-export": [
-            str(p.processing / "wiki_pages.json"),
-        ],
-    }
-
-
+# required_files()/check_outputs() were deleted in STU-600: each pipeline's output
+# assertions now live in the Studio contract of the stage that writes the file, as
+# `expected_outputs.files` (.studio/contracts/*.contract.yaml), checked inside the
+# RALPH loop. clean_files() stays below — deleting outputs on --clean is a distinct
+# orchestrator concern and deliberately diverges from the moved assertions.
 def clean_files(book_path: str) -> dict[str, list[str]]:
     """Files to delete per pipeline when --clean is used.
 
@@ -151,11 +133,6 @@ def run_pipeline(pipeline: str, book_path: str, extra_args: list[str] | None = N
     return result.returncode == 0
 
 
-def check_outputs(pipeline: str, book_path: str) -> list[str]:
-    """Return list of missing output files for a pipeline."""
-    return [f for f in required_files(book_path).get(pipeline, []) if not os.path.exists(f)]
-
-
 def extraction_config_changed(book_path: str) -> bool:
     """Does the book YAML ask for an extraction the artifacts on disk are not?
 
@@ -209,19 +186,27 @@ def run_book(book_path: str, *, restart: str | None, retries: int, clean: bool) 
                 elif p.exists():
                     print(f"  [clean] removing {p}")
                     p.unlink()
+            # A cleaned pipeline is no longer "completed" — its outputs are gone.
+            # Reset its state so the loop re-runs it. This used to fall out of the
+            # skip check calling check_outputs (removed in STU-600), so `--clean`
+            # without `--restart` must reset the state explicitly now.
+            state.setdefault("stages", {}).pop(pipeline, None)
+        save_state(book_path, state)
 
     for pipeline in PIPELINES[start_idx:]:
         stage_state = state.setdefault("stages", {}).get(pipeline, {})
 
-        # Skip if already completed AND output files are still present
+        # Skip if already completed. Whether the outputs are still on disk is no
+        # longer re-checked here: each stage's Studio contract asserts its own
+        # expected_outputs inside the RALPH loop when the pipeline runs (STU-600).
+        # wiki-extraction still re-runs when the book's extraction config changed
+        # (STU-560) — a cache-validity concern the contracts cannot see.
         if stage_state.get("status") == "completed":
-            missing = check_outputs(pipeline, book_path)
-            stale = pipeline == "wiki-extraction" and not missing and extraction_config_changed(book_path)
-            if not missing and not stale:
+            stale = pipeline == "wiki-extraction" and extraction_config_changed(book_path)
+            if not stale:
                 print(f"  {pipeline}: already completed, skipping")
                 continue
-            reason = "config changed since extraction" if stale else f"outputs missing ({', '.join(missing)})"
-            print(f"  {pipeline}: {reason}, re-running")
+            print(f"  {pipeline}: config changed since extraction, re-running")
             state["stages"][pipeline] = {}
             save_state(book_path, state)
 
@@ -244,15 +229,10 @@ def run_book(book_path: str, *, restart: str | None, retries: int, clean: bool) 
             }
             save_state(book_path, state)
 
+            # A "success" return now means the stages passed their own
+            # expected_outputs checks inside Studio (STU-600) — run_wiki.py no
+            # longer re-asserts the output files after the fact.
             ok = run_pipeline(pipeline, book_path)
-
-            if ok:
-                missing = check_outputs(pipeline, book_path)
-                if missing:
-                    print(f"\n[WARN] {pipeline} succeeded but expected files are missing:")
-                    for f in missing:
-                        print(f"  {f}")
-                    ok = False
 
             if ok:
                 state["stages"][pipeline] = {"status": "completed", "attempt": attempt}

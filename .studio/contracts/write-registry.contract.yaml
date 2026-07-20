@@ -8,3 +8,9 @@ schema:
 # series_registry: {path, entities, matched, added, ...} — the multi-tome
 #   accumulation summary (STU-485), always emitted (write_registry.py), so the
 #   whole series path has a contractual surface
+expected_outputs:
+  files:
+    # write-registry (write_registry.py) writes registry.json into
+    # processing_output/<slug>/. Moved here from run_wiki.py required_files()
+    # (STU-600). Glob: per-book slug, cwd = repo root.
+    - "library/*/*/processing_output/*/registry.json"

@@ -18,3 +18,9 @@ schema:
 validators:
   - name: split-clusters-shape
     command: PYTHONPATH=. python3 scripts/validate_split_clusters.py
+expected_outputs:
+  files:
+    # split-clusters (split_clusters.py) writes splits.json into
+    # processing_output/<slug>/. Moved here from run_wiki.py required_files()
+    # (STU-600). Glob: per-book slug, cwd = repo root.
+    - "library/*/*/processing_output/*/splits.json"

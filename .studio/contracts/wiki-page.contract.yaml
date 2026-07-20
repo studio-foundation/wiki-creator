@@ -14,3 +14,11 @@ validators:
     command: PYTHONPATH=. python3 scripts/validate_entity_type_declared.py
   - name: unique-page-title
     command: PYTHONPATH=. python3 scripts/validate_unique_page_title.py
+expected_outputs:
+  files:
+    # This contract backs the wiki-generation stage of pages-export. wiki_pages.json
+    # is written by the pages-export pre-step (scripts/generate_wiki_pages.py) and is
+    # the required INPUT of that stage (assemble_wiki_pages.py exits 1 without it).
+    # Asserting it here is where run_wiki.py's old required_files() check for
+    # pages-export lands (STU-600). Glob: per-book slug, cwd = repo root.
+    - "library/*/*/processing_output/*/wiki_pages.json"

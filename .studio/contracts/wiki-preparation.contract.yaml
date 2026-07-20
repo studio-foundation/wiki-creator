@@ -14,3 +14,15 @@ schema:
 validators:
   - name: preparation-batches-shape
     command: PYTHONPATH=. python3 scripts/validate_preparation_batches.py
+expected_outputs:
+  files:
+    # wiki-preparation (wiki_preparation.py) writes the batch files it lists in
+    # `batches` into wiki_inputs/<slug>/. Asserting the files (not just the dir the
+    # old check verified) is the stronger, culprit-pointing form: the stage's job
+    # is to emit batches. Moved from run_wiki.py required_files() (STU-600).
+    - "library/*/*/wiki_inputs/*/batch_*.json"
+    # relationships_classified.json is a required INPUT of this stage, written by
+    # the wiki-preparation pre-step (scripts/classify_relationships.py). No stage
+    # here writes it; asserting it on its sole consumer keeps run_wiki.py's old
+    # required_files() coverage after the pre-step is removed. Glob: per-book slug.
+    - "library/*/*/processing_output/*/relationships_classified.json"
