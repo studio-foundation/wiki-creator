@@ -12,7 +12,9 @@ from scripts.chapter_summary import (
     _detect_temporal_context,
     _parse_llm_summary_response_text,
     _read_epub_data,
+    _save_chapter_summaries,
     _score_sentence,
+    summary_prompt_fingerprint,
     summarize_chapters_incrementally,
     summarize_chapter,
     summarize_chapter_from_item_result,
@@ -168,6 +170,68 @@ def test_summarize_chapters_incrementally_resumes_from_existing_file(tmp_path) -
     assert "Chapter 2" in summaries
 
 
+def test_summary_fingerprint_changes_with_config():
+    """STU-589: the fingerprint must move when the prompt-shaping config moves, so a
+    changed knob busts the resume."""
+    base = ChapterSummaryConfig(mode="llm", max_bullets=8, llm_model="m")
+    fp = summary_prompt_fingerprint(base, "en")
+    assert summary_prompt_fingerprint(base, "fr") != fp
+    assert summary_prompt_fingerprint(ChapterSummaryConfig(mode="extractive", max_bullets=8, llm_model="m"), "en") != fp
+    assert summary_prompt_fingerprint(ChapterSummaryConfig(mode="llm", max_bullets=3, llm_model="m"), "en") != fp
+    assert summary_prompt_fingerprint(ChapterSummaryConfig(mode="llm", max_bullets=8, llm_model="n"), "en") != fp
+    assert summary_prompt_fingerprint(base, "en") == fp  # stable
+
+
+def test_save_persists_fingerprint(tmp_path):
+    """STU-589: the fingerprint is written into the artifact so the next run can tell
+    whether the prompt it would resume was produced under."""
+    output_file = tmp_path / "chapter_summaries.json"
+    _save_chapter_summaries(
+        {"Chapter 1": {"chapter_id": "ch01", "chapter_title": "Chapter 1",
+                       "summary_bullets": ["b"], "summary_method": "llm"}},
+        output_file,
+        "fp-123",
+    )
+    assert json.loads(output_file.read_text())["prompt"] == "fp-123"
+
+
+def test_incrementally_busts_resume_on_fingerprint_mismatch(tmp_path):
+    """A stored fingerprint that no longer matches discards the resume — the chapter
+    is re-summarized rather than replayed from a stale prompt."""
+    output_file = tmp_path / "chapter_summaries.json"
+    output_file.write_text(json.dumps({
+        "prompt": "old",
+        "chapter_summaries": {
+            "Chapter 1": {"chapter_id": "ch01", "chapter_title": "Chapter 1",
+                          "summary_bullets": ["Stale summary."], "summary_method": "llm",
+                          "quality_flags": []},
+        },
+    }), encoding="utf-8")
+    chapters = [{"id": "ch01", "title": "Chapter 1", "content": "Celaena enters the vault and finds a key."}]
+
+    summaries = summarize_chapters_incrementally(chapters, output_file=output_file, fingerprint="new")
+
+    assert summaries["Chapter 1"]["summary_bullets"] != ["Stale summary."]
+
+
+def test_incrementally_resumes_on_fingerprint_match(tmp_path):
+    """A matching fingerprint resumes normally (extractive mode, no LLM needed)."""
+    output_file = tmp_path / "chapter_summaries.json"
+    output_file.write_text(json.dumps({
+        "prompt": "fp",
+        "chapter_summaries": {
+            "Chapter 1": {"chapter_id": "ch01", "chapter_title": "Chapter 1",
+                          "summary_bullets": ["Kept summary."], "summary_method": "extractive",
+                          "quality_flags": []},
+        },
+    }), encoding="utf-8")
+    chapters = [{"id": "ch01", "title": "Chapter 1", "content": "Old content should be skipped."}]
+
+    summaries = summarize_chapters_incrementally(chapters, output_file=output_file, fingerprint="fp")
+
+    assert summaries["Chapter 1"]["summary_bullets"] == ["Kept summary."]
+
+
 def test_summarize_chapters_incrementally_retries_failed_llm_on_resume(tmp_path, monkeypatch) -> None:
     output_file = tmp_path / "chapter_summaries.json"
     output_file.write_text(
@@ -227,7 +291,7 @@ def test_summarize_chapters_incrementally_saves_after_each_new_chapter(tmp_path,
     ]
     save_sizes: list[int] = []
 
-    def fake_save(chapter_summaries, path):
+    def fake_save(chapter_summaries, path, fingerprint=None):
         assert path == output_file
         save_sizes.append(len(chapter_summaries))
 

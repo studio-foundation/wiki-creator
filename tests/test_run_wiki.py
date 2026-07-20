@@ -145,14 +145,14 @@ def test_completed_extraction_reruns_when_the_config_changed(tmp_path, monkeypat
     assert ran == ["wiki-extraction"]
 
 
-def test_pre_steps_wiki_generation_runs_pages_before_synopsis() -> None:
+def test_pre_steps_pages_export_runs_pages_before_synopsis() -> None:
     """The synopsis (SP4) is generated in the same pre-step batch as the entity
     pages, after generate_wiki_pages.py."""
     from run_wiki import PRE_STEPS
-    cmds = PRE_STEPS["wiki-generation"]
+    cmds = PRE_STEPS["pages-export"]
     joined = [" ".join(cmd) for cmd in cmds]
     pages_idx = next(i for i, c in enumerate(joined) if "generate_wiki_pages.py" in c)
     synopsis_idx = next(i for i, c in enumerate(joined) if "generate_book_synopsis.py" in c)
     assert pages_idx < synopsis_idx, (
-        "generate_wiki_pages.py must run before generate_book_synopsis.py in PRE_STEPS['wiki-generation']"
+        "generate_wiki_pages.py must run before generate_book_synopsis.py in PRE_STEPS['pages-export']"
     )

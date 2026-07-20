@@ -109,7 +109,7 @@ run-from-preparation:
 	python run_wiki.py --book $(BOOK) --restart wiki-preparation $(CLEAN)
 
 run-from-generation:
-	python run_wiki.py --book $(BOOK) --restart wiki-generation $(CLEAN)
+	python run_wiki.py --book $(BOOK) --restart pages-export $(CLEAN)
 
 run-status:
 	python run_wiki.py --book $(BOOK) --status

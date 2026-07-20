@@ -20,6 +20,7 @@ import yaml
 
 
 from wiki_creator import studio_io
+from wiki_creator.page_templates import confidence_definitions, relationship_definitions
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.registry import Registry
 from wiki_creator.relationship_fold import fold_relationships
@@ -28,6 +29,31 @@ from scripts.relationship_extraction import (
     _run_studio_classifier_item,
     _should_classify_pair,
 )
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+_AGENTS_DIR = PROJECT_ROOT / ".studio" / "agents"
+
+
+def _classifier_fingerprint(*, book_config: dict, novel_summary: str, pre_typed: bool) -> str:
+    """Fingerprint the config every verdict in the artifact was produced under.
+
+    The resume state is the output artifact itself, keyed per pair — so before
+    STU-589 an edited classifier prompt or a changed type/confidence vocabulary
+    replayed the stale verdicts silently. This busts the whole resume when any of
+    them moves (the pair evidence is the per-item input and already re-keys itself).
+    """
+    return studio_io.prompt_fingerprint(
+        agents=[
+            _AGENTS_DIR / "relationship-classifier.agent.yaml",
+            _AGENTS_DIR / "relationship-classifier-validator.agent.yaml",
+        ],
+        config={
+            "relationship_types": relationship_definitions(book_config=book_config),
+            "confidence_levels": confidence_definitions(),
+            "novel_summary": novel_summary,
+            "pre_typed": pre_typed,
+        },
+    )
 
 
 # Fields the LLM classifier is allowed to contribute to a relationship dict
@@ -98,7 +124,9 @@ def _entity_role_contexts(
     return out
 
 
-def _load_done_keys(output_path: Path) -> tuple[set[tuple[str, str]], list[dict]]:
+def _load_done_keys(
+    output_path: Path, expected_fingerprint: str | None = None
+) -> tuple[set[tuple[str, str]], list[dict]]:
     """Load already-classified pairs from output file. Returns (done_keys, pairs).
 
     Malformed pairs (missing entity_a/entity_b) are skipped individually — they do NOT
@@ -107,6 +135,11 @@ def _load_done_keys(output_path: Path) -> tuple[set[tuple[str, str]], list[dict]
     A pair carrying a ``classification_error`` (STU-562) is a Studio failure, not a
     verdict: it is dropped from both the done-keys and the kept list so a re-run
     retries it instead of resuming it as settled — and it is not duplicated.
+
+    When ``expected_fingerprint`` is given (STU-589), a stored fingerprint that does
+    not match it means the classifier prompt or vocabulary changed since the artifact
+    was written — the whole resume is discarded so every pair re-classifies rather
+    than replaying verdicts the old prompt produced.
     """
     if not output_path.exists():
         return set(), []
@@ -115,6 +148,10 @@ def _load_done_keys(output_path: Path) -> tuple[set[tuple[str, str]], list[dict]
         pairs = data.get("relationships", [])
     except json.JSONDecodeError:
         return set(), []
+    if expected_fingerprint is not None:
+        stored = (data.get("stats") or {}).get("classifier_prompt")
+        if stored != expected_fingerprint:
+            return set(), []
     keys: set[tuple[str, str]] = set()
     kept: list[dict] = []
     for p in pairs:
@@ -205,7 +242,14 @@ def main() -> None:
         book_cfg = yaml.safe_load(f) or {}
     novel_summary = book_cfg.get("novel_summary") or ""
 
-    done_keys, classified = _load_done_keys(output_path)
+    fingerprint = _classifier_fingerprint(
+        book_config=book_cfg, novel_summary=novel_summary, pre_typed=pre_typed
+    )
+    base_stats = dict(base.get("stats") or {})
+    base_stats["classifier_prompt"] = fingerprint
+    base["stats"] = base_stats
+
+    done_keys, classified = _load_done_keys(output_path, fingerprint)
     if done_keys:
         print(
             f"[classify-relationships] Resuming — {len(done_keys)} pairs already done",
