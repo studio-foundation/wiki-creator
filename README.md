@@ -52,8 +52,12 @@ pip install -e ".[models]"
 # Optional, each pulls torch (large download):
 pip install -e ".[gliner]"   # books with ner.invented_names: true
 pip install -e ".[coref]"    # books with coref: true
-studio config set provider anthropic --api-key $ANTHROPIC_API_KEY
+cp .studio/config.example.yaml .studio/config.yaml
 ```
+
+`defaults` in that file drives every LLM stage — no agent declares a model of
+its own. It ships pointing at the provider the project's own runs use; the
+example documents what swapping it costs.
 
 ### Run
 
