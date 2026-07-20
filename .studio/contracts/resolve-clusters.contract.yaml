@@ -4,5 +4,7 @@ schema:
   required_fields:
     - entities
 # narrator: null (narrator detection not implemented in script stage)
-# entities: all resolved entities from all types (PERSON, PLACE, ORG, EVENT, OTHER) + singles
+# entities: all resolved entities of every resolution type
+#   (base.yaml#entity_types, read at runtime — not restated, so FACTION and any
+#   later type stay covered) + singles
 # Each entity: canonical_name, type, aliases, source_ids, relevant

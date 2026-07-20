@@ -15,3 +15,11 @@ schema:
   #     relationship_type (str|null), direction (str|null),
   #     cooccurrence_count (int), chapter_weights (dict), sample_contexts (list),
   #     evolution (str), books (list)
+# The node/link shapes and the two literal enums above are machine-checked by the
+# validator below — a structurally malformed graph fails here instead of at a
+# downstream reader.
+# PYTHONPATH pins the check to the tree being run, not to whichever checkout
+# `pip install -e` points at.
+validators:
+  - name: character-graph-shape
+    command: PYTHONPATH=. python3 scripts/validate_character_graph.py

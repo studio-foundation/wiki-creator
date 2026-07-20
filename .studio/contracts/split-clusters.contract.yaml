@@ -10,3 +10,11 @@ schema:
 #   (base.yaml#entity_types) — naming a type here would re-freeze the vocabulary
 #   that STU-505 moved into base.yaml.
 # stats: {singles, multi_<TYPE> for each resolution type}
+# The container shape (singles_resolved a list, by_type a dict of lists) is
+# machine-checked by the validator below; the type keys are deliberately NOT
+# named there, for the same STU-505 reason they are not named here.
+# PYTHONPATH pins the check to the tree being run, not to whichever checkout
+# `pip install -e` points at.
+validators:
+  - name: split-clusters-shape
+    command: PYTHONPATH=. python3 scripts/validate_split_clusters.py
