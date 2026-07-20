@@ -1226,10 +1226,27 @@ Inside `wiki-resolution`, order matters:
   chain is LLM-free by construction, so its Studio contract went with it and the
   script calls `character_graph_errors` itself — deleting a stage must not delete
   its validation (STU-590).
-  **Only 18 of Narnia's 32 discovered pairs reach the graph** (STU-602, open):
-  `discover_relationships` builds its roster from `registry.json` while the graph
-  gates edges on `entities_classified.json`'s PERSON set, and the two artifacts
-  disagree on who is a character (`Witch`, `Beavers`).
+  **A typed artifact older than the roster is refused whole (STU-602).** Narnia
+  showed 18 of 32 discovered pairs reaching the graph, and the ticket read that as
+  `discover_relationships` (roster from `registry.json`) disagreeing with the graph
+  (gate on `entities_classified.json`) about who is a character. **The two artifacts
+  agree exactly** — identical PERSON sets, 19 each — and `build_roster` does filter
+  to PERSON while `valid_relations` hard-gates every emitted name against it, so an
+  off-roster name cannot be written in the first place. `relationships_discovered.json`
+  was simply two days older than the registry: it was discovered when the roster still
+  carried the STU-541/585 Beaver remarriage (`Beavers` PERSON, since retyped FACTION)
+  and canonical `Witch` (since `WITCH`), both of which a re-resolution had fixed. 8 of
+  the 14 drops are the rename alone; the other 6 are `Beavers`, correctly gone.
+  The votes cache is keyed on the roster and self-heals, so a full `run_wiki.py`
+  re-runs discovery — but the **output** carried no key, so a reader consumed a
+  roster-mismatched artifact and lost it one edge at a time behind a per-edge stderr
+  line. It needs no new field: `RelationshipBundle.entities` already records the
+  roster discovery ran against (and `classify_relationships` passes it through), so
+  `build_character_graph` compares it to the classified PERSON set and **writes
+  nothing, naming the drifted names**, rather than building a graph from the
+  survivors. Same rule as STU-560, one artifact over: a cache is keyed on the inputs
+  that produced it. A partial build is what let a stale artifact be mistaken for a
+  design flaw.
 - Editorial stance (STU-507): whether pages speak from inside the fiction is
   **declared** in the book YAML (`generation.editorial_stance`), not inherited
   from anti-hallucination prompting. `wiki_creator/editorial_stance.py` holds the
