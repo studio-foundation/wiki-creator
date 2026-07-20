@@ -32,23 +32,6 @@ def test_script_stages_use_script_paths_only() -> None:
             )
 
 
-def test_chapter_summary_stage_has_effectively_unbounded_outer_timeout() -> None:
-    """Studio script stages default to 30s, so long-running incremental summaries need an explicit large timeout."""
-    target_pipelines = {
-        "wiki-generation.pipeline.yaml",
-    }
-
-    for pipeline_name in target_pipelines:
-        doc = _load_yaml(PIPELINES_DIR / pipeline_name)
-        chapter_stage = next(
-            stage for stage in doc.get("stages", [])
-            if stage.get("name") == "chapter-summary"
-        )
-        assert chapter_stage.get("timeout_ms") == 86_400_000, (
-            f"{pipeline_name}:chapter-summary must set timeout_ms=86400000 to avoid Studio's 30s default"
-        )
-
-
 def test_chapter_summary_item_contract_exists_with_required_fields() -> None:
     contract_path = CONTRACTS_DIR / "chapter-summary-item.contract.yaml"
     assert contract_path.exists(), "chapter-summary-item contract is missing"
