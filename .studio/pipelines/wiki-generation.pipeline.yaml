@@ -14,7 +14,6 @@ stages:
       include:
         - input
         - previous_stage_output
-        - all_stage_outputs
 
   - name: wiki-preparation
     kind: extraction
@@ -26,7 +25,6 @@ stages:
       include:
         - input
         - previous_stage_output
-        - all_stage_outputs
 
   - name: wiki-generation
     kind: extraction
