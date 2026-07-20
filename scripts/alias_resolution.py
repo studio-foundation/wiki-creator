@@ -789,10 +789,9 @@ def main() -> None:
     payload = studio_io.read_payload()
     previous_outputs = payload.get("previous_outputs", {})
     all_stage_outputs = payload.get("all_stage_outputs", {})
-    # New pipeline: entities come from merge-entities; fall back to resolve-clusters for compat.
+    # Entities come from resolve-clusters (STU-590 removed the merge-entities passthrough).
     entity_source = (
-        all_stage_outputs.get("merge-entities")
-        or previous_outputs.get("merge-entities")
+        all_stage_outputs.get("resolve-clusters")
         or previous_outputs.get("resolve-clusters")
         or {}
     )
