@@ -21,7 +21,7 @@ stages:
     contract: merge-entities
     context:
       include:
-        - previous_stage_output
+        - all_stage_outputs
 
   - name: relationship-extraction
     kind: analysis
@@ -33,7 +33,7 @@ stages:
     context:
       include:
         - input
-        - previous_stage_output
+        - all_stage_outputs
 
   - name: alias-resolution
     kind: extraction
@@ -48,7 +48,7 @@ stages:
     context:
       include:
         - input
-        - previous_stage_output
+        - all_stage_outputs
 
   - name: alias-adjudication
     kind: extraction
@@ -61,7 +61,7 @@ stages:
     context:
       include:
         - input
-        - previous_stage_output
+        - all_stage_outputs
 
   - name: entity-classification
     kind: extraction
@@ -72,7 +72,7 @@ stages:
     context:
       include:
         - input
-        - previous_stage_output
+        - all_stage_outputs
 
   - name: build-character-graph
     kind: extraction
@@ -83,7 +83,7 @@ stages:
     context:
       include:
         - input
-        - previous_stage_output
+        - all_stage_outputs
 
   - name: save-relationships
     kind: extraction
@@ -94,7 +94,7 @@ stages:
     context:
       include:
         - input
-        - previous_stage_output
+        - all_stage_outputs
 
   - name: write-registry
     kind: extraction
@@ -105,4 +105,4 @@ stages:
     context:
       include:
         - input
-        - previous_stage_output
+        - all_stage_outputs
