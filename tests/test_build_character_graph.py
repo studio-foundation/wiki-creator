@@ -48,7 +48,7 @@ def _run_script(entities, relationships, book_slug="01-tog", series_graph=None):
     import scripts.build_character_graph as bsg
 
     payload = {
-        "all_stage_outputs": {
+        "previous_outputs": {
             "entity-classification": {"entities": entities, "relationships": relationships}
         },
         "additional_context": f"book_slug: {book_slug}\n",
