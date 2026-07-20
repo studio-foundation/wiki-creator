@@ -37,7 +37,7 @@ Aucune page wiki n'est générée tant que le registre d'entités n'est pas
 résolu ; les aliases non fusionnés produiraient des pages dupliquées.
 
 Enforced par :
-- **Ordre du pipeline `wiki-resolution`** : `merge-entities` →
+- **Ordre du pipeline `wiki-resolution`** : `resolve-clusters` →
   `alias-resolution` → `entity-classification` (l'entrée de la génération est
   la sortie d'`entity-classification`, donc toujours post-alias-resolution).
 - **Vérification mesurée** : métrique `alias_duplicates` suivie par run dans

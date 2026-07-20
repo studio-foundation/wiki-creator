@@ -1,9 +1,0 @@
-name: verify-entity-types
-version: 1
-schema:
-  required_fields:
-    - clusters
-    - stats
-    - type_corrections
-# type_corrections: list of {cluster_id, name, from, to, context_snippet}
-# Empty list when verify_entity_types is false or no corrections found.

@@ -67,6 +67,7 @@ from wiki_creator.paths import book_paths_from_yaml, BookPaths
 from wiki_creator.lang import load_lang_config, infer_language
 from wiki_creator.nlp.loader import load_spacy_model
 from wiki_creator.page_templates import confidence_definitions, relationship_definitions
+from wiki_creator.types import Relationship, RelationshipBundle
 from wiki_creator import studio_io
 
 
@@ -1374,14 +1375,14 @@ def main() -> None:
     prev_outputs = payload.get("previous_outputs", {})
     resolution_output = (
         prev_outputs.get("alias-resolution")
-        or prev_outputs.get("merge-entities")
+        or prev_outputs.get("resolve-clusters")
         or prev_outputs.get("entity-resolution")
         or {}
     )
     entities = resolution_output.get("entities", [])
 
     if not entities:
-        json.dump({"error": "missing alias-resolution or merge-entities output"}, sys.stdout, ensure_ascii=False)
+        json.dump({"error": "missing resolve-clusters output"}, sys.stdout, ensure_ascii=False)
         sys.exit(1)
 
     do_coref = False
@@ -1444,6 +1445,19 @@ def main() -> None:
     )
 
     narrator = resolution_output.get("narrator", None)
+
+    # Persist the co-occurrence graph so the standalone classify_relationships.py
+    # step (a later pipeline) can read it from disk — disk is the bus across
+    # pipelines. Folded in from the former save-relationships passthrough (STU-590).
+    if paths is not None:
+        paths.processing.mkdir(parents=True, exist_ok=True)
+        bundle = RelationshipBundle(
+            entities=entities,
+            relationships=[Relationship(**r) for r in relationships],
+            stats=stats,
+            narrator=narrator,
+        )
+        studio_io.save_artifact(paths.processing / "relationships.json", bundle, RelationshipBundle)
 
     json.dump({
         "entities": entities,

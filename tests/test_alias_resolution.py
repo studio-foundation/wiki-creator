@@ -695,8 +695,8 @@ def test_script_role_words_propagated_from_ctx(tmp_path):
 
 
 
-def test_main_reads_entities_from_merge_entities_when_available(tmp_path):
-    """After pipeline reorder, alias-resolution receives merge-entities output in all_stage_outputs."""
+def test_main_reads_entities_from_resolve_clusters_when_available(tmp_path):
+    """STU-590: alias-resolution reads resolve-clusters output from all_stage_outputs."""
     import subprocess, json
     from pathlib import Path
     book_yaml = tmp_path / "library" / "a" / "s" / "books" / "book.yaml"
@@ -716,10 +716,10 @@ def test_main_reads_entities_from_merge_entities_when_available(tmp_path):
     payload = {
         "additional_context": f"file_path: {book_yaml}\n",
         "previous_outputs": {
-            "merge-entities": {"entities": [merged_entity], "narrator": None},
+            "resolve-clusters": {"entities": [merged_entity], "narrator": None},
         },
         "all_stage_outputs": {
-            "merge-entities": {"entities": [merged_entity], "narrator": None},
+            "resolve-clusters": {"entities": [merged_entity], "narrator": None},
             "relationship-extraction": {"relationships": []},
         },
     }
