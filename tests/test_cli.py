@@ -97,3 +97,39 @@ def test_unknown_book_returns_2(fake_lib, monkeypatch, capsys):
 def test_real_library_tog_alias_resolves():
     # sanity against the committed library — the shipped example
     assert library.resolve_book("tog").name == "01-throne-of-glass.yaml"
+
+
+def test_book_pages_bare_runs_pages_export(fake_lib, monkeypatch, capsys):
+    monkeypatch.setattr(library, "_PROJECT_ROOT", fake_lib)
+    cli.main(["--dry-run", "book", "pages", "tog"])
+    assert "studio run pages-export --input-file" in capsys.readouterr().out
+
+
+def test_book_pages_entities_uses_generator_script(fake_lib, monkeypatch, capsys):
+    monkeypatch.setattr(library, "_PROJECT_ROOT", fake_lib)
+    cli.main(["--dry-run", "book", "pages", "tog", "--entities", "Lucy", "Peter", "--force"])
+    out = capsys.readouterr().out
+    assert "generate_wiki_pages.py --book" in out
+    assert "--entities Lucy Peter" in out and "--force" in out
+    assert "studio run" not in out
+
+
+def test_replay_plain(capsys):
+    cli.main(["--dry-run", "replay", "abc123"])
+    assert capsys.readouterr().out.strip() == "$ studio replay abc123"
+
+
+def test_replay_restart_from_stage(capsys):
+    cli.main(["--dry-run", "replay", "abc123", "--stage", "wiki-resolution"])
+    out = capsys.readouterr().out
+    assert "studio replay abc123 --restart --stage wiki-resolution" in out
+
+
+def test_status_and_logs(capsys):
+    cli.main(["--dry-run", "status"])
+    cli.main(["--dry-run", "status", "abc123"])
+    cli.main(["--dry-run", "logs", "abc123"])
+    out = capsys.readouterr().out
+    assert "$ studio status\n" in out
+    assert "$ studio status abc123" in out
+    assert "$ studio logs abc123" in out

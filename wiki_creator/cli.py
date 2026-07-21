@@ -1,9 +1,9 @@
 """`wiki` — ergonomic front door over `studio run` (STU-597).
 
-A thin launcher, zero sequencing: every command is one `studio run` (or a
-tome-by-tome loop for a series, like `make run-series`). It owns no stage
-order — Studio does. It buys short book aliases, subcommand discovery, and
-`--help`.
+A thin launcher, zero sequencing: every command is one `studio run`/`studio
+replay` (or a tome-by-tome loop for a series, like `make run-series`). It owns
+no stage order — Studio does. It buys short book aliases, subcommand discovery,
+and `--help`.
 """
 from __future__ import annotations
 
@@ -41,28 +41,64 @@ def _exec(cmd: list[str], *, dry_run: bool) -> int:
     return subprocess.run(cmd).returncode
 
 
-def _cmd_ls(args: argparse.Namespace) -> int:
-    if args.series:
-        for name, path in sorted(library.discover_series().items()):
-            print(f"{name}\t{path}")
-        return 0
-    for book in library.discover_books():
-        alias = f" ({', '.join(book.aliases)})" if book.aliases else ""
-        print(f"{book.slug}{alias}\t{book.yaml_path}")
-    return 0
-
-
-def _cmd_book(args: argparse.Namespace) -> int:
+def _resolve_book_or_exit(query: str) -> Path | None:
     try:
-        book_path = library.resolve_book(args.book)
+        return library.resolve_book(query)
     except library.ResolutionError as exc:
         print(f"error: {exc}", file=sys.stderr)
+        return None
+
+
+# --- book ------------------------------------------------------------------
+
+def _cmd_book_pipeline(args: argparse.Namespace) -> int:
+    book_path = _resolve_book_or_exit(args.book)
+    if book_path is None:
         return 2
     if args.max_chapters is not None:
         os.environ["WIKI_MAX_CHAPTERS"] = str(args.max_chapters)
-    cmd = _studio_command(_PIPELINES[args.verb], book_path)
-    return _exec(cmd, dry_run=args.dry_run)
+    return _exec(_studio_command(_PIPELINES[args.verb], book_path), dry_run=args.dry_run)
 
+
+def _cmd_book_pages(args: argparse.Namespace) -> int:
+    book_path = _resolve_book_or_exit(args.book)
+    if book_path is None:
+        return 2
+    # A slice (--entities/--importance/--force) regenerates only some pages via
+    # the standalone generator; bare `pages` runs the whole pages-export pipeline.
+    if args.entities or args.importance or args.force:
+        cmd = [sys.executable, "scripts/generate_wiki_pages.py", "--book", str(book_path)]
+        if args.entities:
+            cmd += ["--entities", *args.entities]
+        if args.importance:
+            cmd += ["--importance", args.importance]
+        if args.force:
+            cmd.append("--force")
+        return _exec(cmd, dry_run=args.dry_run)
+    if args.max_chapters is not None:
+        os.environ["WIKI_MAX_CHAPTERS"] = str(args.max_chapters)
+    return _exec(_studio_command("pages-export", book_path), dry_run=args.dry_run)
+
+
+def _cmd_book_add(args: argparse.Namespace) -> int:
+    enrich = (lambda title, author: _llm_summary(title, author)) if args.llm else None
+    try:
+        plan = book_import.generate_book(
+            args.epub, root=args.dest, author_slug=args.author,
+            series_slug=args.series, number=args.number,
+            force=args.force, dry_run=args.dry_run, enrich=enrich,
+        )
+    except (FileNotFoundError, FileExistsError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    verb = "would write" if args.dry_run else "wrote"
+    print(f"{verb} {plan.dest_epub}\n{verb} {plan.dest_yaml}")
+    if args.dry_run:
+        print("---\n" + plan.yaml_text, end="")
+    return 0
+
+
+# --- series ----------------------------------------------------------------
 
 def _cmd_series(args: argparse.Namespace) -> int:
     try:
@@ -79,6 +115,35 @@ def _cmd_series(args: argparse.Namespace) -> int:
         if rc != 0:
             return rc
     return 0
+
+
+# --- top-level: ls / replay / status / logs --------------------------------
+
+def _cmd_ls(args: argparse.Namespace) -> int:
+    if args.series:
+        for name, path in sorted(library.discover_series().items()):
+            print(f"{name}\t{path}")
+        return 0
+    for book in library.discover_books():
+        alias = f" ({', '.join(book.aliases)})" if book.aliases else ""
+        print(f"{book.slug}{alias}\t{book.yaml_path}")
+    return 0
+
+
+def _cmd_replay(args: argparse.Namespace) -> int:
+    cmd = ["studio", "replay", args.run_id]
+    if args.stage is not None:
+        cmd += ["--restart", "--stage", args.stage]
+    return _exec(cmd, dry_run=args.dry_run)
+
+
+def _cmd_status(args: argparse.Namespace) -> int:
+    cmd = ["studio", "status"] + ([args.run_id] if args.run_id else [])
+    return _exec(cmd, dry_run=args.dry_run)
+
+
+def _cmd_logs(args: argparse.Namespace) -> int:
+    return _exec(["studio", "logs", args.run_id], dry_run=args.dry_run)
 
 
 def _llm_summary(title: str, author: str | None) -> str:
@@ -99,24 +164,6 @@ def _llm_summary(title: str, author: str | None) -> str:
     return "".join(getattr(b, "text", "") for b in msg.content).strip()
 
 
-def _cmd_generate(args: argparse.Namespace) -> int:
-    enrich = (lambda title, author: _llm_summary(title, author)) if args.llm else None
-    try:
-        plan = book_import.generate_book(
-            args.epub, root=args.dest, author_slug=args.author,
-            series_slug=args.series, number=args.number,
-            force=args.force, dry_run=args.dry_run, enrich=enrich,
-        )
-    except (FileNotFoundError, FileExistsError) as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return 2
-    verb = "would write" if args.dry_run else "wrote"
-    print(f"{verb} {plan.dest_epub}\n{verb} {plan.dest_yaml}")
-    if args.dry_run:
-        print("---\n" + plan.yaml_text, end="")
-    return 0
-
-
 def _build_parser() -> argparse.ArgumentParser:
     common = argparse.ArgumentParser(add_help=False)
     # SUPPRESS so a subparser's default can't clobber the value parsed at the
@@ -133,11 +180,32 @@ def _build_parser() -> argparse.ArgumentParser:
     ls.add_argument("--series", action="store_true", help="list series instead")
     ls.set_defaults(func=_cmd_ls)
 
-    book = sub.add_parser("book", parents=[common], help="run a pipeline on one book")
-    book.add_argument("verb", choices=list(_PIPELINES), help="pipeline to run")
-    book.add_argument("book", help="book slug, alias, series or author")
-    book.add_argument("--max-chapters", type=int, help="cap extraction (WIKI_MAX_CHAPTERS)")
-    book.set_defaults(func=_cmd_book)
+    # book <verb> ...
+    book = sub.add_parser("book", parents=[common], help="operate on one book")
+    bsub = book.add_subparsers(dest="verb", required=True)
+    for verb in ("run", "extraction", "resolution", "preparation"):
+        p = bsub.add_parser(verb, parents=[common], help=f"studio run {_PIPELINES[verb]}")
+        p.add_argument("book", help="book slug, alias, series or author")
+        p.add_argument("--max-chapters", type=int, help="cap extraction (WIKI_MAX_CHAPTERS)")
+        p.set_defaults(func=_cmd_book_pipeline)
+
+    pages = bsub.add_parser("pages", parents=[common], help="pages-export, or a slice with --entities/--importance")
+    pages.add_argument("book", help="book slug, alias, series or author")
+    pages.add_argument("--max-chapters", type=int, help="cap extraction (WIKI_MAX_CHAPTERS)")
+    pages.add_argument("--entities", nargs="+", metavar="NAME", help="regenerate only these pages")
+    pages.add_argument("--importance", choices=["principal", "secondary", "figurant"], help="regenerate only this tier")
+    pages.add_argument("--force", action="store_true", help="overwrite existing pages")
+    pages.set_defaults(func=_cmd_book_pages)
+
+    add = bsub.add_parser("add", parents=[common], help="import an epub and scaffold its YAML")
+    add.add_argument("epub", help="path to the epub to import")
+    add.add_argument("--dest", default="library", help="library root (default: library)")
+    add.add_argument("--author", help="override author slug (else from epub metadata)")
+    add.add_argument("--series", help="override series slug (else from epub title)")
+    add.add_argument("--number", default="01", help="tome number prefix (default: 01)")
+    add.add_argument("--llm", action="store_true", help="draft a novel_summary via LLM")
+    add.add_argument("--force", action="store_true", help="overwrite an existing YAML")
+    add.set_defaults(func=_cmd_book_add)
 
     series = sub.add_parser("series", parents=[common], help="run wiki-full over a series in reading order")
     series.add_argument("verb", choices=["run"], help="only 'run'")
@@ -145,18 +213,18 @@ def _build_parser() -> argparse.ArgumentParser:
     series.add_argument("--max-chapters", type=int, help="cap extraction (WIKI_MAX_CHAPTERS)")
     series.set_defaults(func=_cmd_series)
 
-    gen = sub.add_parser(
-        "generate-books", parents=[common],
-        help="import an epub into the library and scaffold its YAML",
-    )
-    gen.add_argument("epub", help="path to the epub to import")
-    gen.add_argument("--dest", default="library", help="library root (default: library)")
-    gen.add_argument("--author", help="override author slug (else from epub metadata)")
-    gen.add_argument("--series", help="override series slug (else from epub title)")
-    gen.add_argument("--number", default="01", help="tome number prefix (default: 01)")
-    gen.add_argument("--llm", action="store_true", help="draft a novel_summary via LLM")
-    gen.add_argument("--force", action="store_true", help="overwrite an existing YAML")
-    gen.set_defaults(func=_cmd_generate)
+    replay = sub.add_parser("replay", parents=[common], help="replay a run, or restart it from a stage")
+    replay.add_argument("run_id", help="run id (from `wiki status`)")
+    replay.add_argument("--stage", help="restart from this stage (index or name)")
+    replay.set_defaults(func=_cmd_replay)
+
+    status = sub.add_parser("status", parents=[common], help="show run status")
+    status.add_argument("run_id", nargs="?", help="a run id, or omit for the list")
+    status.set_defaults(func=_cmd_status)
+
+    logs = sub.add_parser("logs", parents=[common], help="show a run's log")
+    logs.add_argument("run_id", help="run id")
+    logs.set_defaults(func=_cmd_logs)
 
     return parser
 

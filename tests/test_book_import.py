@@ -80,15 +80,15 @@ def test_generate_book_enrich_injects_summary(tmp_path):
     assert "novel_summary: |\n  Summary of Dracula." in plan.yaml_text
 
 
-def test_cli_generate_dry_run(tmp_path, monkeypatch, capsys):
+def test_cli_book_add_dry_run(tmp_path, monkeypatch, capsys):
     p = _make_epub(tmp_path / "src.epub", "Oz", "L. Frank Baum")
     monkeypatch.setattr(book_import, "_PROJECT_ROOT", tmp_path)
-    assert cli.main(["generate-books", str(p), "--dry-run"]) == 0
+    assert cli.main(["book", "add", str(p), "--dry-run"]) == 0
     out = capsys.readouterr().out
     assert "would write library/l_frank_baum/oz/books/01-oz.epub" in out
     assert "file_path:" in out
 
 
-def test_cli_generate_missing_epub_returns_2(capsys):
-    assert cli.main(["generate-books", "/nope/x.epub"]) == 2
+def test_cli_book_add_missing_epub_returns_2(capsys):
+    assert cli.main(["book", "add", "/nope/x.epub"]) == 2
     assert "no such epub" in capsys.readouterr().err
