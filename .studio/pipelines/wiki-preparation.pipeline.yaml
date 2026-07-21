@@ -99,26 +99,69 @@ stages:
 
   # STU-556: schema-guided discovery types the relation graph, then the demoted
   # classifier reads relationships_discovered.json and adds prose. Both fan out
-  # via one nested `studio run` over the engine map (per-item resume, STU-605).
+  # via a native `call` over the engine map (per-item resume, STU-605), split
+  # into pre/call/post (STU-621) — the pre builds the items, the call runs the
+  # map with no subprocess, the post folds its output. on_failure: continue keeps
+  # the STU-539 fail-safe: a failed fan-out writes nothing and the run proceeds.
+  - name: discover-relationships-pre
+    kind: analysis
+    executor: script
+    runtime: python
+    script: scripts/discover_relationships_pre.py
+    timeout_ms: 300000
+    context:
+      include:
+        - input
+
+  - call: discover-relationships-verdict
+    pipeline: discover-relationships
+    condition: stages.discover-relationships-pre.output.needs_verdict == true
+    on_failure: continue
+    input:
+      chunks: "{{stages.discover-relationships-pre.output.chunks}}"
+      roster: "{{stages.discover-relationships-pre.output.roster}}"
+      relationship_types: "{{stages.discover-relationships-pre.output.relationship_types}}"
+      prompt_fingerprint: "{{stages.discover-relationships-pre.output.prompt_fingerprint}}"
+
   - name: discover-relationships
     kind: analysis
     executor: script
     runtime: python
     script: scripts/discover_relationships.py
-    timeout_ms: 7500000
+    timeout_ms: 300000
     context:
       include:
         - input
+        - all_stage_outputs
+
+  - name: classify-relationships-pre
+    kind: analysis
+    executor: script
+    runtime: python
+    script: scripts/classify_relationships_pre.py
+    timeout_ms: 300000
+    context:
+      include:
+        - input
+
+  - call: classify-relationships-verdict
+    pipeline: classify-relationships
+    condition: stages.classify-relationships-pre.output.needs_verdict == true
+    on_failure: continue
+    input:
+      pairs: "{{stages.classify-relationships-pre.output.pairs}}"
+      prompt_fingerprint: "{{stages.classify-relationships-pre.output.prompt_fingerprint}}"
 
   - name: classify-relationships
     kind: analysis
     executor: script
     runtime: python
     script: scripts/classify_relationships.py
-    timeout_ms: 7500000
+    timeout_ms: 300000
     context:
       include:
         - input
+        - all_stage_outputs
 
   # STU-575: the graph is built here, not in wiki-resolution, because the types
   # it needs only exist once the two stages above have run.

@@ -169,6 +169,164 @@ def _save(output_path: Path, base: dict, classified: list[dict]) -> None:
     studio_io.save_artifact(output_path, bundle, RelationshipBundle)
 
 
+VERDICT_STAGE = "classify-relationships-verdict"
+
+
+def _map_output_from_payload(payload: dict) -> dict | None:
+    """The `classify-relationships` call's map output, from stage context (or None)."""
+    verdict = payload.get("all_stage_outputs", {}).get(VERDICT_STAGE)
+    if verdict is None:
+        verdict = payload.get("previous_outputs", {}).get(VERDICT_STAGE)
+    return verdict if isinstance(verdict, dict) else None
+
+
+def prepare_classify(book_cfg: dict, book_paths) -> tuple[dict | None, str | None]:
+    """Fold the graph and split it into classifiable pairs — shared by pre/post/`--book`.
+
+    Returns `(prep, None)` with `items` (the fan-out input) and everything the
+    post merge needs (`to_classify`/`passthrough`/`base`/`pre_typed`), or
+    `(None, reason)` when the input artifact is missing.
+    """
+    input_path, pre_typed = _select_input(book_paths.processing)
+    output_path = book_paths.processing / "relationships_classified.json"
+
+    if not input_path.exists():
+        print(f"[classify-relationships] input not found: {input_path}", file=sys.stderr)
+        return None, "missing_input"
+
+    print(
+        f"[classify-relationships] Source: {input_path.name} "
+        f"({'schema-discovered, typed' if pre_typed else 'co-occurrence, untyped'})",
+        file=sys.stderr,
+    )
+
+    # dict-only boundary: the per-pair merge below stays dict-based — validated
+    # on load here, converted back to plain dicts.
+    bundle = studio_io.load_artifact(input_path, RelationshipBundle)
+    data = studio_io.to_dict(bundle)
+    relationships = data.get("relationships", [])
+    entity_types = {e["canonical_name"]: e.get("type", "") for e in data.get("entities", [])}
+    base = {k: v for k, v in data.items() if k != "relationships"}
+
+    # STU-435: fold the co-occurrence graph onto canonical entities before
+    # classifying, so each canonical pair is classified exactly once on the
+    # summed signal instead of alias fragments.
+    registry_path = book_paths.processing / "registry.json"
+    role_contexts: dict[str, list[str]] = {}
+    if registry_path.exists():
+        registry = Registry.load(registry_path)
+        before = len(relationships)
+        relationships = fold_relationships(relationships, registry)
+        entity_types = {rec.canonical_name: rec.entity_type for rec in registry.entities}
+        role_contexts = _entity_role_contexts(registry)
+        print(
+            f"[classify-relationships] Folded {before} surface edges into "
+            f"{len(relationships)} canonical pairs via registry.alias_table()",
+            file=sys.stderr,
+        )
+    else:
+        print(
+            f"[classify-relationships] registry.json not found ({registry_path}) — "
+            "classifying unfolded surface edges, no role contexts (STU-496)",
+            file=sys.stderr,
+        )
+
+    novel_summary = book_cfg.get("novel_summary") or ""
+    fingerprint = _classifier_fingerprint(
+        book_config=book_cfg, novel_summary=novel_summary, pre_typed=pre_typed
+    )
+    base_stats = dict(base.get("stats") or {})
+    base_stats["classifier_prompt"] = fingerprint
+    base["stats"] = base_stats
+
+    to_classify = [r for r in relationships if _should_classify_pair(r, entity_types)]
+    passthrough = [r for r in relationships if not _should_classify_pair(r, entity_types)]
+    print(
+        f"[classify-relationships] {len(relationships)} pairs total | "
+        f"{len(passthrough)} non-interpersonal (pass through) | "
+        f"{len(to_classify)} to classify",
+        file=sys.stderr,
+    )
+
+    items = [
+        classifier_item_input(
+            pair,
+            novel_summary=novel_summary,
+            role_contexts_a=role_contexts.get(pair.get("entity_a", ""), []),
+            role_contexts_b=role_contexts.get(pair.get("entity_b", ""), []),
+            book_config=book_cfg,
+        )
+        for pair in to_classify
+    ]
+    return {
+        "output_path": output_path,
+        "pre_typed": pre_typed,
+        "base": base,
+        "to_classify": to_classify,
+        "passthrough": passthrough,
+        "items": items,
+        "fingerprint": fingerprint,
+        "total": len(relationships),
+    }, None
+
+
+def collect_and_save_classify(prep: dict, map_output: dict | None, error: str | None) -> dict:
+    """Merge the map classifications onto the pairs and write the artifact."""
+    to_classify = prep["to_classify"]
+    pre_typed = prep["pre_typed"]
+    classified: list[dict] = list(prep["passthrough"])
+
+    if (error or map_output is None) and to_classify:
+        # STU-562: an unjudged Studio failure is stamped, never conflated with a
+        # decline — a re-run retries every stamped pair.
+        reason = error or "no_verdict"
+        print(
+            f"[classify-relationships] WARNING: {reason} — stamping "
+            f"{len(to_classify)} pairs classification_error",
+            file=sys.stderr,
+        )
+        classified.extend({**pair, "classification_error": reason} for pair in to_classify)
+    elif to_classify:
+        results_by_index: dict[int, dict] = {}
+        for result in map_output.get("results") or []:
+            if isinstance(result, dict) and isinstance(result.get("index"), int):
+                results_by_index[result["index"]] = result
+        for i, pair in enumerate(to_classify):
+            result = results_by_index.get(i)
+            label = f"{pair.get('entity_a', '?')}↔{pair.get('entity_b', '?')}"
+            if result and result.get("status") == "success" and isinstance(result.get("output"), dict):
+                merged = _merge_classification(pair, result["output"], pre_typed=pre_typed)
+                print(f"  [CLF]  {label} → {merged.get('relationship_type') or 'null'}", file=sys.stderr)
+            else:
+                item_error = (result or {}).get("error") or "no_result"
+                merged = {**pair, "classification_error": str(item_error)}
+                print(f"  [WARN] {label}: {item_error} — will retry next run", file=sys.stderr)
+            classified.append(merged)
+        resumed = map_output.get("resumed", 0)
+        if resumed:
+            print(f"[classify-relationships] {resumed} pairs served from resume cache", file=sys.stderr)
+
+    _save(prep["output_path"], prep["base"], classified)
+    succeeded = sum(1 for r in classified if r.get("relationship_type") is not None)
+    errored = sum(1 for r in classified if r.get("classification_error"))
+    summary = f"\n[classify-relationships] Done — {len(classified)} total, {succeeded} classified"
+    if errored:
+        summary += f", {errored} unjudged (Studio error)"
+    print(summary, file=sys.stderr)
+    return {"pairs": len(classified), "classified": succeeded, "unjudged": errored}
+
+
+def run(book_cfg: dict, book_paths, *, dry_run: bool = False) -> dict:
+    """Standalone (`--book`) path: shells one nested `studio run` itself."""
+    prep, skip = prepare_classify(book_cfg, book_paths)
+    if skip:
+        sys.exit(1)
+    if dry_run or not prep["to_classify"]:
+        return collect_and_save_classify(prep, None, None)
+    map_output, error = _run_classify_fanout(prep["items"], prep["fingerprint"])
+    return collect_and_save_classify(prep, map_output, error)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Classify relationships via Studio (relationship-classifier-item pipeline)."
@@ -190,143 +348,17 @@ def main() -> None:
         run(book_cfg, book_paths_from_yaml(args.book), dry_run=args.dry_run)
         return
 
-    # Studio stdin mode (STU-457): a wiki-preparation stage, book yaml in
-    # additional_context, artifacts from disk.
+    # Studio post stage (STU-621): the `call: classify-relationships-verdict`
+    # stage already ran the map; merge its output. book yaml in additional_context,
+    # artifacts from disk.
     payload = studio_io.read_payload()
     book_cfg = yaml.safe_load(payload.get("additional_context", "") or "") or {}
-    summary = run(book_cfg, studio_io.paths_from_payload(payload))
+    prep, skip = prepare_classify(book_cfg, studio_io.paths_from_payload(payload))
+    if skip:
+        studio_io.write_output({"skipped": skip})
+        return
+    summary = collect_and_save_classify(prep, _map_output_from_payload(payload), None)
     studio_io.write_output(summary)
-
-
-def run(book_cfg: dict, book_paths, *, dry_run: bool = False) -> dict:
-    input_path, pre_typed = _select_input(book_paths.processing)
-    output_path = book_paths.processing / "relationships_classified.json"
-
-    if not input_path.exists():
-        print(f"[ERROR] Input not found: {input_path}", file=sys.stderr)
-        sys.exit(1)
-
-    print(
-        f"[classify-relationships] Source: {input_path.name} "
-        f"({'schema-discovered, typed' if pre_typed else 'co-occurrence, untyped'})",
-        file=sys.stderr,
-    )
-
-    # dict-only boundary: the incremental per-pair classify/resume loop below
-    # merges LLM classification dicts into relationship dicts (_load_done_keys/
-    # _save stay dict-based for interrupted-run tolerance) — validated on load
-    # here, converted back to plain dicts for that loop.
-    bundle = studio_io.load_artifact(input_path, RelationshipBundle)
-    data = studio_io.to_dict(bundle)
-    relationships = data.get("relationships", [])
-    entity_types = {e["canonical_name"]: e.get("type", "") for e in data.get("entities", [])}
-    base = {k: v for k, v in data.items() if k != "relationships"}
-
-    # STU-435: fold the co-occurrence graph onto canonical entities before
-    # classifying. The graph is built at mention level (surface forms, pre
-    # alias-resolution) so a single entity's edges are split across its aliases
-    # (e.g. "Chaol Westfall" vs "Captain Westfall"). registry.alias_table()
-    # collapses them so each canonical pair is classified exactly once, on the
-    # summed cooccurrence signal instead of two weak fragments.
-    registry_path = book_paths.processing / "registry.json"
-    role_contexts: dict[str, list[str]] = {}
-    if registry_path.exists():
-        registry = Registry.load(registry_path)
-        before = len(relationships)
-        relationships = fold_relationships(relationships, registry)
-        # Registry types are refined (post entity-classification) — prefer them.
-        entity_types = {rec.canonical_name: rec.entity_type for rec in registry.entities}
-        role_contexts = _entity_role_contexts(registry)
-        print(
-            f"[classify-relationships] Folded {before} surface edges into "
-            f"{len(relationships)} canonical pairs via registry.alias_table()",
-            file=sys.stderr,
-        )
-    else:
-        print(
-            f"[classify-relationships] registry.json not found ({registry_path}) — "
-            "classifying unfolded surface edges, no role contexts (STU-496)",
-            file=sys.stderr,
-        )
-
-    novel_summary = book_cfg.get("novel_summary") or ""
-
-    fingerprint = _classifier_fingerprint(
-        book_config=book_cfg, novel_summary=novel_summary, pre_typed=pre_typed
-    )
-    base_stats = dict(base.get("stats") or {})
-    base_stats["classifier_prompt"] = fingerprint
-    base["stats"] = base_stats
-
-    to_classify = [r for r in relationships if _should_classify_pair(r, entity_types)]
-    passthrough = [r for r in relationships if not _should_classify_pair(r, entity_types)]
-    print(
-        f"[classify-relationships] {len(relationships)} pairs total | "
-        f"{len(passthrough)} non-interpersonal (pass through) | "
-        f"{len(to_classify)} to classify",
-        file=sys.stderr,
-    )
-
-    if dry_run or not to_classify:
-        _save(output_path, base, passthrough + to_classify)
-        print(
-            f"[classify-relationships] {'Dry run — ' if dry_run else ''}"
-            f"{len(relationships)} pairs passed through",
-            file=sys.stderr,
-        )
-        return {"pairs": len(relationships), "classified": 0}
-
-    items = [
-        classifier_item_input(
-            pair,
-            novel_summary=novel_summary,
-            role_contexts_a=role_contexts.get(pair.get("entity_a", ""), []),
-            role_contexts_b=role_contexts.get(pair.get("entity_b", ""), []),
-            book_config=book_cfg,
-        )
-        for pair in to_classify
-    ]
-    map_output, error = _run_classify_fanout(items, fingerprint)
-
-    classified: list[dict] = list(passthrough)
-    if error:
-        # STU-562: an unjudged Studio failure is stamped, never conflated with a
-        # decline — the whole fan-out failing stamps every classifiable pair, so
-        # downstream still gets an artifact and a re-run retries them all.
-        print(
-            f"[classify-relationships] WARNING: {error} — stamping "
-            f"{len(to_classify)} pairs classification_error",
-            file=sys.stderr,
-        )
-        classified.extend({**pair, "classification_error": error} for pair in to_classify)
-    else:
-        results_by_index: dict[int, dict] = {}
-        for result in map_output.get("results") or []:
-            if isinstance(result, dict) and isinstance(result.get("index"), int):
-                results_by_index[result["index"]] = result
-        for i, pair in enumerate(to_classify):
-            result = results_by_index.get(i)
-            label = f"{pair.get('entity_a', '?')}↔{pair.get('entity_b', '?')}"
-            if result and result.get("status") == "success" and isinstance(result.get("output"), dict):
-                merged = _merge_classification(pair, result["output"], pre_typed=pre_typed)
-                print(f"  [CLF]  {label} → {merged.get('relationship_type') or 'null'}", file=sys.stderr)
-            else:
-                item_error = (result or {}).get("error") or "no_result"
-                merged = {**pair, "classification_error": str(item_error)}
-                print(f"  [WARN] {label}: {item_error} — will retry next run", file=sys.stderr)
-            classified.append(merged)
-        resumed = map_output.get("resumed", 0)
-        if resumed:
-            print(f"[classify-relationships] {resumed} pairs served from resume cache", file=sys.stderr)
-
-    _save(output_path, base, classified)
-    succeeded = sum(1 for r in classified if r.get("relationship_type") is not None)
-    errored = sum(1 for r in classified if r.get("classification_error"))
-    summary = f"\n[classify-relationships] Done — {len(classified)} total, {succeeded} classified"
-    if errored:
-        summary += f", {errored} unjudged (Studio error)"
-    print(summary, file=sys.stderr)
-    return {"pairs": len(classified), "classified": succeeded, "unjudged": errored}
 
 
 if __name__ == "__main__":
