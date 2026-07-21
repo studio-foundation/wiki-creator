@@ -5,6 +5,8 @@ description: |
   resolve aliases, and generate Markdown wiki pages for each entity.
 
 file_path: library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.epub
+# Short handle for the `wiki` CLI (STU-597): `wiki book run tog`.
+aliases: [tog]
 # spacy_model now only tokenizes, tags and splits sentences; GLiNER finds the
 # entities (STU-521). The tagger matters: wiki-ner-en had none, so this book's
 # POS span filters had never once run.

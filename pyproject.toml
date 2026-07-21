@@ -25,6 +25,9 @@ dependencies = [
     "networkx>=3.0",
 ]
 
+[project.scripts]
+wiki = "wiki_creator.cli:main"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
