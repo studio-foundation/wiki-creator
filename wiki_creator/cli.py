@@ -13,7 +13,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from wiki_creator import library
+from wiki_creator import book_import, library
 from wiki_creator.series import discover_series_books
 
 # Short pipeline verb -> Studio pipeline. `run` is the whole build; the rest are
@@ -81,6 +81,42 @@ def _cmd_series(args: argparse.Namespace) -> int:
     return 0
 
 
+def _llm_summary(title: str, author: str | None) -> str:
+    """Draft a novel_summary for --llm. Low-risk prose, flagged for reader review."""
+    import anthropic
+
+    by = f" by {author}" if author else ""
+    client = anthropic.Anthropic()  # ANTHROPIC_API_KEY from env
+    msg = client.messages.create(
+        model="claude-haiku-4-5",
+        max_tokens=400,
+        messages=[{
+            "role": "user",
+            "content": f'Write a 4-6 sentence plot summary of the novel "{title}"{by}. '
+                       "Prose only, no preamble, no spoilers past the first act.",
+        }],
+    )
+    return "".join(getattr(b, "text", "") for b in msg.content).strip()
+
+
+def _cmd_generate(args: argparse.Namespace) -> int:
+    enrich = (lambda title, author: _llm_summary(title, author)) if args.llm else None
+    try:
+        plan = book_import.generate_book(
+            args.epub, root=args.dest, author_slug=args.author,
+            series_slug=args.series, number=args.number,
+            force=args.force, dry_run=args.dry_run, enrich=enrich,
+        )
+    except (FileNotFoundError, FileExistsError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    verb = "would write" if args.dry_run else "wrote"
+    print(f"{verb} {plan.dest_epub}\n{verb} {plan.dest_yaml}")
+    if args.dry_run:
+        print("---\n" + plan.yaml_text, end="")
+    return 0
+
+
 def _build_parser() -> argparse.ArgumentParser:
     common = argparse.ArgumentParser(add_help=False)
     # SUPPRESS so a subparser's default can't clobber the value parsed at the
@@ -108,6 +144,19 @@ def _build_parser() -> argparse.ArgumentParser:
     series.add_argument("series_name", metavar="series", help="series name or substring")
     series.add_argument("--max-chapters", type=int, help="cap extraction (WIKI_MAX_CHAPTERS)")
     series.set_defaults(func=_cmd_series)
+
+    gen = sub.add_parser(
+        "generate-books", parents=[common],
+        help="import an epub into the library and scaffold its YAML",
+    )
+    gen.add_argument("epub", help="path to the epub to import")
+    gen.add_argument("--dest", default="library", help="library root (default: library)")
+    gen.add_argument("--author", help="override author slug (else from epub metadata)")
+    gen.add_argument("--series", help="override series slug (else from epub title)")
+    gen.add_argument("--number", default="01", help="tome number prefix (default: 01)")
+    gen.add_argument("--llm", action="store_true", help="draft a novel_summary via LLM")
+    gen.add_argument("--force", action="store_true", help="overwrite an existing YAML")
+    gen.set_defaults(func=_cmd_generate)
 
     return parser
 

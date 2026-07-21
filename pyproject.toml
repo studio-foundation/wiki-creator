@@ -68,7 +68,7 @@ Homepage = "https://github.com/studio-foundation/wiki-creator"
 # package ships py.typed, so the same import raises import-not-found there and
 # import-untyped locally. Ignoring the module rather than the error code covers
 # both (STU-521).
-module = ["gliner.*", "torch.*"]
+module = ["gliner.*", "torch.*", "ebooklib", "ebooklib.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
