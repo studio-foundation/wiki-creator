@@ -10,10 +10,13 @@ from scripts.chapter_summary import (
     _FALLBACK_BULLET,
     _chapter_summary_config_from_payload,
     _detect_temporal_context,
+    _map_output_from_payload,
     _parse_llm_summary_response_text,
     _read_epub_data,
     _save_chapter_summaries,
     _score_sentence,
+    build_chapter_summaries,
+    pending_chapters,
     summary_prompt_fingerprint,
     summarize_chapters_incrementally,
     summarize_chapter,
@@ -26,6 +29,46 @@ from wiki_creator.studio_io import extract_stage_output_from_run_payload
 def test_score_sentence_accepts_action_cues_kwarg():
     score = _score_sentence("Dorian found the letter.", 0, 5, action_cues=("found",))
     assert isinstance(score, float)
+
+
+# --- STU-621 pre/call/post split -------------------------------------------
+
+
+def test_map_output_from_payload_reads_verdict_stage():
+    """The post stage reads the `chapter-summaries` call output from stage context."""
+    map_output = {"results": [], "resumed": 0, "failed": 0}
+    payload = {"all_stage_outputs": {"chapter-summaries-verdict": map_output}}
+    assert _map_output_from_payload(payload) is map_output
+    assert _map_output_from_payload({"all_stage_outputs": {}}) is None
+
+
+def test_build_chapter_summaries_collects_llm_map_output():
+    """A successful map result becomes an llm summary; a failed item falls back."""
+    pending = [
+        {"id": "ch01", "title": "One", "content": "Celaena ran through the halls."},
+        {"id": "ch02", "title": "Two", "content": "Dorian read a long letter by the window."},
+    ]
+    map_output = {
+        "results": [
+            {"index": 0, "status": "success", "output": {"summary_bullets": ["Celaena escaped."]}},
+            {"index": 1, "status": "failed", "error": "boom"},
+        ],
+    }
+    cfg = ChapterSummaryConfig(mode="llm", max_bullets=3)
+    summaries = build_chapter_summaries(pending, config=cfg, map_output=map_output, error=None)
+
+    assert summaries["One"]["summary_method"] == "llm"
+    assert summaries["One"]["summary_bullets"] == ["Celaena escaped."]
+    # Failed item → extractive fallback this run (never cached, retries next run).
+    assert summaries["Two"]["summary_method"] == "extractive_fallback"
+
+
+def test_build_chapter_summaries_no_map_output_is_extractive():
+    """Extractive mode (or a skipped/failed call) never touches the LLM path."""
+    pending = pending_chapters([{"id": "ch01", "title": "One", "content": "Celaena ran through the long halls."}])
+    cfg = ChapterSummaryConfig(mode="extractive")
+    summaries = build_chapter_summaries(pending, config=cfg, map_output=None, error=None)
+    assert summaries["One"]["summary_method"] == "extractive"
 
 
 def test_score_sentence_action_cue_increases_score():
