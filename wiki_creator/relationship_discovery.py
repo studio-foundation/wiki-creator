@@ -19,6 +19,7 @@ classifier writes as `evolution` prose; here it only decides the primary type.
 from __future__ import annotations
 
 import json
+import sys
 from collections import Counter
 from pathlib import Path
 from typing import Iterable
@@ -32,6 +33,13 @@ _FLIP = {"A→B": "B→A", "B→A": "A→B", SYMMETRIC: SYMMETRIC}
 _MAX_EVIDENCE_CHARS = 200
 _MAX_SAMPLE_CONTEXTS = 3
 
+# A chunk can only exceed ``size`` when a single paragraph does — packing flushes
+# ``buf`` before it overflows. Past this factor the paragraph is not a long passage
+# but a whole chapter with no ``\\n\\n`` to split on (a pre-STU-523 epub_data.json),
+# where ``size`` is silently a no-op. Warn, don't fail: a real single-paragraph
+# passage over the factor is possible.
+_OVERSIZE_FACTOR = 2
+
 
 def flip(direction: str) -> str:
     """Restate a direction against the opposite entity order."""
@@ -44,6 +52,11 @@ def chunk_chapters(chapters: list[dict], size: int) -> list[dict]:
     Packs whole paragraphs (split on ``\\n\\n``) into a chunk until the next one
     would overflow ``size``, then starts a new chunk. Never splits a paragraph.
     Chunk ids are ``{chapter_id}:{i}`` so a vote traces back to its chapter.
+
+    A chapter with no ``\\n\\n`` becomes one chunk whatever ``size`` is (STU-609): a
+    stale ``epub_data.json`` predating STU-523 holds zero paragraph marks, so
+    ``size`` degenerates to a no-op. Warn per chunk over ``size * _OVERSIZE_FACTOR``
+    so the operator re-extracts instead of silently buying a worse discovery stage.
     """
     out: list[dict] = []
     for chapter in chapters:
@@ -58,6 +71,13 @@ def chunk_chapters(chapters: list[dict], size: int) -> list[dict]:
         if buf:
             parts.append(buf)
         for i, text in enumerate(parts):
+            if len(text) > size * _OVERSIZE_FACTOR:
+                print(
+                    f"[WARN] chunk {chapter['id']}:{i} is {len(text)} chars "
+                    f"(target {size}) — chapter has no paragraph break to split on; "
+                    f"re-extract if epub_data.json predates STU-523",
+                    file=sys.stderr,
+                )
             out.append({
                 "id": f"{chapter['id']}:{i}",
                 "chapter_id": chapter["id"],
@@ -189,6 +209,41 @@ def fold_chunk_result(
     return kept
 
 
+def votes_from_map_output(
+    chunks: list[dict],
+    map_output: object,
+    alias_to_canonical: dict[str, str],
+    roster_names: set[str],
+    allowed_types: Iterable[str],
+) -> tuple[list[dict], list[str]]:
+    """Per-chunk votes from the engine map stage's collected output (STU-589).
+
+    Returns ``(votes, failed_chunk_ids)``. ``results[].index`` names the chunk;
+    a failed or missing item contributes no vote and is reported — the engine's
+    per-item resume never caches a failure (STU-605), so a re-run retries it,
+    the ``fold_chunk_result`` None contract one layer up.
+    """
+    results_by_index: dict[int, dict] = {}
+    if isinstance(map_output, dict):
+        for result in map_output.get("results") or []:
+            if isinstance(result, dict) and isinstance(result.get("index"), int):
+                results_by_index[result["index"]] = result
+
+    votes: list[dict] = []
+    failed: list[str] = []
+    for i, chunk in enumerate(chunks):
+        result = results_by_index.get(i)
+        raw = None
+        if result and result.get("status") == "success" and isinstance(result.get("output"), dict):
+            raw = result["output"].get("relations")
+        kept = fold_chunk_result(raw, alias_to_canonical, roster_names, allowed_types)
+        if kept is None:
+            failed.append(chunk["id"])
+            continue
+        votes.append({"chapter_id": chunk["chapter_id"], "relations": kept})
+    return votes, failed
+
+
 def aggregate(votes: list[dict], roster_names: set[str]) -> list[dict]:
     """Fold per-chunk relation votes into book-level ``Relationship`` dicts.
 
@@ -232,6 +287,18 @@ def aggregate(votes: list[dict], roster_names: set[str]) -> list[dict]:
 
     pairs.sort(key=lambda p: (-len(p["chapters"]), p["entity_a"], p["entity_b"]))
     return pairs
+
+
+def uncached_chunk_ids(chunks: list[dict], cache: dict) -> list[str]:
+    """Chunk ids that produced no vote and stayed out of the cache (STU-610).
+
+    A chunk genuinely evidencing no relation is cached with ``[]``; a chunk that
+    failed transiently is left out of the cache entirely so a re-run retries it
+    (STU-562). Only the latter cost text the discovery graph never covered, so a
+    non-empty result means the output is partial — distinct from ``len(chunks)``,
+    which counts the list and cannot tell a failed chunk from a genuine 0.
+    """
+    return [c["id"] for c in chunks if c["id"] not in cache]
 
 
 def load_votes_cache(

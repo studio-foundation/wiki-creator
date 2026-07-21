@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Standalone relationship classifier: calls studio run relationship-classifier-item per pair.
+"""Standalone relationship classifier: one `studio run classify-relationships` per book.
 
 Usage:
     python scripts/classify_relationships.py --book library/.../book.yaml
@@ -8,12 +8,19 @@ Usage:
 Input:  processing_output/<slug>/relationships.json
 Output: processing_output/<slug>/relationships_classified.json
 
-Saves incrementally after each pair. Resumes if output file already exists.
-Studio handles LLM calls, ralph retries, and validation.
+The engine fans out one child run per pair (`map` stage, STU-589) with
+`resume: true` (STU-605): a completed pair replays free on a re-run, a failed
+pair is never cached and retries, and the resume key carries the classifier
+prompt fingerprint so a prompt or vocabulary edit re-classifies every pair
+(STU-560). RALPH retries and the classification-validation group live in the
+child pipeline — the subprocess-level retry layer this script used to need
+(`_CLASSIFIER_MAX_ATTEMPTS`) is gone from the production path.
 """
 import argparse
 import json
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import yaml
@@ -26,7 +33,7 @@ from wiki_creator.registry import Registry
 from wiki_creator.relationship_fold import fold_relationships
 from wiki_creator.types import Relationship, RelationshipBundle
 from scripts.relationship_extraction import (
-    _run_studio_classifier_item,
+    classifier_item_input,
     _should_classify_pair,
 )
 
@@ -124,43 +131,32 @@ def _entity_role_contexts(
     return out
 
 
-def _load_done_keys(
-    output_path: Path, expected_fingerprint: str | None = None
-) -> tuple[set[tuple[str, str]], list[dict]]:
-    """Load already-classified pairs from output file. Returns (done_keys, pairs).
+_TIMEOUT_SECONDS = 7200
 
-    Malformed pairs (missing entity_a/entity_b) are skipped individually — they do NOT
-    cause a full reset of resume state.
 
-    A pair carrying a ``classification_error`` (STU-562) is a Studio failure, not a
-    verdict: it is dropped from both the done-keys and the kept list so a re-run
-    retries it instead of resuming it as settled — and it is not duplicated.
-
-    When ``expected_fingerprint`` is given (STU-589), a stored fingerprint that does
-    not match it means the classifier prompt or vocabulary changed since the artifact
-    was written — the whole resume is discarded so every pair re-classifies rather
-    than replaying verdicts the old prompt produced.
-    """
-    if not output_path.exists():
-        return set(), []
+def _run_classify_fanout(items: list[dict], prompt_fingerprint: str) -> tuple[dict | None, str | None]:
+    """One `studio run` fanning out over all classifiable pairs. Returns (map_output, error)."""
+    payload = {"pairs": items, "prompt_fingerprint": prompt_fingerprint}
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".yaml", delete=False) as tmp:
+        yaml.safe_dump(payload, tmp, sort_keys=False, allow_unicode=True)
+        input_path = tmp.name
+    cmd = ["studio", "run", "classify-relationships", "--input-file", input_path, "--json"]
     try:
-        data = json.loads(output_path.read_text(encoding="utf-8"))
-        pairs = data.get("relationships", [])
-    except json.JSONDecodeError:
-        return set(), []
-    if expected_fingerprint is not None:
-        stored = (data.get("stats") or {}).get("classifier_prompt")
-        if stored != expected_fingerprint:
-            return set(), []
-    keys: set[tuple[str, str]] = set()
-    kept: list[dict] = []
-    for p in pairs:
-        if p.get("classification_error"):
-            continue
-        kept.append(p)
-        if "entity_a" in p and "entity_b" in p:
-            keys.add((p["entity_a"], p["entity_b"]))
-    return keys, kept
+        result = subprocess.run(
+            cmd, cwd=PROJECT_ROOT, capture_output=True, text=True, timeout=_TIMEOUT_SECONDS
+        )
+    except FileNotFoundError:
+        return None, "studio_cli_missing"
+    except subprocess.TimeoutExpired:
+        return None, "studio_run_timeout"
+    finally:
+        Path(input_path).unlink(missing_ok=True)
+    if result.returncode != 0:
+        return None, "studio_run_failed"
+    map_output = studio_io.stage_output_from_stdout(result.stdout or "", "classify")
+    if map_output is None:
+        return None, "studio_run_output_missing"
+    return map_output, None
 
 
 def _save(output_path: Path, base: dict, classified: list[dict]) -> None:
@@ -249,61 +245,68 @@ def main() -> None:
     base_stats["classifier_prompt"] = fingerprint
     base["stats"] = base_stats
 
-    done_keys, classified = _load_done_keys(output_path, fingerprint)
-    if done_keys:
-        print(
-            f"[classify-relationships] Resuming — {len(done_keys)} pairs already done",
-            file=sys.stderr,
-        )
-
-    to_classify = [r for r in relationships if (r.get("entity_a"), r.get("entity_b")) not in done_keys]
-    skip_count = len(relationships) - len(to_classify)
-    classifiable = sum(1 for r in to_classify if _should_classify_pair(r, entity_types))
-
+    to_classify = [r for r in relationships if _should_classify_pair(r, entity_types)]
+    passthrough = [r for r in relationships if not _should_classify_pair(r, entity_types)]
     print(
         f"[classify-relationships] {len(relationships)} pairs total | "
-        f"{skip_count} skipped (already done) | "
-        f"{classifiable} to classify",
+        f"{len(passthrough)} non-interpersonal (pass through) | "
+        f"{len(to_classify)} to classify",
         file=sys.stderr,
     )
 
-    try:
-        for i, pair in enumerate(to_classify, 1):
-            label = f"{pair.get('entity_a', '?')}↔{pair.get('entity_b', '?')}"
-            if not _should_classify_pair(pair, entity_types):
-                print(f"  [SKIP] {label} (non-interpersonal type)", file=sys.stderr)
-                classified.append(pair)
-            elif args.dry_run:
-                print(f"  [DRY]  {label}", file=sys.stderr)
-                classified.append(pair)
-            else:
-                print(f"  [CLF]  {label} ({i}/{len(to_classify)})", file=sys.stderr, end="", flush=True)
-                classification = _run_studio_classifier_item(
-                    pair,
-                    novel_summary=novel_summary,
-                    additional_context="",
-                    role_contexts_a=role_contexts.get(pair.get("entity_a", ""), []),
-                    role_contexts_b=role_contexts.get(pair.get("entity_b", ""), []),
-                    book_config=book_cfg,
-                )
-                if classification and not classification.get("error"):
-                    result = _merge_classification(pair, classification, pre_typed=pre_typed)
-                else:
-                    error = classification.get("error", "unknown") if classification else "no_response"
-                    print(f"\n  [WARN] Studio failed for {label}: {error}", file=sys.stderr)
-                    # STU-562: mark the pair so the artifact distinguishes an
-                    # unjudged Studio failure from a real decline (both untyped).
-                    result = {**pair, "classification_error": error}
-                classified.append(result)
-                status = result.get("relationship_type") or result.get("classification_error") or "null"
-                print(f" → {status}", file=sys.stderr)
-            _save(output_path, base, classified)
-    except KeyboardInterrupt:
+    if args.dry_run or not to_classify:
+        _save(output_path, base, passthrough + to_classify)
         print(
-            f"\n[classify-relationships] Interrupted — {len(classified)} pairs saved",
+            f"[classify-relationships] {'Dry run — ' if args.dry_run else ''}"
+            f"{len(relationships)} pairs passed through",
             file=sys.stderr,
         )
+        return
 
+    items = [
+        classifier_item_input(
+            pair,
+            novel_summary=novel_summary,
+            role_contexts_a=role_contexts.get(pair.get("entity_a", ""), []),
+            role_contexts_b=role_contexts.get(pair.get("entity_b", ""), []),
+            book_config=book_cfg,
+        )
+        for pair in to_classify
+    ]
+    map_output, error = _run_classify_fanout(items, fingerprint)
+
+    classified: list[dict] = list(passthrough)
+    if error:
+        # STU-562: an unjudged Studio failure is stamped, never conflated with a
+        # decline — the whole fan-out failing stamps every classifiable pair, so
+        # downstream still gets an artifact and a re-run retries them all.
+        print(
+            f"[classify-relationships] WARNING: {error} — stamping "
+            f"{len(to_classify)} pairs classification_error",
+            file=sys.stderr,
+        )
+        classified.extend({**pair, "classification_error": error} for pair in to_classify)
+    else:
+        results_by_index: dict[int, dict] = {}
+        for result in map_output.get("results") or []:
+            if isinstance(result, dict) and isinstance(result.get("index"), int):
+                results_by_index[result["index"]] = result
+        for i, pair in enumerate(to_classify):
+            result = results_by_index.get(i)
+            label = f"{pair.get('entity_a', '?')}↔{pair.get('entity_b', '?')}"
+            if result and result.get("status") == "success" and isinstance(result.get("output"), dict):
+                merged = _merge_classification(pair, result["output"], pre_typed=pre_typed)
+                print(f"  [CLF]  {label} → {merged.get('relationship_type') or 'null'}", file=sys.stderr)
+            else:
+                item_error = (result or {}).get("error") or "no_result"
+                merged = {**pair, "classification_error": str(item_error)}
+                print(f"  [WARN] {label}: {item_error} — will retry next run", file=sys.stderr)
+            classified.append(merged)
+        resumed = map_output.get("resumed", 0)
+        if resumed:
+            print(f"[classify-relationships] {resumed} pairs served from resume cache", file=sys.stderr)
+
+    _save(output_path, base, classified)
     succeeded = sum(1 for r in classified if r.get("relationship_type") is not None)
     errored = sum(1 for r in classified if r.get("classification_error"))
     summary = f"\n[classify-relationships] Done — {len(classified)} total, {succeeded} classified"

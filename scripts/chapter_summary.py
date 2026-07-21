@@ -453,8 +453,31 @@ def summarize_chapter(chapter: dict, config: ChapterSummaryConfig | None = None,
     return _summarize_chapter_extractive(chapter, cfg, action_cues=action_cues, flashback_cues=flashback_cues, thought_markers=thought_markers, exclusion_words=exclusion_words, entity_index=entity_index)
 
 
-def _run_chapter_summary_item(*, chapter: dict, config: ChapterSummaryConfig) -> dict:
-    return _run_studio_chapter_summary_item(chapter=chapter, config=config)
+def _run_chapter_summary_fanout(
+    items: list[dict], fingerprint: str | None, timeout_seconds: int
+) -> tuple[dict | None, str | None]:
+    """One `studio run` fanning out over all pending chapters. Returns (map_output, error)."""
+    payload = {"chapters": items, "prompt_fingerprint": fingerprint or ""}
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".yaml", delete=False) as tmp:
+        yaml.safe_dump(payload, tmp, sort_keys=False, allow_unicode=True)
+        input_path = tmp.name
+    cmd = ["studio", "run", "chapter-summaries", "--input-file", input_path, "--json"]
+    try:
+        result = subprocess.run(
+            cmd, cwd=PROJECT_ROOT, capture_output=True, text=True, timeout=timeout_seconds
+        )
+    except FileNotFoundError:
+        return None, "studio_cli_missing"
+    except subprocess.TimeoutExpired:
+        return None, "studio_run_timeout"
+    finally:
+        Path(input_path).unlink(missing_ok=True)
+    if result.returncode != 0:
+        return None, "studio_run_failed"
+    map_output = studio_io.stage_output_from_stdout(result.stdout or "", "summarize")
+    if map_output is None:
+        return None, "studio_run_output_missing"
+    return map_output, None
 
 
 def _chapter_summary_item_input(chapter: dict, config: ChapterSummaryConfig) -> dict:
@@ -463,88 +486,6 @@ def _chapter_summary_item_input(chapter: dict, config: ChapterSummaryConfig) -> 
         "chapter_title": str(chapter.get("title", "")).strip(),
         "chapter_content": str(chapter.get("content", "")).strip(),
         "max_bullets": config.max_bullets,
-    }
-
-
-def _run_studio_chapter_summary_item(*, chapter: dict, config: ChapterSummaryConfig) -> dict:
-    item_input = _chapter_summary_item_input(chapter, config)
-    timeout_seconds = max(config.llm_timeout_seconds * 4, 120)
-
-    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".yaml", delete=False) as tmp:
-        yaml.safe_dump(item_input, tmp, sort_keys=False, allow_unicode=True)
-        input_path = tmp.name
-
-    cmd = [
-        "studio",
-        "run",
-        "chapter-summary-item",
-        "--input-file",
-        input_path,
-        "--json",
-    ]
-    try:
-        result = subprocess.run(
-            cmd,
-            cwd=PROJECT_ROOT,
-            capture_output=True,
-            text=True,
-            timeout=timeout_seconds,
-        )
-    except FileNotFoundError:
-        return {
-            "error": "studio_cli_missing",
-            "raw_response": "",
-            "run_metadata": {"command": cmd},
-        }
-    except subprocess.TimeoutExpired as exc:
-        return {
-            "error": "studio_run_timeout",
-            "raw_response": (exc.stdout or "") + ("\n" + exc.stderr if exc.stderr else ""),
-            "run_metadata": {"command": cmd, "timeout_seconds": timeout_seconds},
-        }
-    finally:
-        try:
-            Path(input_path).unlink(missing_ok=True)
-        except OSError:
-            pass
-
-    combined_output = (result.stdout or "") + (("\n" + result.stderr) if result.stderr else "")
-    run_id = studio_io.extract_run_id(result.stdout or "")
-    run_payload = studio_io.extract_first_json_object(result.stdout or "")
-    run_metadata = {
-        "command": cmd,
-        "returncode": result.returncode,
-        "run_id": run_id or None,
-        "status": (run_payload or {}).get("status"),
-    }
-    if result.returncode != 0:
-        return {
-            "error": "studio_run_failed",
-            "raw_response": combined_output.strip(),
-            "run_metadata": run_metadata,
-        }
-
-    payload = studio_io.stage_output_from_stdout(result.stdout or "", "chapter-summary-item")
-    if payload is None:
-        return {
-            "error": "studio_run_output_missing",
-            "raw_response": combined_output.strip(),
-            "run_metadata": run_metadata,
-        }
-
-    bullets = _sanitize_bullets(payload.get("summary_bullets"), config.max_bullets)
-    if not bullets:
-        return {
-            "error": "studio_invalid_output",
-            "raw_response": combined_output.strip(),
-            "run_metadata": {**run_metadata, "payload": payload},
-        }
-
-    return {
-        "chapter_id": str(payload.get("chapter_id") or item_input["chapter_id"]).strip(),
-        "chapter_title": str(payload.get("chapter_title") or item_input["chapter_title"]).strip(),
-        "summary_bullets": bullets,
-        "run_metadata": run_metadata,
     }
 
 
@@ -602,17 +543,6 @@ def summary_prompt_fingerprint(config: "ChapterSummaryConfig", language: str) ->
     )
 
 
-def _stored_summary_fingerprint(output_file: Path) -> str | None:
-    if not output_file.exists():
-        return None
-    try:
-        with open(output_file, encoding="utf-8") as f:
-            data = json.load(f)
-    except (OSError, json.JSONDecodeError):
-        return None
-    return data.get("prompt") if isinstance(data, dict) else None
-
-
 def _save_chapter_summaries(
     chapter_summaries: dict[str, dict], output_file: Path, fingerprint: str | None = None
 ) -> None:
@@ -625,35 +555,6 @@ def _save_chapter_summaries(
         out["prompt"] = fingerprint
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
-
-
-def _load_existing_chapter_summaries(output_file: Path) -> dict[str, dict]:
-    if not output_file.exists():
-        return {}
-    try:
-        with open(output_file, encoding="utf-8") as f:
-            data = json.load(f)
-    except (OSError, json.JSONDecodeError):
-        return {}
-    chapter_summaries = data.get("chapter_summaries", {})
-    return chapter_summaries if isinstance(chapter_summaries, dict) else {}
-
-
-def _is_summary_complete(summary: dict) -> bool:
-    bullets = summary.get("summary_bullets")
-    if not isinstance(bullets, list):
-        return False
-    return any(isinstance(bullet, str) and bullet.strip() for bullet in bullets)
-
-
-def _is_failed_llm_summary(summary: dict) -> bool:
-    """A summary standing in for a failed LLM call — the extractive fallback or
-    the stub. Kept as the current answer, but retried on resume rather than
-    frozen (persist-as-you-go: a failure must not permanently freeze its unit)."""
-    method = summary.get("summary_method")
-    if method == "extractive_fallback":
-        return True
-    return method == "llm" and summary.get("summary_bullets") == [_FALLBACK_BULLET]
 
 
 def summarize_chapters_incrementally(
@@ -669,52 +570,68 @@ def summarize_chapters_incrementally(
     entity_index: tuple[tuple[re.Pattern[str], float], ...] = (),
     fingerprint: str | None = None,
 ) -> dict[str, dict]:
-    retry_failed_llm = (config or ChapterSummaryConfig()).mode == "llm"
-    # STU-589: a stored fingerprint that no longer matches means the prompt or config
-    # changed since these summaries were written — discard the resume so every chapter
-    # re-summarizes instead of replaying answers the old prompt produced.
-    existing = (
-        {}
-        if fingerprint is not None and _stored_summary_fingerprint(output_file) != fingerprint
-        else _load_existing_chapter_summaries(output_file)
-    )
-    result = {
-        key: value
-        for key, value in existing.items()
-        if isinstance(key, str) and isinstance(value, dict) and _is_summary_complete(value)
-        and not (retry_failed_llm and _is_failed_llm_summary(value))
-    }
+    """Summarize the narrative chapters, one engine fan-out run in llm mode.
 
+    Per-unit persistence lives in the engine (STU-589/605): the map stage caches
+    each completed chapter keyed on its input — content plus the prompt
+    fingerprint — so an interrupted run resumes and a prompt/config edit re-runs
+    every chapter instead of replaying stale summaries (STU-560). A failed
+    chapter falls back to the extractive summary this run and, never cached,
+    retries as a real LLM call on the next one.
+    """
+    cfg = config or ChapterSummaryConfig()
     pending = [
         chapter for chapter in chapters
-        if not is_frontmatter_chapter(chapter) and _chapter_key(chapter) and _chapter_key(chapter) not in result
+        if not is_frontmatter_chapter(chapter) and _chapter_key(chapter)
     ]
-    total = len(result) + len(pending)
-    done = len(result)
+    result: dict[str, dict] = {}
 
-    try:
-        from tqdm import tqdm
-        bar = tqdm(pending, total=total, initial=done, unit="ch", desc="chapter-summary", file=sys.stderr)
-    except ImportError:
-        bar = None
+    if cfg.mode == "llm" and pending:
+        items = [_chapter_summary_item_input(chapter, cfg) for chapter in pending]
+        timeout_seconds = max(cfg.llm_timeout_seconds * 4, 120) * max(1, len(items))
+        map_output, error = _run_chapter_summary_fanout(items, fingerprint, timeout_seconds)
 
-    for chapter in pending:
-        key = _chapter_key(chapter)
-        if (config or ChapterSummaryConfig()).mode == "llm":
-            item_result = _run_chapter_summary_item(chapter=chapter, config=(config or ChapterSummaryConfig()))
-            if debug_dir is not None and isinstance(item_result, dict) and item_result.get("error"):
+        results_by_index: dict[int, dict] = {}
+        if map_output is not None:
+            for entry in map_output.get("results") or []:
+                if isinstance(entry, dict) and isinstance(entry.get("index"), int):
+                    results_by_index[entry["index"]] = entry
+        if error:
+            print(
+                f"[chapter-summary] WARNING: {error} — "
+                f"{len(pending)} chapters fall back to extractive and retry next run",
+                file=sys.stderr,
+            )
+
+        for i, chapter in enumerate(pending):
+            entry = results_by_index.get(i)
+            if entry and entry.get("status") == "success" and isinstance(entry.get("output"), dict):
+                item_result = entry["output"]
+            else:
+                item_error = error or str((entry or {}).get("error") or "no_result")
+                item_result = {
+                    "error": "studio_map_item_failed",
+                    "raw_response": item_error,
+                    "run_metadata": {"run_id": (entry or {}).get("run_id")},
+                }
+            if debug_dir is not None and item_result.get("error"):
                 _save_llm_debug_artifact(debug_dir, chapter, item_result)
-            result[key] = summarize_chapter_from_item_result(chapter, item_result, config=config, action_cues=action_cues, flashback_cues=flashback_cues, thought_markers=thought_markers, exclusion_words=exclusion_words, entity_index=entity_index)
-        else:
-            result[key] = summarize_chapter(chapter, config=config, action_cues=action_cues, flashback_cues=flashback_cues, thought_markers=thought_markers, exclusion_words=exclusion_words, entity_index=entity_index)
-        _save_chapter_summaries(result, output_file, fingerprint)
-        if bar is not None:
-            bar.set_postfix(chapter=key[:40])
-            bar.update(1)
+            result[_chapter_key(chapter)] = summarize_chapter_from_item_result(
+                chapter, item_result, config=cfg,
+                action_cues=action_cues, flashback_cues=flashback_cues,
+                thought_markers=thought_markers, exclusion_words=exclusion_words,
+                entity_index=entity_index,
+            )
+    else:
+        for chapter in pending:
+            result[_chapter_key(chapter)] = summarize_chapter(
+                chapter, config=cfg,
+                action_cues=action_cues, flashback_cues=flashback_cues,
+                thought_markers=thought_markers, exclusion_words=exclusion_words,
+                entity_index=entity_index,
+            )
 
-    if bar is not None:
-        bar.close()
-
+    _save_chapter_summaries(result, output_file, fingerprint)
     return result
 
 

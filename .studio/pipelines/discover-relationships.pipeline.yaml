@@ -1,0 +1,23 @@
+name: discover-relationships
+description: Fan out relationship discovery over paragraph-aligned chunks — one child run per chunk
+version: 1
+
+# The fan-out lives in the engine (STU-589): per-item resume (STU-605) replaces
+# the script's hand-rolled votes cache, collect-all replaces its per-chunk
+# error swallowing, and RALPH retries live in the child pipeline. The resume
+# key is the resolved item input, so `prompt_fingerprint` below is what busts
+# the cache when the agent prompt or the type vocabulary changes (STU-560) —
+# the item text alone would replay stale votes across a prompt edit.
+stages:
+  - map: discover
+    over: input.chunks
+    pipeline: relationship-discovery-item
+    resume: true
+    concurrency: 4
+    on_item_failure: collect-all
+    input:
+      title: "{{item.title}}"
+      passage: "{{item.text}}"
+      roster: "{{input.roster}}"
+      relationship_types: "{{input.relationship_types}}"
+      prompt_fingerprint: "{{input.prompt_fingerprint}}"

@@ -98,5 +98,9 @@ def build_feedback(errors: list[str]) -> str:
 if __name__ == "__main__":
     payload = json.load(sys.stdin)
     summary, meta = parse_payload(payload)
-    result = validate_summary(summary, meta)
-    print(json.dumps(result))
+    verdict = validate_summary(summary, meta)
+    # Superset on purpose (STU-589): this is the child pipeline's last stage, so
+    # its output is what the parent map stage collects — the verdict alone would
+    # lose the summary it validated. No key collides: the summary contract owns
+    # chapter_id/title/bullets/…, the verdict owns valid/errors/feedback.
+    print(json.dumps({**summary, **verdict}))
