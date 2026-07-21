@@ -2,7 +2,7 @@
 
 Pure logic over the existing library layout
 (``library/<author>/<series>/books/NN_*.yaml``, already numbered); no ad-hoc
-series manifest. Consumed by run_wiki.py's ``--series`` mode to run the tomes in
+series manifest. Consumed by ``make run-series`` to run the tomes in
 order, propagating the accumulated series registry from one tome to the next.
 """
 from __future__ import annotations
