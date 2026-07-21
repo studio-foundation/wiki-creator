@@ -178,6 +178,9 @@ class WikiPage:
     content: str = ""
     _failed: bool | None = None
     _insufficient_data: bool | None = None
+    # STU-618: a --dry-run stub. Marked so the next real run's resume filter
+    # evicts it — a dry run is a preview, not a result, and must not resume.
+    _dry_run: bool | None = None
     # STU-447: _force_correct_identity/_recover_identity_rejected_page and the
     # forbidden-names retry in generate_wiki_pages.py stamp these telemetry
     # flags directly onto real page dicts before they're persisted.
