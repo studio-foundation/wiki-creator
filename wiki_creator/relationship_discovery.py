@@ -234,6 +234,18 @@ def aggregate(votes: list[dict], roster_names: set[str]) -> list[dict]:
     return pairs
 
 
+def uncached_chunk_ids(chunks: list[dict], cache: dict) -> list[str]:
+    """Chunk ids that produced no vote and stayed out of the cache (STU-610).
+
+    A chunk genuinely evidencing no relation is cached with ``[]``; a chunk that
+    failed transiently is left out of the cache entirely so a re-run retries it
+    (STU-562). Only the latter cost text the discovery graph never covered, so a
+    non-empty result means the output is partial — distinct from ``len(chunks)``,
+    which counts the list and cannot tell a failed chunk from a genuine 0.
+    """
+    return [c["id"] for c in chunks if c["id"] not in cache]
+
+
 def load_votes_cache(
     path: Path | str, roster_lines: list[str], prompt_key: str
 ) -> dict[str, list[dict]]:
