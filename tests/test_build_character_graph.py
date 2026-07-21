@@ -59,10 +59,21 @@ def _processing(book_yaml):
     return book_yaml.parent.parent / "processing_output" / book_yaml.stem
 
 
-def _write_artifacts(book_yaml, entities, relationships, source="relationships_classified.json"):
+def _write_artifacts(
+    book_yaml, entities, relationships,
+    source="relationships_classified.json", roster=None,
+):
     processing = _processing(book_yaml)
     (processing / "entities_classified.json").write_text(json.dumps({"entities": entities}))
-    (processing / source).write_text(json.dumps({"relationships": relationships}))
+    bundle = {"relationships": relationships}
+    if roster is not None:
+        bundle["entities"] = roster
+    (processing / source).write_text(json.dumps(bundle))
+
+
+def _roster_of(entities):
+    """The `RelationshipBundle.entities` shape discovery records — `type`, not `entity_type`."""
+    return [{"canonical_name": e["canonical_name"], "type": e["type"]} for e in entities]
 
 
 def _run(book_yaml):
@@ -188,6 +199,36 @@ def test_merge_types_an_edge_a_pre_stu575_graph_left_untyped(book):
     _write_artifacts(book, SAMPLE_ENTITIES, SAMPLE_RELATIONSHIPS)
     graph, _ = _run(book)
     assert graph._g.edges["Celaena", "Chaol"]["relationship_type"] == "ally"
+
+
+def test_writes_nothing_when_the_relations_predate_the_current_roster(book, capsys):
+    """STU-602: the typed artifact records the PERSON roster it was discovered
+    against. A later re-resolution renames or retypes an entity, and every edge
+    naming the old canonical is silently dropped one entity at a time — on Narnia
+    that read as a 44% gate loss and was diagnosed as two artifacts disagreeing.
+    The artifact is stale; refuse it whole rather than build from its survivors."""
+    stale = _roster_of(SAMPLE_ENTITIES)
+    stale[0]["canonical_name"] = "CELAENA"
+    _write_artifacts(book, SAMPLE_ENTITIES, SAMPLE_RELATIONSHIPS, roster=stale)
+    assert _run(book) is None
+    err = capsys.readouterr().err
+    assert "roster" in err
+    assert "CELAENA" in err
+
+
+def test_builds_when_the_recorded_roster_matches(book):
+    _write_artifacts(book, SAMPLE_ENTITIES, SAMPLE_RELATIONSHIPS,
+                     roster=_roster_of(SAMPLE_ENTITIES))
+    graph, _ = _run(book)
+    assert graph._g.edges["Celaena", "Chaol"]["relationship_type"] == "ally"
+
+
+def test_a_non_person_roster_entry_is_not_part_of_the_comparison(book):
+    """Only PERSON enters either side: discovery rosters PERSON, the graph gates on
+    PERSON. A FACTION in the bundle is not a divergence."""
+    roster = _roster_of(SAMPLE_ENTITIES) + [{"canonical_name": "Beavers", "type": "FACTION"}]
+    _write_artifacts(book, SAMPLE_ENTITIES, SAMPLE_RELATIONSHIPS, roster=roster)
+    assert _run(book) is not None
 
 
 def test_merge_keeps_an_existing_type(book):

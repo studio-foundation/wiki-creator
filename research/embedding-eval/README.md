@@ -34,7 +34,7 @@ HF_HUB_OFFLINE=1 PYTHONPATH=$(pwd) python research/embedding-eval/measure.py
 No arm separates. Best margin −0.025 (`win±15`), best AUROC 0.73 — both within
 noise of the STU-468 baseline (margin −0.040, AUROC 0.67). The mention window does
 not rescue e5-small disambiguation; mean-removal makes the threshold unusable.
-**Switch stays default OFF** (`embedding_disambiguation` is opt-in and untouched).
+The production judge this fed was excised by STU-601, after STU-576 made the reject structural; `backend.py` holds the encoder these scripts share.
 
 ## STU-577: does a stronger *backend* rescue it? (see results_backends.md)
 
