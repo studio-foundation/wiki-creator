@@ -174,16 +174,31 @@ def main() -> None:
         description="Classify relationships via Studio (relationship-classifier-item pipeline)."
     )
     parser.add_argument(
-        "--book", required=True,
-        help="Path to book YAML, e.g. library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml",
+        "--book",
+        help="Path to book YAML, e.g. library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml "
+             "(standalone mode)",
     )
     parser.add_argument(
         "--dry-run", action="store_true",
         help="Skip Studio calls, pass pairs through unchanged",
     )
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
 
-    book_paths = book_paths_from_yaml(args.book)
+    if args.book:
+        with open(args.book, encoding="utf-8") as f:
+            book_cfg = yaml.safe_load(f) or {}
+        run(book_cfg, book_paths_from_yaml(args.book), dry_run=args.dry_run)
+        return
+
+    # Studio stdin mode (STU-457): a wiki-preparation stage, book yaml in
+    # additional_context, artifacts from disk.
+    payload = studio_io.read_payload()
+    book_cfg = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    summary = run(book_cfg, studio_io.paths_from_payload(payload))
+    studio_io.write_output(summary)
+
+
+def run(book_cfg: dict, book_paths, *, dry_run: bool = False) -> dict:
     input_path, pre_typed = _select_input(book_paths.processing)
     output_path = book_paths.processing / "relationships_classified.json"
 
@@ -234,8 +249,6 @@ def main() -> None:
             file=sys.stderr,
         )
 
-    with open(args.book, encoding="utf-8") as f:
-        book_cfg = yaml.safe_load(f) or {}
     novel_summary = book_cfg.get("novel_summary") or ""
 
     fingerprint = _classifier_fingerprint(
@@ -254,14 +267,14 @@ def main() -> None:
         file=sys.stderr,
     )
 
-    if args.dry_run or not to_classify:
+    if dry_run or not to_classify:
         _save(output_path, base, passthrough + to_classify)
         print(
-            f"[classify-relationships] {'Dry run — ' if args.dry_run else ''}"
+            f"[classify-relationships] {'Dry run — ' if dry_run else ''}"
             f"{len(relationships)} pairs passed through",
             file=sys.stderr,
         )
-        return
+        return {"pairs": len(relationships), "classified": 0}
 
     items = [
         classifier_item_input(
@@ -313,6 +326,7 @@ def main() -> None:
     if errored:
         summary += f", {errored} unjudged (Studio error)"
     print(summary, file=sys.stderr)
+    return {"pairs": len(classified), "classified": succeeded, "unjudged": errored}
 
 
 if __name__ == "__main__":

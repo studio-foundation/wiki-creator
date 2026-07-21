@@ -120,16 +120,37 @@ def _run_discovery_fanout(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Schema-guided relation discovery (STU-556).")
-    parser.add_argument("--book", required=True, help="Path to book YAML")
+    parser.add_argument("--book", help="Path to book YAML (standalone mode)")
     parser.add_argument("--chunk-chars", type=int, default=DEFAULT_CHUNK_CHARS)
     parser.add_argument(
         "--max-chapters", type=int, default=None,
         help="Discover over only the first N narrative chapters — a cheap prompt "
              "smoke (~15 chunks) that seeds the shared engine cache for a later full run.",
     )
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
 
-    book_paths = book_paths_from_yaml(args.book)
+    if args.book:
+        with open(args.book, encoding="utf-8") as f:
+            book_cfg = yaml.safe_load(f) or {}
+        run(book_cfg, book_paths_from_yaml(args.book),
+            chunk_chars=args.chunk_chars, max_chapters=args.max_chapters)
+        return
+
+    # Studio stdin mode (STU-457): a wiki-preparation stage, book yaml in
+    # additional_context, artifacts from disk.
+    payload = studio_io.read_payload()
+    book_cfg = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    summary = run(book_cfg, studio_io.paths_from_payload(payload))
+    studio_io.write_output(summary)
+
+
+def run(
+    book_cfg: dict,
+    book_paths,
+    *,
+    chunk_chars: int = DEFAULT_CHUNK_CHARS,
+    max_chapters: int | None = None,
+) -> dict:
     epub_data_path = book_paths.processing / "epub_data.json"
     registry_path = book_paths.processing / "registry.json"
     output_path = book_paths.processing / "relationships_discovered.json"
@@ -140,7 +161,7 @@ def main() -> None:
             f"{registry_path.name} — writing nothing, classifier falls back to co-occurrence",
             file=sys.stderr,
         )
-        return
+        return {"skipped": "missing_artifacts"}
 
     epub_data = json.loads(epub_data_path.read_text(encoding="utf-8"))
     registry = Registry.load(registry_path)
@@ -151,20 +172,18 @@ def main() -> None:
     roster_names, alias_to_canonical, roster_lines = build_roster(entities)
     if not roster_names:
         print("[discover-relationships] empty PERSON roster — nothing to discover", file=sys.stderr)
-        return
+        return {"skipped": "empty_roster"}
 
-    with open(args.book, encoding="utf-8") as f:
-        book_cfg = yaml.safe_load(f) or {}
     type_defs = relationship_definitions(book_config=book_cfg)
     allowed_types = set(relationship_tokens(book_config=book_cfg))
 
     chapters = _narrative_chapters(epub_data)
-    if args.max_chapters is not None:
-        chapters = chapters[: args.max_chapters]
-    chunks = chunk_chapters(chapters, args.chunk_chars)
+    if max_chapters is not None:
+        chapters = chapters[:max_chapters]
+    chunks = chunk_chapters(chapters, chunk_chars)
     if not chunks:
         print("[discover-relationships] no narrative chapters — nothing to discover", file=sys.stderr)
-        return
+        return {"skipped": "no_chapters"}
 
     print(
         f"[discover-relationships] {len(chunks)} chunks | roster {len(roster_names)} PERSON",
@@ -179,7 +198,7 @@ def main() -> None:
             "prior artifact (if any) kept, classifier falls back to co-occurrence",
             file=sys.stderr,
         )
-        return
+        return {"skipped": error}
 
     votes, failed = votes_from_map_output(
         chunks, map_output, alias_to_canonical, roster_names, allowed_types
@@ -219,6 +238,7 @@ def main() -> None:
             f"built from it is missing these chunks (re-run to retry): {', '.join(failed)}",
             file=sys.stderr,
         )
+    return {"chunks": len(chunks), "chunks_failed": len(failed), "pairs": len(pairs)}
 
 
 if __name__ == "__main__":

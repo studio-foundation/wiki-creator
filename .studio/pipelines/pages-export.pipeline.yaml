@@ -1,8 +1,52 @@
 name: pages-export
-description: Load generated wiki pages, check copyright, and export to wikitext
+description: Generate wiki pages, synopsis and event pages, consolidate stance, then assemble, check copyright and export to wikitext
 version: 1
 
+# STU-457: the four run_wiki.py pages-export pre-steps are stages here now.
+# generate-wiki-pages fans out via one nested `studio run wiki-pages` (the
+# STU-612 plan / map fan-out / replay, per-page resume); synopsis and event
+# pages call wiki-page-item per page (STU-589 left them on the item runner).
 stages:
+  - name: generate-wiki-pages
+    kind: analysis
+    executor: script
+    runtime: python
+    script: scripts/generate_wiki_pages.py
+    timeout_ms: 21600000
+    context:
+      include:
+        - input
+
+  - name: generate-book-synopsis
+    kind: analysis
+    executor: script
+    runtime: python
+    script: scripts/generate_book_synopsis.py
+    timeout_ms: 1800000
+    context:
+      include:
+        - input
+
+  - name: generate-event-pages
+    kind: analysis
+    executor: script
+    runtime: python
+    script: scripts/generate_event_pages.py
+    timeout_ms: 7200000
+    context:
+      include:
+        - input
+
+  - name: consolidate-editorial-stance
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/consolidate_editorial_stance.py
+    timeout_ms: 300000
+    context:
+      include:
+        - input
+
   - name: wiki-generation
     kind: extraction
     executor: script

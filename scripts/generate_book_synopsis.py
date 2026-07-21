@@ -216,22 +216,33 @@ def run_for_processing(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate the book synopsis page (SP4)")
-    parser.add_argument("--book", required=True, help="Path to book YAML config")
+    parser.add_argument("--book", help="Path to book YAML config (standalone mode)")
     parser.add_argument("--timeout", type=int, default=120, help="LLM timeout (seconds)")
     parser.add_argument("--dry-run", action="store_true", help="Skip LLM call, output a stub")
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
 
-    with open(args.book, encoding="utf-8") as f:
-        book_cfg = yaml.safe_load(f) or {}
+    if args.book:
+        with open(args.book, encoding="utf-8") as f:
+            book_cfg = yaml.safe_load(f) or {}
+        book_paths = book_paths_from_yaml(args.book)
+    else:
+        # Studio stdin mode (STU-457): a pages-export stage, book yaml in
+        # additional_context, artifacts from disk.
+        payload = studio_io.read_payload()
+        book_cfg = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+        book_paths = studio_io.paths_from_payload(payload)
 
-    book_paths = book_paths_from_yaml(args.book)
-    run_for_processing(
+    page = run_for_processing(
         book_paths.processing,
         book_cfg=book_cfg,
         language=book_language(book_cfg),
         timeout=args.timeout,
         dry_run=args.dry_run,
     )
+    if not args.book:
+        studio_io.write_output(
+            {"skipped": True} if page is None else {"failed": bool(page.get("_failed"))}
+        )
 
 
 if __name__ == "__main__":

@@ -3,6 +3,21 @@ description: Resolve entities and extract relationships — run once per book
 version: 1
 
 stages:
+  # STU-457: chapter summarization is a stage, not a run_wiki.py pre-step. It
+  # reads epub_data.json from disk (disk is the bus across pipelines, STU-455)
+  # and fans out via one nested `studio run chapter-summaries` (the engine map,
+  # per-item resume, STU-589/605). Long: one LLM call per pending chapter.
+  - name: chapter-summary
+    kind: analysis
+    executor: script
+    runtime: python
+    script: scripts/chapter_summary.py
+    contract: chapter-summary
+    timeout_ms: 14400000
+    context:
+      include:
+        - input
+
   - name: resolve-clusters
     kind: extraction
     executor: script

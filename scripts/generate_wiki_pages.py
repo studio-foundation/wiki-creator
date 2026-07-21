@@ -1991,8 +1991,9 @@ def generate_pages(
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--book", required=True,
-        help="Path to book yaml, e.g. library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml",
+        "--book",
+        help="Path to book yaml, e.g. library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml "
+             "(standalone mode)",
     )
     parser.add_argument("--model", default=os.environ.get("WIKI_MODEL", "qwen2.5"), help="Ollama model")
     parser.add_argument("--timeout", type=int, default=120, help="Timeout per entity (seconds)")
@@ -2004,14 +2005,43 @@ def main() -> None:
                         help="Regenerate targeted entities even if already done "
                              "(requires --entities and/or --importance)")
     parser.add_argument("--dry-run", action="store_true", help="Skip LLM calls, output stubs only")
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
 
     if args.force and not (args.entities or args.importance):
         parser.error("--force requires --entities and/or --importance "
                      "(refuse to force-regenerate the whole book)")
 
-    book_paths = book_paths_from_yaml(args.book)
-    book_cfg = load_book_config(args.book)
+    if args.book:
+        book_paths = book_paths_from_yaml(args.book)
+        book_cfg = load_book_config(args.book)
+        pages = run(
+            book_cfg, book_paths,
+            model=args.model, timeout=args.timeout, importance=args.importance,
+            entities=args.entities, force=args.force, dry_run=args.dry_run,
+        )
+    else:
+        # Studio stdin mode (STU-457): a pages-export stage, book yaml in
+        # additional_context, batches from disk. Always a full, unfiltered run —
+        # the subset axes (--entities/--importance/--force) are dev tools.
+        payload = studio_io.read_payload()
+        book_cfg = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+        book_paths = studio_io.paths_from_payload(payload)
+        pages = run(book_cfg, book_paths, model=os.environ.get("WIKI_MODEL", "qwen2.5"), timeout=120)
+        failed = sum(1 for p in pages if p.get("_failed"))
+        studio_io.write_output({"pages": len(pages), "failed": failed})
+
+
+def run(
+    book_cfg: dict,
+    book_paths,
+    *,
+    model: str,
+    timeout: int,
+    importance: list[str] | None = None,
+    entities: list[str] | None = None,
+    force: bool = False,
+    dry_run: bool = False,
+) -> list[dict]:
     validation_cfg = book_cfg.get("validation", {})
     forbidden_names = validation_cfg.get("forbidden_names", [])
     if forbidden_names:
@@ -2031,42 +2061,43 @@ def main() -> None:
     if identity_registry is None:
         print("[generate-wiki-pages] registry.json not found — identity from batch artifact", file=sys.stderr)
 
-    batches = load_batch_files(str(book_paths.wiki_inputs), args.importance, args.entities)
+    batches = load_batch_files(str(book_paths.wiki_inputs), importance, entities)
     if not batches:
         # A filtered run that matches nothing must NOT wipe the existing file —
         # exit without saving. Only the unfiltered "no batches at all" case
         # writes an empty result (fresh/empty book).
-        if args.importance or args.entities:
+        if importance or entities:
             print("[generate-wiki-pages] Filter matched zero entities — nothing to do, "
                   "existing pages left untouched.", file=sys.stderr)
-            return
+            return []
         print("[WARN] No batch files found or all batches empty.", file=sys.stderr)
         _save([], str(book_paths.processing / "wiki_pages.json"))
-        return
+        return []
 
     total_entities = sum(len(b["entities"]) for _, b in batches)
-    print(f"[generate-wiki-pages] {total_entities} entities across {len(batches)} batches | model={args.model}", file=sys.stderr)
+    print(f"[generate-wiki-pages] {total_entities} entities across {len(batches)} batches | model={model}", file=sys.stderr)
 
     config = GenerationConfig(
         book_title=load_book_title(str(book_paths.processing / "epub_data.json")),
         generation_cfg=book_cfg.get("generation", {}),
         output_file=str(book_paths.processing / "wiki_pages.json"),
         debug_dir=book_paths.processing / "wiki_page_item_debug",
-        model=args.model,
-        timeout=args.timeout,
-        dry_run=args.dry_run,
+        model=model,
+        timeout=timeout,
+        dry_run=dry_run,
         forbidden_names=forbidden_names,
         language=output_language(book_cfg),
         file_path=book_cfg.get("file_path", ""),
         grounding=grounding_cfg,
         book_config=book_cfg,
         identity_registry=identity_registry,
-        force=args.force,
+        force=force,
     )
 
     pages = generate_pages_fanout(batches, config)
     _print_generation_summary(pages)
     _write_identity_telemetry(book_paths.processing)
+    return pages
 
 
 def _print_generation_summary(pages: list[dict], file=None) -> None:
