@@ -1,0 +1,44 @@
+description: |
+  Build a wiki for "The Call of Cthulhu" by H. P. Lovecraft.
+  Parse the book, extract all named entities (characters, locations, organizations, events),
+  resolve aliases, and generate Markdown wiki pages for each entity.
+
+file_path: public_domain/h_p_lovecraft/the_call_of_cthulhu/books/01-the_call_of_cthulhu.epub
+spacy_model: en_core_web_lg
+
+coref: false
+workers: 8
+
+min_mentions_absolute: 3
+
+generation:
+  chapter_summary:
+    mode: llm
+    max_bullets: 8
+    llm_fallback_to_extractive: true
+    llm_model: qwen2.5
+    llm_timeout_seconds: 45
+  chapter_summary_max_chapters_per_entity: 20
+  principal:
+    sections: [infobox, biography, personality, physical, powers, relationships, trivia, references]
+    sections_by_type:
+      PLACE: [infobox, biography, physical, relationships, trivia, references]
+      ORG: [infobox, biography, relationships, references]
+      EVENT: [infobox, biography, relationships, references]
+    max_tokens_per_page: 2000
+  secondary:
+    sections: [infobox, biography, relationships, references]
+    max_tokens_per_page: 800
+  figurant:
+    sections: [infobox, biography]
+    max_tokens_per_page: 200
+
+export:
+  categories:
+    language: en
+    labels:
+      persons: Characters
+      principal: Main Characters
+      secondary: Secondary Characters
+      locations: Locations
+      organizations: Organizations
