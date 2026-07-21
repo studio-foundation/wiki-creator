@@ -14,6 +14,7 @@ from wiki_creator.relationship_discovery import (
     fold_chunk_result,
     load_votes_cache,
     save_votes_cache,
+    uncached_chunk_ids,
     valid_relations,
 )
 
@@ -287,3 +288,23 @@ def test_fold_chunk_canonicalizes_and_validates():
         "direction": "B→A",
         "evidence": "Brom taught the boy to fight.",
     }]
+
+
+# --- uncached_chunk_ids: failed chunks are coverage the run never bought ------
+
+
+def test_uncached_chunk_ids_flags_failed_chunks(tmp_path):
+    chunks = [{"id": "c0"}, {"id": "c1"}, {"id": "c2"}, {"id": "c3"}]
+    # c1 failed and stayed out; c2 genuinely evidenced no relation ([] is cached).
+    cache = {"c0": [{"entity_a": "A"}], "c2": [], "c3": [{"entity_a": "B"}]}
+    assert uncached_chunk_ids(chunks, cache) == ["c1"]
+
+
+def test_uncached_chunk_ids_empty_when_all_cached():
+    chunks = [{"id": "c0"}, {"id": "c1"}]
+    assert uncached_chunk_ids(chunks, {"c0": [], "c1": []}) == []
+
+
+def test_uncached_chunk_ids_preserves_chunk_order():
+    chunks = [{"id": "c0"}, {"id": "c1"}, {"id": "c2"}]
+    assert uncached_chunk_ids(chunks, {}) == ["c0", "c1", "c2"]
