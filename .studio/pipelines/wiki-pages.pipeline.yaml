@@ -1,0 +1,34 @@
+name: wiki-pages
+description: Fan out wiki-page generation over planned item calls — one child run per section/relation/page
+version: 1
+
+# The fan-out lives in the engine (STU-612/589): per-item resume (STU-605)
+# replaces the per-call subprocess loop, collect-all replaces the per-call
+# error ladder, and RALPH + the generation-validation group retry inside the
+# child. The resume key is the resolved item input — the fully rendered prompt,
+# the prompt fingerprint, and the `attempt` counter. `attempt` is what makes
+# the forbidden-name retry a real second roll: the retry prompt is identical by
+# design, so without it the cache would replay the offending output. The
+# child's last stage (the validator) re-emits the page as a superset of its
+# verdict, which is what this map collects.
+stages:
+  - map: generate
+    over: input.items
+    pipeline: wiki-page-item
+    resume: true
+    concurrency: 4
+    on_item_failure: collect-all
+    input:
+      title: "{{item.title}}"
+      importance: "{{item.importance}}"
+      entity_type: "{{item.entity_type}}"
+      max_tokens: "{{item.max_tokens}}"
+      language: "{{item.language}}"
+      forbidden_names: "{{item.forbidden_names}}"
+      file_path: "{{item.file_path}}"
+      prompt: "{{item.prompt}}"
+      grounding_llm: "{{item.grounding_llm}}"
+      grounding_llm_model: "{{item.grounding_llm_model}}"
+      grounding_llm_timeout: "{{item.grounding_llm_timeout}}"
+      attempt: "{{item.attempt}}"
+      prompt_fingerprint: "{{input.prompt_fingerprint}}"

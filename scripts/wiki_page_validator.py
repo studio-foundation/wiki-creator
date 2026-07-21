@@ -355,5 +355,9 @@ def parse_payload(payload: dict) -> tuple[dict, dict]:
 if __name__ == "__main__":
     payload = json.load(sys.stdin)
     page, meta = parse_payload(payload)
-    result = validate_page(page, meta)
-    print(json.dumps(result))
+    verdict = validate_page(page, meta)
+    # Superset on purpose (STU-612): this is the child pipeline's last stage, so
+    # its output is what the parent map stage collects — the verdict alone would
+    # lose the page it validated. No key collides: the page contract owns
+    # title/content/infobox…, the verdict owns valid/errors/error_codes/feedback.
+    print(json.dumps({**page, **verdict}))

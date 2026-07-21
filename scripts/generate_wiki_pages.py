@@ -24,6 +24,9 @@ from __future__ import annotations
 
 import argparse
 import dataclasses
+import hashlib
+import shutil
+import dataclasses
 import json
 import os
 import re
@@ -1049,6 +1052,198 @@ class StudioRunner:
         return studio_io.load_studio_stage_output(run_id, stage)
 
 
+def _item_key(item_input: dict) -> str:
+    return hashlib.sha256(
+        json.dumps(item_input, sort_keys=True, ensure_ascii=False, default=str).encode("utf-8")
+    ).hexdigest()
+
+
+class CollectingRunner:
+    """Plan walk (STU-612): records every item the walk would dispatch and
+    answers with a fake success, so the walk itself enumerates the calls —
+    data gates, section order and the per-relation set included — with zero
+    duplicated planning logic. Pages produced under it are discarded."""
+
+    def __init__(self) -> None:
+        self.items: dict[str, dict] = {}
+
+    def run_item(self, item_input: dict, entity: dict, timeout: int) -> dict:
+        self.items.setdefault(_item_key(item_input), dict(item_input))
+        return {
+            "title": entity.get("canonical_name", ""),
+            "content": "planned",
+            "infobox_fields": {},
+            "run_metadata": {},
+        }
+
+    def load_stage_output(self, run_id: str, stage: str) -> dict | None:
+        return None
+
+
+class ReplayRunner:
+    """Replay walk (STU-612): serves the engine map results keyed on the item
+    input. A second request for the same item is the in-walk forbidden-name
+    retry — recorded in `retry_items` and served from the second fan-out pass
+    when one ran. Mirrors _execute_wiki_page_item's return contract, so the
+    walk cannot tell replay from subprocess."""
+
+    def __init__(self, first: dict[str, dict], second: dict[str, dict] | None = None) -> None:
+        self.first = first
+        self.second = second or {}
+        self._seen: dict[str, int] = {}
+        self.retry_items: dict[str, dict] = {}
+
+    def run_item(self, item_input: dict, entity: dict, timeout: int) -> dict:
+        key = _item_key(item_input)
+        request = self._seen.get(key, 0)
+        self._seen[key] = request + 1
+        if request > 0:
+            if key in self.second:
+                return self._to_item_result(self.second[key], entity, item_input)
+            self.retry_items.setdefault(key, dict(item_input))
+        return self._to_item_result(self.first.get(key), entity, item_input)
+
+    def load_stage_output(self, run_id: str, stage: str) -> dict | None:
+        return studio_io.load_studio_stage_output(run_id, stage)
+
+    @staticmethod
+    def _to_item_result(map_result: dict | None, entity: dict, item_input: dict) -> dict:
+        if map_result is None:
+            return {"error": "studio_map_item_missing", "raw_response": "", "run_metadata": {}}
+        run_metadata = {
+            "run_id": map_result.get("run_id"),
+            "status": map_result.get("status"),
+        }
+        if map_result.get("status") != "success" or not isinstance(map_result.get("output"), dict):
+            return {
+                "error": "studio_map_item_failed",
+                "raw_response": str(map_result.get("error") or ""),
+                "run_metadata": run_metadata,
+            }
+        payload = map_result["output"]
+        page = parse_response(
+            json.dumps(payload, ensure_ascii=False), entity,
+            lang=item_input.get("language", "fr"),
+        )
+        if page.get("_failed"):
+            return {
+                "error": "studio_invalid_output",
+                "raw_response": json.dumps(payload, ensure_ascii=False),
+                "run_metadata": {**run_metadata, "payload": payload},
+            }
+        return {**page, "run_metadata": run_metadata}
+
+
+def _run_pages_fanout(
+    items: list[dict], fingerprint: str, attempt: int, timeout: int
+) -> tuple[dict | None, str | None]:
+    """One `studio run` fanning out over the planned items. Returns (map_output, error)."""
+    payload = {
+        "items": [
+            {
+                "grounding_llm": False,
+                "grounding_llm_model": "",
+                "grounding_llm_timeout": 0,
+                **item,
+                "attempt": attempt,
+            }
+            for item in items
+        ],
+        "prompt_fingerprint": fingerprint,
+    }
+    timeout_seconds = max(600, len(items) * max(timeout, 60))
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".yaml", delete=False) as tmp:
+        yaml.safe_dump(payload, tmp, sort_keys=False, allow_unicode=True)
+        input_path = tmp.name
+    cmd = ["studio", "run", "wiki-pages", "--input-file", input_path, "--json"]
+    try:
+        result = subprocess.run(
+            cmd, cwd=PROJECT_ROOT, capture_output=True, text=True, timeout=timeout_seconds
+        )
+    except FileNotFoundError:
+        return None, "studio_cli_missing"
+    except subprocess.TimeoutExpired:
+        return None, "studio_run_timeout"
+    finally:
+        Path(input_path).unlink(missing_ok=True)
+    if result.returncode != 0:
+        return None, "studio_run_failed"
+    map_output = studio_io.stage_output_from_stdout(result.stdout or "", "generate")
+    if map_output is None:
+        return None, "studio_run_output_missing"
+    return map_output, None
+
+
+def _fanout_results_by_key(keys: list[str], map_output: dict | None) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    if not isinstance(map_output, dict):
+        return out
+    for result in map_output.get("results") or []:
+        if isinstance(result, dict) and isinstance(result.get("index"), int):
+            i = result["index"]
+            if 0 <= i < len(keys):
+                out[keys[i]] = result
+    return out
+
+
+def generate_pages_fanout(batches: list[tuple[str, dict]], config: GenerationConfig) -> list[dict]:
+    """generate_pages through the engine map stage: plan walk → fan-out →
+    replay walk, with a second fan-out only for in-walk forbidden-name retries
+    (their prompt is identical, so `attempt: 2` is what busts the item cache).
+    Walks are deterministic and LLM-free; the fan-outs are the only Studio
+    invocations."""
+    fingerprint = _page_prompt_fingerprint(config)
+
+    with tempfile.TemporaryDirectory(prefix="wiki-pages-plan-") as scratch:
+        def _scratch_config(name: str) -> GenerationConfig:
+            path = str(Path(scratch) / name)
+            if Path(config.output_file).exists():
+                shutil.copyfile(config.output_file, path)
+            return dataclasses.replace(config, output_file=path)
+
+        collector = CollectingRunner()
+        generate_pages(batches, _scratch_config("plan.json"), runner=collector)
+        keys = list(collector.items)
+        items = list(collector.items.values())
+
+        first: dict[str, dict] = {}
+        if items:
+            print(f"[generate-wiki-pages] fan-out: {len(items)} item call(s)", file=sys.stderr)
+            map_output, error = _run_pages_fanout(items, fingerprint, attempt=1, timeout=config.timeout)
+            if error:
+                print(
+                    f"[generate-wiki-pages] WARNING: {error} — every planned item renders "
+                    "as failed; affected pages stub and retry next run",
+                    file=sys.stderr,
+                )
+            first = _fanout_results_by_key(keys, map_output)
+            resumed = (map_output or {}).get("resumed", 0)
+            if resumed:
+                print(f"[generate-wiki-pages] {resumed} item(s) served from resume cache", file=sys.stderr)
+
+        probe = ReplayRunner(first)
+        generate_pages(batches, _scratch_config("probe.json"), runner=probe)
+
+        second: dict[str, dict] = {}
+        if probe.retry_items:
+            retry_keys = list(probe.retry_items)
+            retry_items = list(probe.retry_items.values())
+            print(
+                f"[generate-wiki-pages] forbidden-name retry: {len(retry_items)} item call(s)",
+                file=sys.stderr,
+            )
+            map_output, error = _run_pages_fanout(retry_items, fingerprint, attempt=2, timeout=config.timeout)
+            if error:
+                print(
+                    f"[generate-wiki-pages] WARNING: {error} on the retry pass — "
+                    "first-pass results stand, forbidden hits persist",
+                    file=sys.stderr,
+                )
+            second = _fanout_results_by_key(retry_keys, map_output)
+
+    return generate_pages(batches, config, runner=ReplayRunner(first, second))
+
+
 def _as_failure(result: object) -> dict:
     return result if isinstance(result, dict) else {"error": "studio_result_not_a_dict", "raw_response": repr(result)}
 
@@ -1869,7 +2064,7 @@ def main() -> None:
         force=args.force,
     )
 
-    pages = generate_pages(batches, config, StudioRunner())
+    pages = generate_pages_fanout(batches, config)
     _print_generation_summary(pages)
     _write_identity_telemetry(book_paths.processing)
 
