@@ -209,6 +209,41 @@ def fold_chunk_result(
     return kept
 
 
+def votes_from_map_output(
+    chunks: list[dict],
+    map_output: object,
+    alias_to_canonical: dict[str, str],
+    roster_names: set[str],
+    allowed_types: Iterable[str],
+) -> tuple[list[dict], list[str]]:
+    """Per-chunk votes from the engine map stage's collected output (STU-589).
+
+    Returns ``(votes, failed_chunk_ids)``. ``results[].index`` names the chunk;
+    a failed or missing item contributes no vote and is reported — the engine's
+    per-item resume never caches a failure (STU-605), so a re-run retries it,
+    the ``fold_chunk_result`` None contract one layer up.
+    """
+    results_by_index: dict[int, dict] = {}
+    if isinstance(map_output, dict):
+        for result in map_output.get("results") or []:
+            if isinstance(result, dict) and isinstance(result.get("index"), int):
+                results_by_index[result["index"]] = result
+
+    votes: list[dict] = []
+    failed: list[str] = []
+    for i, chunk in enumerate(chunks):
+        result = results_by_index.get(i)
+        raw = None
+        if result and result.get("status") == "success" and isinstance(result.get("output"), dict):
+            raw = result["output"].get("relations")
+        kept = fold_chunk_result(raw, alias_to_canonical, roster_names, allowed_types)
+        if kept is None:
+            failed.append(chunk["id"])
+            continue
+        votes.append({"chapter_id": chunk["chapter_id"], "relations": kept})
+    return votes, failed
+
+
 def aggregate(votes: list[dict], roster_names: set[str]) -> list[dict]:
     """Fold per-chunk relation votes into book-level ``Relationship`` dicts.
 

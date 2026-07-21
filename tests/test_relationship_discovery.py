@@ -16,6 +16,7 @@ from wiki_creator.relationship_discovery import (
     save_votes_cache,
     uncached_chunk_ids,
     valid_relations,
+    votes_from_map_output,
 )
 
 ROSTER = {"Eragon", "Brom", "Saphira", "Murtagh"}
@@ -37,15 +38,6 @@ def test_chunk_ids_are_chapter_scoped_and_ordered():
     chunks = chunk_chapters(chapters, size=4)
     assert [c["id"] for c in chunks] == ["ch1:0", "ch1:1"]
     assert all(c["chapter_id"] == "ch1" and c["title"] == "One" for c in chunks)
-
-
-def test_chunk_spans_multiple_chapters_in_order():
-    chapters = [
-        {"id": "ch1", "title": "One", "text": "x"},
-        {"id": "ch2", "title": "Two", "text": "y"},
-    ]
-    chunks = chunk_chapters(chapters, size=6000)
-    assert [c["id"] for c in chunks] == ["ch1:0", "ch2:0"]
 
 
 def test_chunk_warns_on_paragraph_less_chapter(capsys):
@@ -70,6 +62,15 @@ def test_chunk_no_warn_on_paragraph_slightly_over_size(capsys):
     chapters = [{"id": "ch1", "title": "One", "text": "x" * 15}]
     chunk_chapters(chapters, size=10)
     assert "[WARN]" not in capsys.readouterr().err
+
+
+def test_chunk_spans_multiple_chapters_in_order():
+    chapters = [
+        {"id": "ch1", "title": "One", "text": "x"},
+        {"id": "ch2", "title": "Two", "text": "y"},
+    ]
+    chunks = chunk_chapters(chapters, size=6000)
+    assert [c["id"] for c in chunks] == ["ch1:0", "ch2:0"]
 
 
 # --- valid_relations --------------------------------------------------------
@@ -288,6 +289,49 @@ def test_fold_chunk_canonicalizes_and_validates():
         "direction": "B→A",
         "evidence": "Brom taught the boy to fight.",
     }]
+
+
+# --- votes_from_map_output (STU-589 map fan-out) ----------------------------
+
+
+_CHUNKS = [
+    {"id": "ch1:0", "chapter_id": "ch1", "title": "One", "text": "aa"},
+    {"id": "ch1:1", "chapter_id": "ch1", "title": "One", "text": "bb"},
+    {"id": "ch2:0", "chapter_id": "ch2", "title": "Two", "text": "cc"},
+]
+
+_REL = {"entity_a": "Eragon", "entity_b": "Brom",
+        "relationship_type": "mentor", "direction": "B→A", "evidence": "ev"}
+
+
+def test_map_output_success_items_fold_into_votes_by_index():
+    map_output = {"results": [
+        {"index": 0, "status": "success", "output": {"relations": [dict(_REL)]}},
+        {"index": 1, "status": "success", "output": {"relations": []}},
+        {"index": 2, "status": "success", "output": {"relations": [dict(_REL)]}},
+    ]}
+    votes, failed = votes_from_map_output(_CHUNKS, map_output, {}, ROSTER, TYPES)
+    assert failed == []
+    assert [v["chapter_id"] for v in votes] == ["ch1", "ch1", "ch2"]
+    assert [len(v["relations"]) for v in votes] == [1, 0, 1]
+
+
+def test_map_output_failed_item_yields_no_vote_and_is_reported():
+    """A failed item is absent from the votes, never an empty vote a later run
+    reads as a genuine 0 (STU-562 shape) — the engine retries it next run."""
+    map_output = {"results": [
+        {"index": 0, "status": "success", "output": {"relations": [dict(_REL)]}},
+        {"index": 1, "status": "failed", "error": "boom"},
+    ]}
+    votes, failed = votes_from_map_output(_CHUNKS, map_output, {}, ROSTER, TYPES)
+    assert failed == ["ch1:1", "ch2:0"]  # missing result counts as failed too
+    assert [v["chapter_id"] for v in votes] == ["ch1"]
+
+
+def test_map_output_unparseable_is_all_failed():
+    votes, failed = votes_from_map_output(_CHUNKS, "garbage", {}, ROSTER, TYPES)
+    assert votes == []
+    assert failed == ["ch1:0", "ch1:1", "ch2:0"]
 
 
 # --- uncached_chunk_ids: failed chunks are coverage the run never bought ------

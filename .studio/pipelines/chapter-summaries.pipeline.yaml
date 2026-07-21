@@ -1,0 +1,24 @@
+name: chapter-summaries
+description: Fan out chapter summarization over narrative chapters — one child run per chapter
+version: 1
+
+# The fan-out lives in the engine (STU-589): per-item resume (STU-605) replaces
+# the output-artifact resume, collect-all replaces the per-chapter error
+# swallowing, and RALPH + the summary-validation group retry inside the child.
+# The resume key is the resolved item input — chapter content plus the prompt
+# fingerprint — so a prompt/config edit re-summarizes every chapter (STU-560)
+# and an unchanged chapter replays free. The child's last stage (the validator)
+# re-emits the summary as a superset, which is what this map collects.
+stages:
+  - map: summarize
+    over: input.chapters
+    pipeline: chapter-summary-item
+    resume: true
+    concurrency: 4
+    on_item_failure: collect-all
+    input:
+      chapter_id: "{{item.chapter_id}}"
+      chapter_title: "{{item.chapter_title}}"
+      chapter_content: "{{item.chapter_content}}"
+      max_bullets: "{{item.max_bullets}}"
+      prompt_fingerprint: "{{input.prompt_fingerprint}}"

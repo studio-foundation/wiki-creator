@@ -141,35 +141,6 @@ def test_summarize_chapters_is_deterministic():
     assert a == b
 
 
-def test_summarize_chapters_incrementally_resumes_from_existing_file(tmp_path) -> None:
-    output_file = tmp_path / "chapter_summaries.json"
-    output_file.write_text(
-        json.dumps(
-            {
-                "chapter_summaries": {
-                    "Chapter 1": {
-                        "chapter_id": "ch01",
-                        "chapter_title": "Chapter 1",
-                        "summary_bullets": ["Existing summary."],
-                        "summary_method": "llm",
-                        "quality_flags": [],
-                    }
-                }
-            }
-        ),
-        encoding="utf-8",
-    )
-    chapters = [
-        {"id": "ch01", "title": "Chapter 1", "content": "Old content should be skipped."},
-        {"id": "ch02", "title": "Chapter 2", "content": "Celaena follows Chaol into the castle vault."},
-    ]
-
-    summaries = summarize_chapters_incrementally(chapters, output_file=output_file)
-
-    assert summaries["Chapter 1"]["summary_bullets"] == ["Existing summary."]
-    assert "Chapter 2" in summaries
-
-
 def test_summary_fingerprint_changes_with_config():
     """STU-589: the fingerprint must move when the prompt-shaping config moves, so a
     changed knob busts the resume."""
@@ -195,95 +166,9 @@ def test_save_persists_fingerprint(tmp_path):
     assert json.loads(output_file.read_text())["prompt"] == "fp-123"
 
 
-def test_incrementally_busts_resume_on_fingerprint_mismatch(tmp_path):
-    """A stored fingerprint that no longer matches discards the resume — the chapter
-    is re-summarized rather than replayed from a stale prompt."""
-    output_file = tmp_path / "chapter_summaries.json"
-    output_file.write_text(json.dumps({
-        "prompt": "old",
-        "chapter_summaries": {
-            "Chapter 1": {"chapter_id": "ch01", "chapter_title": "Chapter 1",
-                          "summary_bullets": ["Stale summary."], "summary_method": "llm",
-                          "quality_flags": []},
-        },
-    }), encoding="utf-8")
-    chapters = [{"id": "ch01", "title": "Chapter 1", "content": "Celaena enters the vault and finds a key."}]
-
-    summaries = summarize_chapters_incrementally(chapters, output_file=output_file, fingerprint="new")
-
-    assert summaries["Chapter 1"]["summary_bullets"] != ["Stale summary."]
-
-
-def test_incrementally_resumes_on_fingerprint_match(tmp_path):
-    """A matching fingerprint resumes normally (extractive mode, no LLM needed)."""
-    output_file = tmp_path / "chapter_summaries.json"
-    output_file.write_text(json.dumps({
-        "prompt": "fp",
-        "chapter_summaries": {
-            "Chapter 1": {"chapter_id": "ch01", "chapter_title": "Chapter 1",
-                          "summary_bullets": ["Kept summary."], "summary_method": "extractive",
-                          "quality_flags": []},
-        },
-    }), encoding="utf-8")
-    chapters = [{"id": "ch01", "title": "Chapter 1", "content": "Old content should be skipped."}]
-
-    summaries = summarize_chapters_incrementally(chapters, output_file=output_file, fingerprint="fp")
-
-    assert summaries["Chapter 1"]["summary_bullets"] == ["Kept summary."]
-
-
-def test_summarize_chapters_incrementally_retries_failed_llm_on_resume(tmp_path, monkeypatch) -> None:
-    output_file = tmp_path / "chapter_summaries.json"
-    output_file.write_text(
-        json.dumps(
-            {
-                "chapter_summaries": {
-                    "Chapter 1": {
-                        "chapter_id": "ch01", "chapter_title": "Chapter 1",
-                        "summary_bullets": ["Extractive stand-in."],
-                        "summary_method": "extractive_fallback",
-                        "quality_flags": ["studio_run_timeout", "fallback_used"],
-                    },
-                    "Chapter 2": {
-                        "chapter_id": "ch02", "chapter_title": "Chapter 2",
-                        "summary_bullets": [_FALLBACK_BULLET],
-                        "summary_method": "llm", "quality_flags": ["studio_run_failed"],
-                    },
-                    "Chapter 3": {
-                        "chapter_id": "ch03", "chapter_title": "Chapter 3",
-                        "summary_bullets": ["A real LLM summary."],
-                        "summary_method": "llm", "quality_flags": [],
-                    },
-                }
-            }
-        ),
-        encoding="utf-8",
-    )
-    chapters = [
-        {"id": "ch01", "title": "Chapter 1", "content": "Celaena enters the vault."},
-        {"id": "ch02", "title": "Chapter 2", "content": "Chaol warns the king."},
-        {"id": "ch03", "title": "Chapter 3", "content": "Dorian reads the letter."},
-    ]
-    retried: list[str] = []
-
-    def fake_runner(*, chapter, config):
-        retried.append(chapter["title"])
-        return {"summary_bullets": [f"Recovered {chapter['title']}."]}
-
-    monkeypatch.setattr("scripts.chapter_summary._run_chapter_summary_item", fake_runner)
-
-    summaries = summarize_chapters_incrementally(
-        chapters, output_file=output_file,
-        config=ChapterSummaryConfig(mode="llm", max_bullets=3, llm_fallback_to_extractive=True),
-    )
-
-    assert sorted(retried) == ["Chapter 1", "Chapter 2"]  # both failures retried
-    assert summaries["Chapter 1"]["summary_bullets"] == ["Recovered Chapter 1."]
-    assert summaries["Chapter 2"]["summary_bullets"] == ["Recovered Chapter 2."]
-    assert summaries["Chapter 3"]["summary_bullets"] == ["A real LLM summary."]  # success untouched
-
-
-def test_summarize_chapters_incrementally_saves_after_each_new_chapter(tmp_path, monkeypatch) -> None:
+def test_summarize_chapters_incrementally_saves_once_at_the_end(tmp_path, monkeypatch) -> None:
+    """Per-unit persistence moved into the engine map cache (STU-589/605); the
+    artifact is written whole, once, from the collected results."""
     output_file = tmp_path / "chapter_summaries.json"
     chapters = [
         {"id": "ch01", "title": "Chapter 1", "content": "Celaena enters the hall and meets Dorian."},
@@ -299,7 +184,7 @@ def test_summarize_chapters_incrementally_saves_after_each_new_chapter(tmp_path,
 
     summarize_chapters_incrementally(chapters, output_file=output_file)
 
-    assert save_sizes == [1, 2]
+    assert save_sizes == [2]
 
 
 def test_summarize_chapters_incrementally_logs_llm_error_details(tmp_path, monkeypatch) -> None:
@@ -310,12 +195,11 @@ def test_summarize_chapters_incrementally_logs_llm_error_details(tmp_path, monke
     ]
 
     monkeypatch.setattr(
-        "scripts.chapter_summary._run_chapter_summary_item",
-        lambda **_: {
-            "summary_bullets": [],
-            "error": "llm_json_parse_error",
-            "raw_response": "not json at all",
-        },
+        "scripts.chapter_summary._run_chapter_summary_fanout",
+        lambda items, fingerprint, timeout_seconds: ({
+            "total": 1, "succeeded": 0, "failed": 1, "resumed": 0,
+            "results": [{"index": 0, "status": "failed", "error": "child exhausted RALPH", "run_id": "r-1"}],
+        }, None),
     )
 
     summarize_chapters_incrementally(
@@ -328,28 +212,31 @@ def test_summarize_chapters_incrementally_logs_llm_error_details(tmp_path, monke
     debug_files = sorted(debug_dir.glob("*.json"))
     assert len(debug_files) == 1
     payload = json.loads(debug_files[0].read_text(encoding="utf-8"))
-    assert payload["error"] == "llm_json_parse_error"
+    assert payload["error"] == "studio_map_item_failed"
     assert payload["chapter_id"] == "ch07.xhtml"
-    assert payload["chapter_title"] == "Chapter 7"
-    assert payload["raw_response"] == "not json at all"
+    assert payload["raw_response"] == "child exhausted RALPH"
+    assert payload["run_metadata"] == {"run_id": "r-1"}
 
 
-def test_summarize_chapters_incrementally_uses_item_runner_in_llm_mode(tmp_path, monkeypatch) -> None:
+def test_summarize_chapters_incrementally_fans_out_in_llm_mode(tmp_path, monkeypatch) -> None:
     output_file = tmp_path / "chapter_summaries.json"
     chapters = [
-        {"id": "ch01", "title": "Chapter 1", "content": "Ignored by fake runner."},
+        {"id": "ch01", "title": "Chapter 1", "content": "Ignored by fake fanout."},
     ]
-    calls: list[tuple[str, str]] = []
+    calls: list[list[dict]] = []
 
-    def fake_runner(*, chapter, config):
-        calls.append((chapter["id"], config.mode))
-        return {
-            "chapter_id": chapter["id"],
-            "chapter_title": chapter["title"],
-            "summary_bullets": ["Studio-generated summary."],
-        }
+    def fake_fanout(items, fingerprint, timeout_seconds):
+        calls.append(items)
+        return ({
+            "total": 1, "succeeded": 1, "failed": 0, "resumed": 0,
+            "results": [{"index": 0, "status": "success", "output": {
+                "chapter_id": "ch01",
+                "chapter_title": "Chapter 1",
+                "summary_bullets": ["Studio-generated summary."],
+            }}],
+        }, None)
 
-    monkeypatch.setattr("scripts.chapter_summary._run_chapter_summary_item", fake_runner)
+    monkeypatch.setattr("scripts.chapter_summary._run_chapter_summary_fanout", fake_fanout)
 
     summaries = summarize_chapters_incrementally(
         chapters,
@@ -357,12 +244,12 @@ def test_summarize_chapters_incrementally_uses_item_runner_in_llm_mode(tmp_path,
         config=ChapterSummaryConfig(mode="llm"),
     )
 
-    assert calls == [("ch01", "llm")]
+    assert len(calls) == 1 and calls[0][0]["chapter_id"] == "ch01"
     assert summaries["Chapter 1"]["summary_method"] == "llm"
     assert summaries["Chapter 1"]["summary_bullets"] == ["Studio-generated summary."]
 
 
-def test_summarize_chapters_incrementally_item_runner_failure_falls_back_and_logs(tmp_path, monkeypatch) -> None:
+def test_summarize_chapters_incrementally_failed_item_falls_back_and_logs(tmp_path, monkeypatch) -> None:
     output_file = tmp_path / "chapter_summaries.json"
     debug_dir = tmp_path / "chapter_summary_llm_debug"
     chapters = [
@@ -374,12 +261,11 @@ def test_summarize_chapters_incrementally_item_runner_failure_falls_back_and_log
     ]
 
     monkeypatch.setattr(
-        "scripts.chapter_summary._run_chapter_summary_item",
-        lambda **_: {
-            "error": "studio_run_failed",
-            "raw_response": "plain string response",
-            "run_metadata": {"pipeline": "chapter-summary-item", "attempts": 3},
-        },
+        "scripts.chapter_summary._run_chapter_summary_fanout",
+        lambda items, fingerprint, timeout_seconds: ({
+            "total": 1, "succeeded": 0, "failed": 1, "resumed": 0,
+            "results": [{"index": 0, "status": "failed", "error": "boom"}],
+        }, None),
     )
 
     summaries = summarize_chapters_incrementally(
@@ -390,12 +276,33 @@ def test_summarize_chapters_incrementally_item_runner_failure_falls_back_and_log
     )
 
     assert summaries["Chapter 7"]["summary_method"] == "extractive_fallback"
-    assert "studio_run_failed" in summaries["Chapter 7"]["quality_flags"]
-    debug_files = sorted(debug_dir.glob("*.json"))
-    assert len(debug_files) == 1
-    payload = json.loads(debug_files[0].read_text(encoding="utf-8"))
-    assert payload["error"] == "studio_run_failed"
-    assert payload["run_metadata"] == {"pipeline": "chapter-summary-item", "attempts": 3}
+    assert "studio_map_item_failed" in summaries["Chapter 7"]["quality_flags"]
+    assert len(sorted(debug_dir.glob("*.json"))) == 1
+
+
+def test_fanout_level_failure_falls_back_every_chapter(tmp_path, monkeypatch) -> None:
+    """The whole fan-out failing (CLI missing, timeout) degrades every chapter to
+    the extractive fallback — the pipeline keeps going, and the engine cached no
+    failure so the next run retries them all as real LLM calls."""
+    output_file = tmp_path / "chapter_summaries.json"
+    chapters = [
+        {"id": "ch01", "title": "Chapter 1", "content": "Celaena enters the vault at midnight."},
+        {"id": "ch02", "title": "Chapter 2", "content": "Chaol warns the king about the plot."},
+    ]
+
+    monkeypatch.setattr(
+        "scripts.chapter_summary._run_chapter_summary_fanout",
+        lambda items, fingerprint, timeout_seconds: (None, "studio_cli_missing"),
+    )
+
+    summaries = summarize_chapters_incrementally(
+        chapters,
+        output_file=output_file,
+        config=ChapterSummaryConfig(mode="llm", llm_fallback_to_extractive=True),
+    )
+
+    assert len(summaries) == 2
+    assert all(s["summary_method"] == "extractive_fallback" for s in summaries.values())
 
 
 def test_extract_stage_output_from_run_payload_reads_successful_stage_output() -> None:

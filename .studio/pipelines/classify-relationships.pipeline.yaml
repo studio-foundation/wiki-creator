@@ -1,0 +1,32 @@
+name: classify-relationships
+description: Fan out relationship classification over canonical pairs — one child run per pair
+version: 1
+
+# The fan-out lives in the engine (STU-589): per-item resume (STU-605) replaces
+# the output-artifact resume, collect-all replaces the per-pair error ladder,
+# and RALPH + the classification-validation group retry inside the child. Each
+# item is the complete classifier payload (`classifier_item_input`, the same
+# shape the one-off eval path dispatches), so the resume key — the resolved
+# item input, fingerprint included — busts on a prompt/vocabulary edit
+# (STU-560) and an unchanged pair replays free.
+stages:
+  - map: classify
+    over: input.pairs
+    pipeline: relationship-classifier-item
+    resume: true
+    concurrency: 4
+    on_item_failure: collect-all
+    input:
+      entity_a: "{{item.entity_a}}"
+      entity_b: "{{item.entity_b}}"
+      cooccurrence_count: "{{item.cooccurrence_count}}"
+      sample_contexts: "{{item.sample_contexts}}"
+      role_contexts_a: "{{item.role_contexts_a}}"
+      role_contexts_b: "{{item.role_contexts_b}}"
+      novel_summary: "{{item.novel_summary}}"
+      relationship_types: "{{item.relationship_types}}"
+      confidence_levels: "{{item.confidence_levels}}"
+      relationship_type: "{{item.relationship_type}}"
+      direction: "{{item.direction}}"
+      evidence: "{{item.evidence}}"
+      prompt_fingerprint: "{{input.prompt_fingerprint}}"

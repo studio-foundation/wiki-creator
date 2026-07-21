@@ -1007,35 +1007,22 @@ def _run_studio_classifier_once(cmd: list[str], timeout_seconds: int) -> dict:
     return stage_output
 
 
-def _run_studio_classifier_item(
+def classifier_item_input(
     rel: dict,
     *,
     novel_summary: str,
-    additional_context: str,
     role_contexts_a: list[str] | None = None,
     role_contexts_b: list[str] | None = None,
     book_config: dict | None = None,
-    timeout_seconds: int = 120,
-    max_attempts: int = _CLASSIFIER_MAX_ATTEMPTS,
 ) -> dict:
-    """Invoke Studio to classify one relationship pair via relationship-classifier-item pipeline.
+    """The one payload shape a classifier item receives, whatever dispatches it.
 
-    ``role_contexts_a``/``role_contexts_b`` (STU-496) are per-entity excerpts that
-    establish each entity's role/status/faction. They let the classifier type a
-    structurally-related pair that never shares a dyadic scene (rival Champions,
-    institutional employer, narrator-attributed mediated causation) without
-    inventing a fake dyadic quote. Empty ⇒ interaction-grounded classification only.
-
-    The type vocabulary travels with the payload (STU-477) rather than sitting in the
-    agent prompt: it is injected here, the one point both callers cross, so no caller can
-    dispatch a pair without one. ``book_config`` adds the types only this novel has
-    (STU-472); absent ⇒ the generic vocabulary alone.
-
-    A transient Studio failure (STU-562) is retried up to ``max_attempts`` times; a
-    persistent failure returns its ``{"error": ...}`` so the caller can mark the pair
-    as unjudged rather than conflate it with a real decline.
+    Shared by the one-off subprocess caller below and the STU-589 map fan-out
+    (`classify_relationships.py`) — the type vocabulary travels with the payload
+    (STU-477), so no caller can dispatch a pair without one. ``book_config`` adds
+    the types only this novel has (STU-472); absent ⇒ the generic vocabulary alone.
     """
-    item_input = {
+    return {
         "entity_a": rel["entity_a"],
         "entity_b": rel["entity_b"],
         "cooccurrence_count": rel.get("cooccurrence_count", 0),
@@ -1052,6 +1039,42 @@ def _run_studio_classifier_item(
         "direction": rel.get("direction"),
         "evidence": rel.get("evidence"),
     }
+
+
+def _run_studio_classifier_item(
+    rel: dict,
+    *,
+    novel_summary: str,
+    additional_context: str,
+    role_contexts_a: list[str] | None = None,
+    role_contexts_b: list[str] | None = None,
+    book_config: dict | None = None,
+    timeout_seconds: int = 120,
+    max_attempts: int = _CLASSIFIER_MAX_ATTEMPTS,
+) -> dict:
+    """Invoke Studio to classify one relationship pair via relationship-classifier-item pipeline.
+
+    One-off dispatch — the eval harness and `--live` tooling. The production
+    path (`classify_relationships.py`) fans the pairs out through the engine
+    map stage instead (STU-589) and does not come through here.
+
+    ``role_contexts_a``/``role_contexts_b`` (STU-496) are per-entity excerpts that
+    establish each entity's role/status/faction. They let the classifier type a
+    structurally-related pair that never shares a dyadic scene (rival Champions,
+    institutional employer, narrator-attributed mediated causation) without
+    inventing a fake dyadic quote. Empty ⇒ interaction-grounded classification only.
+
+    A transient Studio failure (STU-562) is retried up to ``max_attempts`` times; a
+    persistent failure returns its ``{"error": ...}`` so the caller can mark the pair
+    as unjudged rather than conflate it with a real decline.
+    """
+    item_input = classifier_item_input(
+        rel,
+        novel_summary=novel_summary,
+        role_contexts_a=role_contexts_a,
+        role_contexts_b=role_contexts_b,
+        book_config=book_config,
+    )
 
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".yaml", delete=False) as tmp:
         yaml.safe_dump(item_input, tmp, sort_keys=False, allow_unicode=True)
