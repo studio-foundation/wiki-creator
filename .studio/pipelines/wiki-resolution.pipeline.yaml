@@ -40,14 +40,34 @@ stages:
         - input
         - all_stage_outputs
 
+  # alias-adjudication split (STU-589): pre builds the roster and decides cache
+  # hit/miss; the call invokes the LLM natively (no subprocess); post parses,
+  # caches and applies the merges. on_failure: continue preserves the STU-538
+  # bias — a failed verdict merges nothing and the run proceeds.
+  - name: alias-adjudication-pre
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/alias_adjudication_pre.py
+    context:
+      include:
+        - input
+        - all_stage_outputs
+
+  - call: alias-adjudication-verdict
+    pipeline: alias-adjudication-item
+    condition: stages.alias-adjudication-pre.output.needs_verdict == true
+    on_failure: continue
+    input:
+      book_title: "{{stages.alias-adjudication-pre.output.book_title}}"
+      roster: "{{stages.alias-adjudication-pre.output.roster}}"
+
   - name: alias-adjudication
     kind: extraction
     executor: script
     runtime: python
     script: scripts/alias_adjudication.py
     contract: alias-adjudication
-    # One `studio run` per book, over the whole PERSON roster.
-    timeout_ms: 900000
     context:
       include:
         - input

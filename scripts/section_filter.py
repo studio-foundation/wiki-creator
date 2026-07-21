@@ -4,86 +4,54 @@ Stage 2: Section filtering — tag front/back matter so it is never extracted.
 
 Script executor interface: reads JSON from stdin, writes JSON to stdout.
 
-Runs between epub-parse and entity-extraction, and re-emits the epub-parse
-payload with `frontmatter: true` set on the sections that are not part of the
-work. It is a separate stage precisely because it is the only part of extraction
-that needs the network: epub-parse stays deterministic and offline.
+Post-step of the section-filter split (STU-589). The LLM verdict arrives from
+the `call: section-filter-verdict` stage (native invocation, no subprocess);
+this stage parses it, caches it, and re-emits the epub-parse payload with
+`frontmatter: true` set on the sections that are not part of the work.
 
-Input:  { "previous_outputs": {"epub-parse": {...}} }  (or previous_stage_output)
+Input:  { "all_stage_outputs": {"epub-parse": {...}, "section-filter-verdict": {...}} }
 Output: the epub-parse payload, chapters tagged.
 """
 
 import json
-import subprocess
 import sys
-import tempfile
 from pathlib import Path
-
-import yaml
 
 from wiki_creator.chapters import number_chapters
 from wiki_creator.section_filter import (
     apply_frontmatter,
     load_cached_drops,
     parse_drop_verdict,
-    render_section_list,
     save_drop_cache,
     section_rows,
 )
 from wiki_creator import studio_io
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-
-_TIMEOUT_SECONDS = 300
+VERDICT_STAGE = "section-filter-verdict"
 
 
-def _run_section_filter(rows: list[dict], book_title: str) -> tuple[dict[str, str], str | None]:
-    """Classify sections with one `studio run`. Returns (drops, error)."""
-    item_input = {"book_title": book_title, "sections": render_section_list(rows)}
-    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".yaml", delete=False) as tmp:
-        yaml.safe_dump(item_input, tmp, sort_keys=False, allow_unicode=True)
-        input_path = tmp.name
-
-    cmd = ["studio", "run", "section-filter-item", "--input-file", input_path, "--json"]
-    try:
-        result = subprocess.run(
-            cmd, cwd=PROJECT_ROOT, capture_output=True, text=True, timeout=_TIMEOUT_SECONDS
-        )
-    except FileNotFoundError:
-        return {}, "studio_cli_missing"
-    except subprocess.TimeoutExpired:
-        return {}, "studio_run_timeout"
-    finally:
-        Path(input_path).unlink(missing_ok=True)
-
-    if result.returncode != 0:
-        return {}, "studio_run_failed"
-    stage_output = studio_io.stage_output_from_stdout(result.stdout or "", "section-filter-item")
-    if stage_output is None:
-        return {}, "studio_run_output_missing"
-
-    return parse_drop_verdict(stage_output, {row["id"] for row in rows}), None
-
-
-def tag_frontmatter_sections(chapters: list[dict], book_title: str, cache_path: Path) -> list[dict]:
-    """Tag front/back matter in place, from cache or one LLM call.
+def tag_frontmatter_sections(
+    chapters: list[dict], verdict_output: object | None, cache_path: Path
+) -> list[dict]:
+    """Tag front/back matter in place, from cache or the call stage's verdict.
 
     Never raises and never removes a section: a book whose verdict cannot be
-    obtained keeps every section, loudly.
+    obtained keeps every section, loudly (STU-529).
     """
     if not chapters:
         return []
     rows = section_rows(chapters)
     drops = load_cached_drops(cache_path, rows)
     if drops is None:
-        drops, error = _run_section_filter(rows, book_title)
-        if error:
+        if verdict_output is None:
             print(
-                f"[section-filter] WARNING: {error} — keeping all {len(rows)} sections; "
+                f"[section-filter] WARNING: no verdict (call skipped or failed) — "
+                f"keeping all {len(rows)} sections; "
                 "front/back matter will be extracted as narrative",
                 file=sys.stderr,
             )
             return []
+        drops = parse_drop_verdict(verdict_output, {row["id"] for row in rows})
         save_drop_cache(cache_path, rows, drops)
 
     tagged = apply_frontmatter(chapters, drops)
@@ -93,7 +61,7 @@ def tag_frontmatter_sections(chapters: list[dict], book_title: str, cache_path: 
     return tagged
 
 
-def _epub_output_from_payload(payload: dict) -> dict:
+def epub_output_from_payload(payload: dict) -> dict:
     previous = payload.get("previous_outputs") or {}
     epub_data = previous.get("epub-parse")
     if not isinstance(epub_data, dict):
@@ -103,9 +71,16 @@ def _epub_output_from_payload(payload: dict) -> dict:
     return epub_data if isinstance(epub_data, dict) else {}
 
 
+def _verdict_from_payload(payload: dict) -> object | None:
+    verdict = payload.get("all_stage_outputs", {}).get(VERDICT_STAGE)
+    if verdict is None:
+        verdict = payload.get("previous_outputs", {}).get(VERDICT_STAGE)
+    return verdict
+
+
 def main() -> None:
     payload = studio_io.read_payload()
-    epub_data = _epub_output_from_payload(payload)
+    epub_data = epub_output_from_payload(payload)
     chapters = epub_data.get("chapters") or []
     if not chapters:
         json.dump({"error": "missing epub-parse chapters"}, sys.stdout)
@@ -115,7 +90,7 @@ def main() -> None:
     paths.processing.mkdir(parents=True, exist_ok=True)
     tag_frontmatter_sections(
         chapters,
-        book_title=str(epub_data.get("title") or ""),
+        verdict_output=_verdict_from_payload(payload),
         cache_path=paths.processing / "section_filter.json",
     )
     # The only place both the reading order and the front-matter verdict are

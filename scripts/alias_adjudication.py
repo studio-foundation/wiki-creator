@@ -4,20 +4,20 @@ Stage: alias-adjudication — merge the alias pairs no lexical rule can see.
 
 Script executor interface: reads JSON from stdin, writes JSON to stdout.
 
-Runs between alias-resolution and entity-classification, and re-emits the
-alias-resolution payload with contextually-adjudicated PERSON merges applied. It
-is a separate stage precisely because it is the only part of resolution that
-needs the network: alias-resolution stays deterministic and offline, so
-`make golden` and `make smoke` remain LLM-free by construction (STU-529).
+Post-step of the alias-adjudication split (STU-589). The LLM verdict arrives
+from the `call: alias-adjudication-verdict` stage (native invocation, no
+subprocess); this stage parses it, caches it, and re-emits the alias-resolution
+payload with contextually-adjudicated PERSON merges applied. It is a separate
+stage precisely because it is the only part of resolution that needs the
+network: alias-resolution stays deterministic and offline, so `make golden`
+and `make smoke` remain LLM-free by construction (STU-529).
 
-Input:  { "all_stage_outputs": {"alias-resolution": {...}} }
+Input:  { "all_stage_outputs": {"alias-resolution": {...}, "alias-adjudication-verdict": {...}} }
 Output: the alias-resolution payload, merges applied.
 """
 
 import json
-import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 import yaml
@@ -27,43 +27,12 @@ from wiki_creator import studio_io
 from wiki_creator.alias_adjudication import (
     load_cached_merges,
     parse_merge_verdict,
-    render_roster,
     roster_rows,
     save_merge_cache,
 )
 from wiki_creator.lang import infer_language, load_lang_config
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-
-_TIMEOUT_SECONDS = 600
-
-
-def _run_alias_adjudication(rows: list[dict], book_title: str) -> tuple[list[dict], str | None]:
-    """Adjudicate the roster with one `studio run`. Returns (merges, error)."""
-    item_input = {"book_title": book_title, "roster": render_roster(rows)}
-    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".yaml", delete=False) as tmp:
-        yaml.safe_dump(item_input, tmp, sort_keys=False, allow_unicode=True)
-        input_path = tmp.name
-
-    cmd = ["studio", "run", "alias-adjudication-item", "--input-file", input_path, "--json"]
-    try:
-        result = subprocess.run(
-            cmd, cwd=PROJECT_ROOT, capture_output=True, text=True, timeout=_TIMEOUT_SECONDS
-        )
-    except FileNotFoundError:
-        return [], "studio_cli_missing"
-    except subprocess.TimeoutExpired:
-        return [], "studio_run_timeout"
-    finally:
-        Path(input_path).unlink(missing_ok=True)
-
-    if result.returncode != 0:
-        return [], "studio_run_failed"
-    stage_output = studio_io.stage_output_from_stdout(result.stdout or "", "alias-adjudication-item")
-    if stage_output is None:
-        return [], "studio_run_output_missing"
-
-    return parse_merge_verdict(stage_output, rows), None
+VERDICT_STAGE = "alias-adjudication-verdict"
 
 
 def _apply_merges(
@@ -126,11 +95,11 @@ def _apply_merges(
 def adjudicate_aliases(
     entities: list[dict],
     persons_full: dict,
-    book_title: str,
+    verdict_output: object | None,
     cache_path: Path,
     role_words: list[str],
 ) -> list[dict]:
-    """Merge contextually-evidenced alias pairs, from cache or one LLM call.
+    """Merge contextually-evidenced alias pairs, from cache or the call stage's verdict.
 
     Never raises and never merges on a failure: a book whose verdict cannot be
     obtained keeps every entity separate, loudly.
@@ -148,14 +117,15 @@ def adjudicate_aliases(
     rows = roster_rows(persons, contexts)
     merges = load_cached_merges(cache_path, rows)
     if merges is None:
-        merges, error = _run_alias_adjudication(rows, book_title)
-        if error:
+        if verdict_output is None:
             print(
-                f"[alias-adjudication] WARNING: {error} — merging nothing; "
+                f"[alias-adjudication] WARNING: no verdict (call skipped or failed) — "
+                f"merging nothing; "
                 f"aliases among the {len(rows)} characters stay separate entities",
                 file=sys.stderr,
             )
             return entities
+        merges = parse_merge_verdict(verdict_output, rows)
         save_merge_cache(cache_path, rows, merges)
 
     print(
@@ -189,11 +159,15 @@ def main() -> None:
         + [w.lower() for w in lang_cfg.get("person_cue_words", [])]
     ))
 
+    verdict_output = all_stage_outputs.get(VERDICT_STAGE)
+    if verdict_output is None:
+        verdict_output = previous_outputs.get(VERDICT_STAGE)
+
     paths = studio_io.paths_from_payload(payload)
     resolved = adjudicate_aliases(
         entities,
         persons_full=_load_persons_full(paths.processing),
-        book_title=str(ctx.get("title") or paths.processing.name),
+        verdict_output=verdict_output,
         cache_path=paths.processing / "alias_adjudication.json",
         role_words=role_words,
     )
