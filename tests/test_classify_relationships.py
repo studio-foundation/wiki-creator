@@ -7,7 +7,6 @@ import pytest
 import scripts.classify_relationships as clf
 from scripts.classify_relationships import (
     _entity_role_contexts,
-    _load_done_keys,
     _merge_classification,
     _save,
     _select_input,
@@ -15,33 +14,6 @@ from scripts.classify_relationships import (
 from wiki_creator import studio_io
 from wiki_creator.registry import EntityRecord, Mention, Registry
 from wiki_creator.types import RelationshipBundle
-
-
-def test_load_done_keys_returns_empty_when_file_missing(tmp_path):
-    keys, pairs = _load_done_keys(tmp_path / "nonexistent.json")
-    assert keys == set()
-    assert pairs == []
-
-
-def test_load_done_keys_returns_existing_pairs(tmp_path):
-    output = tmp_path / "out.json"
-    data = {
-        "relationships": [
-            {"entity_a": "A", "entity_b": "B", "relationship_type": "ami"},
-        ]
-    }
-    output.write_text(json.dumps(data))
-    keys, pairs = _load_done_keys(output)
-    assert ("A", "B") in keys
-    assert len(pairs) == 1
-
-
-def test_load_done_keys_returns_empty_on_corrupt_file(tmp_path):
-    output = tmp_path / "corrupt.json"
-    output.write_text("not valid json")
-    keys, pairs = _load_done_keys(output)
-    assert keys == set()
-    assert pairs == []
 
 
 def test_select_input_prefers_discovered(tmp_path):
@@ -86,76 +58,6 @@ def test_merge_untyped_takes_classifier_type():
     merged = _merge_classification(pair, classification, pre_typed=False)
     assert merged["relationship_type"] == "friend"
     assert merged["direction"] == "symétrique"
-
-
-def test_load_done_keys_skips_malformed_pairs(tmp_path):
-    """A pair missing entity_a/entity_b is skipped, not a full reset."""
-    output = tmp_path / "out.json"
-    data = {
-        "relationships": [
-            {"entity_a": "A", "entity_b": "B", "relationship_type": "ami"},
-            {"broken": True},
-        ]
-    }
-    output.write_text(json.dumps(data))
-    keys, pairs = _load_done_keys(output)
-    assert ("A", "B") in keys
-    assert len(pairs) == 2
-
-
-def test_load_done_keys_retries_errored_pairs(tmp_path):
-    """A pair marked with a classification_error (STU-562) is dropped from both the
-    done-keys and the kept list, so a re-run retries it and does not duplicate it."""
-    output = tmp_path / "out.json"
-    data = {
-        "relationships": [
-            {"entity_a": "A", "entity_b": "B", "relationship_type": "ami"},
-            {"entity_a": "C", "entity_b": "D", "classification_error": "studio_run_timeout"},
-        ]
-    }
-    output.write_text(json.dumps(data))
-    keys, pairs = _load_done_keys(output)
-    assert ("A", "B") in keys
-    assert ("C", "D") not in keys
-    assert [p.get("entity_a") for p in pairs] == ["A"]
-
-
-def test_load_done_keys_busts_on_fingerprint_mismatch(tmp_path):
-    """STU-589: a changed classifier prompt/vocabulary (new fingerprint) discards the
-    whole resume so every pair re-classifies instead of replaying stale verdicts."""
-    output = tmp_path / "out.json"
-    data = {
-        "stats": {"classifier_prompt": "old"},
-        "relationships": [{"entity_a": "A", "entity_b": "B", "relationship_type": "ami"}],
-    }
-    output.write_text(json.dumps(data))
-    keys, pairs = _load_done_keys(output, expected_fingerprint="new")
-    assert keys == set()
-    assert pairs == []
-
-
-def test_load_done_keys_keeps_on_fingerprint_match(tmp_path):
-    """Same prompt/vocabulary (matching fingerprint) resumes normally."""
-    output = tmp_path / "out.json"
-    data = {
-        "stats": {"classifier_prompt": "fp"},
-        "relationships": [{"entity_a": "A", "entity_b": "B", "relationship_type": "ami"}],
-    }
-    output.write_text(json.dumps(data))
-    keys, pairs = _load_done_keys(output, expected_fingerprint="fp")
-    assert ("A", "B") in keys
-    assert len(pairs) == 1
-
-
-def test_load_done_keys_busts_when_fingerprint_absent(tmp_path):
-    """A pre-STU-589 artifact carries no fingerprint; asking for one busts the resume
-    (an unkeyed cache cannot be trusted to have been made under this prompt)."""
-    output = tmp_path / "out.json"
-    data = {"relationships": [{"entity_a": "A", "entity_b": "B", "relationship_type": "ami"}]}
-    output.write_text(json.dumps(data))
-    keys, pairs = _load_done_keys(output, expected_fingerprint="fp")
-    assert keys == set()
-    assert pairs == []
 
 
 def test_main_persists_classifier_fingerprint(tmp_path, monkeypatch):
@@ -212,11 +114,14 @@ def test_stray_llm_key_does_not_crash_save(tmp_path, monkeypatch):
     )])
     studio_io.save_artifact(processing / "relationships.json", input_bundle, RelationshipBundle)
 
-    monkeypatch.setattr(clf, "_run_studio_classifier_item", lambda pair, **kw: {
-        "relationship_type": "allies", "direction": "mutual", "evolution": None,
-        "key_moments": [], "evidence": "they train together",
-        "reasoning": "stray freeform key the LLM invented",  # not in Relationship
-    })
+    monkeypatch.setattr(clf, "_run_classify_fanout", lambda items, fp: ({
+        "total": 1, "succeeded": 1, "failed": 0, "resumed": 0,
+        "results": [{"index": 0, "status": "success", "output": {
+            "relationship_type": "allies", "direction": "mutual", "evolution": None,
+            "key_moments": [], "evidence": "they train together",
+            "reasoning": "stray freeform key the LLM invented",  # not in Relationship
+        }}],
+    }, None))
     monkeypatch.setattr(sys, "argv", ["classify_relationships.py", "--book", str(book_yaml)])
 
     clf.main()  # must not raise
@@ -288,8 +193,10 @@ def test_studio_error_is_marked_in_artifact(tmp_path, monkeypatch):
     )])
     studio_io.save_artifact(processing / "relationships.json", input_bundle, RelationshipBundle)
 
-    monkeypatch.setattr(clf, "_run_studio_classifier_item",
-                        lambda pair, **kw: {"error": "studio_run_timeout"})
+    monkeypatch.setattr(clf, "_run_classify_fanout", lambda items, fp: ({
+        "total": 1, "succeeded": 0, "failed": 1, "resumed": 0,
+        "results": [{"index": 0, "status": "failed", "error": "child run failed"}],
+    }, None))
     monkeypatch.setattr(sys, "argv", ["classify_relationships.py", "--book", str(book_yaml)])
 
     clf.main()
@@ -299,7 +206,35 @@ def test_studio_error_is_marked_in_artifact(tmp_path, monkeypatch):
     )
     rel = out.relationships[0]
     assert rel.relationship_type is None
-    assert rel.classification_error == "studio_run_timeout"
+    assert rel.classification_error == "child run failed"
+
+
+def test_fanout_level_failure_stamps_every_pair(tmp_path, monkeypatch):
+    """The whole fan-out failing (CLI missing, timeout) stamps every classifiable
+    pair rather than writing nothing — downstream still gets an artifact, and a
+    re-run retries them all (the engine cached no failure)."""
+    series = tmp_path / "library" / "author" / "series"
+    processing = series / "processing_output" / "01-book"
+    processing.mkdir(parents=True)
+    book_yaml = series / "books" / "01-book.yaml"
+    book_yaml.parent.mkdir(parents=True)
+    book_yaml.write_text("novel_summary: A tale.\n", encoding="utf-8")
+
+    input_bundle = RelationshipBundle(relationships=[clf.Relationship(
+        entity_a="Celaena", entity_b="Chaol", cooccurrence_count=9,
+        chapters=["ch01"], sample_contexts=["they spoke"],
+    )])
+    studio_io.save_artifact(processing / "relationships.json", input_bundle, RelationshipBundle)
+
+    monkeypatch.setattr(clf, "_run_classify_fanout", lambda items, fp: (None, "studio_cli_missing"))
+    monkeypatch.setattr(sys, "argv", ["classify_relationships.py", "--book", str(book_yaml)])
+
+    clf.main()
+
+    out = studio_io.load_artifact(
+        processing / "relationships_classified.json", RelationshipBundle
+    )
+    assert out.relationships[0].classification_error == "studio_cli_missing"
 
 
 # ---------------------------------------------------------------------------
