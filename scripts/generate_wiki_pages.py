@@ -1069,8 +1069,15 @@ class CollectingRunner:
 
     def run_item(self, item_input: dict, entity: dict, timeout: int) -> dict:
         self.items.setdefault(_item_key(item_input), dict(item_input))
+        # Mirrors parse_response's identity stamping: the non-PERSON single-shot
+        # path returns this dict as the page, and the walk's _commit validates it
+        # as a WikiPage — without importance/entity_type the plan walk crashes on
+        # the first non-PERSON entity.
         return {
             "title": entity.get("canonical_name", ""),
+            "importance": entity.get("importance", ""),
+            "entity_type": entity.get("type", ""),
+            "books": list(entity.get("books") or []),
             "content": "planned",
             "infobox_fields": {},
             "run_metadata": {},
