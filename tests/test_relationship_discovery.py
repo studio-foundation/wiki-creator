@@ -47,6 +47,30 @@ def test_chunk_spans_multiple_chapters_in_order():
     assert [c["id"] for c in chunks] == ["ch1:0", "ch2:0"]
 
 
+def test_chunk_warns_on_paragraph_less_chapter(capsys):
+    # No \n\n — the whole chapter is one chunk regardless of size (STU-609).
+    chapters = [{"id": "ch1", "title": "One", "text": "x" * 100}]
+    chunks = chunk_chapters(chapters, size=10)
+    assert [c["id"] for c in chunks] == ["ch1:0"]
+    err = capsys.readouterr().err
+    assert "[WARN]" in err
+    assert "ch1:0" in err
+    assert "100 chars" in err
+
+
+def test_chunk_no_warn_on_paragraph_aligned_chapter(capsys):
+    chapters = [{"id": "ch1", "title": "One", "text": "aaaa\n\nbbbb\n\ncccc"}]
+    chunk_chapters(chapters, size=4)
+    assert "[WARN]" not in capsys.readouterr().err
+
+
+def test_chunk_no_warn_on_paragraph_slightly_over_size(capsys):
+    # A single paragraph over size but under the factor is a normal long passage.
+    chapters = [{"id": "ch1", "title": "One", "text": "x" * 15}]
+    chunk_chapters(chapters, size=10)
+    assert "[WARN]" not in capsys.readouterr().err
+
+
 # --- valid_relations --------------------------------------------------------
 
 
