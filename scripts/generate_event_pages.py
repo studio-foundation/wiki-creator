@@ -26,6 +26,7 @@ from pathlib import Path
 import yaml
 
 from scripts.generate_book_synopsis import read_events
+from wiki_creator import studio_io
 from scripts.generate_wiki_pages import (
     _check_forbidden_names,
     _execute_wiki_page_item,
@@ -255,22 +256,36 @@ def run_for_processing(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate per-event wiki pages (SP3)")
-    parser.add_argument("--book", required=True, help="Path to book YAML config")
+    parser.add_argument("--book", help="Path to book YAML config (standalone mode)")
     parser.add_argument("--timeout", type=int, default=120, help="LLM timeout (seconds)")
     parser.add_argument("--dry-run", action="store_true", help="Skip LLM calls, output stubs")
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
 
-    with open(args.book, encoding="utf-8") as f:
-        book_cfg = yaml.safe_load(f) or {}
+    if args.book:
+        with open(args.book, encoding="utf-8") as f:
+            book_cfg = yaml.safe_load(f) or {}
+        book_paths = book_paths_from_yaml(args.book)
+    else:
+        # Studio stdin mode (STU-457): a pages-export stage, book yaml in
+        # additional_context, artifacts from disk.
+        payload = studio_io.read_payload()
+        book_cfg = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+        book_paths = studio_io.paths_from_payload(payload)
 
-    book_paths = book_paths_from_yaml(args.book)
-    run_for_processing(
+    pages = run_for_processing(
         book_paths.processing,
         book_cfg=book_cfg,
         language=output_language(book_cfg),
         timeout=args.timeout,
         dry_run=args.dry_run,
     )
+    if not args.book:
+        if pages is None:
+            studio_io.write_output({"skipped": True})
+        else:
+            studio_io.write_output(
+                {"pages": len(pages), "failed": sum(1 for p in pages if p.get("_failed"))}
+            )
 
 
 if __name__ == "__main__":

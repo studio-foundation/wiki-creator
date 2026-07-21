@@ -1,8 +1,147 @@
 name: wiki-preparation
-description: Prepare wiki batch files from classified entities — runs wiki-preparation script
+description: Decorate the roster (status/affiliation/species), type the relation graph, build events, then prepare wiki batch files
 version: 1
 
+# STU-457: the seven run_wiki.py pre-steps are stages here now. The entity trio
+# is the STU-589 pre/call/post split (pre builds the roster and decides cache
+# hit/miss; the call invokes the LLM natively; post parses, caches, applies).
+# on_failure: continue preserves each stage's safe default — a failed verdict
+# renders `unknown` / no slot, and the run proceeds.
 stages:
+  - name: entity-status-pre
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/entity_status_pre.py
+    timeout_ms: 300000
+    context:
+      include:
+        - input
+
+  - call: entity-status-verdict
+    pipeline: entity-status-item
+    condition: stages.entity-status-pre.output.needs_verdict == true
+    on_failure: continue
+    input:
+      book_title: "{{stages.entity-status-pre.output.book_title}}"
+      roster: "{{stages.entity-status-pre.output.roster}}"
+
+  - name: entity-status
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/entity_status.py
+    timeout_ms: 300000
+    context:
+      include:
+        - input
+        - all_stage_outputs
+
+  - name: entity-affiliation-pre
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/entity_affiliation_pre.py
+    timeout_ms: 300000
+    context:
+      include:
+        - input
+
+  - call: entity-affiliation-verdict
+    pipeline: entity-affiliation-item
+    condition: stages.entity-affiliation-pre.output.needs_verdict == true
+    on_failure: continue
+    input:
+      book_title: "{{stages.entity-affiliation-pre.output.book_title}}"
+      roster: "{{stages.entity-affiliation-pre.output.roster}}"
+
+  - name: entity-affiliation
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/entity_affiliation.py
+    timeout_ms: 300000
+    context:
+      include:
+        - input
+        - all_stage_outputs
+
+  # The STU-574 genre gate lives in the pre stage: a book without invented
+  # names emits needs_verdict: false, so the call is condition-skipped.
+  - name: entity-species-pre
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/entity_species_pre.py
+    timeout_ms: 300000
+    context:
+      include:
+        - input
+
+  - call: entity-species-verdict
+    pipeline: entity-species-item
+    condition: stages.entity-species-pre.output.needs_verdict == true
+    on_failure: continue
+    input:
+      book_title: "{{stages.entity-species-pre.output.book_title}}"
+      roster: "{{stages.entity-species-pre.output.roster}}"
+
+  - name: entity-species
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/entity_species.py
+    timeout_ms: 300000
+    context:
+      include:
+        - input
+        - all_stage_outputs
+
+  # STU-556: schema-guided discovery types the relation graph, then the demoted
+  # classifier reads relationships_discovered.json and adds prose. Both fan out
+  # via one nested `studio run` over the engine map (per-item resume, STU-605).
+  - name: discover-relationships
+    kind: analysis
+    executor: script
+    runtime: python
+    script: scripts/discover_relationships.py
+    timeout_ms: 7500000
+    context:
+      include:
+        - input
+
+  - name: classify-relationships
+    kind: analysis
+    executor: script
+    runtime: python
+    script: scripts/classify_relationships.py
+    timeout_ms: 7500000
+    context:
+      include:
+        - input
+
+  # STU-575: the graph is built here, not in wiki-resolution, because the types
+  # it needs only exist once the two stages above have run.
+  - name: build-character-graph
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/build_character_graph.py
+    timeout_ms: 300000
+    context:
+      include:
+        - input
+
+  - name: build-event-layer
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/build_event_layer.py
+    timeout_ms: 300000
+    context:
+      include:
+        - input
+
   - name: wiki-preparation
     kind: extraction
     executor: script

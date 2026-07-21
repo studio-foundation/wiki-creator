@@ -1,27 +1,28 @@
 #!/usr/bin/env python3
-"""Pre-step: entity-status — is each character alive at the end of this book?
+"""entity-status — is each character alive at the end of this book?
 
-Usage:
-    python scripts/entity_status.py --book library/.../book.yaml
+Script executor interface: reads JSON from stdin, writes JSON to stdout.
 
-Input:  processing_output/<slug>/registry.json
-Output: processing_output/<slug>/entity_status.json
+Post-step of the entity-status split (STU-457). The LLM verdict arrives from
+the `call: entity-status-verdict` stage (native invocation, no subprocess);
+this stage parses it, caches it to `entity_status.json`, which wiki-preparation
+then stamps onto the batch entity so `generate_wiki_pages.py` can render the
+`status` infobox slot.
 
-Runs before wiki-preparation, which stamps the verdict onto the batch entity so
-`generate_wiki_pages.py` can render the `status` infobox slot.
+It sits in wiki-preparation and not wiki-resolution on purpose.
+`alias-adjudication` sits inside resolution because it changes identity —
+entity-classification reads its output. This changes no identity; it only
+decorates the batch entity. And resolution is chained by `make golden`, which
+stays LLM-free by construction.
 
-It is a pre-step and not a wiki-resolution stage on purpose. `alias-adjudication`
-sits inside resolution because it changes identity — entity-classification reads
-its output. This changes no identity; it only decorates the batch entity. And
-resolution is chained by `make golden`, which stays LLM-free by construction.
+Never fails a run: a book whose verdict cannot be obtained renders `unknown`
+for every character, loudly.
 
-Never fails a run: a book whose verdict cannot be obtained renders `unknown` for
-every character, loudly.
+Input:  { "additional_context": "<book yaml>",
+          "all_stage_outputs": {"entity-status-verdict": {...}} }
+Output: { "decided", "roster" }
 """
-import argparse
-import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 import yaml
@@ -31,17 +32,13 @@ from wiki_creator.entity_status import (
     build_name_index,
     load_cached_status,
     parse_status_verdict,
-    render_roster,
     roster_rows,
     save_status_cache,
 )
 from wiki_creator.lang import book_language, load_lang_config
-from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.registry import Registry
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-
-_TIMEOUT_SECONDS = 600
+VERDICT_STAGE = "entity-status-verdict"
 
 
 def contexts_by_entity(registry: Registry) -> dict[str, list[dict]]:
@@ -63,10 +60,20 @@ def contexts_by_entity(registry: Registry) -> dict[str, list[dict]]:
     return contexts
 
 
+def verdict_from_payload(payload: dict, stage_name: str) -> object | None:
+    verdict = payload.get("all_stage_outputs", {}).get(stage_name)
+    if verdict is None:
+        verdict = payload.get("previous_outputs", {}).get(stage_name)
+    return verdict
+
+
 def resolve_status(
-    rows: list[dict], book_title: str, cache_path: Path, name_index: dict[str, dict[str, str]]
+    rows: list[dict],
+    verdict_output: object | None,
+    cache_path: Path,
+    name_index: dict[str, dict[str, str]],
 ) -> dict[str, dict]:
-    """Verified status per character, from cache or one `studio run`.
+    """Verified status per character, from cache or the call stage's verdict.
 
     Never raises. Every failure path returns {} — every character then renders
     the slot's declared fallback, `unknown`.
@@ -74,36 +81,10 @@ def resolve_status(
     cached = load_cached_status(cache_path, rows)
     if cached is not None:
         return cached
-    # A verdict for another roster must not survive a failure below: every
-    # `_give_up` path returns without writing, so a stale artifact from a
-    # prior roster (WIKI_MAX_CHAPTERS, an extraction fix) would otherwise be
-    # replayed by `wiki_preparation.load_status_verdicts`, which is roster-blind.
-    Path(cache_path).unlink(missing_ok=True)
+    if verdict_output is None:
+        return _give_up("no verdict (call skipped or failed)", rows)
 
-    item_input = {"book_title": book_title, "roster": render_roster(rows)}
-    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".yaml", delete=False) as tmp:
-        yaml.safe_dump(item_input, tmp, sort_keys=False, allow_unicode=True)
-        input_path = tmp.name
-
-    cmd = ["studio", "run", "entity-status-item", "--input-file", input_path, "--json"]
-    try:
-        result = subprocess.run(
-            cmd, cwd=PROJECT_ROOT, capture_output=True, text=True, timeout=_TIMEOUT_SECONDS
-        )
-    except FileNotFoundError:
-        return _give_up("studio_cli_missing", rows)
-    except subprocess.TimeoutExpired:
-        return _give_up("studio_run_timeout", rows)
-    finally:
-        Path(input_path).unlink(missing_ok=True)
-
-    if result.returncode != 0:
-        return _give_up("studio_run_failed", rows)
-    stage_output = studio_io.stage_output_from_stdout(result.stdout or "", "entity-status-item")
-    if stage_output is None:
-        return _give_up("studio_run_output_missing", rows)
-
-    verdicts = parse_status_verdict(stage_output, rows, name_index)
+    verdicts = parse_status_verdict(verdict_output, rows, name_index)
     save_status_cache(cache_path, rows, verdicts)
     return verdicts
 
@@ -117,13 +98,9 @@ def _give_up(error: str, rows: list[dict]) -> dict[str, dict]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Decide each character's status for this book")
-    parser.add_argument("--book", required=True, help="Path to the book YAML")
-    args = parser.parse_args()
-
-    book_cfg = yaml.safe_load(Path(args.book).read_text(encoding="utf-8")) or {}
-    paths = book_paths_from_yaml(args.book)
-
+    payload = studio_io.read_payload()
+    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    paths = studio_io.paths_from_payload(payload)
     cache_path = paths.processing / "entity_status.json"
 
     registry = Registry.load_from_processing(paths.processing)
@@ -133,17 +110,11 @@ def main() -> None:
             "every character stays `unknown`",
             file=sys.stderr,
         )
-        Path(cache_path).unlink(missing_ok=True)
+        studio_io.write_output({"decided": 0, "roster": 0})
         return
 
-    lang_cfg = load_lang_config(book_language(book_cfg))
+    lang_cfg = load_lang_config(book_language(ctx))
     status_markers = list(lang_cfg.get("status_markers", []))
-    if not status_markers:
-        print(
-            "[entity-status] no `status_markers` in this language's cue_words — "
-            "selecting the latest snippets only",
-            file=sys.stderr,
-        )
 
     contexts = contexts_by_entity(registry)
     persons = [
@@ -153,7 +124,7 @@ def main() -> None:
     ]
     if not persons:
         print("[entity-status] no PERSON entity with context — nothing to decide", file=sys.stderr)
-        Path(cache_path).unlink(missing_ok=True)
+        studio_io.write_output({"decided": 0, "roster": 0})
         return
 
     rows = roster_rows(persons, contexts, status_markers)
@@ -169,7 +140,7 @@ def main() -> None:
     )
     verdicts = resolve_status(
         rows,
-        book_title=str(book_cfg.get("title") or paths.processing.name),
+        verdict_output=verdict_from_payload(payload, VERDICT_STAGE),
         cache_path=cache_path,
         name_index=name_index,
     )
@@ -183,6 +154,7 @@ def main() -> None:
     )
     for name, verdict in sorted(verdicts.items()):
         print(f"[entity-status]   {name}: {verdict['status']}", file=sys.stderr)
+    studio_io.write_output({"decided": len(decided), "roster": len(rows)})
 
 
 if __name__ == "__main__":

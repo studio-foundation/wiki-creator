@@ -15,3 +15,8 @@ schema:
 #       "flashback_anchor": "..." | null
 #     }
 #   }
+expected_outputs:
+  files:
+    # Written by scripts/chapter_summary.py (this stage). Glob: per-book slug,
+    # cwd = repo root (STU-600, relocated from resolve-clusters in STU-457).
+    - "library/*/*/processing_output/*/chapter_summaries.json"

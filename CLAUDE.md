@@ -4,7 +4,7 @@
 
 - Repo: `wiki-creator-by-studio`
 - Purpose: extract entities from EPUB novels, classify them, generate wiki pages, export wikitext
-- Current verified state on 2026-07-20: `pytest -q` => `2005 passed, 1 skipped`
+- Current verified state on 2026-07-21: `pytest -q` => `2009 passed, 1 skipped`
   (skip count depends on which optional models/extras are installed; see `tests/_markers.py`)
 
 ## Commands
@@ -15,21 +15,17 @@ pip install -e ".[models]"   # to run a book: the lg models the books declare (~
 pytest -q
 mypy wiki_creator/
 
-make run
+make run          # studio run wiki-full: the whole build, one Studio run
+make run-series
 make run-extraction
 make run-resolution
 make run-preparation
+make pages-export
 make generate-pages
 make generate-pages-dry
 make generate-synopsis
 make generate-synopsis-dry
 make consolidate-stance
-make pages-export
-make run-generation
-make run-from-resolution
-make run-from-preparation
-make run-from-generation
-make run-status
 make smoke        # e2e smoke test on the committed fixture novella
 make golden       # golden regression run: chained resolution stages vs committed goldens (~2s, no spaCy/LLM)
 make golden-update  # regenerate goldens after an INTENTIONAL behavior change, then review the diff
@@ -41,54 +37,70 @@ Default `BOOK` in the `Makefile`:
 library/c_w_lewis/narnia/books/01-the_lion_the_witch_and_the_wardrobe.yaml
 ```
 
-The Makefile is a front door, not a sequencer (STU-592). Two facts about it are
-load-bearing. (1) **`run-from-*` restarts CLEAN by default** (`CLEAN ?= --clean`):
-`make run-from-resolution` = `run_wiki.py --restart wiki-resolution --clean`, which
-deletes the artifacts *owned by the restarted stage and its successors* (scoped —
-upstream is kept, each deletion logged `[clean] removing`) and re-runs from clean.
-This differs on purpose from `run_wiki.py --restart X` bare, which re-runs *over* the
-existing artifacts without wiping; to resume without the wipe, `CLEAN= make run-from-X`.
-(2) The `make test` / `test-coref` / `test-coref-parallel` chains are **deleted** —
-they hand-chained `entity_clustering` + `relationship_extraction`, a fourth sequencing
-authority bypassing both Studio and `run_wiki.py`, and `make test` shadowed the pytest
-suite. The single-stage dev tools (`test-extraction`/`test-clustering`/`test-relationships`,
-`--test`/`--live` on one stage) stay — they sequence nothing.
+The Makefile is a front door, not a sequencer (STU-592): every target dispatches
+exactly one command. `run_wiki.py` is deleted (STU-457) — `make run` is
+`studio run wiki-full --input-file $(BOOK) --live`, and Studio owns all
+sequencing. What replaced run_wiki's interface:
+- **Restart from a boundary**: `studio replay <run-id> --restart --stage
+  wiki-resolution` (run ids from `studio status`). The old `run-from-*` targets
+  and `--clean` are gone; the ergonomic front door is STU-597's scope.
+- **Retry**: RALPH retries inside each stage; there is no outer per-pipeline
+  retry loop anymore.
+- **Resume**: per-unit caches (engine map resume, verdict caches) make a plain
+  re-run cheap on the LLM side; deterministic compute (extraction, co-occurrence)
+  re-executes. The old `.wiki_runs/` skip-on-completed state file is gone, and
+  with it the STU-560 staleness check it needed (`extraction_config_changed`) —
+  no skip, no stale skip. `extraction_config.json` is still written and asserted
+  (STU-600).
+- **Series**: `make run-series` loops `discover_series_books` (reading order,
+  `04.5_` between `04_` and `05_`) over `studio run wiki-full`.
+The `make test` / `test-coref` chains stay deleted (STU-592); the single-stage
+dev tools (`test-extraction`/`test-clustering`/`test-relationships`) stay — they
+sequence nothing.
 
 ## Actual Pipeline Layout
 
-Primary workflow:
-1. `wiki-extraction`
-2. `wiki-resolution`
-3. `wiki-preparation`
-4. `python scripts/generate_wiki_pages.py --book <book.yaml>`
-5. `pages-export`
+Primary workflow — one Studio run (STU-457):
+
+```bash
+studio run wiki-full --input-file <book.yaml> --live    # = make run
+```
+
+`wiki-full.pipeline.yaml` call-chains (STU-599) the four pipelines, forwarding
+the book yaml as each child's input:
+1. `wiki-extraction` — epub-parse, section-filter (pre/call/post), entity-extraction, entity-clustering, split-clusters
+2. `wiki-resolution` — chapter-summary, resolve-clusters, relationship-extraction, alias-resolution, alias-adjudication (pre/call/post), entity-classification, write-registry
+3. `wiki-preparation` — entity-status/affiliation/species (each pre/call/post), discover-relationships, classify-relationships, build-character-graph, build-event-layer, wiki-preparation
+4. `pages-export` — generate-wiki-pages, generate-book-synopsis, generate-event-pages, consolidate-editorial-stance, assemble, copyright-check, wiki-export
 
 Important:
-- `.studio/pipelines/wiki-generation.pipeline.yaml` is deleted (STU-591): it re-ran
-  chapter-summary/wiki-preparation/assemble/copyright-check/wiki-export a second time
-  per `make run`. The four generation scripts (`generate_wiki_pages`,
-  `generate_book_synopsis`, `generate_event_pages`, `consolidate_editorial_stance`)
-  are now pre-steps of `pages-export` in `run_wiki.py`, converging it with the
-  `make run-generation` graph. Restart the generation phase with `--restart pages-export`.
+- **Every former run_wiki.py pre-step is a pipeline stage (STU-457).** The
+  scripts keep a `--book` argv mode as standalone dev tools; without `--book`
+  they read the Studio stdin payload (book yaml in `additional_context`,
+  artifacts from disk). A pre-step that "never fails the run" is now a
+  `call ... on_failure: continue` (trio) or a stage that exits 0 with a warning
+  (discovery with no roster, synopsis with no events).
+- `.studio/pipelines/wiki-generation.pipeline.yaml` is deleted (STU-591); the
+  four generation scripts are stages of `pages-export`. Restart the generation
+  phase with `studio replay <run-id> --restart --stage pages-export`.
 - **The LLM loops run natively, not as hand-rolled subprocess loops (STU-589/612).**
   The four fan-outs — `discover-relationships`, `classify-relationships`,
   `chapter-summaries`, `wiki-pages` (`.studio/pipelines/*.pipeline.yaml`) — each own
-  a `map` stage `over: input.<items>` dispatching one child run per item; the script
-  does one `studio run <fan-out-pipeline>` and reads the collected results.
-  `section-filter` and `alias-adjudication` run as a **pre/call/post split** inside
-  their host pipeline (a `*-pre` script, a native `call: *-verdict` stage, a `*` post
-  script) — one call per book, no subprocess. Persistence for all of these, and which
-  loops are *not* migrated (the `entity-status`/`affiliation`/`species` trio, still
-  per-row subprocesses until STU-457), is in **"A Long Run Persists As It Goes"**.
+  a `map` stage `over: input.<items>` dispatching one child run per item; the host
+  stage script does one nested `studio run <fan-out-pipeline>` and reads the
+  collected results. `section-filter`, `alias-adjudication` and the
+  `entity-status`/`affiliation`/`species` trio (STU-457) run as a **pre/call/post
+  split** inside their host pipeline (a `*-pre` script, a native `call: *-verdict`
+  stage, a `*` post script) — one call per book, no subprocess. Persistence for
+  all of these is in **"A Long Run Persists As It Goes"**.
 - **A stage declares the files it writes (STU-600).** `expected_outputs.files` in
   `.studio/contracts/*.contract.yaml` names them per *stage*, not per pipeline —
   `splits.json` is written by `split-clusters`, so a missing file fails that stage
   and names it, inside the RALPH loop where the miss enriches retry feedback.
-  `run_wiki.py`'s `required_files()`/`check_outputs()` are deleted: an orchestrator
-  responsibility implemented outside the orchestrator was the whole thesis of
-  STU-457. `clean_files()` **stays and deliberately diverges** — which artifacts a
-  `--clean` restart deletes is a different question from which a stage must write
-  (`chapter_summaries.json` is cleaned from `wiki-extraction` but asserted nowhere).
+  `run_wiki.py`'s `required_files()`/`check_outputs()` were deleted there; its
+  `clean_files()` died with the file in STU-457 (`--clean` returns with STU-597's
+  CLI). `chapter_summaries.json` is asserted on the `chapter-summary` stage now
+  that the writer is a stage.
 - **Disk is the bus across pipelines (STU-455).** A stage reads an artifact written
   by an *earlier pipeline* from disk, never from Studio's context — those are
   separate `studio run` invocations, so `previous_outputs`/`all_stage_outputs`
@@ -140,18 +152,18 @@ library/sarah_j_maas/throne-of-glass/output/01-throne-of-glass/
 ## Files To Know
 
 - [Makefile](/home/arianeguay/dev/src/wiki-creator-by-studio/Makefile): command entrypoints
-- [run_wiki.py](/home/arianeguay/dev/src/wiki-creator-by-studio/run_wiki.py): local orchestrator
+- [.studio/pipelines/wiki-full.pipeline.yaml](/home/arianeguay/dev/src/wiki-creator-by-studio/.studio/pipelines/wiki-full.pipeline.yaml): the top-level pipeline `make run` invokes (STU-457)
 - [scripts/entity_extraction.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/entity_extraction.py): writes per-book `*_full.json`, `chapters.json`
 - [scripts/relationship_extraction.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/relationship_extraction.py): co-occurrence graph, optional coref, CLI/live mode
 - [scripts/discover_relationships.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/discover_relationships.py): schema-guided typed relation discovery (STU-556), writes `relationships_discovered.json`; pure logic in `wiki_creator/relationship_discovery.py`. One `studio run discover-relationships` per book — the engine fans out one child run per paragraph-aligned chunk (`map` stage, STU-589), and per-item resume (STU-605) replaces the old script-side votes cache (see "A Long Run Persists")
-- [scripts/build_character_graph.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/build_character_graph.py): series character graph pre-step, runs after typing (STU-575), writes `character_graph.json` + `character_graph_delta.json`; pure logic in `wiki_creator/character_graph.py`
+- [scripts/build_character_graph.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/build_character_graph.py): series character graph stage of wiki-preparation, runs after typing (STU-575/457), writes `character_graph.json` + `character_graph_delta.json`; pure logic in `wiki_creator/character_graph.py`
 - [scripts/chapter_summary.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/chapter_summary.py): chapter summaries used during preparation
 - [scripts/wiki_preparation.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/wiki_preparation.py): batch generation
 - [scripts/generate_wiki_pages.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_wiki_pages.py): standalone generation. One `studio run wiki-pages` per book — the engine fans out one child run per planned item call (`map` stage, STU-612/589) via a plan walk → fan-out → replay (the walk records every `wiki-page-item` the generation would dispatch, the map runs them, the replay serves results back keyed on the item input); per-item resume (STU-605) keyed on the rendered prompt + `prompt_fingerprint` + `attempt` (the retry counter that makes a forbidden-name re-roll a real second call rather than a cache replay)
 - [scripts/generate_book_synopsis.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_book_synopsis.py): book synopsis page from `events.json` (SP4/STU-482), writes `book_synopsis.json`; pure logic in `wiki_creator/synopsis.py`
 - [scripts/generate_event_pages.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_event_pages.py): one `EVENT` page per high-salience event from `events.json` (SP3/STU-481), writes `event_pages.json`; pure logic in `wiki_creator/event_pages.py`
 - [scripts/consolidate_editorial_stance.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/consolidate_editorial_stance.py): post-generation editorial-stance consolidation pass (STU-508), writes `editorial_stance_report.json`; pure logic in `wiki_creator/consolidation.py`
-- [scripts/entity_status.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/entity_status.py): per-tome character status pre-step (STU-488), writes `entity_status.json`; pure logic in `wiki_creator/entity_status.py`
+- [scripts/entity_status.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/entity_status.py): per-tome character status stage of wiki-preparation (STU-488; pre/call/post split since STU-457, with `entity_status_pre.py`), writes `entity_status.json`; pure logic in `wiki_creator/entity_status.py`
 - [scripts/wiki_export.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/wiki_export.py): Markdown -> wikitext
 - [scripts/resolve_clusters.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/resolve_clusters.py): resolves NER clusters
 - [scripts/alias_resolution.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/alias_resolution.py): conservative PERSON alias merging, runs after resolve-clusters
@@ -548,8 +560,8 @@ Inside `wiki-resolution`, order matters:
 
 - Entity status (STU-488): the `status` infobox slot was declared `MIN` with
   `fallback: unknown` in STU-504 and never populated. It is filled by one
-  `studio run entity-status-item` per book over the PERSON roster — the
-  STU-529/STU-539 shape — as a **pre-step to wiki-preparation**, not a
+  `entity-status-item` call per book (native `call` stage since STU-457) over the PERSON roster — the
+  STU-529/STU-539 shape — as a **wiki-preparation stage** (pre/call/post since STU-457), not a
   wiki-resolution stage: it changes no identity (unlike `alias-adjudication`,
   which entity-classification reads), and resolution is the chain `make golden`
   runs, so it stays LLM-free by construction. Enum is the fandom-wiki convention
@@ -629,8 +641,8 @@ Inside `wiki-resolution`, order matters:
   stays open. Toggle chrome is chapter-less: `chrome.reveal_spoiler`.
 
 - Affiliation is a scalar, not a dated edge (STU-551): the `affiliation` slot is
-  filled by one `studio run entity-affiliation-item` per book over the PERSON
-  roster — the STU-488 shape, a pre-step to wiki-preparation so resolution stays
+  filled by one `entity-affiliation-item` call per book (native `call` stage since STU-457) over the PERSON
+  roster — the STU-488 shape, a wiki-preparation stage so resolution stays
   LLM-free. The ticket asked for a **dated edge** and three findings refused it.
   (1) Its own acceptance test — tome 3's faction on tome 3's page, tome 1's on
   tome 1's — is true **by construction** under a per-tome wiki, exactly as for
@@ -687,7 +699,7 @@ Inside `wiki-resolution`, order matters:
 
 - Species is an attribute, not the collective entity (STU-574): the `species`
   PERSON infobox slot (declared, `genre_gated: true`, inert since STU-504) is
-  filled by one `studio run entity-species-item` per book over the PERSON roster
+  filled by one `entity-species-item` call per book (native `call` stage since STU-457) over the PERSON roster
   — the STU-551 shape: single-source marker snippets, and a verdict survives only
   when its species is verbatim in a quote from that entity's own snippets
   (`quote_names_value`, lifted to `roster.py` and shared with `affiliation`; it is
@@ -699,7 +711,7 @@ Inside `wiki-resolution`, order matters:
   the character. **Genre-gated on `ner.invented_names`**, checked before any
   registry read — a real-world-cast book has no species to attribute, skips the
   stage, and the OPT slot clears (STU-572). Pure logic in
-  `wiki_creator/entity_species.py`; pre-step to wiki-preparation, so resolution
+  `wiki_creator/entity_species.py`; a wiki-preparation stage, so resolution
   stays LLM-free.
   **Measured precision 7/7, 0 false positives, over the 3 books with a cached
   registry** (Eragon 6/6: dragon/dwarf/Ra'zac; Narnia 1/1: Tumnus=Faun; ToG 0,
@@ -944,7 +956,7 @@ Inside `wiki-resolution`, order matters:
   `04_inheritance`). Nothing is lost by not exempting it — those characters hold
   their principal pages from the tomes where they carry the story, and STU-488
   (one accumulated entity across tomes) needs the tomes to agree on a tier.
-- `classify_relationships.py` (pre-step to `wiki-preparation`) folds the co-occurrence graph onto canonical entities via `registry.alias_table()` before classifying (STU-435). The graph is built at mention level (pre alias-resolution), so surface forms of one entity (`Chaol Westfall` / `Captain Westfall`) are collapsed, counts summed, `chapters`/`sample_contexts` unioned — one classification per canonical pair. Requires `registry.json` (written by `write-registry`); degrades to unfolded edges if absent. Fold logic is pure in `wiki_creator/relationship_fold.py`.
+- `classify_relationships.py` (a `wiki-preparation` stage) folds the co-occurrence graph onto canonical entities via `registry.alias_table()` before classifying (STU-435). The graph is built at mention level (pre alias-resolution), so surface forms of one entity (`Chaol Westfall` / `Captain Westfall`) are collapsed, counts summed, `chapters`/`sample_contexts` unioned — one classification per canonical pair. Requires `registry.json` (written by `write-registry`); degrades to unfolded edges if absent. Fold logic is pure in `wiki_creator/relationship_fold.py`.
 - Mention offsets (STU-489): extraction persists `mention_spans_by_chapter` in
   `*_full.json` — one `{surface, start, end}` per occurrence (uncapped, unlike the
   3-per-chapter context cap), character offsets into the chapter content saved to
@@ -960,15 +972,14 @@ Inside `wiki-resolution`, order matters:
   `entity_clustering.py` and `alias_resolution.py` seed tome N's resolution from it
   (`Registry.load_seed_table`) — absent/unreadable series registry degrades to unseeded.
   Re-running a tome replaces its mention contribution (idempotent); prior tomes are never re-resolved.
-- Series orchestration (STU-487): `run_wiki.py --series library/<author>/<series>`
-  (`make run-series SERIES=...`) runs every tome under `books/` in reading order,
-  one full pipeline per tome. Tome order comes from the numeric filename prefix
+- Series orchestration (STU-487): `make run-series SERIES=library/<author>/<series>`
+  runs every tome under `books/` in reading order, one `studio run wiki-full` per
+  tome (STU-457). Tome order comes from the numeric filename prefix
   (`wiki_creator/series.py`, reuses `tome_labels.tome_number` — `04.5_` sorts
   between `04_` and `05_`; non-numbered tomes sort last). No series manifest.
   Accumulation/seeding are already wired per-tome (write-registry accumulates,
   clustering/alias seed from the series registry), so series mode is a pure
-  sequential loop — each tome must finish before the next seeds from it. Per-tome
-  run state (`.wiki_runs/`) is reused, so a re-run skips already-completed tomes.
+  sequential loop — each tome must finish before the next seeds from it.
 - Collation (STU-511): a tier can trade its dedicated pages for one collective
   page, or none at all. Book YAML `generation.collation.<tier>.mode` =
   `dedicated` (default, pre-STU-511 behavior) | `collective` | `drop`, with
@@ -1101,19 +1112,13 @@ Inside `wiki-resolution`, order matters:
   `wiki_creator/spoiler_blocks.py`; section→heading map in `wiki_creator/sections.py`.
 - Extraction is keyed on its config (STU-560): `entity_extraction.py` writes the
   resolved `ner` block to `processing_output/<slug>/extraction_config.json`
-  (`ner.extraction_fingerprint`), and `run_wiki.py` re-runs `wiki-extraction`
-  when it diverges from the book YAML (`extraction_config_changed`, also true
-  when the file is absent — an artifact that names no backend is stale by
-  definition). Extraction has no cache of its own; the orchestrator's skip was
-  `status == "completed"` + `required_files` present, so a correct `ner` flip was
-  read, applied to nothing, and never reported: the **three** books with an
-  extraction cache were all rendering spaCy-typed entities while configured for
-  GLiNER — Garrow ORG again, the STU-537 bug verbatim. Same rule as the STU-529/
-  539/488 caches, one layer down: a cache is keyed on the config that produced
-  it. The fingerprint holds only `ner` because that is what the class of bug is
-  about — widen it when another config key silently outlives its artifact, not
-  before. `make run-extraction` shells `studio run` directly and always
-  re-extracts, so this only ever bites through `run_wiki.py`.
+  (`ner.extraction_fingerprint`), asserted by `expected_outputs` (STU-600). The
+  staleness *check* (`extraction_config_changed`) died with `run_wiki.py`
+  (STU-457): the bug it closed was the orchestrator's skip-on-completed reading
+  a `ner` flip and applying it to nothing — every `studio run` re-extracts, so
+  there is no skip left to go stale. The class rule stands for the per-unit
+  caches: a cache is keyed on the config that produced it (STU-529/539/488, the
+  engine's prompt-fingerprinted map resume).
 - GLiNER device placement (STU-570): `WIKI_NER_DEVICE=auto|cpu|cuda` (default
   `auto` — the pre-STU-570 behavior, take the GPU when there is one) picks where
   `gliner_ner.py` runs. It is **not** a book YAML key — the device is a property
@@ -1131,11 +1136,10 @@ Inside `wiki-resolution`, order matters:
   (1) Chapters — `WIKI_MAX_CHAPTERS=N` caps extraction to the first N chapters
   (`parse_epub._env_max_chapters` → truncation, the single source of truth); every
   downstream stage just consumes the shrunk `chapters.json`/`splits.json`, so the
-  whole pipeline runs in seconds. Front doors: `run_wiki.py --max-chapters N` (sets
-  the env for all stages) and `make run ... MAX_CHAPTERS=N` (the Makefile `export`s
-  it, so `run-extraction`/`run-from-*` honor it too). Unset = full run, no behavior
-  change (goldens safe). To re-slice an already-completed run, pair with
-  `--restart wiki-extraction --clean`. (2) Entities — `generate_wiki_pages.py
+  whole pipeline runs in seconds. Front door: `make run ... MAX_CHAPTERS=N` (the
+  Makefile `export`s `WIKI_MAX_CHAPTERS`, so every target honors it, and the env
+  propagates through `studio run` into every stage). Unset = full run, no
+  behavior change (goldens safe). (2) Entities — `generate_wiki_pages.py
   --entities NAME... [--force]` (STU-497/#110, `make generate-pages-entity ENTITY=...`)
   regenerates only a slice of pages without wiping the rest.
 - Relation confidence is graded, not counted (STU-476): `confidence.py` used to
@@ -1242,7 +1246,7 @@ Inside `wiki-resolution`, order matters:
   golden path). Related: `stats.classified` is vestigial (STU-563) — the counter
   that would have surfaced this reads 0 on every real run.
 - The character graph is built after typing, not before (STU-575):
-  `build_character_graph.py` is a **wiki-preparation pre-step**, running after
+  `build_character_graph.py` is a **wiki-preparation stage**, running after
   `discover-relationships`/`classify-relationships`, and reads
   `relationships_classified.json` (falling back to
   `relationships_discovered.json`). It used to be a `wiki-resolution` stage
@@ -1274,7 +1278,7 @@ Inside `wiki-resolution`, order matters:
   carried the STU-541/585 Beaver remarriage (`Beavers` PERSON, since retyped FACTION)
   and canonical `Witch` (since `WITCH`), both of which a re-resolution had fixed. 8 of
   the 14 drops are the rename alone; the other 6 are `Beavers`, correctly gone.
-  The votes cache is keyed on the roster and self-heals, so a full `run_wiki.py`
+  The votes cache is keyed on the roster and self-heals, so a full run
   re-runs discovery — but the **output** carried no key, so a reader consumed a
   roster-mismatched artifact and lost it one edge at a time behind a per-edge stderr
   line. It needs no new field: `RelationshipBundle.entities` already records the
@@ -1305,8 +1309,8 @@ Inside `wiki-resolution`, order matters:
   the consolidation pass (STU-508).
 
 - Editorial-stance consolidation (STU-508): a single post-generation pass
-  (`consolidate_editorial_stance.py`, last `pages-export` pre-step in
-  `run_wiki.py`; `make consolidate-stance`) scans every generated page
+  (`consolidate_editorial_stance.py`, the last generation stage of
+  `pages-export`; `make consolidate-stance`) scans every generated page
   (`wiki_pages`/`book_synopsis`/`event_pages`/`collation_pages`, `_failed`
   skipped) for register that contradicts the declared `editorial_stance.mode`
   (STU-507) and writes an advisory drift report to
@@ -1452,7 +1456,7 @@ by someone who has read the novel and nothing else.
 ## Working Norms
 
 - **ALWAYS use a git worktree for every task.** Start each task in its own isolated worktree/branch off `main` — never work directly on a shared or unrelated branch. This keeps every change scoped to a single issue and prevents mixing concerns.
-  - **A worktree runs its own `scripts/` against the checkout `pip install -e .` pinned (STU-569).** The editable install records one absolute path for the whole interpreter, so a subprocess (`studio run`, `python scripts/...`, `run_wiki.py`) imports `wiki_creator` from *that* tree, not the worktree it was launched from. `make` and the pytest `conftest` prepend the right tree, so those paths are correct by construction; anything else needs `PYTHONPATH=$(pwd)`. `wiki_creator/__init__.py` now fails loudly when the imported package is not the one under the cwd (`WIKI_CREATOR_ALLOW_FOREIGN_CHECKOUT=1` opts out) — the silent case (unchanged signature, changed body, green suite on code the branch never ran) is what this closes.
+  - **A worktree runs its own `scripts/` against the checkout `pip install -e .` pinned (STU-569).** The editable install records one absolute path for the whole interpreter, so a subprocess (`studio run`, `python scripts/...`) imports `wiki_creator` from *that* tree, not the worktree it was launched from. `make` and the pytest `conftest` prepend the right tree, so those paths are correct by construction; anything else needs `PYTHONPATH=$(pwd)`. `wiki_creator/__init__.py` now fails loudly when the imported package is not the one under the cwd (`WIKI_CREATOR_ALLOW_FOREIGN_CHECKOUT=1` opts out) — the silent case (unchanged signature, changed body, green suite on code the branch never ran) is what this closes.
 - Prefer `rg` for search.
 - Use `apply_patch` for manual edits.
 - Do not assume docs are current; verify against `Makefile`, pipeline YAML, and tests.

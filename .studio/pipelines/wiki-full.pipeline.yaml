@@ -1,0 +1,18 @@
+name: wiki-full
+description: Full wiki build for one book — extraction, resolution, preparation, export, in sequence
+version: 1
+
+# STU-457/STU-599: the four-pipeline sequence run_wiki.py used to hand-chain,
+# expressed as call stages. Each child receives the parent input (the book
+# yaml) unchanged. Restart from a boundary with
+#   studio replay <run-id> --restart --stage <pipeline-name>
+# (run ids: `studio status`). A failed child fails the run — RALPH retries
+# live inside each child's stages, so there is no outer retry loop.
+stages:
+  - call: wiki-extraction
+
+  - call: wiki-resolution
+
+  - call: wiki-preparation
+
+  - call: pages-export

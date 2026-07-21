@@ -2,10 +2,9 @@
 the collective-noun entity (`Elves`) STU-571 assumed would feed the slot."""
 import json
 from pathlib import Path
-from types import SimpleNamespace
-from unittest.mock import patch
 
 import pytest
+import yaml
 
 CUE_WORDS = Path(__file__).resolve().parents[1] / "wiki_creator" / "cue_words"
 
@@ -191,132 +190,61 @@ def test_render_roster_shows_names_aliases_and_snippets():
     assert "- Arya was an elf of Ellesméra." in rendered
 
 
+import io
 import json as _json
 
 from scripts.entity_species import resolve_species
 
-
-def _ok_payload():
-    class _Ok:
-        returncode = 0
-        stdout = _json.dumps({
-            "stages": [{
-                "stage_name": "entity-species-item",
-                "status": "success",
-                "output": {"species": [
-                    {"name": "Arya", "species": "elf",
-                     "quote": "Arya was an elf of Ellesméra."}
-                ]},
-            }]
-        })
-        stderr = ""
-    return _Ok()
+_VERDICT = {"species": [
+    {"name": "Arya", "species": "elf", "quote": "Arya was an elf of Ellesméra."}
+]}
 
 
-def test_resolve_caches_and_does_not_call_twice(tmp_path):
+def test_resolve_caches_and_replays(tmp_path):
     cache = tmp_path / "entity_species.json"
-    with patch("scripts.entity_species.subprocess.run", return_value=_ok_payload()):
-        first = resolve_species(_rows(), "Eragon", cache)
+    first = resolve_species(_rows(), _VERDICT, cache)
     assert first["Arya"]["species"] == "elf"
 
-    with patch("scripts.entity_species.subprocess.run") as run:
-        second = resolve_species(_rows(), "Eragon", cache)
-    run.assert_not_called()
+    # Cache hit: served without consulting the (absent) call output.
+    second = resolve_species(_rows(), None, cache)
     assert second == first
 
 
-@pytest.mark.parametrize("boom", [FileNotFoundError, __import__("subprocess").TimeoutExpired("studio", 1)])
-def test_every_failure_path_omits_the_slot_for_everyone(tmp_path, boom):
+def test_a_missing_verdict_omits_the_slot_for_everyone(tmp_path):
     """A false species labels a character the wrong race on a page nobody will
-    reread; an absent one says nothing. The run must never fail."""
+    reread; an absent one says nothing. The call stage failing (on_failure:
+    continue) or being skipped must never fail the run and must cache nothing."""
     cache = tmp_path / "entity_species.json"
-    with patch("scripts.entity_species.subprocess.run", side_effect=boom):
-        assert resolve_species(_rows(), "Eragon", cache) == {}
-
-
-def test_a_nonzero_exit_omits_the_slot_for_everyone(tmp_path):
-    class _Fail:
-        returncode = 1
-        stdout = ""
-        stderr = "boom"
-    cache = tmp_path / "entity_species.json"
-    with patch("scripts.entity_species.subprocess.run", return_value=_Fail()):
-        assert resolve_species(_rows(), "Eragon", cache) == {}
-
-
-def test_a_truncated_stdout_still_recovers_the_verdict_from_the_log(tmp_path, monkeypatch):
-    """STU-564: `studio run --json` cuts stdout at 8 KiB, but the run id survives
-    the cut and the JSONL log is complete on disk. Routing through
-    `stage_output_from_stdout` recovers it — inherited by reusing that helper."""
-    from wiki_creator import studio_io
-
-    run_id = "d9f310e4-1ec0-4094-8bd7-8b9602f36cdf"
-    runs = tmp_path / ".studio" / "runs"
-    runs.mkdir(parents=True)
-    (runs / f"2026-07-17T00h00m-entity-species-item-{run_id}.jsonl").write_text(
-        _json.dumps({
-            "event": "stage_complete",
-            "stage": "entity-species-item",
-            "status": "success",
-            "output": {"species": [
-                {"name": "Arya", "species": "elf",
-                 "quote": "Arya was an elf of Ellesméra."}
-            ]},
-        }) + "\n",
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(studio_io, "PROJECT_ROOT", tmp_path)
-
-    truncated = '{"id": "' + run_id + '", "status": "success", "stages": [{"stage_name'
-
-    class _Truncated:
-        returncode = 0
-        stdout = truncated
-        stderr = ""
-
-    cache = tmp_path / "entity_species.json"
-    with patch("scripts.entity_species.subprocess.run", return_value=_Truncated()):
-        verdicts = resolve_species(_rows(), "Eragon", cache)
-    assert verdicts == {"Arya": {"species": "elf", "quote": "Arya was an elf of Ellesméra."}}
-
-
-def test_a_stale_cache_from_another_roster_is_deleted_not_replayed(tmp_path):
-    cache = tmp_path / "entity_species.json"
-    save_cache(cache, _rows(), {"Arya": {"species": "elf", "quote": "x"}}, CACHE_VERSION)
-    other = roster_rows(
-        [{"canonical_name": "Murtagh", "aliases": []}],
-        {"Murtagh": [_snip("Murtagh was a human of the Empire.", "ch40")]},
-        MARKERS,
-    )
-    with patch("scripts.entity_species.subprocess.run", side_effect=FileNotFoundError):
-        assert resolve_species(other, "Eragon", cache) == {}
+    assert resolve_species(_rows(), None, cache) == {}
     assert not cache.exists()
 
 
-def _book_yaml(tmp_path, invented):
-    book = tmp_path / "book.yaml"
-    book.write_text(
-        f"title: Test\nlanguage: en\nner:\n  invented_names: {str(invented).lower()}\n",
-        encoding="utf-8",
-    )
-    return book
-
-
-def test_a_book_with_no_invented_species_skips_the_stage_entirely(tmp_path):
+def test_a_book_with_no_invented_species_skips_the_call_entirely(tmp_path, monkeypatch):
     """THE STU-574 GATE. The `species` slot is `genre_gated: true`: a real-world-cast
-    book has no species to attribute. The gate is `ner.invented_names`, checked
-    before any registry read, so a non-genre book never calls the LLM and clears
-    any stale artifact."""
-    import scripts.entity_species as es
+    book has no species to attribute. The gate is `ner.invented_names`, checked in
+    the pre stage before any registry read, so a non-genre book emits
+    `needs_verdict: false` (the call is condition-skipped) and clears any stale
+    artifact."""
+    import scripts.entity_species_pre as pre
 
-    book = _book_yaml(tmp_path, invented=False)
-    stale = tmp_path / "entity_species.json"
+    books_dir = tmp_path / "author" / "series" / "books"
+    books_dir.mkdir(parents=True)
+    epub = books_dir / "01-a-book.epub"
+    epub.write_bytes(b"not a real epub - only the path is used")
+    processing = tmp_path / "author" / "series" / "processing_output" / "01-a-book"
+    processing.mkdir(parents=True)
+    stale = processing / "entity_species.json"
     stale.write_text("{}", encoding="utf-8")
-    with patch.object(es, "book_paths_from_yaml", return_value=SimpleNamespace(processing=tmp_path)), \
-         patch.object(es.subprocess, "run") as run, \
-         patch.object(es.sys, "argv", ["entity_species.py", "--book", str(book)]):
-        es.main()
-    run.assert_not_called()
+
+    payload = {"additional_context": yaml.safe_dump(
+        {"title": "Test", "language": "en", "file_path": str(epub), "ner": {"invented_names": False}}
+    )}
+    monkeypatch.setattr("sys.stdin", io.StringIO(_json.dumps(payload)))
+    out = io.StringIO()
+    monkeypatch.setattr("sys.stdout", out)
+    pre.main()
+
+    assert _json.loads(out.getvalue())["needs_verdict"] is False
     assert not stale.exists()
 
 

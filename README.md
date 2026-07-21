@@ -75,9 +75,6 @@ make run-preparation
 make generate-pages
 make pages-export
 
-# Check status
-make run-status
-
 # Run tests
 pytest -q
 
@@ -99,8 +96,7 @@ wiki-creator/
 ├── wiki_creator/         # Python package (NER, clustering, export logic)
 ├── scripts/              # Pipeline stage scripts (called by Studio)
 ├── tests/                # Test suite (pytest)
-├── Makefile              # Developer commands
-└── run_wiki.py           # Local orchestrator script
+└── Makefile              # Developer commands
 ```
 
 ## License

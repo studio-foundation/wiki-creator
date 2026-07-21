@@ -26,6 +26,7 @@ from pathlib import Path
 
 import yaml
 
+from wiki_creator import studio_io
 from wiki_creator.consolidation import build_report, format_summary, scan_pages
 from wiki_creator.editorial_stance import editorial_stance
 from wiki_creator.page_templates import output_language
@@ -89,20 +90,29 @@ def run_for_processing(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Editorial-stance consolidation pass (STU-508)")
-    parser.add_argument("--book", required=True, help="Path to book YAML config")
+    parser.add_argument("--book", help="Path to book YAML config (standalone mode)")
     parser.add_argument(
         "--sample",
         type=int,
         default=0,
         help="Cap the number of pages scanned (0 = all; the scan is free, so all by default)",
     )
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
 
-    with open(args.book, encoding="utf-8") as f:
-        book_cfg = yaml.safe_load(f) or {}
+    if args.book:
+        with open(args.book, encoding="utf-8") as f:
+            book_cfg = yaml.safe_load(f) or {}
+        book_paths = book_paths_from_yaml(args.book)
+    else:
+        # Studio stdin mode (STU-457): a pages-export stage, book yaml in
+        # additional_context, generated pages from disk.
+        payload = studio_io.read_payload()
+        book_cfg = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+        book_paths = studio_io.paths_from_payload(payload)
 
-    book_paths = book_paths_from_yaml(args.book)
-    run_for_processing(book_paths.processing, book_cfg=book_cfg, sample=args.sample)
+    report = run_for_processing(book_paths.processing, book_cfg=book_cfg, sample=args.sample)
+    if not args.book:
+        studio_io.write_output({"status": report.get("status"), "findings": len(report.get("findings", []))})
 
 
 if __name__ == "__main__":

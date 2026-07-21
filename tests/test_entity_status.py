@@ -1,13 +1,10 @@
 """STU-488: per-tome entity status (the `status` infobox slot)."""
 import json
 import re
-import subprocess
 from pathlib import Path
-from unittest.mock import patch
 
 import yaml
 
-import run_wiki
 from scripts.entity_status import contexts_by_entity, resolve_status
 from scripts.wiki_preparation import load_status_verdicts
 from wiki_creator.entity_status import (
@@ -395,55 +392,13 @@ def test_non_person_entities_have_no_context():
     assert "Tronjheim" not in contexts_by_entity(_registry())
 
 
-def test_every_studio_failure_leaves_the_roster_unknown(tmp_path):
-    # Missing CLI, timeout, non-zero exit, unparseable output, missing stage
-    # output: each renders `unknown`, which is the slot's declared fallback.
-    # A false `deceased` kills a living character on a page nobody will reread.
-    for error in [
-        FileNotFoundError(),
-        subprocess.TimeoutExpired(cmd="studio", timeout=1),
-    ]:
-        with patch("scripts.entity_status.subprocess.run", side_effect=error):
-            assert resolve_status(_rows(), "Eragon", tmp_path / "s.json", _index()) == {}
-
-    class _Result:
-        returncode = 1
-        stdout = ""
-        stderr = "boom"
-
-    with patch("scripts.entity_status.subprocess.run", return_value=_Result()):
-        assert resolve_status(_rows(), "Eragon", tmp_path / "s.json", _index()) == {}
-
-    class _Garbage:
-        returncode = 0
-        stdout = "not json at all"
-        stderr = ""
-
-    with patch("scripts.entity_status.subprocess.run", return_value=_Garbage()):
-        assert resolve_status(_rows(), "Eragon", tmp_path / "s.json", _index()) == {}
-
-
-def test_a_failed_run_is_not_cached(tmp_path):
-    # Caching a failure would make the next run replay it silently.
+def test_a_missing_verdict_leaves_the_roster_unknown(tmp_path):
+    # The call stage was skipped or failed (on_failure: continue): every
+    # character renders `unknown`, the slot's declared fallback, and nothing is
+    # cached — a false `deceased` kills a living character on a page nobody
+    # will reread.
     cache = tmp_path / "s.json"
-    with patch("scripts.entity_status.subprocess.run", side_effect=FileNotFoundError()):
-        resolve_status(_rows(), "Eragon", cache, _index())
-    assert not cache.exists()
-
-
-def test_a_stale_verdict_for_another_roster_does_not_survive_a_failed_retry(tmp_path):
-    # A full run leaves an artifact for roster R1. A re-run with a changed
-    # roster (WIKI_MAX_CHAPTERS, an extraction fix) R2 misses the cache and
-    # then fails the `studio run` — `load_status_verdicts` is roster-blind, so
-    # any artifact left on disk here would be replayed onto R2 by the consumer.
-    cache = tmp_path / "s.json"
-    save_status_cache(cache, _rows(), {"Brom": {"status": "deceased", "quote": BROM_QUOTE}})
-
-    other_rows = _rows()
-    other_rows[0]["snippets"] = [{"text": "Brom rode north.", "chapter_id": "chapter_2"}]
-
-    with patch("scripts.entity_status.subprocess.run", side_effect=FileNotFoundError()):
-        resolve_status(other_rows, "Eragon", cache, _index())
+    assert resolve_status(_rows(), None, cache, _index()) == {}
     assert not cache.exists()
 
 
@@ -451,23 +406,11 @@ def test_a_successful_verdict_is_cached_and_replayed(tmp_path):
     cache = tmp_path / "s.json"
     stage_output = {"status": [{"name": "Brom", "status": "deceased", "quote": BROM_QUOTE}]}
 
-    class _Ok:
-        returncode = 0
-        stdout = json.dumps({
-            "id": "run-1",
-            "stages": [
-                {"stage_name": "entity-status-item", "status": "success", "output": stage_output},
-            ],
-        })
-        stderr = ""
-
-    with patch("scripts.entity_status.subprocess.run", return_value=_Ok()) as run:
-        first = resolve_status(_rows(), "Eragon", cache, _index())
+    first = resolve_status(_rows(), stage_output, cache, _index())
     assert first["Brom"]["status"] == "deceased"
 
-    with patch("scripts.entity_status.subprocess.run") as run:
-        second = resolve_status(_rows(), "Eragon", cache, _index())
-    run.assert_not_called()
+    # Cache hit: the verdict is served without consulting the (absent) call output.
+    second = resolve_status(_rows(), None, cache, _index())
     assert second == first
 
 
@@ -526,11 +469,20 @@ def test_person_declares_the_death_slot_as_optional():
     assert "{{{death|}}}" in person["export"]["infobox_source"]
 
 
-def test_the_pre_step_is_registered_before_wiki_preparation():
+def test_the_stage_is_wired_before_wiki_preparation():
     # STU-512's lesson: without this, the whole feature is deletable with the
-    # suite green.
-    commands = [" ".join(cmd) for cmd in run_wiki.PRE_STEPS["wiki-preparation"]]
-    assert any("scripts/entity_status.py" in cmd for cmd in commands)
+    # suite green. Since STU-457 the stage lives in the wiki-preparation
+    # pipeline YAML (pre / call / post), no longer in run_wiki.py's PRE_STEPS.
+    pipeline = yaml.safe_load(
+        (Path(__file__).resolve().parents[1] / ".studio" / "pipelines" / "wiki-preparation.pipeline.yaml")
+        .read_text(encoding="utf-8")
+    )
+    scripts = [s.get("script", "") for s in pipeline["stages"] if isinstance(s, dict)]
+    status_idx = next(i for i, s in enumerate(scripts) if "entity_status.py" in s)
+    prep_idx = next(i for i, s in enumerate(scripts) if "wiki_preparation.py" in s)
+    assert status_idx < prep_idx
+    calls = [s.get("call") for s in pipeline["stages"] if isinstance(s, dict)]
+    assert "entity-status-verdict" in calls
 
 
 def test_load_status_verdicts_reads_the_artifact(tmp_path):

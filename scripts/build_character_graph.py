@@ -23,6 +23,7 @@ import argparse
 import json
 import sys
 
+from wiki_creator import studio_io
 from wiki_creator.character_graph import CharacterGraph
 from wiki_creator.contract_validators import character_graph_errors
 from wiki_creator.paths import book_paths_from_yaml
@@ -96,10 +97,20 @@ def _load_typed_relationships(processing) -> tuple[dict, str] | None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build the series character graph (STU-575).")
-    parser.add_argument("--book", required=True, help="Path to book YAML")
-    args = parser.parse_args()
+    parser.add_argument("--book", help="Path to book YAML (standalone mode)")
+    args, _ = parser.parse_known_args()
 
-    paths = book_paths_from_yaml(args.book)
+    if args.book:
+        run(book_paths_from_yaml(args.book))
+        return
+
+    # Studio stdin mode (STU-457): a wiki-preparation stage, artifacts from disk.
+    payload = studio_io.read_payload()
+    summary = run(studio_io.paths_from_payload(payload))
+    studio_io.write_output(summary)
+
+
+def run(paths) -> dict:
     classified_path = paths.processing / "entities_classified.json"
 
     # Fail safe, loudly: no typed source means writing an untyped graph, which is
@@ -112,7 +123,7 @@ def main() -> None:
             f"writing nothing. Run discover-relationships first.",
             file=sys.stderr,
         )
-        return
+        return {"skipped": "no_typed_source"}
     bundle, source_name = source
 
     entities = json.loads(classified_path.read_text(encoding="utf-8")).get("entities", [])
@@ -132,7 +143,7 @@ def main() -> None:
             f"{', '.join(sorted(drift))}. Writing nothing; re-run discover-relationships.",
             file=sys.stderr,
         )
-        return
+        return {"skipped": "stale_roster"}
 
     delta = build_book_graph(entities, bundle.get("relationships", []), paths.processing.name)
 
@@ -169,6 +180,7 @@ def main() -> None:
         f"{len(links)} edges ({typed} typed) → {sgp.name}",
         file=sys.stderr,
     )
+    return {"nodes": len(delta_json["nodes"]), "edges": len(links), "typed": typed}
 
 
 if __name__ == "__main__":

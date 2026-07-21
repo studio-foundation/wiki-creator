@@ -96,14 +96,22 @@ def _read_relationships(path: Path) -> list[dict]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build the event layer (events.json)")
-    parser.add_argument("--book", required=True, help="Path to book YAML config")
-    args = parser.parse_args()
+    parser.add_argument("--book", help="Path to book YAML config (standalone mode)")
+    args, _ = parser.parse_known_args()
 
-    with open(args.book, encoding="utf-8") as f:
-        ctx = yaml.safe_load(f) or {}
+    if args.book:
+        with open(args.book, encoding="utf-8") as f:
+            ctx = yaml.safe_load(f) or {}
+        run_for_processing(book_paths_from_yaml(args.book).processing, book_language(ctx))
+        return
 
-    book_paths = book_paths_from_yaml(args.book)
-    run_for_processing(book_paths.processing, book_language(ctx))
+    # Studio stdin mode (STU-457): a wiki-preparation stage, book yaml in
+    # additional_context, artifacts from disk.
+    payload = studio_io.read_payload()
+    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    book_paths = studio_io.paths_from_payload(payload)
+    events = run_for_processing(book_paths.processing, book_language(ctx))
+    studio_io.write_output({"events": len(events)})
 
 
 if __name__ == "__main__":

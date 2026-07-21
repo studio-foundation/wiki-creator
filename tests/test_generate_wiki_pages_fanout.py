@@ -51,6 +51,20 @@ def test_collecting_runner_records_each_item_once_and_fakes_success():
     assert not r1.get("error") and r1["content"] and r2["content"]
 
 
+def test_collecting_runner_fake_is_a_valid_page_for_a_non_person_entity():
+    """The non-PERSON single-shot path returns the runner result as the page and
+    the walk's _commit validates it as a WikiPage — a fake without the identity
+    fields crashed the plan walk on the first PLACE of a book."""
+    from wiki_creator.types import WikiPage
+
+    place = {"canonical_name": "Port Saffron", "type": "PLACE", "importance": "figurant"}
+    fake = CollectingRunner().run_item(dict(ITEM), place, timeout=5)
+
+    page = WikiPage(**fake)
+    assert page.importance == "figurant"
+    assert page.entity_type == "PLACE"
+
+
 def test_replay_runner_serves_a_success_as_a_parsed_page():
     key = _item_key(ITEM)
     runner = ReplayRunner({key: {"status": "success", "output": dict(PAGE_PAYLOAD), "run_id": "r-1"}})
