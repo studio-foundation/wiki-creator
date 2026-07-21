@@ -31,6 +31,35 @@ make golden       # golden regression run: chained resolution stages vs committe
 make golden-update  # regenerate goldens after an INTENTIONAL behavior change, then review the diff
 ```
 
+The `wiki` CLI is the ergonomic front door (STU-597), a thin launcher over
+`studio run` with short book aliases and `--help` — it owns no stage order
+(Studio does). It does not replace the Makefile: `make` keeps the dev/test
+targets (`smoke`/`golden`/`eval-*`) the CLI has no reason to wrap.
+
+```bash
+wiki ls [--series]                        # list books / series in the library
+wiki book run tog                         # studio run wiki-full on a book by alias
+wiki book extraction narnia               # single pipeline (extraction/resolution/preparation)
+wiki book run tog --max-chapters 3        # sets WIKI_MAX_CHAPTERS
+wiki book pages narnia                    # whole pages-export
+wiki book pages narnia --entities "Lucy" --force   # regenerate only some pages (the page-slice)
+wiki book add path/to.epub                # import epub + scaffold a minimal book YAML (--llm, --force)
+wiki series run inheritance               # wiki-full over every tome, reading order
+wiki replay <run-id> [--stage wiki-resolution]     # studio replay, restart from a boundary
+wiki status [run-id]  ·  wiki logs <run-id>        # observability (run-ids feed replay)
+wiki <cmd> --dry-run                      # print the studio command(s) instead of running
+```
+
+A book resolves from a short query — its slug, series, author, or an explicit
+`aliases:` list in the book YAML (`aliases: [tog]` reaches throne-of-glass); an
+ambiguous or unknown query lists candidates. `book add` fills only the
+mechanical fields; the load-bearing reader-authored ones (`ner.invented_names`,
+`notability`, `classification` roles) stay for a human — `--llm` drafts only a
+`novel_summary`. `replay`/`status`/`logs` are thin passthroughs to the matching
+`studio` command; `clean` is deliberately not wrapped (destructive stays an
+explicit Makefile opt-in — a future `wiki clean <alias> --yes` is the only
+remaining gap).
+
 Default `BOOK` in the `Makefile`:
 
 ```bash
