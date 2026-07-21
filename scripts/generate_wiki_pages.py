@@ -1893,7 +1893,11 @@ def generate_pages(
     ]
 
     def _commit(page: dict) -> None:
-        page["_prompt"] = fingerprint
+        # A dry run is a preview, not a result: leaving the stub unstamped
+        # (_prompt None != fingerprint) makes the resume filter evict it on the
+        # next real run instead of skipping the entity as already done (STU-618).
+        if not config.dry_run:
+            page["_prompt"] = fingerprint
         all_pages.append(page)
         _save(all_pages, config.output_file)
 
