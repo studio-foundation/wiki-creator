@@ -8,21 +8,38 @@
 # the file entirely (recommended):
 #
 #   export ANTHROPIC_API_KEY=sk-ant-...
+#
+# No agent under .studio/agents/ declares a model, so `defaults` below drives
+# every LLM stage in the project. Changing it changes what the whole pipeline
+# runs on.
 
 providers:
-  # Local, no API key required — the default. Install: https://ollama.com
+  # Routes through a local Claude Code CLI — no API key. The default.
+  claude-code: {}
+  # Local, no API key required. Install: https://ollama.com
   ollama:
     baseUrl: http://localhost:11434
-  # Optional cloud providers:
+  # Cloud providers, billed per token:
   anthropic:
     apiKey: ${ANTHROPIC_API_KEY}
   openai:
     apiKey: ${OPENAI_API_KEY}
-  claude-code: {}
 
 defaults:
-  provider: ollama
-  model: llama3:8b
+  # What the project's own runs and measurements use. Every accuracy figure
+  # written down in CLAUDE.md was produced here — alias adjudication's 0.83
+  # precision, the entity-status and species verdicts, the relation typing.
+  # Swap the provider and those numbers no longer describe your run.
+  provider: claude-code
+  model: claude-haiku-4-5
+
+  # The zero-cost path. It is the product's long-term direction (M5: a LoRA
+  # fine-tune distributed via Ollama), not a drop-in swap today: the prompts
+  # are tuned against the model above and nothing has been re-measured on a
+  # local one.
+  #
+  #   provider: ollama
+  #   model: llama3:8b
 
 api:
   port: 3700

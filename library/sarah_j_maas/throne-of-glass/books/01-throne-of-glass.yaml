@@ -173,14 +173,3 @@ validation:
     - Aelin Galathynius
     - Aelin
  
-# Semantic embedding disambiguation (STU-468). Opt-in, defaults OFF.
-# NOTE: the STU-468 eval falsified the centroid-cosine approach on single-book
-# data (same/different pairs are not separable — topic/setting dominates the
-# embedding). Kept as inert infrastructure; do NOT enable without a working
-# representation. See docs/superpowers/specs/2026-07-12-embedding-disambiguation-EVAL-RESULTS.md
-embedding_disambiguation:
-  enabled: false
-  model: intfloat/multilingual-e5-small
-  device: null              # null = auto (cuda if available, else cpu)
-  propose_threshold: 0.86   # placeholder — no viable threshold exists on current data
-  veto_threshold: 0.80

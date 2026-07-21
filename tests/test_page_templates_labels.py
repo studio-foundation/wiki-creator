@@ -11,11 +11,17 @@ def test_slot_label_fallback_titlecase():
 
 
 def test_output_language_precedence():
-    # STU-510: explicit generation.output_language wins; default is French
-    # (the corpus's output language). export.categories.language is a separate
-    # axis (category labels) and deliberately does NOT drive output language.
+    # STU-510: explicit generation.output_language wins.
+    # STU-607: the default follows the book's own language (book_language) instead
+    # of a hardcoded French, so an English source yields an English wiki.
+    # export.categories.language is a separate axis (category labels) and
+    # deliberately does NOT drive output language.
     assert pt.output_language({"generation": {"output_language": "en"}}) == "en"
     assert pt.output_language({"generation": {"output_language": "fr"}}) == "fr"
+    # STU-607: an English book defaults to English output.
+    assert pt.output_language({"spacy_model": "en_core_web_lg"}) == "en"
+    assert pt.output_language({"language": "en"}) == "en"
+    # No language signal at all still degrades to the historical French default.
     assert pt.output_language(None) == "fr"
     assert pt.output_language({}) == "fr"
     assert pt.output_language({"export": {"categories": {"language": "en"}}}) == "fr"

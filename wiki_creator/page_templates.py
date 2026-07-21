@@ -8,6 +8,7 @@ from pathlib import Path
 
 import yaml
 
+from wiki_creator.lang import book_language
 from wiki_creator.relationship_vocabulary import book_relationship_types
 
 PROVENANCES = {"batch-bound", "extracted-fact", "llm-prose"}
@@ -284,8 +285,9 @@ def few_shot_example(lang, base=None) -> dict:
 
 
 def output_language(book_config) -> str:
-    """Language of the generated wiki (titles + prose). Defaults to French, the
-    historical output language of this corpus; a book opts into another language
+    """Language of the generated wiki (titles + prose). Defaults to the book's own
+    language (``book_language`` — the language the NER/cue-words already run in), so
+    an English source yields an English wiki unless a book opts into another language
     via ``generation.output_language``. Deliberately independent of
     ``export.categories.language`` (category-label language is a separate axis —
     conflating them is the STU-510 silent-incoherence bug)."""
@@ -293,4 +295,4 @@ def output_language(book_config) -> str:
     gen = cfg.get("generation", {}) if isinstance(cfg.get("generation"), dict) else {}
     if gen.get("output_language"):
         return str(gen["output_language"])
-    return "fr"
+    return book_language(cfg)

@@ -81,13 +81,16 @@ def build_book_graph(entities: list[dict], relationships: list[dict], book_slug:
     return g
 
 
-def _load_typed_relationships(processing) -> tuple[list[dict], str] | None:
-    """Typed relations and the artifact they came from, or None if neither exists."""
+def _persons(entities: list[dict], key: str) -> set[str]:
+    return {e["canonical_name"] for e in entities if e.get(key) == "PERSON" and e.get("canonical_name")}
+
+
+def _load_typed_relationships(processing) -> tuple[dict, str] | None:
+    """The typed bundle and the artifact it came from, or None if neither exists."""
     for name in _RELATION_SOURCES:
         path = processing / name
         if path.exists():
-            data = json.loads(path.read_text(encoding="utf-8"))
-            return data.get("relationships", []), name
+            return json.loads(path.read_text(encoding="utf-8")), name
     return None
 
 
@@ -110,10 +113,28 @@ def main() -> None:
             file=sys.stderr,
         )
         return
-    relationships, source_name = source
+    bundle, source_name = source
 
     entities = json.loads(classified_path.read_text(encoding="utf-8")).get("entities", [])
-    delta = build_book_graph(entities, relationships, paths.processing.name)
+
+    # STU-602: the bundle records the PERSON roster discovery ran against. A
+    # re-resolution that renames or retypes an entity leaves every edge naming the
+    # old canonical off-roster, and the per-edge skip below drops them one at a
+    # time — on Narnia that read as a 44% gate loss and was diagnosed as two
+    # artifacts disagreeing on who is a character. They never disagree; the
+    # artifact is simply older than the roster. Refuse it whole.
+    discovered_roster = _persons(bundle.get("entities", []), "type")
+    drift = discovered_roster - _persons(entities, "type")
+    if drift:
+        print(
+            f"[build-character-graph] {source_name} was discovered against a stale "
+            f"PERSON roster — {len(drift)} name(s) no longer in {classified_path.name}: "
+            f"{', '.join(sorted(drift))}. Writing nothing; re-run discover-relationships.",
+            file=sys.stderr,
+        )
+        return
+
+    delta = build_book_graph(entities, bundle.get("relationships", []), paths.processing.name)
 
     sgp = paths.series_character_graph
     series_graph = CharacterGraph.from_json(json.loads(sgp.read_text())) if sgp.exists() else CharacterGraph()
