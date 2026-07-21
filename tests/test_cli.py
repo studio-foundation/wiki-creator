@@ -77,11 +77,15 @@ def test_book_extraction_adds_verbose(fake_lib, monkeypatch, capsys):
 
 
 def test_book_max_chapters_sets_env(fake_lib, monkeypatch):
-    monkeypatch.setattr(library, "_PROJECT_ROOT", fake_lib)
-    monkeypatch.delenv("WIKI_MAX_CHAPTERS", raising=False)
-    cli.main(["--dry-run", "book", "run", "tog", "--max-chapters", "3"])
     import os
-    assert os.environ["WIKI_MAX_CHAPTERS"] == "3"
+    monkeypatch.setattr(library, "_PROJECT_ROOT", fake_lib)
+    # cli sets os.environ directly; give it a throwaway copy so the mutation
+    # can't leak WIKI_MAX_CHAPTERS into later tests in this process.
+    env = dict(os.environ)
+    env.pop("WIKI_MAX_CHAPTERS", None)
+    monkeypatch.setattr(cli.os, "environ", env)
+    cli.main(["--dry-run", "book", "run", "tog", "--max-chapters", "3"])
+    assert env["WIKI_MAX_CHAPTERS"] == "3"
 
 
 def test_unknown_book_returns_2(fake_lib, monkeypatch, capsys):
