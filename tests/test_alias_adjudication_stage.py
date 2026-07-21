@@ -1,8 +1,9 @@
-"""The alias-adjudication stage itself — wiring, not adjudication.
+"""The alias-adjudication stage pair — wiring, not adjudication.
 
-Every test here is LLM-free: the verdict cache is pre-seeded, so `main()` takes the
-cache-hit path and never shells out to `studio`. A test that reached the network
-would be exercising the model, not the stage.
+Every test here is LLM-free: the verdict either comes from the cache or arrives
+as the `alias-adjudication-verdict` call stage's output in the payload (STU-589).
+Neither script may reach the network — the LLM invocation lives in the pipeline
+YAML now, not in Python.
 """
 
 import io
@@ -12,6 +13,7 @@ import pytest
 import yaml
 
 from scripts import alias_adjudication as stage
+from scripts import alias_adjudication_pre as pre_stage
 from wiki_creator.alias_adjudication import roster_rows, save_merge_cache
 
 
@@ -61,31 +63,35 @@ def book(tmp_path):
     return epub, processing
 
 
-def _payload(epub, entities=None):
+def _payload(epub, entities=None, verdict=None):
+    all_stage_outputs = {
+        "alias-resolution": {
+            "entities": [dict(e) for e in (entities or ENTITIES)],
+            "narrator": "Celaena Sardothien",
+            "stats": {"merges_applied": 0},
+        }
+    }
+    if verdict is not None:
+        all_stage_outputs["alias-adjudication-verdict"] = verdict
     return {
         "additional_context": yaml.safe_dump({"file_path": str(epub), "spacy_model": "en_core_web_lg"}),
-        "all_stage_outputs": {
-            "alias-resolution": {
-                "entities": [dict(e) for e in (entities or ENTITIES)],
-                "narrator": "Celaena Sardothien",
-                "stats": {"merges_applied": 0},
-            }
-        },
+        "all_stage_outputs": all_stage_outputs,
     }
 
 
-def _run(monkeypatch, payload) -> dict:
+def _run(monkeypatch, payload, module=stage) -> dict:
     monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps(payload)))
     out = io.StringIO()
     monkeypatch.setattr("sys.stdout", out)
-    stage.main()
+    module.main()
     return json.loads(out.getvalue())
 
 
-def _forbid_network(monkeypatch):
-    def boom(*a, **k):
-        raise AssertionError("stage must not shell out to studio on a cache hit")
-    monkeypatch.setattr(stage.subprocess, "run", boom)
+def test_neither_script_can_shell_out():
+    """The subprocess boundary is gone (STU-589): the LLM call lives in the
+    pipeline YAML. A subprocess import reappearing here is the old loop back."""
+    assert not hasattr(stage, "subprocess")
+    assert not hasattr(pre_stage, "subprocess")
 
 
 def _seed_cache(processing, merges, entities=None):
@@ -103,8 +109,6 @@ def test_stage_merges_a_cached_pair_and_preserves_the_payload_shape(monkeypatch,
     epub, processing = book
     _seed_cache(processing, [{"a": "Celaena Sardothien", "b": "Lillian Gordaina",
                              "quote": REVEAL, "reason": "cover identity"}])
-    _forbid_network(monkeypatch)
-
     result = _run(monkeypatch, _payload(epub))
 
     # Shape must survive: entity-classification reads this as all_stage_outputs.
@@ -124,8 +128,6 @@ def test_stage_leaves_non_person_and_unmerged_entities_alone(monkeypatch, book):
     epub, processing = book
     _seed_cache(processing, [{"a": "Celaena Sardothien", "b": "Lillian Gordaina",
                              "quote": REVEAL, "reason": "cover identity"}])
-    _forbid_network(monkeypatch)
-
     result = _run(monkeypatch, _payload(epub))
 
     # One merged PERSON in the pair's place, the untouched PERSON and the PLACE after it.
@@ -136,33 +138,69 @@ def test_stage_leaves_non_person_and_unmerged_entities_alone(monkeypatch, book):
 def test_stage_merges_nothing_when_the_verdict_is_empty(monkeypatch, book):
     epub, processing = book
     _seed_cache(processing, [])
-    _forbid_network(monkeypatch)
-
     result = _run(monkeypatch, _payload(epub))
 
     assert result["entities"] == ENTITIES
 
 
 def test_stage_merges_nothing_when_the_verdict_cannot_be_obtained(monkeypatch, book, capsys):
-    """No cache and no studio CLI: merge nothing, and say so.
+    """No cache and no call output (child failed under on_failure: continue, or
+    was skipped): merge nothing, and say so.
 
     STU-538's asymmetry: a false merge deletes a real character and propagates to
     every later tome; a false negative leaves two individually-correct pages.
     """
     epub, _ = book
-    monkeypatch.setattr(stage.subprocess, "run", lambda *a, **k: (_ for _ in ()).throw(FileNotFoundError()))
 
     result = _run(monkeypatch, _payload(epub))
 
     assert result["entities"] == ENTITIES
-    assert "studio_cli_missing" in capsys.readouterr().err
+    assert "no verdict" in capsys.readouterr().err
 
 
-def test_stage_does_not_call_studio_for_a_roster_of_one(monkeypatch, book):
+def test_stage_applies_the_call_verdict_and_caches_it(monkeypatch, book):
+    epub, processing = book
+    verdict = {"merge": [{"a": "Celaena Sardothien", "b": "Lillian Gordaina",
+                          "quote": REVEAL, "reason": "cover identity"}]}
+
+    result = _run(monkeypatch, _payload(epub, verdict=verdict))
+
+    merged = next(e for e in result["entities"] if "Lillian Gordaina" in e["aliases"])
+    assert merged["alias_resolution"]["method"] == "context_adjudication"
+    cached = json.loads((processing / "alias_adjudication.json").read_text(encoding="utf-8"))
+    assert cached["merge"] == [
+        {"a": "Celaena Sardothien", "b": "Lillian Gordaina", "quote": REVEAL, "reason": "cover identity"}
+    ]
+
+
+def test_stage_ignores_a_verdict_for_a_roster_of_one(monkeypatch, book):
     epub, _ = book
-    _forbid_network(monkeypatch)
     entities = [ENTITIES[0], ENTITIES[3]]
     assert _run(monkeypatch, _payload(epub, entities))["entities"] == entities
+
+
+def test_pre_asks_for_a_verdict_when_the_cache_is_cold(monkeypatch, book):
+    epub, _ = book
+
+    result = _run(monkeypatch, _payload(epub), module=pre_stage)
+
+    assert result["needs_verdict"] is True
+    assert "Celaena Sardothien" in result["roster"]
+    assert "Lillian Gordaina" in result["roster"]
+    assert "Endovier" not in result["roster"]
+
+
+def test_pre_skips_the_call_on_a_cache_hit(monkeypatch, book):
+    epub, processing = book
+    _seed_cache(processing, [])
+
+    assert _run(monkeypatch, _payload(epub), module=pre_stage)["needs_verdict"] is False
+
+
+def test_pre_skips_the_call_for_a_roster_of_one(monkeypatch, book):
+    epub, _ = book
+    entities = [ENTITIES[0], ENTITIES[3]]
+    assert _run(monkeypatch, _payload(epub, entities), module=pre_stage)["needs_verdict"] is False
 
 
 def test_a_same_named_entity_of_another_type_is_not_touched(monkeypatch, book):
@@ -174,8 +212,6 @@ def test_a_same_named_entity_of_another_type_is_not_touched(monkeypatch, book):
     entities = ENTITIES + [homonym]
     _seed_cache(processing, [{"a": "Celaena Sardothien", "b": "Lillian Gordaina",
                              "quote": REVEAL, "reason": "cover identity"}], entities)
-    _forbid_network(monkeypatch)
-
     result = _run(monkeypatch, _payload(epub, entities))
 
     assert homonym in result["entities"]
@@ -189,8 +225,6 @@ def test_stage_skips_a_second_merge_that_chains_off_the_first(monkeypatch, book,
         {"a": "Celaena Sardothien", "b": "Lillian Gordaina", "quote": REVEAL, "reason": "cover identity"},
         {"a": "Lillian Gordaina", "b": "Dorian", "quote": REVEAL, "reason": "chained"},
     ])
-    _forbid_network(monkeypatch)
-
     result = _run(monkeypatch, _payload(epub))
 
     assert "Dorian" in [e["canonical_name"] for e in result["entities"]]
