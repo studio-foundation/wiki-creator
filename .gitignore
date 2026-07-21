@@ -75,6 +75,7 @@ library/**/processing_output/
 library/**/wiki_inputs/
 library/**/output/
 library/**/registry.json
+library/**/character_graph.json
 .wiki_runs/
 
 # Fandom survey corpus — regenerable from scripts/fandom_wikis.yaml, and large
