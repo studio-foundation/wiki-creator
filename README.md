@@ -37,11 +37,12 @@ The workflow is split into five Studio pipelines, each with structurally validat
   memorized. There, GLiNER finds the entities by prompt and spaCy keeps doing the
   tokenizing, tagging and sentence splitting. Optional extra (pulls torch).
 
-> **Language support:** the pipeline is French-first — page generation and
-> validation target French output by default. Set a top-level `language:` key
-> in your book YAML (e.g. `language: en`) to disable French-only validation
-> for books in other languages. POV detection and cue words currently support
-> `fr` and `en`.
+> **Language support:** page generation and validation follow the book's own
+> language by default (`output_language` defaults to `book_language` — STU-607),
+> so an English source yields an English wiki. Set a top-level `language:` key in
+> your book YAML (e.g. `language: en`) to declare it, or override the output
+> language alone with `generation.output_language`. POV detection and cue words
+> currently support `fr` and `en`.
 
 ### Setup
 
