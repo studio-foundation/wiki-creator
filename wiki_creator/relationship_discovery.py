@@ -19,6 +19,7 @@ classifier writes as `evolution` prose; here it only decides the primary type.
 from __future__ import annotations
 
 import json
+import sys
 from collections import Counter
 from pathlib import Path
 from typing import Iterable
@@ -32,6 +33,13 @@ _FLIP = {"A→B": "B→A", "B→A": "A→B", SYMMETRIC: SYMMETRIC}
 _MAX_EVIDENCE_CHARS = 200
 _MAX_SAMPLE_CONTEXTS = 3
 
+# A chunk can only exceed ``size`` when a single paragraph does — packing flushes
+# ``buf`` before it overflows. Past this factor the paragraph is not a long passage
+# but a whole chapter with no ``\\n\\n`` to split on (a pre-STU-523 epub_data.json),
+# where ``size`` is silently a no-op. Warn, don't fail: a real single-paragraph
+# passage over the factor is possible.
+_OVERSIZE_FACTOR = 2
+
 
 def flip(direction: str) -> str:
     """Restate a direction against the opposite entity order."""
@@ -44,6 +52,11 @@ def chunk_chapters(chapters: list[dict], size: int) -> list[dict]:
     Packs whole paragraphs (split on ``\\n\\n``) into a chunk until the next one
     would overflow ``size``, then starts a new chunk. Never splits a paragraph.
     Chunk ids are ``{chapter_id}:{i}`` so a vote traces back to its chapter.
+
+    A chapter with no ``\\n\\n`` becomes one chunk whatever ``size`` is (STU-609): a
+    stale ``epub_data.json`` predating STU-523 holds zero paragraph marks, so
+    ``size`` degenerates to a no-op. Warn per chunk over ``size * _OVERSIZE_FACTOR``
+    so the operator re-extracts instead of silently buying a worse discovery stage.
     """
     out: list[dict] = []
     for chapter in chapters:
@@ -58,6 +71,13 @@ def chunk_chapters(chapters: list[dict], size: int) -> list[dict]:
         if buf:
             parts.append(buf)
         for i, text in enumerate(parts):
+            if len(text) > size * _OVERSIZE_FACTOR:
+                print(
+                    f"[WARN] chunk {chapter['id']}:{i} is {len(text)} chars "
+                    f"(target {size}) — chapter has no paragraph break to split on; "
+                    f"re-extract if epub_data.json predates STU-523",
+                    file=sys.stderr,
+                )
             out.append({
                 "id": f"{chapter['id']}:{i}",
                 "chapter_id": chapter["id"],
