@@ -4,7 +4,7 @@
 
 - Repo: `wiki-creator-by-studio`
 - Purpose: extract entities from EPUB novels, classify them, generate wiki pages, export wikitext
-- Current verified state on 2026-07-15: `pytest -q` => `1604 passed, 1 skipped`
+- Current verified state on 2026-07-20: `pytest -q` => `2005 passed, 1 skipped`
   (skip count depends on which optional models/extras are installed; see `tests/_markers.py`)
 
 ## Commands
@@ -38,7 +38,7 @@ make golden-update  # regenerate goldens after an INTENTIONAL behavior change, t
 Default `BOOK` in the `Makefile`:
 
 ```bash
-library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml
+library/c_w_lewis/narnia/books/01-the_lion_the_witch_and_the_wardrobe.yaml
 ```
 
 The Makefile is a front door, not a sequencer (STU-592). Two facts about it are
@@ -70,6 +70,15 @@ Important:
   `generate_book_synopsis`, `generate_event_pages`, `consolidate_editorial_stance`)
   are now pre-steps of `pages-export` in `run_wiki.py`, converging it with the
   `make run-generation` graph. Restart the generation phase with `--restart pages-export`.
+- **A stage declares the files it writes (STU-600).** `expected_outputs.files` in
+  `.studio/contracts/*.contract.yaml` names them per *stage*, not per pipeline —
+  `splits.json` is written by `split-clusters`, so a missing file fails that stage
+  and names it, inside the RALPH loop where the miss enriches retry feedback.
+  `run_wiki.py`'s `required_files()`/`check_outputs()` are deleted: an orchestrator
+  responsibility implemented outside the orchestrator was the whole thesis of
+  STU-457. `clean_files()` **stays and deliberately diverges** — which artifacts a
+  `--clean` restart deletes is a different question from which a stage must write
+  (`chapter_summaries.json` is cleaned from `wiki-extraction` but asserted nowhere).
 - **Disk is the bus across pipelines (STU-455).** A stage reads an artifact written
   by an *earlier pipeline* from disk, never from Studio's context — those are
   separate `studio run` invocations, so `previous_outputs`/`all_stage_outputs`
@@ -1051,7 +1060,12 @@ Inside `wiki-resolution`, order matters:
   stays — it numbers the ordered summaries 1..N, which already *is* the position,
   and it is handed no chapter records to read the field off.
 - `workers` in relationship/coref config directly impact RAM usage.
-- `.studio/config.yaml` and `.studio/runs/` must not be committed.
+- `.studio/config.yaml` and `.studio/runs/` must not be committed. **No agent
+  declares a `model:`**, so `defaults` in that file drives every LLM stage —
+  today `claude-code` / `claude-haiku-4-5`, and every accuracy figure recorded
+  in this file was measured there. Since the file is gitignored, the committed
+  `.studio/config.example.yaml` is the only referenceable statement of what the
+  project runs on; keep the two in step.
 - Never add hardcoded word lists to scripts. All vocabulary belongs in `wiki_creator/cue_words/<lang>.json` (language-wide) or the book YAML `classification` section (book-specific). No script may define a fallback vocabulary constant — if a key is absent from cue_words, degrade gracefully to an empty collection.
 - English is the default and the only language allowed in code. Nothing user-visible may be hardcoded in another language — no French (or any non-English) string literals in `.py`. Anything that needs translation is data, not code: it lives in YAML (`wiki_creator/templates/base.yaml` for template/output strings — `labels`, `briefs`, `few_shot`, `length_by_tier`, `chrome`, `language_names`; cue_words for detection vocabulary) keyed by language, and is read via helpers (`slot_label`, `section_brief`, `chrome_label`, …). Prompt *scaffolding* (instructions, grounding labels) stays English regardless of output language; only output-anchoring content (section titles, briefs, few-shot, the write-in-`<language>` directive) and reader-facing chrome follow `output_language(book_config)` (STU-510).
 - `tests/test_e2e_golden.py` chains all deterministic resolution stages on the fixture novella and compares every stage output to goldens in `tests/fixtures/e2e/golden/stages/`. Any intentional behavior change in those stages requires `make golden-update` and a review of the golden diff in the same PR. The extraction seed is committed (`golden/seed/`, regenerate with `gen_seed.py`); a `@requires_en_sm` test keeps it shape-compatible with real extraction in CI.
