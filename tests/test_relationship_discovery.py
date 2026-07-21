@@ -14,6 +14,7 @@ from wiki_creator.relationship_discovery import (
     fold_chunk_result,
     load_votes_cache,
     save_votes_cache,
+    uncached_chunk_ids,
     valid_relations,
     votes_from_map_output,
 )
@@ -37,6 +38,30 @@ def test_chunk_ids_are_chapter_scoped_and_ordered():
     chunks = chunk_chapters(chapters, size=4)
     assert [c["id"] for c in chunks] == ["ch1:0", "ch1:1"]
     assert all(c["chapter_id"] == "ch1" and c["title"] == "One" for c in chunks)
+
+
+def test_chunk_warns_on_paragraph_less_chapter(capsys):
+    # No \n\n — the whole chapter is one chunk regardless of size (STU-609).
+    chapters = [{"id": "ch1", "title": "One", "text": "x" * 100}]
+    chunks = chunk_chapters(chapters, size=10)
+    assert [c["id"] for c in chunks] == ["ch1:0"]
+    err = capsys.readouterr().err
+    assert "[WARN]" in err
+    assert "ch1:0" in err
+    assert "100 chars" in err
+
+
+def test_chunk_no_warn_on_paragraph_aligned_chapter(capsys):
+    chapters = [{"id": "ch1", "title": "One", "text": "aaaa\n\nbbbb\n\ncccc"}]
+    chunk_chapters(chapters, size=4)
+    assert "[WARN]" not in capsys.readouterr().err
+
+
+def test_chunk_no_warn_on_paragraph_slightly_over_size(capsys):
+    # A single paragraph over size but under the factor is a normal long passage.
+    chapters = [{"id": "ch1", "title": "One", "text": "x" * 15}]
+    chunk_chapters(chapters, size=10)
+    assert "[WARN]" not in capsys.readouterr().err
 
 
 def test_chunk_spans_multiple_chapters_in_order():
@@ -307,3 +332,23 @@ def test_map_output_unparseable_is_all_failed():
     votes, failed = votes_from_map_output(_CHUNKS, "garbage", {}, ROSTER, TYPES)
     assert votes == []
     assert failed == ["ch1:0", "ch1:1", "ch2:0"]
+
+
+# --- uncached_chunk_ids: failed chunks are coverage the run never bought ------
+
+
+def test_uncached_chunk_ids_flags_failed_chunks(tmp_path):
+    chunks = [{"id": "c0"}, {"id": "c1"}, {"id": "c2"}, {"id": "c3"}]
+    # c1 failed and stayed out; c2 genuinely evidenced no relation ([] is cached).
+    cache = {"c0": [{"entity_a": "A"}], "c2": [], "c3": [{"entity_a": "B"}]}
+    assert uncached_chunk_ids(chunks, cache) == ["c1"]
+
+
+def test_uncached_chunk_ids_empty_when_all_cached():
+    chunks = [{"id": "c0"}, {"id": "c1"}]
+    assert uncached_chunk_ids(chunks, {"c0": [], "c1": []}) == []
+
+
+def test_uncached_chunk_ids_preserves_chunk_order():
+    chunks = [{"id": "c0"}, {"id": "c1"}, {"id": "c2"}]
+    assert uncached_chunk_ids(chunks, {}) == ["c0", "c1", "c2"]

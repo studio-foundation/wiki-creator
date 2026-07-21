@@ -197,13 +197,28 @@ def main() -> None:
     bundle = RelationshipBundle(
         entities=[{"canonical_name": e["canonical_name"], "type": e["entity_type"]} for e in entities],
         relationships=[Relationship(**p) for p in pairs],
-        stats={"chunks": len(chunks), "pairs": len(pairs), "roster": len(roster_names)},
+        # STU-610: the artifact records which chunks failed and stayed uncached,
+        # so a partial discovery output is distinguishable from full coverage.
+        stats={
+            "chunks": len(chunks),
+            "chunks_covered": len(chunks) - len(failed),
+            "chunks_uncached": failed,
+            "pairs": len(pairs),
+            "roster": len(roster_names),
+        },
     )
     studio_io.save_artifact(output_path, bundle, RelationshipBundle)
     print(
         f"[discover-relationships] {len(chunks)} chunks → {len(pairs)} typed pairs → {output_path.name}",
         file=sys.stderr,
     )
+    if failed:
+        print(
+            f"[discover-relationships] WARNING: {len(failed)} of {len(chunks)} chunks "
+            f"failed and stayed uncached — the discovery output is partial and the graph "
+            f"built from it is missing these chunks (re-run to retry): {', '.join(failed)}",
+            file=sys.stderr,
+        )
 
 
 if __name__ == "__main__":
