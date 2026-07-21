@@ -18,7 +18,7 @@ The workflow is split into five Studio pipelines, each with structurally validat
 
 3. **wiki-preparation** -- Discovers and types the relationships, fills the per-book infobox facts (status, affiliation, species), builds the character graph and the event layer, then batches everything into wiki input files.
 
-4. **wiki-page-item** -- Generates individual wiki pages using an LLM agent inside a generation-validation group (max 3 iterations). A validator checks each page; rejected pages trigger a group retry with accumulated feedback. Validation includes anti-hallucination grounding against the source excerpts: proper nouns that never appear in the excerpts are rejected outright, and an optional LLM check (`validation.grounding.llm: true` in the book YAML, Ollama-backed) verifies that factual claims are supported by the excerpts.
+4. **wiki-pages** -- Fans out over the planned page/section/relation calls, dispatching one `wiki-page-item` child run each (an engine `map` stage; per-item resume replays already-generated calls). Each child generates a page using an LLM agent inside a generation-validation group (max 3 iterations). A validator checks each page; rejected pages trigger a group retry with accumulated feedback. Validation includes anti-hallucination grounding against the source excerpts: proper nouns that never appear in the excerpts are rejected outright, and an optional LLM check (`validation.grounding.llm: true` in the book YAML, Ollama-backed) verifies that factual claims are supported by the excerpts.
 
 5. **pages-export** -- Assembles the generated pages, runs a copyright check (no verbatim passages from the source), and exports to wikitext format.
 

@@ -70,6 +70,16 @@ Important:
   `generate_book_synopsis`, `generate_event_pages`, `consolidate_editorial_stance`)
   are now pre-steps of `pages-export` in `run_wiki.py`, converging it with the
   `make run-generation` graph. Restart the generation phase with `--restart pages-export`.
+- **The LLM loops run natively, not as hand-rolled subprocess loops (STU-589/612).**
+  The four fan-outs — `discover-relationships`, `classify-relationships`,
+  `chapter-summaries`, `wiki-pages` (`.studio/pipelines/*.pipeline.yaml`) — each own
+  a `map` stage `over: input.<items>` dispatching one child run per item; the script
+  does one `studio run <fan-out-pipeline>` and reads the collected results.
+  `section-filter` and `alias-adjudication` run as a **pre/call/post split** inside
+  their host pipeline (a `*-pre` script, a native `call: *-verdict` stage, a `*` post
+  script) — one call per book, no subprocess. Persistence for all of these, and which
+  loops are *not* migrated (the `entity-status`/`affiliation`/`species` trio, still
+  per-row subprocesses until STU-457), is in **"A Long Run Persists As It Goes"**.
 - **A stage declares the files it writes (STU-600).** `expected_outputs.files` in
   `.studio/contracts/*.contract.yaml` names them per *stage*, not per pipeline —
   `splits.json` is written by `split-clusters`, so a missing file fails that stage
@@ -133,11 +143,11 @@ library/sarah_j_maas/throne-of-glass/output/01-throne-of-glass/
 - [run_wiki.py](/home/arianeguay/dev/src/wiki-creator-by-studio/run_wiki.py): local orchestrator
 - [scripts/entity_extraction.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/entity_extraction.py): writes per-book `*_full.json`, `chapters.json`
 - [scripts/relationship_extraction.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/relationship_extraction.py): co-occurrence graph, optional coref, CLI/live mode
-- [scripts/discover_relationships.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/discover_relationships.py): schema-guided typed relation discovery, one `studio run` per chunk (STU-556), writes `relationships_discovered.json`; pure logic in `wiki_creator/relationship_discovery.py`
+- [scripts/discover_relationships.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/discover_relationships.py): schema-guided typed relation discovery (STU-556), writes `relationships_discovered.json`; pure logic in `wiki_creator/relationship_discovery.py`. One `studio run discover-relationships` per book — the engine fans out one child run per paragraph-aligned chunk (`map` stage, STU-589), and per-item resume (STU-605) replaces the old script-side votes cache (see "A Long Run Persists")
 - [scripts/build_character_graph.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/build_character_graph.py): series character graph pre-step, runs after typing (STU-575), writes `character_graph.json` + `character_graph_delta.json`; pure logic in `wiki_creator/character_graph.py`
 - [scripts/chapter_summary.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/chapter_summary.py): chapter summaries used during preparation
 - [scripts/wiki_preparation.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/wiki_preparation.py): batch generation
-- [scripts/generate_wiki_pages.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_wiki_pages.py): standalone generation (shells out to `studio run wiki-page-item` per entity)
+- [scripts/generate_wiki_pages.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_wiki_pages.py): standalone generation. One `studio run wiki-pages` per book — the engine fans out one child run per planned item call (`map` stage, STU-612/589) via a plan walk → fan-out → replay (the walk records every `wiki-page-item` the generation would dispatch, the map runs them, the replay serves results back keyed on the item input); per-item resume (STU-605) keyed on the rendered prompt + `prompt_fingerprint` + `attempt` (the retry counter that makes a forbidden-name re-roll a real second call rather than a cache replay)
 - [scripts/generate_book_synopsis.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_book_synopsis.py): book synopsis page from `events.json` (SP4/STU-482), writes `book_synopsis.json`; pure logic in `wiki_creator/synopsis.py`
 - [scripts/generate_event_pages.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_event_pages.py): one `EVENT` page per high-salience event from `events.json` (SP3/STU-481), writes `event_pages.json`; pure logic in `wiki_creator/event_pages.py`
 - [scripts/consolidate_editorial_stance.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/consolidate_editorial_stance.py): post-generation editorial-stance consolidation pass (STU-508), writes `editorial_stance_report.json`; pure logic in `wiki_creator/consolidation.py`
@@ -413,16 +423,21 @@ Inside `wiki-resolution`, order matters:
   proposed — would have kept `King` → `Brannon`.
 
 - Contextual alias adjudication (STU-539): the alias pair no rule proposes is
-  decided by one `studio run alias-adjudication-item` per book, over the **whole
-  PERSON roster** — the `section-filter` shape (STU-529), with the opposite bias:
-  every failure path (missing CLI, timeout, unparseable verdict, hallucinated name)
-  **merges nothing** and warns, because STU-538's asymmetry runs the other way from
+  decided by one LLM verdict per book, over the **whole PERSON roster** — the
+  `section-filter` shape (STU-529), with the opposite bias: every failure path
+  (missing verdict, timeout, unparseable verdict, hallucinated name) **merges
+  nothing** and warns, because STU-538's asymmetry runs the other way from
   STU-529's. A false merge invents a character, deletes a real one, and
   `Registry.accumulate` carries it into every later tome; a false negative leaves two
-  pages that are each still correct. `scripts/alias_adjudication.py` runs between
-  `alias-resolution` and `entity-classification`, re-emitting the former's payload
-  with merges applied (so `entity_classification` prefers `alias-adjudication` and
-  falls back); pure logic in `wiki_creator/alias_adjudication.py`. It is a **separate
+  pages that are each still correct. Since STU-589 the call is a **pre/call/post
+  split** inside `wiki-resolution`, not a subprocess: `alias_adjudication_pre.py`
+  builds the roster and decides cache hit/miss (`needs_verdict`), a native `call:
+  alias-adjudication-verdict` stage invokes the LLM (`condition:` on the miss,
+  `on_failure: continue`), and `alias_adjudication.py` parses/caches/applies —
+  re-emitting `alias-resolution`'s payload with merges applied (so
+  `entity_classification` prefers `alias-adjudication` and falls back); pure logic in
+  `wiki_creator/alias_adjudication.py`. The cache is still script-side and per book
+  (one call, not a fan-out). It is a **separate
   stage on purpose** — `alias-resolution` stays deterministic and offline, so `make
   golden`/`make smoke` stay LLM-free by construction, not by mocking. The cache
   (`processing_output/<slug>/alias_adjudication.json`) is keyed on the roster rows
@@ -846,8 +861,12 @@ Inside `wiki-resolution`, order matters:
 - Section filtering (STU-529): what counts as front/back matter is **classified**,
   not matched. The two `chapters.py` frozensets are gone; `is_frontmatter_chapter`
   is a dict lookup on a `frontmatter: true` tag, and the `section-filter` stage
-  (`scripts/section_filter.py`, between `epub-parse` and `entity-extraction`) sets
-  it from one `studio run section-filter-item` per book. They were tuned on the 16
+  (between `epub-parse` and `entity-extraction`) sets it from one LLM verdict per
+  book. Since STU-589 that verdict is a **pre/call/post split**, not a subprocess:
+  `section_filter_pre.py` builds the classifier input and decides cache hit/miss, a
+  native `call: section-filter-verdict` stage invokes the LLM (`condition:` on the
+  miss, `on_failure: continue`), and `section_filter.py` parses/caches/applies. They
+  were tuned on the 16
   library EPUBs and failed silently elsewhere — the wiki-ner-en shape (STU-521) one
   layer down; they also leaked 11 sections titled `Copyright`/`Dedication`/`Contents`
   because those words were only in the *ID* set while real EPUBs use opaque ids
@@ -860,7 +879,7 @@ Inside `wiki-resolution`, order matters:
   marketing synopsis and drops both; it decides on one axis, inside vs outside the
   fiction (the STU-507 `editorial_stance` lens). Way of Kings' `index_split_001.html`
   is ACKNOWLEDGMENTS, not a chapter — judging by title and length alone gets it
-  backwards. (3) **Bias toward keep**: every failure path (missing CLI, timeout,
+  backwards. (3) **Bias toward keep**: every failure path (missing verdict, timeout,
   unparseable verdict, hallucinated id) keeps every section and warns. A false keep
   is one visible junk entity; a false drop deletes a real chapter silently, in a book
   we will never read. (4) **The cache is keyed on the rows themselves**
@@ -1201,23 +1220,27 @@ Inside `wiki-resolution`, order matters:
   the model *did* read and decline. Both were `relationship_type: null`, and the
   artifact recorded no difference: the next person measuring the graph could not
   tell loss-with-judgment from loss-with-none-behind-it. Two halves.
-  (1) **Retry.** `_run_studio_classifier_item` retries a *transient* failure
-  (`studio_run_timeout` / `studio_run_failed` / `studio_run_output_missing`) once
-  — `studio_cli_missing` is terminal and is not retried, since retrying an absent
-  binary only stalls. This is the outer, subprocess-level retry; it is distinct
-  from the pipeline's RALPH loop (`max_attempts: 3`), which catches an off-schema
-  *agent output*, not a killed `studio run`. STU-564's log recovery already
-  absorbs most of what used to surface as a parse error, so the timeout is the
-  live case. (2) **Mark.** A pair that still fails is stamped
-  `classification_error` (a new optional `Relationship` field), so the artifact
-  distinguishes it from a decline — a retry that does not persist the distinction
-  leaves the same fog. `_load_done_keys` treats a stamped pair as **unfinished**:
-  it drops it from both the resume keys and the kept list, so a re-run retries it
-  once more without duplicating it. The field is `null` on every declined and
-  typed pair, so it changes no reader surface (STU-501 still omits the untyped
-  pair) and no golden (relationship typing is an LLM stage, off the golden path).
-  Related: `stats.classified` is vestigial (STU-563) — the counter that would
-  have surfaced this reads 0 on every real run.
+  (1) **Retry.** A *transient* failure re-runs on the next pass. Since STU-589
+  moved the classify loop into the engine (`classify-relationships` `map` stage,
+  `resume: true`, `on_item_failure: collect-all`), the retry is the engine's: a
+  successful item caches, a failed item is **never cached**, so a re-run retries
+  exactly the ones that failed — and RALPH (`max_attempts: 3`) still retries an
+  off-schema *agent output* inside each child run. The old per-pair subprocess
+  retry (`_run_studio_classifier_item`, retrying `studio_run_timeout` /
+  `studio_run_failed` / `studio_run_output_missing` once, `studio_cli_missing`
+  terminal) is gone from the production path — it survives only as the one-off
+  dispatcher the offline eval (`eval_relationship_classifier.py`) still calls. If
+  the whole `studio run classify-relationships` fails, every classifiable pair is
+  stamped so the artifact still ships and the re-run retries them all. (2)
+  **Mark.** A pair that still fails is stamped `classification_error` (an optional
+  `Relationship` field), so the artifact distinguishes it from a decline — the
+  engine's resume already re-runs the uncached failures, and the old
+  `_load_done_keys` that dropped a stamped pair from the script's own resume keys
+  is retired with the script-side resume it served. The field is `null` on every
+  declined and typed pair, so it changes no reader surface (STU-501 still omits
+  the untyped pair) and no golden (relationship typing is an LLM stage, off the
+  golden path). Related: `stats.classified` is vestigial (STU-563) — the counter
+  that would have surfaced this reads 0 on every real run.
 - The character graph is built after typing, not before (STU-575):
   `build_character_graph.py` is a **wiki-preparation pre-step**, running after
   `discover-relationships`/`classify-relationships`, and reads
@@ -1362,11 +1385,38 @@ An LLM stage over a book is a long run — tens to hundreds of per-unit calls
 So **every such stage writes each unit's result to disk the moment it lands, not
 at the end**, and re-reads that cache on the next invocation to run only what is
 missing. A timeout, a crash, a `Ctrl-C`, or a machine going to sleep mid-run
-costs the units in flight, never the hundred already done. `discover-relationships`
-is the canonical shape: `save_votes_cache` runs inside the per-chunk lock right
-after each chunk (`scripts/discover_relationships.py`), so
-`45 chunks | 12 cached | 33 to run` is a resume, and three `FAILED: TimeoutExpired`
-chunks just re-run next pass while the other 42 stay done.
+costs the units in flight, never the hundred already done.
+
+**Where the per-unit cache lives depends on who owns the fan-out (STU-589/612).**
+The four flat/nested fan-outs — `discover-relationships`, `classify-relationships`,
+`chapter-summaries`, `wiki-pages` — moved the loop into the **engine** (a `map`
+stage `over: input.<items>`, `resume: true`, `on_item_failure: collect-all`; each
+dispatches one child pipeline per item). Persistence is now the engine's per-item
+resume cache, **keyed on the resolved item input** — the item text plus a
+`prompt_fingerprint` (STU-560, so a prompt or vocabulary edit re-runs every item),
+plus an `attempt` counter on `wiki-pages` (so the forbidden-name retry is a real
+second roll, not a replay of the offending output). The script does one
+`studio run <fan-out-pipeline>` and reads back `map_output.resumed`; the retired
+`save_votes_cache`/`load_votes_cache` (still in `relationship_discovery.py`, but
+test-only now) are what this replaced — the canonical shape used to be a
+per-chunk lock writing a script-side votes JSON. So `45 chunks | 12 resumed | 0 failed`
+is a resume, and a `FAILED` chunk stays uncached and re-runs next pass while the
+rest stay done.
+
+`section-filter` and `alias-adjudication` also migrated (STU-589 call half), but as
+a **pre/call/post split** in their host pipeline (`wiki-extraction`,
+`wiki-resolution`): a `*-pre` script builds the classifier input and decides cache
+hit/miss (`needs_verdict`), a native `call: *-verdict` stage invokes the LLM with no
+subprocess (`condition:` on the miss, `on_failure: continue` to keep the STU-529/538
+keep-everything bias), and a `*` post script parses, applies and **caches the verdict
+script-side** (`section_filter.json` / `alias_adjudication.json`). These are one call
+per book, not per-item, so their cache stays where it was — the migration removed the
+subprocess, not the JSON.
+
+The remaining trio — `entity-status`, `entity-affiliation`, `entity-species` — is
+**not migrated**: each still does one `studio run` subprocess per roster row and
+keeps its own script-side cache (STU-488/551/574), unchanged until STU-457 folds the
+orchestration into Studio.
 
 This is the base principle the caches already documented in Gotchas are each one
 instance of — `section-filter`, `alias-adjudication`, `entity-status`,
