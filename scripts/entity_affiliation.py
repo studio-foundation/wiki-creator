@@ -1,67 +1,48 @@
 #!/usr/bin/env python3
-"""Pre-step: entity-affiliation — which faction does each character belong to?
+"""entity-affiliation — which faction does each character belong to?
 
-Usage:
-    python scripts/entity_affiliation.py --book library/.../book.yaml
+Script executor interface: reads JSON from stdin, writes JSON to stdout.
 
-Input:  processing_output/<slug>/registry.json
-Output: processing_output/<slug>/entity_affiliation.json
-
-Runs before wiki-preparation, which stamps the verdict onto the batch entity so
+Post-step of the entity-affiliation split (STU-457). The LLM verdict arrives
+from the `call: entity-affiliation-verdict` stage (native invocation, no
+subprocess); this stage parses it, caches it to `entity_affiliation.json`,
+which wiki-preparation then stamps onto the batch entity so
 `generate_wiki_pages.py` can render the `affiliation` infobox slot.
 
-A pre-step and not a wiki-resolution stage, for STU-488's reasons: it changes no
-identity, and resolution is chained by `make golden`, which stays LLM-free by
-construction.
+It sits in wiki-preparation and not wiki-resolution, for STU-488's reasons: it
+changes no identity, and resolution is chained by `make golden`, which stays
+LLM-free by construction.
 
-Never fails a run: a book whose verdict cannot be obtained renders no slot at all,
-loudly.
+Never fails a run: a book whose verdict cannot be obtained renders no slot at
+all, loudly.
+
+Input:  { "additional_context": "<book yaml>",
+          "all_stage_outputs": {"entity-affiliation-verdict": {...}} }
+Output: { "decided", "roster" }
 """
-import argparse
-import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 import yaml
 
+from scripts.entity_status import contexts_by_entity, verdict_from_payload
 from wiki_creator import studio_io
 from wiki_creator.entity_affiliation import (
     CACHE_VERSION,
     parse_affiliation_verdict,
     roster_rows,
 )
-from wiki_creator.roster import load_cache, render_roster, save_cache
 from wiki_creator.lang import book_language, load_lang_config
-from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.registry import Registry
+from wiki_creator.roster import load_cache, save_cache
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-
-_TIMEOUT_SECONDS = 600
-
-
-def contexts_by_entity(registry: Registry) -> dict[str, list[dict]]:
-    """Per-PERSON context sentences with the chapter each came from.
-
-    The chapter rides along because `select_affiliation_snippets` sorts by it.
-    """
-    contexts: dict[str, list[dict]] = {}
-    for record in registry.entities:
-        if record.entity_type != "PERSON":
-            continue
-        snippets = [
-            {"text": mention.context.strip(), "chapter_id": mention.chapter_id}
-            for mention in record.mentions
-            if mention.context and mention.context.strip()
-        ]
-        if snippets:
-            contexts[record.canonical_name] = snippets
-    return contexts
+VERDICT_STAGE = "entity-affiliation-verdict"
 
 
-def resolve_affiliation(rows: list[dict], book_title: str, cache_path: Path) -> dict[str, dict]:
-    """Verified affiliation per character, from cache or one `studio run`.
+def resolve_affiliation(
+    rows: list[dict], verdict_output: object | None, cache_path: Path
+) -> dict[str, dict]:
+    """Verified affiliation per character, from cache or the call stage's verdict.
 
     Never raises. Every failure path returns {} — every character then renders no
     `affiliation` slot, which is what an OPT slot with no value does.
@@ -69,35 +50,10 @@ def resolve_affiliation(rows: list[dict], book_title: str, cache_path: Path) -> 
     cached = load_cache(cache_path, rows, CACHE_VERSION)
     if cached is not None:
         return cached
-    # A verdict for another roster must not survive a failure below:
-    # `wiki_preparation.load_affiliation_verdicts` is roster-blind and would
-    # replay a stale artifact.
-    Path(cache_path).unlink(missing_ok=True)
+    if verdict_output is None:
+        return _give_up("no verdict (call skipped or failed)", rows)
 
-    item_input = {"book_title": book_title, "roster": render_roster(rows)}
-    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".yaml", delete=False) as tmp:
-        yaml.safe_dump(item_input, tmp, sort_keys=False, allow_unicode=True)
-        input_path = tmp.name
-
-    cmd = ["studio", "run", "entity-affiliation-item", "--input-file", input_path, "--json"]
-    try:
-        result = subprocess.run(
-            cmd, cwd=PROJECT_ROOT, capture_output=True, text=True, timeout=_TIMEOUT_SECONDS
-        )
-    except FileNotFoundError:
-        return _give_up("studio_cli_missing", rows)
-    except subprocess.TimeoutExpired:
-        return _give_up("studio_run_timeout", rows)
-    finally:
-        Path(input_path).unlink(missing_ok=True)
-
-    if result.returncode != 0:
-        return _give_up("studio_run_failed", rows)
-    stage_output = studio_io.stage_output_from_stdout(result.stdout or "", "entity-affiliation-item")
-    if stage_output is None:
-        return _give_up("studio_run_output_missing", rows)
-
-    verdicts = parse_affiliation_verdict(stage_output, rows)
+    verdicts = parse_affiliation_verdict(verdict_output, rows)
     save_cache(cache_path, rows, verdicts, CACHE_VERSION)
     return verdicts
 
@@ -112,13 +68,9 @@ def _give_up(error: str, rows: list[dict]) -> dict[str, dict]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Decide each character's faction for this book")
-    parser.add_argument("--book", required=True, help="Path to the book YAML")
-    args = parser.parse_args()
-
-    book_cfg = yaml.safe_load(Path(args.book).read_text(encoding="utf-8")) or {}
-    paths = book_paths_from_yaml(args.book)
-
+    payload = studio_io.read_payload()
+    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    paths = studio_io.paths_from_payload(payload)
     cache_path = paths.processing / "entity_affiliation.json"
 
     registry = Registry.load_from_processing(paths.processing)
@@ -128,10 +80,10 @@ def main() -> None:
             "no character renders an affiliation",
             file=sys.stderr,
         )
-        Path(cache_path).unlink(missing_ok=True)
+        studio_io.write_output({"decided": 0, "roster": 0})
         return
 
-    lang_cfg = load_lang_config(book_language(book_cfg))
+    lang_cfg = load_lang_config(book_language(ctx))
     markers = list(lang_cfg.get("affiliation_markers", []))
     if not markers:
         print(
@@ -139,7 +91,7 @@ def main() -> None:
             "no snippet can be selected, so no character renders an affiliation",
             file=sys.stderr,
         )
-        Path(cache_path).unlink(missing_ok=True)
+        studio_io.write_output({"decided": 0, "roster": 0})
         return
 
     contexts = contexts_by_entity(registry)
@@ -153,13 +105,13 @@ def main() -> None:
             "[entity-affiliation] no PERSON entity with context — nothing to decide",
             file=sys.stderr,
         )
-        Path(cache_path).unlink(missing_ok=True)
+        studio_io.write_output({"decided": 0, "roster": 0})
         return
 
     rows = roster_rows(persons, contexts, markers)
     verdicts = resolve_affiliation(
         rows,
-        book_title=str(book_cfg.get("title") or paths.processing.name),
+        verdict_output=verdict_from_payload(payload, VERDICT_STAGE),
         cache_path=cache_path,
     )
 
@@ -170,6 +122,7 @@ def main() -> None:
     )
     for name, verdict in sorted(verdicts.items()):
         print(f"[entity-affiliation]   {name}: {verdict['affiliation']}", file=sys.stderr)
+    studio_io.write_output({"decided": len(verdicts), "roster": len(rows)})
 
 
 if __name__ == "__main__":

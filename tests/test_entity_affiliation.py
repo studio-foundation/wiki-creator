@@ -165,115 +165,30 @@ def test_render_roster_shows_names_aliases_and_snippets():
     assert "- Eragon joined the Varden." in rendered
 
 
-import json as _json
-from unittest.mock import patch
-
 from scripts.entity_affiliation import resolve_affiliation
 
-
-def _ok_payload():
-    class _Ok:
-        returncode = 0
-        stdout = _json.dumps({
-            "stages": [{
-                "stage_name": "entity-affiliation-item",
-                "status": "success",
-                "output": {"affiliation": [
-                    {"name": "Eragon", "affiliation": "Varden",
-                     "quote": "Eragon joined the Varden."}
-                ]},
-            }]
-        })
-        stderr = ""
-    return _Ok()
+_VERDICT = {"affiliation": [
+    {"name": "Eragon", "affiliation": "Varden", "quote": "Eragon joined the Varden."}
+]}
 
 
-def test_resolve_caches_and_does_not_call_twice(tmp_path):
+def test_resolve_caches_and_replays(tmp_path):
     cache = tmp_path / "entity_affiliation.json"
-    with patch("scripts.entity_affiliation.subprocess.run", return_value=_ok_payload()):
-        first = resolve_affiliation(_rows(), "Eragon", cache)
+    first = resolve_affiliation(_rows(), _VERDICT, cache)
     assert first["Eragon"]["affiliation"] == "Varden"
 
-    with patch("scripts.entity_affiliation.subprocess.run") as run:
-        second = resolve_affiliation(_rows(), "Eragon", cache)
-    run.assert_not_called()
+    # Cache hit: served without consulting the (absent) call output.
+    second = resolve_affiliation(_rows(), None, cache)
     assert second == first
 
 
-@pytest.mark.parametrize("boom", [FileNotFoundError, __import__("subprocess").TimeoutExpired("studio", 1)])
-def test_every_failure_path_omits_the_slot_for_everyone(tmp_path, boom):
+def test_a_missing_verdict_omits_the_slot_for_everyone(tmp_path):
     """THE LOAD-BEARING TEST. A false affiliation puts a character in the wrong
-    army on a page nobody will reread; an absent one says nothing. The run must
-    never fail."""
+    army on a page nobody will reread; an absent one says nothing. The call stage
+    failing (on_failure: continue) or being skipped must never fail the run and
+    must cache nothing."""
     cache = tmp_path / "entity_affiliation.json"
-    with patch("scripts.entity_affiliation.subprocess.run", side_effect=boom):
-        assert resolve_affiliation(_rows(), "Eragon", cache) == {}
-
-
-def test_a_nonzero_exit_omits_the_slot_for_everyone(tmp_path):
-    class _Fail:
-        returncode = 1
-        stdout = ""
-        stderr = "boom"
-    cache = tmp_path / "entity_affiliation.json"
-    with patch("scripts.entity_affiliation.subprocess.run", return_value=_Fail()):
-        assert resolve_affiliation(_rows(), "Eragon", cache) == {}
-
-
-def test_a_truncated_stdout_still_recovers_the_verdict_from_the_log(tmp_path, monkeypatch):
-    """STU-564: the bug this caller shared with the five in PR #186. `studio run
-    --json` cuts stdout at 8 KiB (STU-533), so a large roster's payload never
-    decodes — but the run id is the payload's first key and survives the cut, and
-    the JSONL log is complete on disk. The old shape dead-ended at
-    `studio_output_json_parse_error` and read the id from the payload it had just
-    failed to parse, so the log fallback was unreachable on exactly the runs that
-    needed it. Routing through `stage_output_from_stdout` fixes it."""
-    from wiki_creator import studio_io
-
-    run_id = "d9f310e4-1ec0-4094-8bd7-8b9602f36cdf"
-    runs = tmp_path / ".studio" / "runs"
-    runs.mkdir(parents=True)
-    (runs / f"2026-07-17T00h00m-entity-affiliation-item-{run_id}.jsonl").write_text(
-        _json.dumps({
-            "event": "stage_complete",
-            "stage": "entity-affiliation-item",
-            "status": "success",
-            "output": {"affiliation": [
-                {"name": "Eragon", "affiliation": "Varden",
-                 "quote": "Eragon joined the Varden."}
-            ]},
-        }) + "\n",
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(studio_io, "PROJECT_ROOT", tmp_path)
-
-    # stdout carries the id but is cut mid-object: the payload never decodes.
-    truncated = '{"id": "' + run_id + '", "status": "success", "stages": [{"stage_name'
-
-    class _Truncated:
-        returncode = 0
-        stdout = truncated
-        stderr = ""
-
-    cache = tmp_path / "entity_affiliation.json"
-    with patch("scripts.entity_affiliation.subprocess.run", return_value=_Truncated()):
-        verdicts = resolve_affiliation(_rows(), "Eragon", cache)
-    assert verdicts == {"Eragon": {"affiliation": "Varden", "quote": "Eragon joined the Varden."}}
-
-
-def test_a_stale_cache_from_another_roster_is_deleted_not_replayed(tmp_path):
-    """wiki_preparation.load_affiliation_verdicts is roster-blind, so a give-up
-    path that left the old artifact in place would let it replay a verdict made
-    for a different roster."""
-    cache = tmp_path / "entity_affiliation.json"
-    save_cache(cache, _rows(), {"Eragon": {"affiliation": "Varden", "quote": "x"}}, CACHE_VERSION)
-    other = roster_rows(
-        [{"canonical_name": "Murtagh", "aliases": []}],
-        {"Murtagh": [_snip("Murtagh joined the Empire.", "ch40")]},
-        MARKERS,
-    )
-    with patch("scripts.entity_affiliation.subprocess.run", side_effect=FileNotFoundError):
-        assert resolve_affiliation(other, "Eragon", cache) == {}
+    assert resolve_affiliation(_rows(), None, cache) == {}
     assert not cache.exists()
 
 
