@@ -241,6 +241,16 @@ def collect_and_save(prep: dict, map_output: dict | None, error: str | None) -> 
             f"built from it is missing these chunks (re-run to retry): {', '.join(failed)}",
             file=sys.stderr,
         )
+    # STU-629: covered chunks that yield 0 pairs over a real roster is a discovery
+    # failure, not an empty graph — the weak-model shape (mistral returned off-schema
+    # over Alice's 20-entity cast) otherwise reads as "this book has no relationships".
+    if not pairs and len(chunks) > len(failed) and len(roster_names) >= 2:
+        print(
+            f"[discover-relationships] WARNING: 0 pairs over {len(chunks) - len(failed)} "
+            f"covered chunks and a {len(roster_names)}-entity roster — the model likely "
+            f"returned empty/off-schema discovery output (try a stronger provider)",
+            file=sys.stderr,
+        )
     return {"chunks": len(chunks), "chunks_failed": len(failed), "pairs": len(pairs)}
 
 
