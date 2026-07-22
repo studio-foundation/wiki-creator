@@ -352,3 +352,43 @@ def test_uncached_chunk_ids_empty_when_all_cached():
 def test_uncached_chunk_ids_preserves_chunk_order():
     chunks = [{"id": "c0"}, {"id": "c1"}, {"id": "c2"}]
     assert uncached_chunk_ids(chunks, {}) == ["c0", "c1", "c2"]
+
+
+# --- collect_and_save: 0 pairs over covered chunks is loud (STU-629) ----------
+
+
+def _prep_for(tmp_path, roster):
+    return {
+        "chunks": list(_CHUNKS),
+        "alias_to_canonical": {},
+        "roster_names": set(roster),
+        "allowed_types": TYPES,
+        "entities": [{"canonical_name": n, "entity_type": "PERSON"} for n in roster],
+        "output_path": tmp_path / "relationships_discovered.json",
+    }
+
+
+def test_collect_warns_on_zero_pairs_over_covered_roster(tmp_path, capsys):
+    from scripts.discover_relationships import collect_and_save
+
+    # every chunk covered but evidenced no relation — the mistral-on-Alice shape.
+    map_output = {"results": [
+        {"index": i, "status": "success", "output": {"relations": []}}
+        for i in range(len(_CHUNKS))
+    ]}
+    stats = collect_and_save(_prep_for(tmp_path, ROSTER), map_output, None)
+    assert stats["pairs"] == 0
+    assert "0 pairs over" in capsys.readouterr().err
+
+
+def test_collect_no_zero_pair_warning_when_pairs_found(tmp_path, capsys):
+    from scripts.discover_relationships import collect_and_save
+
+    map_output = {"results": [
+        {"index": 0, "status": "success", "output": {"relations": [dict(_REL)]}},
+        {"index": 1, "status": "success", "output": {"relations": []}},
+        {"index": 2, "status": "success", "output": {"relations": []}},
+    ]}
+    stats = collect_and_save(_prep_for(tmp_path, ROSTER), map_output, None)
+    assert stats["pairs"] == 1
+    assert "0 pairs over" not in capsys.readouterr().err
