@@ -675,3 +675,66 @@ def test_annotate_pov_persists_per_chapter_fields():
 def test_annotate_pov_empty_chapters():
     """No chapters → omniscient modal, no crash."""
     assert annotate_pov([], language="fr")["pov"] == "omniscient"
+
+
+from scripts.parse_epub import strip_gutenberg_boilerplate
+
+
+def test_gutenberg_boilerplate_stripped_when_embedded_in_content_sections():
+    """START/END markers sit inside content sections, not their own (STU-627).
+
+    Header before START and footer after END leak `Project Gutenberg` /
+    `United States` into extraction; only the text between the markers is the work.
+    """
+    chapters = [
+        {"id": "c1", "content": (
+            "The Project Gutenberg eBook of Alice.\n\n"
+            "This ebook is for the use of anyone anywhere in the United States.\n\n"
+            "*** START OF THE PROJECT GUTENBERG EBOOK ALICE ***\n\n"
+            "CHAPTER I. Down the Rabbit-Hole"
+        )},
+        {"id": "c2", "content": "Alice was beginning to get very tired."},
+        {"id": "c3", "content": (
+            "THE END.\n\n"
+            "*** END OF THE PROJECT GUTENBERG EBOOK ALICE ***\n\n"
+            "Project Gutenberg is a registered trademark in the United States."
+        )},
+    ]
+    result = strip_gutenberg_boilerplate(chapters)
+    blob = "\n".join(ch["content"] for ch in result)
+    assert "Project Gutenberg" not in blob
+    assert "United States" not in blob
+    assert result[0]["content"].startswith("CHAPTER I")
+    assert result[-1]["content"] == "THE END."
+
+
+def test_gutenberg_boilerplate_drops_whole_sections_outside_the_markers():
+    """A boilerplate-only section before START / after END is dropped entirely."""
+    chapters = [
+        {"id": "c1", "content": "The Project Gutenberg license preamble, United States."},
+        {"id": "c2", "content": "*** START OF THE PROJECT GUTENBERG EBOOK X ***"},
+        {"id": "c3", "content": "The real story begins here and runs on."},
+        {"id": "c4", "content": "*** END OF THE PROJECT GUTENBERG EBOOK X ***"},
+        {"id": "c5", "content": "Full license text, Project Gutenberg, United States."},
+    ]
+    result = strip_gutenberg_boilerplate(chapters)
+    assert [ch["id"] for ch in result] == ["c3"]
+
+
+def test_gutenberg_stripper_is_noop_without_markers():
+    """A non-Gutenberg source has no markers and is returned unchanged."""
+    chapters = [
+        {"id": "c1", "content": "Chapter one, no markers."},
+        {"id": "c2", "content": "Chapter two."},
+    ]
+    result = strip_gutenberg_boilerplate(chapters)
+    assert result == chapters
+
+
+def test_gutenberg_start_marker_matches_this_variant_case_insensitively():
+    """Older EPUBs write `START OF THIS PROJECT GUTENBERG EBOOK`, any case."""
+    chapters = [
+        {"id": "c1", "content": "*** start of this project gutenberg ebook y ***\n\nStory."},
+    ]
+    result = strip_gutenberg_boilerplate(chapters)
+    assert result[0]["content"] == "Story."
