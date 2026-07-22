@@ -1,6 +1,13 @@
 {
-  "extraKnownMarketplaces": {
-    "claude-toolbox": { "source": { "source": "github", "repo": "arianeguay/claude-toolbox" } }
+  "enabledPlugins": {
+    "toolbox@claude-toolbox": true
   },
-  "enabledPlugins": { "toolbox@claude-toolbox": true }
+  "extraKnownMarketplaces": {
+    "claude-toolbox": {
+      "source": {
+        "source": "github",
+        "repo": "arianeguay/claude-toolbox"
+      }
+    }
+  }
 }

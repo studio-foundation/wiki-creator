@@ -2007,12 +2007,16 @@ def generate_pages(
     }
     all_pages = [
         p for p in _load_existing(config.output_file)
-        if not p.get("_failed") and _is_page_complete(p)
+        if not p.get("_failed") and not p.get("_dry_run") and _is_page_complete(p)
         and not (p.get("title") in regenerable and p.get("_prompt") != fingerprint)
     ]
 
     def _commit(page: dict) -> None:
-        page["_prompt"] = fingerprint
+        # A dry run is a preview, not a result: leaving the stub unstamped
+        # (_prompt None != fingerprint) makes the resume filter evict it on the
+        # next real run instead of skipping the entity as already done (STU-618).
+        if not config.dry_run:
+            page["_prompt"] = fingerprint
         all_pages.append(page)
         _save(all_pages, config.output_file)
 
@@ -2065,6 +2069,7 @@ def generate_pages(
                 if config.dry_run:
                     print(f"  [DRY]  {name}", file=sys.stderr)
                     page = make_stub_page(entity, lang=config.language)
+                    page["_dry_run"] = True
                     _commit(page)
                     done_titles.add(name)
                     continue
