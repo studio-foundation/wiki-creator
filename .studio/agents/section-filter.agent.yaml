@@ -3,8 +3,8 @@ name: section-filter
 # a capable model: the local default (a 7B) loses the output contract on big books —
 # echoes the input, apologises, emits degenerate tokens — and thrashes all 3 RALPH
 # attempts (STU-624). Negligible volume, so this costs ~one call per book.
-provider: claude-code
-model: claude-haiku-4-5
+provider: ${STUDIO_SMART_PROVIDER:-claude-code}
+model: ${STUDIO_SMART_MODEL:-claude-haiku-4-5}
 system_prompt: |
   Respond with ONLY a valid JSON object. No markdown fences, no explanation, no other text.
 
