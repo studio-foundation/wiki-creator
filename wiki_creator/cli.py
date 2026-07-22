@@ -13,7 +13,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from wiki_creator import book_import, library
+from wiki_creator import book_import, item_stream, library
 from wiki_creator.series import discover_series_books
 
 # Short pipeline verb -> Studio pipeline. `run` is the whole build; the rest are
@@ -31,6 +31,9 @@ def _studio_command(pipeline: str, book_path: Path) -> list[str]:
     cmd = ["studio", "run", pipeline, "--input-file", str(book_path), "--live"]
     if pipeline != "wiki-full":
         cmd.append("--verbose")
+    # Show each fan-out unit as it lands (Alice <=> Dodo — allies), STU-626.
+    if item_stream.studio_supports_stream_items():
+        cmd.append("--stream-items")
     return cmd
 
 
@@ -38,6 +41,8 @@ def _exec(cmd: list[str], *, dry_run: bool) -> int:
     print("$ " + " ".join(cmd))
     if dry_run:
         return 0
+    if "--stream-items" in cmd:
+        return item_stream.run_studio_with_stream(cmd)
     return subprocess.run(cmd).returncode
 
 

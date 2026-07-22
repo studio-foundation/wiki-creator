@@ -31,9 +31,18 @@ def main() -> None:
         studio_io.write_output({"pairs": [], "prompt_fingerprint": "", "needs_verdict": False})
         return
 
+    # A pair carries no title/name key, so the engine's map label would be `#i`
+    # and the --stream-items view (STU-626) could not name it. A label derived
+    # from the pair gives it identity; it re-keys the item once (STU-560), which
+    # a re-run absorbs.
+    pairs = [
+        {**pair, "label": f"{pair.get('entity_a', '?')} <=> {pair.get('entity_b', '?')}"}
+        for pair in prep["items"]
+    ]
+
     studio_io.write_output(
         {
-            "pairs": prep["items"],
+            "pairs": pairs,
             "prompt_fingerprint": prep["fingerprint"],
             "needs_verdict": True,
         }
