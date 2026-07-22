@@ -1,4 +1,10 @@
 name: section-filter
+# Whole-book verdict (one call/book, strict JSON over a large section list). Pinned to
+# a capable model: the local default (a 7B) loses the output contract on big books —
+# echoes the input, apologises, emits degenerate tokens — and thrashes all 3 RALPH
+# attempts (STU-624). Negligible volume, so this costs ~one call per book.
+provider: claude-code
+model: claude-haiku-4-5
 system_prompt: |
   Respond with ONLY a valid JSON object. No markdown fences, no explanation, no other text.
 
