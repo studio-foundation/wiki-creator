@@ -1115,30 +1115,47 @@ class ReplayRunner:
 
     @staticmethod
     def _to_item_result(map_result: dict | None, entity: dict, item_input: dict) -> dict:
-        if map_result is None:
-            return {"error": "studio_map_item_missing", "raw_response": "", "run_metadata": {}}
-        run_metadata = {
-            "run_id": map_result.get("run_id"),
-            "status": map_result.get("status"),
+        return page_from_map_result(map_result, entity, item_input.get("language", "fr"))
+
+
+def page_from_map_result(map_result: dict | None, entity: dict, language: str = "fr") -> dict:
+    """Reconstruct `_execute_wiki_page_item`'s return contract from one engine map
+    result. Shared by the replay walk (entity pages) and the synopsis/event post
+    stages, so all three parse a map result the same way (STU-621)."""
+    if map_result is None:
+        return {"error": "studio_map_item_missing", "raw_response": "", "run_metadata": {}}
+    run_metadata = {
+        "run_id": map_result.get("run_id"),
+        "status": map_result.get("status"),
+    }
+    if map_result.get("status") != "success" or not isinstance(map_result.get("output"), dict):
+        return {
+            "error": "studio_map_item_failed",
+            "raw_response": str(map_result.get("error") or ""),
+            "run_metadata": run_metadata,
         }
-        if map_result.get("status") != "success" or not isinstance(map_result.get("output"), dict):
-            return {
-                "error": "studio_map_item_failed",
-                "raw_response": str(map_result.get("error") or ""),
-                "run_metadata": run_metadata,
-            }
-        payload = map_result["output"]
-        page = parse_response(
-            json.dumps(payload, ensure_ascii=False), entity,
-            lang=item_input.get("language", "fr"),
-        )
-        if page.get("_failed"):
-            return {
-                "error": "studio_invalid_output",
-                "raw_response": json.dumps(payload, ensure_ascii=False),
-                "run_metadata": {**run_metadata, "payload": payload},
-            }
-        return {**page, "run_metadata": run_metadata}
+    payload = map_result["output"]
+    page = parse_response(json.dumps(payload, ensure_ascii=False), entity, lang=language)
+    if page.get("_failed"):
+        return {
+            "error": "studio_invalid_output",
+            "raw_response": json.dumps(payload, ensure_ascii=False),
+            "run_metadata": {**run_metadata, "payload": payload},
+        }
+    return {**page, "run_metadata": run_metadata}
+
+
+def wiki_pages_map_item(item_input: dict, attempt: int = 1) -> dict:
+    """A `wiki-pages` map item from a prebuilt wiki-page-item input — the grounding
+    defaults + `attempt` key `_run_pages_fanout` injects, extracted so the
+    synopsis/event stages build identical items (STU-621)."""
+    return {
+        "grounding_llm": False,
+        "grounding_llm_model": "",
+        "grounding_llm_timeout": 0,
+        **item_input,
+        "attempt": attempt,
+    }
 
 
 def _run_pages_fanout(
@@ -1146,16 +1163,7 @@ def _run_pages_fanout(
 ) -> tuple[dict | None, str | None]:
     """One `studio run` fanning out over the planned items. Returns (map_output, error)."""
     payload = {
-        "items": [
-            {
-                "grounding_llm": False,
-                "grounding_llm_model": "",
-                "grounding_llm_timeout": 0,
-                **item,
-                "attempt": attempt,
-            }
-            for item in items
-        ],
+        "items": [wiki_pages_map_item(item, attempt) for item in items],
         "prompt_fingerprint": fingerprint,
     }
     timeout_seconds = max(600, len(items) * max(timeout, 60))

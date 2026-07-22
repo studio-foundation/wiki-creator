@@ -31,6 +31,8 @@ from scripts.generate_wiki_pages import (
     _execute_wiki_page_item,
     _references_block,
     load_book_title,
+    page_from_map_result,
+    wiki_pages_map_item,
 )
 from wiki_creator import studio_io
 from wiki_creator.lang import book_language
@@ -107,19 +109,12 @@ def _finalize_page(result: dict, book_title: str) -> dict:
     }
 
 
-def generate_synopsis_page(
-    events: list[dict],
-    *,
-    book_title: str,
-    book_cfg: dict,
-    language: str,
-    timeout: int = 120,
-    dry_run: bool = False,
-) -> dict:
-    """One synopsis page from the events, via the wiki-page-item pipeline."""
-    if dry_run:
-        return _stub_page()
-
+def build_synopsis_item(
+    events: list[dict], *, book_title: str, book_cfg: dict, language: str
+) -> tuple[dict, dict, list[str]]:
+    """The pre-LLM half of the synopsis page: the wiki-page-item input, the
+    synthetic entity, and the forbidden-name list. Shared by the `--book`
+    subprocess path and the pre stage that builds the map item (STU-621)."""
     synopsis_cfg = (book_cfg.get("generation") or {}).get("synopsis") or {}
     try:
         max_per_chapter = int(
@@ -149,27 +144,60 @@ def generate_synopsis_page(
         "file_path": book_cfg.get("file_path", ""),
         "prompt": prompt,
     }
-    entity = _synopsis_entity()
+    return item_input, _synopsis_entity(), forbidden_names
 
-    result = _execute_wiki_page_item(item_input, entity, timeout)
+
+def finalize_synopsis(result: dict, *, book_title: str, forbidden_names: list[str]) -> dict:
+    """The post-LLM half: turn one wiki-page-item result into the synopsis page.
+
+    A generation error stubs the page; a forbidden name that survived the
+    child's generation-validation loop rejects it (`_spoiler_rejected`).
+    """
     if result.get("error"):
         print(f"[synopsis] generation failed: {result['error']}", file=sys.stderr)
         return _stub_page(failed=True)
-
     if forbidden_names and _check_forbidden_names(result, forbidden_names):
+        hits = _check_forbidden_names(result, forbidden_names)
+        print(f"[synopsis] spoiler persists ({', '.join(hits)}), rejecting", file=sys.stderr)
+        page = _stub_page(failed=True)
+        page["_spoiler_rejected"] = True
+        return page
+    return _finalize_page(result, book_title)
+
+
+def generate_synopsis_page(
+    events: list[dict],
+    *,
+    book_title: str,
+    book_cfg: dict,
+    language: str,
+    timeout: int = 120,
+    dry_run: bool = False,
+) -> dict:
+    """One synopsis page from the events, via the wiki-page-item pipeline
+    (`--book` path: one nested `studio run` subprocess with a host-level
+    forbidden-name re-roll)."""
+    if dry_run:
+        return _stub_page()
+
+    item_input, entity, forbidden_names = build_synopsis_item(
+        events, book_title=book_title, book_cfg=book_cfg, language=language
+    )
+    result = _execute_wiki_page_item(item_input, entity, timeout)
+    if not result.get("error") and forbidden_names and _check_forbidden_names(result, forbidden_names):
         print("[synopsis] spoiler detected, retrying…", file=sys.stderr)
         result = _execute_wiki_page_item(item_input, entity, timeout)
-        if result.get("error"):
-            print(f"[synopsis] retry failed: {result['error']}", file=sys.stderr)
-            return _stub_page(failed=True)
-        hits = _check_forbidden_names(result, forbidden_names)
-        if hits:
-            print(f"[synopsis] spoiler persists ({', '.join(hits)}), rejecting", file=sys.stderr)
-            page = _stub_page(failed=True)
-            page["_spoiler_rejected"] = True
-            return page
+    return finalize_synopsis(result, book_title=book_title, forbidden_names=forbidden_names)
 
-    return _finalize_page(result, book_title)
+
+def _write_synopsis_page(page: dict, processing_dir: Path) -> None:
+    out_path = processing_dir / "book_synopsis.json"
+    out_path.write_text(
+        json.dumps({"page": page}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    status = "failed stub" if page.get("_failed") else "page"
+    print(f"[synopsis] wrote {status} to {out_path}", file=sys.stderr)
 
 
 def run_for_processing(
@@ -180,8 +208,8 @@ def run_for_processing(
     timeout: int = 120,
     dry_run: bool = False,
 ) -> dict | None:
-    """Build book_synopsis.json from artifacts in ``processing_dir``. Returns
-    the page, or None when there is nothing to summarize."""
+    """Build book_synopsis.json from artifacts in ``processing_dir`` (`--book`
+    path). Returns the page, or None when there is nothing to summarize."""
     processing_dir = Path(processing_dir)
     events = read_events(processing_dir)
     if events is None:
@@ -204,14 +232,61 @@ def run_for_processing(
         timeout=timeout,
         dry_run=dry_run,
     )
-    out_path = processing_dir / "book_synopsis.json"
-    out_path.write_text(
-        json.dumps({"page": page}, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-    status = "failed stub" if page.get("_failed") else "page"
-    print(f"[synopsis] wrote {status} to {out_path}", file=sys.stderr)
+    _write_synopsis_page(page, processing_dir)
     return page
+
+
+VERDICT_STAGE = "book-synopsis-verdict"
+
+_AGENTS_DIR = Path(__file__).resolve().parents[1] / ".studio" / "agents"
+
+
+def synopsis_prompt_fingerprint() -> str:
+    """Busts the map resume cache on a wiki-page-item prompt edit (STU-560). The
+    rendered synopsis prompt already travels in the item input, so this only
+    guards the agent yaml."""
+    return studio_io.prompt_fingerprint(
+        [_AGENTS_DIR / "wiki-page-item.agent.yaml", _AGENTS_DIR / "wiki-page-validator.agent.yaml"],
+        {},
+    )
+
+
+def _map_output_from_payload(payload: dict) -> dict | None:
+    verdict = payload.get("all_stage_outputs", {}).get(VERDICT_STAGE)
+    if verdict is None:
+        verdict = payload.get("previous_outputs", {}).get(VERDICT_STAGE)
+    return verdict if isinstance(verdict, dict) else None
+
+
+def _result_at_index(map_output: dict | None, index: int) -> dict | None:
+    if not isinstance(map_output, dict):
+        return None
+    for result in map_output.get("results") or []:
+        if isinstance(result, dict) and result.get("index") == index:
+            return result
+    return None
+
+
+def run_post(payload: dict, *, book_cfg: dict, language: str) -> dict:
+    """Studio post stage (STU-621): finalize the synopsis from the `wiki-pages`
+    call's map output. Emits `{skipped}` / `{failed}`."""
+    paths = studio_io.paths_from_payload(payload)
+    events = read_events(paths.processing)
+    if not events:
+        reason = "events.json not found" if events is None else "events.json has no events"
+        print(f"[synopsis] {reason} — skipping synopsis", file=sys.stderr)
+        return {"skipped": True}
+
+    book_title = load_book_title(str(paths.processing / "epub_data.json"))
+    _item_input, entity, forbidden_names = build_synopsis_item(
+        events, book_title=book_title, book_cfg=book_cfg, language=language
+    )
+    result = page_from_map_result(
+        _result_at_index(_map_output_from_payload(payload), 0), entity, language
+    )
+    page = finalize_synopsis(result, book_title=book_title, forbidden_names=forbidden_names)
+    _write_synopsis_page(page, paths.processing)
+    return {"failed": bool(page.get("_failed"))}
 
 
 def main() -> None:
@@ -224,25 +299,20 @@ def main() -> None:
     if args.book:
         with open(args.book, encoding="utf-8") as f:
             book_cfg = yaml.safe_load(f) or {}
-        book_paths = book_paths_from_yaml(args.book)
-    else:
-        # Studio stdin mode (STU-457): a pages-export stage, book yaml in
-        # additional_context, artifacts from disk.
-        payload = studio_io.read_payload()
-        book_cfg = yaml.safe_load(payload.get("additional_context", "") or "") or {}
-        book_paths = studio_io.paths_from_payload(payload)
-
-    page = run_for_processing(
-        book_paths.processing,
-        book_cfg=book_cfg,
-        language=book_language(book_cfg),
-        timeout=args.timeout,
-        dry_run=args.dry_run,
-    )
-    if not args.book:
-        studio_io.write_output(
-            {"skipped": True} if page is None else {"failed": bool(page.get("_failed"))}
+        run_for_processing(
+            book_paths_from_yaml(args.book).processing,
+            book_cfg=book_cfg,
+            language=book_language(book_cfg),
+            timeout=args.timeout,
+            dry_run=args.dry_run,
         )
+        return
+
+    # Studio post stage: the `call: book-synopsis-verdict` stage already ran the
+    # wiki-pages map; finalize its output.
+    payload = studio_io.read_payload()
+    book_cfg = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    studio_io.write_output(run_post(payload, book_cfg=book_cfg, language=book_language(book_cfg)))
 
 
 if __name__ == "__main__":
