@@ -11,6 +11,21 @@ ner:
   # threshold 0.3 measured > 0.5 (per STU-535).
   invented_names: true
   threshold: 0.3
+  # STU-630: Wonderland's cast is named by common nouns (the Hatter, the Dormouse),
+  # which GLiNER's `person name` label under-detects. Listed here, matched verbatim
+  # and typed PERSON. "Cat" is the Cheshire Cat, called "the Cat" 43 times.
+  character_names:
+    - Hatter
+    - Dormouse
+    - Caterpillar
+    - Cheshire Cat
+    - Cat
+    - Knave
+    - Dodo
+    - Mouse
+    - Lory
+    - Eaglet
+    - Pigeon
 
 coref: false
 workers: 8
