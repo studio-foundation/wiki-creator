@@ -5,6 +5,12 @@ description: |
 
 file_path: public_domain/lewis_carroll/alice/books/01-alice_in_wonderland.epub
 spacy_model: en_core_web_lg
+ner:
+  # STU-616: invented world. GLiNER typing 20/36 vs spaCy 18/36
+  # (LLM oracle, claude-opus-4-8). Wonderland's talking-creature cast: spaCy types the invented names ORG; GLiNER lifts PERSON recall 14->19.
+  # threshold 0.3 measured > 0.5 (per STU-535).
+  invented_names: true
+  threshold: 0.3
 
 coref: false
 workers: 8

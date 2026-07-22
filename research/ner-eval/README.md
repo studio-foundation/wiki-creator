@@ -131,6 +131,15 @@ Three things this method gets wrong if you let it:
 - **GLiNER's borderline spans are not deterministic.** Counts move by ±1 entity
   between identical runs; do not read a one-entity difference as a result.
 
+### The public_domain flip (STU-616)
+
+The same `run_arms` + `oracle_types` method, batched over the distributable
+`public_domain/` invented-world books (Alice, The Call of Cthulhu, Oz ×6, The
+Odyssey). All nine flipped to `invented_names: true` at threshold 0.3; the
+real-world casts (Dracula, the Verne pair, Notre-Dame) stayed on spaCy. Numbers,
+per-book PERSON/PLACE breakdown, and the reproduce command: [results_stu616.md](results_stu616.md)
+(driver: `batch_all.sh`).
+
 ## Tests
 
     pytest tests/ -q

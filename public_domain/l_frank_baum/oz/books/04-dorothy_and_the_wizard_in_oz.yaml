@@ -6,6 +6,12 @@ description: |
 
 file_path: public_domain/l_frank_baum/oz/books/04-dorothy_and_the_wizard_in_oz.epub
 spacy_model: en_core_web_lg
+ner:
+  # STU-616: invented world. GLiNER typing 43/63 vs spaCy 26/63
+  # (LLM oracle, claude-opus-4-8). Oz invented cast: GLiNER PLACE 12/12 vs spaCy 4/7, PERSON 28/31 vs 20/27.
+  # threshold 0.3 measured > 0.5 (per STU-535).
+  invented_names: true
+  threshold: 0.3
 
 coref: false
 workers: 8
