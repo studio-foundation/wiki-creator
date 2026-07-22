@@ -1,0 +1,59 @@
+[
+  {
+    "run": 1,
+    "date": "2026-07-22",
+    "book": "01-alice_in_wonderland",
+    "providers": {
+      "extraction": "deterministic (spaCy en_core_web_lg + GLiNER, invented_names, thr 0.3)",
+      "verdict_agents": "claude-code / claude-haiku-4-5 (section-filter, alias-adjudication, entity-status/affiliation/species — pin STU-624)",
+      "chapter_summaries": "ollama / qwen2.5 (book yaml)",
+      "generation": "ollama / mistral:7b-instruct (config default: discover/classify-relationships, wiki-pages, synopsis, event-pages, consolidation)"
+    },
+    "pages_generated": 21,
+    "failed_pages": ["Dinah", "Five", "Seven", "Project Gutenberg"],
+    "infobox_pct": 81,
+    "lang_fr_pct": 0,
+    "lang_note": "100% English, intended (export.categories.language: en). Skill FR/EN heuristic false-positived several English pages.",
+    "alias_duplicates": 1,
+    "alias_duplicate_detail": "Queen / The Queen = same Queen of Hearts, two pages",
+    "hallucinations": 2,
+    "hallucination_detail": [
+      "Through the Looking-Glass (sequel not in this EPUB) in Alice biography/relationships — mistral memory contamination",
+      "8 pages render ## Relationships prose invented from 0 relationship data (all rel artifacts = 0)"
+    ],
+    "gt_violations": "n/a — no ground-truth corpus for lewis_carroll/alice",
+    "coverage": {
+      "batch_entities": 21,
+      "pages_generated": 21,
+      "missing": [],
+      "failed": ["Dinah", "Five", "Seven", "Project Gutenberg"],
+      "filtered_before_batch": 0,
+      "iconic_cast_absent": ["Hatter/Mad Hatter", "Cheshire Cat", "Dormouse", "Caterpillar", "Knave", "Cook", "Dodo", "Mouse"],
+      "junk_entities": ["Project Gutenberg (PERSON)", "United States (PLACE)"]
+    },
+    "relationships": {
+      "discovered_pairs": 0,
+      "discovery_chunks": "18/34 covered, 16 uncached (incl pg-header/pg-footer)",
+      "classified": 0,
+      "character_graph_edges": 0
+    },
+    "weak_entities": [],
+    "regression": {
+      "prefixed_keys": "✅",
+      "epub_ids": "✅",
+      "entity_type_null": "✅",
+      "alias_duplicates": "❌",
+      "cross_serie": "❌",
+      "evolution_quality": "❌",
+      "temporal_context": "n/a",
+      "ground_truth": "n/a"
+    },
+    "verdict": "Pipeline runs end-to-end on a public-domain Gutenberg EPUB (mechanics clean: 0 prefixed keys, 0 EPUB ids, correct language, full export). Content quality broken by two roots: (a) Gutenberg boilerplate not stripped -> junk entities (Project Gutenberg, United States); (b) mistral:7b-instruct hallucinates heavily on a famous text (invented sequel, relationships sections written from 0 data, 4 empty pages) while discovery finds 0 relations. Priority next run: strip Gutenberg boilerplate before extraction.",
+    "new_issues": [
+      "Gutenberg boilerplate leaks into extraction (junk entities)",
+      "relationships section rendered from 0 data = hallucinated; omit when empty",
+      "discover-relationships yields 0 pairs on Alice",
+      "GLiNER misses common-noun-name cast (Hatter/Cheshire Cat/Dormouse)"
+    ]
+  }
+]

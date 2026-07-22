@@ -53,6 +53,8 @@ Trois contraintes, chacune apprise d'un faux positif ou d'un faux négatif obser
 
 ### Étape 1 — Analyse des fichiers
 
+**Providers utilisés** — relever et rapporter quel provider/modèle a produit chaque étage LLM, car deux runs de la même série peuvent tourner sur des modèles différents (ex : TOG/Narnia sur claude-code, une run public-domain sur ollama/mistral). Source : `.studio/config.yaml` `defaults` (le provider de génération : chapter-summaries si non surchargé, discover/classify-relationships, wiki-pages, synopsis, event-pages, consolidation) ; les 5 agents verdict (section-filter, alias-adjudication, entity-status/affiliation/species) pinnent leur propre provider/modèle dans leur agent YAML (STU-624) ; le book YAML peut surcharger un étage (ex `generation.chapter_summary.llm_model`). Reporter le mix dans le tableau final (étape 3) et le champ `providers` de l'audit_log (étape 6) — une hallucination de contenu se lit d'abord contre le modèle de génération.
+
 Exécute ce bloc d'analyse Python sur les fichiers fournis. Adapte les chemins selon ce qui est disponible dans `/mnt/user-data/uploads/`.
 
 ```python
@@ -652,6 +654,11 @@ Structure d'une entrée :
 {
   "run": <numéro déduit du tableau cross-runs>,
   "date": "<date du jour YYYY-MM-DD>",
+  "providers": {
+    "generation": "<provider/modèle des pages — ex 'ollama/mistral:7b-instruct' ou 'claude-code/claude-haiku-4-5'>",
+    "verdict_agents": "<provider/modèle des 5 agents verdict (section-filter, alias-adjudication, entity-status/affiliation/species)>",
+    "chapter_summaries": "<provider/modèle si distinct>"
+  },
   "pages_generated": <N>,
   "infobox_pct": <0-100>,
   "lang_fr_pct": <0-100>,
@@ -692,9 +699,26 @@ Structure d'une entrée :
 
 Utilise l'outil `Read` pour charger le fichier existant (s'il existe), ajoute l'entrée, puis `Write` pour sauvegarder le fichier complet.
 
+### Étape 7 — PR de l'audit
+
+Après la sauvegarde, ouvrir une PR portant l'`audit_log.json` mis à jour (et tout fichier de skill/config touché pendant l'audit). **Toujours dans un worktree** — jamais un commit direct sur `main` (norme de travail du projet).
+
+```bash
+cd <repo-root>
+git worktree add -b audit/<author>-<series>-run<N> .worktrees/audit-<series>-run<N> main
+cp <BOOK_AUDITS>/audit_log.json .worktrees/audit-<series>-run<N>/<BOOK_AUDITS_REL>/audit_log.json
+cd .worktrees/audit-<series>-run<N>
+git add <BOOK_AUDITS_REL>/audit_log.json
+git commit -m "audit(<series>): run <N> — <one-line verdict>"
+git push -u origin HEAD
+gh pr create --fill --base main
+```
+
+Le corps de PR reprend le verdict (étape 5), le mix de providers (étape 1) et les issues créées (`STU-XXX`). Une run sans nouveau défaut mérite quand même sa PR : l'`audit_log.json` est la trace cross-run qui alimente l'étape 3.
+
 ## Format de sortie
 
-Produis les étapes dans cet ordre : 1c (traçabilité), 1d (couverture), 1e (entités faibles), 2 (régression), 3 (cross-runs), 4 (nouveaux problèmes avec diagnostic vérifié), 5 (verdict), 6 (sauvegarde). Pas de prose introductive — aller direct aux résultats.
+Produis les étapes dans cet ordre : 1c (traçabilité), 1d (couverture), 1e (entités faibles), 2 (régression), 3 (cross-runs), 4 (nouveaux problèmes avec diagnostic vérifié), 5 (verdict), 6 (sauvegarde), 7 (PR de l'audit). Pas de prose introductive — aller direct aux résultats.
 
 Si des nouvelles issues Linear sont justifiées, les créer via l'outil Linear après le verdict. **Chaque issue de défaut (bug de pipeline, régression, hallucination, échec de génération, violation GT réelle) doit être créée avec le label `bug`** en plus de `repo:wiki-creator`. Les issues de feature / refacto / dette technique ne portent PAS le label `bug`.
 
