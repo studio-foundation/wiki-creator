@@ -1121,3 +1121,88 @@ def test_main_reads_chapters_from_section_filter_not_positionally(monkeypatch):
         stage.main()
     assert exc.value.code == 1
     assert "chapters" in _json.loads(out.getvalue())["error"]
+
+
+# --- Input-keyed extraction cache (STU-631) ---
+
+
+def test_extraction_cache_key_moves_on_ner_flip_and_chapters():
+    """The key must move when either input the stage consumes moves (STU-631)."""
+    from scripts.entity_extraction import _extraction_cache_key
+
+    chapters = [{"id": "c01", "title": "One", "content": "Alice met Bob."}]
+    base = _extraction_cache_key(chapters, {})
+    assert _extraction_cache_key(chapters, {"ner": {"invented_names": True}}) != base
+    assert _extraction_cache_key(chapters, {"ner": {"threshold": 0.3}}) != base
+    other = [{"id": "c01", "title": "One", "content": "Alice met Carol."}]
+    assert _extraction_cache_key(other, {}) != base
+    assert _extraction_cache_key(chapters, {}) == base  # deterministic
+
+
+def _run_extraction(stage, epub, chapters, extra=None):
+    import io
+    import json as _json
+
+    import yaml as _yaml
+
+    cfg = {"file_path": str(epub), "language": "en", "spacy_model": "en_core_web_sm", "min_mentions_absolute": 1}
+    cfg.update(extra or {})
+    payload = {
+        "additional_context": _yaml.safe_dump(cfg),
+        "previous_outputs": {"epub-parse": {"chapters": chapters}},
+    }
+    import unittest.mock as _mock
+
+    with _mock.patch("sys.stdin", io.StringIO(_json.dumps(payload))):
+        out = io.StringIO()
+        with _mock.patch("sys.stdout", out):
+            stage.main()
+    return out.getvalue()
+
+
+@requires_en_sm
+def test_extraction_cache_hit_skips_the_extraction_pass(tmp_path, monkeypatch):
+    """A warm run with identical inputs loads from disk, never re-running spaCy/GLiNER."""
+    from scripts import entity_extraction as stage
+
+    books_dir = tmp_path / "author" / "series" / "books"
+    books_dir.mkdir(parents=True)
+    epub = books_dir / "01-a-book.epub"
+    epub.write_bytes(b"only the path is used")
+    chapters = [
+        {"id": "c01", "title": "One", "content": "Harry Potter lived on Privet Drive. Harry Potter was a wizard."}
+    ]
+
+    cold = _run_extraction(stage, epub, chapters)
+
+    spy = monkeypatch  # readability
+    calls = []
+    real_extract = stage.extract_entities
+    spy.setattr(stage, "extract_entities", lambda *a, **k: calls.append(1) or real_extract(*a, **k))
+
+    warm = _run_extraction(stage, epub, chapters)
+    assert calls == [], "warm run must not re-run extraction on an unchanged input"
+    assert warm == cold
+
+
+@requires_en_sm
+def test_extraction_cache_reextracts_on_fingerprint_change(tmp_path, monkeypatch):
+    """A `ner` change moves the fingerprint and forces a fresh extraction pass (STU-631)."""
+    from scripts import entity_extraction as stage
+
+    books_dir = tmp_path / "author" / "series" / "books"
+    books_dir.mkdir(parents=True)
+    epub = books_dir / "01-a-book.epub"
+    epub.write_bytes(b"only the path is used")
+    chapters = [
+        {"id": "c01", "title": "One", "content": "Harry Potter lived on Privet Drive. Harry Potter was a wizard."}
+    ]
+
+    _run_extraction(stage, epub, chapters)
+
+    calls = []
+    real_extract = stage.extract_entities
+    monkeypatch.setattr(stage, "extract_entities", lambda *a, **k: calls.append(1) or real_extract(*a, **k))
+
+    _run_extraction(stage, epub, chapters, extra={"ner": {"threshold": 0.3}})
+    assert calls == [1], "a fingerprint change must invalidate the cache"
