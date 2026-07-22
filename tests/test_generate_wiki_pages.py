@@ -15,6 +15,7 @@ from scripts.generate_wiki_pages import (
     _nom_matches_identity,
     _print_generation_summary,
     _rejection_is_identity_only,
+    _adjust_relationship_section,
     _run_generation_for_entity,
     _strip_relations_section,
     build_prompt,
@@ -1208,10 +1209,55 @@ def _make_content_with_relations() -> str:
     )
 
 
+def test_adjust_relationship_section_drops_when_no_usable_relations():
+    """STU-628: an entity with 0 usable-typed relations must not be asked to
+    author a relationships section — nothing grounds it."""
+    entity = {"type": "PERSON", "relationships": []}
+    sections = ["infobox", "biography", "relationships", "references"]
+    assert _adjust_relationship_section(sections, entity) == ["infobox", "biography", "references"]
+
+
+def test_adjust_relationship_section_drops_when_relations_untyped():
+    """A relation with no usable relationship_type (STU-501) counts as no data."""
+    entity = {
+        "type": "PERSON",
+        "relationships": [
+            {"entity_a": "Alice", "entity_b": "White Rabbit", "relationship_type": None},
+            {"entity_a": "Alice", "entity_b": "Dinah", "relationship_type": "null"},
+        ],
+    }
+    sections = ["biography", "relationships"]
+    assert "relationships" not in _adjust_relationship_section(sections, entity)
+
+
+def test_adjust_relationship_section_keeps_when_usable_relations():
+    entity = {
+        "type": "PERSON",
+        "relationships": [
+            {"entity_a": "Celaena", "entity_b": "Dorian", "relationship_type": "ami"},
+        ],
+    }
+    sections = ["biography", "relationships"]
+    assert _adjust_relationship_section(sections, entity) == ["biography", "relationships"]
+
+
+def test_adjust_relationship_section_adds_for_person_with_three_usable():
+    entity = {
+        "type": "PERSON",
+        "relationships": [
+            {"entity_a": "A", "entity_b": "B", "relationship_type": "ami"},
+            {"entity_a": "A", "entity_b": "C", "relationship_type": "ennemi"},
+            {"entity_a": "A", "entity_b": "D", "relationship_type": "famille"},
+        ],
+    }
+    sections = ["biography"]
+    assert _adjust_relationship_section(sections, entity) == ["biography", "relationships"]
+
+
 def test_strip_relations_section_removes_section_from_content():
     """_strip_relations_section must remove the ## Relations section entirely from content."""
     content = _make_content_with_relations()
-    result = _strip_relations_section(content)
+    result = _strip_relations_section(content, "Relations")
     assert "## Relations" not in result
     assert "Dorian Havilliard" not in result
 
@@ -1219,7 +1265,7 @@ def test_strip_relations_section_removes_section_from_content():
 def test_strip_relations_section_preserves_surrounding_sections():
     """_strip_relations_section must not remove other sections."""
     content = _make_content_with_relations()
-    result = _strip_relations_section(content)
+    result = _strip_relations_section(content, "Relations")
     assert "## Biographie" in result
     assert "Celaena est une assassin." in result
     assert "## Anecdotes" in result
@@ -1229,8 +1275,24 @@ def test_strip_relations_section_preserves_surrounding_sections():
 def test_strip_relations_section_no_op_when_absent():
     """_strip_relations_section must be a no-op when content has no ## Relations section."""
     content = "## Biographie\n\nCelaena est une assassin.\n\n## Anecdotes\n\nElle aime la musique."
-    result = _strip_relations_section(content)
+    result = _strip_relations_section(content, "Relations")
     assert result == content
+
+
+def test_strip_relations_section_strips_localized_english_heading():
+    """STU-628: the guard is keyed on the localized title, so an English run's
+    ``## Relationships`` heading is stripped — a hardcoded ``## Relations`` missed
+    it and let a hallucinated section survive on Alice."""
+    content = (
+        "## Biography\n\nAlice falls down a hole.\n\n"
+        "## Relationships\n\nShe meets the Mad Hatter and the Cheshire Cat.\n\n"
+        "## Trivia\n\nShe is seven years old."
+    )
+    result = _strip_relations_section(content, "Relationships")
+    assert "## Relationships" not in result
+    assert "Mad Hatter" not in result
+    assert "## Biography" in result
+    assert "## Trivia" in result
 
 
 # --- STU-311: _insufficient_data flag and short-content warning ---
