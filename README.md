@@ -56,24 +56,52 @@ pip install -e ".[coref]"    # books with coref: true
 cp .studio/config.example.yaml .studio/config.yaml
 ```
 
+The editable install registers the `wiki` command (from `[project.scripts]`),
+so `wiki ls` works from anywhere once the install completes. Use
+`pip install -e ".[dev]"` instead to run the test suite — it carries
+`en_core_web_sm`, the model the tests use, so `pytest -q` reproduces the
+documented state without the ~1 GB `models` extra.
+
 `defaults` in that file drives every LLM stage — no agent declares a model of
 its own. It ships pointing at the provider the project's own runs use; the
 example documents what swapping it costs.
 
 ### Run
 
-Place a book YAML config in `library/<author>/<series>/books/` with the corresponding EPUB, then:
+Place a book YAML config in `library/<author>/<series>/books/` with the
+corresponding EPUB. The `wiki` CLI is the front door — a thin launcher over
+`studio run` with short book aliases, `--help`, and a `--dry-run` that prints
+the command instead of running it. It owns no stage order (Studio does).
 
 ```bash
-# Full pipeline (extraction through export)
-make run BOOK=library/c_w_lewis/narnia/books/01-the_lion_the_witch_and_the_wardrobe.yaml
+wiki ls                          # list books in the library
+wiki book run narnia             # full pipeline (extraction through export)
+wiki book run tog --max-chapters 3   # cap extraction to the first 3 chapters
 
-# Or run individual stages
-make run-extraction
-make run-resolution
-make run-preparation
-make generate-pages
-make pages-export
+# Single pipeline
+wiki book extraction narnia
+wiki book resolution narnia
+wiki book preparation narnia
+
+# Export / a slice of pages
+wiki book pages narnia
+wiki book pages narnia --entities "Lucy" "Peter" --force
+
+wiki series run inheritance       # every tome of a series, reading order
+wiki book add path/to.epub        # import an epub + scaffold a minimal YAML
+wiki replay <run-id> --stage wiki-resolution   # restart from a boundary
+wiki status [run-id]  ·  wiki logs <run-id>    # observability
+```
+
+A book resolves from a short query — its slug, series, author, or an explicit
+`aliases:` list in the book YAML; an ambiguous query lists candidates.
+
+The `Makefile` is the dev/test front door the CLI does not wrap. Each target
+dispatches exactly one command; Studio owns all sequencing.
+
+```bash
+# Same full run as `wiki book run`, on an explicit book path
+make run BOOK=library/c_w_lewis/narnia/books/01-the_lion_the_witch_and_the_wardrobe.yaml
 
 # Run tests
 pytest -q
