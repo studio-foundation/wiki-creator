@@ -3,7 +3,8 @@ version: 1
 schema:
   required_fields:
     - status
-# status: "pass" | "fail"
+# status: "pass" | "fail" | "advisory"
+#   advisory (STU-637): verbatim spans on a public-domain book — reported, never blocks export
 # checked_pages: number of pages checked
 # violations: list of {page_title, chapter, wiki_excerpt, consecutive_words}
-# feedback: rejection message (only present if status == "fail")
+# feedback: rejection message (present when status == "fail" or "advisory")
