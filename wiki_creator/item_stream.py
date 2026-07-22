@@ -56,7 +56,7 @@ def render_map_item(payload: dict, out: TextIO | None = None) -> None:
         return
 
     if kind == "discover":
-        relations = output.get("relations") or []
+        relations = [r for r in (output.get("relations") or []) if isinstance(r, dict)]
         named = [
             rel for rel in relations
             if (rel.get("entity_a") or "").strip() and (rel.get("entity_b") or "").strip()
@@ -117,7 +117,10 @@ def run_studio_with_stream(cmd: list[str]) -> int:
     for raw in proc.stderr:
         payload = parse_item_line(raw)
         if payload is not None:
-            render_map_item(payload)
+            try:
+                render_map_item(payload)
+            except Exception:  # the stream is cosmetic, the run is not
+                sys.stderr.write(raw)
         else:
             sys.stderr.write(raw)
     return proc.wait()

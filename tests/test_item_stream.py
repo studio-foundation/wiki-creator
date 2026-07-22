@@ -37,6 +37,22 @@ def test_render_discover_lists_each_pair(capsys):
     assert "Alice <=> Dodo — allies" in err
 
 
+def test_render_discover_skips_non_dict_relations(capsys):
+    # An off-schema child can ship a bare string in `relations`; the cosmetic
+    # stream must not crash the run over it.
+    render_map_item(
+        {
+            "map": "discover",
+            "label": "Chapter 4",
+            "status": "success",
+            "output": {"relations": ["Alice and the Dodo are allies", {"entity_a": "Alice", "entity_b": "Dodo"}]},
+        },
+        out=sys.stderr,
+    )
+    err = capsys.readouterr().err
+    assert "Alice <=> Dodo" in err
+
+
 def test_render_discover_summarizes_unnamed_relations(capsys):
     render_map_item(
         {
