@@ -5,6 +5,12 @@ description: |
 
 file_path: public_domain/h_p_lovecraft/the_call_of_cthulhu/books/01-the_call_of_cthulhu.epub
 spacy_model: en_core_web_lg
+ner:
+  # STU-616: invented world. GLiNER typing 20/33 vs spaCy 17/33
+  # (LLM oracle, claude-opus-4-8). Cthulhu, R'lyeh, the Cthulhu Cult: invented cosmic names spaCy mistypes; GLiNER wins PLACE too (8/10 vs 7/8).
+  # threshold 0.3 measured > 0.5 (per STU-535).
+  invented_names: true
+  threshold: 0.3
 
 coref: false
 workers: 8

@@ -53,6 +53,36 @@ def test_render_discover_skips_non_dict_relations(capsys):
     assert "Alice <=> Dodo" in err
 
 
+def test_render_discover_summarizes_unnamed_relations(capsys):
+    render_map_item(
+        {
+            "map": "discover",
+            "label": "Chapter 4",
+            "status": "success",
+            "output": {"relations": [
+                {"entity_a": "Alice", "entity_b": "Dodo", "relationship_type": "allies"},
+                {"entity_a": "", "entity_b": "", "relationship_type": ""},
+                {},
+            ]},
+        },
+        out=sys.stderr,
+    )
+    err = capsys.readouterr().err
+    assert "Alice <=> Dodo — allies" in err
+    assert "? <=> ?" not in err
+    assert "(+2 unnamed)" in err
+
+
+def test_render_discover_all_unnamed_is_one_line(capsys):
+    render_map_item(
+        {"map": "discover", "label": "Ch 1", "status": "success", "output": {"relations": [{}, {}]}},
+        out=sys.stderr,
+    )
+    err = capsys.readouterr().err
+    assert "? <=> ?" not in err
+    assert "(2 unnamed)" in err
+
+
 def test_render_classify_names_the_pair_from_its_label(capsys):
     render_map_item(
         {

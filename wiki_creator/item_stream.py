@@ -57,14 +57,23 @@ def render_map_item(payload: dict, out: TextIO | None = None) -> None:
 
     if kind == "discover":
         relations = [r for r in (output.get("relations") or []) if isinstance(r, dict)]
+        named = [
+            rel for rel in relations
+            if (rel.get("entity_a") or "").strip() and (rel.get("entity_b") or "").strip()
+        ]
         print(f"{tick} {label}", file=out)
-        for rel in relations:
-            a = rel.get("entity_a", "?")
-            b = rel.get("entity_b", "?")
+        for rel in named:
+            a = rel["entity_a"].strip()
+            b = rel["entity_b"].strip()
             rel_type = rel.get("relationship_type") or "—"
             print(f"    {a} <=> {b} — {rel_type}", file=out)
-        if not relations:
-            print("    (no relations)", file=out)
+        # A weak model can return relation objects with no names; they are dropped
+        # downstream (valid_relations), so summarize rather than spam blank pairs.
+        unnamed = len(relations) - len(named)
+        if not named:
+            print(f"    ({unnamed} unnamed)" if unnamed else "    (no relations)", file=out)
+        elif unnamed:
+            print(f"    (+{unnamed} unnamed)", file=out)
     elif kind == "classify":
         rel_type = output.get("relationship_type") or "—"
         confidence = output.get("confidence")

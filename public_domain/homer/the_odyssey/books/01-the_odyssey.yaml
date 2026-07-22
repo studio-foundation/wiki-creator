@@ -5,6 +5,13 @@ description: |
 
 file_path: public_domain/homer/the_odyssey/books/01-the_odyssey.epub
 spacy_model: en_core_web_lg
+ner:
+  # STU-616: invented world. GLiNER typing 173/211 vs spaCy 94/211
+  # (LLM oracle, claude-opus-4-8). Greek myth cast (gods, Ithaca, the Cyclops):
+  # spaCy types PERSON 69/85 and PLACE 23/39; GLiNER 113/116 and 42/49.
+  # threshold 0.3 measured > 0.5 (per STU-535).
+  invented_names: true
+  threshold: 0.3
 
 coref: false
 workers: 8

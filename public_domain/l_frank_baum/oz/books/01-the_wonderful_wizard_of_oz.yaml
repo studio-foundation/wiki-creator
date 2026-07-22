@@ -6,6 +6,12 @@ description: |
 
 file_path: public_domain/l_frank_baum/oz/books/01-the_wonderful_wizard_of_oz.epub
 spacy_model: en_core_web_lg
+ner:
+  # STU-616: invented world. GLiNER typing 40/61 vs spaCy 22/61
+  # (LLM oracle, claude-opus-4-8). Oz's invented cast: spaCy emits 45 ORG and types PERSON 12/16; GLiNER 27/29.
+  # threshold 0.3 measured > 0.5 (per STU-535).
+  invented_names: true
+  threshold: 0.3
 
 coref: false
 workers: 8
