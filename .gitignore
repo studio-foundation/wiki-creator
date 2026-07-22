@@ -76,6 +76,13 @@ library/**/wiki_inputs/
 library/**/output/
 library/**/registry.json
 library/**/character_graph.json
+# public_domain ships its EPUBs + YAMLs (distributable), but its run outputs are
+# regenerable and stay out of git, same as library/.
+public_domain/**/processing_output/
+public_domain/**/wiki_inputs/
+public_domain/**/output/
+public_domain/**/registry.json
+public_domain/**/character_graph.json
 .wiki_runs/
 
 # Fandom survey corpus — regenerable from scripts/fandom_wikis.yaml, and large
@@ -88,6 +95,9 @@ processing_output/fandom_corpus/
 /audits/
 # Research eval outputs: per-book arm extractions + the oracle verdicts (STU-535)
 research/*/arms/
+# ner-eval STU-616: per-book oracle rosters + batch log. Regenerable by
+# batch_all.sh; the judged numbers live in research/ner-eval/results_stu616.md.
+research/ner-eval/stu616/
 # alias-eval: per-book adjudication verdicts + run log (STU-543). Regenerable by
 # run_books.py; the judged numbers live in research/alias-eval/results.md.
 research/alias-eval/verdicts/
