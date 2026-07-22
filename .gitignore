@@ -70,6 +70,12 @@ ner_dataset/
 library/**/*.epub
 !library/**/*.yaml
 
+# Sanctioned bench/test corpus (STU-623): a throwaway book placed here still
+# lives under library/<author>/<series>/, so its derived paths match the
+# expected_outputs globs (library/*/*/...) and its contracts pass. Whole dir
+# ignored — bench yaml/epub/output are never committed.
+library/_bench/
+
 # Pipeline output dirs (per-series)
 library/**/processing_output/
 library/**/wiki_inputs/

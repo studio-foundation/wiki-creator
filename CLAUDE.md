@@ -130,6 +130,20 @@ Important:
   `clean_files()` died with the file in STU-457 (`--clean` returns with STU-597's
   CLI). `chapter_summaries.json` is asserted on the `chapter-summary` stage now
   that the writer is a stage.
+- **The `expected_outputs` globs pin the `library/` layout (STU-623).** Every
+  `expected_outputs.files` entry is a cwd-relative glob
+  (`library/*/*/processing_output/*/<file>`) that hardcodes
+  `library/<author>/<series>/`, so a book outside that layout fails its stage's
+  output check even when the stage wrote the file — and the error names the glob,
+  not the path written (hit while benching STU-457 with the fixture book in a
+  scratch dir). Convention, not a kernel fix: contract-checked books live under
+  `library/`, and a bench/test/throwaway corpus that must pass the contracts goes
+  under `library/_bench/` (gitignored) — two levels down (`library/_bench/<book>/`)
+  it still matches `library/*/*/`. The glob is also over-broad the other way — it
+  matches *any* book's artifact, so a stale file from book Y satisfies a stage
+  running on book X. Closing that needs Studio to template `expected_outputs` from
+  the run input (`{{input.file_path}}` → derived paths), a new kernel surface
+  deferred until a second corpus location actually exists.
 - **Disk is the bus across pipelines (STU-455).** A stage reads an artifact written
   by an *earlier pipeline* from disk, never from Studio's context — those are
   separate `studio run` invocations, so `previous_outputs`/`all_stage_outputs`
