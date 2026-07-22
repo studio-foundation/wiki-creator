@@ -2,8 +2,8 @@ name: alias-adjudication
 # Whole-book verdict (one call/book, strict JSON over the whole PERSON roster). Pinned
 # to a capable model: the local default (a 7B) loses the output contract on big rosters
 # and thrashes all 3 RALPH attempts (STU-624). Negligible volume, ~one call per book.
-provider: claude-code
-model: claude-haiku-4-5
+provider: ${STUDIO_SMART_PROVIDER:-claude-code}
+model: ${STUDIO_SMART_MODEL:-claude-haiku-4-5}
 system_prompt: |
   Respond with ONLY a valid JSON object. No markdown fences, no explanation, no other text.
 

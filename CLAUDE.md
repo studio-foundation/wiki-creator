@@ -1150,6 +1150,16 @@ Inside `wiki-resolution`, order matters:
   every agent (e.g. `--provider mock` for tests). Since `config.yaml` is
   gitignored, the committed `.studio/config.example.yaml` is the only
   referenceable statement of the default; keep the two in step.
+  **The two tiers are `.env`-settable** (`.env.example`): the five verdict
+  agents read `${STUDIO_SMART_PROVIDER:-claude-code}` /
+  `${STUDIO_SMART_MODEL:-claude-haiku-4-5}` from their agent yaml, and
+  `defaults` reads `${STUDIO_BULK_PROVIDER}` / `${STUDIO_BULK_MODEL}`, so a run
+  can retarget either tier without editing a committed file — all-claude-code is
+  pointing BULK at claude-code too. Unset = the pin, so an absent `.env` changes
+  nothing. This needs Studio's agent-YAML env interpolation (studio#209);
+  before it lands, a literal `${...}` in an agent yaml is passed through as the
+  provider name and fails. `--provider X` still overrides both tiers at once,
+  the flag path.
 - Never add hardcoded word lists to scripts. All vocabulary belongs in `wiki_creator/cue_words/<lang>.json` (language-wide) or the book YAML `classification` section (book-specific). No script may define a fallback vocabulary constant — if a key is absent from cue_words, degrade gracefully to an empty collection.
 - English is the default and the only language allowed in code. Nothing user-visible may be hardcoded in another language — no French (or any non-English) string literals in `.py`. Anything that needs translation is data, not code: it lives in YAML (`wiki_creator/templates/base.yaml` for template/output strings — `labels`, `briefs`, `few_shot`, `length_by_tier`, `chrome`, `language_names`; cue_words for detection vocabulary) keyed by language, and is read via helpers (`slot_label`, `section_brief`, `chrome_label`, …). Prompt *scaffolding* (instructions, grounding labels) stays English regardless of output language; only output-anchoring content (section titles, briefs, few-shot, the write-in-`<language>` directive) and reader-facing chrome follow `output_language(book_config)` (STU-510).
 - `tests/test_e2e_golden.py` chains all deterministic resolution stages on the fixture novella and compares every stage output to goldens in `tests/fixtures/e2e/golden/stages/`. Any intentional behavior change in those stages requires `make golden-update` and a review of the golden diff in the same PR. The extraction seed is committed (`golden/seed/`, regenerate with `gen_seed.py`); a `@requires_en_sm` test keeps it shape-compatible with real extraction in CI.

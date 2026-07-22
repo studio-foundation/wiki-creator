@@ -9,11 +9,16 @@
 #
 #   export ANTHROPIC_API_KEY=sk-ant-...
 #
-# `defaults` below drives every LLM stage in the project except the five
-# whole-book verdict agents (section-filter, alias-adjudication, entity-status,
-# entity-affiliation, entity-species), which pin provider/model in their own
-# agent yaml — a small local model loses their strict output contract on big
-# books (STU-624). Changing `defaults` changes what every other stage runs on.
+# The project runs on two model tiers, each settable from a .env (see
+# .env.example):
+#   - BULK  — the high-volume map fan-outs (chapter-summaries,
+#     discover/classify-relationships, wiki-pages). Driven by `defaults` below.
+#   - SMART — the five whole-book verdict agents (section-filter,
+#     alias-adjudication, entity-status/affiliation/species), which pin
+#     provider/model in their own agent yaml via ${STUDIO_SMART_*}. A small
+#     local model loses their strict output contract on big books (STU-624),
+#     so they default to claude-code.
+# Changing `defaults` changes what every BULK stage runs on.
 
 providers:
   # Routes through a local Claude Code CLI — no API key. The default.
@@ -21,19 +26,21 @@ providers:
   # Local, no API key required. Install: https://ollama.com
   ollama:
     baseUrl: http://localhost:11434
-  # Cloud providers, billed per token:
-  anthropic:
-    apiKey: ${ANTHROPIC_API_KEY}
-  openai:
-    apiKey: ${OPENAI_API_KEY}
+  # Cloud providers, billed per token. Only declare a block once you have the
+  # key: an empty ${VAR} makes the provider construct with a blank key, and the
+  # OpenAI client throws on that at startup even if no stage uses it.
+  # anthropic:
+  #   apiKey: ${ANTHROPIC_API_KEY}
+  # openai:
+  #   apiKey: ${OPENAI_API_KEY}
 
 defaults:
-  # What the project's own runs and measurements use. Every accuracy figure
-  # written down in CLAUDE.md was produced here — alias adjudication's 0.83
-  # precision, the entity-status and species verdicts, the relation typing.
-  # Swap the provider and those numbers no longer describe your run.
-  provider: claude-code
-  model: claude-haiku-4-5
+  # The BULK tier. What the project's own runs and measurements use — every
+  # accuracy figure in CLAUDE.md was produced here. Swap the provider and those
+  # numbers no longer describe your run. ${STUDIO_BULK_*} lets a .env retarget
+  # it without editing this file; unset falls back to the pin.
+  provider: ${STUDIO_BULK_PROVIDER:-claude-code}
+  model: ${STUDIO_BULK_MODEL:-claude-haiku-4-5}
 
   # The zero-cost path. It is the product's long-term direction (M5: a LoRA
   # fine-tune distributed via Ollama), not a drop-in swap today: the prompts
