@@ -23,6 +23,9 @@ from scripts.entity_clustering import (
 _FR_TITLES = load_title_prefixes("fr")
 _FR_MASC = load_masculine_titles("fr")
 _FR_FEM = load_feminine_titles("fr")
+_EN_TITLES = load_title_prefixes("en")
+_EN_MASC = load_masculine_titles("en")
+_EN_FEM = load_feminine_titles("en")
 
 
 # --- normalize_for_comparison ---
@@ -52,9 +55,17 @@ def test_tokenize_strips_don():
 def test_tokenize_keeps_full_name():
     assert tokenize_name("David Martín") == ["david", "martín"]
 
-def test_tokenize_empty_after_strip():
-    # If only a title remains, should return empty list
-    assert tokenize_name("M.", _FR_TITLES) == []
+def test_tokenize_bare_title_survives_as_last_token():
+    # STU-636: the last token is never stripped — a name that is only a title/role
+    # is identified by it, not emptied (needed so bare "Queen" has a comparison key).
+    assert tokenize_name("M.", _FR_TITLES) == ["m."]
+
+def test_tokenize_strips_leading_determiner():
+    # STU-636: "the" is a determiner; "queen" is the surviving role token.
+    assert tokenize_name("The Queen", _EN_TITLES) == ["queen"]
+
+def test_tokenize_bare_role_survives():
+    assert tokenize_name("Queen", _EN_TITLES) == ["queen"]
 
 
 # --- is_single_given_name ---
@@ -90,6 +101,19 @@ def test_cluster_tokens_single_name_matches_longer():
 
 def test_cluster_tokens_no_match():
     assert should_cluster_tokens("Corelli", "Sempere") is False
+
+def test_cluster_the_queen_folds_into_queen():
+    # STU-636: determiner-only difference — one entity, not two pages.
+    assert should_cluster("Queen", "The Queen", _EN_TITLES, _EN_MASC, _EN_FEM) is True
+
+def test_cluster_the_king_stays_off_the_queen():
+    # STU-636 guard: distinct roles must not merge.
+    assert should_cluster("The King", "The Queen", _EN_TITLES, _EN_MASC, _EN_FEM) is False
+
+def test_cluster_bare_role_does_not_absorb_qualified():
+    # STU-636 guard: a bare role only matches exactly, never as a subset.
+    assert should_cluster_tokens("Queen", "Red Queen", _EN_TITLES) is False
+    assert should_cluster_tokens("Queen", "White Queen", _EN_TITLES) is False
 
 
 # --- should_cluster_jw ---
