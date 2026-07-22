@@ -161,6 +161,45 @@ def clean_chapter_text(text: str) -> str:
     return '\n\n'.join(p for p in paragraphs if p)
 
 
+# Project Gutenberg wraps the work in machine-readable markers; the license
+# header sits before START and the full license after END, both embedded inside
+# a content spine item — so section-filter (whole-section) cannot drop them
+# (STU-627). The title between EBOOK and *** varies per book, hence `.*?`.
+_GUTENBERG_START = re.compile(
+    r'\*\*\*\s*START OF (?:THE|THIS) PROJECT GUTENBERG EBOOK.*?\*\*\*',
+    re.IGNORECASE | re.DOTALL,
+)
+_GUTENBERG_END = re.compile(
+    r'\*\*\*\s*END OF (?:THE|THIS) PROJECT GUTENBERG EBOOK.*?\*\*\*',
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def strip_gutenberg_boilerplate(chapters: list[dict]) -> list[dict]:
+    """Drop Project Gutenberg header/footer boilerplate (STU-627).
+
+    The work lives strictly between the START and END markers. Everything before
+    START (the license preamble) and after END (the full license) is boilerplate
+    that leaks junk entities like `Project Gutenberg`/`United States` into
+    extraction. The markers may sit inside a content section, so this slices
+    within the marked chapter and drops whole sections outside the pair. A book
+    with no markers (non-Gutenberg source) is returned unchanged.
+    """
+    for i, ch in enumerate(chapters):
+        m = _GUTENBERG_START.search(ch["content"])
+        if m:
+            ch["content"] = ch["content"][m.end():].strip()
+            chapters = chapters[i:]
+            break
+    for i, ch in enumerate(chapters):
+        m = _GUTENBERG_END.search(ch["content"])
+        if m:
+            ch["content"] = ch["content"][:m.start()].strip()
+            chapters = chapters[:i + 1]
+            break
+    return [ch for ch in chapters if ch["content"].strip()]
+
+
 def _first_person_regex(language: str) -> re.Pattern | None:
     """Build the first-person detection regex from cue_words/<language>.json.
 
@@ -376,6 +415,8 @@ def parse_epub(file_path: str, language: str = "fr", max_chapters: int | None = 
             "title": chapter_title,
             "content": cleaned,
         })
+
+    chapters = strip_gutenberg_boilerplate(chapters)
 
     if max_chapters is not None and max_chapters > 0:
         chapters = chapters[:max_chapters]
