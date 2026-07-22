@@ -86,10 +86,27 @@ def test_wiki_full_chains_the_four_pipelines_in_order() -> None:
 
 
 def test_wiki_resolution_summarizes_chapters_first() -> None:
-    """chapter_summary.py was the wiki-resolution pre-step; as a stage it must
-    still run before resolution reads its output downstream."""
+    """chapter summarization runs first in wiki-resolution. Since STU-621 it is a
+    pre/call/post split (pre builds the fan-out items, the native call runs the
+    engine map, post collects), so the pre stage leads and the post precedes the
+    stages that read chapter_summaries.json downstream."""
     scripts = _scripts(_pipeline("wiki-resolution"))
-    assert "chapter_summary.py" in scripts[0]
+    assert "chapter_summary_pre.py" in scripts[0]
+    pre_idx = next(i for i, s in enumerate(scripts) if "chapter_summary_pre.py" in s)
+    post_idx = next(i for i, s in enumerate(scripts) if "chapter_summary.py" in s)
+    resolve_idx = next(i for i, s in enumerate(scripts) if "resolve_clusters.py" in s)
+    assert pre_idx < post_idx < resolve_idx
+
+
+def test_wiki_resolution_wires_chapter_summary_as_pre_call_post() -> None:
+    """The STU-621 shape: a native `call: chapter-summaries` runs the engine map
+    only when the pre stage says so (llm mode, chapters pending), and
+    on_failure: continue keeps the run alive (extractive fallback in post)."""
+    stages = _pipeline("wiki-resolution")["stages"]
+    call = next(s for s in stages if s.get("call") == "chapter-summaries-verdict")
+    assert call["pipeline"] == "chapter-summaries"
+    assert call["on_failure"] == "continue"
+    assert "needs_verdict" in call["condition"]
 
 
 def test_wiki_preparation_runs_classify_before_events() -> None:
@@ -120,6 +137,37 @@ def test_wiki_preparation_wires_the_entity_trio_as_pre_call_post() -> None:
         assert call["pipeline"] == item_pipeline
         assert call["on_failure"] == "continue"
         assert "needs_verdict" in call["condition"]
+
+
+def test_wiki_preparation_wires_discover_and_classify_as_pre_call_post() -> None:
+    """STU-621: the relation fan-outs are native `call` stages, not subprocess
+    fan-outs — condition-gated on the pre stage, on_failure: continue."""
+    stages = _pipeline("wiki-preparation")["stages"]
+    by_call = {s.get("call"): s for s in stages if s.get("call")}
+    for verdict, item_pipeline in [
+        ("discover-relationships-verdict", "discover-relationships"),
+        ("classify-relationships-verdict", "classify-relationships"),
+    ]:
+        call = by_call[verdict]
+        assert call["pipeline"] == item_pipeline
+        assert call["on_failure"] == "continue"
+        assert "needs_verdict" in call["condition"]
+
+
+def test_pages_export_wires_the_page_fan_outs_as_native_calls() -> None:
+    """STU-621: synopsis / event pages route through the `wiki-pages` map, and
+    generate-wiki-pages is the two-pass plan/call/probe/call split — every page
+    fan-out is a native `call`, no per-page subprocess."""
+    stages = _pipeline("pages-export")["stages"]
+    by_call = {s.get("call"): s for s in stages if s.get("call")}
+    for verdict in ("book-synopsis-verdict", "event-pages-verdict", "wiki-pages-verdict"):
+        assert by_call[verdict]["pipeline"] == "wiki-pages"
+        assert by_call[verdict]["on_failure"] == "continue"
+        assert "needs_verdict" in by_call[verdict]["condition"]
+    # The attempt-2 retry call fires only when the probe found forbidden-name hits.
+    retry = by_call["wiki-pages-retry-verdict"]
+    assert retry["pipeline"] == "wiki-pages"
+    assert "needs_retry" in retry["condition"]
 
 
 def test_pages_export_generates_before_assembling() -> None:
