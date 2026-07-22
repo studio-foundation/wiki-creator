@@ -1093,7 +1093,7 @@ def test_main_records_the_ner_config_it_extracted_under(tmp_path, monkeypatch):
     stage.main()
 
     recorded = _json.loads((processing / EXTRACTION_CONFIG_FILE).read_text())
-    assert recorded == {"ner": {"invented_names": False, "model": stage._ner_config(None).model, "threshold": 0.5}}
+    assert recorded == {"ner": {"invented_names": False, "model": stage._ner_config(None).model, "threshold": 0.5, "character_names": []}}
 
 
 def test_main_reads_chapters_from_section_filter_not_positionally(monkeypatch):
