@@ -9,9 +9,11 @@
 #
 #   export ANTHROPIC_API_KEY=sk-ant-...
 #
-# No agent under .studio/agents/ declares a model, so `defaults` below drives
-# every LLM stage in the project. Changing it changes what the whole pipeline
-# runs on.
+# `defaults` below drives every LLM stage in the project except the five
+# whole-book verdict agents (section-filter, alias-adjudication, entity-status,
+# entity-affiliation, entity-species), which pin provider/model in their own
+# agent yaml — a small local model loses their strict output contract on big
+# books (STU-624). Changing `defaults` changes what every other stage runs on.
 
 providers:
   # Routes through a local Claude Code CLI — no API key. The default.

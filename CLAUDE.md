@@ -1133,12 +1133,23 @@ Inside `wiki-resolution`, order matters:
   stays — it numbers the ordered summaries 1..N, which already *is* the position,
   and it is handed no chapter records to read the field off.
 - `workers` in relationship/coref config directly impact RAM usage.
-- `.studio/config.yaml` and `.studio/runs/` must not be committed. **No agent
-  declares a `model:`**, so `defaults` in that file drives every LLM stage —
-  today `claude-code` / `claude-haiku-4-5`, and every accuracy figure recorded
-  in this file was measured there. Since the file is gitignored, the committed
-  `.studio/config.example.yaml` is the only referenceable statement of what the
-  project runs on; keep the two in step.
+- `.studio/config.yaml` and `.studio/runs/` must not be committed. **`defaults`
+  in that file drives every LLM stage except the five whole-book verdict agents**
+  (`section-filter`, `alias-adjudication`, `entity-status`, `entity-affiliation`,
+  `entity-species`), which pin `provider: claude-code` / `model:
+  claude-haiku-4-5` in their own agent yaml (STU-624): each is one strict-JSON
+  call per book over a large roster/section list, and a small local model
+  (`mistral:7b-instruct`, the current gitignored default) loses their output
+  contract on big books — echoes the input, apologises, emits degenerate tokens —
+  and thrashes all 3 RALPH attempts, so its safe default engages and the feature
+  silently vanishes on that book. The high-volume per-item map fan-outs
+  (`chapter-summaries`, `discover-relationships`, `classify-relationships`,
+  `wiki-pages`) keep the cheap local default — that is where the usage win lives.
+  Every accuracy figure recorded in this file was measured on `claude-haiku-4-5`,
+  which is what the five verdict agents now pin. `--provider X` still overrides
+  every agent (e.g. `--provider mock` for tests). Since `config.yaml` is
+  gitignored, the committed `.studio/config.example.yaml` is the only
+  referenceable statement of the default; keep the two in step.
 - Never add hardcoded word lists to scripts. All vocabulary belongs in `wiki_creator/cue_words/<lang>.json` (language-wide) or the book YAML `classification` section (book-specific). No script may define a fallback vocabulary constant — if a key is absent from cue_words, degrade gracefully to an empty collection.
 - English is the default and the only language allowed in code. Nothing user-visible may be hardcoded in another language — no French (or any non-English) string literals in `.py`. Anything that needs translation is data, not code: it lives in YAML (`wiki_creator/templates/base.yaml` for template/output strings — `labels`, `briefs`, `few_shot`, `length_by_tier`, `chrome`, `language_names`; cue_words for detection vocabulary) keyed by language, and is read via helpers (`slot_label`, `section_brief`, `chrome_label`, …). Prompt *scaffolding* (instructions, grounding labels) stays English regardless of output language; only output-anchoring content (section titles, briefs, few-shot, the write-in-`<language>` directive) and reader-facing chrome follow `output_language(book_config)` (STU-510).
 - `tests/test_e2e_golden.py` chains all deterministic resolution stages on the fixture novella and compares every stage output to goldens in `tests/fixtures/e2e/golden/stages/`. Any intentional behavior change in those stages requires `make golden-update` and a review of the golden diff in the same PR. The extraction seed is committed (`golden/seed/`, regenerate with `gen_seed.py`); a `@requires_en_sm` test keeps it shape-compatible with real extraction in CI.
