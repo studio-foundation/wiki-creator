@@ -1259,6 +1259,117 @@ def generate_pages_fanout(batches: list[tuple[str, dict]], config: GenerationCon
     return generate_pages(batches, config, runner=ReplayRunner(first, second))
 
 
+# --- STU-621 native plan/call/probe/call/post split ---------------------------
+#
+# The walk is deterministic and LLM-free, so each stage re-runs it to reproduce
+# the same items/keys; only the two `wiki-pages` map outputs flow between stages
+# (through Studio context). The two nested `studio run` subprocesses of
+# `generate_pages_fanout` become two native `call: wiki-pages` stages, so the
+# whole build runs under one top-level engine (STU-615 lifted the depth cap).
+
+VERDICT_STAGE = "wiki-pages-verdict"
+RETRY_VERDICT_STAGE = "wiki-pages-retry-verdict"
+
+
+def _map_output_from_payload(payload: dict, stage_name: str) -> dict | None:
+    """A `wiki-pages` call's map output, from stage context (or None)."""
+    verdict = payload.get("all_stage_outputs", {}).get(stage_name)
+    if verdict is None:
+        verdict = payload.get("previous_outputs", {}).get(stage_name)
+    return verdict if isinstance(verdict, dict) else None
+
+
+def _throwaway_walk(batches: list[tuple[str, dict]], config: GenerationConfig, runner) -> None:
+    """Run a plan/probe walk against a scratch output file — the walk enumerates
+    or replays items, its pages are discarded. The real output is copied in so
+    resume / `--force` decisions match the final walk."""
+    with tempfile.TemporaryDirectory(prefix="wiki-pages-walk-") as scratch:
+        path = str(Path(scratch) / "walk.json")
+        if Path(config.output_file).exists():
+            shutil.copyfile(config.output_file, path)
+        generate_pages(batches, dataclasses.replace(config, output_file=path), runner=runner)
+
+
+def _plan_keys_and_items(batches: list[tuple[str, dict]], config: GenerationConfig) -> tuple[list[str], list[dict]]:
+    """The plan walk: every item the generation would dispatch, in walk order."""
+    collector = CollectingRunner()
+    _throwaway_walk(batches, config, collector)
+    return list(collector.items), list(collector.items.values())
+
+
+def plan_generation(book_cfg: dict, book_paths) -> dict:
+    """Plan stage: enumerate the attempt-1 fan-out items. `needs_verdict` is
+    false when there is nothing to generate (the post stage then has no map to
+    read and writes what `_prepare_generation` already wrote)."""
+    config, batches = _prepare_generation(
+        book_cfg, book_paths, model=os.environ.get("WIKI_MODEL", "qwen2.5"), timeout=120
+    )
+    if config is None:
+        return {"items": [], "prompt_fingerprint": "", "needs_verdict": False}
+
+    _keys, items = _plan_keys_and_items(batches, config)
+    print(f"[generate-wiki-pages] plan: {len(items)} item call(s)", file=sys.stderr)
+    return {
+        "items": [wiki_pages_map_item(item, attempt=1) for item in items],
+        "prompt_fingerprint": _page_prompt_fingerprint(config),
+        "needs_verdict": bool(items),
+    }
+
+
+def probe_generation(book_cfg: dict, book_paths, first_map_output: dict | None) -> dict:
+    """Probe stage: replay the attempt-1 results through the walk and collect the
+    in-walk forbidden-name retries as attempt-2 items (their prompt is identical,
+    so `attempt: 2` is what busts the item cache)."""
+    config, batches = _prepare_generation(
+        book_cfg, book_paths, model=os.environ.get("WIKI_MODEL", "qwen2.5"), timeout=120
+    )
+    if config is None:
+        return {"items": [], "needs_retry": False}
+
+    keys, _items = _plan_keys_and_items(batches, config)
+    first = _fanout_results_by_key(keys, first_map_output)
+    probe = ReplayRunner(first)
+    _throwaway_walk(batches, config, probe)
+
+    retry_items = list(probe.retry_items.values())
+    if retry_items:
+        print(f"[generate-wiki-pages] forbidden-name retry: {len(retry_items)} item call(s)", file=sys.stderr)
+    return {
+        "items": [wiki_pages_map_item(item, attempt=2) for item in retry_items],
+        "needs_retry": bool(retry_items),
+    }
+
+
+def post_generation(
+    book_cfg: dict, book_paths, first_map_output: dict | None, second_map_output: dict | None
+) -> list[dict]:
+    """Post stage: rebuild both passes' results and run the final replay walk,
+    which commits the real `wiki_pages.json`."""
+    config, batches = _prepare_generation(
+        book_cfg, book_paths, model=os.environ.get("WIKI_MODEL", "qwen2.5"), timeout=120
+    )
+    if config is None:
+        return []
+
+    keys, _items = _plan_keys_and_items(batches, config)
+    first = _fanout_results_by_key(keys, first_map_output)
+    resumed = (first_map_output or {}).get("resumed", 0)
+    if resumed:
+        print(f"[generate-wiki-pages] {resumed} item(s) served from resume cache", file=sys.stderr)
+
+    # Reproduce the attempt-2 keys the probe collected, so the second pass'
+    # results map back onto the same items.
+    probe = ReplayRunner(first)
+    _throwaway_walk(batches, config, probe)
+    retry_keys = list(probe.retry_items)
+    second = _fanout_results_by_key(retry_keys, second_map_output)
+
+    pages = generate_pages(batches, config, runner=ReplayRunner(first, second))
+    _print_generation_summary(pages)
+    _write_identity_telemetry(book_paths.processing)
+    return pages
+
+
 def _as_failure(result: object) -> dict:
     return result if isinstance(result, dict) else {"error": "studio_result_not_a_dict", "raw_response": repr(result)}
 
@@ -2035,18 +2146,22 @@ def main() -> None:
             entities=args.entities, force=args.force, dry_run=args.dry_run,
         )
     else:
-        # Studio stdin mode (STU-457): a pages-export stage, book yaml in
-        # additional_context, batches from disk. Always a full, unfiltered run —
-        # the subset axes (--entities/--importance/--force) are dev tools.
+        # Studio post stage (STU-621): the two `call: wiki-pages` stages already
+        # ran the fan-outs; rebuild both passes and run the final replay walk.
+        # Always a full, unfiltered run — the subset axes are dev tools (--book).
         payload = studio_io.read_payload()
         book_cfg = yaml.safe_load(payload.get("additional_context", "") or "") or {}
         book_paths = studio_io.paths_from_payload(payload)
-        pages = run(book_cfg, book_paths, model=os.environ.get("WIKI_MODEL", "qwen2.5"), timeout=120)
+        pages = post_generation(
+            book_cfg, book_paths,
+            _map_output_from_payload(payload, VERDICT_STAGE),
+            _map_output_from_payload(payload, RETRY_VERDICT_STAGE),
+        )
         failed = sum(1 for p in pages if p.get("_failed"))
         studio_io.write_output({"pages": len(pages), "failed": failed})
 
 
-def run(
+def _prepare_generation(
     book_cfg: dict,
     book_paths,
     *,
@@ -2056,7 +2171,10 @@ def run(
     entities: list[str] | None = None,
     force: bool = False,
     dry_run: bool = False,
-) -> list[dict]:
+) -> tuple[GenerationConfig | None, list[tuple[str, dict]]]:
+    """Build the generation config + batches shared by `--book`, plan, probe and
+    post (STU-621). Returns `(None, [])` on the terminal no-batches cases (having
+    already written the empty artifact for an unfiltered run)."""
     validation_cfg = book_cfg.get("validation", {})
     forbidden_names = validation_cfg.get("forbidden_names", [])
     if forbidden_names:
@@ -2084,10 +2202,10 @@ def run(
         if importance or entities:
             print("[generate-wiki-pages] Filter matched zero entities — nothing to do, "
                   "existing pages left untouched.", file=sys.stderr)
-            return []
+            return None, []
         print("[WARN] No batch files found or all batches empty.", file=sys.stderr)
         _save([], str(book_paths.processing / "wiki_pages.json"))
-        return []
+        return None, []
 
     total_entities = sum(len(b["entities"]) for _, b in batches)
     print(f"[generate-wiki-pages] {total_entities} entities across {len(batches)} batches | model={model}", file=sys.stderr)
@@ -2108,7 +2226,28 @@ def run(
         identity_registry=identity_registry,
         force=force,
     )
+    return config, batches
 
+
+def run(
+    book_cfg: dict,
+    book_paths,
+    *,
+    model: str,
+    timeout: int,
+    importance: list[str] | None = None,
+    entities: list[str] | None = None,
+    force: bool = False,
+    dry_run: bool = False,
+) -> list[dict]:
+    """Standalone (`--book`) path: the plan/fan-out/replay walk with the two
+    fan-outs shelled as nested `studio run` subprocesses (`generate_pages_fanout`)."""
+    config, batches = _prepare_generation(
+        book_cfg, book_paths, model=model, timeout=timeout,
+        importance=importance, entities=entities, force=force, dry_run=dry_run,
+    )
+    if config is None:
+        return []
     pages = generate_pages_fanout(batches, config)
     _print_generation_summary(pages)
     _write_identity_telemetry(book_paths.processing)
