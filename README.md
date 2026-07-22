@@ -10,7 +10,7 @@ Wiki Creator takes EPUB books and automatically extracts characters, locations, 
 
 ## How it works
 
-The workflow is split into five Studio pipelines, each with structurally validated stages. Every stage declares the files it writes (`expected_outputs.files` in its contract), so a missing artifact fails the stage that owns it.
+The workflow is split into five Studio pipelines, each with structurally validated stages. Every stage declares the files it writes (`expected_outputs.files` in its contract), so a missing artifact fails the stage that owns it. Those declarations are globs that assume the `library/<author>/<series>/` layout, so a contract-checked book must live under `library/`; a throwaway bench or test corpus goes under `library/_bench/` (gitignored), which still matches the layout.
 
 1. **wiki-extraction** -- Parses the EPUB, classifies front/back matter out of the narrative, extracts entities, clusters them, and splits by category (persons, places, organizations, factions, events).
 
