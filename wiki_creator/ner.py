@@ -25,14 +25,14 @@ months; a misconfiguration that quietly falls back is that same bug.
 """
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 
 DEFAULT_MODEL = "urchade/gliner_large-v2.1"
 DEFAULT_THRESHOLD = 0.5
 
 EXTRACTION_CONFIG_FILE = "extraction_config.json"
 
-_KEYS = {"invented_names", "model", "threshold"}
+_KEYS = {"invented_names", "model", "threshold", "character_names"}
 
 
 @dataclass(frozen=True)
@@ -40,6 +40,9 @@ class NerConfig:
     invented_names: bool = False
     model: str = DEFAULT_MODEL
     threshold: float = DEFAULT_THRESHOLD
+    # Characters this novel names with a common noun (`the Hatter`, `the Cook`) —
+    # what a name-detector under-detects. Matched verbatim, typed PERSON (STU-630).
+    character_names: tuple[str, ...] = field(default_factory=tuple)
 
 
 def ner_config(book_config: dict | None) -> NerConfig:
@@ -66,7 +69,18 @@ def ner_config(book_config: dict | None) -> NerConfig:
     if not isinstance(threshold, (int, float)) or isinstance(threshold, bool) or not 0 < threshold <= 1:
         raise ValueError(f"book YAML `ner.threshold` must be a number in (0, 1], got {threshold!r}")
 
-    return NerConfig(invented_names, raw.get("model", DEFAULT_MODEL), float(threshold))
+    names = raw.get("character_names", [])
+    if not isinstance(names, list) or not all(isinstance(n, str) for n in names):
+        raise ValueError(
+            f"book YAML `ner.character_names` must be a list of strings, got {names!r}"
+        )
+
+    return NerConfig(
+        invented_names,
+        raw.get("model", DEFAULT_MODEL),
+        float(threshold),
+        tuple(names),
+    )
 
 
 def extraction_fingerprint(book_config: dict | None) -> dict:

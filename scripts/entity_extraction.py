@@ -716,6 +716,12 @@ def main() -> None:
 
         _attach_gliner(nlp, gliner_label_map(), model=ner.model, threshold=ner.threshold)
 
+    # Per-book gazetteer for characters named by a common noun, after the NER
+    # slot so it can add what the model missed (STU-630).
+    from wiki_creator.nlp.gazetteer import attach as _attach_gazetteer
+
+    _attach_gazetteer(nlp, list(ner.character_names))
+
     _log_pipeline(nlp, loaded_model)
     _audit_ner_labels(nlp)
     _warn_if_no_pos_tagger(nlp)
