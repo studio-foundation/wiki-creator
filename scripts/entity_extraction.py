@@ -26,6 +26,7 @@ Standalone test mode:
 """
 
 import functools
+import hashlib
 import json
 import re
 import sys
@@ -669,6 +670,47 @@ def save_chapters_json(chapters: list[dict], path: str = "chapters.json") -> Non
         json.dump(data, f, ensure_ascii=False)
 
 
+EXTRACTION_CACHE_FILE = "extraction_cache.json"
+
+
+def _extraction_cache_key(chapters: list[dict], input_data: dict) -> str:
+    """Key extraction on exactly what the stage consumes (STU-631).
+
+    The chapters payload already carries the EPUB content, the WIKI_MAX_CHAPTERS
+    truncation and the section-filter front-matter tags; the fingerprint carries
+    the resolved `ner` block (STU-560). So a re-imported EPUB, a chapter-cap
+    change or a `ner.invented_names` flip all move the key by construction — the
+    exact case STU-457's completion-flag skip got wrong.
+    """
+    material = json.dumps(
+        {"chapters": chapters, "fingerprint": extraction_fingerprint(input_data)},
+        sort_keys=True,
+        ensure_ascii=False,
+    )
+    return hashlib.sha256(material.encode("utf-8")).hexdigest()
+
+
+def _load_extraction_cache(processing: Path, key: str) -> dict | None:
+    """Return the cached `entities_for_resolution` iff every artifact a full run
+    would have written is present and the stored key matches — a partial or
+    cleaned processing dir is a miss, so `expected_outputs` (STU-600) never sees
+    a hit standing on absent files."""
+    cache_path = processing / EXTRACTION_CACHE_FILE
+    if not cache_path.exists():
+        return None
+    try:
+        cached = json.loads(cache_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    if cached.get("key") != key:
+        return None
+    required = [processing / EXTRACTION_CONFIG_FILE, processing / "chapters.json"]
+    required += [processing / filename for _, filename, _ in full_registry_files()]
+    if not all(p.exists() for p in required):
+        return None
+    return cached.get("entities_for_resolution")
+
+
 def main() -> None:
     if "--test" in sys.argv:
         run_test_mode()
@@ -693,6 +735,15 @@ def main() -> None:
     if not chapters:
         json.dump({"error": "missing field: chapters"}, sys.stdout)
         sys.exit(1)
+
+    paths = studio_io.paths_from_payload(payload, strict=False)
+    cache_key = _extraction_cache_key(chapters, input_data)
+    if paths is not None:
+        cached = _load_extraction_cache(paths.processing, cache_key)
+        if cached is not None:
+            print("[extraction] cache hit — skipping spaCy/GLiNER pass (STU-631)", file=sys.stderr)
+            json.dump({"entities_for_resolution": cached}, sys.stdout, ensure_ascii=False)
+            return
 
     # Resolves the book language explicit-or-fail: a non-inferable model (local
     # path, community model) without an explicit `language:` raises here (STU-453).
@@ -754,7 +805,8 @@ def main() -> None:
         sys.exit(1)
 
     # Write full entities to disk split by type, for wiki-generation to read via repo_manager-read_file
-    paths = studio_io.paths_from_payload(payload)
+    if paths is None:
+        paths = studio_io.paths_from_payload(payload)  # strict: a run producing entities must declare file_path
     paths.processing.mkdir(parents=True, exist_ok=True)
     by_type = split_by_type(entities_full)
     for type_key, filename, json_key in full_registry_files():
@@ -768,6 +820,9 @@ def main() -> None:
 
     with open(paths.processing / EXTRACTION_CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(extraction_fingerprint(input_data), f, ensure_ascii=False)
+
+    with open(paths.processing / EXTRACTION_CACHE_FILE, "w", encoding="utf-8") as f:
+        json.dump({"key": cache_key, "entities_for_resolution": entities_for_resolution}, f, ensure_ascii=False)
 
     # Output lightweight entities to stdout → becomes entity-resolution's previous_stage_output
     json.dump({"entities_for_resolution": entities_for_resolution}, sys.stdout, ensure_ascii=False)
