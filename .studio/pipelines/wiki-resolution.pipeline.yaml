@@ -3,10 +3,28 @@ description: Resolve entities and extract relationships — run once per book
 version: 1
 
 stages:
-  # STU-457: chapter summarization is a stage, not a run_wiki.py pre-step. It
-  # reads epub_data.json from disk (disk is the bus across pipelines, STU-455)
-  # and fans out via one nested `studio run chapter-summaries` (the engine map,
-  # per-item resume, STU-589/605). Long: one LLM call per pending chapter.
+  # chapter-summary split (STU-621): pre builds the per-chapter fan-out items;
+  # the native `call: chapter-summaries` runs the engine map (per-item resume,
+  # STU-589/605), no subprocess; post collects its output and writes the artifact
+  # (extractive fallback for any chapter the LLM verdict never landed for).
+  # on_failure: continue keeps the run alive — a failed fan-out falls back.
+  - name: chapter-summary-pre
+    kind: analysis
+    executor: script
+    runtime: python
+    script: scripts/chapter_summary_pre.py
+    context:
+      include:
+        - input
+
+  - call: chapter-summaries-verdict
+    pipeline: chapter-summaries
+    condition: stages.chapter-summary-pre.output.needs_verdict == true
+    on_failure: continue
+    input:
+      chapters: "{{stages.chapter-summary-pre.output.chapters}}"
+      prompt_fingerprint: "{{stages.chapter-summary-pre.output.prompt_fingerprint}}"
+
   - name: chapter-summary
     kind: analysis
     executor: script
@@ -17,6 +35,7 @@ stages:
     context:
       include:
         - input
+        - all_stage_outputs
 
   - name: resolve-clusters
     kind: extraction

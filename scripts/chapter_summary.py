@@ -106,6 +106,10 @@ def _as_positive_int(value: object, default: int) -> int:
 
 def _chapter_summary_config_from_payload(payload: dict) -> ChapterSummaryConfig:
     ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
+    return chapter_summary_config_from_ctx(ctx)
+
+
+def chapter_summary_config_from_ctx(ctx: dict) -> ChapterSummaryConfig:
     generation_cfg = ctx.get("generation", {}) if isinstance(ctx, dict) else {}
     summary_cfg = generation_cfg.get("chapter_summary", {}) if isinstance(generation_cfg, dict) else {}
     if not isinstance(summary_cfg, dict):
@@ -557,40 +561,42 @@ def _save_chapter_summaries(
         json.dump(out, f, ensure_ascii=False, indent=2)
 
 
-def summarize_chapters_incrementally(
-    chapters: list[dict],
+def pending_chapters(chapters: list[dict]) -> list[dict]:
+    """Narrative chapters with a stable key, in reading order — the fan-out items.
+
+    The pre stage builds the map items from this and the post stage zips the map
+    results back onto it by index, so both must derive the same ordered list.
+    """
+    return [
+        chapter for chapter in chapters
+        if not is_frontmatter_chapter(chapter) and _chapter_key(chapter)
+    ]
+
+
+def build_chapter_summaries(
+    pending: list[dict],
     *,
-    output_file: Path,
+    config: ChapterSummaryConfig,
+    map_output: dict | None,
+    error: str | None,
     debug_dir: Path | None = None,
-    config: ChapterSummaryConfig | None = None,
     action_cues: tuple[str, ...] = (),
     flashback_cues: tuple[str, ...] = (),
     thought_markers: tuple[str, ...] = (),
     exclusion_words: tuple[str, ...] = (),
     entity_index: tuple[tuple[re.Pattern[str], float], ...] = (),
-    fingerprint: str | None = None,
 ) -> dict[str, dict]:
-    """Summarize the narrative chapters, one engine fan-out run in llm mode.
+    """Collect per-chapter summaries from a `chapter-summaries` map output.
 
-    Per-unit persistence lives in the engine (STU-589/605): the map stage caches
-    each completed chapter keyed on its input — content plus the prompt
-    fingerprint — so an interrupted run resumes and a prompt/config edit re-runs
-    every chapter instead of replaying stale summaries (STU-560). A failed
-    chapter falls back to the extractive summary this run and, never cached,
-    retries as a real LLM call on the next one.
+    `map_output` is the engine map stage's output (`results` in item-index
+    order); `None` means the call was skipped or failed (extractive mode, or the
+    LLM verdict never landed). In llm mode a missing/failed item falls back to
+    the extractive summary this run and, never cached, retries next run (STU-589).
     """
-    cfg = config or ChapterSummaryConfig()
-    pending = [
-        chapter for chapter in chapters
-        if not is_frontmatter_chapter(chapter) and _chapter_key(chapter)
-    ]
+    cfg = config
     result: dict[str, dict] = {}
 
     if cfg.mode == "llm" and pending:
-        items = [_chapter_summary_item_input(chapter, cfg) for chapter in pending]
-        timeout_seconds = max(cfg.llm_timeout_seconds * 4, 120) * max(1, len(items))
-        map_output, error = _run_chapter_summary_fanout(items, fingerprint, timeout_seconds)
-
         results_by_index: dict[int, dict] = {}
         if map_output is not None:
             for entry in map_output.get("results") or []:
@@ -630,7 +636,50 @@ def summarize_chapters_incrementally(
                 thought_markers=thought_markers, exclusion_words=exclusion_words,
                 entity_index=entity_index,
             )
+    return result
 
+
+def summarize_chapters_incrementally(
+    chapters: list[dict],
+    *,
+    output_file: Path,
+    debug_dir: Path | None = None,
+    config: ChapterSummaryConfig | None = None,
+    action_cues: tuple[str, ...] = (),
+    flashback_cues: tuple[str, ...] = (),
+    thought_markers: tuple[str, ...] = (),
+    exclusion_words: tuple[str, ...] = (),
+    entity_index: tuple[tuple[re.Pattern[str], float], ...] = (),
+    fingerprint: str | None = None,
+) -> dict[str, dict]:
+    """Summarize the narrative chapters, one engine fan-out run in llm mode.
+
+    Standalone (`--book`) path: shells one nested `studio run chapter-summaries`
+    itself. The pipeline path splits this into pre/call/post (STU-621) — the
+    native `call` runs the map and the post stage calls `build_chapter_summaries`
+    on its output — but the dev tool is a fresh top-level run either way.
+
+    Per-unit persistence lives in the engine (STU-589/605): the map stage caches
+    each completed chapter keyed on its input — content plus the prompt
+    fingerprint — so an interrupted run resumes and a prompt/config edit re-runs
+    every chapter instead of replaying stale summaries (STU-560).
+    """
+    cfg = config or ChapterSummaryConfig()
+    pending = pending_chapters(chapters)
+
+    map_output: dict | None = None
+    error: str | None = None
+    if cfg.mode == "llm" and pending:
+        items = [_chapter_summary_item_input(chapter, cfg) for chapter in pending]
+        timeout_seconds = max(cfg.llm_timeout_seconds * 4, 120) * max(1, len(items))
+        map_output, error = _run_chapter_summary_fanout(items, fingerprint, timeout_seconds)
+
+    result = build_chapter_summaries(
+        pending, config=cfg, map_output=map_output, error=error, debug_dir=debug_dir,
+        action_cues=action_cues, flashback_cues=flashback_cues,
+        thought_markers=thought_markers, exclusion_words=exclusion_words,
+        entity_index=entity_index,
+    )
     _save_chapter_summaries(result, output_file, fingerprint)
     return result
 
@@ -775,6 +824,51 @@ def _main_from_book(book_path: str) -> None:
     )
 
 
+def resolve_summary_inputs(ctx: dict, paths: BookPaths) -> dict:
+    """Config, language cues and entity weighting shared by the pre and post stages.
+
+    Both the fan-out item build (pre) and the result collection (post) must agree
+    on the config and cues, so they derive them the same way — from the book yaml
+    in `additional_context` and the on-disk classification artifact.
+    """
+    config = chapter_summary_config_from_ctx(ctx)
+    spacy_model = ctx.get("spacy_model", "en_core_web_lg")
+    export_categories = ctx.get("export", {}).get("categories", {})
+    language = export_categories.get("language") or infer_language(spacy_model)
+    lang_config = load_lang_config(language)
+    return {
+        "config": config,
+        "language": language,
+        "action_cues": tuple(lang_config.get("action_cues", ())),
+        "flashback_cues": tuple(lang_config.get("flashback_cues", ())),
+        "thought_markers": tuple(lang_config.get("third_person_thought_markers", ())),
+        "exclusion_words": tuple(
+            set(lang_config.get("noise_words", []))
+            | set(lang_config.get("false_positive_words", []))
+            | set(lang_config.get("determiners", []))
+            | set(lang_config.get("role_words", []))
+            | set(lang_config.get("pronouns", []))
+        ),
+        # STU-433: weight toward important entities. Degrades to no weighting when
+        # the classification artifact is absent (fresh run).
+        "entity_index": build_entity_importance_index(
+            _load_classified_entities(paths.processing / "entities_classified.json")
+        ),
+        "fingerprint": summary_prompt_fingerprint(config, language),
+    }
+
+
+VERDICT_STAGE = "chapter-summaries-verdict"
+
+
+def _map_output_from_payload(payload: dict) -> dict | None:
+    """The `chapter-summaries` call's map output, from stage context (or None)."""
+    verdict = payload.get("all_stage_outputs", {}).get(VERDICT_STAGE)
+    if verdict is None:
+        verdict = payload.get("previous_outputs", {}).get(VERDICT_STAGE)
+    return verdict if isinstance(verdict, dict) else None
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate chapter summaries.")
     parser.add_argument("--book", help="Path to book YAML (standalone mode, reads chapters.json from disk)")
@@ -784,49 +878,36 @@ def main() -> None:
         _main_from_book(args.book)
         return
 
-    # Studio stdin mode (legacy — called from wiki-preparation pipeline)
+    # Studio post stage (STU-621): the `call: chapter-summaries-verdict` stage
+    # already ran the map; collect its output, falling back to extractive for any
+    # chapter the LLM verdict never landed for.
     payload = studio_io.read_payload()
     paths = studio_io.paths_from_payload(payload)
-    chapters = _read_epub_data(paths).get("chapters", [])
-    config = _chapter_summary_config_from_payload(payload)
-
     ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
-    spacy_model = ctx.get("spacy_model", "en_core_web_lg")
-    export_categories = ctx.get("export", {}).get("categories", {})
-    language = export_categories.get("language") or infer_language(spacy_model)
-    lang_config = load_lang_config(language)
-    action_cues = tuple(lang_config.get("action_cues", ()))
-    flashback_cues = tuple(lang_config.get("flashback_cues", ()))
-    thought_markers = tuple(lang_config.get("third_person_thought_markers", ()))
-    exclusion_words = tuple(
-        set(lang_config.get("noise_words", []))
-        | set(lang_config.get("false_positive_words", []))
-        | set(lang_config.get("determiners", []))
-        | set(lang_config.get("role_words", []))
-        | set(lang_config.get("pronouns", []))
-    )
+    chapters = _read_epub_data(paths).get("chapters", [])
+    inp = resolve_summary_inputs(ctx, paths)
+    cfg = inp["config"]
 
-    # STU-433: weight toward important entities. Degrades to no weighting when
-    # the classification artifact is absent.
-    classified_entities = _load_classified_entities(paths.processing / "entities_classified.json")
-    entity_index = build_entity_importance_index(classified_entities)
+    pending = pending_chapters(chapters)
+    map_output = _map_output_from_payload(payload)
+    error = None
+    if map_output is None and cfg.mode == "llm" and pending:
+        error = "no_verdict (call skipped or failed)"
 
-    out_file = paths.processing / "chapter_summaries.json"
-    debug_dir = paths.processing / "chapter_summary_llm_debug"
-    chapter_summaries = summarize_chapters_incrementally(
-        chapters,
-        output_file=out_file,
-        debug_dir=debug_dir,
-        config=config,
-        action_cues=action_cues,
-        flashback_cues=flashback_cues,
-        thought_markers=thought_markers,
-        exclusion_words=exclusion_words,
-        entity_index=entity_index,
-        fingerprint=summary_prompt_fingerprint(config, language),
+    chapter_summaries = build_chapter_summaries(
+        pending,
+        config=cfg,
+        map_output=map_output,
+        error=error,
+        debug_dir=paths.processing / "chapter_summary_llm_debug",
+        action_cues=inp["action_cues"],
+        flashback_cues=inp["flashback_cues"],
+        thought_markers=inp["thought_markers"],
+        exclusion_words=inp["exclusion_words"],
+        entity_index=inp["entity_index"],
     )
-    out = {"chapter_summaries": chapter_summaries}
-    json.dump(out, sys.stdout, ensure_ascii=False)
+    _save_chapter_summaries(chapter_summaries, paths.processing / "chapter_summaries.json", inp["fingerprint"])
+    json.dump({"chapter_summaries": chapter_summaries}, sys.stdout, ensure_ascii=False)
 
 
 if __name__ == "__main__":

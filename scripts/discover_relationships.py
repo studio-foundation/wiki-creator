@@ -118,6 +118,154 @@ def _run_discovery_fanout(
     return map_output, None
 
 
+VERDICT_STAGE = "discover-relationships-verdict"
+
+
+def _map_output_from_payload(payload: dict) -> dict | None:
+    """The `discover-relationships` call's map output, from stage context (or None)."""
+    verdict = payload.get("all_stage_outputs", {}).get(VERDICT_STAGE)
+    if verdict is None:
+        verdict = payload.get("previous_outputs", {}).get(VERDICT_STAGE)
+    return verdict if isinstance(verdict, dict) else None
+
+
+def prepare_discovery(
+    book_cfg: dict,
+    book_paths,
+    *,
+    chunk_chars: int = DEFAULT_CHUNK_CHARS,
+    max_chapters: int | None = None,
+) -> tuple[dict | None, str | None]:
+    """Build the discovery inputs shared by the pre, post and `--book` paths.
+
+    Returns `(prep, None)` with everything the fan-out and the aggregation need,
+    or `(None, reason)` when the book has no work (missing artifacts, empty
+    roster, no chapters) — the STU-539 fail-safe: the caller writes nothing and
+    the classifier falls back to co-occurrence.
+    """
+    epub_data_path = book_paths.processing / "epub_data.json"
+    registry_path = book_paths.processing / "registry.json"
+    output_path = book_paths.processing / "relationships_discovered.json"
+
+    if not epub_data_path.exists() or not registry_path.exists():
+        print(
+            f"[discover-relationships] missing {epub_data_path.name} or "
+            f"{registry_path.name} — writing nothing, classifier falls back to co-occurrence",
+            file=sys.stderr,
+        )
+        return None, "missing_artifacts"
+
+    epub_data = json.loads(epub_data_path.read_text(encoding="utf-8"))
+    registry = Registry.load(registry_path)
+    entities = [
+        {"canonical_name": r.canonical_name, "entity_type": r.entity_type, "aliases": r.aliases}
+        for r in registry.entities
+    ]
+    roster_names, alias_to_canonical, roster_lines = build_roster(entities)
+    if not roster_names:
+        print("[discover-relationships] empty PERSON roster — nothing to discover", file=sys.stderr)
+        return None, "empty_roster"
+
+    type_defs = relationship_definitions(book_config=book_cfg)
+    allowed_types = set(relationship_tokens(book_config=book_cfg))
+
+    chapters = _narrative_chapters(epub_data)
+    if max_chapters is not None:
+        chapters = chapters[:max_chapters]
+    chunks = chunk_chapters(chapters, chunk_chars)
+    if not chunks:
+        print("[discover-relationships] no narrative chapters — nothing to discover", file=sys.stderr)
+        return None, "no_chapters"
+
+    return {
+        "chunks": chunks,
+        "roster_lines": roster_lines,
+        "type_defs": type_defs,
+        "fingerprint": _prompt_fingerprint(type_defs),
+        "roster_names": roster_names,
+        "alias_to_canonical": alias_to_canonical,
+        "allowed_types": allowed_types,
+        "entities": entities,
+        "output_path": output_path,
+    }, None
+
+
+def collect_and_save(prep: dict, map_output: dict | None, error: str | None) -> dict:
+    """Fold the map votes to typed pairs and write `relationships_discovered.json`."""
+    if error or map_output is None:
+        reason = error or "no_verdict"
+        print(
+            f"[discover-relationships] WARNING: {reason} — writing nothing; "
+            "prior artifact (if any) kept, classifier falls back to co-occurrence",
+            file=sys.stderr,
+        )
+        return {"skipped": reason}
+
+    chunks = prep["chunks"]
+    votes, failed = votes_from_map_output(
+        chunks, map_output, prep["alias_to_canonical"], prep["roster_names"], prep["allowed_types"]
+    )
+    resumed = map_output.get("resumed", 0)
+    print(
+        f"[discover-relationships] {len(chunks)} chunks | {resumed} resumed | "
+        f"{len(failed)} failed (will retry next run)",
+        file=sys.stderr,
+    )
+    for chunk_id in failed:
+        print(f"  [{chunk_id}] FAILED — not cached, will retry", file=sys.stderr)
+
+    roster_names = prep["roster_names"]
+    pairs = aggregate(votes, roster_names)
+    bundle = RelationshipBundle(
+        entities=[{"canonical_name": e["canonical_name"], "type": e["entity_type"]} for e in prep["entities"]],
+        relationships=[Relationship(**p) for p in pairs],
+        # STU-610: the artifact records which chunks failed and stayed uncached,
+        # so a partial discovery output is distinguishable from full coverage.
+        stats={
+            "chunks": len(chunks),
+            "chunks_covered": len(chunks) - len(failed),
+            "chunks_uncached": failed,
+            "pairs": len(pairs),
+            "roster": len(roster_names),
+        },
+    )
+    studio_io.save_artifact(prep["output_path"], bundle, RelationshipBundle)
+    print(
+        f"[discover-relationships] {len(chunks)} chunks → {len(pairs)} typed pairs → {prep['output_path'].name}",
+        file=sys.stderr,
+    )
+    if failed:
+        print(
+            f"[discover-relationships] WARNING: {len(failed)} of {len(chunks)} chunks "
+            f"failed and stayed uncached — the discovery output is partial and the graph "
+            f"built from it is missing these chunks (re-run to retry): {', '.join(failed)}",
+            file=sys.stderr,
+        )
+    return {"chunks": len(chunks), "chunks_failed": len(failed), "pairs": len(pairs)}
+
+
+def run(
+    book_cfg: dict,
+    book_paths,
+    *,
+    chunk_chars: int = DEFAULT_CHUNK_CHARS,
+    max_chapters: int | None = None,
+) -> dict:
+    """Standalone (`--book`) path: shells one nested `studio run` itself."""
+    prep, skip = prepare_discovery(book_cfg, book_paths, chunk_chars=chunk_chars, max_chapters=max_chapters)
+    if skip:
+        return {"skipped": skip}
+    print(
+        f"[discover-relationships] {len(prep['chunks'])} chunks | "
+        f"roster {len(prep['roster_names'])} PERSON",
+        file=sys.stderr,
+    )
+    map_output, error = _run_discovery_fanout(
+        prep["chunks"], prep["roster_lines"], prep["type_defs"], prep["fingerprint"]
+    )
+    return collect_and_save(prep, map_output, error)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Schema-guided relation discovery (STU-556).")
     parser.add_argument("--book", help="Path to book YAML (standalone mode)")
@@ -136,109 +284,17 @@ def main() -> None:
             chunk_chars=args.chunk_chars, max_chapters=args.max_chapters)
         return
 
-    # Studio stdin mode (STU-457): a wiki-preparation stage, book yaml in
-    # additional_context, artifacts from disk.
+    # Studio post stage (STU-621): the `call: discover-relationships-verdict`
+    # stage already ran the map; fold its output. book yaml in additional_context,
+    # artifacts from disk.
     payload = studio_io.read_payload()
     book_cfg = yaml.safe_load(payload.get("additional_context", "") or "") or {}
-    summary = run(book_cfg, studio_io.paths_from_payload(payload))
+    prep, skip = prepare_discovery(book_cfg, studio_io.paths_from_payload(payload))
+    if skip:
+        studio_io.write_output({"skipped": skip})
+        return
+    summary = collect_and_save(prep, _map_output_from_payload(payload), None)
     studio_io.write_output(summary)
-
-
-def run(
-    book_cfg: dict,
-    book_paths,
-    *,
-    chunk_chars: int = DEFAULT_CHUNK_CHARS,
-    max_chapters: int | None = None,
-) -> dict:
-    epub_data_path = book_paths.processing / "epub_data.json"
-    registry_path = book_paths.processing / "registry.json"
-    output_path = book_paths.processing / "relationships_discovered.json"
-
-    if not epub_data_path.exists() or not registry_path.exists():
-        print(
-            f"[discover-relationships] missing {epub_data_path.name} or "
-            f"{registry_path.name} — writing nothing, classifier falls back to co-occurrence",
-            file=sys.stderr,
-        )
-        return {"skipped": "missing_artifacts"}
-
-    epub_data = json.loads(epub_data_path.read_text(encoding="utf-8"))
-    registry = Registry.load(registry_path)
-    entities = [
-        {"canonical_name": r.canonical_name, "entity_type": r.entity_type, "aliases": r.aliases}
-        for r in registry.entities
-    ]
-    roster_names, alias_to_canonical, roster_lines = build_roster(entities)
-    if not roster_names:
-        print("[discover-relationships] empty PERSON roster — nothing to discover", file=sys.stderr)
-        return {"skipped": "empty_roster"}
-
-    type_defs = relationship_definitions(book_config=book_cfg)
-    allowed_types = set(relationship_tokens(book_config=book_cfg))
-
-    chapters = _narrative_chapters(epub_data)
-    if max_chapters is not None:
-        chapters = chapters[:max_chapters]
-    chunks = chunk_chapters(chapters, chunk_chars)
-    if not chunks:
-        print("[discover-relationships] no narrative chapters — nothing to discover", file=sys.stderr)
-        return {"skipped": "no_chapters"}
-
-    print(
-        f"[discover-relationships] {len(chunks)} chunks | roster {len(roster_names)} PERSON",
-        file=sys.stderr,
-    )
-    map_output, error = _run_discovery_fanout(
-        chunks, roster_lines, type_defs, _prompt_fingerprint(type_defs)
-    )
-    if error:
-        print(
-            f"[discover-relationships] WARNING: {error} — writing nothing; "
-            "prior artifact (if any) kept, classifier falls back to co-occurrence",
-            file=sys.stderr,
-        )
-        return {"skipped": error}
-
-    votes, failed = votes_from_map_output(
-        chunks, map_output, alias_to_canonical, roster_names, allowed_types
-    )
-    resumed = map_output.get("resumed", 0) if isinstance(map_output, dict) else 0
-    print(
-        f"[discover-relationships] {len(chunks)} chunks | {resumed} resumed | "
-        f"{len(failed)} failed (will retry next run)",
-        file=sys.stderr,
-    )
-    for chunk_id in failed:
-        print(f"  [{chunk_id}] FAILED — not cached, will retry", file=sys.stderr)
-
-    pairs = aggregate(votes, roster_names)
-    bundle = RelationshipBundle(
-        entities=[{"canonical_name": e["canonical_name"], "type": e["entity_type"]} for e in entities],
-        relationships=[Relationship(**p) for p in pairs],
-        # STU-610: the artifact records which chunks failed and stayed uncached,
-        # so a partial discovery output is distinguishable from full coverage.
-        stats={
-            "chunks": len(chunks),
-            "chunks_covered": len(chunks) - len(failed),
-            "chunks_uncached": failed,
-            "pairs": len(pairs),
-            "roster": len(roster_names),
-        },
-    )
-    studio_io.save_artifact(output_path, bundle, RelationshipBundle)
-    print(
-        f"[discover-relationships] {len(chunks)} chunks → {len(pairs)} typed pairs → {output_path.name}",
-        file=sys.stderr,
-    )
-    if failed:
-        print(
-            f"[discover-relationships] WARNING: {len(failed)} of {len(chunks)} chunks "
-            f"failed and stayed uncached — the discovery output is partial and the graph "
-            f"built from it is missing these chunks (re-run to retry): {', '.join(failed)}",
-            file=sys.stderr,
-        )
-    return {"chunks": len(chunks), "chunks_failed": len(failed), "pairs": len(pairs)}
 
 
 if __name__ == "__main__":

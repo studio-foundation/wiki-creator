@@ -7,6 +7,50 @@ version: 1
 # STU-612 plan / map fan-out / replay, per-page resume); synopsis and event
 # pages call wiki-page-item per page (STU-589 left them on the item runner).
 stages:
+  # generate-wiki-pages split (STU-621): the STU-612 plan / fan-out / replay walk
+  # spread across native stages — plan builds attempt-1 items, call runs the map,
+  # probe replays and collects forbidden-name retries as attempt-2 items, a
+  # conditional second call runs them, and post runs the final replay walk that
+  # commits wiki_pages.json. The walk is deterministic and LLM-free, so each stage
+  # re-derives it; only the two map outputs flow through context. on_failure:
+  # continue keeps the run alive — a failed fan-out stubs the affected pages.
+  - name: generate-wiki-pages-plan
+    kind: analysis
+    executor: script
+    runtime: python
+    script: scripts/generate_wiki_pages_plan.py
+    timeout_ms: 600000
+    context:
+      include:
+        - input
+
+  - call: wiki-pages-verdict
+    pipeline: wiki-pages
+    condition: stages.generate-wiki-pages-plan.output.needs_verdict == true
+    on_failure: continue
+    input:
+      items: "{{stages.generate-wiki-pages-plan.output.items}}"
+      prompt_fingerprint: "{{stages.generate-wiki-pages-plan.output.prompt_fingerprint}}"
+
+  - name: generate-wiki-pages-probe
+    kind: analysis
+    executor: script
+    runtime: python
+    script: scripts/generate_wiki_pages_probe.py
+    timeout_ms: 600000
+    context:
+      include:
+        - input
+        - all_stage_outputs
+
+  - call: wiki-pages-retry-verdict
+    pipeline: wiki-pages
+    condition: stages.generate-wiki-pages-probe.output.needs_retry == true
+    on_failure: continue
+    input:
+      items: "{{stages.generate-wiki-pages-probe.output.items}}"
+      prompt_fingerprint: "{{stages.generate-wiki-pages-plan.output.prompt_fingerprint}}"
+
   - name: generate-wiki-pages
     kind: analysis
     executor: script
@@ -16,6 +60,30 @@ stages:
     context:
       include:
         - input
+        - all_stage_outputs
+
+  # synopsis / event pages split (STU-621): pre builds the wiki-pages map items,
+  # the native `call: wiki-pages` runs them through the wiki-page-item pipeline
+  # (its generation-validation group re-rolls spoilers natively, so no host-level
+  # retry pass), and post finalizes. on_failure: continue keeps the run alive —
+  # a failed page stubs, never fails the run (these stages never fail the run).
+  - name: generate-book-synopsis-pre
+    kind: analysis
+    executor: script
+    runtime: python
+    script: scripts/generate_book_synopsis_pre.py
+    timeout_ms: 300000
+    context:
+      include:
+        - input
+
+  - call: book-synopsis-verdict
+    pipeline: wiki-pages
+    condition: stages.generate-book-synopsis-pre.output.needs_verdict == true
+    on_failure: continue
+    input:
+      items: "{{stages.generate-book-synopsis-pre.output.items}}"
+      prompt_fingerprint: "{{stages.generate-book-synopsis-pre.output.prompt_fingerprint}}"
 
   - name: generate-book-synopsis
     kind: analysis
@@ -26,6 +94,25 @@ stages:
     context:
       include:
         - input
+        - all_stage_outputs
+
+  - name: generate-event-pages-pre
+    kind: analysis
+    executor: script
+    runtime: python
+    script: scripts/generate_event_pages_pre.py
+    timeout_ms: 300000
+    context:
+      include:
+        - input
+
+  - call: event-pages-verdict
+    pipeline: wiki-pages
+    condition: stages.generate-event-pages-pre.output.needs_verdict == true
+    on_failure: continue
+    input:
+      items: "{{stages.generate-event-pages-pre.output.items}}"
+      prompt_fingerprint: "{{stages.generate-event-pages-pre.output.prompt_fingerprint}}"
 
   - name: generate-event-pages
     kind: analysis
@@ -36,6 +123,7 @@ stages:
     context:
       include:
         - input
+        - all_stage_outputs
 
   - name: consolidate-editorial-stance
     kind: extraction
