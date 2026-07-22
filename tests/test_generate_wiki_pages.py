@@ -2074,6 +2074,22 @@ def test_generate_pages_dry_run_skips_runner(tmp_path):
     assert [p["title"] for p in pages] == ["Rifthold"]
 
 
+def test_dry_run_stub_does_not_poison_the_next_real_run(tmp_path):
+    """STU-618: a --dry-run writes stub pages, but the next real run must
+    regenerate every one of them — a dry run is a preview, not a result."""
+    config = _config(tmp_path)
+    config.dry_run = True
+    dry_pages = generate_pages(_place_batch(), config, _FakeRunner())
+    assert all(p.get("_dry_run") for p in dry_pages)
+
+    runner = _FakeRunner()
+    pages = generate_pages(_place_batch(), _config(tmp_path), runner)
+
+    assert runner.run_calls == ["Rifthold"]  # dry stub did not resume
+    assert "Rifthold est un lieu." in pages[0]["content"]
+    assert not any(p.get("_dry_run") for p in pages)
+
+
 def test_generate_pages_resumes_completed_pages(tmp_path):
     output_file = tmp_path / "wiki_pages.json"
     fingerprint = _gwp._page_prompt_fingerprint(_config(tmp_path))
