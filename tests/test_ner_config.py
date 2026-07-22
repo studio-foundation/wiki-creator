@@ -61,10 +61,34 @@ def test_threshold_of_one_is_allowed():
     assert ner_config({"ner": {"invented_names": True, "threshold": 1}}).threshold == 1.0
 
 
+def test_character_names_default_to_empty():
+    assert ner_config({"ner": {"invented_names": True}}).character_names == ()
+
+
+def test_character_names_are_read_as_a_tuple():
+    cfg = ner_config({"ner": {"invented_names": True,
+                              "character_names": ["Hatter", "Cheshire Cat"]}})
+    assert cfg.character_names == ("Hatter", "Cheshire Cat")
+
+
+@pytest.mark.parametrize("value", ["Hatter", ["Hatter", 3], {"Hatter": 1}])
+def test_non_string_list_character_names_raises(value):
+    with pytest.raises(ValueError, match="ner.character_names"):
+        ner_config({"ner": {"invented_names": True, "character_names": value}})
+
+
+def test_character_names_change_the_fingerprint():
+    from wiki_creator.ner import extraction_fingerprint
+    assert extraction_fingerprint({"ner": {"invented_names": True}}) != extraction_fingerprint(
+        {"ner": {"invented_names": True, "character_names": ["Hatter"]}}
+    )
+
+
 def test_fingerprint_carries_the_resolved_block_not_the_declared_one():
     from wiki_creator.ner import DEFAULT_MODEL, extraction_fingerprint
     assert extraction_fingerprint({"ner": {"invented_names": True}}) == {
-        "ner": {"invented_names": True, "model": DEFAULT_MODEL, "threshold": 0.5}
+        "ner": {"invented_names": True, "model": DEFAULT_MODEL, "threshold": 0.5,
+                "character_names": ()}
     }
 
 
