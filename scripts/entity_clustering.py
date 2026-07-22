@@ -61,7 +61,13 @@ from wiki_creator.registry import Registry, normalize_name as normalize_for_comp
 TITLE_PREFIXES: frozenset[str] = frozenset()
 
 def load_title_prefixes(language: str | None = None) -> frozenset[str]:
-    """Return the language's `title_prefixes` unioned with its `person_cue_words`."""
+    """Return the leading tokens stripped before name comparison: the language's
+    `title_prefixes` ∪ `person_cue_words` ∪ `determiners`.
+
+    Determiners (STU-636) fold a bare article into the name it leads, so
+    ``The Queen`` and ``Queen`` share a comparison key. ``tokenize_name`` never
+    strips the last token, so a bare role (``Queen``) survives as its own key
+    while ``The King`` still stays off ``The Queen`` (``king`` != ``queen``)."""
     if not language:
         return TITLE_PREFIXES
     try:
@@ -69,7 +75,8 @@ def load_title_prefixes(language: str | None = None) -> frozenset[str]:
         lang_cfg = load_lang_config(language)
         prefixes = frozenset(w.lower() for w in lang_cfg.get("title_prefixes", []))
         person_cues = frozenset(w.lower() for w in lang_cfg.get("person_cue_words", []))
-        return prefixes | person_cues
+        determiners = frozenset(w.lower() for w in lang_cfg.get("determiners", []))
+        return prefixes | person_cues | determiners
     except Exception as exc:
         import logging
         logging.warning("load_title_prefixes: could not load cue_words for language %r: %s", language, exc)
@@ -132,9 +139,14 @@ def _extend_from_lang(base: frozenset[str], key: str, language: str | None) -> f
 # --- String utilities ---
 
 def tokenize_name(name: str, title_prefixes: frozenset[str] = TITLE_PREFIXES) -> list[str]:
-    """Strip title prefixes and tokenize a name."""
+    """Strip leading title/determiner prefixes and tokenize a name.
+
+    The last token is never stripped (STU-636): a name that is nothing but a
+    title or role — ``Queen``, ``The Queen`` — is identified by that role, not
+    emptied. ``The Queen`` strips its determiner to ``["queen"]`` and matches a
+    bare ``Queen``; ``The King`` reduces to ``["king"]`` and stays distinct."""
     tokens = name.lower().strip().split()
-    while tokens and tokens[0] in title_prefixes:
+    while len(tokens) > 1 and tokens[0] in title_prefixes:
         tokens = tokens[1:]
     return [t for t in tokens if t]
 
@@ -255,6 +267,12 @@ def should_cluster_tokens(name1: str, name2: str, title_prefixes: frozenset[str]
 
     # Subset match: one name is contained in the other
     if s1.issubset(s2) or s2.issubset(s1):
+        # A bare title/role only matches exactly, never as a subset (STU-636):
+        # "Queen" must not absorb "Red Queen" / "White Queen". The determiner
+        # variant "The Queen" still merges — it hits the exact branch above.
+        smaller = t1 if len(s1) <= len(s2) else t2
+        if len(smaller) == 1 and smaller[0] in title_prefixes:
+            return False
         # Safety: single given names don't match each other
         if is_single_given_name(t1) and is_single_given_name(t2):
             return False
