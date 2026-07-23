@@ -127,6 +127,18 @@ wiki-creator/
 └── Makefile              # Developer commands
 ```
 
+## Contributing
+
+Contributions are welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md). The two
+that grow the tool toward new communities have their own guides:
+
+- **[Adding a language](docs/adding-a-language.md)** — a `cue_words/<lang>.json`
+  lang pack so the pipeline runs on books in your language.
+- **[Adding or adapting a page template](docs/adding-a-template.md)** — infobox
+  slots, sections, tiers and localized labels in `wiki_creator/templates/`.
+
+All participants are held to the [Code of Conduct](./CODE_OF_CONDUCT.md).
+
 ## License
 
 GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later) -- see [LICENSE](./LICENSE).
