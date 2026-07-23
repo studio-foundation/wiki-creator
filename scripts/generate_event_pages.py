@@ -53,6 +53,7 @@ from wiki_creator.page_templates import (
     slot_label,
 )
 from wiki_creator.paths import book_paths_from_yaml
+from wiki_creator.register import DEFAULT_REGISTER, register_clause
 
 
 def _event_stub(lang: str, kind: str) -> str:
@@ -120,10 +121,13 @@ def build_event_item(
     language: str,
     file_path: str,
     all_events: list[dict] | None = None,
+    register: str = DEFAULT_REGISTER,
 ) -> tuple[dict, dict]:
     """The pre-LLM half of an event page: the wiki-page-item input + entity.
     Shared by the `--book` subprocess path and the pre stage (STU-621)."""
-    prompt = build_event_prompt(event, title, book_title, forbidden_names, all_events, lang=language)
+    prompt = build_event_prompt(
+        event, title, book_title, forbidden_names, all_events, lang=language, register=register
+    )
     item_input = {
         "title": title,
         "importance": EVENT_IMPORTANCE,
@@ -167,6 +171,7 @@ def generate_event_page(
     all_events: list[dict] | None = None,
     timeout: int = 120,
     dry_run: bool = False,
+    register: str = DEFAULT_REGISTER,
 ) -> dict:
     """One event page via the wiki-page-item pipeline (`--book` path: one nested
     `studio run` subprocess with a host-level forbidden-name re-roll). ``language``
@@ -177,6 +182,7 @@ def generate_event_page(
     item_input, entity = build_event_item(
         event, title, book_title=book_title, forbidden_names=forbidden_names,
         max_tokens=max_tokens, language=language, file_path=file_path, all_events=all_events,
+        register=register,
     )
     result = _execute_wiki_page_item(item_input, entity, timeout)
     if not result.get("error") and forbidden_names and _check_forbidden_names(result, forbidden_names):
@@ -252,6 +258,7 @@ def plan_event_pages(
         "max_tokens": max_tokens,
         "file_path": book_cfg.get("file_path", ""),
         "all_events": events,
+        "register": register_clause(book_cfg),
     }
     return planned, meta
 
@@ -299,6 +306,7 @@ def run_for_processing(
                 all_events=meta["all_events"],
                 timeout=timeout,
                 dry_run=dry_run,
+                register=meta["register"],
             )
         )
     _write_event_pages(pages, processing_dir)

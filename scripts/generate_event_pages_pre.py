@@ -45,6 +45,7 @@ def main() -> None:
             book_title=meta["book_title"], forbidden_names=meta["forbidden_names"],
             max_tokens=meta["max_tokens"], language=language,
             file_path=meta["file_path"], all_events=meta["all_events"],
+            register=meta["register"],
         )
         items.append(wiki_pages_map_item(item_input, attempt=1))
 

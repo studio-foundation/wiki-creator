@@ -8,6 +8,7 @@ synopsis.py pure-module pattern.
 from __future__ import annotations
 
 from wiki_creator.page_templates import language_name, slot_label
+from wiki_creator.register import DEFAULT_REGISTER
 
 EVENT_ENTITY_TYPE = "EVENT"
 EVENT_IMPORTANCE = "principal"
@@ -171,6 +172,7 @@ def build_event_prompt(
     events: list[dict] | None = None,
     context_window: int = DEFAULT_CONTEXT_WINDOW,
     lang: str = "fr",
+    register: str = DEFAULT_REGISTER,
 ) -> str:
     """Anchored writer prompt for one event page.
 
@@ -227,7 +229,7 @@ FACTS ABOUT THIS EVENT — these are the ONLY facts you may state about the even
 WRITING RULES (follow strictly):
 
 Tone and register:
-- Write in encyclopedic {lang_name}. Neutral, precise, factual.
+- Write in encyclopedic {lang_name}. {register}
 - Flowing prose in paragraphs — no bullet lists, no headings other than the single "## {heading}" heading.
 - Use specific, concrete language anchored in the listed facts.
 
