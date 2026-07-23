@@ -67,8 +67,12 @@ Homepage = "https://github.com/studio-foundation/wiki-creator"
 # The gliner extra is absent in CI (which installs only [dev]) and neither
 # package ships py.typed, so the same import raises import-not-found there and
 # import-untyped locally. Ignoring the module rather than the error code covers
-# both (STU-521).
-module = ["gliner.*", "torch.*", "ebooklib", "ebooklib.*"]
+# both (STU-521). transformers/huggingface_hub come in transitively with gliner
+# and are absent in CI for the same reason (STU-638).
+module = [
+    "gliner.*", "torch.*", "ebooklib", "ebooklib.*",
+    "transformers.*", "huggingface_hub.*",
+]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

@@ -87,6 +87,34 @@ def windows(doc, chunk_chars: int = DEFAULT_CHUNK_CHARS) -> list[tuple[int, str]
     return out
 
 
+def _from_pretrained_offline_first(model_name: str):
+    """Load GLiNER from the local HF cache first, hitting the network only on a miss.
+
+    The model is a pinned, pre-cached asset (`gliner` extra pulls it once), so a
+    cached load must not make a blocking, un-timeout'd HF round-trip on every run:
+    when the hub is slow it hangs the extraction stage to its 600s timeout. Both
+    ``huggingface_hub`` and ``transformers`` read their offline flag into a module
+    global at import, so the env var (set here, after import) and the
+    ``local_files_only`` kwarg (ignored by the nested deberta tokenizer load) are
+    both too late — the two live globals are toggled instead, which every call
+    reads. A genuine cache miss (first pull) restores them and falls back to the
+    network.
+    """
+    from gliner import GLiNER
+    import huggingface_hub.constants as hf
+    import transformers.utils.hub as tf
+
+    hf_prev, tf_prev = hf.HF_HUB_OFFLINE, tf._is_offline_mode
+    hf.HF_HUB_OFFLINE = tf._is_offline_mode = True
+    try:
+        return GLiNER.from_pretrained(model_name)
+    except Exception:
+        hf.HF_HUB_OFFLINE = tf._is_offline_mode = False
+        return GLiNER.from_pretrained(model_name)
+    finally:
+        hf.HF_HUB_OFFLINE, tf._is_offline_mode = hf_prev, tf_prev
+
+
 class GlinerNer:
     """spaCy component setting ``doc.ents`` from GLiNER predictions."""
 
@@ -111,10 +139,8 @@ class GlinerNer:
 
     def _load(self):
         if self._model is None:
-            from gliner import GLiNER
-
             device = resolve_device()
-            self._model = GLiNER.from_pretrained(self.model_name).to(device)
+            self._model = _from_pretrained_offline_first(self.model_name).to(device)
             print(f"[nlp] gliner '{self.model_name}' on {device} "
                   f"labels={self.label_to_type}", file=sys.stderr)
         return self._model
