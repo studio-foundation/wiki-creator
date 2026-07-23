@@ -120,6 +120,54 @@ def test_sectioned_page_carries_content_units(monkeypatch):
     assert "infobox" not in units and "references" not in units
 
 
+def test_build_prompt_covered_prose_injects_anti_repeat_block_and_rule():
+    """STU-643: passing prior section prose adds a read-only ALREADY WRITTEN block
+    plus an explicit do-not-repeat rule; empty covered_prose leaves it out."""
+    entity = _entity()
+    p_with = gwp.build_prompt(entity, "ToG", sections=["trivia"],
+                              covered_prose="## Biographie\n\nThe gardeners painted the roses red.")
+    assert "ALREADY WRITTEN" in p_with
+    assert "gardeners painted the roses red" in p_with
+    assert "do not re-tell" in p_with.lower() or "do not re-narrate" in p_with.lower()
+    p_without = gwp.build_prompt(entity, "ToG", sections=["trivia"])
+    assert "ALREADY WRITTEN" not in p_without
+
+
+def test_build_prompt_biography_defers_to_sibling_sections():
+    """STU-643: when narrative_role/personality also exist on the page, biography
+    is told to stay factual and not absorb the arc or trait analysis. With no
+    siblings (figurant), it gets no such constraint."""
+    entity = _entity()
+    p = gwp.build_prompt(entity, "ToG", sections=["biography"],
+                         page_sections=["biography", "narrative_role", "personality", "trivia"])
+    assert "own a scope" in p
+    assert "beat by beat" in p          # defers the arc to narrative_role
+    assert "do NOT analyse" in p        # defers traits to personality
+    p_solo = gwp.build_prompt(entity, "ToG", sections=["biography"],
+                              page_sections=["biography"])
+    assert "own a scope" not in p_solo  # figurant biography stays self-contained
+
+
+def test_sectioned_feeds_prior_prose_to_portrait_sections_only(monkeypatch):
+    """STU-643: personality/trivia (portrait sections) receive the prose written by
+    earlier sections; biography (a contributor) receives none, and the pool grows."""
+    seen: dict[str, str] = {}
+    def fake(**kw):
+        sec = kw["sections"][0]
+        seen[sec] = kw.get("covered_prose", "")
+        return _fake_item(f"## {sec}\n\n{sec} body.")
+    monkeypatch.setattr(gwp, "_run_wiki_page_item", fake)
+    from pathlib import Path
+    gwp._run_generation_sectioned(
+        entity=_entity(), book_title="ToG", model="m", timeout=10,
+        sections=["infobox", "biography", "personality", "trivia", "references"],
+        max_tokens=500, dry_run=False, debug_dir=Path("/tmp"), book_config={})
+    assert seen["biography"] == ""                          # first / non-consumer
+    assert "biography body." in seen["personality"]         # consumes biography
+    assert "biography body." in seen["trivia"]              # pool grows...
+    assert "personality body." in seen["trivia"]            # ...to include personality
+
+
 def test_sectioned_biography_failure_returns_stub(monkeypatch):
     _sectioned(monkeypatch, {"biography": None})
     from pathlib import Path

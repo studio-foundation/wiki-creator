@@ -90,6 +90,12 @@ _INTERNAL_INFOBOX_KEYS = frozenset({
 
 _MIN_CONTENT_CHARS_WARNING = 80  # warn when LLM output is suspiciously short but not empty
 
+# STU-643: portrait-shaped sections that must not re-tell anecdotes already
+# written in earlier sections of the same page. biography/backstory/narrative_role
+# are the event-narrating sections that feed the pool but never consume it —
+# narrative_role's job IS to retell the arc.
+_ANTI_REPEAT_SECTIONS = frozenset({"personality", "physical", "powers", "trivia"})
+
 # Language-neutral: an angle-bracket token leaked from the prompt (`<if known>`).
 _ANGLE_PLACEHOLDER = re.compile(r"<[^>\n]{1,80}>")
 
@@ -316,6 +322,8 @@ def build_prompt(
     forbidden_names: list[str] | None = None,
     stance: EditorialStance | None = None,
     lang: str = "fr",
+    covered_prose: str = "",
+    page_sections: list[str] | None = None,
     register: str = DEFAULT_REGISTER,
 ) -> str:
     stance = stance or EditorialStance()
@@ -576,6 +584,54 @@ def build_prompt(
                 f'\n- Do NOT include a "## {backstory_title}" section: no flashback backstory is available for this character.'
             )
 
+    # STU-643: PERSON pages are generated one section per LLM call, each drawing
+    # from the same event/excerpt pool with no memory of what earlier sections
+    # already covered — so the few salient anecdotes resurface in every section.
+    # Feed the already-written sections to the later, portrait-shaped ones as
+    # read-only context, with an explicit anti-repetition rule (STU-493's guard,
+    # but grounded in the actual prior text instead of a static per-pair mention).
+    covered_block = ""
+    covered_rule = ""
+    if covered_prose.strip():
+        covered_block = (
+            "\n\nALREADY WRITTEN IN EARLIER SECTIONS OF THIS PAGE "
+            "(read-only — do NOT re-tell these anecdotes or events):\n"
+            + covered_prose.strip()
+        )
+        covered_rule = (
+            "\n- The section(s) above under \"ALREADY WRITTEN\" have already covered "
+            "those events and anecdotes. Do NOT re-narrate them here. Draw on facts, "
+            "traits, or details NOT already stated there; if the only material you have "
+            "is already covered above, keep this section brief or omit it rather than repeating."
+        )
+
+    # STU-643: biography is generated first and, left unscoped, absorbs the whole
+    # page — the plot arc that belongs to narrative_role and the trait analysis
+    # that belongs to personality. When those specialised sibling sections exist
+    # on this page, tell biography to stay in its lane. Gated on their presence so
+    # a figurant whose only section is biography still gets a self-contained one.
+    biography_scope_rule = ""
+    if etype == "PERSON" and sections == ["biography"] and page_sections:
+        deferrals = []
+        if "narrative_role" in page_sections:
+            deferrals.append(
+                f'a separate "## {slot_label("narrative_role", lang)}" section covers the '
+                "chronological plot arc — here, state who the character is and their overall "
+                "place in the story; do NOT retell the events beat by beat"
+            )
+        if "personality" in page_sections:
+            deferrals.append(
+                f'a separate "## {slot_label("personality", lang)}" section covers character '
+                "traits — here, state what the character IS factually; do NOT analyse their "
+                "temperament, psychology, or disposition"
+            )
+        if deferrals:
+            biography_scope_rule = (
+                "\n- This page has other sections that each own a scope: "
+                + "; ".join(deferrals)
+                + ". Keep the biography factual and concise."
+            )
+
     return f"""{GROUNDING_BLOCK}
 
 {stance.prompt_block(sections, lang)}
@@ -605,7 +661,7 @@ Typed relationships (use these directly for the ## Relations section):
 {relationships_block if relationships_block else "  (no typed relationships available)"}{indirect_section}
 
 Chapter summaries (orientation context — lower priority than excerpts):
-{chapter_summary_block}{place_events_section}{narrative_role_section}{backstory_section}
+{chapter_summary_block}{place_events_section}{narrative_role_section}{backstory_section}{covered_block}
 
 ---
 
@@ -624,7 +680,7 @@ Content constraints:
 - Do NOT invent plot details, relationships, abilities, or physical traits not supported by excerpts.
 - Do NOT turn cooccurrence between entities into narrative causality.
 - Confidence markers: each relationship carries a "confidence" tag. State "explicit" relationships as fact (direct affirmation). Phrase "inferred" and "interpretation" relationships tentatively ("seems", "suggests", "could indicate") — never as established fact. Indirect relationships listed as "inferred: true" are interpretation: mention them only with such hedged phrasing, if at all.
-- When referring to related entities or characters, use their name EXACTLY as written in the excerpts or relationships list — do not paraphrase, alter, or approximate names.{place_events_rule}{narrative_role_rule}{backstory_rule}
+- When referring to related entities or characters, use their name EXACTLY as written in the excerpts or relationships list — do not paraphrase, alter, or approximate names.{place_events_rule}{narrative_role_rule}{backstory_rule}{biography_scope_rule}{covered_rule}
 - If information is insufficient for a section, omit that section entirely.
 - Do NOT write "information not available", "not mentioned in excerpts", or any similar phrase. Omit instead.
 - Omit infobox fields entirely if their value is unknown.
@@ -907,6 +963,8 @@ def _wiki_page_item_input(
     grounding: dict | None = None,
     prompt_override: str | None = None,
     stance: EditorialStance | None = None,
+    covered_prose: str = "",
+    page_sections: list[str] | None = None,
     register: str = DEFAULT_REGISTER,
 ) -> dict:
     # language / forbidden_names / file_path / grounding_* feed the
@@ -924,6 +982,7 @@ def _wiki_page_item_input(
         "prompt": prompt_override or build_prompt(
             entity, book_title, sections=sections,
             forbidden_names=forbidden_names, stance=stance, lang=language,
+            covered_prose=covered_prose, page_sections=page_sections,
             register=register,
         ),
     }
@@ -952,6 +1011,8 @@ def _run_wiki_page_item(
     runner: StudioRunner | None = None,
     prompt_override: str | None = None,
     stance: EditorialStance | None = None,
+    covered_prose: str = "",
+    page_sections: list[str] | None = None,
     register: str = DEFAULT_REGISTER,
 ) -> dict:
     item_input = _wiki_page_item_input(
@@ -965,6 +1026,8 @@ def _run_wiki_page_item(
         grounding=grounding,
         prompt_override=prompt_override,
         stance=stance,
+        covered_prose=covered_prose,
+        page_sections=page_sections,
         register=register,
     )
     return (runner or StudioRunner()).run_item(item_input, entity, timeout)
@@ -1406,6 +1469,8 @@ def _generate_one_section(
     grounding: dict | None = None,
     runner: StudioRunner | None = None,
     stance: EditorialStance | None = None,
+    covered_prose: str = "",
+    page_sections: list[str] | None = None,
     register: str = DEFAULT_REGISTER,
 ) -> tuple[str | None, dict | None]:
     """Generate a single section via a scoped wiki-page-item call.
@@ -1430,7 +1495,8 @@ def _generate_one_section(
             entity=entity, book_title=book_title, model=model, timeout=timeout,
             sections=[section], max_tokens=max_tokens, forbidden_names=forbidden_names,
             language=language, file_path=file_path, grounding=grounding, runner=runner,
-            stance=stance, register=register,
+            stance=stance, covered_prose=covered_prose, page_sections=page_sections,
+            register=register,
         )
 
     result = _once()
@@ -1676,6 +1742,10 @@ def _run_generation_sectioned(
     )
     blocks: list[str] = []
     emitted: list[str] = []
+    # STU-643: portrait-shaped sections re-tell the same salient anecdotes because
+    # each is a separate LLM call blind to the others. Feed them the prose already
+    # written for this page so they can steer clear of it.
+    covered_parts: list[str] = []
     for section in content_sections:
         if section == "relationships" and per_relation:
             block = _generate_relationships_subsections(
@@ -1689,17 +1759,20 @@ def _run_generation_sectioned(
                 # so it is excluded from content_units — per-relation gating
                 # (relation_units) replaces whole-section gating.
             continue
+        covered = "\n\n".join(covered_parts) if section in _ANTI_REPEAT_SECTIONS else ""
         block, failure = _generate_one_section(
             entity=entity, section=section, book_title=book_title, model=model,
             timeout=timeout, max_tokens=max_tokens, forbidden_names=forbidden_names,
             language=language, file_path=file_path, grounding=grounding, runner=runner,
-            stance=stance, register=register,
+            stance=stance, covered_prose=covered, page_sections=content_sections,
+            register=register,
         )
         if block:
             if section == "narrative_role" and sibling_canonicals:
                 block = link_first_mentions(block, sibling_canonicals)
             blocks.append(block)
             emitted.append(section)
+            covered_parts.append(block)
         elif section == "biography":
             _save_generation_debug_artifact(debug_dir, entity, failure or {"error": "biography_failed"})
             return make_stub_page(entity, failed=True, lang=language)
