@@ -646,14 +646,17 @@ Output this JSON object:
 Output ONLY the JSON. Nothing before, nothing after."""
 
 
-def _strip_relations_section(content: str) -> str:
-    """Remove any ## Relations section from Markdown content.
+def _strip_relations_section(content: str, title: str) -> str:
+    """Remove the localized relationships section (``## <title>``) from Markdown.
 
-    Post-processing guard: the LLM may produce a ## Relations section even
-    when instructed not to. This strips it deterministically before saving.
+    Post-processing guard: the LLM may produce a relationships section even when
+    instructed not to. The heading is language-dependent (``Relations`` in fr,
+    ``Relationships`` in en), so the pattern is built from the localized title —
+    a hardcoded ``## Relations`` silently missed the English heading and let a
+    hallucinated section survive on Alice (STU-628).
     """
     return re.sub(
-        r"(?m)^## Relations\s*\n(?:(?!^##\s).*\n?)*",
+        rf"(?m)^## {re.escape(title)}\s*\n(?:(?!^##\s).*\n?)*",
         "",
         content,
     ).rstrip("\n")
@@ -1419,14 +1422,14 @@ def _generate_one_section(
         return None, _as_failure(result)
     content = _isolate_section(result.get("content") or "", section, language) or ""
     if section == "relationships" and not entity.get("relationships"):
-        content = _strip_relations_section(content)
+        content = _strip_relations_section(content, slot_label("relationships", language))
     if forbidden_names and _check_forbidden_names({"content": content, "infobox_fields": {}}, forbidden_names):
         result = _once()
         if not isinstance(result, dict) or result.get("error"):
             return None, _as_failure(result)
         content = _isolate_section(result.get("content") or "", section, language) or ""
         if section == "relationships" and not entity.get("relationships"):
-            content = _strip_relations_section(content)
+            content = _strip_relations_section(content, slot_label("relationships", language))
         if _check_forbidden_names({"content": content, "infobox_fields": {}}, forbidden_names):
             return None, {"error": "forbidden_names_persist", "run_metadata": result.get("run_metadata")}
     content = content.strip()
@@ -1570,7 +1573,7 @@ def _run_generation_for_entity(
     typed_rels = entity.get("relationships", [])
     if isinstance(item_result, dict) and "content" in item_result:
         if "relationships" not in sections or not typed_rels:
-            item_result["content"] = _strip_relations_section(item_result["content"] or "")
+            item_result["content"] = _strip_relations_section(item_result["content"] or "", slot_label("relationships", language))
 
     # Forbidden names check + retry
     if forbidden_names and isinstance(item_result, dict) and "content" in item_result:
@@ -1596,7 +1599,7 @@ def _run_generation_for_entity(
                 return make_stub_page(entity, failed=True, lang=language)
             if isinstance(item_result, dict) and "content" in item_result:
                 if "relationships" not in sections or not typed_rels:
-                    item_result["content"] = _strip_relations_section(item_result["content"] or "")
+                    item_result["content"] = _strip_relations_section(item_result["content"] or "", slot_label("relationships", language))
             hits = _check_forbidden_names(item_result, forbidden_names)
             if hits:
                 print(f" ✗ spoiler persists ({', '.join(hits)})", file=sys.stderr, end="", flush=True)
@@ -1933,6 +1936,28 @@ def generation_profile(config: dict, importance: str, entity_type: str | None = 
     return sections, max_tokens
 
 
+def _adjust_relationship_section(sections: list[str], entity: dict) -> list[str]:
+    """Gate the relationships section on the entity's usable relations (STU-628).
+
+    A relationships section with no data to ground it lets the writer fill the
+    vacuum from training memory (Alice: 8 pages of invented Mad Hatter / Cheshire
+    relations over 0 real relationship data). So drop it when the entity has no
+    usable-typed relation (STU-501 filter); add it for a PERSON with 3+."""
+    usable_rels = [
+        r for r in (entity.get("relationships") or [])
+        if usable_relationship_type(r.get("relationship_type"))
+    ]
+    if not usable_rels:
+        return [s for s in sections if s != "relationships"]
+    if (
+        entity.get("type") == "PERSON"
+        and len(usable_rels) >= 3
+        and "relationships" not in sections
+    ):
+        return list(sections) + ["relationships"]
+    return list(sections)
+
+
 @dataclass
 class GenerationConfig:
     """Run-constant inputs to generate_pages(). Per-entity values (sections,
@@ -2077,13 +2102,7 @@ def generate_pages(
                 print(f"  [GEN]  {name} ({importance})", file=sys.stderr, end="", flush=True)
                 try:
                     sections, max_tokens = generation_profile(config.generation_cfg, importance, entity.get("type"))
-                    typed_rels = entity.get("relationships", [])
-                    if (
-                        entity.get("type") == "PERSON"
-                        and len(typed_rels) >= 3
-                        and "relationships" not in sections
-                    ):
-                        sections = list(sections) + ["relationships"]
+                    sections = _adjust_relationship_section(sections, entity)
                     page = _run_generation(
                         entity=entity,
                         book_title=config.book_title,

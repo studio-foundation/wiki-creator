@@ -16,6 +16,7 @@ import argparse
 import json
 import re
 import sys
+from pathlib import Path
 from typing import Dict, List
 
 import ebooklib
@@ -23,6 +24,20 @@ from ebooklib import epub
 from bs4 import BeautifulSoup
 
 MIN_CHAPTER_CHARS = 100  # Skip EPUB nav/boilerplate items shorter than this
+
+PUBLIC_DOMAIN_TREE = "public_domain"
+
+
+def is_public_domain(file_path: str, book_cfg: dict | None = None) -> bool:
+    """Whether the source has no copyright to protect — the check is advisory, not blocking.
+
+    Reader-answerable (STU-637): an explicit ``public_domain:`` in the book YAML
+    wins; absent, a book filed under the ``public_domain/`` corpus tree is public
+    domain by placement.
+    """
+    if book_cfg and "public_domain" in book_cfg:
+        return bool(book_cfg["public_domain"])
+    return PUBLIC_DOMAIN_TREE in Path(file_path or "").parts
 
 
 def tokenize(text: str) -> List[str]:
@@ -125,12 +140,28 @@ def check_page(page: dict, source_index: Dict[tuple, str], n: int = 15) -> List[
     ]
 
 
-def format_output(pages_checked: int, violations: List[dict]) -> dict:
-    """Format the hook output JSON."""
+def format_output(
+    pages_checked: int, violations: List[dict], public_domain: bool = False
+) -> dict:
+    """Format the hook output JSON.
+
+    A public-domain source has no copyright to protect (STU-637): verbatim spans
+    are reported as ``advisory`` and never block export — only ``fail`` does.
+    """
     if not violations:
         return {"status": "pass", "checked_pages": pages_checked, "violations": []}
 
     titles = sorted({v["page_title"] for v in violations})
+    if public_domain:
+        return {
+            "status": "advisory",
+            "checked_pages": pages_checked,
+            "violations": violations,
+            "feedback": (
+                f"Verbatim source spans detected in: {', '.join(f'[{t}]' for t in titles)}. "
+                "Book is public domain — reproducing its text is legal; export not blocked."
+            ),
+        }
     titles_str = ", ".join(f"[{t}]" for t in titles)
     feedback = (
         f"Violations copyright détectées dans : {titles_str}. "
@@ -145,14 +176,18 @@ def format_output(pages_checked: int, violations: List[dict]) -> dict:
     }
 
 
-def run_check(pages: List[dict], epub_path: str, threshold: int = 15) -> dict:
+def run_check(
+    pages: List[dict], epub_path: str, threshold: int = 15, public_domain: bool = False
+) -> dict:
     """Full pipeline: load epub, build index, check all pages."""
     chapters = load_epub_chapters(epub_path)
     source_index = build_source_index(chapters, n=threshold)
     all_violations = []
     for page in pages:
         all_violations.extend(check_page(page, source_index, n=threshold))
-    return format_output(pages_checked=len(pages), violations=all_violations)
+    return format_output(
+        pages_checked=len(pages), violations=all_violations, public_domain=public_domain
+    )
 
 
 def main() -> None:
@@ -201,6 +236,11 @@ def main() -> None:
         if not result["violations"] or result["violations"][0]["page_title"] != "Test — verbatim page":
             print(f"ERROR: Expected violation for 'Test — verbatim page', got: {result['violations']}", file=sys.stderr)
             sys.exit(1)
+        # STU-637: same violations on a public-domain book are advisory, not fail.
+        pd_result = format_output(pages_checked=len(fake_pages), violations=violations, public_domain=True)
+        if pd_result["status"] != "advisory":
+            print(f"ERROR: Expected advisory for public-domain book, got: {pd_result}", file=sys.stderr)
+            sys.exit(1)
         print("\n✓ --test passed", file=sys.stderr)
         return
 
@@ -210,18 +250,19 @@ def main() -> None:
     # Standalone format: {"pages": [...]}
     pages = payload.get("pages")
     epub_path = args.epub
+    book_cfg: dict | None = None
 
     if pages is None:
         import yaml
         previous = payload.get("previous_outputs", {})
         wiki_gen = previous.get("wiki-generation", {})
         pages = wiki_gen.get("pages", [])
+        try:
+            book_cfg = yaml.safe_load(payload.get("additional_context", "{}") or "{}")
+        except Exception:
+            book_cfg = None
         if not epub_path:
-            try:
-                ctx = yaml.safe_load(payload.get("additional_context", "{}") or "{}")
-                epub_path = ctx.get("file_path", "")
-            except Exception:
-                epub_path = ""
+            epub_path = (book_cfg or {}).get("file_path", "")
 
     if not epub_path:
         print("Error: epub path not found (pass --epub or run as a pipeline stage with input.file_path)", file=sys.stderr)
@@ -231,7 +272,8 @@ def main() -> None:
         json.dump({"status": "pass", "checked_pages": 0, "violations": [], "pages": []}, sys.stdout, ensure_ascii=False)
         return
 
-    result = run_check(pages, epub_path, threshold=args.threshold)
+    public_domain = is_public_domain(epub_path, book_cfg)
+    result = run_check(pages, epub_path, threshold=args.threshold, public_domain=public_domain)
     result["pages"] = pages  # pass through for wiki-export
     json.dump(result, sys.stdout, ensure_ascii=False)
 

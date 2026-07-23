@@ -1,6 +1,6 @@
 from scripts.copyright_check import tokenize, mask_short_quotes
 from scripts.copyright_check import build_source_index, find_violations
-from scripts.copyright_check import check_page, format_output
+from scripts.copyright_check import check_page, format_output, is_public_domain
 
 
 def test_tokenize_lowercases_and_strips_punctuation():
@@ -141,3 +141,40 @@ def test_format_output_fail_includes_feedback():
     assert result["status"] == "fail"
     assert "David Martín" in result["feedback"]
     assert len(result["violations"]) == 1
+
+
+# STU-637: public-domain sources have no copyright to protect — verbatim spans
+# are advisory, never a blocking `fail` that stops export.
+VIOLATION = [{"page_title": "Alice", "chapter": "ch01",
+              "wiki_excerpt": "...", "consecutive_words": 18}]
+
+
+def test_public_domain_book_verbatim_page_is_advisory_not_fail():
+    result = format_output(pages_checked=19, violations=VIOLATION, public_domain=True)
+    assert result["status"] == "advisory"
+    assert result["violations"] == VIOLATION  # still reported
+
+
+def test_in_copyright_book_verbatim_page_still_fails():
+    result = format_output(pages_checked=19, violations=VIOLATION, public_domain=False)
+    assert result["status"] == "fail"
+
+
+def test_public_domain_clean_page_still_passes():
+    result = format_output(pages_checked=19, violations=[], public_domain=True)
+    assert result["status"] == "pass"
+
+
+def test_is_public_domain_from_corpus_tree():
+    assert is_public_domain("public_domain/lewis_carroll/alice/books/01-alice.epub")
+    assert not is_public_domain("library/sarah_j_maas/throne-of-glass/books/01.epub")
+
+
+def test_is_public_domain_explicit_key_overrides_path():
+    assert is_public_domain("library/x/y/books/01.epub", {"public_domain": True})
+    assert not is_public_domain("public_domain/x/y/books/01.epub", {"public_domain": False})
+
+
+def test_is_public_domain_ignores_substring_in_filename():
+    # "public_domain" as a filename fragment, not a path component, must not match.
+    assert not is_public_domain("library/x/y/books/public_domain_notes.epub")
