@@ -42,6 +42,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 from wiki_creator.chapters import resolve_chapter_number
 from wiki_creator.lang import load_lang_config
 from wiki_creator.editorial_stance import GROUNDING_BLOCK, EditorialStance, editorial_stance
+from wiki_creator.register import DEFAULT_REGISTER, register_clause
 from wiki_creator.page_templates import (
     few_shot_example,
     language_name,
@@ -323,6 +324,7 @@ def build_prompt(
     lang: str = "fr",
     covered_prose: str = "",
     page_sections: list[str] | None = None,
+    register: str = DEFAULT_REGISTER,
 ) -> str:
     stance = stance or EditorialStance()
     lang_name = language_name(lang)
@@ -666,7 +668,7 @@ Chapter summaries (orientation context — lower priority than excerpts):
 WRITING RULES (follow strictly):
 
 Tone and register:
-- Write in encyclopedic {lang_name}. Neutral, precise, factual.
+- Write in encyclopedic {lang_name}. {register}
 - Describe what the entity IS before describing what happens to it.
 - When a chapter summary is tagged with a subjective POV, attribute contested claims to that viewpoint ("according to X", "from X's point of view") rather than stating them as fact.
 - Use specific, concrete language. Avoid generic adjectives without textual evidence.
@@ -963,6 +965,7 @@ def _wiki_page_item_input(
     stance: EditorialStance | None = None,
     covered_prose: str = "",
     page_sections: list[str] | None = None,
+    register: str = DEFAULT_REGISTER,
 ) -> dict:
     # language / forbidden_names / file_path / grounding_* feed the
     # wiki-page-validator stage inside the wiki-page-item pipeline (its
@@ -980,6 +983,7 @@ def _wiki_page_item_input(
             entity, book_title, sections=sections,
             forbidden_names=forbidden_names, stance=stance, lang=language,
             covered_prose=covered_prose, page_sections=page_sections,
+            register=register,
         ),
     }
     grounding = grounding or {}
@@ -1009,6 +1013,7 @@ def _run_wiki_page_item(
     stance: EditorialStance | None = None,
     covered_prose: str = "",
     page_sections: list[str] | None = None,
+    register: str = DEFAULT_REGISTER,
 ) -> dict:
     item_input = _wiki_page_item_input(
         entity=entity,
@@ -1023,6 +1028,7 @@ def _run_wiki_page_item(
         stance=stance,
         covered_prose=covered_prose,
         page_sections=page_sections,
+        register=register,
     )
     return (runner or StudioRunner()).run_item(item_input, entity, timeout)
 
@@ -1465,6 +1471,7 @@ def _generate_one_section(
     stance: EditorialStance | None = None,
     covered_prose: str = "",
     page_sections: list[str] | None = None,
+    register: str = DEFAULT_REGISTER,
 ) -> tuple[str | None, dict | None]:
     """Generate a single section via a scoped wiki-page-item call.
 
@@ -1489,6 +1496,7 @@ def _generate_one_section(
             sections=[section], max_tokens=max_tokens, forbidden_names=forbidden_names,
             language=language, file_path=file_path, grounding=grounding, runner=runner,
             stance=stance, covered_prose=covered_prose, page_sections=page_sections,
+            register=register,
         )
 
     result = _once()
@@ -1613,6 +1621,7 @@ def _run_generation_for_entity(
         return make_stub_page(entity, lang=language)
 
     stance = editorial_stance(book_config or {})
+    register = register_clause(book_config or {})
     item_result = _run_wiki_page_item(
         entity=entity,
         book_title=book_title,
@@ -1622,6 +1631,7 @@ def _run_generation_for_entity(
         max_tokens=max_tokens,
         forbidden_names=forbidden_names,
         stance=stance,
+        register=register,
         language=language,
         file_path=file_path,
         grounding=grounding,
@@ -1663,6 +1673,7 @@ def _run_generation_for_entity(
                 max_tokens=max_tokens,
                 forbidden_names=forbidden_names,
                 stance=stance,
+                register=register,
                 language=language,
                 file_path=file_path,
                 grounding=grounding,
@@ -1722,6 +1733,7 @@ def _run_generation_sectioned(
         return make_stub_page(entity, lang=language)
 
     stance = editorial_stance(book_config or {})
+    register = register_clause(book_config or {})
     content_sections = [s for s in sections if s not in ("infobox", "references")]
     per_relation = (
         entity.get("type") == "PERSON"
@@ -1753,6 +1765,7 @@ def _run_generation_sectioned(
             timeout=timeout, max_tokens=max_tokens, forbidden_names=forbidden_names,
             language=language, file_path=file_path, grounding=grounding, runner=runner,
             stance=stance, covered_prose=covered, page_sections=content_sections,
+            register=register,
         )
         if block:
             if section == "narrative_role" and sibling_canonicals:
