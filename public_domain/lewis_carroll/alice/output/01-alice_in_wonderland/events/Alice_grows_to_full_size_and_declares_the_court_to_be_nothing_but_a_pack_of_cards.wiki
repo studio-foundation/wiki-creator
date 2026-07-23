@@ -1,0 +1,15 @@
+{{Infobox event
+|name=Alice grows to full size and declares the court to be nothing but a pack of cards
+|participants=Alice
+|chapitre=12
+}}
+
+== Course of events ==
+
+Alice grew to full size and declared that the court was nothing but a pack of cards. This pronouncement represented a categorical rejection of the legitimacy and authority of the judicial proceedings. The declaration came at a critical moment, following her accidental upset of the jury-box with her skirt while standing as a witness summoned by the White Rabbit. In response to her assertion, Alice refused to abandon the courtroom, maintaining her position despite the profound challenge to the court's authority. The King, who had been presiding as judge adorned with both crown and wig, attempted to restore control by engaging with verses, though his interpretations devolved into absurd and incoherent conclusions. Ultimately, the King moved to reinstate structural order by insisting that all jurymen return to their proper places.
+
+== References ==
+
+- Alice's Adventures in Wonderland
+
+[[Category:Événements]]

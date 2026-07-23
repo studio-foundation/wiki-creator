@@ -1,0 +1,29 @@
+{{Infobox character
+|nom=Mock Turtle
+|apparition=Appears in book 1
+|status=Unknown
+}}
+
+== Biography ==
+
+The Mock Turtle is a Wonderland character who attended school in the sea during his youth under a teacher known as Tortoise. In his encounter with Alice, he demonstrates a critical nature, reproaching her for asking what he considers a simple question and objecting to her recitation for lack of explanation, calling it "by far the most confusing thing I ever heard." He is readily irritable, commanding Alice to "hold your tongue," and appears knowledgeable in aquatic matters. According to Alice's recollection, the Mock Turtle is observed in a melancholic state, associated with weeping.
+
+== Relationships ==
+
+'''[[Alice]]''' — acquaintance. They interact in Wonderland, with Alice posing questions to the Mock Turtle and observing his behavior and teachings.
+
+'''[[Gryphon]]''' — strained_friendship. The Mock Turtle and Gryphon appear together and share activities, including teaching the Lobster Quadrille, though their interactions suggest underlying tension.
+
+'''[[Tortoise]]''' — mentor. The Mock Turtle learned from Tortoise during schooling "in the sea," referring to him as a master who taught him and others.
+
+''Evolution:''
+* [[Alice]] — Acquaintance (ch.9→ch.10)
+* [[Gryphon]] — Strained friendship (ch.9→ch.10)
+* [[Tortoise]] — Mentor (ch.9)
+== References ==
+
+- Alice's Adventures in Wonderland
+
+[[Category:Characters]]
+[[Category:Secondary Characters]]
+[[Category:Personnages du Tome 1]]

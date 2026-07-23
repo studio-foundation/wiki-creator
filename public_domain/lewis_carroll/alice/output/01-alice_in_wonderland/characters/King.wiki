@@ -1,0 +1,37 @@
+{{Infobox character
+|nom=King
+|apparition=Appears in book 1
+|status=Unknown
+|titles=King
+}}
+
+== Biography ==
+
+The King is a monarch who presides as judge over the trial of the Knave of Hearts. He sits upon a throne alongside a Queen and wears both a crown and a great wig—a combination that does not look comfortable or becoming. He maintains authority in his court through formal pronouncements and is assisted by the White Rabbit, who serves as his herald with a trumpet and scroll of parchment. He wears spectacles to observe the proceedings.
+
+During the trial, the King demonstrates a stern judicial manner. He insists with great emphasis and a grave voice that all jury members must return to their proper places before proceedings can continue. He questions witnesses directly, as when he asks Alice what she knows about the matter at hand and presses her when she answers "nothing." His deliberations reveal some uncertainty: when the White Rabbit corrects his language, suggesting a word means the opposite of what he stated, the King accepts the correction and repeats the words to himself—"important—unimportant—unimportant—important—"—as though testing which sounds best. This tendency to reconsider his own pronouncements suggests a hesitancy beneath his surface authority.
+
+== Relationships ==
+
+'''[[Queen]]''' — family. The King and Queen of Hearts jointly occupy the throne, indicating a ruling partnership.
+
+'''[[Alice]]''' — enemy. The King questions Alice directly during the trial, suggesting a combative interaction.
+
+'''[[Knave]]''' — employment. The Knave of Hearts stands before the King in chains during trial proceedings.
+
+'''[[White Rabbit]]''' — employment. The White Rabbit stands near the King bearing the trumpet and parchment, suggesting a court attendant role.
+
+''Evolution:''
+* [[White Rabbit]] — Employment (ch.11→ch.12)
+* [[Hatter]] — Employment (ch.11)
+* [[Queen]] — Family (ch.8→ch.12)
+* [[Alice]] — Enemy (ch.8→ch.12)
+* [[Knave]] — Employment (ch.8→ch.12)
+* [[Cheshire Cat]] — Enemy (ch.8)
+== References ==
+
+- Alice's Adventures in Wonderland
+
+[[Category:Characters]]
+[[Category:Secondary Characters]]
+[[Category:Personnages du Tome 1]]

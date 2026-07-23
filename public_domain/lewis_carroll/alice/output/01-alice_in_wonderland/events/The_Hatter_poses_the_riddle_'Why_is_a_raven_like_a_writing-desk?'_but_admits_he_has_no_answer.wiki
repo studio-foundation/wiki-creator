@@ -1,0 +1,15 @@
+{{Infobox event
+|name=The Hatter poses the riddle 'Why is a raven like a writing-desk?' but admits he has no answer
+|participants=Hatter
+|chapitre=7
+}}
+
+== Course of events ==
+
+The Hatter poses the riddle "Why is a raven like a writing-desk?" during an encounter marked by peculiar absurdity and logical inversions. Upon posing the riddle, the Hatter openly admits he has no answer to it. This disclosure stands as a remarkable moment within an already bewildering gathering, where conventional meaning and sense are systematically inverted through wordplay and contradiction. The Hatter's presentation of an unsolvable riddle—and his candid admission of its irresolution—serves as a crystalline example of the illogical world in which he and his companions find themselves trapped, perpetually removed from ordinary time and reason.
+
+== References ==
+
+- Alice's Adventures in Wonderland
+
+[[Category:Événements]]

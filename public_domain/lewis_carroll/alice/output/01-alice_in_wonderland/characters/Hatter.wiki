@@ -1,0 +1,35 @@
+{{Infobox character
+|nom=Hatter
+|apparition=Appears in book 1
+|status=Unknown
+}}
+
+== Biography ==
+
+The Hatter is a local resident known for his peculiar wit and manner of speech. He hosts a tea party with the March Hare and the Dormouse, where he engages in philosophical disputes about language and logic. When Alice suggests that "I mean what I say" is equivalent to "I say what I mean," he disputes her reasoning: "You might just as well say that 'I see what I eat' is the same thing as 'I eat what I see'!" He demonstrates contempt for Time itself, claiming that Alice has never spoken to it. He later appears at a trial on the fourteenth of March, where he becomes noticeably anxious. Under the King's questioning, he admits to having a poor memory and identifies himself as "a poor man."
+
+== Relationships ==
+
+'''[[March Hare]]''' — acquaintance. The two appear to be regular companions who share tea together, though they exchange sharp words over practical matters.
+
+'''[[Dormouse]]''' — acquaintance. The Dormouse appears to be a customary third party at the Hatter and March Hare's tea gatherings, often asleep between them.
+
+'''[[Alice]]''' — friendly_rivalry. The Hatter observes Alice with apparent curiosity, engages her in absurd logical arguments, and offers her pointed criticism regarding her appearance.
+
+'''[[King]]''' — employment. The Hatter appears in court subject to the King's authority, required to give testimony and threatened with execution for failing to comply.
+
+'''[[Queen]]''' — enemy. The Queen's gaze at the Hatter in court causes him visible distress and fear, causing him to tremble and lose his composure. They appear to have a history of conflict; the Queen has previously threatened his execution.
+
+''Evolution:''
+* [[King]] — Employment (ch.11)
+* [[Queen]] — Enemy (ch.11)
+* [[March Hare]] — Acquaintance (ch.7→ch.11)
+* [[Dormouse]] — Acquaintance (ch.7→ch.11)
+* [[Alice]] — Friendly rivalry (ch.7)
+== References ==
+
+- Alice's Adventures in Wonderland
+
+[[Category:Characters]]
+[[Category:Secondary Characters]]
+[[Category:Personnages du Tome 1]]

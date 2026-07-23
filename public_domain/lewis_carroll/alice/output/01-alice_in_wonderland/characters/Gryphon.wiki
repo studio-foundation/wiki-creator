@@ -1,0 +1,32 @@
+{{Infobox character
+|nom=Gryphon
+|apparition=Appears in book 1
+|status=Unknown
+}}
+
+== Biography ==
+
+The Gryphon is a creature of Wonderland who regularly associates with the Mock Turtle. It exhibits a critical and impatient disposition. When Alice asks the Gryphon about the Mock Turtle's sorrow, the Gryphon responds dismissively, declaring it "all his fancy" and asserting that the Mock Turtle "hasn't got no sorrow." Upon posing what the Gryphon considers a simple question, Alice receives a sharp rebuke: "You ought to be ashamed of yourself for asking such a simple question." Both the Gryphon and Mock Turtle then regard her in silent disapproval. The Gryphon appears to exercise authority over the Mock Turtle, issuing commands such as "Drive on, old fellow! Don't be all day about it!" The Gryphon's presence in Wonderland is marked by distinctive shrieks that sound among the characteristic noises of the realm.
+
+== Relationships ==
+
+'''[[Alice]]''' — acquaintance. The Gryphon encounters Alice and criticizes her for asking basic questions, though she remains in their presence.
+
+'''[[Mock Turtle]]''' — strained_friendship. The Gryphon appears to be a close companion of the Mock Turtle, though demonstrates impatience and takes a commanding stance during their time together.
+
+'''[[Queen]]''' — suggests involvement with Wonderland's broader social order, though specific details of any direct relationship remain undocumented.
+
+'''[[Tortoise]]''' — indirectly connected through the Mock Turtle's account of the Tortoise as a former teacher from their schooldays at sea.
+
+''Evolution:''
+* [[Alice]] — Acquaintance (ch.9→ch.11)
+* [[Mock Turtle]] — Strained friendship (ch.9→ch.10)
+* [[Queen]] — Employment (ch.9)
+* [[Tortoise]] — Mentor (ch.9)
+== References ==
+
+- Alice's Adventures in Wonderland
+
+[[Category:Characters]]
+[[Category:Secondary Characters]]
+[[Category:Personnages du Tome 1]]

@@ -1,0 +1,16 @@
+= Catégories =
+This page documents the category hierarchy used in this wiki.
+
+== Characters ==
+* [[Category:Characters]]
+** [[Category:Main Characters]]
+** [[Category:Secondary Characters]]
+
+== Locations ==
+* [[Category:Locations]]
+
+== Organizations ==
+* [[Category:Organizations]]
+
+== Événements ==
+* [[Category:Événements]]

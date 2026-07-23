@@ -1,0 +1,26 @@
+{{Infobox character
+|nom=Duchess
+|apparition=Appears in book 1
+|status=Unknown
+}}
+
+== Biography ==
+
+The Duchess is a figure of authority in Wonderland known for her volatile temperament. The White Rabbit exhibits considerable anxiety about keeping her waiting, fearing she will become savage if displeased. Alice has encountered her in both fierce and pleasant states, leading her to theorize that pepper might influence the Duchess's disposition.
+
+== Relationships ==
+
+'''[[Queen]]''' — enemy
+
+'''[[White Rabbit]]''' — employment
+
+'''[[Alice]]''' — acquaintance
+
+''Evolution:''
+* [[Queen]] — Enemy (ch.8→ch.9)
+* [[Alice]] — Acquaintance (ch.6)
+* [[White Rabbit]] — Employment (ch.2→ch.4)
+
+
+[[Category:Characters]]
+[[Category:Personnages du Tome 1]]

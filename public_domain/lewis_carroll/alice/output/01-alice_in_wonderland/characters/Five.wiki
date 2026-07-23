@@ -1,0 +1,29 @@
+{{Infobox character
+|nom=Five
+|apparition=Appears in book 1
+|status=Unknown
+}}
+
+== Biography ==
+
+Five is one of three gardeners in the Queen's garden tasked with painting white roses red to conceal a planting error before the Queen's discovery. He exhibits a sulky disposition and characteristically deflects blame for his own mistakes; when his painting splashes, he attributes the incident to Seven jogging his elbow rather than acknowledging his own carelessness.
+
+== Relationships ==
+
+'''[[Alice]]''' — ally. Five's connection with Alice appears to form through her presence at the gardeners' work.
+
+'''[[Queen]]''' — enemy. The Queen represents the threat of execution should she discover their planting error.
+
+'''[[Seven]]''' — acquaintance. Seven and Five exchange accusations over the spilled paint, each deflecting blame.
+
+'''[[Two]]''' — ally. Two works alongside Five on the task of repainting the roses.
+
+''Evolution:''
+* [[Alice]] — Ally (ch.8)
+* [[Queen]] — Enemy (ch.8)
+* [[Seven]] — Acquaintance (ch.8)
+* [[Two]] — Ally (ch.8)
+
+
+[[Category:Characters]]
+[[Category:Personnages du Tome 1]]

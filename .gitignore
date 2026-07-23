@@ -82,11 +82,12 @@ library/**/wiki_inputs/
 library/**/output/
 library/**/registry.json
 library/**/character_graph.json
-# public_domain ships its EPUBs + YAMLs (distributable), but its run outputs are
-# regenerable and stay out of git, same as library/.
+# public_domain ships its EPUBs + YAMLs (distributable), and its exported wikis
+# (output/) ARE committed as demo artifacts (STU-617) — the point of the corpus is
+# to show a built wiki. The intermediate artifacts stay out of git: regenerable,
+# large, and not the deliverable.
 public_domain/**/processing_output/
 public_domain/**/wiki_inputs/
-public_domain/**/output/
 public_domain/**/registry.json
 public_domain/**/character_graph.json
 .wiki_runs/

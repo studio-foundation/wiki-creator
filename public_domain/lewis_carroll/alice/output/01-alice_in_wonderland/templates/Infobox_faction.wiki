@@ -1,0 +1,14 @@
+<includeonly>
+{| class="infobox"
+|-
+! colspan="2" | {{{name}}}
+|-
+| '''Type''' || {{{type|}}}
+|-
+| '''Chef(s)''' || {{{leaders|}}}
+|-
+| '''Membres notables''' || {{{members|}}}
+|-
+| '''Première mention''' || {{{first_seen|}}}
+|}
+</includeonly>
