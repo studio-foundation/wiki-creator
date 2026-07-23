@@ -135,14 +135,23 @@ def _isolate_section(content: str, section: str, lang: str = "fr") -> str | None
 
     blocks = []
     for h, b in zip(headings, bodies):
-        blocks.append((_norm(h), f"{h.strip()}\n\n{b.strip()}".strip()))
+        blocks.append((_norm(h), f"{h.strip()}\n\n{b.strip()}".strip(), b.strip()))
     # Prefer an exact title match; else, if exactly one non-infobox block, take it.
-    for norm, block in blocks:
+    for norm, block, _body in blocks:
         if norm == title.lower():
             return block
-    non_infobox = [blk for norm, blk in blocks if norm != slot_label("infobox", lang).lower()]
+    non_infobox = [
+        (block, body)
+        for norm, block, body in blocks
+        if norm != slot_label("infobox", lang).lower()
+    ]
     if len(non_infobox) == 1:
-        return non_infobox[0]
+        # The model wrote a heading that isn't the requested one (a `physical`
+        # section returned as `## Biography`, primed by the few-shot). Force the
+        # canonical title so it lands as the requested section instead of
+        # duplicating a heading already on the page and silently dropping this one.
+        _block, body = non_infobox[0]
+        return f"## {title}\n\n{body}".strip()
     return None
 
 
