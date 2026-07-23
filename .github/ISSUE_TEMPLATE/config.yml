@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Contributing guide
+    url: https://github.com/studio-foundation/wiki-creator/blob/main/CONTRIBUTING.md
+    about: How to set up, add a language, adapt a template, and open a PR.
