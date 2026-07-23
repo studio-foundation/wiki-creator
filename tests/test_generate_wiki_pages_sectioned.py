@@ -191,6 +191,18 @@ def test_isolate_section_wraps_bare_body(monkeypatch):
     assert out == "## Biographie\n\nJuste le corps."
 
 
+def test_isolate_section_forces_canonical_title_on_mismatched_heading(monkeypatch):
+    # The model wrote `## Biographie` for a `physical` section (few-shot drift);
+    # the single-bloc fallback must relabel it to the requested title, not keep
+    # the model's heading (which would duplicate Biographie and drop Apparence).
+    mismatched = "## Biographie\n\nDescription physique réelle."
+    monkeypatch.setattr(gwp, "_run_wiki_page_item", lambda **kw: _fake_item(mismatched))
+    out, _ = gwp._generate_one_section(entity={"canonical_name": "A"}, section="physical",
+                                    book_title="B", model="m", timeout=10, max_tokens=500)
+    assert out == f"## {gwp.slot_label('physical', 'fr')}\n\nDescription physique réelle."
+    assert "Biographie" not in out
+
+
 def test_isolate_section_none_when_only_infobox(monkeypatch):
     monkeypatch.setattr(gwp, "_run_wiki_page_item", lambda **kw: _fake_item("## Infobox\n\n- Nom: X"))
     out, _ = gwp._generate_one_section(entity={"canonical_name": "A"}, section="biography",
