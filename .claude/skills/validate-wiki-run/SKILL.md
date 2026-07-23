@@ -82,8 +82,13 @@ for p in pages:
                       ('La cour des lions','halluc_titre'),('Duchess of Danger','halluc_titre')]:
         if kw in content + str(ib): issues.append(label)
     en = any(w in content for w in ['is the','was a','known as','also known','she was','he is'])
-    fr = any(w in content for w in ['est le','est un','était','dans le','il est','elle est'])
-    lang = 'MIXTE' if en and fr else ('EN' if en else 'FR')
+    fr = any(w in content for w in [' est ',' une ',' était','dans le',' il est',' elle est'])
+    # Absence of EN sample phrases is NOT French — an English page without these exact
+    # phrases (e.g. "March Hare", "Duchess", "Queen") was mislabeled FR and inflated a
+    # bogus "16 FR pages". Expected language is the book's own
+    # (export.categories.language / output_language); the sniff only surfaces genuine
+    # cross-language contamination (both markers on one page) or a real FR marker.
+    lang = 'MIXTE' if en and fr else ('FR' if fr else 'EN')
     print(f"{p['title'][:30]:<30} {p['importance']:<10} {p.get('entity_type','?'):<8} ib={len(ib)} {lang} | {', '.join(issues) if issues else 'OK'}")
 
 # Sommaire
@@ -92,7 +97,7 @@ print(f"Infobox peuplées: {sum(1 for p in pages if p.get('infobox_fields'))}/{l
 print(f"Clés préfixées: {sum(1 for p in pages if any(k.startswith('- ') for k in p.get('infobox_fields',{})))}")
 print(f"## Relations: {sum(1 for p in pages if '## Relations' in p.get('content','') or '**Relations**' in p.get('content',''))}/{len(pages)}")
 print(f"IDs EPUB: {sum(1 for p in pages if '.xhtml' in p.get('content',''))}")
-print(f"Pages FR: {sum(1 for p in pages if not any(w in p.get('content','') for w in ['is the','was a','known as']))}/{len(pages)}")
+print(f"Pages avec marqueurs FR: {sum(1 for p in pages if any(w in p.get('content','') for w in [' est ',' une ',' était','dans le',' il est',' elle est']))}/{len(pages)} (langue attendue = book yaml, pas ce sniff)")
 
 # Doublons connus
 for d in ['Captain Westfall','Crown Prince','Chaol Westfall']:
