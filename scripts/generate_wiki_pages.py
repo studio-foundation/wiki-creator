@@ -322,6 +322,7 @@ def build_prompt(
     stance: EditorialStance | None = None,
     lang: str = "fr",
     covered_prose: str = "",
+    page_sections: list[str] | None = None,
 ) -> str:
     stance = stance or EditorialStance()
     lang_name = language_name(lang)
@@ -602,6 +603,33 @@ def build_prompt(
             "is already covered above, keep this section brief or omit it rather than repeating."
         )
 
+    # STU-643: biography is generated first and, left unscoped, absorbs the whole
+    # page — the plot arc that belongs to narrative_role and the trait analysis
+    # that belongs to personality. When those specialised sibling sections exist
+    # on this page, tell biography to stay in its lane. Gated on their presence so
+    # a figurant whose only section is biography still gets a self-contained one.
+    biography_scope_rule = ""
+    if etype == "PERSON" and sections == ["biography"] and page_sections:
+        deferrals = []
+        if "narrative_role" in page_sections:
+            deferrals.append(
+                f'a separate "## {slot_label("narrative_role", lang)}" section covers the '
+                "chronological plot arc — here, state who the character is and their overall "
+                "place in the story; do NOT retell the events beat by beat"
+            )
+        if "personality" in page_sections:
+            deferrals.append(
+                f'a separate "## {slot_label("personality", lang)}" section covers character '
+                "traits — here, state what the character IS factually; do NOT analyse their "
+                "temperament, psychology, or disposition"
+            )
+        if deferrals:
+            biography_scope_rule = (
+                "\n- This page has other sections that each own a scope: "
+                + "; ".join(deferrals)
+                + ". Keep the biography factual and concise."
+            )
+
     return f"""{GROUNDING_BLOCK}
 
 {stance.prompt_block(sections, lang)}
@@ -650,7 +678,7 @@ Content constraints:
 - Do NOT invent plot details, relationships, abilities, or physical traits not supported by excerpts.
 - Do NOT turn cooccurrence between entities into narrative causality.
 - Confidence markers: each relationship carries a "confidence" tag. State "explicit" relationships as fact (direct affirmation). Phrase "inferred" and "interpretation" relationships tentatively ("seems", "suggests", "could indicate") — never as established fact. Indirect relationships listed as "inferred: true" are interpretation: mention them only with such hedged phrasing, if at all.
-- When referring to related entities or characters, use their name EXACTLY as written in the excerpts or relationships list — do not paraphrase, alter, or approximate names.{place_events_rule}{narrative_role_rule}{backstory_rule}{covered_rule}
+- When referring to related entities or characters, use their name EXACTLY as written in the excerpts or relationships list — do not paraphrase, alter, or approximate names.{place_events_rule}{narrative_role_rule}{backstory_rule}{biography_scope_rule}{covered_rule}
 - If information is insufficient for a section, omit that section entirely.
 - Do NOT write "information not available", "not mentioned in excerpts", or any similar phrase. Omit instead.
 - Omit infobox fields entirely if their value is unknown.
@@ -934,6 +962,7 @@ def _wiki_page_item_input(
     prompt_override: str | None = None,
     stance: EditorialStance | None = None,
     covered_prose: str = "",
+    page_sections: list[str] | None = None,
 ) -> dict:
     # language / forbidden_names / file_path / grounding_* feed the
     # wiki-page-validator stage inside the wiki-page-item pipeline (its
@@ -950,7 +979,7 @@ def _wiki_page_item_input(
         "prompt": prompt_override or build_prompt(
             entity, book_title, sections=sections,
             forbidden_names=forbidden_names, stance=stance, lang=language,
-            covered_prose=covered_prose,
+            covered_prose=covered_prose, page_sections=page_sections,
         ),
     }
     grounding = grounding or {}
@@ -979,6 +1008,7 @@ def _run_wiki_page_item(
     prompt_override: str | None = None,
     stance: EditorialStance | None = None,
     covered_prose: str = "",
+    page_sections: list[str] | None = None,
 ) -> dict:
     item_input = _wiki_page_item_input(
         entity=entity,
@@ -992,6 +1022,7 @@ def _run_wiki_page_item(
         prompt_override=prompt_override,
         stance=stance,
         covered_prose=covered_prose,
+        page_sections=page_sections,
     )
     return (runner or StudioRunner()).run_item(item_input, entity, timeout)
 
@@ -1433,6 +1464,7 @@ def _generate_one_section(
     runner: StudioRunner | None = None,
     stance: EditorialStance | None = None,
     covered_prose: str = "",
+    page_sections: list[str] | None = None,
 ) -> tuple[str | None, dict | None]:
     """Generate a single section via a scoped wiki-page-item call.
 
@@ -1456,7 +1488,7 @@ def _generate_one_section(
             entity=entity, book_title=book_title, model=model, timeout=timeout,
             sections=[section], max_tokens=max_tokens, forbidden_names=forbidden_names,
             language=language, file_path=file_path, grounding=grounding, runner=runner,
-            stance=stance, covered_prose=covered_prose,
+            stance=stance, covered_prose=covered_prose, page_sections=page_sections,
         )
 
     result = _once()
@@ -1720,7 +1752,7 @@ def _run_generation_sectioned(
             entity=entity, section=section, book_title=book_title, model=model,
             timeout=timeout, max_tokens=max_tokens, forbidden_names=forbidden_names,
             language=language, file_path=file_path, grounding=grounding, runner=runner,
-            stance=stance, covered_prose=covered,
+            stance=stance, covered_prose=covered, page_sections=content_sections,
         )
         if block:
             if section == "narrative_role" and sibling_canonicals:

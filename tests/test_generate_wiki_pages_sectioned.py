@@ -133,6 +133,21 @@ def test_build_prompt_covered_prose_injects_anti_repeat_block_and_rule():
     assert "ALREADY WRITTEN" not in p_without
 
 
+def test_build_prompt_biography_defers_to_sibling_sections():
+    """STU-643: when narrative_role/personality also exist on the page, biography
+    is told to stay factual and not absorb the arc or trait analysis. With no
+    siblings (figurant), it gets no such constraint."""
+    entity = _entity()
+    p = gwp.build_prompt(entity, "ToG", sections=["biography"],
+                         page_sections=["biography", "narrative_role", "personality", "trivia"])
+    assert "own a scope" in p
+    assert "beat by beat" in p          # defers the arc to narrative_role
+    assert "do NOT analyse" in p        # defers traits to personality
+    p_solo = gwp.build_prompt(entity, "ToG", sections=["biography"],
+                              page_sections=["biography"])
+    assert "own a scope" not in p_solo  # figurant biography stays self-contained
+
+
 def test_sectioned_feeds_prior_prose_to_portrait_sections_only(monkeypatch):
     """STU-643: personality/trivia (portrait sections) receive the prose written by
     earlier sections; biography (a contributor) receives none, and the pool grows."""
