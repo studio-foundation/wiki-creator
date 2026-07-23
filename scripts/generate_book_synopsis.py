@@ -46,6 +46,7 @@ from wiki_creator.synopsis import (
     build_synopsis_prompt,
     select_events,
 )
+from wiki_creator.register import register_clause
 from wiki_creator.types import EventBundle
 
 _STUB_CONTENT_FAILED = "## Synopsis\n\n*Échec technique de la génération du synopsis.*"
@@ -131,7 +132,9 @@ def build_synopsis_item(
     forbidden_names = validation_cfg.get("forbidden_names", []) or []
 
     selected = select_events(events, max_per_chapter)
-    prompt = build_synopsis_prompt(selected, book_title, forbidden_names)
+    prompt = build_synopsis_prompt(
+        selected, book_title, forbidden_names, register=register_clause(book_cfg)
+    )
     # language / forbidden_names / file_path feed the wiki-page-validator
     # stage inside the wiki-page-item pipeline (same channel as entity pages).
     item_input = {

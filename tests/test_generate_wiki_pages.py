@@ -544,7 +544,7 @@ def test_run_generation_for_entity_uses_item_runner_when_not_dry(monkeypatch, tm
 
     def fake_runner(*, entity, book_title, model, timeout, sections, max_tokens,
                     forbidden_names=None, language="fr", file_path="", grounding=None, runner=None,
-                    stance=None):
+                    stance=None, register=None):
         calls.append((entity["canonical_name"], book_title, model, timeout, sections, max_tokens))
         return {
             "title": "Victor Grandes",
@@ -1135,6 +1135,27 @@ def test_build_prompt_localizes_titles_briefs_and_directive_in_english():
     assert "Write ALL content in French" in fr
     assert "## Biographie" in fr                      # French default preserved
     assert "Qui est ce personnage" in fr
+
+
+def test_build_prompt_injects_the_book_register_and_defaults_to_neutral():
+    """STU-644: the register clause follows the encyclopedic directive; an
+    unconfigured page keeps the neutral wording."""
+    entity = {
+        "canonical_name": "Alice",
+        "type": "PERSON",
+        "importance": "principal",
+        "aliases": [],
+        "context_by_chapter": {"C01.xhtml": ["She fell down the hole."]},
+    }
+    default = build_prompt(entity, "Alice in Wonderland", sections=["biography"], lang="en")
+    assert "encyclopedic English. Neutral, precise, factual." in default
+
+    whimsical = build_prompt(
+        entity, "Alice in Wonderland", sections=["biography"], lang="en",
+        register="Whimsical, nonsense-tinged.",
+    )
+    assert "encyclopedic English. Whimsical, nonsense-tinged." in whimsical
+    assert "Neutral, precise, factual." not in whimsical
 
 
 # --- STU-291: generation summary log ---

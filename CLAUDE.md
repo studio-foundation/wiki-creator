@@ -1372,6 +1372,24 @@ Inside `wiki-resolution`, order matters:
   Inter-page tone coherence is not contractable per page (INV-08); it belongs to
   the consolidation pass (STU-508).
 
+- Editorial register (STU-644): the **voice/tone** of generated prose is declared
+  per book in `generation.register` (free text, `wiki_creator/register.py`), a
+  *form* axis distinct from STU-507's stance (*who* narrates) and from grounding
+  (*invent nothing*, unconditional). It is the clause that follows "Write in
+  encyclopedic <language>." in the writer prompt — default `Neutral, precise,
+  factual.` (an unconfigured book is byte-identical), or e.g. a whimsical/nonsense
+  voice for *Alice*, gothic for *Notre-Dame de Paris*. The register shapes word
+  choice and rhythm only; every anti-hallucination rule stays in place, so it can
+  never license inventing a fact. A present-but-empty/non-string value **raises**
+  (a silently ignored register is the STU-470 shape). Applied to all three prose
+  surfaces from one helper — entity pages (`build_prompt`), the book synopsis
+  (`build_synopsis_prompt`) and event pages (`build_event_prompt`) — each reading
+  `register_clause(book_cfg)` where `book_cfg` is already in hand. The value rides
+  in `generation_cfg` (entity fingerprint) and in each surface's rendered `prompt`
+  (map-resume item key), so a register edit busts the caches by construction — no
+  fingerprint change. Whether a register clause actually improves the editorial
+  read is a live-LLM judgment (claude:local), not a golden.
+
 - Editorial-stance consolidation (STU-508): a single post-generation pass
   (`consolidate_editorial_stance.py`, the last generation stage of
   `pages-export`; `make consolidate-stance`) scans every generated page

@@ -6,6 +6,8 @@ pure-module pattern.
 """
 from __future__ import annotations
 
+from wiki_creator.register import DEFAULT_REGISTER
+
 SYNOPSIS_TITLE = "Synopsis"
 SYNOPSIS_ENTITY_TYPE = "SYNOPSIS"
 SYNOPSIS_IMPORTANCE = "principal"
@@ -99,6 +101,7 @@ def build_synopsis_prompt(
     events: list[dict],
     book_title: str,
     forbidden_names: list[str] | None = None,
+    register: str = DEFAULT_REGISTER,
 ) -> str:
     """Anchored writer prompt for the book synopsis page.
 
@@ -135,7 +138,7 @@ EVENTS OF THE BOOK, IN NARRATIVE ORDER — these are the ONLY facts you may use:
 WRITING RULES (follow strictly):
 
 Tone and register:
-- Write in encyclopedic French. Neutral, precise, factual.
+- Write in encyclopedic French. {register}
 - Flowing prose in paragraphs — no bullet lists, no headings other than the single "## Synopsis" heading.
 - Use specific, concrete language anchored in the listed events.
 
