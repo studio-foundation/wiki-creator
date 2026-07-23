@@ -92,6 +92,10 @@ public_domain/**/registry.json
 public_domain/**/character_graph.json
 .wiki_runs/
 
+# Per-book run snapshots (CLAUDE.local.md "Back Up Before Running On A Real Book":
+# bak_<DD-MM-YY>/ next to a book's output dirs). Local audit scratch, never committed.
+bak_*/
+
 # Fandom survey corpus — regenerable from scripts/fandom_wikis.yaml, and large
 # (raw_wikitext per page + every infobox Template: page, per wiki). The curated
 # datasets under processing_output/fandom/ stay tracked; this is the scratch
