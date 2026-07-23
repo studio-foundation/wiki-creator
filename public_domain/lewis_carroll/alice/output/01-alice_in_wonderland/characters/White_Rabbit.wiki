@@ -1,0 +1,37 @@
+{{Infobox character
+|nom=White Rabbit
+|apparition=Appears in book 1
+|status=Unknown
+}}
+
+== Biography ==
+
+The White Rabbit serves as an official of the King's court, bearing the symbols of his office—a trumpet and a scroll of parchment. He appears at the trial of the Knave of Hearts, where he enforces the court's proceedings with stern authority. When Alice speaks out of turn during the trial, he cries out "Silence in the court!", demonstrating his responsibility for maintaining order. His manner is anxious and hurried; he moves with urgency through his duties, described as "jumping up in a great hurry" and "trotting along in a great hurry".
+
+Despite his evident deference toward the King—he speaks in "a very respectful tone"—the White Rabbit shows willingness to correct the monarch when necessary. When the King refers to evidence as "very important," the White Rabbit interrupts respectfully to clarify that the King meant "unimportant" instead. He actively participates in the trial's proceedings, announcing new evidence and reporting on a letter discovered during the case. The White Rabbit maintains a residence, indicated by the brass nameplate reading "W. RABBIT" affixed to his house. He is described as appearing "splendidly dressed," carrying white kid gloves and a large fan, suggesting he maintains a formal and proper appearance befitting his official station.
+
+== Relationships ==
+
+'''[[Alice]]''' — acquaintance. Alice approaches the White Rabbit with evident deference and hesitation.
+
+'''[[King]]''' — employment. The White Rabbit serves as an official in the King's Court, maintaining order during proceedings and presenting evidence at the court's direction.
+
+'''[[Duchess]]''' — employment. The White Rabbit appears to serve the Duchess, attending to her needs and concerns with considerable urgency.
+
+'''[[Bill]]''' — employment. Bill seems to work under the White Rabbit's direction.
+
+'''[[Mary Ann]]''' — employment. Mary Ann serves the White Rabbit, responding to his direct commands to fetch items and perform errands on his behalf.
+
+''Evolution:''
+* [[King]] — Employment (ch.11→ch.12)
+* [[Bill]] — Employment (ch.4)
+* [[Mary Ann]] — Employment (ch.4)
+* [[Alice]] — Acquaintance (ch.2→ch.8)
+* [[Duchess]] — Employment (ch.2→ch.4)
+== References ==
+
+- Alice's Adventures in Wonderland
+
+[[Category:Characters]]
+[[Category:Secondary Characters]]
+[[Category:Personnages du Tome 1]]

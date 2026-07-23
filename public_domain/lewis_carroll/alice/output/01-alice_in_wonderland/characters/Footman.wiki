@@ -1,0 +1,12 @@
+{{Infobox character
+|nom=Footman
+|apparition=Appears in book 1
+|status=Unknown
+}}
+
+== Biography ==
+
+The Footman is a servant stationed outside the Duchess's residence. He engages with visitors in absurdly logical conversation, arguing that knocking on a door has no sense when the door lies between the knocker and the person inside—observing that if one were already inside, they might knock to be let out. When a plate comes flying out of the house and grazes his nose, breaking against a nearby tree, he continues speaking in exactly the same tone as if the incident had not occurred, displaying remarkable imperturbability amid chaos.
+
+[[Category:Characters]]
+[[Category:Personnages du Tome 1]]

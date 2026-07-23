@@ -1,0 +1,12 @@
+{{Infobox character
+|nom=Mary Ann
+|apparition=Appears in book 1
+|status=Unknown
+}}
+
+== Biography ==
+
+Mary Ann is the White Rabbit's maid. When Alice encounters the Rabbit, he mistakes her for Mary Ann and instructs her to retrieve a pair of gloves and a fan.
+
+[[Category:Characters]]
+[[Category:Personnages du Tome 1]]

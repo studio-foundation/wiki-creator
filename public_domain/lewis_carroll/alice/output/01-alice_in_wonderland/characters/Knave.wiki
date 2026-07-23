@@ -1,0 +1,28 @@
+{{Infobox character
+|nom=Knave
+|apparition=Appears in book 1
+|status=Unknown
+}}
+
+== Biography ==
+
+The Knave of Hearts serves as an attendant in the royal court of Hearts. He carries ceremonial objects, such as the King's crown on a crimson velvet cushion, during formal processions and executes the Queen's commands with meticulous care. When instructed to manipulate objects, he complies "very carefully."
+
+The Knave is brought before the court in chains, guarded by soldiers. During the proceedings, he defends himself concerning an unspecified matter, asserting that he did not write something and that the absence of a signature absolves him of responsibility. His demeanor throughout is one of melancholy resignation.
+
+== Relationships ==
+
+'''[[King]]''' — employment. The Knave carries the King's crown during formal processions, suggesting he serves in an official capacity at court.
+
+'''[[Queen]]''' — employment. The Knave responds to the Queen's direct commands with obedience, suggesting he is subordinate to her authority.
+
+''Evolution:''
+* [[King]] — Employment (ch.8→ch.12)
+* [[Queen]] — Employment (ch.8→ch.11)
+== References ==
+
+- Alice's Adventures in Wonderland
+
+[[Category:Characters]]
+[[Category:Secondary Characters]]
+[[Category:Personnages du Tome 1]]

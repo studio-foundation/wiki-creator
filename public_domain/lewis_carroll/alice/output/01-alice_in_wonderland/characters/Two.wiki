@@ -1,0 +1,29 @@
+{{Infobox character
+|nom=Two
+|apparition=Appears in book 1
+|status=Unknown
+}}
+
+== Biography ==
+
+Two is one of three gardeners in the Queen's garden. When Alice asks why they are painting the roses, Two explains in a low voice that a white rose-tree was mistakenly planted where a red one should have been. To hide this error before the Queen discovers it, Two and his companions are repainting the roses red, fearing execution if their mistake is found out.
+
+== Relationships ==
+
+'''[[Alice]]''' — ally
+
+'''[[Five]]''' — ally
+
+'''[[Queen]]''' — enemy
+
+'''[[Seven]]''' — acquaintance
+
+''Evolution:''
+* [[Alice]] — Ally (ch.8)
+* [[Five]] — Ally (ch.8)
+* [[Queen]] — Enemy (ch.8)
+* [[Seven]] — Acquaintance (ch.8)
+
+
+[[Category:Characters]]
+[[Category:Personnages du Tome 1]]

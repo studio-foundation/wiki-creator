@@ -1,0 +1,15 @@
+{{Infobox event
+|name=The Mouse promises to tell its sad history but grows angry when Alice misunderstands it
+|participants=Alice, Mouse
+|chapitre=3
+}}
+
+== Course of events ==
+
+After Alice's mention of her cat Dinah has frightened the animals and the Dodo has organized a peculiar Caucus-race with no clear start or finish, the Mouse promises to tell its sad history to Alice and the assembled animals. When Alice misunderstands the Mouse, the Mouse grows angry at the misunderstanding. This moment of tension reveals the difficulty of communication that emerges between Alice and the creatures she encounters in this strange world.
+
+== References ==
+
+- Alice's Adventures in Wonderland
+
+[[Category:Événements]]

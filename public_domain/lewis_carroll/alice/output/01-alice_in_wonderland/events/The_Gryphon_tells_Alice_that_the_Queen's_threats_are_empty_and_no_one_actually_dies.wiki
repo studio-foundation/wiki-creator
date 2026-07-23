@@ -1,0 +1,17 @@
+{{Infobox event
+|name=The Gryphon tells Alice that the Queen's threats are empty and no one actually dies
+|participants=Alice, Gryphon, Queen
+|chapitre=9
+}}
+
+== Course of events ==
+
+Following Alice's return to the croquet game, where she has witnessed the Queen sentencing numerous players to execution, the Gryphon speaks with Alice about the consequences of these pronouncements. The Gryphon tells Alice that the Queen's threats are empty and no one actually dies. This revelation from the Gryphon provides Alice with significant reassurance, offering a counterpoint to the apparent violence of the Queen's judicial proceedings.
+
+The disclosure by the Gryphon to Alice recontextualizes the executions Alice has observed, clarifying that the Queen's threats, despite their severity, carry no actual consequence. The Gryphon's statement serves as a moment of clarification within the chaos of the croquet game, offering Alice understanding of the true nature of the Queen's threats.
+
+== References ==
+
+- Alice's Adventures in Wonderland
+
+[[Category:Événements]]

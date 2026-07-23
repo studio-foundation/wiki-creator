@@ -1,0 +1,15 @@
+{{Infobox event
+|name=Alice becomes trapped in the small room with her arms and legs extending out the window and chimney
+|participants=Alice
+|chapitre=4
+}}
+
+== Course of events ==
+
+Alice becomes trapped in a small room with her arms extending out of the window and her legs extending into the chimney. This confinement follows her earlier encounters with a Mouse, a giant puppy, and a caterpillar smoking a hookah on a mushroom. The event precedes Alice being mistaken for the Rabbit's housemaid, when she is asked to retrieve missing items from his house.
+
+== References ==
+
+- Alice's Adventures in Wonderland
+
+[[Category:Événements]]

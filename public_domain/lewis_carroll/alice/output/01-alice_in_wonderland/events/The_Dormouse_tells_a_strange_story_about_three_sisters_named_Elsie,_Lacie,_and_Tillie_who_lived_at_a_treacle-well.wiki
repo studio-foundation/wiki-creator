@@ -1,0 +1,17 @@
+{{Infobox event
+|name=The Dormouse tells a strange story about three sisters named Elsie, Lacie, and Tillie who lived at a treacle-well
+|participants=Dormouse
+|chapitre=7
+}}
+
+== Course of events ==
+
+An afternoon tea party brings together Alice, the March Hare, the Hatter, and the Dormouse; Alice arrives as an uninvited and unwelcome guest. The tea party occurs under extraordinary circumstances—Time has stopped functioning for the Hatter and his companions, leaving them perpetually at six o'clock—and conversation proceeds through absurd wordplay and logical arguments that distort ordinary meanings.
+
+Within this peculiar setting, the Dormouse tells a story about three sisters named Elsie, Lacie, and Tillie who lived at a treacle-well. The narration forms part of the broader discourse of linguistic absurdity that characterizes the gathering, which continues with further exchanges among its participants.
+
+== References ==
+
+- Alice's Adventures in Wonderland
+
+[[Category:Événements]]

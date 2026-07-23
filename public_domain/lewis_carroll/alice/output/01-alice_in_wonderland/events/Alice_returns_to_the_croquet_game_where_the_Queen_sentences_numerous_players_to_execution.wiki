@@ -1,0 +1,15 @@
+{{Infobox event
+|name=Alice returns to the croquet game where the Queen sentences numerous players to execution
+|participants=Alice, Queen
+|chapitre=9
+}}
+
+== Course of events ==
+
+After leaving the croquet ground to accompany the Gryphon in finding the Mock Turtle and to meet with the Duchess, Alice returns to the croquet game. There, the Queen sentences numerous players to execution. This event brings together Alice and the Queen in a moment of great severity, after which the other characters—including the Duchess, the Gryphon, and the Mock Turtle—continue to occupy Alice's attention with their respective concerns and recollections.
+
+== References ==
+
+- Alice's Adventures in Wonderland
+
+[[Category:Événements]]

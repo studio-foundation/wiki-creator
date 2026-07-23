@@ -1,0 +1,12 @@
+{{Infobox character
+|nom=Tortoise
+|apparition=Appears in book 1
+|status=Unknown
+}}
+
+== Biography ==
+
+Tortoise was a schoolmaster in the sea who taught the Mock Turtle and others during their youth. Though he was an old Turtle, his students called him Tortoise because, as the Mock Turtle recalled, "he taught us."
+
+[[Category:Characters]]
+[[Category:Personnages du Tome 1]]

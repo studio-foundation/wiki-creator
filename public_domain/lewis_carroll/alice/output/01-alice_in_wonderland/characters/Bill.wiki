@@ -1,0 +1,26 @@
+{{Infobox character
+|nom=Bill
+|apparition=Appears in book 1
+|status=Unknown
+}}
+
+== Biography ==
+
+Bill is a worker who takes instructions from a master to perform manual labor involving ladders, ropes, and chimney work.
+
+== Relationships ==
+
+'''[[Alice]]''' — enemy
+
+'''[[Queen]]''' — enemy
+
+'''[[White Rabbit]]''' — employment
+
+''Evolution:''
+* [[Queen]] — Enemy (ch.12)
+* [[Alice]] — Enemy (ch.4)
+* [[White Rabbit]] — Employment (ch.4)
+
+
+[[Category:Characters]]
+[[Category:Personnages du Tome 1]]
