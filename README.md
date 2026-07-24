@@ -151,7 +151,7 @@ Copyleft by conviction, matching [Studio](https://github.com/studio-foundation/s
 
 Wiki Creator ships **no model weights**. Every model it uses is a dependency you install or download yourself, so no third-party model license reaches the AGPL distribution:
 
-- **spaCy models** (`en_core_web_lg`/`sm`, `fr_core_news_lg`) are pulled by the `models`/`dev` extras from Explosion's own release wheels. The `en_core_web_*` models are MIT-licensed; check each model's own page for its terms before you redistribute it.
+- **spaCy models** are pulled by the `models`/`dev` extras from Explosion's own release wheels, each under its own license: `en_core_web_lg`/`sm` are **MIT**, while `fr_core_news_lg` is **LGPL-LR** (its UD French Sequoia training data is LGPL-LR). LGPL-LR is weak copyleft: it constrains *your* redistribution of that model, not this program. Check a model's `meta.json` for its terms before you redistribute it.
 - **GLiNER** and its NER model (`ner.invented_names: true` books) are downloaded from Hugging Face at runtime; the coreference and embedding extras behave the same way.
 
 The tool never bundles a community or in-house model, so the GPL chain a bundled community model would create does not apply here. If you install a copyleft-licensed model yourself, that license governs *your* use of that model, independently of this program's AGPL.
