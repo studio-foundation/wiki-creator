@@ -133,6 +133,22 @@ def test_build_prompt_covered_prose_injects_anti_repeat_block_and_rule():
     assert "ALREADY WRITTEN" not in p_without
 
 
+def test_build_prompt_personality_overrides_omit_if_covered():
+    """STU-653: personality gets a distillation rule that scopes the omit to a
+    genuine absence of traits, and its covered_rule drops the omit-if-covered
+    escape (kept for the other portrait sections)."""
+    entity = _entity()
+    p = gwp.build_prompt(entity, "ToG", sections=["personality"],
+                         covered_prose="## Biographie\n\nAlice curiously followed the rabbit.")
+    assert "Omit this section ONLY when the excerpts ground no character traits" in p
+    assert "distil the disposition" in p
+    assert "keep this section brief or omit it rather than repeating" not in p
+    # a non-personality portrait section keeps the omit escape
+    p_trivia = gwp.build_prompt(entity, "ToG", sections=["trivia"],
+                                covered_prose="## Biographie\n\nAlice followed the rabbit.")
+    assert "keep this section brief or omit it rather than repeating" in p_trivia
+
+
 def test_build_prompt_biography_defers_to_sibling_sections():
     """STU-643: when narrative_role/personality also exist on the page, biography
     is told to stay factual and not absorb the arc or trait analysis. With no
