@@ -30,6 +30,14 @@ jobs:
       - name: Tests
         run: python -m pytest -q
 
+      # The e2e smoke test on the committed fixture novella (EPUB parse + NER
+      # extraction). `pytest -q` above already collects it; running it as its own
+      # named step gives a visible gate the milestones can require. It touches no
+      # LLM — the resolution/generation stages are not exercised — so no provider
+      # or API key is configured here.
+      - name: Smoke test (fixture novella, no API key)
+        run: make smoke
+
       # One process per eval, never `pytest research/` — the dirs are hyphenated,
       # so they are not packages, so two evals in one process share a namespace
       # and `score` shadows `score` (research/README.md). Their own requirements
