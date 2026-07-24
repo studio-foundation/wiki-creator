@@ -1,0 +1,13 @@
+{
+  "name": "wiki-preview",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "M5.1 Fandom Preview — render wiki-creator wikitext output in the browser",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.9"
+  }
+}
