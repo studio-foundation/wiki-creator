@@ -31,6 +31,7 @@ def test_build_index_matches_the_api_shape():
     assert by_path["Synopsis.wiki"]["entityType"] is None
     assert by_path["characters/Alice.wiki"]["slug"] == "characters/Alice"
     assert by_path["characters/Alice.wiki"]["title"] == "Alice"
+    assert "Characters" in by_path["characters/Alice.wiki"]["categories"]
     assert not any(p["path"].startswith("templates/") for p in index["pages"])
 
 

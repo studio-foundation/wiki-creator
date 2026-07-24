@@ -36,6 +36,11 @@ describe('buildIndex', () => {
   it('excludes the templates dir', () => {
     expect(index.pages.some((p) => p.path.startsWith('templates/'))).toBe(false);
   });
+
+  it('carries each page\'s category tags', () => {
+    expect(byPath['characters/Alice.wiki'].categories).toContain('Characters');
+    expect(byPath['characters/Alice.wiki'].categories).toContain('Main Characters');
+  });
 });
 
 describe('loadTemplates', () => {
