@@ -76,4 +76,30 @@ describe('App shell', () => {
     render(<App />);
     expect(await screen.findByText(/Failed to load the wiki/)).toBeTruthy();
   });
+
+  it('wires wikilinks: existing pages navigate, dangling links go red (STU-650)', async () => {
+    window.location.hash = '#/characters/Alice';
+    render(<App />);
+    await screen.findByRole('heading', { name: 'Biography', level: 2 });
+    // [[Wonderland]] resolves to the location page route
+    const wonderland = [...document.querySelectorAll('a.wikilink')].find(
+      (a) => a.dataset.target === 'Wonderland',
+    );
+    expect(wonderland.getAttribute('href')).toBe('#/locations/Wonderland');
+    // [[Dormouse]] has no page → red link, non-navigating
+    const dormouse = [...document.querySelectorAll('a.wikilink')].find(
+      (a) => a.dataset.target === 'Dormouse',
+    );
+    expect(dormouse.classList.contains('is-missing')).toBe(true);
+    expect(dormouse.hasAttribute('href')).toBe(false);
+  });
+
+  it('renders a category view listing its member pages', async () => {
+    window.location.hash = '#/category/Characters';
+    render(<App />);
+    expect(await screen.findByRole('heading', { name: 'Category: Characters' })).toBeTruthy();
+    const members = document.querySelector('.wiki-category-members');
+    expect(members.textContent).toContain('Alice');
+    expect(members.querySelector('a[href="#/characters/Alice"]')).toBeTruthy();
+  });
 });

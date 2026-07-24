@@ -10,11 +10,14 @@ identical in dev and here. The HTTP server also serves the built SPA
 from __future__ import annotations
 
 import json
+import re
 import threading
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
+
+_CATEGORY_RE = re.compile(r"^\[\[Category:([^\]]+)\]\]\s*$", re.M)
 
 # Export subdir -> entity type (mirrors base.yaml#entity_types.export.subdir and
 # the JS SUBDIR_TYPE in preview/src/server/fixture-server.js).
@@ -47,6 +50,7 @@ def build_index(output_dir: Path, book: str = "") -> dict:
             continue
         subdir = rel.rsplit("/", 1)[0] if "/" in rel else ""
         stem = wiki.stem
+        categories = [m.strip() for m in _CATEGORY_RE.findall(wiki.read_text(encoding="utf-8"))]
         pages.append(
             {
                 "title": stem.replace("_", " "),
@@ -54,6 +58,7 @@ def build_index(output_dir: Path, book: str = "") -> dict:
                 "slug": rel[: -len(".wiki")],
                 "entityType": _SUBDIR_TYPE.get(subdir),
                 "subdir": subdir,
+                "categories": categories,
             }
         )
     pages.sort(key=lambda p: (p["path"] != "Main_Page.wiki", p["path"]))

@@ -33,8 +33,15 @@ function listWiki(dir, sub = '') {
   return out;
 }
 
+/** Category tags a page declares (`[[Category:X]]` lines). */
+function pageCategories(outputDir, path) {
+  const re = /^\[\[Category:([^\]]+)\]\]\s*$/gm;
+  const text = readFileSync(join(outputDir, path), 'utf-8');
+  return [...text.matchAll(re)].map((m) => m[1].trim());
+}
+
 /** The page index a book's `output/` exposes.
- * @returns {{book: string, pages: Array<{title,path,slug,entityType,subdir}>}}
+ * @returns {{book: string, pages: Array<{title,path,slug,entityType,subdir,categories}>}}
  */
 export function buildIndex(outputDir, book = '') {
   const pages = listWiki(outputDir)
@@ -49,6 +56,7 @@ export function buildIndex(outputDir, book = '') {
         slug: path.replace(/\.wiki$/, ''), // stable route key, unique per file
         entityType: SUBDIR_TYPE[subdir] ?? null,
         subdir,
+        categories: pageCategories(outputDir, path),
       };
     });
   // Main_Page first, then a stable order by path.

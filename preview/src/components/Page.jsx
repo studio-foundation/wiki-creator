@@ -3,8 +3,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { fetchPage } from '../api.js';
 import { renderWikitext } from '../wikitext/parse.js';
 import { wireCollapsibles } from '../collapsible.js';
+import { wireWikilinks } from '../wikilinks.js';
 
-export default function Page({ page, templates }) {
+export default function Page({ page, templates, resolver }) {
   const [state, setState] = useState({ status: 'loading' });
   const contentRef = useRef(null);
 
@@ -24,8 +25,10 @@ export default function Page({ page, templates }) {
   }, [page.path, templates]);
 
   useEffect(() => {
-    if (state.status === 'ready') wireCollapsibles(contentRef.current);
-  }, [state]);
+    if (state.status !== 'ready') return;
+    wireCollapsibles(contentRef.current);
+    if (resolver) wireWikilinks(contentRef.current, resolver);
+  }, [state, resolver]);
 
   if (state.status === 'loading') return <div className="state">Loading {page.title}…</div>;
   if (state.status === 'error') {
@@ -45,7 +48,11 @@ export default function Page({ page, templates }) {
           <span className="wiki-categories-label">Categories:</span>
           <ul>
             {state.categories.map((c) => (
-              <li key={c}>{c}</li>
+              <li key={c}>
+                <a className="wikilink" href={`#/category/${encodeURIComponent(c)}`}>
+                  {c}
+                </a>
+              </li>
             ))}
           </ul>
         </footer>
