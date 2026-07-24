@@ -41,6 +41,39 @@ def test_blockquote_removed():
     assert convert(md).strip() == ""
 
 
+def test_hyphen_list_item():
+    """Markdown `-` bullet → wikitext `*` (STU-652)."""
+    assert convert("- Alice's Adventures in Wonderland") == "* Alice's Adventures in Wonderland"
+
+
+def test_plus_list_item():
+    """Markdown `+` bullet → wikitext `*`."""
+    assert convert("+ un item") == "* un item"
+
+
+def test_list_item_inline_markup():
+    """List content still gets inline conversion."""
+    assert convert("- **gras** et [[Nom]]") == "* '''gras''' et [[Nom]]"
+
+
+def test_star_bullet_passthrough():
+    """Markdown `*` bullet already valid wikitext, passes through unchanged."""
+    assert convert("* déjà valide") == "* déjà valide"
+
+
+def test_leading_hyphen_not_a_list():
+    """A hyphen without a following space is plain text, not a bullet."""
+    assert convert("-3 degrés") == "-3 degrés"
+    assert convert("--- ") == "--- "
+
+
+def test_references_list_render():
+    """The deterministic References block renders as a wikitext list (STU-652)."""
+    md = "## References\n\n- Alice's Adventures in Wonderland"
+    expected = "== References ==\n\n* Alice's Adventures in Wonderland"
+    assert convert(md) == expected
+
+
 def test_multiline():
     md = "## Biographie\n\n**Pedro Vidal** rencontre [[David Martín]]."
     expected = "== Biographie ==\n\n'''Pedro Vidal''' rencontre [[David Martín]]."
