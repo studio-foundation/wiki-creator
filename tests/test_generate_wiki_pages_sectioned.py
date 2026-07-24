@@ -133,6 +133,22 @@ def test_build_prompt_covered_prose_injects_anti_repeat_block_and_rule():
     assert "ALREADY WRITTEN" not in p_without
 
 
+def test_build_prompt_personality_overrides_omit_if_covered():
+    """STU-653: personality gets a distillation rule that scopes the omit to a
+    genuine absence of traits, and its covered_rule drops the omit-if-covered
+    escape (kept for the other portrait sections)."""
+    entity = _entity()
+    p = gwp.build_prompt(entity, "ToG", sections=["personality"],
+                         covered_prose="## Biographie\n\nAlice curiously followed the rabbit.")
+    assert "Omit this section ONLY when the excerpts ground no character traits" in p
+    assert "distil the disposition" in p
+    assert "keep this section brief or omit it rather than repeating" not in p
+    # a non-personality portrait section keeps the omit escape
+    p_trivia = gwp.build_prompt(entity, "ToG", sections=["trivia"],
+                                covered_prose="## Biographie\n\nAlice followed the rabbit.")
+    assert "keep this section brief or omit it rather than repeating" in p_trivia
+
+
 def test_build_prompt_biography_defers_to_sibling_sections():
     """STU-643: when narrative_role/personality also exist on the page, biography
     is told to stay factual and not absorb the arc or trait analysis. With no
@@ -166,6 +182,25 @@ def test_sectioned_feeds_prior_prose_to_portrait_sections_only(monkeypatch):
     assert "biography body." in seen["personality"]         # consumes biography
     assert "biography body." in seen["trivia"]              # pool grows...
     assert "personality body." in seen["trivia"]            # ...to include personality
+
+
+def test_item_key_ignores_covered_prose_block():
+    """STU-653: the ALREADY WRITTEN anti-repeat block (STU-643) must not enter the
+    item identity — the plan walk stubs the prior prose ("planned") and the replay
+    walk carries the real biography, so a covered-prose-sensitive key drops the
+    section's fan-out result on replay. Two personality items differing ONLY in
+    covered_prose must hash identically; a real content difference still differs."""
+    entity = _entity()
+    a = {"title": "Chaol", "prompt": gwp.build_prompt(
+        entity, "ToG", sections=["personality"], covered_prose="## Bio\n\nStub planned.")}
+    b = {"title": "Chaol", "prompt": gwp.build_prompt(
+        entity, "ToG", sections=["personality"],
+        covered_prose="## Bio\n\nA long, real biography of many sentences and events.")}
+    assert gwp._item_key(a) == gwp._item_key(b)
+    # a genuinely different item (no covered block at all) still hashes apart only
+    # by its real content, not by the stripped block
+    c = {"title": "Chaol", "prompt": gwp.build_prompt(entity, "ToG", sections=["trivia"])}
+    assert gwp._item_key(c) != gwp._item_key(a)
 
 
 def test_sectioned_biography_failure_returns_stub(monkeypatch):

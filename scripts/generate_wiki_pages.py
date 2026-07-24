@@ -598,11 +598,41 @@ def build_prompt(
             "(read-only — do NOT re-tell these anecdotes or events):\n"
             + covered_prose.strip()
         )
-        covered_rule = (
-            "\n- The section(s) above under \"ALREADY WRITTEN\" have already covered "
-            "those events and anecdotes. Do NOT re-narrate them here. Draw on facts, "
-            "traits, or details NOT already stated there; if the only material you have "
-            "is already covered above, keep this section brief or omit it rather than repeating."
+        if "personality" in sections:
+            # STU-653: personality distils disposition FROM those same events, so
+            # the overlap is the point — it must not trigger the omit-if-covered
+            # escape the other portrait sections rely on.
+            covered_rule = (
+                "\n- The section(s) above under \"ALREADY WRITTEN\" narrate what the "
+                "character DOES. Do NOT re-narrate those events here; instead distil the "
+                "disposition they reveal into named traits."
+            )
+        else:
+            covered_rule = (
+                "\n- The section(s) above under \"ALREADY WRITTEN\" have already covered "
+                "those events and anecdotes. Do NOT re-narrate them here. Draw on facts, "
+                "traits, or details NOT already stated there; if the only material you have "
+                "is already covered above, keep this section brief or omit it rather than repeating."
+            )
+
+    # STU-653: personality is an OPT section on the principal tier only, so its
+    # presence in `sections` means a principal. A grounded model was omitting it —
+    # reading the traits as "already covered" by the biography that narrates the
+    # character's reactions. Reframe it as distillation (disposition vs events) and
+    # scope the omit to genuine absence of traits, protecting the grounding invariant.
+    personality_title = slot_label("personality", lang)
+    personality_rule = ""
+    if etype == "PERSON" and "personality" in sections:
+        personality_rule = (
+            f'\n- Write a "## {personality_title}" section whenever the excerpts ground '
+            "character traits — how the character thinks, feels, reacts, or treats others. "
+            "This is a core section for a principal character. Biography and Personality "
+            "answer different questions: biography recounts what happens, personality names "
+            "the disposition those actions reveal. Name each trait (e.g. curious, bold, "
+            "indignant) and ground it in the character's behaviour, WITHOUT re-narrating the "
+            "events. Omit this section ONLY when the excerpts ground no character traits at "
+            "all — never merely because the events are recounted in another section. Do NOT "
+            "invent traits absent from the excerpts."
         )
 
     # STU-643: biography is generated first and, left unscoped, absorbs the whole
@@ -680,7 +710,7 @@ Content constraints:
 - Do NOT invent plot details, relationships, abilities, or physical traits not supported by excerpts.
 - Do NOT turn cooccurrence between entities into narrative causality.
 - Confidence markers: each relationship carries a "confidence" tag. State "explicit" relationships as fact (direct affirmation). Phrase "inferred" and "interpretation" relationships tentatively ("seems", "suggests", "could indicate") — never as established fact. Indirect relationships listed as "inferred: true" are interpretation: mention them only with such hedged phrasing, if at all.
-- When referring to related entities or characters, use their name EXACTLY as written in the excerpts or relationships list — do not paraphrase, alter, or approximate names.{place_events_rule}{narrative_role_rule}{backstory_rule}{biography_scope_rule}{covered_rule}
+- When referring to related entities or characters, use their name EXACTLY as written in the excerpts or relationships list — do not paraphrase, alter, or approximate names.{place_events_rule}{narrative_role_rule}{backstory_rule}{biography_scope_rule}{covered_rule}{personality_rule}
 - If information is insufficient for a section, omit that section entirely.
 - Do NOT write "information not available", "not mentioned in excerpts", or any similar phrase. Omit instead.
 - Omit infobox fields entirely if their value is unknown.
@@ -1133,9 +1163,26 @@ class StudioRunner:
         return studio_io.load_studio_stage_output(run_id, stage)
 
 
+# STU-653: the anti-repeat ALREADY WRITTEN block (STU-643) embeds the prose that
+# earlier sections *actually produced* — which the plan walk stubs as "planned"
+# and the replay walk carries as the real biography. Keying the item on it makes
+# personality/physical/powers/trivia hash differently between the two walks, so
+# the replay can't find its own fan-out result and silently drops the section.
+# The block is anti-repetition CONTEXT, not part of an item's identity (an item
+# is its entity + section + excerpts + config), so it is excised before hashing.
+_COVERED_BLOCK_RE = re.compile(
+    r"\n\nALREADY WRITTEN IN EARLIER SECTIONS OF THIS PAGE.*?(?=\n\n---\n\nWRITING RULES)",
+    re.S,
+)
+
+
 def _item_key(item_input: dict) -> str:
+    keyed = item_input
+    prompt = item_input.get("prompt")
+    if isinstance(prompt, str) and "ALREADY WRITTEN IN EARLIER SECTIONS" in prompt:
+        keyed = {**item_input, "prompt": _COVERED_BLOCK_RE.sub("", prompt)}
     return hashlib.sha256(
-        json.dumps(item_input, sort_keys=True, ensure_ascii=False, default=str).encode("utf-8")
+        json.dumps(keyed, sort_keys=True, ensure_ascii=False, default=str).encode("utf-8")
     ).hexdigest()
 
 
