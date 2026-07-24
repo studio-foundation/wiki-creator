@@ -6,6 +6,13 @@ on:
   pull_request:
   merge_group:
 
+# A newer push to the same branch/PR supersedes an in-flight run — cancel the
+# stale one instead of spending runner minutes finishing it. `main` and the
+# merge queue are never cancelled (their ref is unique per run).
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -27,8 +34,11 @@ jobs:
       - name: Type-check
         run: python -m mypy wiki_creator/
 
+      # `-n auto` fans the suite across the runner's cores (pytest-xdist, in the
+      # dev extra). No test shares mutable state, so it scales near-linearly —
+      # measured ~2.4x on a 4-core runner.
       - name: Tests
-        run: python -m pytest -q
+        run: python -m pytest -q -n auto
 
       # The e2e smoke test on the committed fixture novella (EPUB parse + NER
       # extraction). `pytest -q` above already collects it; running it as its own
