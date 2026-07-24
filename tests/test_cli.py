@@ -111,6 +111,8 @@ def test_book_pages_entities_uses_generator_script(fake_lib, monkeypatch, capsys
     out = capsys.readouterr().out
     assert "generate_wiki_pages.py --book" in out
     assert "--entities Lucy Peter" in out and "--force" in out
+    # The slice re-exports so the .wiki files reflect the regenerated JSON.
+    assert "export_pages.py --book" in out
     assert "studio run" not in out
 
 
