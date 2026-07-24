@@ -79,7 +79,15 @@ def _cmd_book_pages(args: argparse.Namespace) -> int:
             cmd += ["--importance", args.importance]
         if args.force:
             cmd.append("--force")
-        return _exec(cmd, dry_run=args.dry_run)
+        rc = _exec(cmd, dry_run=args.dry_run)
+        if rc != 0:
+            return rc
+        # The slice writes wiki_pages.json only; re-export so the .wiki files
+        # reflect it (assemble -> copyright-check -> wiki-export, from disk).
+        return _exec(
+            [sys.executable, "scripts/export_pages.py", "--book", str(book_path)],
+            dry_run=args.dry_run,
+        )
     if args.max_chapters is not None:
         os.environ["WIKI_MAX_CHAPTERS"] = str(args.max_chapters)
     return _exec(_studio_command("pages-export", book_path), dry_run=args.dry_run)

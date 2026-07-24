@@ -1,5 +1,7 @@
 # Wiki Creator
 
+[![CI](https://github.com/studio-foundation/wiki-creator/actions/workflows/ci.yml/badge.svg)](https://github.com/studio-foundation/wiki-creator/actions/workflows/ci.yml)
+
 **Powered by [Studio](https://github.com/studio-foundation/studio)** -- agentic pipeline orchestrator with structural validation.
 
 > **Status: Active development.** This project is a work in progress and is not feature-complete. Expect rough edges and breaking changes.
