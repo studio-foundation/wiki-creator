@@ -146,3 +146,12 @@ All participants are held to the [Code of Conduct](./CODE_OF_CONDUCT.md).
 GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later) -- see [LICENSE](./LICENSE).
 
 Copyleft by conviction, matching [Studio](https://github.com/studio-foundation/studio): anyone may use, study, and modify Wiki Creator, but modified versions -- including those offered as a network service -- must share their source under the same terms. The AGPL applies to the *program*; the wiki pages it generates are your output, not covered by this license.
+
+### Models are dependencies, not distribution
+
+Wiki Creator ships **no model weights**. Every model it uses is a dependency you install or download yourself, so no third-party model license reaches the AGPL distribution:
+
+- **spaCy models** (`en_core_web_lg`/`sm`, `fr_core_news_lg`) are pulled by the `models`/`dev` extras from Explosion's own release wheels. The `en_core_web_*` models are MIT-licensed; check each model's own page for its terms before you redistribute it.
+- **GLiNER** and its NER model (`ner.invented_names: true` books) are downloaded from Hugging Face at runtime; the coreference and embedding extras behave the same way.
+
+The tool never bundles a community or in-house model, so the GPL chain a bundled community model would create does not apply here. If you install a copyleft-licensed model yourself, that license governs *your* use of that model, independently of this program's AGPL.
