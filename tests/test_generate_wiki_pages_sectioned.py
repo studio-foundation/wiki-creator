@@ -184,6 +184,25 @@ def test_sectioned_feeds_prior_prose_to_portrait_sections_only(monkeypatch):
     assert "personality body." in seen["trivia"]            # ...to include personality
 
 
+def test_item_key_ignores_covered_prose_block():
+    """STU-653: the ALREADY WRITTEN anti-repeat block (STU-643) must not enter the
+    item identity — the plan walk stubs the prior prose ("planned") and the replay
+    walk carries the real biography, so a covered-prose-sensitive key drops the
+    section's fan-out result on replay. Two personality items differing ONLY in
+    covered_prose must hash identically; a real content difference still differs."""
+    entity = _entity()
+    a = {"title": "Chaol", "prompt": gwp.build_prompt(
+        entity, "ToG", sections=["personality"], covered_prose="## Bio\n\nStub planned.")}
+    b = {"title": "Chaol", "prompt": gwp.build_prompt(
+        entity, "ToG", sections=["personality"],
+        covered_prose="## Bio\n\nA long, real biography of many sentences and events.")}
+    assert gwp._item_key(a) == gwp._item_key(b)
+    # a genuinely different item (no covered block at all) still hashes apart only
+    # by its real content, not by the stripped block
+    c = {"title": "Chaol", "prompt": gwp.build_prompt(entity, "ToG", sections=["trivia"])}
+    assert gwp._item_key(c) != gwp._item_key(a)
+
+
 def test_sectioned_biography_failure_returns_stub(monkeypatch):
     _sectioned(monkeypatch, {"biography": None})
     from pathlib import Path

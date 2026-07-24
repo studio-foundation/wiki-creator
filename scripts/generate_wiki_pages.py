@@ -1163,9 +1163,26 @@ class StudioRunner:
         return studio_io.load_studio_stage_output(run_id, stage)
 
 
+# STU-653: the anti-repeat ALREADY WRITTEN block (STU-643) embeds the prose that
+# earlier sections *actually produced* — which the plan walk stubs as "planned"
+# and the replay walk carries as the real biography. Keying the item on it makes
+# personality/physical/powers/trivia hash differently between the two walks, so
+# the replay can't find its own fan-out result and silently drops the section.
+# The block is anti-repetition CONTEXT, not part of an item's identity (an item
+# is its entity + section + excerpts + config), so it is excised before hashing.
+_COVERED_BLOCK_RE = re.compile(
+    r"\n\nALREADY WRITTEN IN EARLIER SECTIONS OF THIS PAGE.*?(?=\n\n---\n\nWRITING RULES)",
+    re.S,
+)
+
+
 def _item_key(item_input: dict) -> str:
+    keyed = item_input
+    prompt = item_input.get("prompt")
+    if isinstance(prompt, str) and "ALREADY WRITTEN IN EARLIER SECTIONS" in prompt:
+        keyed = {**item_input, "prompt": _COVERED_BLOCK_RE.sub("", prompt)}
     return hashlib.sha256(
-        json.dumps(item_input, sort_keys=True, ensure_ascii=False, default=str).encode("utf-8")
+        json.dumps(keyed, sort_keys=True, ensure_ascii=False, default=str).encode("utf-8")
     ).hexdigest()
 
 
