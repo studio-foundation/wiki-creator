@@ -31,6 +31,9 @@ wiki = "wiki_creator.cli:main"
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
+    # Parallel test execution in CI (`pytest -n auto`): the suite is ~2000 small
+    # tests with no shared-state coupling, so it scales near-linearly with cores.
+    "pytest-xdist>=3.0",
     "mypy>=1.0",
     "types-networkx",
     "types-PyYAML",
