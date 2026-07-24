@@ -13,7 +13,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-from wiki_creator import book_import, item_stream, library
+from wiki_creator import book_import, item_stream, library, preview
+from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.series import discover_series_books
 
 # Short pipeline verb -> Studio pipeline. `run` is the whole build; the rest are
@@ -159,6 +160,55 @@ def _cmd_logs(args: argparse.Namespace) -> int:
     return _exec(["studio", "logs", args.run_id], dry_run=args.dry_run)
 
 
+def _cmd_preview(args: argparse.Namespace) -> int:
+    if args.output:
+        output_dir = Path(args.output)
+        book = args.book or output_dir.name
+    else:
+        if not args.book:
+            print("error: give a book (or --output DIR)", file=sys.stderr)
+            return 2
+        yaml_path = _resolve_book_or_exit(args.book)
+        if yaml_path is None:
+            return 2
+        book = Path(yaml_path).stem
+        output_dir = library._PROJECT_ROOT / book_paths_from_yaml(yaml_path).output
+
+    if not output_dir.is_dir() or not any(output_dir.rglob("*.wiki")):
+        print(
+            f"error: no exported wiki at {output_dir}\n"
+            f"run the pipeline first: wiki book run {book}",
+            file=sys.stderr,
+        )
+        return 2
+
+    dist_dir = library._PROJECT_ROOT / "preview" / "dist"
+    if not preview.preview_app_built(dist_dir):
+        print(
+            "error: preview app not built. Run: (cd preview && npm install && npm run build)",
+            file=sys.stderr,
+        )
+        return 2
+
+    if args.dry_run:
+        opening = "" if args.no_open else " + open browser"
+        print(f"$ serve {output_dir} (app: {dist_dir}) on port {args.port}{opening}")
+        return 0
+
+    httpd = preview.serve(
+        output_dir, dist_dir, book=book, port=args.port, open_browser=not args.no_open
+    )
+    port = httpd.server_address[1]
+    print(f"wiki preview serving {book} at http://127.0.0.1:{port}/ (Ctrl-C to stop)")
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print()
+    finally:
+        httpd.shutdown()
+    return 0
+
+
 def _llm_summary(title: str, author: str | None) -> str:
     """Draft a novel_summary for --llm. Low-risk prose, flagged for reader review."""
     import anthropic
@@ -238,6 +288,13 @@ def _build_parser() -> argparse.ArgumentParser:
     logs = sub.add_parser("logs", parents=[common], help="show a run's log")
     logs.add_argument("run_id", help="run id")
     logs.set_defaults(func=_cmd_logs)
+
+    prev = sub.add_parser("preview", parents=[common], help="serve a book's exported wiki in the browser (STU-646)")
+    prev.add_argument("book", nargs="?", help="book slug, alias, series or author")
+    prev.add_argument("--output", help="serve this output/ dir directly, skipping book resolution")
+    prev.add_argument("--port", type=int, default=4173, help="port (default: 4173)")
+    prev.add_argument("--no-open", action="store_true", help="don't open a browser")
+    prev.set_defaults(func=_cmd_preview)
 
     return parser
 
