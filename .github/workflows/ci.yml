@@ -21,13 +21,15 @@ jobs:
         with:
           fetch-depth: 0  # need history to diff the change range below
 
-      # Docs-only changes (Markdown, docs/, LICENSE) can't affect the suite, so
-      # skip the heavy steps for them. The job still runs and succeeds, so the
-      # required status check reports green — a trigger-level `paths-ignore`
-      # would instead leave the check pending and block a docs-only PR on
-      # protected `main`. merge_group always runs the full suite (the queued
-      # batch may mix docs and code).
-      - name: Detect docs-only change
+      # Changes that can't affect the Python suite — docs (Markdown, docs/,
+      # LICENSE) and the self-contained `preview/` app (its own JS/vitest, no
+      # Python impact) — skip the heavy steps. The job still runs and succeeds,
+      # so the required status check reports green: a trigger-level
+      # `paths-ignore` would instead leave the check pending and block such a PR
+      # on protected `main`. merge_group always runs the full suite (the queued
+      # batch may mix docs, preview and code). preview/ is covered by the
+      # separate `preview` job below.
+      - name: Detect Python-irrelevant change
         id: changes
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
@@ -37,21 +39,21 @@ jobs:
             base='${{ github.event.before }}'
             head='${{ github.sha }}'
           else
-            echo "docs_only=false" >> "$GITHUB_OUTPUT"; exit 0
+            echo "skip_python=false" >> "$GITHUB_OUTPUT"; exit 0
           fi
           if ! git rev-parse --quiet --verify "$base^{commit}" >/dev/null 2>&1; then
-            echo "docs_only=false" >> "$GITHUB_OUTPUT"; exit 0
+            echo "skip_python=false" >> "$GITHUB_OUTPUT"; exit 0
           fi
           files=$(git diff --name-only "$base" "$head")
           echo "changed files:"; echo "$files"
-          if [ -z "$files" ] || ! echo "$files" | grep -qvE '(^docs/|\.md$|^LICENSE$)'; then
-            echo "docs_only=true" >> "$GITHUB_OUTPUT"
+          if [ -z "$files" ] || ! echo "$files" | grep -qvE '(^docs/|\.md$|^LICENSE$|^preview/)'; then
+            echo "skip_python=true" >> "$GITHUB_OUTPUT"
           else
-            echo "docs_only=false" >> "$GITHUB_OUTPUT"
+            echo "skip_python=false" >> "$GITHUB_OUTPUT"
           fi
 
       - uses: actions/setup-python@v5
-        if: steps.changes.outputs.docs_only != 'true'
+        if: steps.changes.outputs.skip_python != 'true'
         with:
           python-version: "3.11"
           cache: pip
@@ -60,19 +62,27 @@ jobs:
       # The [models] extra (~1 GB of lg models) is a run-time need, not a test
       # one; tests needing fr_core_news_lg or the coref/gliner extras skip
       # cleanly (see tests/_markers.py) to keep CI fast.
+      # The en_core_web_sm wheel is fetched from a GitHub release URL, which
+      # intermittently 504s — retry the install so a transient gateway timeout
+      # doesn't red an unrelated PR.
       - name: Install package with dev dependencies
-        if: steps.changes.outputs.docs_only != 'true'
-        run: pip install -e ".[dev]"
+        if: steps.changes.outputs.skip_python != 'true'
+        run: |
+          for attempt in 1 2 3; do
+            pip install -e ".[dev]" && exit 0
+            echo "pip install failed (attempt $attempt) — retrying in 15s"; sleep 15
+          done
+          exit 1
 
       - name: Type-check
-        if: steps.changes.outputs.docs_only != 'true'
+        if: steps.changes.outputs.skip_python != 'true'
         run: python -m mypy wiki_creator/
 
       # `-n auto` fans the suite across the runner's cores (pytest-xdist, in the
       # dev extra). No test shares mutable state, so it scales near-linearly —
       # measured ~2.4x on a 4-core runner.
       - name: Tests
-        if: steps.changes.outputs.docs_only != 'true'
+        if: steps.changes.outputs.skip_python != 'true'
         run: python -m pytest -q -n auto
 
       # The e2e smoke test on the committed fixture novella (EPUB parse + NER
@@ -81,7 +91,7 @@ jobs:
       # LLM — the resolution/generation stages are not exercised — so no provider
       # or API key is configured here.
       - name: Smoke test (fixture novella, no API key)
-        if: steps.changes.outputs.docs_only != 'true'
+        if: steps.changes.outputs.skip_python != 'true'
         run: make smoke
 
       # One process per eval, never `pytest research/` — the dirs are hyphenated,
@@ -89,7 +99,7 @@ jobs:
       # and `score` shadows `score` (research/README.md). Their own requirements
       # are not installed here; these suites cover the pure logic only.
       - name: Research eval suites
-        if: steps.changes.outputs.docs_only != 'true'
+        if: steps.changes.outputs.skip_python != 'true'
         run: |
           for eval in research/*-eval; do
             # a research-only spike ships no tests/ (graph-eval, STU-469)
@@ -98,3 +108,58 @@ jobs:
             (cd "$eval" && PYTHONPATH="$GITHUB_WORKSPACE" python -m pytest tests/ -q)
             echo "::endgroup::"
           done
+
+  # The preview app (M5.1) is a self-contained Vite/React project with its own
+  # vitest suite. It runs only when preview/ changed, so a Python-only PR gets a
+  # green no-op (same reasoning as the docs skip above), and a preview-only PR is
+  # covered here without paying for — or being flaked by — the Python model
+  # install. merge_group runs it unconditionally.
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect preview change
+        id: changes
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base='${{ github.event.pull_request.base.sha }}'
+            head='${{ github.event.pull_request.head.sha }}'
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            base='${{ github.event.before }}'
+            head='${{ github.sha }}'
+          else
+            echo "preview_changed=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          if ! git rev-parse --quiet --verify "$base^{commit}" >/dev/null 2>&1; then
+            echo "preview_changed=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          if git diff --name-only "$base" "$head" | grep -qE '^preview/'; then
+            echo "preview_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "preview_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.changes.outputs.preview_changed == 'true'
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: preview/package-lock.json
+
+      - name: Install
+        if: steps.changes.outputs.preview_changed == 'true'
+        working-directory: preview
+        run: npm ci
+
+      - name: Tests
+        if: steps.changes.outputs.preview_changed == 'true'
+        working-directory: preview
+        run: npm test
+
+      - name: Build
+        if: steps.changes.outputs.preview_changed == 'true'
+        working-directory: preview
+        run: npm run build
