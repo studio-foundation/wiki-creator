@@ -105,8 +105,13 @@ def category_key(etype: str, base: dict | None = None) -> str | None:
     return _export(etype, base).get("category_key")
 
 
-def category_default(etype: str, base: dict | None = None) -> str | None:
-    return _export(etype, base).get("category_default")
+def category_default(etype: str, lang: str | None = None, base: dict | None = None) -> str | None:
+    """Default [[Category:X]] label for a type, keyed by ``lang`` (STU-651). English
+    is the default; a non-English label is data, never a hardcoded Python literal."""
+    value = _export(etype, base).get("category_default")
+    if isinstance(value, dict):
+        return value.get(lang) or value.get("en") or value.get("fr")
+    return value
 
 
 def tome_label_key(etype: str, base: dict | None = None) -> str | None:

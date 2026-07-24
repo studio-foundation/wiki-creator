@@ -28,7 +28,7 @@ from pathlib import Path
 from scripts.wiki_export import render_page, _build_categories_wiki
 from wiki_creator import entity_taxonomy
 from wiki_creator.editorial_stance import EditorialStance
-from wiki_creator.export_helpers import index_limits, main_page_content
+from wiki_creator.export_helpers import category_labels, index_limits, main_page_content
 
 OUT = Path(__file__).resolve().parent / "output"
 LANG = "en"
@@ -262,19 +262,7 @@ def _pages() -> list[dict]:
 
 def _labels() -> dict:
     """Reproduce wiki_export.main's labels dict for the English export config."""
-    labels_cfg = EXPORT_CFG["categories"]["labels"]
-    labels = {
-        "principal": labels_cfg["principal"],
-        "secondary": labels_cfg["secondary"],
-        "persons_by_tome": labels_cfg["persons_by_tome"],
-        "locations_by_tome": labels_cfg["locations_by_tome"],
-        "organizations_by_tome": labels_cfg["organizations_by_tome"],
-    }
-    for etype in entity_taxonomy.declared_types():
-        cat_key = entity_taxonomy.category_key(etype)
-        if cat_key and cat_key not in labels:
-            labels[cat_key] = labels_cfg.get(cat_key) or entity_taxonomy.category_default(etype)
-    return labels
+    return category_labels(EXPORT_CFG["categories"]["labels"], LANG)
 
 
 def build() -> dict[str, str]:
