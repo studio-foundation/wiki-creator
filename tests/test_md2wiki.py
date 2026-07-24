@@ -74,6 +74,37 @@ def test_references_list_render():
     assert convert(md) == expected
 
 
+def test_ordered_list_dot():
+    """Markdown `1.` bullet → wikitext `#`."""
+    assert convert("1. Premier") == "# Premier"
+
+
+def test_ordered_list_paren():
+    """Markdown `1)` bullet → wikitext `#`."""
+    assert convert("2) Deuxième") == "# Deuxième"
+
+
+def test_ordered_list_inline_markup():
+    """Ordered list content still gets inline conversion."""
+    assert convert("1. **gras** et [[Nom]]") == "# '''gras''' et [[Nom]]"
+
+
+def test_decimal_not_a_list():
+    """A decimal number mid-sentence is not an ordered-list item."""
+    assert convert("3.14 est une approximation de pi") == "3.14 est une approximation de pi"
+    assert convert("En 1953, il partit.") == "En 1953, il partit."
+
+
+def test_inline_code():
+    """Markdown `code` → <code>code</code>."""
+    assert convert("Le sort `Fireball` est puissant") == "Le sort <code>Fireball</code> est puissant"
+
+
+def test_bold_italic_passthrough():
+    """***text*** already converts to wikitext bold-italic '''''text'''''."""
+    assert convert("***très fort***") == "'''''très fort'''''"
+
+
 def test_multiline():
     md = "## Biographie\n\n**Pedro Vidal** rencontre [[David Martín]]."
     expected = "== Biographie ==\n\n'''Pedro Vidal''' rencontre [[David Martín]]."

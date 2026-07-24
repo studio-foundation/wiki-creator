@@ -10,6 +10,8 @@ def convert(markdown: str) -> str:
 
     Cross-refs ([[Name]]) and category tags ([[Category:X]]) pass through unchanged.
     Blockquote lines (spoiler warnings) are removed.
+    Lists are flattened to a single level (the converter is line-local): both
+    unordered (-, +) and ordered (1., 1)) markers map to their wikitext bullet.
     """
     lines = markdown.split("\n")
     result = []
@@ -20,6 +22,7 @@ def convert(markdown: str) -> str:
 
 
 _LIST_ITEM = re.compile(r"^\s*[-+]\s+(.*)$")
+_ORDERED_ITEM = re.compile(r"^\s*\d+[.)]\s+(.*)$")
 
 
 def _convert_line(line: str) -> str:
@@ -43,12 +46,20 @@ def _convert_line(line: str) -> str:
     if item:
         return "* " + _convert_inline(item.group(1))
 
+    # Ordered-list markers (1., 1)) → wikitext ordered bullet (#).
+    ordered = _ORDERED_ITEM.match(line)
+    if ordered:
+        return "# " + _convert_inline(ordered.group(1))
+
     # Inline markup
     line = _convert_inline(line)
     return line
 
 
 def _convert_inline(text: str) -> str:
+    # Inline code (`text`) → <code>text</code> — before emphasis so backtick
+    # spans are lifted out first
+    text = re.sub(r"`([^`]+)`", r"<code>\1</code>", text)
     # Bold (**text**) → '''text''' — must be done before italic
     text = re.sub(r"\*\*(.+?)\*\*", r"'''\1'''", text)
     # Italic (*text*) → ''text'' — only single asterisks remaining
