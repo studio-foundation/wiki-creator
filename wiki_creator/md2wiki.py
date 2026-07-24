@@ -19,6 +19,9 @@ def convert(markdown: str) -> str:
     return "\n".join(result)
 
 
+_LIST_ITEM = re.compile(r"^\s*[-+]\s+(.*)$")
+
+
 def _convert_line(line: str) -> str:
     # Remove blockquotes entirely
     if line.startswith(">"):
@@ -33,6 +36,12 @@ def _convert_line(line: str) -> str:
         return "== " + _convert_inline(line[3:]) + " =="
     if line.startswith("# "):
         return "= " + _convert_inline(line[2:]) + " ="
+
+    # Unordered-list markers (-, +) → wikitext bullet (*); markdown * bullets
+    # are already valid wikitext and pass through _convert_inline untouched.
+    item = _LIST_ITEM.match(line)
+    if item:
+        return "* " + _convert_inline(item.group(1))
 
     # Inline markup
     line = _convert_inline(line)
