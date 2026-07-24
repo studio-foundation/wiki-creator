@@ -1,0 +1,12 @@
+{{Infobox location
+|name=Wonderland
+|type=Dream world
+|location=Below the [[Rabbit Hole]]
+}}
+
+== Overview ==
+'''Wonderland''' is the surreal realm Alice reaches through the [[Rabbit Hole]]. Its logic is dream-logic: sizes shift, animals speak, and the [[Court of Hearts]] holds absurd trials.
+
+
+[[Category:Locations]]
+[[Category:Locations (Book 1)]]

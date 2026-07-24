@@ -1,0 +1,12 @@
+{{Infobox organization
+|name=Court of Hearts
+|type=Royal court
+|leader=[[Queen of Hearts]]
+}}
+
+== Overview ==
+The '''Court of Hearts''' is the playing-card court ruled by the [[Queen of Hearts]]. It stages the trial of the Knave and, finally, of [[Alice]] herself.
+
+
+[[Category:Organizations]]
+[[Category:Organizations (Book 1)]]

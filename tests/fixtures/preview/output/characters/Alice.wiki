@@ -1,0 +1,24 @@
+{{Infobox character
+|name=Alice
+|status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
+|species=Human
+|residence=Victorian England
+|first_seen=Chapter 1
+}}
+
+== Biography ==
+'''Alice''' is a curious seven-year-old girl who falls down a rabbit hole into [[Wonderland]], a nonsensical world she explores across the story. She follows the [[White Rabbit]], meets the [[Cheshire Cat]], and clashes with the [[Queen of Hearts]].
+
+== Appearance ==
+Alice wears a blue pinafore dress. Her size changes constantly — she grows ''enormous'' after a cake and shrinks after a drink.
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Chapter 12 — reveal" data-collapsetext="Hide">
+== Narrative role ==
+By the trial, Alice realises the court is ''nothing but a pack of cards'' and wakes — the dream ends. A stray note about the [[Dormouse]] belongs here too.
+
+</div>
+
+
+[[Category:Characters]]
+[[Category:Main Characters]]
+[[Category:Characters (Book 1)]]

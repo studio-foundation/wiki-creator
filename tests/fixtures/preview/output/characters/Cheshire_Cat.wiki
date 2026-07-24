@@ -1,0 +1,14 @@
+{{Infobox character
+|name=Cheshire Cat
+|species=Cat
+|status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
+|first_seen=Chapter 6
+}}
+
+== Biography ==
+The '''Cheshire Cat''' is a grinning cat who can vanish at will, leaving only its smile. It gives Alice riddling directions and unsettles the [[Queen of Hearts]].
+
+
+[[Category:Characters]]
+[[Category:Supporting Characters]]
+[[Category:Characters (Book 1)]]

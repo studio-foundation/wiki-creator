@@ -1,0 +1,14 @@
+<includeonly>
+{| class="infobox"
+|-
+! colspan="2" | {{{name}}}
+|-
+| '''Type''' || {{{type|}}}
+|-
+| '''Localisation''' || {{{location|}}}
+|-
+| '''Première mention''' || {{{first_seen|}}}
+|-
+| '''Résidents notables''' || {{{residents|}}}
+|}
+</includeonly>
