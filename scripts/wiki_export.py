@@ -17,6 +17,7 @@ from wiki_creator.editorial_stance import EditorialStance, editorial_stance
 from wiki_creator.md2wiki import convert, make_infobox_call
 from wiki_creator.export_helpers import (
     page_filename,
+    category_labels,
     category_tags,
     index_limits,
     main_page_content,
@@ -166,23 +167,10 @@ def main() -> None:
 
     export_cfg = input_cfg.get("export", {})
     wiki_dir = paths.output
+    # Category/showcase labels default via base.yaml keyed by output_language
+    # (STU-651), overridable per book by export.categories.labels.
     labels_cfg = export_cfg.get("categories", {}).get("labels", {})
-    labels = {
-        "principal": labels_cfg.get("principal", "Personnages principaux"),
-        "secondary": labels_cfg.get("secondary", "Personnages secondaires"),
-        # Per-tome categories (STU-486): "{n}" is filled with the tome number.
-        "persons_by_tome": labels_cfg.get("persons_by_tome", "Personnages du Tome {n}"),
-        "locations_by_tome": labels_cfg.get("locations_by_tome", "Lieux du Tome {n}"),
-        "organizations_by_tome": labels_cfg.get(
-            "organizations_by_tome", "Organisations du Tome {n}"
-        ),
-    }
-    # Per-type category labels come from base.yaml defaults (STU-505), overridable
-    # by the book YAML's export.categories.labels.
-    for etype in entity_taxonomy.declared_types():
-        cat_key = entity_taxonomy.category_key(etype)
-        if cat_key and cat_key not in labels:
-            labels[cat_key] = labels_cfg.get(cat_key) or entity_taxonomy.category_default(etype)
+    labels = category_labels(labels_cfg, lang)
 
     # Create directories
     (wiki_dir / "templates").mkdir(parents=True, exist_ok=True)

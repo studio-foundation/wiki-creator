@@ -3,6 +3,7 @@ import pytest
 from wiki_creator.export_helpers import (
     index_limits,
     page_filename,
+    category_labels,
     category_tags,
     infobox_template_content,
     main_page_content,
@@ -129,6 +130,43 @@ def test_category_tags_missing_tome_label_config_skips_silently():
               "locations": "L", "organizations": "O"}
     tags = category_tags("PERSON", "principal", labels, books=["01-a"])
     assert not any("Tome" in t for t in tags)
+
+
+# STU-651: category/showcase label defaults follow output_language, never a
+# hardcoded French Python literal. An English book renders English categories
+# without spelling out every key; a French book renders French.
+def test_category_labels_default_to_english():
+    labels = category_labels({}, "en")
+    assert labels["persons"] == "Characters"
+    assert labels["principal"] == "Main characters"
+    assert labels["persons_by_tome"] == "Characters of Book {n}"
+
+
+def test_category_labels_default_to_french_for_french_book():
+    labels = category_labels({}, "fr")
+    assert labels["persons"] == "Personnages"
+    assert labels["principal"] == "Personnages principaux"
+    assert labels["persons_by_tome"] == "Personnages du Tome {n}"
+
+
+def test_category_labels_book_override_wins_over_language_default():
+    labels = category_labels({"persons_by_tome": "Book {n} Cast"}, "en")
+    assert labels["persons_by_tome"] == "Book {n} Cast"
+
+
+def test_english_book_renders_english_by_tome_category():
+    # The STU-651 leak: an English book that does not override persons_by_tome
+    # used to render "Personnages du Tome 1" among English categories.
+    labels = category_labels({}, "en")
+    tags = category_tags("PERSON", "principal", labels, books=["01-alice"])
+    assert "[[Category:Characters of Book 1]]" in tags
+    assert not any("Tome" in t for t in tags)
+
+
+def test_french_book_renders_french_by_tome_category():
+    labels = category_labels({}, "fr")
+    tags = category_tags("PERSON", "principal", labels, books=["01-alice"])
+    assert "[[Category:Personnages du Tome 1]]" in tags
 
 
 def test_infobox_template_person_contains_name_field():

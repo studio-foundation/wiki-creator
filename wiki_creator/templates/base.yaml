@@ -20,7 +20,7 @@ entity_types:
       full_key: persons
       infobox_template: Infobox character
       category_key: persons
-      category_default: Personnages
+      category_default: {fr: Personnages, en: Characters}
       importance_categories: true
       tome_label_key: persons_by_tome
       infobox_source: |-
@@ -76,7 +76,7 @@ entity_types:
       full_key: places
       infobox_template: Infobox location
       category_key: locations
-      category_default: Lieux
+      category_default: {fr: Lieux, en: Locations}
       tome_label_key: locations_by_tome
       infobox_source: |-
         <includeonly>
@@ -113,7 +113,7 @@ entity_types:
       full_key: orgs
       infobox_template: Infobox organization
       category_key: organizations
-      category_default: Organisations
+      category_default: {fr: Organisations, en: Organizations}
       tome_label_key: organizations_by_tome
       infobox_source: |-
         <includeonly>
@@ -149,7 +149,7 @@ entity_types:
       full_key: events
       infobox_template: Infobox event
       category_key: events
-      category_default: Événements
+      category_default: {fr: Événements, en: Events}
       infobox_source: |-
         <includeonly>
         {| class="infobox"
@@ -184,7 +184,7 @@ entity_types:
       full_key: factions
       infobox_template: Infobox faction
       category_key: factions
-      category_default: Factions
+      category_default: {fr: Factions, en: Factions}
       infobox_source: |-
         <includeonly>
         {| class="infobox"
@@ -408,6 +408,15 @@ chrome:
   collation_mentions:  {fr: "Mentionné {mentions} fois dans {chapters} chapitre(s).", en: "Mentioned {mentions} times in {chapters} chapter(s)."}
   # STU-514: event-page title disambiguation suffix (chapter tag on colliding titles).
   chapter_tag:         {fr: "chapitre {chapter}", en: "chapter {chapter}"}
+  # STU-651: export category / showcase label defaults, keyed by output_language
+  # (English default, French only when the book is French) — a book need not spell
+  # out every key in export.categories.labels for its wiki to stay in one language.
+  # `{n}` is the tome number. Overridable per book via export.categories.labels.
+  principal:             {fr: "Personnages principaux", en: "Main characters"}
+  secondary:             {fr: "Personnages secondaires", en: "Secondary characters"}
+  persons_by_tome:       {fr: "Personnages du Tome {n}", en: "Characters of Book {n}"}
+  locations_by_tome:     {fr: "Lieux du Tome {n}", en: "Locations of Book {n}"}
+  organizations_by_tome: {fr: "Organisations du Tome {n}", en: "Organizations of Book {n}"}
 # STU-516: reader-facing stub-page bodies, rendered as-is in the wiki when an
 # entity's page cannot be generated. Localized like the rest of the output.
 stubs:
