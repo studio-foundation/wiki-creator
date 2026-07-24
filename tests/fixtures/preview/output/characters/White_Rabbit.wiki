@@ -1,0 +1,16 @@
+{{Infobox character
+|name=White Rabbit
+|species=Rabbit
+|status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
+|occupation=Herald
+|affiliation=[[Court of Hearts]]
+|first_seen=Chapter 1
+}}
+
+== Biography ==
+The '''White Rabbit''' is a fretful, waistcoat-wearing rabbit who hurries through [[Wonderland]] muttering ''"Oh dear! I shall be late!"'' It is he Alice follows down the [[Rabbit Hole]].
+
+
+[[Category:Characters]]
+[[Category:Main Characters]]
+[[Category:Characters (Book 1)]]
