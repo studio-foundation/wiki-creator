@@ -1,0 +1,12 @@
+{{Infobox event
+|name=A Mad Tea-Party
+|participants=[[Alice]], [[Cheshire Cat]]
+|location=[[Wonderland]]
+|chapter=Chapter 7
+}}
+
+== Overview ==
+'''A Mad Tea-Party''' is the endless tea party where time itself has stopped at six o'clock. Alice is quizzed with the riddle ''"Why is a raven like a writing-desk?"'' and leaves in disgust.
+
+
+[[Category:Events]]

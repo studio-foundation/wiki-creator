@@ -1,0 +1,11 @@
+{{Infobox location
+|name=Rabbit Hole
+|type=Passage
+}}
+
+== Overview ==
+The '''Rabbit Hole''' is the tunnel Alice tumbles down after the [[White Rabbit]], falling slowly past shelves and maps into [[Wonderland]].
+
+
+[[Category:Locations]]
+[[Category:Locations (Book 1)]]
