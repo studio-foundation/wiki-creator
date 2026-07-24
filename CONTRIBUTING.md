@@ -78,6 +78,22 @@ CI (`.github/workflows/ci.yml`) runs `mypy wiki_creator/`, `pytest -q`, and the
   is one — `fix: gate Relationships section on usable relation data (STU-628)`.
 - Commit small and often — don't batch unrelated fixes into one commit.
 
+### Sign-off (DCO)
+
+This project uses the [Developer Certificate of Origin](DCO) instead of a CLA:
+you keep the copyright to your contribution, and nothing is signed or assigned.
+Each commit must carry a `Signed-off-by` line certifying you have the right to
+submit it under the project's AGPL-3.0-or-later license. Add it automatically:
+
+```bash
+git commit -s -m "docs: add a Klingon lang pack (STU-123)"
+```
+
+This appends `Signed-off-by: Your Name <you@example.com>` (using your
+`git config user.name`/`user.email`). Amend a commit that is missing it with
+`git commit --amend -s`. The sign-off is the whole agreement — there is no form
+to fill.
+
 ## Pull requests
 
 1. Branch off `main` (never commit to `main` directly).
