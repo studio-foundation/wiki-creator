@@ -239,22 +239,38 @@ def _place_events_block(entity: dict) -> str:
 
 # SP1 (STU-479): "Arc perso" projection over the Event Layer (events.json, SP0)
 # — events_for_entity() in wiki_preparation.py filters events where the PERSON
-# participates into entity["entity_events"]. The arc's climax beats (couronnement,
-# duel) sit late in the book, so cap by salience (not chapter order, which would
-# drop the ending) then re-sort chronologically for the prompt.
+# participates into entity["entity_events"].
 _MAX_PERSON_EVENTS = 18
 
 
 def _narrative_events(entity: dict) -> list[dict]:
-    """The character's most salient participant events, in chronological order.
-    Empty for non-PERSON entities or when SP0 produced no events for them."""
+    """The character's participant events selected to cover the arc's shape, in
+    chronological order. Empty for non-PERSON entities or when SP0 produced no
+    events for them.
+
+    A pure salience cap dropped the arc's opening (STU-663): salience rewards
+    multi-participant set pieces, so a solo-protagonist opening — Alice alone
+    down the rabbit hole — scores lowest and is cut before the chrono re-sort
+    can recover it. So guarantee one event per chapter first (arc coverage:
+    beginning + middle + end by construction), then fill the remaining budget
+    by salience."""
     if entity.get("type") != "PERSON":
         return []
     events = entity.get("entity_events") or []
-    top = sorted(
-        events,
-        key=lambda e: (-float(e.get("salience", 0.0)), int(e.get("chapter", 0))),
-    )[:_MAX_PERSON_EVENTS]
+    salience = lambda e: (-float(e.get("salience", 0.0)), int(e.get("chapter", 0)))
+
+    by_chapter: dict[int, list[dict]] = {}
+    for e in events:
+        by_chapter.setdefault(int(e.get("chapter", 0)), []).append(e)
+    coverage = [min(evts, key=salience) for evts in by_chapter.values()]
+
+    if len(coverage) >= _MAX_PERSON_EVENTS:
+        top = sorted(coverage, key=salience)[:_MAX_PERSON_EVENTS]
+    else:
+        covered = {id(e) for e in coverage}
+        rest = sorted((e for e in events if id(e) not in covered), key=salience)
+        top = coverage + rest[: _MAX_PERSON_EVENTS - len(coverage)]
+
     return sorted(top, key=lambda e: int(e.get("chapter", 0)))
 
 
