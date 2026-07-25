@@ -250,6 +250,13 @@ _MAX_PERSON_EVENTS = 18
 # three-act shape; a book with an unusual structure could override them via config.
 _ACT_WEIGHTS = (0.25, 0.50, 0.25)
 
+# The opening beats of the first chapter are the exposition — a solo protagonist,
+# no set piece — so they score lowest and a salience pick drops them, opening the
+# summary mid-story (Alice already falling, the White Rabbit and her sister on the
+# bank gone). Anchor the first few by narrative position instead. Relies on
+# entity_events being in narrative order (event_layer sorts them so).
+_ARC_OPENING_BEATS = 3
+
 
 def _narrative_events(entity: dict) -> list[dict]:
     """The character's participant events selected to frame the arc as three acts,
@@ -281,12 +288,13 @@ def _narrative_events(entity: dict) -> list[dict]:
     middle = set(chapters) - setup - epilogue
     acts = (setup, middle, epilogue)
 
-    # Force the arc's literal bookends — the first and last chapter's strongest
-    # beat. Salience alone drops the opening even inside the setup act (Alice's
-    # rabbit-hole fall scores below the pool-of-tears crowd two chapters later),
-    # so the act quota is not enough on its own; the bookends anchor it.
+    # Anchor the arc's bookends so neither end is lost to salience. The opening is
+    # the first chapter's first beats in narrative order (the exposition scores
+    # lowest and the act quota alone drops it); the close is the last chapter's
+    # strongest beat (the climax).
     best_of = lambda ch: min((e for e in events if chapter_of(e) == ch), key=salience)
-    picked: list[dict] = [best_of(chapters[0])]
+    opening = [e for e in events if chapter_of(e) == chapters[0]][:_ARC_OPENING_BEATS]
+    picked: list[dict] = list(opening)
     if chapters[-1] != chapters[0]:
         picked.append(best_of(chapters[-1]))
     chosen = {id(e) for e in picked}

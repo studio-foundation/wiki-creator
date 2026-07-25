@@ -471,6 +471,25 @@ def test_narrative_events_splits_budget_across_three_acts():
     assert max(chapters.count(c) for c in set(chapters)) > 1
 
 
+def test_narrative_events_opens_on_first_beat_not_most_salient():
+    # The arc's opening is anchored by narrative position, not salience: the
+    # exposition scores lowest (a solo protagonist, no set piece), so a salience
+    # pick opened the summary mid-story. entity_events arrive in narrative order,
+    # so the first beats of the first chapter are the true opening.
+    import scripts.generate_wiki_pages as gwp
+
+    events = [
+        {"chapter": 1, "description": "Alice notices the White Rabbit", "salience": 0.38},
+        {"chapter": 1, "description": "Alice falls down the rabbit-hole", "salience": 0.47},
+        {"chapter": 1, "description": "Alice lands in the hall", "salience": 0.47},
+    ] + [{"chapter": c, "description": f"c{c}", "salience": 0.9} for c in range(2, 13)]
+    picked = gwp._narrative_events({"type": "PERSON", "canonical_name": "Alice",
+                                    "entity_events": events})
+    # The lowest-salience first beat leads, not the higher-salience fall.
+    assert picked[0]["description"] == "Alice notices the White Rabbit"
+    assert [e["description"] for e in picked[:3]] == [e["description"] for e in events[:3]]
+
+
 def test_narrative_events_empty_for_non_person():
     entity = {"type": "PLACE", "entity_events": [{"chapter": 1, "description": "x", "salience": 1.0}]}
     assert _narrative_events(entity) == []
