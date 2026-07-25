@@ -142,11 +142,11 @@ def test_build_prompt_personality_overrides_omit_if_covered():
                          covered_prose="## Biographie\n\nAlice curiously followed the rabbit.")
     assert "Omit this section ONLY when the excerpts ground no character traits" in p
     assert "distil the disposition" in p
-    assert "keep this section brief or omit it rather than repeating" not in p
-    # a non-personality portrait section keeps the omit escape
+    assert "OMIT this section" not in p
+    # a non-personality portrait section gets the imperative omit rule
     p_trivia = gwp.build_prompt(entity, "ToG", sections=["trivia"],
                                 covered_prose="## Biographie\n\nAlice followed the rabbit.")
-    assert "keep this section brief or omit it rather than repeating" in p_trivia
+    assert "OMIT this section — do not write it" in p_trivia
 
 
 def test_build_prompt_biography_defers_to_sibling_sections():
