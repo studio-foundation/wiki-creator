@@ -628,8 +628,9 @@ def build_prompt(
             covered_rule = (
                 "\n- The section(s) above under \"ALREADY WRITTEN\" have already covered "
                 "those events and anecdotes. Do NOT re-narrate them here. Draw on facts, "
-                "traits, or details NOT already stated there; if the only material you have "
-                "is already covered above, keep this section brief or omit it rather than repeating."
+                "traits, or details NOT already stated there. If every fact you would write "
+                "here is already stated above, OMIT this section — do not write it. Do NOT "
+                "restate a covered fact in different words to fill the section."
             )
 
     # STU-653: personality is an OPT section on the principal tier only, so its
