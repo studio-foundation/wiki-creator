@@ -583,6 +583,10 @@ def build_prompt(
                 "the character does and what happens to them across these events — not a static "
                 "portrait. Do NOT mention chapter numbers in the prose. Do NOT "
                 "invent events, outcomes, or motives absent from the listed events."
+                "\n- Each listed event is a distinct moment. Do NOT merge two events into a "
+                "single action, and do NOT imply that two events share a scene, place, or "
+                "instant unless the events themselves say so. An event tagged a later chapter "
+                "happens AFTER an earlier one — preserve that sequence even in flowing prose."
                 "\n- Name every other character explicitly, using their exact name as written "
                 "in the events block. NEVER replace a named character with a vague periphrasis "
                 "(e.g. \"the protagonist\", \"a young woman\", \"the main character\") — this is "
@@ -591,8 +595,11 @@ def build_prompt(
                 "their first mention; pronouns are fine afterwards."
                 "\n- Weight the prose by each event's \"importance\" tier: an event marked "
                 '"importance: high" earns a full, developed treatment; "medium" a sentence '
-                'or two; "low" a brief mention or a subordinate clause — never a dedicated '
-                "paragraph. Spend words in proportion to narrative importance, not evenly."
+                'or two; "low" a brief mention — never a dedicated paragraph. A low-salience '
+                "event may share a sentence with a neighbour only when they are the same "
+                "moment; otherwise give it its own short sentence rather than grammatically "
+                "fusing it onto an unrelated event. Spend words in proportion to narrative "
+                "importance, not evenly."
             )
         else:
             narrative_role_rule = (
