@@ -9,9 +9,10 @@
 //
 // Constructs: headings, bold/italic, [[wikilinks]] (+ [[t|label]], [[:Category:…]]),
 // [[Category:X]] tags (collected, not rendered inline), {| … |} tables,
-// {{Infobox …}} calls expanded against local template sources, and native
+// {{Infobox …}} calls expanded against local template sources, native
 // <div>/<span class="mw-collapsible"> spoiler markup (passed through, inner
-// wikitext still parsed).
+// wikitext still parsed), and <ref>…</ref> footnotes collected into a
+// <references/> list (STU-656).
 
 /** Render one page's wikitext.
  * @param {string} source raw wikitext
@@ -22,7 +23,33 @@
 export function renderWikitext(source, { templates = {} } = {}) {
   const expanded = expandTemplates(source ?? '', templates);
   const { body, categories } = extractCategories(expanded);
-  return { html: renderBlocks(body), categories };
+  const refs = [];
+  const withMarkers = collectRefs(body, refs);
+  return { html: renderBlocks(withMarkers, refs), categories };
+}
+
+// --- footnotes (STU-656) ---------------------------------------------------
+
+/** Replace each `<ref>…</ref>` with a numbered superscript marker, collecting
+ * its text into `refs` (rendered later at `<references/>`). Coupled to the
+ * exporter's plain `<ref>` form; the citation body is plain text (book title +
+ * chapter), so it is stored raw and inline-rendered when the list is built. */
+function collectRefs(src, refs) {
+  return src.replace(/<ref>([\s\S]*?)<\/ref>/g, (_m, inner) => {
+    refs.push(inner.trim());
+    const n = refs.length;
+    return `<sup class="reference"><a class="ref-marker" data-note="${n}">[${n}]</a></sup>`;
+  });
+}
+
+/** Render the collected footnotes as an ordered list. Empty when the page has
+ * no `<ref>` — a bare `<references/>` then renders nothing, as in MediaWiki. */
+function renderReflist(refs) {
+  if (!refs.length) return '';
+  const items = refs
+    .map((r, i) => `<li id="cite_note-${i + 1}">${renderInline(r)}</li>`)
+    .join('');
+  return `<ol class="references">${items}</ol>`;
 }
 
 // --- template expansion ----------------------------------------------------
@@ -89,7 +116,7 @@ function extractCategories(src) {
 
 // --- block rendering -------------------------------------------------------
 
-function renderBlocks(body) {
+function renderBlocks(body, refs = []) {
   const lines = body.split('\n');
   const out = [];
   let i = 0;
@@ -97,6 +124,11 @@ function renderBlocks(body) {
     const line = lines[i];
     if (line.trim() === '') { i++; continue; }
 
+    if (/^<references\s*\/?>$/.test(line.trim())) {
+      out.push(renderReflist(refs));
+      i++;
+      continue;
+    }
     if (line.startsWith('{|')) {
       const j = findLine(lines, i + 1, (l) => l.startsWith('|}'));
       out.push(renderTable(lines.slice(i, j + 1)));
@@ -106,7 +138,7 @@ function renderBlocks(body) {
     if (/^<div\b/.test(line)) {
       const j = findLine(lines, i + 1, (l) => l.trim() === '</div>');
       const inner = lines.slice(i + 1, j).join('\n');
-      out.push(`${line}\n${renderBlocks(inner)}\n</div>`);
+      out.push(`${line}\n${renderBlocks(inner, refs)}\n</div>`);
       i = j + 1;
       continue;
     }
@@ -130,6 +162,7 @@ function renderBlocks(body) {
       !lines[i].startsWith('{|') &&
       !/^<div\b/.test(lines[i]) &&
       !/^={1,6}\s/.test(lines[i]) &&
+      !/^<references\s*\/?>$/.test(lines[i].trim()) &&
       !lines[i].startsWith('* ')
     ) {
       para.push(lines[i]);

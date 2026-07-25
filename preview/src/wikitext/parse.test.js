@@ -169,6 +169,35 @@ describe('whole-fixture robustness', () => {
   });
 });
 
+describe('footnotes (STU-656)', () => {
+  it('renders <ref> as a numbered marker and <references/> as the list', () => {
+    const src =
+      '== Relations ==\n\n' +
+      '* [[White Rabbit]] — Ami (ch.1)<ref>Alice in Wonderland, chapitre 1</ref>\n\n' +
+      '== Références ==\n\n<references/>';
+    const { html } = renderWikitext(src);
+    // marker in place, citation text NOT leaked inline
+    expect(html).toContain('[1]</a></sup>');
+    expect(html).not.toMatch(/Ami \(ch\.1\)Alice in Wonderland/);
+    // the reflist carries the citation text, once
+    expect(html).toContain('<ol class="references">');
+    expect(html).toContain('<li id="cite_note-1">Alice in Wonderland, chapitre 1</li>');
+  });
+
+  it('numbers multiple refs in document order', () => {
+    const src = 'A<ref>src one</ref> and B<ref>src two</ref>.\n\n<references/>';
+    const { html } = renderWikitext(src);
+    expect(html).toContain('[1]</a></sup>');
+    expect(html).toContain('[2]</a></sup>');
+    expect(html.indexOf('src one')).toBeLessThan(html.indexOf('src two'));
+  });
+
+  it('renders an empty <references/> as nothing (no <ol>)', () => {
+    const { html } = renderWikitext('== Références ==\n\n<references/>');
+    expect(html).not.toContain('<ol');
+  });
+});
+
 describe('expandTemplates (unit)', () => {
   it('is a no-op when there are no calls', () => {
     expect(expandTemplates('plain text', {})).toBe('plain text');
