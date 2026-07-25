@@ -211,7 +211,12 @@ def build_events(
             "source_bullets": entry["source_bullets"],
         })
 
-    events.sort(key=lambda e: (e["chapter"], e["description"].casefold()))
+    # Within a chapter, keep the beats in the order they were seen — the chapter
+    # summary bullets arrive in narrative order, so insertion order is the arc's
+    # order. Sorting by description alphabetized the beats instead (the cake's
+    # "EAT ME" before Alice ever meets the White Rabbit), which the downstream
+    # narrative_role summary then opened on; a stable chapter-only sort fixes it.
+    events.sort(key=lambda e: e["chapter"])
     by_chapter: dict[int, int] = {}
     for e in events:
         idx = by_chapter.get(e["chapter"], 0)
