@@ -463,6 +463,24 @@ def test_generation_profile_prefers_sections_by_type_override():
     assert max_tokens == 900
 
 
+def test_generation_profile_person_principal_keeps_narrative_role():
+    """STU-657: public_domain books declare narrative_role in principal.sections;
+    it must reach a PERSON principal and survive the default hybrid stance."""
+    cfg = {
+        "principal": {
+            "sections": [
+                "infobox", "biography", "narrative_role", "personality",
+                "physical", "powers", "relationships", "trivia", "references",
+            ],
+        }
+    }
+
+    sections, _ = generation_profile(cfg, "principal", "PERSON")
+
+    assert "narrative_role" in sections
+    assert sections.index("narrative_role") == sections.index("biography") + 1
+
+
 def test_parse_response_marks_empty_content_as_failed_stub():
     raw = (
         '{"title":"Yulemas","importance":"principal","entity_type":"EVENT",'
