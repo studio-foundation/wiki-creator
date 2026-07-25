@@ -46,6 +46,14 @@ entity_types:
         | '''Affiliation''' || {{{affiliation|}}}
         |-
         | '''Première apparition''' || {{{first_seen|}}}
+        |-
+        | '''Famille''' || {{{family|}}}
+        |-
+        | '''Amours''' || {{{romance|}}}
+        |-
+        | '''Amis et alliés''' || {{{friends_allies|}}}
+        |-
+        | '''Ennemis''' || {{{enemies|}}}
         |}
         </includeonly>
     infobox:
@@ -58,6 +66,12 @@ entity_types:
       - {token: species,     group: infobox, provenance: extracted-fact, obligation: OPT, genre_gated: true, tiers: [secondary, principal]}
       - {token: affiliation, group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
       - {token: titles,      group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
+      # STU-664: typed relationships surface bucketed in the infobox, filled
+      # deterministically from relationships_classified.json — never the writer.
+      - {token: family,         group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
+      - {token: romance,        group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
+      - {token: friends_allies, group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
+      - {token: enemies,        group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
     sections:
       - {token: biography,      group: section, provenance: llm-prose,      obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: backstory,      group: section, provenance: llm-prose,      obligation: OPT, tiers: [secondary, principal]}
@@ -346,6 +360,10 @@ labels:
   species:       {en: Species,     fr: Espèce}
   affiliation:   {en: Affiliation, fr: Affiliation}
   titles:        {en: Titles,      fr: Titres}
+  family:         {en: Family,           fr: Famille}
+  romance:        {en: Romance,          fr: Amours}
+  friends_allies: {en: "Friends & Allies", fr: "Amis et alliés"}
+  enemies:        {en: Enemies,          fr: Ennemis}
   location:      {en: Location,    fr: Localisation}
   leaders:       {en: Leaders,     fr: Leaders}
   infobox:       {en: Infobox,     fr: Infobox}

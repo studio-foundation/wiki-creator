@@ -168,6 +168,38 @@ def test_bind_creates_infobox_and_is_noop_without_config():
     assert page["infobox_fields"]["nom"] == "Verin"
 
 
+def test_bind_injects_relationship_buckets():
+    # STU-664: typed relationships fill the infobox buckets deterministically,
+    # never the writer. Secondary+ PERSON only (base.yaml gates the slots).
+    entity = {
+        "canonical_name": "Alice", "type": "PERSON", "importance": "secondary",
+        "aliases": [],
+        "relationships": [
+            {"entity_a": "Alice", "entity_b": "Dinah", "relationship_type": "family",
+             "other_deceased": True},
+            {"entity_a": "Queen", "entity_b": "Alice", "relationship_type": "enemy"},
+        ],
+    }
+    page = {"infobox_fields": {"family": "wrong"}}  # writer guess is overwritten
+    gwp._bind_batch_fields(page, entity, {})
+    assert page["infobox_fields"]["family"] == "[[Dinah]] †"
+    assert page["infobox_fields"]["enemies"] == "[[Queen]]"
+    assert "romance" not in page["infobox_fields"]  # empty bucket omitted
+
+
+def test_bind_omits_relationship_buckets_at_figurant():
+    # base.yaml gates the buckets to secondary+, so a figurant never gets them.
+    entity = {
+        "canonical_name": "Bill", "type": "PERSON", "importance": "figurant", "aliases": [],
+        "relationships": [
+            {"entity_a": "Bill", "entity_b": "Alice", "relationship_type": "enemy"},
+        ],
+    }
+    page = {"infobox_fields": {}}
+    gwp._bind_batch_fields(page, entity, {})
+    assert "enemies" not in page["infobox_fields"]
+
+
 def test_generation_profile_uses_template_order():
     # legacy-style book config; sections must come back in the config's order
     config = {"principal": {"sections_by_type": {"PERSON": [
