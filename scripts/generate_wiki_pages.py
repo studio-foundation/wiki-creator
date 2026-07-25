@@ -129,8 +129,21 @@ def _looks_like_relationship_index(body: str) -> bool:
 
 
 def _references_block(book_title: str, lang: str = "fr") -> str:
-    """Deterministic References section — lists only the book title (no LLM)."""
+    """Deterministic References section — lists only the book title (no LLM).
+
+    Used by the synopsis and event pages, which carry no per-fact ``<ref>``
+    provenance yet, so citing the whole book by name is more grounded than an
+    empty ``<references/>`` list. Entity pages use ``_references_backmatter``
+    (STU-656), which collects the inline relationship footnotes instead."""
     return f"## {slot_label('references', lang)}\n\n- {book_title}"
+
+
+def _references_backmatter(lang: str = "fr") -> str:
+    """Deterministic References back-matter (STU-656) for entity pages: a
+    ``<references/>`` list that renders the per-fact ``<ref>`` footnotes emitted
+    from provenance (the dated relationship index). The book title is cited
+    inside each ``<ref>``, not listed as a bullet."""
+    return f"## {slot_label('references', lang)}\n\n<references/>"
 
 
 def _isolate_section(content: str, section: str, lang: str = "fr") -> str | None:
@@ -554,8 +567,9 @@ def build_prompt(
     references_rule = ""
     if "references" in sections:
         references_rule = (
-            f'\n- The ## {slot_label("references", lang)} section must list ONLY "{book_title}". '
-            "Do not add any other book, volume, or series title."
+            f'\n- The ## {slot_label("references", lang)} section must contain ONLY the exact '
+            'text "<references/>" and nothing else — no book title, no list, no prose. '
+            "It is a footnote list that is filled in automatically."
         )
 
     narrative_role_title = slot_label("narrative_role", lang)
@@ -1714,7 +1728,7 @@ def _run_generation_for_entity(
         if recovered is not None:
             _record_safety_net("identity_recovery")
             recovered["content_units"] = content_units(sections, entity)
-            recovered["relationship_index"] = relationship_index_lines(entity, language, book_config)
+            recovered["relationship_index"] = relationship_index_lines(entity, language, book_config, book_title)
             _bind_batch_fields(recovered, entity, book_config)
             print(" ⚠ identity-corrected from rejected run", file=sys.stderr, end="", flush=True)
             return recovered
@@ -1768,7 +1782,7 @@ def _run_generation_for_entity(
 
     if isinstance(item_result, dict) and "content" in item_result:
         item_result["content_units"] = content_units(sections, entity)
-        item_result["relationship_index"] = relationship_index_lines(entity, language, book_config)
+        item_result["relationship_index"] = relationship_index_lines(entity, language, book_config, book_title)
         _bind_batch_fields(item_result, entity, book_config)
 
     return item_result
@@ -1847,7 +1861,7 @@ def _run_generation_sectioned(
         return make_stub_page(entity, failed=True, lang=language)
 
     if "references" in sections:
-        blocks.append(_references_block(book_title, language))
+        blocks.append(_references_backmatter(language))
 
     page = {
         "title": entity["canonical_name"],
@@ -1857,7 +1871,7 @@ def _run_generation_sectioned(
         "infobox_fields": {},
         "content": _assemble_section_blocks(blocks),
         "content_units": content_units(emitted, entity),
-        "relationship_index": relationship_index_lines(entity, language, book_config),
+        "relationship_index": relationship_index_lines(entity, language, book_config, book_title),
     }
     if per_relation:
         page["relation_units"] = relation_units(entity)
