@@ -241,38 +241,72 @@ def _place_events_block(entity: dict) -> str:
 # participates into entity["entity_events"].
 _MAX_PERSON_EVENTS = 18
 
+# STU-663: an arc is three acts, not a flat salience ranking. The event budget is
+# split across setup / rising action (péripéties) / resolution by chapter position,
+# so a long exposition (an adult novel whose first chapters are the initial
+# situation) is represented in proportion to its length, and a solo-protagonist
+# opening is never starved by the multi-character climax. Weights are the classic
+# three-act shape; a book with an unusual structure could override them via config.
+_ACT_WEIGHTS = (0.25, 0.50, 0.25)
+
 
 def _narrative_events(entity: dict) -> list[dict]:
-    """The character's participant events selected to frame the arc, in
-    chronological order. Empty for non-PERSON entities or when SP0 produced no
+    """The character's participant events selected to frame the arc as three acts,
+    in chronological order. Empty for non-PERSON entities or when SP0 produced no
     events for them.
 
     A pure salience cap dropped the arc's opening (STU-663): salience rewards
-    multi-participant set pieces, so a solo-protagonist opening — Alice alone
-    down the rabbit hole — scores lowest and is cut before the chrono re-sort
-    can recover it. Guaranteeing one event per chapter over-corrected: it spent
-    most of the budget on coverage, thinning the dense, consequential chapters
-    into a one-beat-per-chapter checklist that read as disjointed. So guarantee
-    only the arc's endpoints — the opening and closing chapter's strongest beat —
-    then fill the rest by salience, keeping the dramatic middle dense."""
+    multi-participant set pieces, so a solo-protagonist opening — Alice alone down
+    the rabbit hole — scores lowest and is cut before the chrono re-sort can
+    recover it. The budget is instead split across three position-based acts
+    (`_ACT_WEIGHTS`) and the most salient beats are taken within each, so the
+    exposition and the resolution each get a share proportional to their length
+    while the dramatic middle stays dense — not one beat per chapter (a disjointed
+    checklist), not salience-only (no beginning)."""
     if entity.get("type") != "PERSON":
         return []
     events = entity.get("entity_events") or []
     if not events:
         return []
     salience = lambda e: (-float(e.get("salience", 0.0)), int(e.get("chapter", 0)))
+    chapter_of = lambda e: int(e.get("chapter", 0))
+    chapters = sorted({chapter_of(e) for e in events})
 
-    by_chapter: dict[int, list[dict]] = {}
-    for e in events:
-        by_chapter.setdefault(int(e.get("chapter", 0)), []).append(e)
-    endpoint_chapters = {min(by_chapter), max(by_chapter)}
-    endpoints = [min(by_chapter[ch], key=salience) for ch in sorted(endpoint_chapters)]
+    # Partition the chapters that carry events into three contiguous acts by
+    # position, then give each act a share of the budget by the same weights.
+    n = len(chapters)
+    setup = set(chapters[: round(n * _ACT_WEIGHTS[0])])
+    epilogue = set(chapters[n - round(n * _ACT_WEIGHTS[2]) :]) - setup
+    middle = set(chapters) - setup - epilogue
+    acts = (setup, middle, epilogue)
 
-    covered = {id(e) for e in endpoints}
-    rest = sorted((e for e in events if id(e) not in covered), key=salience)
-    top = endpoints + rest[: _MAX_PERSON_EVENTS - len(endpoints)]
+    # Force the arc's literal bookends — the first and last chapter's strongest
+    # beat. Salience alone drops the opening even inside the setup act (Alice's
+    # rabbit-hole fall scores below the pool-of-tears crowd two chapters later),
+    # so the act quota is not enough on its own; the bookends anchor it.
+    best_of = lambda ch: min((e for e in events if chapter_of(e) == ch), key=salience)
+    picked: list[dict] = [best_of(chapters[0])]
+    if chapters[-1] != chapters[0]:
+        picked.append(best_of(chapters[-1]))
+    chosen = {id(e) for e in picked}
 
-    return sorted(top, key=lambda e: int(e.get("chapter", 0)))
+    for act_chapters, weight in zip(acts, _ACT_WEIGHTS):
+        quota = round(_MAX_PERSON_EVENTS * weight)
+        already = sum(1 for e in picked if chapter_of(e) in act_chapters)
+        act_events = sorted(
+            (e for e in events if chapter_of(e) in act_chapters and id(e) not in chosen),
+            key=salience,
+        )
+        for event in act_events[: max(0, quota - already)]:
+            picked.append(event)
+            chosen.add(id(event))
+    # An act smaller than its quota leaves budget on the table — spend it on the
+    # next most salient events anywhere in the arc.
+    if len(picked) < _MAX_PERSON_EVENTS:
+        rest = sorted((e for e in events if id(e) not in chosen), key=salience)
+        picked += rest[: _MAX_PERSON_EVENTS - len(picked)]
+
+    return sorted(picked[:_MAX_PERSON_EVENTS], key=chapter_of)
 
 
 def _has_backstory(entity: dict) -> bool:

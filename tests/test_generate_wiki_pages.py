@@ -441,18 +441,18 @@ def test_narrative_events_caps_by_salience_then_orders_by_chapter():
     assert chapters == sorted(chapters)  # chronological
 
 
-def test_narrative_events_guarantees_arc_endpoints_not_full_coverage():
-    # STU-663: the opening (ch 1) is solo-protagonist and scores lowest, so a
-    # pure salience cap dropped it. The fix guarantees only the arc's endpoints
-    # (first + last chapter), then fills the middle by salience — NOT one beat
-    # per chapter, which thinned the dense chapters into a disjointed checklist.
+def test_narrative_events_splits_budget_across_three_acts():
+    # STU-663: the exposition (ch 1-3) is low-salience but must get a share of the
+    # budget proportional to its length — not one endpoint beat, not one per
+    # chapter. The middle stays salience-dense; low-salience middle chapters are
+    # crowded out by the set pieces, exactly as a plot summary would weight them.
     import scripts.generate_wiki_pages as gwp
 
     events = []
-    for ch in range(1, 14):  # 13 chapters
+    for ch in range(1, 14):  # 13 chapters → setup ch1-3, middle ch4-10, epilogue ch11-13
         n = 6 if ch >= 7 else 1  # late chapters crowded with salient set pieces
         for i in range(n):
-            sal = 0.05 if ch == 1 else (0.9 if ch >= 7 else 0.4)
+            sal = 0.05 if ch <= 3 else (0.9 if ch >= 7 else 0.4)
             events.append({"chapter": ch, "description": f"c{ch}-{i}", "salience": sal})
     entity = {"type": "PERSON", "canonical_name": "Alice", "entity_events": events}
 
@@ -460,12 +460,15 @@ def test_narrative_events_guarantees_arc_endpoints_not_full_coverage():
     chapters = [e["chapter"] for e in picked]
     assert len(picked) == gwp._MAX_PERSON_EVENTS
     assert chapters == sorted(chapters)  # chronological
-    assert 1 in chapters  # the opening endpoint survived the salience cap
-    assert 13 in chapters  # the closing endpoint too
-    # The dramatic middle stays dense (salience-filled), not padded per chapter:
-    # a low-salience middle chapter is crowded out, and a dense one keeps >1 beat.
-    assert 2 not in chapters
-    assert chapters.count(7) > 1
+    # The low-salience exposition act is represented in proportion to its length,
+    # not reduced to a single opening beat.
+    assert {1, 2, 3} <= set(chapters)
+    # The epilogue act is present.
+    assert any(c >= 11 for c in chapters)
+    # Within the middle act, salience decides: the low-salience ch4-6 are crowded
+    # out by the ch7-10 set pieces, which keep multiple beats.
+    assert 4 not in chapters
+    assert max(chapters.count(c) for c in set(chapters)) > 1
 
 
 def test_narrative_events_empty_for_non_person():
