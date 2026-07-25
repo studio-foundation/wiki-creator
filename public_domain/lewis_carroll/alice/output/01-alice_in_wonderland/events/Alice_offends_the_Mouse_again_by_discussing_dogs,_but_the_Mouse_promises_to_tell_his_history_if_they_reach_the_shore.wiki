@@ -12,6 +12,6 @@ This exchange illuminates the delicate dynamics of Alice's interactions with the
 
 == References ==
 
-- Alice's Adventures in Wonderland
+* Alice's Adventures in Wonderland
 
-[[Category:Événements]]
+[[Category:Events]]
