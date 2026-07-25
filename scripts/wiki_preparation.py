@@ -445,6 +445,14 @@ def build_entity_bundle(
         ]}
         for r in filter_relationships(canonical_name, relationships, aliases=entity.get("aliases"))
     ]
+    # STU-664: stamp each relation with the other party's death, so the infobox
+    # bucket can mark a deceased related character with a † without generation
+    # re-reading entity_status.json (build_entity_bundle already holds every verdict).
+    own_names = {canonical_name, *entity.get("aliases", [])}
+    deceased_names = {
+        name for name, verdict in (status_verdicts or {}).items()
+        if isinstance(verdict, dict) and verdict.get("status") == "deceased"
+    }
     return {
         "canonical_name": canonical_name,
         "type": entity.get("type", "OTHER"),
@@ -469,7 +477,14 @@ def build_entity_bundle(
         "context_chapters": sorted(context_chapter_numbers.values()),
         "context_chapter_numbers": context_chapter_numbers,
         "relationships": [
-            {**r, "confidence": relationship_confidence(r), "revealed_at_chapter": relation_revealed_at(r)}
+            {
+                **r,
+                "confidence": relationship_confidence(r),
+                "revealed_at_chapter": relation_revealed_at(r),
+                "other_deceased": (
+                    r["entity_b"] if r.get("entity_a") in own_names else r.get("entity_a")
+                ) in deceased_names,
+            }
             for r in entity_relationships
         ],
         "indirect_relationships": [
