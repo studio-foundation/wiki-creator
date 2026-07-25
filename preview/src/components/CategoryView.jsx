@@ -4,7 +4,9 @@ import React from 'react';
 // wikilink or the per-page categories footer (STU-650). Membership comes from
 // the index (each page carries its `categories`), so no page fetching.
 export default function CategoryView({ name, pages }) {
-  const members = pages.filter((p) => (p.categories || []).includes(name));
+  const members = pages.filter(
+    (p) => p.entityType !== 'ORIGINAL' && (p.categories || []).includes(name),
+  );
   return (
     <article className="wiki-page">
       <h1 className="wiki-page-title">Category: {name}</h1>

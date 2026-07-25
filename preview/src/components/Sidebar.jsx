@@ -1,7 +1,8 @@
 import React from 'react';
 
 // Grouping for the nav, in display order. Non-entity pages (Main_Page,
-// Synopsis, collations, categories) fall under "Pages".
+// Synopsis, collations, categories) fall under "Pages"; the hand-authored
+// reference under real-wiki/ falls under "Original Wiki".
 const GROUPS = [
   { type: 'PERSON', label: 'Characters' },
   { type: 'PLACE', label: 'Locations' },
@@ -9,6 +10,7 @@ const GROUPS = [
   { type: 'FACTION', label: 'Factions' },
   { type: 'EVENT', label: 'Events' },
   { type: null, label: 'Pages' },
+  { type: 'ORIGINAL', label: 'Original Wiki' },
 ];
 
 export default function Sidebar({ pages, book, currentSlug }) {

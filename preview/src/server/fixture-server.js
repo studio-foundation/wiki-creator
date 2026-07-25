@@ -16,6 +16,7 @@ const SUBDIR_TYPE = {
   organizations: 'ORG',
   events: 'EVENT',
   factions: 'FACTION',
+  'real-wiki': 'ORIGINAL', // hand-authored reference page(s), shown as their own nav group
 };
 
 /** Filename stem → display title (`_` → space). */

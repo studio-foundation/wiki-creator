@@ -36,8 +36,15 @@ describe('App shell', () => {
     render(<App />);
     expect(await screen.findByText('Characters')).toBeTruthy();
     expect(screen.getByText('Locations')).toBeTruthy();
-    // a character link is present
-    expect(screen.getByRole('link', { name: 'Alice' })).toBeTruthy();
+    // a character link is present (the generated Alice and the original share a title)
+    expect(screen.getAllByRole('link', { name: 'Alice' }).length).toBeGreaterThan(0);
+  });
+
+  it('lists the hand-authored reference under an Original Wiki group', async () => {
+    render(<App />);
+    expect(await screen.findByText('Original Wiki')).toBeTruthy();
+    // both the generated and the original Alice are reachable
+    expect(screen.getAllByRole('link', { name: 'Alice' }).length).toBe(2);
   });
 
   it('renders the Main_Page landing page by default', async () => {

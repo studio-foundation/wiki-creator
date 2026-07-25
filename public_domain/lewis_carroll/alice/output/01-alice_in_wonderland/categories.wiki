@@ -12,5 +12,5 @@ This page documents the category hierarchy used in this wiki.
 == Organizations ==
 * [[Category:Organizations]]
 
-== Événements ==
-* [[Category:Événements]]
+== Events ==
+* [[Category:Events]]

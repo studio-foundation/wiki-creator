@@ -12,6 +12,6 @@ The kitchen visit represents a continuation of Alice's navigation through Wonder
 
 == References ==
 
-- Alice's Adventures in Wonderland
+* Alice's Adventures in Wonderland
 
-[[Category:Événements]]
+[[Category:Events]]
