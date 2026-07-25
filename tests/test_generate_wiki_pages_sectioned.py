@@ -292,6 +292,21 @@ def test_isolate_section_forces_canonical_title_on_mismatched_heading(monkeypatc
     assert "Biographie" not in out
 
 
+def test_isolate_section_refuses_relationship_index_under_other_section(monkeypatch):
+    # STU-655: a mis-mapped/leaked relationships block (## Relations bullets)
+    # served for a `physical` item must NOT be relabeled ## Apparence — drop it.
+    leaked = (
+        "## Relations\n\n"
+        "**[[Gryphon]]** — connaissance\n"
+        "**[[White Rabbit]]** — connaissance\n"
+        "**[[Queen]]** — ennemi"
+    )
+    monkeypatch.setattr(gwp, "_run_wiki_page_item", lambda **kw: _fake_item(leaked))
+    out, _ = gwp._generate_one_section(entity={"canonical_name": "A"}, section="physical",
+                                    book_title="B", model="m", timeout=10, max_tokens=500)
+    assert out is None
+
+
 def test_isolate_section_none_when_only_infobox(monkeypatch):
     monkeypatch.setattr(gwp, "_run_wiki_page_item", lambda **kw: _fake_item("## Infobox\n\n- Nom: X"))
     out, _ = gwp._generate_one_section(entity={"canonical_name": "A"}, section="biography",

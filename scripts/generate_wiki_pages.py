@@ -115,6 +115,19 @@ def _assemble_section_blocks(blocks: list[str]) -> str:
     return "\n\n".join(b.strip() for b in blocks if b and b.strip())
 
 
+# STU-655: a block dominated by `**[[Name]]** — type` bullets is the
+# relationships index, never appearance/biography prose. A mixed-format map-cache
+# once served a relationships result under the `physical` item key, and
+# _isolate_section's single-block fallback relabeled it `## Appearance`.
+_RELATION_INDEX_LINE = re.compile(r"^\s*\*\*\[\[.+?\]\]\*\*\s*[—–-]")
+
+
+def _looks_like_relationship_index(body: str) -> bool:
+    lines = [ln for ln in body.splitlines() if ln.strip()]
+    hits = sum(1 for ln in lines if _RELATION_INDEX_LINE.match(ln))
+    return hits >= 2 and hits * 2 >= len(lines)
+
+
 def _references_block(book_title: str, lang: str = "fr") -> str:
     """Deterministic References section — lists only the book title (no LLM).
 
@@ -171,6 +184,10 @@ def _isolate_section(content: str, section: str, lang: str = "fr") -> str | None
         # canonical title so it lands as the requested section instead of
         # duplicating a heading already on the page and silently dropping this one.
         _block, body = non_infobox[0]
+        # STU-655: but never relabel a relationships-index block as some other
+        # section — that is a mis-mapped/leaked result, not a mistitled one.
+        if section != "relationships" and _looks_like_relationship_index(body):
+            return None
         return f"## {title}\n\n{body}".strip()
     return None
 

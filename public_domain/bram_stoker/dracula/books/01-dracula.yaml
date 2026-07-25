@@ -20,7 +20,7 @@ generation:
     llm_timeout_seconds: 45
   chapter_summary_max_chapters_per_entity: 20
   principal:
-    sections: [infobox, biography, personality, physical, powers, relationships, trivia, references]
+    sections: [infobox, biography, narrative_role, personality, physical, powers, relationships, trivia, references]
     sections_by_type:
       PLACE: [infobox, biography, physical, relationships, trivia, references]
       ORG: [infobox, biography, relationships, references]
