@@ -14,7 +14,13 @@ def test_assemble_empty_is_empty_string():
 
 
 def test_references_block_lists_only_book_title():
+    # Synopsis/event pages still cite the whole book by name (no inline refs yet).
     assert gwp._references_block("Throne of Glass") == "## Références\n\n- Throne of Glass"
+
+
+def test_references_backmatter_is_references_list():
+    # Entity pages emit a <references/> list that collects the inline <ref> footnotes.
+    assert gwp._references_backmatter() == "## Références\n\n<references/>"
 
 
 def _fake_item(content):
@@ -84,7 +90,7 @@ def test_sectioned_calls_once_per_content_section_and_assembles(monkeypatch):
         dry_run=False, debug_dir=Path("/tmp"), book_config={})
     assert calls == ["biography"]                       # infobox + references not LLM'd
     assert "## Biographie" in page["content"]
-    assert "## Références\n\n- ToG" in page["content"]   # deterministic refs
+    assert "## Références\n\n<references/>" in page["content"]  # deterministic back-matter (STU-656)
     assert page["infobox_fields"]["nom"] == "Chaol"     # slice-B binding still applied
     assert page["infobox_fields"]["titles"] == "Captain"
 
@@ -308,7 +314,10 @@ def test_sectioned_page_carries_relationship_index(monkeypatch):
         entity=entity, book_title="ToG", model="m", timeout=10,
         sections=["biography", "relationships"], max_tokens=500,
         dry_run=False, debug_dir=Path("/tmp"), book_config={})
-    assert page["relationship_index"] == ["* [[Chaol]] — Amoureux (ch.1→ch.55)"]
+    # STU-656: each index line now carries a <ref> grounded in the first-reveal chapter.
+    assert page["relationship_index"] == [
+        "* [[Chaol]] — Amoureux (ch.1→ch.55)<ref>ToG, chapitre 1</ref>"
+    ]
 
 
 def test_build_relation_prompt_grounds_and_requires_french():
@@ -435,7 +444,7 @@ def test_build_prompt_omits_references_rule_when_section_is_not_generated():
     entity = _entity()
     with_refs = gwp.build_prompt(entity, "Throne of Glass", sections=["infobox", "references"])
     without = gwp.build_prompt(entity, "Throne of Glass", sections=["infobox", "biography"])
-    assert "## Références section must list ONLY" in with_refs
+    assert '"<references/>"' in with_refs and "## Références" in with_refs
     assert "Références" not in without
 
 

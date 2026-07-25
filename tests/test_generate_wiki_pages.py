@@ -1107,7 +1107,7 @@ def test_build_prompt_references_constraint_present():
     }
     prompt = build_prompt(entity, book_title="Throne of Glass", sections=["infobox", "biography", "references"])
     assert "Throne of Glass" in prompt
-    assert 'must list ONLY "Throne of Glass"' in prompt
+    assert '"<references/>"' in prompt
 
 
 def test_build_prompt_localizes_titles_briefs_and_directive_in_english():
@@ -1126,7 +1126,7 @@ def test_build_prompt_localizes_titles_briefs_and_directive_in_english():
     assert "encyclopedic English" in en
     assert "## Biography" in en                      # few-shot heading, English
     assert "Who this character is" in en             # biography brief, English
-    assert 'The ## References section must list' in en
+    assert 'The ## References section must contain ONLY the exact' in en
     assert "Biographie" not in en                    # no French titles leak
     assert "français" not in en.lower()
 

@@ -98,8 +98,20 @@ def gate_infobox_spoilers(fields: dict, lang: str = "fr") -> dict:
     return gated
 
 
+def citation_ref(book_title: str, chapter: int, lang: str = "fr") -> str:
+    """MediaWiki footnote (STU-656) citing the book and the chapter a fact is
+    grounded in — ``<ref>{book_title}, {chapter}</ref>``. The chapter comes from
+    the unit's own provenance, so it invents no page/line number; the localized
+    "chapter N" label is ``chrome.chapter_tag``."""
+    where = chrome_label("chapter_tag", lang).format(chapter=chapter)
+    return f"<ref>{book_title}, {where}</ref>"
+
+
 def relationship_index_lines(
-    entity: dict, lang: str = "fr", book_config: dict | None = None
+    entity: dict,
+    lang: str = "fr",
+    book_config: dict | None = None,
+    book_title: str | None = None,
 ) -> list[str]:
     """Dated index line per typed relationship, most-recent-reveal first.
 
@@ -109,6 +121,10 @@ def relationship_index_lines(
     French string from a pre-STU-477 artifact resolves via the enum's ``legacy`` map.
     ``book_config`` carries the types only this novel declares (STU-472) — their name
     is already the reader's term, so they render as written.
+
+    When ``book_title`` is given, each line carries a ``<ref>`` citation (STU-656)
+    grounded in the relation's first-reveal chapter — the deterministic per-line
+    provenance the ``<references/>`` back-matter collects into footnotes.
     """
     own = {entity.get("canonical_name")} | set(entity.get("aliases") or [])
     rows = []
@@ -124,7 +140,10 @@ def relationship_index_lines(
         other = rel["entity_b"] if rel.get("entity_a") in own else rel["entity_a"]
         lo, hi = min(chapters), max(chapters)
         span = f"ch.{lo}" if lo == hi else f"ch.{lo}→ch.{hi}"
-        rows.append((lo, f"* [[{other}]] — {rtype} ({span})"))
+        line = f"* [[{other}]] — {rtype} ({span})"
+        if book_title:
+            line += citation_ref(book_title, lo, lang)
+        rows.append((lo, line))
     rows.sort(key=lambda r: r[0], reverse=True)
     return [line for _, line in rows]
 

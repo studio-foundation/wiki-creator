@@ -67,11 +67,21 @@ def test_leading_hyphen_not_a_list():
     assert convert("--- ") == "--- "
 
 
-def test_references_list_render():
-    """The deterministic References block renders as a wikitext list (STU-652)."""
-    md = "## References\n\n- Alice's Adventures in Wonderland"
-    expected = "== References ==\n\n* Alice's Adventures in Wonderland"
+def test_references_backmatter_render():
+    """The References block is now a <references/> back-matter list (STU-656),
+    passed through untouched by the converter."""
+    md = "## References\n\n<references/>"
+    expected = "== References ==\n\n<references/>"
     assert convert(md) == expected
+
+
+def test_ref_tags_pass_through_untouched():
+    """<ref>/<references/> are MediaWiki, not markdown — the converter must not
+    strip or mangle them (STU-656); only the ingestion cleaner strips refs, and
+    that never runs on our export path."""
+    assert convert("<references/>") == "<references/>"
+    line = "* [[Chaol]] — Amoureux (ch.1)<ref>Throne of Glass, chapitre 1</ref>"
+    assert convert(line) == line
 
 
 def test_ordered_list_dot():

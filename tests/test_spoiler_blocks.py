@@ -1,4 +1,5 @@
 from wiki_creator.spoiler_blocks import (
+    citation_ref,
     gate_infobox_spoilers,
     inject_relationship_index,
     relationship_index_lines,
@@ -109,6 +110,25 @@ def test_relationship_index_lines_localizes_canonical_token():
     }
     assert relationship_index_lines(entity, "fr") == ["* [[Chaol]] — Amitié tendue (ch.1)"]
     assert relationship_index_lines(entity, "en") == ["* [[Chaol]] — Strained friendship (ch.1)"]
+
+
+def test_citation_ref_grounds_book_and_chapter():
+    assert citation_ref("The Hobbit", 3, "en") == "<ref>The Hobbit, chapter 3</ref>"
+    assert citation_ref("Le Hobbit", 3, "fr") == "<ref>Le Hobbit, chapitre 3</ref>"
+
+
+def test_relationship_index_lines_cite_first_reveal_chapter_when_book_title_given():
+    # STU-656: a book_title attaches a <ref> per line, grounded in the relation's
+    # first-reveal chapter (the span's low end), not the last.
+    lines = relationship_index_lines(_entity(), "fr", book_title="Throne of Glass")
+    assert lines == [
+        "* [[Cain]] — Ennemi (ch.7)<ref>Throne of Glass, chapitre 7</ref>",
+        "* [[Chaol]] — Amoureux (ch.1→ch.55)<ref>Throne of Glass, chapitre 1</ref>",
+    ]
+
+
+def test_relationship_index_lines_no_ref_without_book_title():
+    assert all("<ref>" not in line for line in relationship_index_lines(_entity(), "fr"))
 
 
 def test_relationship_index_lines_empty_when_no_typed():
