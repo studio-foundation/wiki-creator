@@ -414,6 +414,34 @@ def test_a_successful_verdict_is_cached_and_replayed(tmp_path):
     assert second == first
 
 
+def test_a_wholesale_empty_verdict_is_not_cached_and_re_attempts(tmp_path):
+    # A verdict that parses to {} (malformed shape, or every quote rejected, or
+    # every entry off-roster) is a failure, not "nobody has a known status".
+    # Caching it would replay `{}` onto an unchanged roster forever, even after
+    # switching to a capable provider (STU-659).
+    cache = tmp_path / "s.json"
+    off_roster = {"status": [{"name": "Nobody", "status": "deceased", "quote": BROM_QUOTE}]}
+    assert resolve_status(_rows(), off_roster, cache, _index()) == {}
+    assert not cache.exists()
+
+    # A subsequent real verdict is not shadowed by a poisoned cache.
+    stage_output = {"status": [{"name": "Brom", "status": "deceased", "quote": BROM_QUOTE}]}
+    recovered = resolve_status(_rows(), stage_output, cache, _index())
+    assert recovered["Brom"]["status"] == "deceased"
+
+
+def test_a_pre_existing_poisoned_cache_is_treated_as_a_miss(tmp_path):
+    # Caches written before STU-659 hold `{}` on disk; the load side now reads an
+    # empty verdict set as a cache miss, auto-repairing without a manual `rm`.
+    cache = tmp_path / "s.json"
+    save_status_cache(cache, _rows(), {})
+    assert cache.exists()
+
+    stage_output = {"status": [{"name": "Brom", "status": "deceased", "quote": BROM_QUOTE}]}
+    recovered = resolve_status(_rows(), stage_output, cache, _index())
+    assert recovered["Brom"]["status"] == "deceased"
+
+
 from scripts.generate_wiki_pages import _extracted_fact_value
 from wiki_creator.entity_status import status_label
 from wiki_creator.page_templates import load_base_template

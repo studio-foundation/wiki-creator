@@ -79,13 +79,14 @@ def resolve_status(
     the slot's declared fallback, `unknown`.
     """
     cached = load_cached_status(cache_path, rows)
-    if cached is not None:
+    if cached:
         return cached
     if verdict_output is None:
         return _give_up("no verdict (call skipped or failed)", rows)
 
     verdicts = parse_status_verdict(verdict_output, rows, name_index)
-    save_status_cache(cache_path, rows, verdicts)
+    if verdicts:
+        save_status_cache(cache_path, rows, verdicts)
     return verdicts
 
 
