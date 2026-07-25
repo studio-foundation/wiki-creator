@@ -208,7 +208,7 @@ function renderBlocks(body, refs = []) {
       i = j + 1;
       continue;
     }
-    const h = line.match(/^(={1,6})\s+(.*?)\s+\1\s*$/);
+    const h = line.match(/^(={1,6})\s*(.*?)\s*\1\s*$/);
     if (h) {
       const level = h[1].length;
       out.push(`<h${level}>${renderInline(h[2])}</h${level}>`);
@@ -227,7 +227,7 @@ function renderBlocks(body, refs = []) {
       lines[i].trim() !== '' &&
       !lines[i].startsWith('{|') &&
       !/^<div\b/.test(lines[i]) &&
-      !/^={1,6}\s/.test(lines[i]) &&
+      !/^(={1,6})\s*.*\s*\1\s*$/.test(lines[i]) &&
       !/^<references\s*\/?>$/.test(lines[i].trim()) &&
       !lines[i].startsWith('* ')
     ) {

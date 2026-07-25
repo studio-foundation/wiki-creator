@@ -33,6 +33,12 @@ describe('headings', () => {
     expect(html).toContain('<h4>C</h4>');
   });
 
+  it('renders a space-less ==Heading== (Fandom style) with inline markup', () => {
+    const { html } = renderWikitext("=='''''Alice's Adventures'''''==");
+    expect(html).toMatch(/^<h2>.*Alice's Adventures.*<\/h2>$/);
+    expect(html).toContain('<strong>'); // '''''…''''' still bolds/italicises
+  });
+
   it('renders the fixture section headings', () => {
     expect(render('characters/Alice.wiki').html).toContain('<h2>Biography</h2>');
   });
