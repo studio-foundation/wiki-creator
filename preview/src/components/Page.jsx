@@ -14,7 +14,9 @@ export default function Page({ page, templates, resolver }) {
     setState({ status: 'loading' });
     fetchPage(page.path)
       .then((wikitext) => {
-        if (alive) setState({ status: 'ready', ...renderWikitext(wikitext, { templates }) });
+        if (alive) {
+          setState({ status: 'ready', ...renderWikitext(wikitext, { templates, title: page.title }) });
+        }
       })
       .catch((e) => {
         if (alive) setState({ status: 'error', error: String(e) });
@@ -22,7 +24,7 @@ export default function Page({ page, templates, resolver }) {
     return () => {
       alive = false;
     };
-  }, [page.path, templates]);
+  }, [page.path, page.title, templates]);
 
   useEffect(() => {
     if (state.status !== 'ready') return;

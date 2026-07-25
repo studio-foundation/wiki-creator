@@ -254,6 +254,98 @@ body {
   display: none;
 }
 
+/* Image cell spans both columns; opt it out of the label-column styling. */
+.wiki-content table.infobox td.infobox-image {
+  width: auto;
+  background: none;
+  text-align: center;
+  padding: 0.6rem;
+}
+
+/* --- reference-page media & templates ------------------------------------- */
+
+/* [[File:…]] / <gallery> placeholders — the images aren't committed, so a
+   captioned box stands in, floated like a real MediaWiki thumb. */
+.wiki-content .wikithumb {
+  display: inline-block;
+  max-width: 100%;
+  margin: 0.3rem 0;
+  vertical-align: top;
+  font-size: 0.82rem;
+}
+.wiki-content .wikithumb.tleft {
+  float: left;
+  margin: 0.3rem 1rem 0.6rem 0;
+}
+.wiki-content .wikithumb.tright {
+  float: right;
+  margin: 0.3rem 0 0.6rem 1rem;
+}
+.wiki-content .wikithumb.tcenter {
+  display: block;
+  margin: 0.6rem auto;
+  text-align: center;
+}
+.wiki-content .wikithumb .thumbimage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 8rem;
+  min-height: 5rem;
+  padding: 0.6rem;
+  border: 1px solid var(--infobox-border);
+  border-radius: 4px;
+  background: var(--infobox-label-bg);
+  color: var(--muted);
+  word-break: break-all;
+}
+.wiki-content .wikithumb .thumbimage::before {
+  content: "🖼 ";
+  margin-right: 0.3rem;
+}
+.wiki-content .wikithumb .thumbcaption {
+  display: block;
+  padding: 0.3rem 0.2rem 0;
+  color: var(--muted);
+  text-align: center;
+}
+.wiki-content table.infobox .wikithumb {
+  float: none;
+  margin: 0;
+}
+
+/* {{Q|…}} pull-quote. */
+.wiki-content .pullquote {
+  margin: 0 0 1.25rem;
+  padding: 0.4rem 0 0.4rem 1rem;
+  border-left: 2px solid var(--infobox-border);
+  font-size: 1.15rem;
+  font-style: italic;
+  color: var(--muted);
+}
+.wiki-content .pullquote .quote-cite {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.85rem;
+  font-style: normal;
+}
+
+/* {{Clr}} clears floated thumbs/infoboxes. */
+.wiki-content .clear {
+  clear: both;
+}
+
+/* Single-bracket external links. */
+.wiki-content a.external {
+  color: var(--link);
+}
+.wiki-content a.external::after {
+  content: " ↗";
+  font-size: 0.75em;
+  vertical-align: super;
+  color: var(--muted);
+}
+
 /* --- categories footer ---------------------------------------------------- */
 
 .wiki-categories {
