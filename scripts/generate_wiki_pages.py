@@ -58,6 +58,7 @@ from wiki_creator.provenance import content_units, relation_units
 from wiki_creator import studio_io
 from wiki_creator.entity_links import link_first_mentions
 from wiki_creator.entity_status import death_label, status_label
+from wiki_creator.infobox_relationships import relationship_infobox_fields
 from wiki_creator.registry import Registry, normalize_name
 from wiki_creator.spoiler_blocks import relationship_index_lines, per_relation_prose_enabled
 from wiki_creator.relationship_types import usable_relationship_type
@@ -944,6 +945,11 @@ def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> No
     page.setdefault("infobox_fields", {})
     resolved = resolve_template(entity.get("type"), entity.get("importance"), book_config)
     lang = output_language(book_config)
+    # STU-664: the typed-relationship buckets (Family/Romance/Friends/Enemies) are
+    # extracted-fact slots too, but computed together from the whole relationship
+    # set rather than one per token — precompute the dict once, then fill the slots
+    # from it below like any other pipeline-owned fact.
+    rel_fields = relationship_infobox_fields(entity, book_config)
     for slot in resolved.infobox():
         if slot.provenance == "batch-bound":
             value = _batch_bound_value(entity, slot.token, lang)
@@ -956,7 +962,7 @@ def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> No
             # fact under a provenance that promises a grounded one (STU-572).
             # A slot the pipeline never computes (species, location, leaders)
             # is therefore always empty until it is computed.
-            value = _extracted_fact_value(entity, slot.token, lang)
+            value = _extracted_fact_value(entity, slot.token, lang) or rel_fields.get(slot.token)
             if value:
                 page["infobox_fields"][slot.token] = value
             else:

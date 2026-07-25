@@ -282,6 +282,29 @@ def test_build_entity_bundle_tags_revealed_at_chapter():
     assert bundle["entity_events"][0]["revealed_at_chapter"] == 5
 
 
+def test_build_entity_bundle_stamps_other_deceased():
+    """STU-664: each relation carries whether the *other* party is deceased, so the
+    infobox bucket can mark it with a † without generation re-reading statuses."""
+    persons, places, orgs, events = _registries()
+    entity = {"canonical_name": "Celaena", "type": "PERSON", "importance": "principal"}
+    entities_by_name = {"Celaena": entity}
+    relationships = [
+        {"entity_a": "Celaena", "entity_b": "Nehemia", "relationship_type": "friend"},
+        {"entity_a": "Chaol", "entity_b": "Celaena", "relationship_type": "romance"},
+    ]
+    status_verdicts = {"Nehemia": {"status": "deceased"}, "Chaol": {"status": "alive"}}
+
+    bundle = build_entity_bundle(
+        entity, relationships, persons, places, orgs, events, entities_by_name,
+        status_verdicts=status_verdicts,
+    )
+    by_other = {
+        (r["entity_b"] if r["entity_a"] == "Celaena" else r["entity_a"]): r["other_deceased"]
+        for r in bundle["relationships"]
+    }
+    assert by_other == {"Nehemia": True, "Chaol": False}
+
+
 def test_build_entity_bundle_related_context_empty_without_relationships():
     persons, places, orgs, events = _registries()
     entity = {

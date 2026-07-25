@@ -20,5 +20,13 @@
 | '''Affiliation''' || {{{affiliation|}}}
 |-
 | '''Première apparition''' || {{{first_seen|}}}
+|-
+| '''Famille''' || {{{family|}}}
+|-
+| '''Amours''' || {{{romance|}}}
+|-
+| '''Amis et alliés''' || {{{friends_allies|}}}
+|-
+| '''Ennemis''' || {{{enemies|}}}
 |}
 </includeonly>
