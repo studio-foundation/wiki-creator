@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 
+from wiki_creator.infobox_relationships import bucket_for_type
 from wiki_creator.page_templates import (
     canonical_relationship,
     chrome_label,
@@ -133,6 +134,13 @@ def relationship_index_lines(
         if not rtype:
             continue
         token = canonical_relationship(rtype, book_config=book_config)
+        # STU-664: the dated index scopes to the same bonds the infobox buckets do
+        # — Family/Romance/Friends/Enemies — instead of dumping every typed pair.
+        # A weak (acquaintance) or unbucketed book-specific type stays in the prose
+        # only, so the index consolidates rather than duplicating what the infobox
+        # already lists.
+        if not bucket_for_type(token):
+            continue
         rtype = relationship_label(token, lang, book_config=book_config) if token else rtype
         chapters = [c for c in (rel.get("chapters") or []) if isinstance(c, int)]
         if not chapters:

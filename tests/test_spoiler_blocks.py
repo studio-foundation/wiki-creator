@@ -131,6 +131,23 @@ def test_relationship_index_lines_no_ref_without_book_title():
     assert all("<ref>" not in line for line in relationship_index_lines(_entity(), "fr"))
 
 
+def test_relationship_index_lines_drops_unbucketed_types():
+    # STU-664: the dated index scopes to the infobox buckets — a weak acquaintance,
+    # an employment, or a bare "other" is dropped from the index (stays in prose).
+    entity = {
+        "canonical_name": "Celaena",
+        "relationships": [
+            {"entity_a": "Celaena", "entity_b": "Kaltain",
+             "relationship_type": "acquaintance", "chapters": [2]},
+            {"entity_a": "Celaena", "entity_b": "The King",
+             "relationship_type": "employment", "chapters": [4]},
+            {"entity_a": "Celaena", "entity_b": "Nehemia",
+             "relationship_type": "friend", "chapters": [3]},
+        ],
+    }
+    assert relationship_index_lines(entity, "en") == ["* [[Nehemia]] — Friend (ch.3)"]
+
+
 def test_relationship_index_lines_empty_when_no_typed():
     assert relationship_index_lines({"canonical_name": "X", "relationships": []}) == []
 
