@@ -441,13 +441,15 @@ def test_narrative_events_caps_by_salience_then_orders_by_chapter():
     assert chapters == sorted(chapters)  # chronological
 
 
-def test_narrative_events_covers_arc_low_salience_opening_survives_cap():
-    # STU-663: the opening (ch 1) is solo-protagonist and scores lowest, but a
-    # per-chapter coverage guarantee must keep it despite the salience cap.
+def test_narrative_events_guarantees_arc_endpoints_not_full_coverage():
+    # STU-663: the opening (ch 1) is solo-protagonist and scores lowest, so a
+    # pure salience cap dropped it. The fix guarantees only the arc's endpoints
+    # (first + last chapter), then fills the middle by salience — NOT one beat
+    # per chapter, which thinned the dense chapters into a disjointed checklist.
     import scripts.generate_wiki_pages as gwp
 
     events = []
-    for ch in range(1, 14):  # 13 chapters > budget-headroom pressure
+    for ch in range(1, 14):  # 13 chapters
         n = 6 if ch >= 7 else 1  # late chapters crowded with salient set pieces
         for i in range(n):
             sal = 0.05 if ch == 1 else (0.9 if ch >= 7 else 0.4)
@@ -458,8 +460,12 @@ def test_narrative_events_covers_arc_low_salience_opening_survives_cap():
     chapters = [e["chapter"] for e in picked]
     assert len(picked) == gwp._MAX_PERSON_EVENTS
     assert chapters == sorted(chapters)  # chronological
-    assert 1 in chapters  # the opening survived the salience cap
-    assert set(range(1, 14)) <= set(chapters)  # every chapter represented
+    assert 1 in chapters  # the opening endpoint survived the salience cap
+    assert 13 in chapters  # the closing endpoint too
+    # The dramatic middle stays dense (salience-filled), not padded per chapter:
+    # a low-salience middle chapter is crowded out, and a dense one keeps >1 beat.
+    assert 2 not in chapters
+    assert chapters.count(7) > 1
 
 
 def test_narrative_events_empty_for_non_person():
