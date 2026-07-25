@@ -33,6 +33,10 @@ workers: 8
 min_mentions_absolute: 3
 
 generation:
+  register: >-
+    Whimsical and storybook, in the wondering, matter-of-fact voice of a Victorian
+    children's tale: warm, playful, faintly absurd, following the dream-logic of
+    Wonderland without ever winking at the reader or explaining the joke.
   chapter_summary:
     mode: llm
     max_bullets: 8

@@ -185,6 +185,21 @@ def test_build_events_degrades_gracefully_with_no_registry():
     assert e["event_id"] == "e_ch3_0"
 
 
+def test_build_events_keep_intra_chapter_narrative_order():
+    # Within a chapter the beats must stay in the summary's reading order, not be
+    # alphabetized by description — an alphabetical sort opened Alice's arc on the
+    # "EAT ME" cake before she ever met the White Rabbit.
+    bullets = [
+        "White Rabbit runs past Alice",
+        "Alice falls down the rabbit-hole",
+        "Bottle labelled DRINK ME shrinks Alice",
+        "A cake labelled EAT ME sits on the table",
+    ]
+    events = build_events(_summaries({1: bullets}), [], None, action_cues=[])
+    assert [e["description"] for e in events] == bullets
+    assert [e["event_id"] for e in events] == [f"e_ch1_{i}" for i in range(4)]
+
+
 def test_build_events_tolerates_none_summaries_and_relationships():
     assert build_events(None, None, None, action_cues=[]) == []
 
