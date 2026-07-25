@@ -287,6 +287,15 @@ def build() -> dict[str, str]:
 
     files["categories.wiki"] = _build_categories_wiki(labels)
 
+    # Hand-authored reference wiki (not exporter output): shown in the preview's
+    # "Original Wiki" nav group so a generated page can be read side by side with
+    # the source it mirrors. Same title as the generated Alice on purpose.
+    files["real-wiki/Alice.wiki"] = (
+        "'''Alice''' is the protagonist of Lewis Carroll's ''Alice's Adventures "
+        "in Wonderland''. She follows the [[White Rabbit]] into [[Wonderland]].\n"
+        "[[Category:Characters]]\n"
+    )
+
     principals_shown, places_shown = index_limits(EXPORT_CFG)
     files["Main_Page.wiki"] = main_page_content(
         "Alice's Adventures in Wonderland", "Lewis Carroll", pages, labels,

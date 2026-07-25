@@ -31,6 +31,14 @@ describe('buildResolver', () => {
   it('reports a missing page (red link)', () => {
     expect(resolve('Dormouse')).toEqual({ kind: 'missing' });
   });
+
+  it('ignores ORIGINAL pages so a same-title reference cannot hijack a link', () => {
+    const resolveWithOriginal = buildResolver([
+      ...PAGES,
+      { title: 'Alice', slug: 'real-wiki/Alice', entityType: 'ORIGINAL', categories: [] },
+    ]);
+    expect(resolveWithOriginal('Alice')).toEqual({ kind: 'page', slug: 'characters/Alice' });
+  });
 });
 
 describe('wireWikilinks', () => {

@@ -84,3 +84,4 @@ def test_fixture_layout_mirrors_real_export():
     assert any(n.startswith("organizations/") for n in names)
     assert any(n.startswith("events/") for n in names)
     assert any(n.startswith("templates/") for n in names)
+    assert "real-wiki/Alice.wiki" in names  # hand-authored reference page

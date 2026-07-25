@@ -21,6 +21,9 @@ function normKey(s) {
 export function buildResolver(pages) {
   const byKey = new Map();
   for (const p of pages) {
+    // The hand-authored reference is a mirror of the generated cast — its
+    // titles must not hijack a [[link]] away from the generated page.
+    if (p.entityType === 'ORIGINAL') continue;
     byKey.set(normKey(p.title), p.slug);
     // also the bare filename stem, so a link written as the file name resolves
     byKey.set(normKey(p.slug.split('/').pop()), p.slug);

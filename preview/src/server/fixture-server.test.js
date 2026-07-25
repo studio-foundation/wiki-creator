@@ -25,6 +25,7 @@ describe('buildIndex', () => {
     expect(byPath['organizations/Court_of_Hearts.wiki'].entityType).toBe('ORG');
     expect(byPath['events/A_Mad_Tea-Party.wiki'].entityType).toBe('EVENT');
     expect(byPath['Synopsis.wiki'].entityType).toBeNull();
+    expect(byPath['real-wiki/Alice.wiki'].entityType).toBe('ORIGINAL');
   });
 
   it('derives title and a unique slug', () => {

@@ -29,6 +29,7 @@ def test_build_index_matches_the_api_shape():
     assert by_path["organizations/Court_of_Hearts.wiki"]["entityType"] == "ORG"
     assert by_path["events/A_Mad_Tea-Party.wiki"]["entityType"] == "EVENT"
     assert by_path["Synopsis.wiki"]["entityType"] is None
+    assert by_path["real-wiki/Alice.wiki"]["entityType"] == "ORIGINAL"
     assert by_path["characters/Alice.wiki"]["slug"] == "characters/Alice"
     assert by_path["characters/Alice.wiki"]["title"] == "Alice"
     assert "Characters" in by_path["characters/Alice.wiki"]["categories"]

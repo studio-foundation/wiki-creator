@@ -27,6 +27,7 @@ _SUBDIR_TYPE = {
     "organizations": "ORG",
     "events": "EVENT",
     "factions": "FACTION",
+    "real-wiki": "ORIGINAL",  # hand-authored reference page(s), shown as their own nav group
 }
 
 _STATIC_TYPES = {
