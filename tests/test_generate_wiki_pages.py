@@ -441,6 +441,27 @@ def test_narrative_events_caps_by_salience_then_orders_by_chapter():
     assert chapters == sorted(chapters)  # chronological
 
 
+def test_narrative_events_covers_arc_low_salience_opening_survives_cap():
+    # STU-663: the opening (ch 1) is solo-protagonist and scores lowest, but a
+    # per-chapter coverage guarantee must keep it despite the salience cap.
+    import scripts.generate_wiki_pages as gwp
+
+    events = []
+    for ch in range(1, 14):  # 13 chapters > budget-headroom pressure
+        n = 6 if ch >= 7 else 1  # late chapters crowded with salient set pieces
+        for i in range(n):
+            sal = 0.05 if ch == 1 else (0.9 if ch >= 7 else 0.4)
+            events.append({"chapter": ch, "description": f"c{ch}-{i}", "salience": sal})
+    entity = {"type": "PERSON", "canonical_name": "Alice", "entity_events": events}
+
+    picked = gwp._narrative_events(entity)
+    chapters = [e["chapter"] for e in picked]
+    assert len(picked) == gwp._MAX_PERSON_EVENTS
+    assert chapters == sorted(chapters)  # chronological
+    assert 1 in chapters  # the opening survived the salience cap
+    assert set(range(1, 14)) <= set(chapters)  # every chapter represented
+
+
 def test_narrative_events_empty_for_non_person():
     entity = {"type": "PLACE", "entity_events": [{"chapter": 1, "description": "x", "salience": 1.0}]}
     assert _narrative_events(entity) == []
