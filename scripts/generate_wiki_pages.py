@@ -1975,6 +1975,27 @@ def _run_generation_sectioned(
     return page
 
 
+def single_call_pages_enabled(book_cfg: dict | None) -> bool:
+    """STU-671: generate a PERSON page in ONE call instead of the per-section
+    fan-out. The per-section shape re-sends the whole ~2-5k-token per-entity
+    context block once per section (~6× for a principal); a single call pays it
+    once, at the cost of losing per-section length budgeting and the STU-643
+    anti-repeat plumbing (one call sees the whole page, so it needs neither).
+
+    Whole-page generation reuses the non-PERSON single-shot generator, so the
+    tier's ``max_tokens_per_page`` budgets the WHOLE page rather than each
+    section — raise it for books that flip this on if principal pages shrink.
+    A book that sets ``generation.per_relation_prose`` gets an inline Relations
+    section here instead (the per-relation fan-out is one of the calls collapsed).
+    """
+    raw = (book_cfg or {}).get("generation", {}).get("single_call")
+    if raw is None:
+        return False
+    if not isinstance(raw, bool):
+        raise ValueError("generation.single_call must be a boolean")
+    return raw
+
+
 def _run_generation(
     *,
     entity: dict,
@@ -2002,12 +2023,14 @@ def _run_generation(
     Sectioned isolation would then discard that valid content as a false
     `biography_failed` (STU-465), so non-PERSON types use single-shot generation
     which keeps the model's multi-section article as-is.
+    STU-671: `generation.single_call` routes PERSON through the same single-shot
+    generator to collapse the per-section fan-out (~6 calls → 1).
     """
-    generator = (
-        _run_generation_sectioned
-        if entity.get("type") == "PERSON"
-        else _run_generation_for_entity
+    sectioned = (
+        entity.get("type") == "PERSON"
+        and not single_call_pages_enabled(book_config)
     )
+    generator = _run_generation_sectioned if sectioned else _run_generation_for_entity
     return generator(
         entity=entity,
         book_title=book_title,
