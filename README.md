@@ -29,7 +29,9 @@ The workflow is split into five Studio pipelines, each with structurally validat
 ### Prerequisites
 
 - Python 3.11+
-- [Studio CLI](https://github.com/studio-foundation/studio) installed from source
+- Node.js LTS ≤ 22 (Node 24's V8 headers break `better-sqlite3`'s native build) and the
+  [Studio CLI](https://github.com/studio-foundation/studio):
+  `npm i -g @studio-foundation/cli`
 - The spaCy models the books declare — installed by the `models` extra below
   (`en_core_web_lg`, `fr_core_news_lg`; ~1 GB). Skipping it does not fail the
   run: a missing model falls back to a smaller sibling of the same language and
