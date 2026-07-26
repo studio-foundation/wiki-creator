@@ -21,13 +21,21 @@ Studio config & providers. Moved verbatim from the root CLAUDE.md Gotchas sectio
   every agent (e.g. `--provider mock` for tests). Since `config.yaml` is
   gitignored, the committed `.studio/config.example.yaml` is the only
   referenceable statement of the default; keep the two in step.
-  **The two tiers are `.env`-settable** (`.env.example`): the five verdict
-  agents read `${STUDIO_SMART_PROVIDER:-claude-code}` /
+  **The two tiers were meant to be `.env`-settable** (`.env.example`): the
+  five verdict agents were to read `${STUDIO_SMART_PROVIDER:-claude-code}` /
   `${STUDIO_SMART_MODEL:-claude-haiku-4-5}` from their agent yaml, and
   `defaults` reads `${STUDIO_BULK_PROVIDER}` / `${STUDIO_BULK_MODEL}`, so a run
-  can retarget either tier without editing a committed file — all-claude-code is
-  pointing BULK at claude-code too. Unset = the pin, so an absent `.env` changes
-  nothing. This needs Studio's agent-YAML env interpolation (studio#209);
-  before it lands, a literal `${...}` in an agent yaml is passed through as the
-  provider name and fails. `--provider X` still overrides both tiers at once,
-  the flag path.
+  could retarget either tier without editing a committed file. This needs
+  Studio's agent-YAML env interpolation (studio#209), which has never shipped
+  (still open as of Studio 0.9.0, the latest release) — so **every run of the
+  five verdict agents has failed since PR #261 introduced the template**,
+  every stage that uses one (`Provider not found:
+  ${STUDIO_SMART_PROVIDER:-claude-code}`), invisibly, because their on-failure
+  behavior is the safe-default fallback (see "A Long Run Persists" in the root
+  CLAUDE.md) — the run completes, it just never got that verdict.
+  PR #303 hardcoded `provider: claude-code` back into all five agent yamls as
+  a stopgap. `model` is still templated (`${STUDIO_SMART_MODEL:-claude-haiku-4-5}`)
+  and equally uninterpolated — untouched only because nothing has surfaced a
+  concrete failure from it yet, not because it's confirmed fine; revisit once
+  studio#209 ships or once model needs retargeting again. `--provider X` still
+  overrides both tiers at once, the flag path — unaffected by this.
