@@ -110,9 +110,89 @@ def test_cli_preview_errors_when_no_output_exists(tmp_path, capsys):
     assert "no exported wiki" in capsys.readouterr().err
 
 
-def test_cli_preview_dry_run(monkeypatch, capsys):
-    monkeypatch.setattr(preview, "preview_app_built", lambda _dist: True)
+def test_cli_preview_dry_run(capsys):
     rc = cli.main(["--dry-run", "preview", "--output", str(FIXTURE)])
     out = capsys.readouterr().out
     assert rc == 0
     assert "serve" in out and str(FIXTURE) in out
+
+
+# --- auto-build on first run (STU-673) -------------------------------------
+
+class _FakeServer:
+    server_address = ("127.0.0.1", 4173)
+
+    def serve_forever(self):
+        raise KeyboardInterrupt
+
+    def shutdown(self):
+        pass
+
+
+def test_cli_preview_builds_when_dist_missing(monkeypatch, capsys):
+    built = []
+    monkeypatch.setattr(preview, "preview_app_built", lambda _dist: False)
+    monkeypatch.setattr(preview, "build_preview_app", lambda d: built.append(d))
+    monkeypatch.setattr(preview, "serve", lambda *a, **k: _FakeServer())
+    rc = cli.main(["preview", "--output", str(FIXTURE), "--no-open"])
+    assert rc == 0
+    assert len(built) == 1  # dist missing -> build invoked
+    assert "building preview app" in capsys.readouterr().err
+
+
+def test_cli_preview_skips_build_when_dist_present(monkeypatch):
+    built = []
+    monkeypatch.setattr(preview, "preview_app_built", lambda _dist: True)
+    monkeypatch.setattr(preview, "build_preview_app", lambda d: built.append(d))
+    monkeypatch.setattr(preview, "serve", lambda *a, **k: _FakeServer())
+    rc = cli.main(["preview", "--output", str(FIXTURE), "--no-open"])
+    assert rc == 0
+    assert built == []  # dist present -> build skipped
+
+
+def test_cli_preview_errors_when_build_fails(monkeypatch, capsys):
+    monkeypatch.setattr(preview, "preview_app_built", lambda _dist: False)
+
+    def _boom(_dir):
+        raise preview.PreviewBuildError("npm not found — install Node.js")
+
+    monkeypatch.setattr(preview, "build_preview_app", _boom)
+    rc = cli.main(["preview", "--output", str(FIXTURE), "--no-open"])
+    assert rc == 2
+    assert "npm not found" in capsys.readouterr().err
+
+
+def test_build_preview_app_raises_when_npm_missing(monkeypatch, tmp_path):
+    monkeypatch.setattr(preview.shutil, "which", lambda _cmd: None)
+    with pytest.raises(preview.PreviewBuildError, match="npm not found"):
+        preview.build_preview_app(tmp_path)
+
+
+def test_build_preview_app_runs_ci_then_build(monkeypatch, tmp_path):
+    monkeypatch.setattr(preview.shutil, "which", lambda _cmd: "/usr/bin/npm")
+    calls = []
+
+    class _Ok:
+        returncode = 0
+
+    def _run(cmd, cwd):
+        calls.append((cmd, cwd))
+        return _Ok()
+
+    monkeypatch.setattr(preview.subprocess, "run", _run)
+    preview.build_preview_app(tmp_path)  # no node_modules -> ci then build
+    assert [c[0] for c in calls] == [["npm", "ci"], ["npm", "run", "build"]]
+    assert all(c[1] == tmp_path for c in calls)
+
+
+def test_build_preview_app_skips_ci_when_node_modules_present(monkeypatch, tmp_path):
+    (tmp_path / "node_modules").mkdir()
+    monkeypatch.setattr(preview.shutil, "which", lambda _cmd: "/usr/bin/npm")
+    calls = []
+
+    class _Ok:
+        returncode = 0
+
+    monkeypatch.setattr(preview.subprocess, "run", lambda cmd, cwd: calls.append(cmd) or _Ok())
+    preview.build_preview_app(tmp_path)
+    assert calls == [["npm", "run", "build"]]  # node_modules present -> only build

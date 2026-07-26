@@ -183,17 +183,19 @@ def _cmd_preview(args: argparse.Namespace) -> int:
         return 2
 
     dist_dir = library._PROJECT_ROOT / "preview" / "dist"
-    if not preview.preview_app_built(dist_dir):
-        print(
-            "error: preview app not built. Run: (cd preview && npm install && npm run build)",
-            file=sys.stderr,
-        )
-        return 2
 
     if args.dry_run:
         opening = "" if args.no_open else " + open browser"
         print(f"$ serve {output_dir} (app: {dist_dir}) on port {args.port}{opening}")
         return 0
+
+    if not preview.preview_app_built(dist_dir):
+        print("building preview app (first run)…", file=sys.stderr)
+        try:
+            preview.build_preview_app(library._PROJECT_ROOT / "preview")
+        except preview.PreviewBuildError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
 
     httpd = preview.serve(
         output_dir, dist_dir, book=book, port=args.port, open_browser=not args.no_open

@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
+import subprocess
 import threading
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -129,6 +131,33 @@ def _make_handler(output_dir: Path, dist_dir: Path, book: str):
 
 def preview_app_built(dist_dir: Path) -> bool:
     return (dist_dir / "index.html").is_file()
+
+
+class PreviewBuildError(RuntimeError):
+    """The preview SPA could not be built — npm absent, or a build step failed.
+
+    The only remaining failure mode ``wiki preview`` surfaces as an actionable
+    error (STU-673); everything else auto-builds on first run.
+    """
+
+
+def build_preview_app(preview_dir: Path) -> None:
+    """Build the SPA into ``preview_dir/dist`` (STU-673): ``npm ci`` once (when
+    ``node_modules`` is absent), then ``npm run build``. Output streams to the
+    console so a slow first run shows progress. Raises :class:`PreviewBuildError`
+    when npm is missing or a step exits non-zero."""
+    if shutil.which("npm") is None:
+        raise PreviewBuildError(
+            "npm not found — install Node.js (LTS <= 22) and rerun, or build by "
+            "hand: (cd preview && npm install && npm run build)"
+        )
+    steps = []
+    if not (preview_dir / "node_modules").is_dir():
+        steps.append(["npm", "ci"])
+    steps.append(["npm", "run", "build"])
+    for cmd in steps:
+        if subprocess.run(cmd, cwd=preview_dir).returncode != 0:
+            raise PreviewBuildError(f"preview build failed: {' '.join(cmd)}")
 
 
 def serve(
