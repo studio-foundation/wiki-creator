@@ -22,8 +22,9 @@ jobs:
           fetch-depth: 0  # need history to diff the change range below
 
       # Changes that can't affect the Python suite — docs (Markdown, docs/,
-      # LICENSE) and the self-contained `preview/` app (its own JS/vitest, no
-      # Python impact) — skip the heavy steps. The job still runs and succeeds,
+      # LICENSE), generated `.wiki` pages (committed demo artifacts, STU-617),
+      # and the self-contained `preview/` app (its own JS/vitest, no Python
+      # impact) — skip the heavy steps. The job still runs and succeeds,
       # so the required status check reports green: a trigger-level
       # `paths-ignore` would instead leave the check pending and block such a PR
       # on protected `main`. merge_group always runs the full suite (the queued
@@ -46,7 +47,7 @@ jobs:
           fi
           files=$(git diff --name-only "$base" "$head")
           echo "changed files:"; echo "$files"
-          if [ -z "$files" ] || ! echo "$files" | grep -qvE '(^docs/|\.md$|^LICENSE$|^preview/)'; then
+          if [ -z "$files" ] || ! echo "$files" | grep -qvE '(^docs/|\.md$|^LICENSE$|^preview/|\.wiki$)'; then
             echo "skip_python=true" >> "$GITHUB_OUTPUT"
           else
             echo "skip_python=false" >> "$GITHUB_OUTPUT"
