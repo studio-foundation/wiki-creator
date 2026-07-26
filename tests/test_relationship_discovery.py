@@ -13,7 +13,9 @@ from wiki_creator.relationship_discovery import (
     flip,
     fold_chunk_result,
     load_votes_cache,
+    roster_entries,
     save_votes_cache,
+    subset_roster,
     uncached_chunk_ids,
     valid_relations,
     votes_from_map_output,
@@ -195,6 +197,49 @@ def test_build_roster_prompt_line_bare_when_no_alias():
                  "aliases": ["Eragon"]}]
     _, _, lines = build_roster(entities)
     assert lines == ["Eragon"]
+
+
+# --- roster_entries / subset_roster (STU-672) -------------------------------
+
+
+def test_roster_entries_line_matches_build_roster():
+    entities = [
+        {"canonical_name": "Brom", "entity_type": "PERSON", "aliases": ["Brom", "Neal"]},
+        {"canonical_name": "Eragon", "entity_type": "PERSON", "aliases": ["Eragon"]},
+        {"canonical_name": "Alagaësia", "entity_type": "PLACE", "aliases": []},
+    ]
+    _, _, lines = build_roster(entities)
+    assert [e["line"] for e in roster_entries(entities)] == lines
+
+
+def test_roster_entries_surfaces_are_lowercased_canonical_and_aliases():
+    entities = [{"canonical_name": "Brom", "entity_type": "PERSON",
+                 "aliases": ["Brom", "Neal", "the old man"]}]
+    entries = roster_entries(entities)
+    assert entries[0]["surfaces"] == ["brom", "neal", "the old man"]
+
+
+def test_subset_roster_keeps_only_named_entities():
+    entities = [
+        {"canonical_name": "Eragon", "entity_type": "PERSON", "aliases": ["Eragon"]},
+        {"canonical_name": "Brom", "entity_type": "PERSON", "aliases": ["Brom", "Neal"]},
+        {"canonical_name": "Murtagh", "entity_type": "PERSON", "aliases": ["Murtagh"]},
+    ]
+    entries = roster_entries(entities)
+    lines = subset_roster(entries, "Eragon turned to Neal, who said nothing.")
+    assert lines == ["Eragon", "Brom (also called: Neal)"]  # Murtagh, unnamed, dropped
+
+
+def test_subset_roster_matches_case_insensitively():
+    entities = [{"canonical_name": "Eragon", "entity_type": "PERSON", "aliases": ["Eragon"]}]
+    entries = roster_entries(entities)
+    assert subset_roster(entries, "ERAGON drew his sword.") == ["Eragon"]
+
+
+def test_subset_roster_empty_when_no_entity_named():
+    entities = [{"canonical_name": "Eragon", "entity_type": "PERSON", "aliases": ["Eragon"]}]
+    entries = roster_entries(entities)
+    assert subset_roster(entries, "The dragon soared over the valley.") == []
 
 
 # --- canonicalize_relations -------------------------------------------------
