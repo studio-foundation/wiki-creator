@@ -1,0 +1,32 @@
+<includeonly>
+{| class="infobox"
+|-
+! colspan="2" | {{{name}}}
+|-
+| '''Aussi connu comme''' || {{{aliases|}}}
+|-
+| '''Titre(s)''' || {{{titles|}}}
+|-
+| '''Statut''' || {{{status|}}}
+|-
+| '''Décès''' || {{{death|}}}
+|-
+| '''Espèce/Race''' || {{{species|}}}
+|-
+| '''Occupation''' || {{{occupation|}}}
+|-
+| '''Résidence''' || {{{residence|}}}
+|-
+| '''Affiliation''' || {{{affiliation|}}}
+|-
+| '''Première apparition''' || {{{first_seen|}}}
+|-
+| '''Famille''' || {{{family|}}}
+|-
+| '''Amours''' || {{{romance|}}}
+|-
+| '''Amis et alliés''' || {{{friends_allies|}}}
+|-
+| '''Ennemis''' || {{{enemies|}}}
+|}
+</includeonly>

@@ -1,0 +1,41 @@
+{{Infobox character
+|nom=Wizard of Oz
+|alias=Wizard, Wonderful Wizard
+|apparition=Appears in book 2
+|status=Unknown
+|friends_allies=[[Old Mombi]]
+|enemies=[[Nick Chopper]], [[The Scarecrow]], [[Tip]], [[Dorothy]], [[Pastoria]] †
+}}
+
+== Biography ==
+
+The Wizard of Oz, known simply as the Wizard or the Wonderful Wizard, built the Emerald City, a city rendered entirely in shades of green according to Tip's account. He once ruled the Emerald City as its King, having taken the crown from Pastoria, the city's former King, before passing it on to the Scarecrow when he departed. When Dorothy came to the Emerald City with the Scarecrow and the Tin Woodman to ask him to send her back to Kansas, the Wizard could not do so, since he was not so much of a Wizard as he might have been. He is nonetheless credited with placing a heart of his own construction into the breast of the Tin Woodman, an act commemorated by a large painting hanging in the Tin Woodman's palace. During his reign the Soldier with the Green Whiskers served as his Royal Army, and people feared him enough that the army carried real weight. He later escaped the Emerald City in a balloon.
+
+According to Glinda's investigation into his conduct, the Wizard's recorded actions included eating beans with a knife, paying three secret visits to old Mombi, and walking with a slight limp on his left foot; the Tin Woodman suggested, without certainty, that he might have originally come from a country called Omaha. Glinda's inquiry further concluded that the Wizard had taught Mombi some of his tricks of magic, which she took as evidence that Mombi had helped him conceal the infant Ozma, the rightful heir to the Emerald City's throne. Mombi herself, compelled by Glinda's truth-detecting pearl, confirmed that the Wizard brought her the infant Ozma and asked her to hide the child — Ozma being, by Mombi's account, the daughter of the King whose throne the Wizard had taken.
+
+== Relationships ==
+
+'''[[Nick Chopper]]''' — the bond seems to have soured over time; though the Wizard is credited with fashioning Nick Chopper's tin heart, the record suggests Nick Chopper grew angry enough to threaten exposing him, hinting at an adversarial turn.
+
+'''[[Old Mombi]]''' — the two appear to share a guarded arrangement rather than open friendship; Glinda's inquiry suggests the Wizard taught Mombi several of his tricks of magic, implying she aided him in return, likely in concealing the infant Ozma.
+
+'''[[The Scarecrow]]''' — like Nick Chopper, the Scarecrow reportedly grew angry at the Wizard and threatened to expose him, suggesting a falling-out despite the Wizard having passed the crown of the Emerald City on to him.
+
+'''[[Tip]]''' — the connection is inferential; Tip recounts the Wizard's failed attempt to send Dorothy back to Kansas, a narration whose tone could hint at some skepticism toward the Wizard, though no direct confrontation between them is described.
+
+'''[[Dorothy]]''' — she once sought out the Wizard to ask him to send her back to Kansas, only for him to fail her; this unmet request could suggest a strained relationship, though the excerpts describe no open conflict between them.
+
+''Evolution:''
+* [[Old Mombi]] — Wary alliance (ch.20→ch.23)<ref>The Marvelous Land of Oz, chapter 20</ref>
+* [[Tip]] — Enemy (ch.20→ch.23)<ref>The Marvelous Land of Oz, chapter 20</ref>
+* [[Pastoria]] — Enemy (ch.20)<ref>The Marvelous Land of Oz, chapter 20</ref>
+* [[Nick Chopper]] — Enemy (ch.3→ch.11)<ref>The Marvelous Land of Oz, chapter 3</ref>
+* [[The Scarecrow]] — Enemy (ch.3→ch.16)<ref>The Marvelous Land of Oz, chapter 3</ref>
+* [[Dorothy]] — Enemy (ch.3)<ref>The Marvelous Land of Oz, chapter 3</ref>
+== References ==
+
+<references/>
+
+[[Category:Characters]]
+[[Category:Secondary Characters]]
+[[Category:Characters of Book 2]]
