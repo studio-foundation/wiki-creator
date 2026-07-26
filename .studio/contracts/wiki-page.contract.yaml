@@ -21,4 +21,4 @@ expected_outputs:
     # the required INPUT of that stage (assemble_wiki_pages.py exits 1 without it).
     # Asserting it here is where run_wiki.py's old required_files() check for
     # pages-export lands (STU-600). Glob: per-book slug, cwd = repo root.
-    - "library/*/*/processing_output/*/wiki_pages.json"
+    - "{library,public_domain}/*/*/processing_output/*/wiki_pages.json"

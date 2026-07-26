@@ -15,4 +15,4 @@ expected_outputs:
     # epub-parse (parse_epub.py) writes epub_data.json into the book's
     # processing_output/<slug>/. Glob because the slug is per-book and the check
     # runs with cwd = repo root. Moved here from run_wiki.py required_files() (STU-600).
-    - "library/*/*/processing_output/*/epub_data.json"
+    - "{library,public_domain}/*/*/processing_output/*/epub_data.json"

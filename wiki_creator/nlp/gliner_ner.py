@@ -92,27 +92,26 @@ def _from_pretrained_offline_first(model_name: str):
 
     The model is a pinned, pre-cached asset (`gliner` extra pulls it once), so a
     cached load must not make a blocking, un-timeout'd HF round-trip on every run:
-    when the hub is slow it hangs the extraction stage to its 600s timeout. Both
-    ``huggingface_hub`` and ``transformers`` read their offline flag into a module
-    global at import, so the env var (set here, after import) and the
-    ``local_files_only`` kwarg (ignored by the nested deberta tokenizer load) are
-    both too late — the two live globals are toggled instead, which every call
-    reads. A genuine cache miss (first pull) restores them and falls back to the
-    network.
+    when the hub is slow it hangs the extraction stage to its 600s timeout. The
+    env var (set here, after import) and the ``local_files_only`` kwarg (ignored
+    by the nested deberta tokenizer load) are both too late — ``huggingface_hub``
+    reads its offline flag into a module global at import, so that global is
+    toggled instead, which every call reads (``transformers.utils.hub.is_offline_mode``
+    reads the same global live, not a separate snapshot). A genuine cache miss
+    (first pull) restores it and falls back to the network.
     """
     from gliner import GLiNER
     import huggingface_hub.constants as hf
-    import transformers.utils.hub as tf
 
-    hf_prev, tf_prev = hf.HF_HUB_OFFLINE, tf._is_offline_mode
-    hf.HF_HUB_OFFLINE = tf._is_offline_mode = True
+    hf_prev = hf.HF_HUB_OFFLINE
+    hf.HF_HUB_OFFLINE = True
     try:
         return GLiNER.from_pretrained(model_name)
     except Exception:
-        hf.HF_HUB_OFFLINE = tf._is_offline_mode = False
+        hf.HF_HUB_OFFLINE = False
         return GLiNER.from_pretrained(model_name)
     finally:
-        hf.HF_HUB_OFFLINE, tf._is_offline_mode = hf_prev, tf_prev
+        hf.HF_HUB_OFFLINE = hf_prev
 
 
 class GlinerNer:

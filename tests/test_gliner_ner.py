@@ -104,8 +104,12 @@ def test_unknown_device_raises_instead_of_falling_back_to_auto(monkeypatch):
 
 
 def _fake_hf_modules(monkeypatch, from_pretrained):
-    """Install fake ``gliner``/``huggingface_hub``/``transformers`` so the load
-    helper runs without a model download and its offline flags are observable."""
+    """Install fake ``gliner``/``huggingface_hub`` so the load helper runs
+    without a model download and its offline flag is observable.
+
+    ``transformers.utils.hub.is_offline_mode()`` reads ``huggingface_hub``'s
+    global live (no separate transformers-side flag to fake, unlike older
+    transformers which snapshotted it at import)."""
     import sys
     from types import ModuleType
 
@@ -114,13 +118,6 @@ def _fake_hf_modules(monkeypatch, from_pretrained):
     hf_pkg = ModuleType("huggingface_hub")
     hf_pkg.constants = hf
 
-    tf_hub = ModuleType("transformers.utils.hub")
-    tf_hub._is_offline_mode = False
-    tf_utils = ModuleType("transformers.utils")
-    tf_utils.hub = tf_hub
-    tf_pkg = ModuleType("transformers")
-    tf_pkg.utils = tf_utils
-
     gliner = ModuleType("gliner")
     gliner.GLiNER = type("GLiNER", (), {"from_pretrained": staticmethod(from_pretrained)})
 
@@ -128,17 +125,14 @@ def _fake_hf_modules(monkeypatch, from_pretrained):
         ("gliner", gliner),
         ("huggingface_hub", hf_pkg),
         ("huggingface_hub.constants", hf),
-        ("transformers", tf_pkg),
-        ("transformers.utils", tf_utils),
-        ("transformers.utils.hub", tf_hub),
     ]:
         monkeypatch.setitem(sys.modules, name, mod)
-    return hf, tf_hub
+    return hf
 
 
 def test_load_forces_offline_during_a_cached_load_and_restores_it(monkeypatch):
-    """A cached load must not touch the network — both offline flags are True
-    while ``from_pretrained`` runs, and restored to their prior value after."""
+    """A cached load must not touch the network — the offline flag is True
+    while ``from_pretrained`` runs, and restored to its prior value after."""
     from wiki_creator.nlp.gliner_ner import _from_pretrained_offline_first
 
     seen = {}
@@ -146,32 +140,31 @@ def test_load_forces_offline_during_a_cached_load_and_restores_it(monkeypatch):
     def from_pretrained(name):
         seen["name"] = name
         seen["hf"] = sys_hf.HF_HUB_OFFLINE
-        seen["tf"] = sys_tf._is_offline_mode
         return "MODEL"
 
-    sys_hf, sys_tf = _fake_hf_modules(monkeypatch, from_pretrained)
+    sys_hf = _fake_hf_modules(monkeypatch, from_pretrained)
     assert _from_pretrained_offline_first("m") == "MODEL"
-    assert (seen["name"], seen["hf"], seen["tf"]) == ("m", True, True)
-    assert sys_hf.HF_HUB_OFFLINE is False and sys_tf._is_offline_mode is False
+    assert (seen["name"], seen["hf"]) == ("m", True)
+    assert sys_hf.HF_HUB_OFFLINE is False
 
 
 def test_load_falls_back_to_network_on_a_cache_miss(monkeypatch):
     """A genuine miss (first pull) retries online — offline is off on the retry,
-    and both flags are restored afterwards regardless."""
+    and the flag is restored afterwards regardless."""
     from wiki_creator.nlp.gliner_ner import _from_pretrained_offline_first
 
     calls = []
 
     def from_pretrained(name):
-        calls.append((sys_hf.HF_HUB_OFFLINE, sys_tf._is_offline_mode))
+        calls.append(sys_hf.HF_HUB_OFFLINE)
         if len(calls) == 1:
             raise OSError("not cached")
         return "MODEL"
 
-    sys_hf, sys_tf = _fake_hf_modules(monkeypatch, from_pretrained)
+    sys_hf = _fake_hf_modules(monkeypatch, from_pretrained)
     assert _from_pretrained_offline_first("m") == "MODEL"
-    assert calls == [(True, True), (False, False)]
-    assert sys_hf.HF_HUB_OFFLINE is False and sys_tf._is_offline_mode is False
+    assert calls == [True, False]
+    assert sys_hf.HF_HUB_OFFLINE is False
 
 
 # --- windows -----------------------------------------------------------------
