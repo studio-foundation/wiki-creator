@@ -1,0 +1,41 @@
+{{Infobox character
+|nom=Old Mombi
+|alias=Mombi
+|apparition=Appears in book 2
+|status=Alive
+|friends_allies=[[General Jinjur]], [[Wizard of Oz]]
+|enemies=[[Glinda the Good]], [[Tip]], [[The Scarecrow]], [[Nick Chopper]]
+}}
+
+== Biography ==
+
+Old Mombi, known simply as Mombi, is an old woman living in the Country of the Gillikins in the North of the Land of Oz, where she serves as guardian to the boy Tip, raising him since early childhood though he remembers nothing of his parents. Her reputation is poor: the Gillikin people suspect her of practicing magical arts and largely avoid her company. Because the ruling Good Witch has forbidden any other Witch to exist within her dominion, Mombi cannot claim that title outright and is restricted to working as a Sorceress, or at most a Wizardess. She actively pursues magical knowledge, at one point trading secrets with a crooked wizard living in a mountain cave in exchange for three recipes, four magical powders, and a selection of potent herbs, and she keeps a pepper-box containing the Powder of Life among her possessions.
+
+When Tip flees her household after fashioning and animating a pumpkin-headed man named Jack, Mombi discovers the trick and grows furious, both at the deception and at the theft of the Powder of Life. Later, General Jinjur summons her to the Emerald City to help repel the returning Scarecrow and Tin Woodman, and from a tower room she works magic to disorient the travelers, at one point sending a sheet of crackling flame across the meadow toward them. Her history with magic runs deeper still: Glinda later argues that the Wizard of Oz must have taught Mombi many of his tricks in exchange for some earlier assistance, and suspects — though does not confirm — that Mombi helped him conceal the girl Ozma, the rightful heir to the throne of the Emerald City, prompting Glinda to seek Mombi out to force her to reveal where the girl is hidden.
+
+== Relationships ==
+
+'''[[Glinda the Good]]''' — enemy. Glinda vows to march on the Emerald City to "take Mombi prisoner," suggesting the two stand as opposed forces.
+
+'''[[General Jinjur]]''' — wary alliance. Jinjur sends for Mombi and promises her rewards for aid against the Scarecrow and Tin Woodman, an alliance that seems born of convenience rather than trust.
+
+'''[[Tip]]''' — enemy. Mombi's fury at Tip's trick and his theft of the Powder of Life points to a bond turned to enmity after his escape.
+
+'''[[The Scarecrow]]''' — enemy. Mombi's magical assaults against the traveling party, which included the Scarecrow, suggest she counted him among her foes.
+
+'''[[Wizard of Oz]]''' — wary alliance. Glinda's account that "the Wizard taught the old woman many of his tricks of magic" hints at a past working arrangement between the two, offered only as suspicion.
+
+''Evolution:''
+* [[Glinda the Good]] — Enemy (ch.20→ch.23)<ref>The Marvelous Land of Oz, chapter 20</ref>
+* [[Wizard of Oz]] — Wary alliance (ch.20→ch.23)<ref>The Marvelous Land of Oz, chapter 20</ref>
+* [[General Jinjur]] — Wary alliance (ch.12→ch.21)<ref>The Marvelous Land of Oz, chapter 12</ref>
+* [[Tip]] — Enemy (ch.12→ch.23)<ref>The Marvelous Land of Oz, chapter 12</ref>
+* [[The Scarecrow]] — Enemy (ch.12→ch.14)<ref>The Marvelous Land of Oz, chapter 12</ref>
+* [[Nick Chopper]] — Enemy (ch.12)<ref>The Marvelous Land of Oz, chapter 12</ref>
+== References ==
+
+<references/>
+
+[[Category:Characters]]
+[[Category:Secondary Characters]]
+[[Category:Characters of Book 2]]
