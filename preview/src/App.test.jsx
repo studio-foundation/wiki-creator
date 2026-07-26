@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import React from 'react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, waitFor, cleanup, act } from '@testing-library/react';
+import { render, screen, waitFor, cleanup, act, within } from '@testing-library/react';
 
 import App from './App.jsx';
 import { buildIndex, loadTemplates, readPage } from './server/fixture-server.js';
@@ -43,8 +43,9 @@ describe('App shell', () => {
   it('lists the hand-authored reference under an Original Wiki group', async () => {
     render(<App />);
     expect(await screen.findByText('Original Wiki')).toBeTruthy();
-    // both the generated and the original Alice are reachable
-    expect(screen.getAllByRole('link', { name: 'Alice' }).length).toBe(2);
+    // both the generated and the original Alice are reachable from the nav
+    const nav = screen.getByRole('navigation', { name: 'Wiki navigation' });
+    expect(within(nav).getAllByRole('link', { name: 'Alice' }).length).toBe(2);
   });
 
   it('renders the Main_Page landing page by default', async () => {

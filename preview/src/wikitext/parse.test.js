@@ -33,6 +33,12 @@ describe('headings', () => {
     expect(html).toContain('<h4>C</h4>');
   });
 
+  it('renders a space-less ==Heading== (Fandom style) with inline markup', () => {
+    const { html } = renderWikitext("=='''''Alice's Adventures'''''==");
+    expect(html).toMatch(/^<h2>.*Alice's Adventures.*<\/h2>$/);
+    expect(html).toContain('<strong>'); // '''''…''''' still bolds/italicises
+  });
+
   it('renders the fixture section headings', () => {
     expect(render('characters/Alice.wiki').html).toContain('<h2>Biography</h2>');
   });
@@ -195,6 +201,55 @@ describe('footnotes (STU-656)', () => {
   it('renders an empty <references/> as nothing (no <ol>)', () => {
     const { html } = renderWikitext('== Références ==\n\n<references/>');
     expect(html).not.toContain('<ol');
+  });
+});
+
+describe('reference-page constructs (source-less Fandom wikitext)', () => {
+  it('renders a source-less {{Infobox …}} generically from its args, titled by the page', () => {
+    const src =
+      '{{Infobox Character 2\n|image = <gallery>\nAlice.jpg|<center>BOOK</center>\n</gallery>\n' +
+      '|gender = Female\n|species=Human}}';
+    const { html } = renderWikitext(src, { title: 'Alice' });
+    expect(html).toContain('<table class="infobox">');
+    expect(html).toContain('<th colspan="2">Alice</th>'); // page title as header
+    expect(html).toContain('<strong>Gender</strong>'); // arg key → label
+    expect(html).toContain('Human');
+    expect(html).toContain('class="infobox-image"'); // gallery → image placeholder
+    expect(html).toContain('Alice.jpg'); // first gallery image name
+    expect(html).not.toMatch(/\{\{Infobox/);
+  });
+
+  it('renders {{Q|quote|author}} as an italic pull-quote', () => {
+    const { html } = renderWikitext('{{Q|Curiouser & Curiouser|Alice}}');
+    expect(html).toContain('class="pullquote"');
+    expect(html).toContain('<em>Curiouser &amp; Curiouser</em>');
+    expect(html).toContain('— Alice');
+  });
+
+  it('renders [[File:…]] as a floated captioned placeholder', () => {
+    const { html } = renderWikitext('[[File:Falls.jpg|left|92px|Alice falls|frameless]]');
+    expect(html).toContain('class="wikithumb tleft"');
+    expect(html).toContain('Falls.jpg');
+    expect(html).toContain('<span class="thumbcaption">Alice falls</span>');
+    expect(html).not.toContain('data-target="File'); // not swallowed as a wikilink
+  });
+
+  it('renders a single-bracket [external link]', () => {
+    const { html } = renderWikitext('see [https://example.com/x?a=1&b=2 the source] here');
+    expect(html).toContain('href="https://example.com/x?a=1&amp;b=2"');
+    expect(html).toContain('class="external"');
+    expect(html).toContain('>the source</a>');
+  });
+
+  it('turns {{Clr}} into a clearing div and drops interlanguage links', () => {
+    const { html } = renderWikitext('{{Clrl}}\n\n[[es:Alicia]]\n\ntext');
+    expect(html).toContain('<div class="clear"></div>');
+    expect(html).not.toContain('es:Alicia');
+  });
+
+  it('drops a bare unknown template but keeps one carrying args verbatim', () => {
+    expect(renderWikitext('== Nav ==\n\n{{AAIW}}').html).not.toContain('{{AAIW}}');
+    expect(renderWikitext('{{Unknown|a=1}}').html).toContain('{{Unknown|a=1}}');
   });
 });
 
