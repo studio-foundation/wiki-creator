@@ -7,6 +7,19 @@
 - Current verified state on 2026-07-21: `pytest -q` => `2009 passed, 1 skipped`
   (skip count depends on which optional models/extras are installed; see `tests/_markers.py`)
 
+## Setup (fresh machine)
+
+- Node.js LTS **≤ 22** (Node 24's V8 headers break `better-sqlite3`'s native
+  build) and the Studio CLI: `npm i -g @studio-foundation/cli`. If `studio` is
+  missing or resolves to a dangling symlink, check `node --version` /
+  `nvm alias default` first — a global install done under a different active
+  Node version than your shell defaults to produces exactly that.
+- Python: `pip install -e ".[dev]"` first (test suite), then `".[models]"` (the
+  spaCy lg models books declare), `".[gliner]"` (any book with
+  `ner.invented_names: true`), `".[coref]"` (any book with `coref: true`) — see
+  README Setup for the full extras list; this file only repeats the two most
+  common.
+
 ## Commands
 
 ```bash
