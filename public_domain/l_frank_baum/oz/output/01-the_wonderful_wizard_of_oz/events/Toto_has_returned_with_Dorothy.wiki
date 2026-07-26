@@ -1,0 +1,15 @@
+{{Infobox event
+|name=Toto has returned with Dorothy
+|participants=Dorothy, Toto
+|chapitre=24
+}}
+
+== Course of events ==
+
+As Aunt Em was watering the cabbages outside the house, she looked up and saw Dorothy running toward her. In that moment, Toto had returned with Dorothy, back at the house after their time away. Overjoyed at being home, Dorothy told Aunt Em how glad she was, and explained that she and Toto had come from the Land of Oz.
+
+== References ==
+
+* The Wonderful Wizard of Oz
+
+[[Category:Events]]

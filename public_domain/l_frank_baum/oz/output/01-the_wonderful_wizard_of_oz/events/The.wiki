@@ -1,0 +1,12 @@
+{{Infobox event
+|nom=The
+|apparition=Appears in book 1
+}}
+
+== Infobox ==
+
+== Biography ==
+
+After passing safely through rest of forest, four travelers face steep hill covered top to bottom with great rock pieces, marking hard climb ahead as they continue toward Country of Quadlings.
+
+[[Category:Events]]
