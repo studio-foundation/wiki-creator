@@ -31,6 +31,11 @@ min_mentions_absolute: 3
 #       figurant: { min_mentions: 3 }
 
 generation:
+  # STU-671: single_call generates a PERSON page in one LLM call instead of one
+  # per section (~6 calls → 1 for a principal, cutting the repeated per-entity
+  # context block). max_tokens_per_page then budgets the WHOLE page, not each
+  # section — raise it if principal pages come out short.
+  # single_call: true
   principal:
     sections: [infobox, biography, personality, physical, powers, relationships, trivia, references]
     max_tokens_per_page: 2000
