@@ -52,6 +52,13 @@ min_mentions_absolute: 3
 #       figurant: { min_mentions: 3 }
 
 generation:
+  # How thoroughly generated pages are fact-checked against the source (STU-670).
+  # Names the tier FLOOR: pages at this importance and above run the grounding
+  # validator and its re-write loop; below it, pages are kept as written.
+  # principal (default) | secondary | all | off. Lower tiers are short,
+  # low-stakes pages, so `principal` keeps grounding where it matters and skips
+  # the re-generation cost elsewhere.
+  validate_pages: principal
   # STU-507: the posture is declared, not inherited from anti-hallucination prompting.
   editorial_stance:
     mode: hybrid                # in_universe | out_of_universe | hybrid

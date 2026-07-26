@@ -44,12 +44,14 @@ from wiki_creator.lang import load_lang_config
 from wiki_creator.editorial_stance import GROUNDING_BLOCK, EditorialStance, editorial_stance
 from wiki_creator.register import DEFAULT_REGISTER, register_clause
 from wiki_creator.page_templates import (
+    DEFAULT_VALIDATE_PAGES,
     few_shot_example,
     language_name,
     length_guide,
     output_language,
     resolve_template,
     section_brief,
+    should_validate_page,
     slot_label,
     stub_content,
 )
@@ -1378,16 +1380,23 @@ def page_from_map_result(map_result: dict | None, entity: dict, language: str = 
     return {**page, "run_metadata": run_metadata}
 
 
-def wiki_pages_map_item(item_input: dict, attempt: int = 1) -> dict:
+def wiki_pages_map_item(
+    item_input: dict, attempt: int = 1, validate_pages: str = "all"
+) -> dict:
     """A `wiki-pages` map item from a prebuilt wiki-page-item input — the grounding
     defaults + `attempt` key `_run_pages_fanout` injects, extracted so the
-    synopsis/event stages build identical items (STU-621)."""
+    synopsis/event stages build identical items (STU-621).
+
+    `validate` gates the child's grounding validator + re-generation loop by tier
+    (STU-670). Defaults to `all` so the synopsis/event callers keep validating;
+    the plan/probe stages pass the book's `generation.validate_pages` setting."""
     return {
         "grounding_llm": False,
         "grounding_llm_model": "",
         "grounding_llm_timeout": 0,
         **item_input,
         "attempt": attempt,
+        "validate": should_validate_page(item_input.get("importance", ""), validate_pages),
     }
 
 
@@ -1530,6 +1539,13 @@ def _plan_keys_and_items(batches: list[tuple[str, dict]], config: GenerationConf
     return list(collector.items), list(collector.items.values())
 
 
+def _validate_pages_setting(book_cfg: dict) -> str:
+    """The book's `generation.validate_pages` tier floor (STU-670), defaulting to
+    grounding-on-principals-only."""
+    generation = book_cfg.get("generation") or {}
+    return str(generation.get("validate_pages") or DEFAULT_VALIDATE_PAGES)
+
+
 def plan_generation(book_cfg: dict, book_paths) -> dict:
     """Plan stage: enumerate the attempt-1 fan-out items. `needs_verdict` is
     false when there is nothing to generate (the post stage then has no map to
@@ -1540,10 +1556,11 @@ def plan_generation(book_cfg: dict, book_paths) -> dict:
     if config is None:
         return {"items": [], "prompt_fingerprint": "", "needs_verdict": False}
 
+    validate_pages = _validate_pages_setting(book_cfg)
     _keys, items = _plan_keys_and_items(batches, config)
     print(f"[generate-wiki-pages] plan: {len(items)} item call(s)", file=sys.stderr)
     return {
-        "items": [wiki_pages_map_item(item, attempt=1) for item in items],
+        "items": [wiki_pages_map_item(item, attempt=1, validate_pages=validate_pages) for item in items],
         "prompt_fingerprint": _page_prompt_fingerprint(config),
         "needs_verdict": bool(items),
     }
@@ -1564,11 +1581,12 @@ def probe_generation(book_cfg: dict, book_paths, first_map_output: dict | None) 
     probe = ReplayRunner(first)
     _throwaway_walk(batches, config, probe)
 
+    validate_pages = _validate_pages_setting(book_cfg)
     retry_items = list(probe.retry_items.values())
     if retry_items:
         print(f"[generate-wiki-pages] forbidden-name retry: {len(retry_items)} item call(s)", file=sys.stderr)
     return {
-        "items": [wiki_pages_map_item(item, attempt=2) for item in retry_items],
+        "items": [wiki_pages_map_item(item, attempt=2, validate_pages=validate_pages) for item in retry_items],
         "needs_retry": bool(retry_items),
     }
 
