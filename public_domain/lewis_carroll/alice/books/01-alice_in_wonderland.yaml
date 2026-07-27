@@ -44,6 +44,12 @@ generation:
     llm_model: qwen2.5
     llm_timeout_seconds: 45
   chapter_summary_max_chapters_per_entity: 20
+  # STU-666: Wonderland is episodic — one short setup ("Down the Rabbit-Hole"),
+  # a long sprawling middle of self-contained encounters, and a brief trial
+  # resolution. The default 25/50/25 over-weights the exposition; shift the budget
+  # into the rising action so Alice's arc reads as the string of episodes it is.
+  narrative_arc:
+    weights: [0.15, 0.70, 0.15]
   principal:
     sections: [infobox, biography, narrative_role, personality, physical, powers, relationships, trivia, references]
     sections_by_type:
