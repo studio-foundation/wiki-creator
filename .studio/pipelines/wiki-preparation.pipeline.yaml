@@ -119,7 +119,6 @@ stages:
     on_failure: continue
     input:
       chunks: "{{stages.discover-relationships-pre.output.chunks}}"
-      roster: "{{stages.discover-relationships-pre.output.roster}}"
       relationship_types: "{{stages.discover-relationships-pre.output.relationship_types}}"
       prompt_fingerprint: "{{stages.discover-relationships-pre.output.prompt_fingerprint}}"
 

@@ -154,6 +154,20 @@ def test_wiki_preparation_wires_discover_and_classify_as_pre_call_post() -> None
         assert "needs_verdict" in call["condition"]
 
 
+def test_discover_map_reads_roster_per_chunk_not_whole_book() -> None:
+    """STU-672: the roster is subset per chunk and rides on each map item, so the
+    discovery map dispatches `item.roster`, never the whole-book `input.roster` —
+    and the wiki-preparation call no longer forwards a top-level roster."""
+    map_stage = next(s for s in _pipeline("discover-relationships")["stages"] if s.get("map"))
+    assert map_stage["input"]["roster"] == "{{item.roster}}"
+
+    call = next(
+        s for s in _pipeline("wiki-preparation")["stages"]
+        if s.get("call") == "discover-relationships-verdict"
+    )
+    assert "roster" not in call["input"]
+
+
 def test_pages_export_wires_the_page_fan_outs_as_native_calls() -> None:
     """STU-621: synopsis / event pages route through the `wiki-pages` map, and
     generate-wiki-pages is the two-pass plan/call/probe/call split — every page
