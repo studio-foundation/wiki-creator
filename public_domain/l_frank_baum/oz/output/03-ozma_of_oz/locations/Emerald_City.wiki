@@ -1,0 +1,26 @@
+{{Infobox location
+|name=Emerald City
+|place_type=Town
+|region=Center of the four kingdoms of the Land of Oz
+|status=Active
+|nom=Emerald City
+|apparition=Appears in book 3
+}}
+
+== Infobox ==
+
+* Name: Emerald City
+* Place type: Town
+* Region: Center of the four kingdoms of the Land of Oz
+* Status: Active
+
+== Biography ==
+
+The Emerald City is the town where Ozma, supreme ruler of the Land of Oz, lives, standing in the exact center of the four kingdoms — those of the Munchkins, the Winkies, the Quadlings, and the Gillikins — each governed by its own king under her rule. A road of yellow brick leads straight to its jewel-studded gates. When Ozma and her companions returned there, the Munchkin king had escorted them to its border, and the people turned out everywhere to greet Ozma and to hail the Scarecrow, the Tin Woodman, and the Cowardly Lion as popular favorites. The Cowardly Lion, ruler of the great forest as King of Beasts, journeyed to the Emerald City to see Ozma after she became reigning princess.
+
+== Events ==
+
+Ozma's party, including Dorothy, Tiktok, and Billina, crosses the desert on a magic carpet on their way to the Emerald City, meeting Jinjur — now a contented farm wife — along the way.
+
+[[Category:Locations]]
+[[Category:Locations of Book 3]]

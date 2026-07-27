@@ -2,9 +2,12 @@ name: chapter-summary-item
 description: Generate one chapter summary item with validation loop
 version: 2
 
+# STU-670: `max_iterations: 2` caps re-generation to one revalidation (was 3).
+# The validator is a deterministic script; the trimmed cost is the summary LLM
+# stage re-running on rejection.
 stages:
   - group: summary-validation
-    max_iterations: 3
+    max_iterations: 2
     stages:
       - name: chapter-summary-item
         kind: analysis

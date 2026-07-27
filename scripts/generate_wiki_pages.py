@@ -45,12 +45,14 @@ from wiki_creator.editorial_stance import GROUNDING_BLOCK, EditorialStance, edit
 from wiki_creator.register import DEFAULT_REGISTER, register_clause
 from wiki_creator.narrative_arc import NarrativeArc, narrative_arc
 from wiki_creator.page_templates import (
+    DEFAULT_VALIDATE_PAGES,
     few_shot_example,
     language_name,
     length_guide,
     output_language,
     resolve_template,
     section_brief,
+    should_validate_page,
     slot_label,
     stub_content,
 )
@@ -1382,16 +1384,23 @@ def page_from_map_result(map_result: dict | None, entity: dict, language: str = 
     return {**page, "run_metadata": run_metadata}
 
 
-def wiki_pages_map_item(item_input: dict, attempt: int = 1) -> dict:
+def wiki_pages_map_item(
+    item_input: dict, attempt: int = 1, validate_pages: str = "all"
+) -> dict:
     """A `wiki-pages` map item from a prebuilt wiki-page-item input — the grounding
     defaults + `attempt` key `_run_pages_fanout` injects, extracted so the
-    synopsis/event stages build identical items (STU-621)."""
+    synopsis/event stages build identical items (STU-621).
+
+    `validate` gates the child's grounding validator + re-generation loop by tier
+    (STU-670). Defaults to `all` so the synopsis/event callers keep validating;
+    the plan/probe stages pass the book's `generation.validate_pages` setting."""
     return {
         "grounding_llm": False,
         "grounding_llm_model": "",
         "grounding_llm_timeout": 0,
         **item_input,
         "attempt": attempt,
+        "validate": should_validate_page(item_input.get("importance", ""), validate_pages),
     }
 
 
@@ -1534,6 +1543,13 @@ def _plan_keys_and_items(batches: list[tuple[str, dict]], config: GenerationConf
     return list(collector.items), list(collector.items.values())
 
 
+def _validate_pages_setting(book_cfg: dict) -> str:
+    """The book's `generation.validate_pages` tier floor (STU-670), defaulting to
+    grounding-on-principals-only."""
+    generation = book_cfg.get("generation") or {}
+    return str(generation.get("validate_pages") or DEFAULT_VALIDATE_PAGES)
+
+
 def plan_generation(book_cfg: dict, book_paths) -> dict:
     """Plan stage: enumerate the attempt-1 fan-out items. `needs_verdict` is
     false when there is nothing to generate (the post stage then has no map to
@@ -1544,10 +1560,11 @@ def plan_generation(book_cfg: dict, book_paths) -> dict:
     if config is None:
         return {"items": [], "prompt_fingerprint": "", "needs_verdict": False}
 
+    validate_pages = _validate_pages_setting(book_cfg)
     _keys, items = _plan_keys_and_items(batches, config)
     print(f"[generate-wiki-pages] plan: {len(items)} item call(s)", file=sys.stderr)
     return {
-        "items": [wiki_pages_map_item(item, attempt=1) for item in items],
+        "items": [wiki_pages_map_item(item, attempt=1, validate_pages=validate_pages) for item in items],
         "prompt_fingerprint": _page_prompt_fingerprint(config),
         "needs_verdict": bool(items),
     }
@@ -1568,11 +1585,12 @@ def probe_generation(book_cfg: dict, book_paths, first_map_output: dict | None) 
     probe = ReplayRunner(first)
     _throwaway_walk(batches, config, probe)
 
+    validate_pages = _validate_pages_setting(book_cfg)
     retry_items = list(probe.retry_items.values())
     if retry_items:
         print(f"[generate-wiki-pages] forbidden-name retry: {len(retry_items)} item call(s)", file=sys.stderr)
     return {
-        "items": [wiki_pages_map_item(item, attempt=2) for item in retry_items],
+        "items": [wiki_pages_map_item(item, attempt=2, validate_pages=validate_pages) for item in retry_items],
         "needs_retry": bool(retry_items),
     }
 
@@ -1966,6 +1984,27 @@ def _run_generation_sectioned(
     return page
 
 
+def single_call_pages_enabled(book_cfg: dict | None) -> bool:
+    """STU-671: generate a PERSON page in ONE call instead of the per-section
+    fan-out. The per-section shape re-sends the whole ~2-5k-token per-entity
+    context block once per section (~6× for a principal); a single call pays it
+    once, at the cost of losing per-section length budgeting and the STU-643
+    anti-repeat plumbing (one call sees the whole page, so it needs neither).
+
+    Whole-page generation reuses the non-PERSON single-shot generator, so the
+    tier's ``max_tokens_per_page`` budgets the WHOLE page rather than each
+    section — raise it for books that flip this on if principal pages shrink.
+    A book that sets ``generation.per_relation_prose`` gets an inline Relations
+    section here instead (the per-relation fan-out is one of the calls collapsed).
+    """
+    raw = (book_cfg or {}).get("generation", {}).get("single_call")
+    if raw is None:
+        return False
+    if not isinstance(raw, bool):
+        raise ValueError("generation.single_call must be a boolean")
+    return raw
+
+
 def _run_generation(
     *,
     entity: dict,
@@ -1993,12 +2032,14 @@ def _run_generation(
     Sectioned isolation would then discard that valid content as a false
     `biography_failed` (STU-465), so non-PERSON types use single-shot generation
     which keeps the model's multi-section article as-is.
+    STU-671: `generation.single_call` routes PERSON through the same single-shot
+    generator to collapse the per-section fan-out (~6 calls → 1).
     """
-    generator = (
-        _run_generation_sectioned
-        if entity.get("type") == "PERSON"
-        else _run_generation_for_entity
+    sectioned = (
+        entity.get("type") == "PERSON"
+        and not single_call_pages_enabled(book_config)
     )
+    generator = _run_generation_sectioned if sectioned else _run_generation_for_entity
     return generator(
         entity=entity,
         book_title=book_title,

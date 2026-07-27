@@ -3,17 +3,18 @@
 
 Script executor interface: reads JSON from stdin, writes JSON to stdout.
 
-Emits the paragraph-aligned chunks, the PERSON roster, the type vocabulary and
-the prompt fingerprint the following `call: discover-relationships` stage fans
-out over — one child run per chunk. `needs_verdict` is false when the book has
-no work (missing artifacts, empty roster, no chapters); the call is then
-condition-skipped and the post stage writes nothing (STU-539 fail-safe).
+Emits the paragraph-aligned chunks (each carrying its own subset roster, STU-672),
+the type vocabulary and the prompt fingerprint the following `call:
+discover-relationships` stage fans out over — one child run per chunk.
+`needs_verdict` is false when the book has no work (missing artifacts, empty
+roster, no chapters); the call is then condition-skipped and the post stage
+writes nothing (STU-539 fail-safe).
 
 The per-chunk resume lives in the engine map (STU-589/605), keyed on the item
 input + fingerprint, so this stage does no cache check.
 
 Input:  { "additional_context": "<book yaml>" }
-Output: { "chunks", "roster", "relationship_types", "prompt_fingerprint", "needs_verdict" }
+Output: { "chunks" (each {title, text, roster}), "relationship_types", "prompt_fingerprint", "needs_verdict" }
 """
 
 import yaml
@@ -29,15 +30,18 @@ def main() -> None:
 
     if skip:
         studio_io.write_output(
-            {"chunks": [], "roster": [], "relationship_types": [],
+            {"chunks": [], "relationship_types": [],
              "prompt_fingerprint": "", "needs_verdict": False}
         )
         return
 
     studio_io.write_output(
         {
-            "chunks": [{"title": c["title"], "text": c["text"]} for c in prep["chunks"]],
-            "roster": prep["roster_lines"],
+            # STU-672: each chunk carries its own subset roster, not a whole-book one.
+            "chunks": [
+                {"title": c["title"], "text": c["text"], "roster": c["roster"]}
+                for c in prep["chunks"]
+            ],
             "relationship_types": prep["type_defs"],
             "prompt_fingerprint": prep["fingerprint"],
             "needs_verdict": True,

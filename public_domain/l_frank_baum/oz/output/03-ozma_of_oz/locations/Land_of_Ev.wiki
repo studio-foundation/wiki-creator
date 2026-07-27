@@ -1,0 +1,24 @@
+{{Infobox location
+|name=Land of Ev
+|place_type=kingdom
+|region=across the desert from the Land of Oz, bordered to the north by a great mountain
+|nom=Land of Ev
+|apparition=Appears in book 3
+}}
+
+== Infobox ==
+
+* Name: Land of Ev
+* Place type: kingdom
+* Region: across the desert from the Land of Oz, bordered to the north by a great mountain
+
+== Biography ==
+
+The Land of Ev is a kingdom whose royal family was held in long imprisonment, their liberation being the stated purpose of Ozma's expedition there. The country lies beyond a dangerous desert from the Land of Oz, a stretch crossed by means of a magic carpet. Its landscape includes a valley lying between two high mountains, with a third great mountain blocking the valley and forming the northern edge of Ev; the Nome King's palace was said to lie underneath that mountain. After the royal family's release, the new King of Ev pledged his gratitude to Ozma and promised to render the Land of Oz any service within his power.
+
+== Events ==
+
+Despite the power of a magic belt, a rescue party was unable to locate the Tin Woodman while in Ev and was forced to depart without him, returning to the Land of Ev with the rescued royal family.
+
+[[Category:Locations]]
+[[Category:Locations of Book 3]]

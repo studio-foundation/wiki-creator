@@ -40,6 +40,31 @@ PAGE_PAYLOAD = {
 }
 
 
+def test_map_item_gates_validate_by_tier_default_principal():
+    # STU-670: default floor is principal — only principal items validate.
+    principal = gwp.wiki_pages_map_item({**ITEM, "importance": "principal"})
+    secondary = gwp.wiki_pages_map_item({**ITEM, "importance": "secondary"}, validate_pages="principal")
+    figurant = gwp.wiki_pages_map_item({**ITEM, "importance": "figurant"}, validate_pages="principal")
+    # The default validate_pages for wiki_pages_map_item itself is "all" (the
+    # synopsis/event callers keep validating); pass principal explicitly.
+    assert gwp.wiki_pages_map_item({**ITEM}, validate_pages="principal")["validate"] is True
+    assert principal["validate"] is True
+    assert secondary["validate"] is False
+    assert figurant["validate"] is False
+
+
+def test_map_item_default_validate_pages_is_all():
+    # A caller that does not thread the book setting (synopsis/event stages)
+    # keeps every page validated — no silent grounding drop.
+    assert gwp.wiki_pages_map_item({**ITEM, "importance": "figurant"})["validate"] is True
+
+
+def test_validate_pages_setting_reads_book_config_with_principal_default():
+    assert gwp._validate_pages_setting({}) == "principal"
+    assert gwp._validate_pages_setting({"generation": {}}) == "principal"
+    assert gwp._validate_pages_setting({"generation": {"validate_pages": "all"}}) == "all"
+
+
 def test_collecting_runner_records_each_item_once_and_fakes_success():
     runner = CollectingRunner()
     r1 = runner.run_item(dict(ITEM), ENTITY, timeout=5)
