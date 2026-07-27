@@ -14,7 +14,7 @@ Extending the vocabulary to sub-roles is a separate follow-up (STU-665).
 
 from __future__ import annotations
 
-from wiki_creator.page_templates import canonical_relationship
+from wiki_creator.page_templates import canonical_relationship, output_language, sub_role_label
 from wiki_creator.relationship_types import usable_relationship_type
 
 # Canonical relationship type -> infobox bucket token. Types with no entry
@@ -50,11 +50,14 @@ def relationship_infobox_fields(entity: dict, book_config: dict | None = None) -
     """Bucketed ``{token: "[[A]], [[B]] †"}`` infobox rows for one PERSON entity.
 
     Each typed relationship is grouped by ``bucket_for_type``; within a bucket the
-    other party is a ``[[wikilink]]``, deceased ones (``rel['other_deceased']``,
-    stamped at bundle build from ``entity_status.json``) carry a ``†``. Ordered by
-    co-occurrence so the most prominent bond leads. Empty buckets are omitted.
+    other party is a ``[[wikilink]]``, qualified by its fine kinship/romance sub-role
+    when the classifier assigned one — ``[[James Potter]] (father)`` (STU-665) — and
+    deceased ones (``rel['other_deceased']``, stamped at bundle build from
+    ``entity_status.json``) carry a ``†``. Ordered by co-occurrence so the most
+    prominent bond leads. Empty buckets are omitted.
     """
     own = {entity.get("canonical_name")} | set(entity.get("aliases") or [])
+    lang = output_language(book_config)
     buckets: dict[str, list[tuple[int, str, str]]] = {t: [] for t in INFOBOX_BUCKET_TOKENS}
     seen: dict[str, set[str]] = {t: set() for t in INFOBOX_BUCKET_TOKENS}
     for rel in entity.get("relationships") or []:
@@ -62,12 +65,18 @@ def relationship_infobox_fields(entity: dict, book_config: dict | None = None) -
         bucket = bucket_for_type(canonical_relationship(rtype, book_config=book_config))
         if not bucket:
             continue
-        other = (rel["entity_b"] if rel.get("entity_a") in own else rel["entity_a"]) or ""
+        other_is_a = rel.get("entity_a") not in own
+        other = (rel["entity_a"] if other_is_a else rel["entity_b"]) or ""
         other = other.strip()
         if not other or other in seen[bucket]:
             continue
         seen[bucket].add(other)
-        entry = f"[[{other}]] {_DECEASED_MARK}" if rel.get("other_deceased") else f"[[{other}]]"
+        # The qualifier is the OTHER party's role: sub_role_a is what entity_a is,
+        # sub_role_b what entity_b is (STU-665).
+        sub_role = rel.get("sub_role_a") if other_is_a else rel.get("sub_role_b")
+        qualifier = f" ({sub_role_label(sub_role, lang)})" if sub_role else ""
+        deceased = f" {_DECEASED_MARK}" if rel.get("other_deceased") else ""
+        entry = f"[[{other}]]{qualifier}{deceased}"
         count = int(rel.get("cooccurrence_count", 0) or 0)
         buckets[bucket].append((count, other, entry))
     fields: dict[str, str] = {}

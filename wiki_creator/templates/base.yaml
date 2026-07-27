@@ -331,6 +331,65 @@ relationships:
       description: >-
         A directly-attested relationship no other type fits. Last resort: exhaust every
         other type first, and prefer null over other when no bond is attested at all.
+  # STU-665: fine kinship/romance sub-roles that qualify a `family`/`romance` pair in
+  # the character infobox — `[[James Potter]] (father) †`, `[[Cho Chang]] (ex-girlfriend)`.
+  # They do NOT replace the coarse `relationship_type` (which still buckets the pair,
+  # STU-664); the classifier returns two of them per pair — `sub_role_a` is what
+  # entity_a IS to entity_b, `sub_role_b` the converse — so each character's page shows
+  # the term for the OTHER party (a child's page shows `(father)`, the parent's `(son)`).
+  # `description` is the application criterion, read literally like the type enum (STU-477).
+  # CUTOFF: immediate family + primary romance only. `father`/`mother`/`son`/`daughter`/
+  # `sibling`/`spouse`/`partner` earn their infobox space; extended kin
+  # (aunt/uncle/cousin/grandparent, second-cousin-once-removed) do not — they inflate
+  # classifier error for a line no reader needs. Prefer the gender-neutral token
+  # (`child`, `sibling`, `parent`) whenever the text does not establish the party's sex.
+  sub_roles:
+    father:
+      labels: {en: father, fr: père}
+      description: The party is the male parent (biological or adoptive) of the other.
+    mother:
+      labels: {en: mother, fr: mère}
+      description: The party is the female parent (biological or adoptive) of the other.
+    parent:
+      labels: {en: parent, fr: parent}
+      description: The party is a parent of the other whose sex the text does not establish.
+    son:
+      labels: {en: son, fr: fils}
+      description: The party is the male child of the other.
+    daughter:
+      labels: {en: daughter, fr: fille}
+      description: The party is the female child of the other.
+    child:
+      labels: {en: child, fr: enfant}
+      description: The party is a child of the other whose sex the text does not establish.
+    brother:
+      labels: {en: brother, fr: frère}
+      description: The party is the male sibling of the other.
+    sister:
+      labels: {en: sister, fr: sœur}
+      description: The party is the female sibling of the other.
+    sibling:
+      labels: {en: sibling, fr: frère ou sœur}
+      description: The party is a sibling of the other whose sex the text does not establish.
+    spouse:
+      labels: {en: spouse, fr: époux/épouse}
+      description: The party is married to the other. Symmetric — both parties are spouses.
+    ex_spouse:
+      labels: {en: ex-spouse, fr: ex-époux/épouse}
+      description: The party was married to the other and the marriage has ended. Symmetric.
+    partner:
+      labels: {en: partner, fr: partenaire}
+      description: >-
+        The party is the other's committed romantic partner short of marriage — the
+        pair is a couple on the page. Symmetric.
+    ex_partner:
+      labels: {en: ex-partner, fr: ex-partenaire}
+      description: >-
+        The party was the other's romantic partner and the relationship has ended.
+        Symmetric.
+    betrothed:
+      labels: {en: betrothed, fr: fiancé/fiancée}
+      description: The party is engaged to marry the other, not yet wed. Symmetric.
   # STU-476: how strongly the evidence sentence supports the type — graded by the
   # classifier, which is the only step that reads the excerpts. Keys are the tiers
   # wiki_creator/confidence.py declares (STU-428).

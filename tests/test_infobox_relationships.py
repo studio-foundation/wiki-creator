@@ -78,3 +78,44 @@ def test_legacy_french_type_resolves_to_bucket():
         {"entity_a": "Alice", "entity_b": "Chaol", "relationship_type": "amoureux"},
     ]))
     assert fields == {"romance": "[[Chaol]]"}
+
+
+_EN = {"generation": {"output_language": "en"}}
+
+
+def test_sub_role_qualifier_uses_other_partys_role():
+    # sub_role_a = what entity_a IS to entity_b, sub_role_b the converse. The
+    # qualifier shown for the OTHER party is that party's own role (STU-665).
+    child = {"canonical_name": "Harry", "aliases": [], "relationships": [
+        {"entity_a": "James", "entity_b": "Harry", "relationship_type": "family",
+         "sub_role_a": "father", "sub_role_b": "son", "other_deceased": True},
+    ]}
+    parent = {"canonical_name": "James", "aliases": [], "relationships": [
+        {"entity_a": "James", "entity_b": "Harry", "relationship_type": "family",
+         "sub_role_a": "father", "sub_role_b": "son"},
+    ]}
+    assert relationship_infobox_fields(child, _EN) == {"family": "[[James]] (father) †"}
+    assert relationship_infobox_fields(parent, _EN) == {"family": "[[Harry]] (son)"}
+
+
+def test_sub_role_localized_label():
+    child = {"canonical_name": "Harry", "aliases": [], "relationships": [
+        {"entity_a": "James", "entity_b": "Harry", "relationship_type": "family",
+         "sub_role_a": "father", "sub_role_b": "son"},
+    ]}
+    assert relationship_infobox_fields(child) == {"family": "[[James]] (père)"}
+
+
+def test_symmetric_sub_role_shown_both_sides():
+    a = {"canonical_name": "Alice", "aliases": [], "relationships": [
+        {"entity_a": "Alice", "entity_b": "Bob", "relationship_type": "romance",
+         "sub_role_a": "partner", "sub_role_b": "partner"},
+    ]}
+    assert relationship_infobox_fields(a, _EN) == {"romance": "[[Bob]] (partner)"}
+
+
+def test_missing_sub_role_falls_back_to_bare_link():
+    a = {"canonical_name": "Alice", "aliases": [], "relationships": [
+        {"entity_a": "Alice", "entity_b": "Bob", "relationship_type": "family"},
+    ]}
+    assert relationship_infobox_fields(a, _EN) == {"family": "[[Bob]]"}

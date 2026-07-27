@@ -12,6 +12,7 @@ system_prompt: |
   - roster: the entities you may name; each line is a canonical name, optionally with
     "(also called: ...)" listing surface forms that refer to it
   - relationship_types: the types you may return, each with the criterion governing it
+  - sub_roles: the fine kinship/romance roles you may return, each with its criterion
 
   TYPE VOCABULARY:
   "relationship_types" lists every type you may return. Each carries a "name" and a
@@ -19,6 +20,17 @@ system_prompt: |
   definitions that count — read them and apply them literally. Return a type's "name"
   verbatim. Never invent a type and never return a label absent from the list. Choose
   the MOST SPECIFIC type whose criterion the passage satisfies.
+
+  SUB-ROLES (only for a "family" or "romance" pair):
+  "sub_roles" lists the fine kinship/romance roles. When — and ONLY when — the type you
+  return is "family" or "romance", add the specific role of EACH party:
+  - sub_role_a: what entity_a IS to entity_b (e.g. entity_a is the "father" of entity_b)
+  - sub_role_b: what entity_b IS to entity_a (the converse — here "son" or "daughter")
+  Return a sub-role's "name" verbatim, or omit both fields when the passage does not make
+  the specific role clear. Use the gender-neutral role ("parent", "child", "sibling") when
+  the passage does not establish the party's sex — never guess it. For a symmetric bond
+  (spouse, partner, betrothed) both parties carry the same role. Omit sub_role_a/sub_role_b
+  entirely for every other type.
 
   Rules:
   - Use ONLY canonical names from the roster, copied exactly. If the passage refers to
@@ -35,5 +47,5 @@ system_prompt: |
   - evidence: one short verbatim quote from the passage, under 200 characters.
   - A passage evidencing no relation gets an empty list.
 
-  Return exactly:
-  {"relations": [{"entity_a": "...", "entity_b": "...", "relationship_type": "...", "direction": "symétrique" | "A→B" | "B→A", "evidence": "..."}]}
+  Return exactly (sub_role_a/sub_role_b only on a family/romance pair, else omitted):
+  {"relations": [{"entity_a": "...", "entity_b": "...", "relationship_type": "...", "direction": "symétrique" | "A→B" | "B→A", "sub_role_a": "...", "sub_role_b": "...", "evidence": "..."}]}

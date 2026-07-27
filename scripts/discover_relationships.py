@@ -42,7 +42,12 @@ import yaml
 
 from wiki_creator import studio_io
 from wiki_creator.chapters import is_frontmatter_chapter
-from wiki_creator.page_templates import relationship_definitions, relationship_tokens
+from wiki_creator.page_templates import (
+    relationship_definitions,
+    relationship_tokens,
+    sub_role_definitions,
+    sub_role_tokens,
+)
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.registry import Registry
 from wiki_creator.relationship_discovery import (
@@ -62,16 +67,18 @@ _TIMEOUT_SECONDS = 7200
 _AGENT_YAML = PROJECT_ROOT / ".studio" / "agents" / "relationship-discovery.agent.yaml"
 
 
-def _prompt_fingerprint(type_defs: list[dict]) -> str:
-    """Fingerprint the discovery prompt + type vocabulary the votes are made under.
+def _prompt_fingerprint(type_defs: list[dict], sub_role_defs: list[dict]) -> str:
+    """Fingerprint the discovery prompt + type/sub-role vocabulary the votes are made under.
 
     Travels in every map item's input, so the engine's per-item resume cache
-    (keyed on the item input, STU-605) busts when either changes — a prompt edit
-    re-runs the chunks instead of replaying stale votes (STU-560). Hashes the
-    agent yaml (the system prompt) and the injected type definitions."""
+    (keyed on the item input, STU-605) busts when either changes — a prompt or
+    vocabulary edit re-runs the chunks instead of replaying stale votes (STU-560).
+    Hashes the agent yaml (the system prompt) and the injected definitions."""
     agent = _AGENT_YAML.read_bytes() if _AGENT_YAML.exists() else b""
-    types = json.dumps(type_defs, ensure_ascii=False, sort_keys=True).encode("utf-8")
-    return hashlib.sha256(agent + b"\x00" + types).hexdigest()
+    vocab = json.dumps(
+        [type_defs, sub_role_defs], ensure_ascii=False, sort_keys=True
+    ).encode("utf-8")
+    return hashlib.sha256(agent + b"\x00" + vocab).hexdigest()
 
 
 def _narrative_chapters(epub_data: dict) -> list[dict]:
@@ -89,7 +96,10 @@ def _narrative_chapters(epub_data: dict) -> list[dict]:
 
 
 def _run_discovery_fanout(
-    chunks: list[dict], type_defs: list[dict], prompt_key: str
+    chunks: list[dict],
+    type_defs: list[dict],
+    sub_role_defs: list[dict],
+    prompt_key: str,
 ) -> tuple[dict | None, str | None]:
     """One `studio run` fanning out over all chunks. Returns (map_output, error).
 
@@ -101,6 +111,7 @@ def _run_discovery_fanout(
             {"title": c["title"], "text": c["text"], "roster": c["roster"]} for c in chunks
         ],
         "relationship_types": type_defs,
+        "sub_roles": sub_role_defs,
         "prompt_fingerprint": prompt_key,
     }
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".yaml", delete=False) as tmp:
@@ -175,6 +186,8 @@ def prepare_discovery(
 
     type_defs = relationship_definitions(book_config=book_cfg)
     allowed_types = set(relationship_tokens(book_config=book_cfg))
+    sub_role_defs = sub_role_definitions()
+    allowed_sub_roles = set(sub_role_tokens())
 
     chapters = _narrative_chapters(epub_data)
     if max_chapters is not None:
@@ -195,10 +208,12 @@ def prepare_discovery(
         "chunks": chunks,
         "roster_lines": roster_lines,
         "type_defs": type_defs,
-        "fingerprint": _prompt_fingerprint(type_defs),
+        "sub_role_defs": sub_role_defs,
+        "fingerprint": _prompt_fingerprint(type_defs, sub_role_defs),
         "roster_names": roster_names,
         "alias_to_canonical": alias_to_canonical,
         "allowed_types": allowed_types,
+        "allowed_sub_roles": allowed_sub_roles,
         "entities": entities,
         "output_path": output_path,
     }, None
@@ -217,7 +232,8 @@ def collect_and_save(prep: dict, map_output: dict | None, error: str | None) -> 
 
     chunks = prep["chunks"]
     votes, failed = votes_from_map_output(
-        chunks, map_output, prep["alias_to_canonical"], prep["roster_names"], prep["allowed_types"]
+        chunks, map_output, prep["alias_to_canonical"], prep["roster_names"],
+        prep["allowed_types"], prep.get("allowed_sub_roles") or set(),
     )
     resumed = map_output.get("resumed", 0)
     print(
@@ -285,7 +301,7 @@ def run(
         file=sys.stderr,
     )
     map_output, error = _run_discovery_fanout(
-        prep["chunks"], prep["type_defs"], prep["fingerprint"]
+        prep["chunks"], prep["type_defs"], prep["sub_role_defs"], prep["fingerprint"]
     )
     return collect_and_save(prep, map_output, error)
 
