@@ -15,6 +15,27 @@ PROVENANCES = {"batch-bound", "extracted-fact", "llm-prose"}
 OBLIGATIONS = {"MIN", "OPT"}
 TIERS = ("figurant", "secondary", "principal")
 
+DEFAULT_VALIDATE_PAGES = "principal"
+
+
+def should_validate_page(importance: str, setting: str = DEFAULT_VALIDATE_PAGES) -> bool:
+    """Whether a page of this tier runs the grounding validator + re-generation
+    loop (STU-670). ``setting`` names the FLOOR tier — validate it and every
+    tier above — or the sentinels ``all`` / ``off``. An unknown importance
+    validates (fail safe: never silently drop grounding on an unrecognized tier).
+
+    The cost this gates is the ``group max_iterations`` re-generation, not the
+    validator itself (a deterministic script); skipping it lets a low-tier page
+    through as if it had passed, uncontested."""
+    setting = (setting or DEFAULT_VALIDATE_PAGES).strip().lower()
+    if setting == "off":
+        return False
+    if setting == "all":
+        return True
+    floor = TIERS.index(setting) if setting in TIERS else TIERS.index(DEFAULT_VALIDATE_PAGES)
+    return TIERS.index(importance) >= floor if importance in TIERS else True
+
+
 DEFAULT_BASE_PATH = Path(__file__).resolve().parent / "templates" / "base.yaml"
 
 

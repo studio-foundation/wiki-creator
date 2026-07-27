@@ -87,6 +87,11 @@ def chunk_chapters(chapters: list[dict], size: int) -> list[dict]:
     return out
 
 
+def _roster_line(canonical: str, extra: list[str]) -> str:
+    """A roster prompt line: ``"Name (also called: a, b)"`` or bare ``"Name"``."""
+    return f"{canonical} (also called: {', '.join(extra)})" if extra else canonical
+
+
 def build_roster(entities: list[dict]) -> tuple[set[str], dict[str, str], list[str]]:
     """Build the PERSON roster the discovery prompt reads.
 
@@ -108,11 +113,43 @@ def build_roster(entities: list[dict]) -> tuple[set[str], dict[str, str], list[s
         extra = [a for a in entity.get("aliases") or [] if a and a != canonical]
         for alias in extra:
             alias_to_canonical[alias] = canonical
-        line = canonical
-        if extra:
-            line += f" (also called: {', '.join(extra)})"
-        lines.append(line)
+        lines.append(_roster_line(canonical, extra))
     return names, alias_to_canonical, lines
+
+
+def roster_entries(entities: list[dict]) -> list[dict]:
+    """The PERSON roster as presence-matchable entries (STU-672).
+
+    Each entry is ``{"line", "surfaces"}``: ``line`` is the exact prompt line
+    ``build_roster`` emits, ``surfaces`` is the canonical name and every alias
+    lowercased, for a case-insensitive presence test against a chunk's text.
+    Ordered as ``build_roster`` orders the roster. Feeds ``subset_roster``.
+    """
+    entries: list[dict] = []
+    for entity in entities:
+        if entity.get("entity_type") != "PERSON":
+            continue
+        canonical = entity["canonical_name"]
+        extra = [a for a in entity.get("aliases") or [] if a and a != canonical]
+        surfaces = [s.lower() for s in (canonical, *extra) if s]
+        entries.append({"line": _roster_line(canonical, extra), "surfaces": surfaces})
+    return entries
+
+
+def subset_roster(entries: list[dict], text: str) -> list[str]:
+    """Roster lines for the entities a chunk's text can actually name (STU-672).
+
+    The full PERSON roster is byte-identical on every chunk and is the bulk of
+    the discovery call's input; an entity none of whose surface forms appears in
+    the chunk cannot be a valid endpoint for a relation *this chunk* evidences —
+    ``valid_relations`` drops any off-roster name and the passage is the only
+    evidence the model reads — so it is dropped from that chunk's prompt.
+    Matching is a lowercased substring test: it over-includes on a coincidental
+    substring (a harmless slightly larger payload) but never drops an entity a
+    real occurrence names.
+    """
+    low = text.lower()
+    return [e["line"] for e in entries if any(s in low for s in e["surfaces"])]
 
 
 def canonicalize_relations(raw: object, alias_to_canonical: dict[str, str]) -> list[dict]:

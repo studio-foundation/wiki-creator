@@ -18,6 +18,6 @@ stages:
     input:
       title: "{{item.title}}"
       passage: "{{item.text}}"
-      roster: "{{input.roster}}"
+      roster: "{{item.roster}}"
       relationship_types: "{{input.relationship_types}}"
       prompt_fingerprint: "{{input.prompt_fingerprint}}"

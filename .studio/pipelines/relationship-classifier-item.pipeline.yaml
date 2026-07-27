@@ -2,9 +2,12 @@ name: relationship-classifier-item
 description: Classify one relationship pair with validation loop
 version: 1
 
+# STU-670: `max_iterations: 2` caps re-generation to one revalidation (was 3).
+# The validator is a deterministic script; the trimmed cost is the classifier
+# LLM stage re-running on rejection.
 stages:
   - group: classification-validation
-    max_iterations: 3
+    max_iterations: 2
     stages:
       - name: relationship-classifier
         kind: analysis

@@ -54,6 +54,8 @@ from wiki_creator.relationship_discovery import (
     aggregate,
     build_roster,
     chunk_chapters,
+    roster_entries,
+    subset_roster,
     votes_from_map_output,
 )
 from wiki_creator.types import Relationship, RelationshipBundle
@@ -95,15 +97,19 @@ def _narrative_chapters(epub_data: dict) -> list[dict]:
 
 def _run_discovery_fanout(
     chunks: list[dict],
-    roster_lines: list[str],
     type_defs: list[dict],
     sub_role_defs: list[dict],
     prompt_key: str,
 ) -> tuple[dict | None, str | None]:
-    """One `studio run` fanning out over all chunks. Returns (map_output, error)."""
+    """One `studio run` fanning out over all chunks. Returns (map_output, error).
+
+    Each chunk carries its own subset roster (STU-672), so no whole-book roster
+    travels at the top level.
+    """
     payload = {
-        "chunks": [{"title": c["title"], "text": c["text"]} for c in chunks],
-        "roster": roster_lines,
+        "chunks": [
+            {"title": c["title"], "text": c["text"], "roster": c["roster"]} for c in chunks
+        ],
         "relationship_types": type_defs,
         "sub_roles": sub_role_defs,
         "prompt_fingerprint": prompt_key,
@@ -190,6 +196,13 @@ def prepare_discovery(
     if not chunks:
         print("[discover-relationships] no narrative chapters — nothing to discover", file=sys.stderr)
         return None, "no_chapters"
+
+    # STU-672: each chunk carries only the roster its own text can name, not the
+    # byte-identical whole-book roster — the repeated prefix that dominated the
+    # discovery call's input tokens.
+    entries = roster_entries(entities)
+    for chunk in chunks:
+        chunk["roster"] = subset_roster(entries, chunk["text"])
 
     return {
         "chunks": chunks,
@@ -288,8 +301,7 @@ def run(
         file=sys.stderr,
     )
     map_output, error = _run_discovery_fanout(
-        prep["chunks"], prep["roster_lines"], prep["type_defs"],
-        prep["sub_role_defs"], prep["fingerprint"],
+        prep["chunks"], prep["type_defs"], prep["sub_role_defs"], prep["fingerprint"]
     )
     return collect_and_save(prep, map_output, error)
 
