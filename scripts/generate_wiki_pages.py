@@ -43,6 +43,7 @@ from wiki_creator.chapters import resolve_chapter_number
 from wiki_creator.lang import load_lang_config
 from wiki_creator.editorial_stance import GROUNDING_BLOCK, EditorialStance, editorial_stance
 from wiki_creator.register import DEFAULT_REGISTER, register_clause
+from wiki_creator.narrative_arc import NarrativeArc, narrative_arc
 from wiki_creator.page_templates import (
     DEFAULT_VALIDATE_PAGES,
     few_shot_example,
@@ -248,9 +249,9 @@ _MAX_PERSON_EVENTS = 18
 # split across setup / rising action (péripéties) / resolution by chapter position,
 # so a long exposition (an adult novel whose first chapters are the initial
 # situation) is represented in proportion to its length, and a solo-protagonist
-# opening is never starved by the multi-character climax. Weights are the classic
-# three-act shape; a book with an unusual structure could override them via config.
-_ACT_WEIGHTS = (0.25, 0.50, 0.25)
+# opening is never starved by the multi-character climax. The act structure is a
+# property of the book (STU-666): the default 25/50/25 lives in `narrative_arc`,
+# which a book may override via `generation.narrative_arc`.
 
 # The opening beats of the first chapter are the exposition — a solo protagonist,
 # no set piece — so they score lowest and a salience pick drops them, opening the
@@ -260,7 +261,7 @@ _ACT_WEIGHTS = (0.25, 0.50, 0.25)
 _ARC_OPENING_BEATS = 3
 
 
-def _narrative_events(entity: dict) -> list[dict]:
+def _narrative_events(entity: dict, arc: NarrativeArc | None = None) -> list[dict]:
     """The character's participant events selected to frame the arc as three acts,
     in chronological order. Empty for non-PERSON entities or when SP0 produced no
     events for them.
@@ -268,26 +269,25 @@ def _narrative_events(entity: dict) -> list[dict]:
     A pure salience cap dropped the arc's opening (STU-663): salience rewards
     multi-participant set pieces, so a solo-protagonist opening — Alice alone down
     the rabbit hole — scores lowest and is cut before the chrono re-sort can
-    recover it. The budget is instead split across three position-based acts
-    (`_ACT_WEIGHTS`) and the most salient beats are taken within each, so the
-    exposition and the resolution each get a share proportional to their length
-    while the dramatic middle stays dense — not one beat per chapter (a disjointed
-    checklist), not salience-only (no beginning)."""
+    recover it. The budget is instead split across three acts (the book's declared
+    `arc`, STU-666, defaulting to 25/50/25) and the most salient beats are taken
+    within each, so the exposition and the resolution each get a share proportional
+    to their length while the dramatic middle stays dense — not one beat per chapter
+    (a disjointed checklist), not salience-only (no beginning)."""
     if entity.get("type") != "PERSON":
         return []
     events = entity.get("entity_events") or []
     if not events:
         return []
+    arc = arc or NarrativeArc()
     salience = lambda e: (-float(e.get("salience", 0.0)), int(e.get("chapter", 0)))
     chapter_of = lambda e: int(e.get("chapter", 0))
     chapters = sorted({chapter_of(e) for e in events})
 
-    # Partition the chapters that carry events into three contiguous acts by
-    # position, then give each act a share of the budget by the same weights.
-    n = len(chapters)
-    setup = set(chapters[: round(n * _ACT_WEIGHTS[0])])
-    epilogue = set(chapters[n - round(n * _ACT_WEIGHTS[2]) :]) - setup
-    middle = set(chapters) - setup - epilogue
+    # Partition the chapters that carry events into three acts (by position under
+    # mode-A weights, or by the declared chapter ranges under mode B), then give
+    # each act a share of the budget by the matching weights.
+    (setup, middle, epilogue), act_weights = arc.partition(chapters)
     acts = (setup, middle, epilogue)
 
     # Anchor the arc's bookends so neither end is lost to salience. The opening is
@@ -301,7 +301,7 @@ def _narrative_events(entity: dict) -> list[dict]:
         picked.append(best_of(chapters[-1]))
     chosen = {id(e) for e in picked}
 
-    for act_chapters, weight in zip(acts, _ACT_WEIGHTS):
+    for act_chapters, weight in zip(acts, act_weights):
         quota = round(_MAX_PERSON_EVENTS * weight)
         already = sum(1 for e in picked if chapter_of(e) in act_chapters)
         act_events = sorted(
@@ -329,12 +329,12 @@ def _has_backstory(entity: dict) -> bool:
     )
 
 
-def _narrative_role_block(entity: dict) -> str:
+def _narrative_role_block(entity: dict, arc: NarrativeArc | None = None) -> str:
     """Grounding block of the character's arc through the plot, or "" when the
     entity isn't a PERSON or has no participant events. Prompt-grounding only
     (never rendered), so the header stays English like the other grounding
     labels, regardless of the wiki's output language."""
-    lines = event_lines(_narrative_events(entity), include_salience=True)
+    lines = event_lines(_narrative_events(entity, arc), include_salience=True)
     if not lines:
         return ""
     name = entity.get("canonical_name", "")
@@ -418,6 +418,7 @@ def build_prompt(
     covered_prose: str = "",
     page_sections: list[str] | None = None,
     register: str = DEFAULT_REGISTER,
+    arc: NarrativeArc | None = None,
 ) -> str:
     stance = stance or EditorialStance()
     lang_name = language_name(lang)
@@ -559,7 +560,7 @@ def build_prompt(
     # being generated (PERSON is section-scoped — one section per prompt), so it
     # never leaks into the biography/personality prompts.
     narrative_role_block = (
-        _narrative_role_block(entity) if "narrative_role" in sections else ""
+        _narrative_role_block(entity, arc) if "narrative_role" in sections else ""
     )
     narrative_role_section = f"\n\n{narrative_role_block}" if narrative_role_block else ""
 
@@ -1103,6 +1104,7 @@ def _wiki_page_item_input(
     covered_prose: str = "",
     page_sections: list[str] | None = None,
     register: str = DEFAULT_REGISTER,
+    arc: NarrativeArc | None = None,
 ) -> dict:
     # language / forbidden_names / file_path / grounding_* feed the
     # wiki-page-validator stage inside the wiki-page-item pipeline (its
@@ -1120,7 +1122,7 @@ def _wiki_page_item_input(
             entity, book_title, sections=sections,
             forbidden_names=forbidden_names, stance=stance, lang=language,
             covered_prose=covered_prose, page_sections=page_sections,
-            register=register,
+            register=register, arc=arc,
         ),
     }
     grounding = grounding or {}
@@ -1151,6 +1153,7 @@ def _run_wiki_page_item(
     covered_prose: str = "",
     page_sections: list[str] | None = None,
     register: str = DEFAULT_REGISTER,
+    arc: NarrativeArc | None = None,
 ) -> dict:
     item_input = _wiki_page_item_input(
         entity=entity,
@@ -1166,6 +1169,7 @@ def _run_wiki_page_item(
         covered_prose=covered_prose,
         page_sections=page_sections,
         register=register,
+        arc=arc,
     )
     return (runner or StudioRunner()).run_item(item_input, entity, timeout)
 
@@ -1642,6 +1646,7 @@ def _generate_one_section(
     covered_prose: str = "",
     page_sections: list[str] | None = None,
     register: str = DEFAULT_REGISTER,
+    arc: NarrativeArc | None = None,
 ) -> tuple[str | None, dict | None]:
     """Generate a single section via a scoped wiki-page-item call.
 
@@ -1652,7 +1657,7 @@ def _generate_one_section(
 
     # SP1: the arc section is data-gated — skip the LLM call entirely when SP0
     # produced no participant events, rather than prompting it to hallucinate one.
-    if section == "narrative_role" and not _narrative_events(entity):
+    if section == "narrative_role" and not _narrative_events(entity, arc):
         return None, None
 
     # STU-493: the backstory section is data-gated — skip the LLM call when the
@@ -1666,7 +1671,7 @@ def _generate_one_section(
             sections=[section], max_tokens=max_tokens, forbidden_names=forbidden_names,
             language=language, file_path=file_path, grounding=grounding, runner=runner,
             stance=stance, covered_prose=covered_prose, page_sections=page_sections,
-            register=register,
+            register=register, arc=arc,
         )
 
     result = _once()
@@ -1792,6 +1797,7 @@ def _run_generation_for_entity(
 
     stance = editorial_stance(book_config or {})
     register = register_clause(book_config or {})
+    arc = narrative_arc(book_config or {})
     item_result = _run_wiki_page_item(
         entity=entity,
         book_title=book_title,
@@ -1802,6 +1808,7 @@ def _run_generation_for_entity(
         forbidden_names=forbidden_names,
         stance=stance,
         register=register,
+        arc=arc,
         language=language,
         file_path=file_path,
         grounding=grounding,
@@ -1844,6 +1851,7 @@ def _run_generation_for_entity(
                 forbidden_names=forbidden_names,
                 stance=stance,
                 register=register,
+                arc=arc,
                 language=language,
                 file_path=file_path,
                 grounding=grounding,
@@ -1904,6 +1912,7 @@ def _run_generation_sectioned(
 
     stance = editorial_stance(book_config or {})
     register = register_clause(book_config or {})
+    arc = narrative_arc(book_config or {})
     content_sections = [s for s in sections if s not in ("infobox", "references")]
     per_relation = (
         entity.get("type") == "PERSON"
@@ -1935,7 +1944,7 @@ def _run_generation_sectioned(
             timeout=timeout, max_tokens=max_tokens, forbidden_names=forbidden_names,
             language=language, file_path=file_path, grounding=grounding, runner=runner,
             stance=stance, covered_prose=covered, page_sections=content_sections,
-            register=register,
+            register=register, arc=arc,
         )
         if block:
             if section == "narrative_role" and sibling_canonicals:
