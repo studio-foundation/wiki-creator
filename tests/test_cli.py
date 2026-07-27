@@ -127,6 +127,61 @@ def test_replay_restart_from_stage(capsys):
     assert "studio replay abc123 --restart --stage wiki-resolution" in out
 
 
+def _proc_dir(root):
+    return root / "library/sarah_j_maas/throne-of-glass/processing_output/01-throne-of-glass"
+
+
+@pytest.fixture
+def no_studio(monkeypatch):
+    """Stub the `studio cache clean` subprocess so tests don't shell out."""
+    monkeypatch.setattr(cli.subprocess, "run", lambda *a, **k: type("R", (), {"returncode": 0})())
+
+
+def test_cache_clean_llm_removes_verdicts_and_map_cache(fake_lib, no_studio, monkeypatch, capsys):
+    monkeypatch.setattr(library, "_PROJECT_ROOT", fake_lib)
+    proc = _proc_dir(fake_lib)
+    proc.mkdir(parents=True)
+    (proc / "section_filter.json").write_text("{}", encoding="utf-8")
+    (proc / "entity_species.json").write_text("{}", encoding="utf-8")
+    kept = proc / "01-throne-of-glass_full.json"  # extraction artifact
+    kept.write_text("{}", encoding="utf-8")
+
+    assert cli.main(["cache", "clean", "tog"]) == 0
+    assert not (proc / "section_filter.json").exists()
+    assert not (proc / "entity_species.json").exists()
+    assert kept.exists()  # --llm keeps extraction
+    assert "$ studio cache clean" in capsys.readouterr().out
+
+
+def test_cache_clean_all_wipes_book_dirs(fake_lib, no_studio, monkeypatch, capsys):
+    monkeypatch.setattr(library, "_PROJECT_ROOT", fake_lib)
+    proc = _proc_dir(fake_lib)
+    proc.mkdir(parents=True)
+    (proc / "01-throne-of-glass_full.json").write_text("{}", encoding="utf-8")
+
+    assert cli.main(["cache", "clean", "tog", "--all"]) == 0
+    assert not proc.exists()
+    assert "$ studio cache clean" in capsys.readouterr().out
+
+
+def test_cache_clean_dry_run_deletes_nothing(fake_lib, monkeypatch, capsys):
+    monkeypatch.setattr(library, "_PROJECT_ROOT", fake_lib)
+    proc = _proc_dir(fake_lib)
+    proc.mkdir(parents=True)
+    (proc / "section_filter.json").write_text("{}", encoding="utf-8")
+
+    assert cli.main(["--dry-run", "cache", "clean", "tog"]) == 0
+    assert (proc / "section_filter.json").exists()
+    out = capsys.readouterr().out
+    assert "would remove" in out and "$ studio cache clean" in out
+
+
+def test_cache_clean_llm_and_all_mutually_exclusive(fake_lib, monkeypatch):
+    monkeypatch.setattr(library, "_PROJECT_ROOT", fake_lib)
+    with pytest.raises(SystemExit):
+        cli.main(["cache", "clean", "tog", "--llm", "--all"])
+
+
 def test_status_and_logs(capsys):
     cli.main(["--dry-run", "status"])
     cli.main(["--dry-run", "status", "abc123"])

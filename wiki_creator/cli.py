@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -110,6 +111,44 @@ def _cmd_book_add(args: argparse.Namespace) -> int:
     if args.dry_run:
         print("---\n" + plan.yaml_text, end="")
     return 0
+
+
+# --- cache -----------------------------------------------------------------
+
+# Script-side verdict caches, keyed on roster/prompt not on provider — a warm
+# run under a new provider replays the old one's verdicts unless cleared first.
+_VERDICT_CACHES = (
+    "section_filter.json",
+    "alias_adjudication.json",
+    "entity_status.json",
+    "entity_affiliation.json",
+    "entity_species.json",
+)
+
+
+def _rm(target: Path, *, dry_run: bool) -> None:
+    if not target.exists():
+        return
+    print(f"{'would remove' if dry_run else 'removed'} {target}")
+    if dry_run:
+        return
+    shutil.rmtree(target) if target.is_dir() else target.unlink()
+
+
+def _cmd_cache_clean(args: argparse.Namespace) -> int:
+    book_path = _resolve_book_or_exit(args.book)
+    if book_path is None:
+        return 2
+    paths = book_paths_from_yaml(book_path)
+    root = library._PROJECT_ROOT
+    if args.all:
+        targets = [root / paths.processing, root / paths.wiki_inputs, root / paths.output]
+    else:  # --llm (default): verdict caches only, keep extraction/deterministic artifacts
+        targets = [root / paths.processing / name for name in _VERDICT_CACHES]
+    for target in targets:
+        _rm(target, dry_run=args.dry_run)
+    # The engine map-cache is global and Studio-owned; delegate its clean.
+    return _exec(["studio", "cache", "clean"], dry_run=args.dry_run)
 
 
 # --- series ----------------------------------------------------------------
@@ -271,6 +310,26 @@ def _build_parser() -> argparse.ArgumentParser:
     add.add_argument("--llm", action="store_true", help="draft a novel_summary via LLM")
     add.add_argument("--force", action="store_true", help="overwrite an existing YAML")
     add.set_defaults(func=_cmd_book_add)
+
+    cache = sub.add_parser("cache", parents=[common], help="clear a book's caches (STU-641)")
+    csub = cache.add_subparsers(dest="cache_verb", required=True)
+    clean = csub.add_parser(
+        "clean", parents=[common],
+        help="clear a book's LLM verdict caches + Studio map-cache (--llm), or every generated artifact (--all)",
+        epilog=(
+            "Cache locations:\n"
+            "  verdict caches  library/<author>/<series>/processing_output/<slug>/"
+            "{section_filter,alias_adjudication,entity_status,entity_affiliation,entity_species}.json\n"
+            "  map-cache       .studio/runs/map-cache/  (global, Studio-owned)\n"
+            "Clear both before comparing providers — they key on item/roster, not provider (STU-622)."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    clean.add_argument("book", help="book slug, alias, series or author")
+    scope = clean.add_mutually_exclusive_group()
+    scope.add_argument("--llm", action="store_true", help="LLM verdict caches + map-cache, keeping extraction (default)")
+    scope.add_argument("--all", action="store_true", help="every generated artifact (processing_output/wiki_inputs/output) + map-cache")
+    clean.set_defaults(func=_cmd_cache_clean)
 
     series = sub.add_parser("series", parents=[common], help="run wiki-full over a series in reading order")
     series.add_argument("verb", choices=["run"], help="only 'run'")
