@@ -31,4 +31,5 @@ stages:
       grounding_llm_model: "{{item.grounding_llm_model}}"
       grounding_llm_timeout: "{{item.grounding_llm_timeout}}"
       attempt: "{{item.attempt}}"
+      validate: "{{item.validate}}"
       prompt_fingerprint: "{{input.prompt_fingerprint}}"

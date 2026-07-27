@@ -2,9 +2,12 @@ name: wiki-page-item
 description: Generate one wiki page item with validation loop
 version: 2
 
+# STU-670: `max_iterations: 2` caps the re-generation to one revalidation (was
+# 3 — two re-rolls). The validator is a deterministic script (~0 LLM tokens);
+# the cost this trims is the generation LLM stage re-running on rejection.
 stages:
   - group: generation-validation
-    max_iterations: 3
+    max_iterations: 2
     stages:
       - name: wiki-page-item
         kind: analysis
@@ -19,6 +22,10 @@ stages:
 
       - name: wiki-page-validator
         kind: validation
+        # STU-670: gated by tier. The host computes `validate` per item from the
+        # book's `generation.validate_pages` floor; a skipped validator neither
+        # grounds nor re-generates the page (it passes through uncontested).
+        condition: input.validate == true
         executor: script
         runtime: python
         script: scripts/wiki_page_validator.py
