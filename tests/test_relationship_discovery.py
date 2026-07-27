@@ -392,3 +392,67 @@ def test_collect_no_zero_pair_warning_when_pairs_found(tmp_path, capsys):
     stats = collect_and_save(_prep_for(tmp_path, ROSTER), map_output, None)
     assert stats["pairs"] == 1
     assert "0 pairs over" not in capsys.readouterr().err
+
+
+# --- sub-roles (STU-665) ----------------------------------------------------
+
+SUB_ROLES = {"father", "mother", "son", "daughter", "parent", "child", "spouse"}
+
+
+def test_valid_relations_keeps_vocabulary_sub_roles():
+    raw = [{"entity_a": "Eragon", "entity_b": "Brom", "relationship_type": "family",
+            "direction": "A→B", "sub_role_a": "father", "sub_role_b": "son"}]
+    kept, _ = valid_relations(raw, ROSTER, TYPES, SUB_ROLES)
+    assert kept[0]["sub_role_a"] == "father"
+    assert kept[0]["sub_role_b"] == "son"
+
+
+def test_valid_relations_drops_off_vocabulary_sub_role_but_keeps_relation():
+    raw = [{"entity_a": "Eragon", "entity_b": "Brom", "relationship_type": "family",
+            "direction": "A→B", "sub_role_a": "second-cousin", "sub_role_b": "son"}]
+    kept, _ = valid_relations(raw, ROSTER, TYPES, SUB_ROLES)
+    assert len(kept) == 1
+    assert "sub_role_a" not in kept[0]  # off-vocabulary dropped
+    assert kept[0]["sub_role_b"] == "son"  # valid one survives
+
+
+def test_valid_relations_sub_roles_ignored_without_vocabulary():
+    # No allowed_sub_roles passed → the fields are simply not carried.
+    raw = [{"entity_a": "Eragon", "entity_b": "Brom", "relationship_type": "family",
+            "direction": "A→B", "sub_role_a": "father"}]
+    kept, _ = valid_relations(raw, ROSTER, TYPES)
+    assert "sub_role_a" not in kept[0]
+
+
+def _vote_sub(chapter_id, a, b, sub_a, sub_b):
+    return {"chapter_id": chapter_id, "relations": [
+        {"entity_a": a, "entity_b": b, "relationship_type": "family",
+         "direction": "A→B", "sub_role_a": sub_a, "sub_role_b": sub_b, "evidence": "ev"}]}
+
+
+def test_aggregate_swaps_sub_roles_to_sorted_key():
+    # pair_key sorts to (Brom, Eragon). A vote naming (Eragon, Brom) with Eragon=father
+    # is restated so the sorted entity_a (Brom) carries the son role.
+    votes = [_vote_sub("ch1", "Eragon", "Brom", "father", "son")]
+    pairs = aggregate(votes, ROSTER)
+    assert (pairs[0]["entity_a"], pairs[0]["entity_b"]) == ("Brom", "Eragon")
+    assert pairs[0]["sub_role_a"] == "son"
+    assert pairs[0]["sub_role_b"] == "father"
+
+
+def test_aggregate_sub_roles_most_common():
+    votes = [
+        _vote_sub("ch1", "Brom", "Eragon", "father", "son"),
+        _vote_sub("ch2", "Brom", "Eragon", "father", "daughter"),
+        _vote_sub("ch3", "Brom", "Eragon", "father", "son"),
+    ]
+    pairs = aggregate(votes, ROSTER)
+    assert pairs[0]["sub_role_a"] == "father"
+    assert pairs[0]["sub_role_b"] == "son"
+
+
+def test_aggregate_omits_sub_roles_when_absent():
+    votes = [_vote("ch1", "Eragon", "Brom", "family")]
+    pairs = aggregate(votes, ROSTER)
+    assert "sub_role_a" not in pairs[0]
+    assert "sub_role_b" not in pairs[0]

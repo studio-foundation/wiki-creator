@@ -121,6 +121,13 @@ class Relationship:
     sample_contexts: list[str] = field(default_factory=list)
     relationship_type: str | None = None
     direction: str | None = None
+    # STU-665: fine kinship/romance sub-roles qualifying a family/romance pair in the
+    # infobox. sub_role_a is what entity_a IS to entity_b (father/spouse/…), sub_role_b
+    # the converse; they swap when the pair is reordered onto its canonical key, so the
+    # gendered term is never collapsed to a neutral reciprocal. None when the pair is
+    # left coarse.
+    sub_role_a: str | None = None
+    sub_role_b: str | None = None
     evolution: str | None = None
     evidence: str | None = None
     confidence: str | None = None

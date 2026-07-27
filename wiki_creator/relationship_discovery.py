@@ -140,16 +140,22 @@ def canonicalize_relations(raw: object, alias_to_canonical: dict[str, str]) -> l
 
 
 def valid_relations(
-    raw: object, roster_names: set[str], allowed_types: Iterable[str]
+    raw: object,
+    roster_names: set[str],
+    allowed_types: Iterable[str],
+    allowed_sub_roles: Iterable[str] = (),
 ) -> tuple[list[dict], list[str]]:
     """Split a chunk's relations into (well-formed, rejected-with-reason).
 
     The studio contract enforces the object shape; this rejects what would crash
     or silently mistype the fold — an off-roster or self name, an off-vocabulary
     type or direction. The vocabulary is passed in because a book declares its own
-    types (STU-472).
+    types (STU-472). Optional ``sub_role_a``/``sub_role_b`` (STU-665) are kept only
+    when in ``allowed_sub_roles`` — an off-vocabulary sub-role is dropped, never a
+    reason to reject the whole relation (the coarse type still stands).
     """
     types = set(allowed_types)
+    sub_roles = set(allowed_sub_roles)
     kept: list[dict] = []
     rejected: list[str] = []
     if not isinstance(raw, list):
@@ -179,13 +185,18 @@ def valid_relations(
         if rel["direction"] not in DIRECTIONS:
             rejected.append(f"direction off-vocabulary: {rel['direction']!r}")
             continue
-        kept.append({
+        clean = {
             "entity_a": a,
             "entity_b": b,
             "relationship_type": rel["relationship_type"],
             "direction": rel["direction"],
             "evidence": (rel.get("evidence") or "").strip()[:_MAX_EVIDENCE_CHARS],
-        })
+        }
+        for slot in ("sub_role_a", "sub_role_b"):
+            value = rel.get(slot)
+            if isinstance(value, str) and value.strip() in sub_roles:
+                clean[slot] = value.strip()
+        kept.append(clean)
     return kept, rejected
 
 
@@ -194,6 +205,7 @@ def fold_chunk_result(
     alias_to_canonical: dict[str, str],
     roster_names: set[str],
     allowed_types: Iterable[str],
+    allowed_sub_roles: Iterable[str] = (),
 ) -> list[dict] | None:
     """Canonicalize + validate a chunk's raw relations, or ``None`` on failure.
 
@@ -205,7 +217,7 @@ def fold_chunk_result(
     if raw is None:
         return None
     resolved = canonicalize_relations(raw, alias_to_canonical)
-    kept, _ = valid_relations(resolved, roster_names, allowed_types)
+    kept, _ = valid_relations(resolved, roster_names, allowed_types, allowed_sub_roles)
     return kept
 
 
@@ -215,6 +227,7 @@ def votes_from_map_output(
     alias_to_canonical: dict[str, str],
     roster_names: set[str],
     allowed_types: Iterable[str],
+    allowed_sub_roles: Iterable[str] = (),
 ) -> tuple[list[dict], list[str]]:
     """Per-chunk votes from the engine map stage's collected output (STU-589).
 
@@ -236,7 +249,9 @@ def votes_from_map_output(
         raw = None
         if result and result.get("status") == "success" and isinstance(result.get("output"), dict):
             raw = result["output"].get("relations")
-        kept = fold_chunk_result(raw, alias_to_canonical, roster_names, allowed_types)
+        kept = fold_chunk_result(
+            raw, alias_to_canonical, roster_names, allowed_types, allowed_sub_roles
+        )
         if kept is None:
             failed.append(chunk["id"])
             continue
@@ -263,11 +278,21 @@ def aggregate(votes: list[dict], roster_names: set[str]) -> list[dict]:
             key = pair_key(a, b)
             slot = acc.setdefault(key, {
                 "types": Counter(), "directions": Counter(),
+                "sub_roles_a": Counter(), "sub_roles_b": Counter(),
                 "chapters": set(), "evidence": [], "votes": 0,
             })
             slot["types"][rel["relationship_type"]] += 1
-            direction = rel["direction"] if (a, b) == key else flip(rel["direction"])
+            oriented = (a, b) == key
+            direction = rel["direction"] if oriented else flip(rel["direction"])
             slot["directions"][direction] += 1
+            # sub_role_a/b are the two parties' roles; when the vote names the pair
+            # the other way, the parties swap so the roles swap with them (STU-665).
+            sub_a = rel.get("sub_role_a" if oriented else "sub_role_b")
+            sub_b = rel.get("sub_role_b" if oriented else "sub_role_a")
+            if sub_a:
+                slot["sub_roles_a"][sub_a] += 1
+            if sub_b:
+                slot["sub_roles_b"][sub_b] += 1
             slot["chapters"].add(chapter_id)
             slot["votes"] += 1
             if rel.get("evidence"):
@@ -275,7 +300,7 @@ def aggregate(votes: list[dict], roster_names: set[str]) -> list[dict]:
 
     pairs: list[dict] = []
     for key, slot in acc.items():
-        pairs.append({
+        pair = {
             "entity_a": key[0],
             "entity_b": key[1],
             "relationship_type": slot["types"].most_common(1)[0][0],
@@ -283,7 +308,12 @@ def aggregate(votes: list[dict], roster_names: set[str]) -> list[dict]:
             "chapters": sorted(slot["chapters"]),
             "cooccurrence_count": slot["votes"],
             "sample_contexts": slot["evidence"][:_MAX_SAMPLE_CONTEXTS],
-        })
+        }
+        if slot["sub_roles_a"]:
+            pair["sub_role_a"] = slot["sub_roles_a"].most_common(1)[0][0]
+        if slot["sub_roles_b"]:
+            pair["sub_role_b"] = slot["sub_roles_b"].most_common(1)[0][0]
+        pairs.append(pair)
 
     pairs.sort(key=lambda p: (-len(p["chapters"]), p["entity_a"], p["entity_b"]))
     return pairs
