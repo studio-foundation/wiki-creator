@@ -39,6 +39,27 @@ def _heading_of(block: str) -> str | None:
     return m.group(1) if m else None
 
 
+def _collapsible(inner: str, expandtext: str, collapsetext: str) -> str:
+    """A collapsed ``mw-collapsible`` div wrapping ``inner`` — the one div literal
+    the chapter axis, the relation axis and the tome axis (STU-668) all share."""
+    return (
+        f'<div class="mw-collapsible mw-collapsed" '
+        f'data-expandtext="{expandtext}" data-collapsetext="{collapsetext}">\n{inner}\n</div>\n'
+    )
+
+
+def tome_collapsible_section(heading: str, body: str, expandtext: str, collapsetext: str) -> str:
+    """One ``== heading ==`` section collapsed behind an mw-collapsible div — the
+    tome axis of STU-232 (``wrap_collapsible`` is the chapter axis).
+
+    A series character page (STU-668) stacks one of these per tome. Every tome
+    collapses by default, so spoiler safety rides entirely on the reader expanding
+    the tomes they have read — the coarse per-tome export gate is given up on
+    purpose. The latest-wins Status scalar lives in the (separately gated) infobox.
+    """
+    return _collapsible(f"== {heading} ==\n\n{body.strip()}", expandtext, collapsetext)
+
+
 def wrap_collapsible(body: str, content_units: list[dict], collapse_after: int, lang: str = "fr") -> str:
     """Wrap each section revealed after ``collapse_after`` in an mw-collapsible div.
 
@@ -57,12 +78,7 @@ def wrap_collapsible(body: str, content_units: list[dict], collapse_after: int, 
         chapter = chapter_by_title.get(_norm(heading)) if heading else None
         if chapter is not None and chapter > collapse_after:
             expand = chrome_label("reveal", lang).format(chapter=chapter)
-            collapse = chrome_label("collapse", lang)
-            out.append(
-                f'<div class="mw-collapsible mw-collapsed" '
-                f'data-expandtext="{expand}" '
-                f'data-collapsetext="{collapse}">\n{block}\n</div>\n'
-            )
+            out.append(_collapsible(block, expand, chrome_label("collapse", lang)))
         else:
             out.append(block)
     return "".join(out)
@@ -230,12 +246,7 @@ def wrap_relation_collapsibles(body: str, relation_units: list[dict], collapse_a
             chapter = chapter_by_name.get(_norm(name)) if name else None
             if chapter is not None and chapter > collapse_after:
                 expand = chrome_label("reveal", lang).format(chapter=chapter)
-                collapse = chrome_label("collapse", lang)
-                wrapped.append(
-                    f'<div class="mw-collapsible mw-collapsed" '
-                    f'data-expandtext="{expand}" '
-                    f'data-collapsetext="{collapse}">\n{sub.rstrip()}\n</div>\n'
-                )
+                wrapped.append(_collapsible(sub.rstrip(), expand, chrome_label("collapse", lang)))
             else:
                 wrapped.append(sub)
         out.append("".join(wrapped))

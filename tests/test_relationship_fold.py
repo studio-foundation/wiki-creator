@@ -151,3 +151,39 @@ def test_output_sorted_by_cooccurrence_desc():
     ]
     folded = fold_relationships(rels, _registry(CHAOL, CELAENA, third))
     assert [e["cooccurrence_count"] for e in folded] == [30, 4]
+
+
+def test_sub_roles_carried_through_fold():
+    """STU-665: sub_role_a/sub_role_b survive the fold when the pair is not reordered."""
+    rels = [
+        {"entity_a": "Celaena", "entity_b": "Chaol", "cooccurrence_count": 5,
+         "relationship_type": "family", "sub_role_a": "sister", "sub_role_b": "brother"},
+    ]
+    edge = fold_relationships(rels, _registry(CHAOL, CELAENA))[0]
+    assert (edge["entity_a"], edge["entity_b"]) == ("Celaena", "Chaol")
+    assert edge["sub_role_a"] == "sister"
+    assert edge["sub_role_b"] == "brother"
+
+
+def test_sub_roles_swap_when_pair_reordered():
+    """STU-665: reordering onto the canonical key swaps the two parties' roles,
+    so the gendered term is never collapsed to a neutral reciprocal."""
+    # Input order Chaol→Celaena; canonical key sorts to (Celaena, Chaol).
+    rels = [
+        {"entity_a": "Chaol", "entity_b": "Celaena", "cooccurrence_count": 5,
+         "relationship_type": "family", "sub_role_a": "father", "sub_role_b": "daughter"},
+    ]
+    edge = fold_relationships(rels, _registry(CHAOL, CELAENA))[0]
+    assert (edge["entity_a"], edge["entity_b"]) == ("Celaena", "Chaol")
+    assert edge["sub_role_a"] == "daughter"
+    assert edge["sub_role_b"] == "father"
+
+
+def test_missing_sub_roles_fold_to_none():
+    rels = [
+        {"entity_a": "Celaena", "entity_b": "Chaol", "cooccurrence_count": 5,
+         "relationship_type": "family"},
+    ]
+    edge = fold_relationships(rels, _registry(CHAOL, CELAENA))[0]
+    assert edge["sub_role_a"] is None
+    assert edge["sub_role_b"] is None

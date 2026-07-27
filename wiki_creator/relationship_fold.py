@@ -71,6 +71,8 @@ def fold_relationships(relationships: list[dict], registry: "Registry") -> list[
                 "_contexts": [],
                 "_carried": {f: set() for f in _CARRIED_FIELDS},
                 "_directions": set(),
+                "_sub_a": set(),
+                "_sub_b": set(),
             }
             aggregated[key] = base
         base["cooccurrence_count"] += int(rel.get("cooccurrence_count", 0) or 0)
@@ -80,9 +82,18 @@ def fold_relationships(relationships: list[dict], registry: "Registry") -> list[
             value = rel.get(name_)
             if value is not None:
                 base["_carried"][name_].add(value)
+        oriented = a <= b
         direction = rel.get("direction")
         if direction is not None:
-            base["_directions"].add(direction if a <= b else flip(direction))
+            base["_directions"].add(direction if oriented else flip(direction))
+        # sub_role_a/b are the two parties' roles; they swap with the pair when the
+        # edge is reordered onto its canonical key (STU-665).
+        sub_a = rel.get("sub_role_a" if oriented else "sub_role_b")
+        sub_b = rel.get("sub_role_b" if oriented else "sub_role_a")
+        if sub_a is not None:
+            base["_sub_a"].add(sub_a)
+        if sub_b is not None:
+            base["_sub_b"].add(sub_b)
 
     folded: list[dict] = []
     for base in aggregated.values():
@@ -92,6 +103,8 @@ def fold_relationships(relationships: list[dict], registry: "Registry") -> list[
         for name_ in _CARRIED_FIELDS:
             base[name_] = _sole(carried[name_])
         base["direction"] = _sole(base.pop("_directions"))
+        base["sub_role_a"] = _sole(base.pop("_sub_a"))
+        base["sub_role_b"] = _sole(base.pop("_sub_b"))
         folded.append(base)
 
     folded.sort(key=lambda r: r["cooccurrence_count"], reverse=True)

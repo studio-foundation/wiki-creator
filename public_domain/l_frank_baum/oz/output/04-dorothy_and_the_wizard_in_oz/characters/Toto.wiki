@@ -1,0 +1,12 @@
+{{Infobox character
+|nom=Toto
+|apparition=Appears in book 4
+|status=Unknown
+}}
+
+== Biography ==
+
+Toto is Dorothy's little black dog, well known among those who follow her adventures. During the events of this story, Toto remained in Kansas while Dorothy traveled to California, and so he was unable to join her when her journey began; she brought her kitten along in his place.
+
+[[Category:Characters]]
+[[Category:Characters of Book 4]]

@@ -1,0 +1,12 @@
+{{Infobox character
+|nom=L. FRANK BAUM
+|apparition=Appears in book 4
+|status=Unknown
+}}
+
+== Biography ==
+
+L. Frank Baum is credited on the title page as writer of the account, alongside illustrator John R. Neill. The dedication names Harriet A. B. Neal. In a preface addressed to readers, Baum acknowledges that "the books are partly yours," crediting readers' suggestions for guiding the telling of the stories and calling their assistance "clever and thoughtful."
+
+[[Category:Characters]]
+[[Category:Characters of Book 4]]
