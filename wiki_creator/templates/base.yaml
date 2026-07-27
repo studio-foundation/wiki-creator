@@ -392,6 +392,10 @@ chrome:
   reveal_spoiler: {fr: "Spoiler — révéler", en: "Spoiler — reveal"}
   collapse:  {fr: "Masquer", en: "Hide"}
   evolution: {fr: "Évolution :", en: "Evolution:"}
+  # STU-668: the tome axis of the collapsible (series wiki). `reveal` is the
+  # chapter axis; these gate one section per tome on a merged character page.
+  reveal_tome:  {fr: "Tome {tome} — révéler", en: "Book {tome} — reveal"}
+  tome_heading: {fr: "Tome {tome}", en: "Book {tome}"}
   # STU-488: the `status` infobox slot. Reader-facing chrome, so the
   # enum's labels are data — the enum itself lives in wiki_creator/entity_status.py.
   status_alive:    {fr: "Vivant",   en: "Alive"}

@@ -1,0 +1,31 @@
+{{Infobox character
+|nom=Aelin Galathynius
+|alias=Celaena Sardothien
+|apparition=First appears in book 1, last appears in book 2
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
+== Book 1 ==
+
+== Biography ==
+
+An assassin in Rifthold.
+</div>
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 2 — reveal" data-collapsetext="Hide">
+== Book 2 ==
+
+== Biography ==
+
+Queen of Terrasen.
+</div>
+
+== Relationships ==
+
+''Evolution:''
+* [[Chaol]] — romance (ch.5→ch.30)
+* [[Rowan]] — romance (ch.40)
+
+[[Category:Characters]]
+[[Category:Main characters]]
+[[Category:Characters of Book 1]]
+[[Category:Characters of Book 2]]

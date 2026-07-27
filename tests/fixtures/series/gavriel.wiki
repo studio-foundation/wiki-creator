@@ -1,0 +1,44 @@
+{{Infobox character
+|nom=Gavriel
+|alias=The Lion
+|apparition=First appears in book 1, last appears in book 2
+|status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Deceased</span>
+|death=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Killed by Aelin Galathynius</span>
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
+== Book 1 ==
+
+== Biography ==
+
+A warrior of the Cadre.
+
+== Relationships ==
+
+'''[[Aedion]]''' — his son, unknown to him.
+</div>
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 2 — reveal" data-collapsetext="Hide">
+== Book 2 ==
+
+== Biography ==
+
+He joins the war.
+
+== Relationships ==
+
+'''[[Aedion]]''' — reunited at last.
+
+=== Events ===
+
+* Gavriel dies shielding the army.
+</div>
+
+== Relationships ==
+
+''Evolution:''
+* [[Aedion]] — family (ch.3→ch.20)
+
+[[Category:Characters]]
+[[Category:Main characters]]
+[[Category:Characters of Book 1]]
+[[Category:Characters of Book 2]]
