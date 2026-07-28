@@ -22,8 +22,8 @@ def _registry(entities: list[dict]) -> Registry:
     return Registry.from_dict({"version": 1, "entities": entities, "decisions": [], "warnings": []})
 
 
-def _page(title: str, importance: str = "secondary") -> dict:
-    return {"title": title, "importance": importance, "entity_type": "PERSON"}
+def _page(title: str, importance: str = "secondary", entity_type: str = "PERSON") -> dict:
+    return {"title": title, "importance": importance, "entity_type": entity_type}
 
 
 def _contrib(book_id: str, importance: str | None = None, status: dict | None = None):
@@ -103,12 +103,32 @@ def test_gather_joins_by_alias_when_a_tome_renamed_the_character():
     assert chars[0].books == ["01", "03"]
 
 
-def test_gather_skips_non_person_entities():
+def test_gather_merges_non_person_entities():
+    # STU-706: all types merge cross-tome, not just PERSON.
     reg = _registry([
         {"entity_id": "p", "canonical_name": "Rifthold", "entity_type": "PLACE", "aliases": []},
     ])
-    tomes = [TomeArtifacts("01", pages=[_page("Rifthold")])]
-    assert build_series_characters(reg, tomes) == []
+    tomes = [
+        TomeArtifacts("01", pages=[_page("Rifthold", entity_type="PLACE")]),
+        TomeArtifacts("03", pages=[_page("Rifthold", entity_type="PLACE")]),
+    ]
+    chars = build_series_characters(reg, tomes)
+    assert len(chars) == 1
+    assert chars[0].entity_type == "PLACE"
+    assert chars[0].books == ["01", "03"]
+
+
+def test_non_person_status_is_gated():
+    # STU-706: status (alive/dead) is PERSON-only. A non-PERSON whose name collides
+    # with a status verdict must not pick it up.
+    reg = _registry([
+        {"entity_id": "p", "canonical_name": "Rifthold", "entity_type": "PLACE", "aliases": []},
+    ])
+    tomes = [TomeArtifacts("01", pages=[_page("Rifthold", entity_type="PLACE")],
+                           status_verdicts={"Rifthold": {"status": "deceased", "quote": "q"}})]
+    chars = build_series_characters(reg, tomes)
+    assert chars[0].status is None
+    assert all(c.status is None for c in chars[0].contributions)
 
 
 def test_gather_skips_characters_with_no_page_anywhere():
