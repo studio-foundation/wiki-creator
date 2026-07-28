@@ -470,6 +470,8 @@ chrome:
   main_characters:    {fr: "Personnages principaux", en: "Main characters"}
   main_locations:     {fr: "Lieux importants", en: "Important locations"}
   navigation:         {fr: "Navigation", en: "Navigation"}
+  # STU-707: series hub — reading-order heading for the tome list.
+  reading_order:      {fr: "Ordre de lecture", en: "Reading order"}
   statistics:         {fr: "Statistiques", en: "Statistics"}
   synopsis:           {fr: "Synopsis", en: "Synopsis"}
   synopsis_link:      {fr: "Synopsis du livre", en: "Book synopsis"}
