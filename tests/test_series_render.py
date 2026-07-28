@@ -47,8 +47,12 @@ def _fixture() -> list:
             {"title": "Celaena Sardothien", "importance": "principal", "entity_type": "PERSON",
              "content": "## Biography\n\nAn assassin in Rifthold.",
              "relationship_index": ["* [[Chaol]] — romance (ch.5→ch.30)"]},
+            {"title": "Glass Castle", "importance": "secondary", "entity_type": "PLACE",
+             "content": "## Overview\n\nThe royal seat of Adarlan."},
         ],
-        status_verdicts={"Gavriel": {"status": "alive", "quote": "Gavriel lived."}},
+        # A verdict keyed on the PLACE name must be ignored (status is PERSON-only).
+        status_verdicts={"Gavriel": {"status": "alive", "quote": "Gavriel lived."},
+                         "Glass Castle": {"status": "deceased", "quote": "nope"}},
     )
     tome2 = TomeArtifacts(
         book_id="02-crown",
@@ -59,6 +63,8 @@ def _fixture() -> list:
             {"title": "Aelin Galathynius", "importance": "principal", "entity_type": "PERSON",
              "content": "## Biography\n\nQueen of Terrasen.",
              "relationship_index": ["* [[Chaol]] — romance (ch.5→ch.30)", "* [[Rowan]] — romance (ch.40)"]},
+            {"title": "Glass Castle", "importance": "secondary", "entity_type": "PLACE",
+             "content": "## Overview\n\nShattered in the siege."},
         ],
         status_verdicts={"Gavriel": {"status": "deceased", "quote": "Gavriel fell.", "agent": "Aelin Galathynius"}},
         events=[{"event_id": "e1", "chapter": 22, "description": "Gavriel dies shielding the army.",
@@ -83,13 +89,30 @@ def test_series_character_pages_match_golden():
     labels = category_labels({}, "en")
     by_name = {c.canonical_name: c for c in chars}
 
-    assert set(by_name) == {"Gavriel", "Aelin Galathynius"}  # PLACE excluded
+    assert set(by_name) == {"Gavriel", "Aelin Galathynius", "Glass Castle"}  # all types (STU-706)
 
     _, gavriel = render_series_character_page(by_name["Gavriel"], labels, "en")
     _assert_golden("gavriel.wiki", gavriel)
 
     _, aelin = render_series_character_page(by_name["Aelin Galathynius"], labels, "en")
     _assert_golden("aelin.wiki", aelin)
+
+    _, castle = render_series_character_page(by_name["Glass Castle"], labels, "en")
+    _assert_golden("glass_castle.wiki", castle)
+
+
+def test_non_person_page_has_no_status_row():
+    # STU-706: a PLACE merges cross-tome but carries no alive/dead status slot,
+    # even when a status verdict collides with its name.
+    chars = _fixture()
+    castle = next(c for c in chars if c.canonical_name == "Glass Castle")
+    relpath, wiki = render_series_character_page(castle, category_labels({}, "en"), "en")
+
+    assert relpath == "locations/Glass_Castle.wiki"
+    assert castle.status is None
+    assert "Deceased" not in wiki and "status" not in wiki.lower()
+    # still a real cross-tome page: one collapsible section per tome
+    assert "== Book 1 ==" in wiki and "== Book 2 ==" in wiki
 
 
 def test_gavriel_page_key_properties():

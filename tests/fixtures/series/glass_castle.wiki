@@ -1,0 +1,23 @@
+{{Infobox location
+|nom=Glass Castle
+|apparition=First appears in book 1, last appears in book 2
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
+== Book 1 ==
+
+== Overview ==
+
+The royal seat of Adarlan.
+</div>
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 2 — reveal" data-collapsetext="Hide">
+== Book 2 ==
+
+== Overview ==
+
+Shattered in the siege.
+</div>
+
+[[Category:Locations]]
+[[Category:Locations of Book 1]]
+[[Category:Locations of Book 2]]

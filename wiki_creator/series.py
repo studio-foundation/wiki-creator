@@ -167,23 +167,25 @@ def _match_events(events: list[dict], names: set[str]) -> list[dict]:
 def build_series_characters(
     registry: Registry, tomes: list[TomeArtifacts]
 ) -> list[SeriesCharacter]:
-    """One ``SeriesCharacter`` per canonical PERSON that has a page in some tome.
+    """One ``SeriesCharacter`` per canonical entity that has a page in some tome.
 
     ``tomes`` are in reading order; each character's contributions preserve that
-    order. Identity is the series registry's — a character's page in any tome is
+    order. Identity is the series registry's — an entity's page in any tome is
     the one whose title matches its canonical name or any accumulated alias, so a
-    tome that renamed the character still joins. Notability and status are
-    reconciled latest-wins.
+    tome that renamed it still joins. Notability is reconciled latest-wins.
+
+    All entity types merge cross-tome (STU-706), not just PERSON. Status
+    (alive/dead) is PERSON-only — the reader-facing slot for non-PERSON drops,
+    matching the infobox (``series_pages._infobox_fields``).
     """
     characters: list[SeriesCharacter] = []
     for record in registry.entities:
-        if record.entity_type != "PERSON":
-            continue
+        is_person = record.entity_type == "PERSON"
         names = _name_set(record)
         contributions: list[TomeContribution] = []
         for tome in tomes:
             page = _match_page(tome.pages, names)
-            status = _match_status(tome.status_verdicts, names)
+            status = _match_status(tome.status_verdicts, names) if is_person else None
             events = _match_events(tome.events, names)
             if page or status or events:
                 contributions.append(

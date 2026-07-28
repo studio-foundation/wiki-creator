@@ -5,6 +5,10 @@ from pathlib import Path
 # Project root = directory containing wiki_creator (repo root)
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
+# Series-scoped published wiki dir name — sibling of the per-tome output/<slug>/
+# dirs (STU-705). The leading underscore cannot collide with a tome slug.
+_SERIES_OUTPUT_NAME = "_series"
+
 
 def _resolve(path: Path | str) -> Path:
     """Resolve path relative to project root if not absolute."""
@@ -46,6 +50,11 @@ class BookPaths:
         """Series-level canon policy: library/<author>/<series>/canon.yaml"""
         return self.epub.parent.parent / "canon.yaml"
 
+    @property
+    def series_output(self) -> Path:
+        """Series-level published wiki: library/<author>/<series>/output/_series/ (STU-705)."""
+        return self.output.parent / _SERIES_OUTPUT_NAME
+
 
 def book_paths_from_epub(epub_path: Path | str) -> BookPaths:
     """Derive all book working directories from the epub path.
@@ -82,3 +91,19 @@ def book_paths_from_yaml(yaml_path: Path | str) -> BookPaths:
     slug = p.stem
     epub = series_dir / "books" / f"{slug}.epub"
     return book_paths_from_epub(epub)
+
+
+def series_output_dir(series_dir: Path | str) -> Path:
+    """Series-level published wiki dir: <series_dir>/output/_series/ (STU-705).
+
+    Input is the series root (library/<author>/<series>/), as returned by
+    ``library.resolve_series`` / consumed by ``discover_series_books``. Sibling
+    of the per-tome output/<slug>/ dirs; equals ``BookPaths.series_output`` for
+    any tome of the series.
+    """
+    p = _resolve(series_dir)
+    try:
+        base = p.relative_to(_PROJECT_ROOT)
+    except ValueError:
+        base = p
+    return base / "output" / _SERIES_OUTPUT_NAME
