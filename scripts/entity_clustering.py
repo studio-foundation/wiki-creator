@@ -151,6 +151,19 @@ def tokenize_name(name: str, title_prefixes: frozenset[str] = TITLE_PREFIXES) ->
     return [t for t in tokens if t]
 
 
+def _canonical_score(mention: str, title_prefixes: frozenset[str] = TITLE_PREFIXES) -> tuple[int, int, bool]:
+    """Rank a surface form for use as the cluster's canonical name.
+
+    Most substantive tokens wins, then longest ("David Martín" > "Monsieur
+    Martín"). The trailing flag breaks a tie against an ALL-CAPS surface form
+    (STU-701): a small-caps chapter opener yields "DOROTHY" beside "Dorothy",
+    both scoring identically until here, and ``max`` would otherwise keep
+    whichever the raw-mention order put first — printing DOROTHY as the page
+    title. An all-caps form is preferred only when no cased variant ties it."""
+    tokens = tokenize_name(mention, title_prefixes)
+    return (len(tokens), len(" ".join(tokens)), not mention.isupper())
+
+
 def extract_leading_titles(name: str, title_prefixes: frozenset[str] = TITLE_PREFIXES) -> frozenset[str]:
     """Return the set of title prefixes at the START of a name (stops at first non-title)."""
     tokens = name.lower().strip().split()
@@ -484,13 +497,7 @@ def build_clusters(
                 entity = entities[eid]
                 total_mentions += _entity_weight(entity)
 
-            # Pick the mention with the most substantive tokens (after title stripping)
-            # "David Martín" > "Monsieur Martín" (2 real tokens vs 1)
-            def canonical_score(mention):
-                tokens = tokenize_name(mention, title_prefixes)
-                return (len(tokens), len(" ".join(tokens)))
-
-            canonical = max(all_mentions, key=canonical_score)
+            canonical = max(all_mentions, key=lambda m: _canonical_score(m, title_prefixes))
 
             clusters_list.append({
                 "cluster_id": f"cluster_{cluster_counter:03d}",
@@ -564,11 +571,10 @@ def _make_cluster(
             first_seen_chapters.append(fs)
         total_mentions += _entity_weight(entity)
 
-    def canonical_score(mention):
-        tokens = tokenize_name(mention, title_prefixes)
-        return (len(tokens), len(" ".join(tokens)))
-
-    canonical = max(all_mentions, key=canonical_score) if all_mentions else eids[0]
+    canonical = (
+        max(all_mentions, key=lambda m: _canonical_score(m, title_prefixes))
+        if all_mentions else eids[0]
+    )
 
     return {
         "cluster_id": cluster_id,

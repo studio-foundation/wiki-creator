@@ -10,6 +10,7 @@ from scripts.entity_clustering import (
     should_cluster_jw,
     should_cluster,
     build_clusters,
+    _canonical_score,
     extract_leading_titles,
     has_conflicting_gender_title,
     extract_surname_and_firstname,
@@ -164,6 +165,26 @@ def test_build_clusters_sempere_all_in_one():
     clusters, unclustered = build_clusters(entities, language="fr")
     assert len(clusters) == 1, f"Expected 1 cluster, got {len(clusters)}"
     assert set(clusters[0]["entity_ids"]) == {"e010", "e011", "e012", "e013"}
+
+
+def test_canonical_score_prefers_cased_over_all_caps():
+    """STU-701: at equal tokens/length, a cased form outranks an ALL-CAPS one."""
+    assert _canonical_score("Dorothy") > _canonical_score("DOROTHY")
+    assert _canonical_score("Land of Oz") > _canonical_score("LAND OF OZ")
+    # No cased tie → the all-caps form is not penalized away.
+    assert _canonical_score("DOROTHY")[:2] == _canonical_score("Dorothy")[:2]
+
+
+def test_build_clusters_canonical_is_not_all_caps():
+    """A small-caps chapter opener yields DOROTHY beside Dorothy; the page title
+    must be Dorothy even when the all-caps mention comes first (STU-701)."""
+    entities = {
+        "e001": {"type": "PERSON", "raw_mentions": ["DOROTHY"], "first_seen": "ch01"},
+        "e002": {"type": "PERSON", "raw_mentions": ["Dorothy"], "first_seen": "ch01"},
+    }
+    clusters, _ = build_clusters(entities, language="en")
+    assert len(clusters) == 1, f"Expected 1 cluster, got {len(clusters)}"
+    assert clusters[0]["canonical_candidate"] == "Dorothy"
 
 
 def test_build_clusters_different_types_dont_merge():
