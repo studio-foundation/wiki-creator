@@ -1,0 +1,532 @@
+[
+  {
+    "run": 1,
+    "date": "2026-07-28",
+    "providers": {
+      "generation": "claude-code/claude-sonnet-5",
+      "verdict_agents": "not inspected (pinned per-agent yaml, STU-624)",
+      "chapter_summaries": "ollama/qwen2.5 (book yaml override)"
+    },
+    "book": "01-the_wonderful_wizard_of_oz",
+    "pages_generated": 31,
+    "infobox_pct": 67.7,
+    "lang_fr_pct": 0.0,
+    "expected_language": "en (book output_language; lang_fr_pct is a contamination sniff, not a target)",
+    "alias_duplicates": 0,
+    "hallucinations": 0,
+    "gt_violations": [],
+    "gt_status": "n/a - no ground-truth corpus for l_frank_baum/oz series",
+    "coverage": {
+      "batch_entities": 31,
+      "pages_generated": 31,
+      "missing": [],
+      "failed": [
+        "Emerald City",
+        "Kansas",
+        "Munchkins",
+        "Land of Oz",
+        "Throne Room"
+      ],
+      "filtered_before_batch": 3
+    },
+    "weak_entities": {
+      "zero_relations": [
+        "Emerald City",
+        "Kansas",
+        "Winged Monkeys",
+        "Munchkins",
+        "Winkies",
+        "Land of Oz",
+        "Throne Room",
+        "Quadlings",
+        "Kalidahs",
+        "Palace",
+        "City of Emeralds",
+        "The",
+        "Land of the South",
+        "Mr. Joker",
+        "Hammer-Heads"
+      ],
+      "no_evidence_no_evolution_no_key_moments": [
+        "Dorothy",
+        "Toto",
+        "Scarecrow",
+        "Aunt Em",
+        "Uncle Henry",
+        "Tin Woodman",
+        "Cowardly Lion",
+        "Wicked Witch",
+        "Glinda",
+        "Queen",
+        "Quelala",
+        "King",
+        "Wizard",
+        "Gayelette",
+        "Guardian of the Gates",
+        "Boq"
+      ],
+      "note": "evidence/evolution/key_moments are null/empty on ALL relationships with rels>0 in this book (series-wide finding, see new_issues #2)"
+    },
+    "regression": {
+      "prefixed_keys": "pass",
+      "epub_ids": "pass",
+      "entity_type_null": "pass",
+      "alias_duplicates": "pass",
+      "cross_serie": "pass",
+      "evolution_quality": "fail",
+      "temporal_context": "pass",
+      "ground_truth": "n/a",
+      "page_generation": "fail"
+    },
+    "verdict": "31 pages, 5 failed generation (16.1%), full batch coverage, no cross-series/alias/infobox regressions; evidence/evolution/key_moments empty on all populated relationships.",
+    "new_issues": [
+      "generate_wiki_pages.py emits invalid JSON for long PLACE pages (studio_invalid_output) - recurring on Emerald City/Kansas/Land of Oz across most Oz books",
+      "evidence/evolution/key_moments always empty in relationship discovery output - 100% of relationships, all 6 Oz books"
+    ]
+  },
+  {
+    "run": 1,
+    "date": "2026-07-28",
+    "providers": {
+      "generation": "claude-code/claude-sonnet-5",
+      "verdict_agents": "not inspected (pinned per-agent yaml, STU-624)",
+      "chapter_summaries": "ollama/qwen2.5 (book yaml override)"
+    },
+    "book": "02-the_marvelous_land_of_oz",
+    "pages_generated": 29,
+    "infobox_pct": 69.0,
+    "lang_fr_pct": 3.4,
+    "expected_language": "en (book output_language; lang_fr_pct is a contamination sniff, not a target)",
+    "alias_duplicates": 0,
+    "hallucinations": 0,
+    "gt_violations": [],
+    "gt_status": "n/a - no ground-truth corpus for l_frank_baum/oz series",
+    "coverage": {
+      "batch_entities": 29,
+      "pages_generated": 29,
+      "missing": [],
+      "failed": [
+        "Land of Oz",
+        "Emerald City",
+        "His Majesty",
+        "Dorothy"
+      ],
+      "filtered_before_batch": 0
+    },
+    "weak_entities": {
+      "zero_relations": [
+        "Land of Oz",
+        "Winkies",
+        "Gillikins",
+        "Munchkins",
+        "Emerald City",
+        "His Majesty",
+        "Emperor",
+        "Gump",
+        "Journey",
+        "Quadlings",
+        "Field Mice"
+      ],
+      "no_evidence_no_evolution_no_key_moments": [
+        "Tip",
+        "Jack Pumpkinhead",
+        "Nick Chopper",
+        "Woggle-Bug",
+        "The Scarecrow",
+        "Glinda the Good",
+        "Old Mombi",
+        "General Jinjur",
+        "Wizard of Oz",
+        "Queen",
+        "Dorothy",
+        "Jackdaws",
+        "Captain",
+        "Pastoria",
+        "Saw-Horse",
+        "Guardian",
+        "Soldier with the Green Whiskers",
+        "Jellia Jamb"
+      ],
+      "note": "evidence/evolution/key_moments are null/empty on ALL relationships with rels>0 in this book (series-wide finding, see new_issues #2)"
+    },
+    "regression": {
+      "prefixed_keys": "pass",
+      "epub_ids": "pass",
+      "entity_type_null": "pass",
+      "alias_duplicates": "pass",
+      "cross_serie": "pass",
+      "evolution_quality": "fail",
+      "temporal_context": "pass",
+      "ground_truth": "n/a",
+      "page_generation": "fail"
+    },
+    "verdict": "29 pages, 4 failed generation (13.8%), full batch coverage, no cross-series/alias/infobox regressions; evidence/evolution/key_moments empty on all populated relationships.",
+    "new_issues": [
+      "generate_wiki_pages.py emits invalid JSON for long PLACE pages (studio_invalid_output) - recurring on Emerald City/Kansas/Land of Oz across most Oz books",
+      "evidence/evolution/key_moments always empty in relationship discovery output - 100% of relationships, all 6 Oz books"
+    ]
+  },
+  {
+    "run": 1,
+    "date": "2026-07-28",
+    "providers": {
+      "generation": "claude-code/claude-sonnet-5",
+      "verdict_agents": "not inspected (pinned per-agent yaml, STU-624)",
+      "chapter_summaries": "ollama/qwen2.5 (book yaml override)"
+    },
+    "book": "03-ozma_of_oz",
+    "pages_generated": 24,
+    "infobox_pct": 95.8,
+    "lang_fr_pct": 4.2,
+    "expected_language": "en (book output_language; lang_fr_pct is a contamination sniff, not a target)",
+    "alias_duplicates": 0,
+    "hallucinations": 0,
+    "gt_violations": [],
+    "gt_status": "n/a - no ground-truth corpus for l_frank_baum/oz series",
+    "coverage": {
+      "batch_entities": 24,
+      "pages_generated": 24,
+      "missing": [],
+      "failed": [],
+      "filtered_before_batch": 0
+    },
+    "weak_entities": {
+      "zero_relations": [
+        "Nomes",
+        "Emerald City",
+        "Australia",
+        "Land of Ev"
+      ],
+      "no_evidence_no_evolution_no_key_moments": [
+        "DOROTHY",
+        "Queen of Ev",
+        "Prince",
+        "Ozma",
+        "BILLINA",
+        "Nome King",
+        "King",
+        "Scarecrow",
+        "Tiktok",
+        "Evardo",
+        "Chief Steward",
+        "Cowardly Lion",
+        "Glinda the Good",
+        "Tin Woodman",
+        "Uncle Henry",
+        "Princess Langwidere",
+        "Tiger",
+        "Jinjur",
+        "Aunt Em",
+        "Evanna"
+      ],
+      "note": "evidence/evolution/key_moments are null/empty on ALL relationships with rels>0 in this book (series-wide finding, see new_issues #2)"
+    },
+    "regression": {
+      "prefixed_keys": "pass",
+      "epub_ids": "pass",
+      "entity_type_null": "pass",
+      "alias_duplicates": "pass",
+      "cross_serie": "pass",
+      "evolution_quality": "fail",
+      "temporal_context": "pass",
+      "ground_truth": "n/a",
+      "page_generation": "pass"
+    },
+    "verdict": "24 pages, 0 failed generation (0.0%), full batch coverage, no cross-series/alias/infobox regressions; evidence/evolution/key_moments empty on all populated relationships.",
+    "new_issues": [
+      "generate_wiki_pages.py emits invalid JSON for long PLACE pages (studio_invalid_output) - recurring on Emerald City/Kansas/Land of Oz across most Oz books",
+      "evidence/evolution/key_moments always empty in relationship discovery output - 100% of relationships, all 6 Oz books"
+    ]
+  },
+  {
+    "run": 1,
+    "date": "2026-07-28",
+    "providers": {
+      "generation": "claude-code/claude-sonnet-5",
+      "verdict_agents": "not inspected (pinned per-agent yaml, STU-624)",
+      "chapter_summaries": "ollama/qwen2.5 (book yaml override)"
+    },
+    "book": "04-dorothy_and_the_wizard_in_oz",
+    "pages_generated": 36,
+    "infobox_pct": 80.6,
+    "lang_fr_pct": 5.6,
+    "expected_language": "en (book output_language; lang_fr_pct is a contamination sniff, not a target)",
+    "alias_duplicates": 0,
+    "hallucinations": 0,
+    "gt_violations": [],
+    "gt_status": "n/a - no ground-truth corpus for l_frank_baum/oz series",
+    "coverage": {
+      "batch_entities": 36,
+      "pages_generated": 36,
+      "missing": [],
+      "failed": [
+        "Kansas",
+        "Valley of Voe",
+        "Emerald City",
+        "Land of Oz",
+        "Hugson's Ranch"
+      ],
+      "filtered_before_batch": 0
+    },
+    "weak_entities": {
+      "zero_relations": [
+        "Kansas",
+        "Valley of Voe",
+        "Emerald City",
+        "Land of Oz",
+        "Hugson's Ranch",
+        "Gargoyles",
+        "Rain of Stones",
+        "Black Pit",
+        "Champion",
+        "The",
+        "L. FRANK BAUM",
+        "Toto",
+        "Pyramid Mountain",
+        "Omaha",
+        "Land of the Mangaboos"
+      ],
+      "no_evidence_no_evolution_no_key_moments": [
+        "DOROTHY",
+        "Jim",
+        "Zeb",
+        "Eureka",
+        "Princess",
+        "WIZARD",
+        "Princess Ozma",
+        "Scarecrow",
+        "Uncle Henry",
+        "Sorcerer",
+        "Jellia Jamb",
+        "Prince",
+        "Billina",
+        "Tin Woodman",
+        "Sawhorse",
+        "Woggle-Bug",
+        "Nome King",
+        "Uncle Hugson",
+        "Hungry Tiger",
+        "Mombi",
+        "Munchkin"
+      ],
+      "note": "evidence/evolution/key_moments are null/empty on ALL relationships with rels>0 in this book (series-wide finding, see new_issues #2)"
+    },
+    "regression": {
+      "prefixed_keys": "pass",
+      "epub_ids": "pass",
+      "entity_type_null": "pass",
+      "alias_duplicates": "pass",
+      "cross_serie": "pass",
+      "evolution_quality": "fail",
+      "temporal_context": "pass",
+      "ground_truth": "n/a",
+      "page_generation": "fail"
+    },
+    "verdict": "36 pages, 5 failed generation (13.9%), full batch coverage, no cross-series/alias/infobox regressions; evidence/evolution/key_moments empty on all populated relationships.",
+    "new_issues": [
+      "generate_wiki_pages.py emits invalid JSON for long PLACE pages (studio_invalid_output) - recurring on Emerald City/Kansas/Land of Oz across most Oz books",
+      "evidence/evolution/key_moments always empty in relationship discovery output - 100% of relationships, all 6 Oz books"
+    ]
+  },
+  {
+    "run": 1,
+    "date": "2026-07-28",
+    "providers": {
+      "generation": "claude-code/claude-sonnet-5",
+      "verdict_agents": "not inspected (pinned per-agent yaml, STU-624)",
+      "chapter_summaries": "ollama/qwen2.5 (book yaml override)"
+    },
+    "book": "05-the_road_to_oz",
+    "pages_generated": 35,
+    "infobox_pct": 74.3,
+    "lang_fr_pct": 2.9,
+    "expected_language": "en (book output_language; lang_fr_pct is a contamination sniff, not a target)",
+    "alias_duplicates": 0,
+    "hallucinations": 0,
+    "gt_violations": [],
+    "gt_status": "n/a - no ground-truth corpus for l_frank_baum/oz series",
+    "coverage": {
+      "batch_entities": 35,
+      "pages_generated": 35,
+      "missing": [],
+      "failed": [
+        "Emerald City",
+        "LAND OF OZ",
+        "Kansas",
+        "The",
+        "Deadly Desert",
+        "Royal Palace"
+      ],
+      "filtered_before_batch": 4
+    },
+    "weak_entities": {
+      "zero_relations": [
+        "Emerald City",
+        "LAND OF OZ",
+        "Kansas",
+        "The",
+        "Deadly Desert",
+        "Royal Palace",
+        "TWINKLE",
+        "Dyna",
+        "Musicker",
+        "Winkies",
+        "Emperor",
+        "Knooks",
+        "Ryls"
+      ],
+      "no_evidence_no_evolution_no_key_moments": [
+        "Ozma",
+        "Wizard",
+        "Nick Chopper",
+        "Jack Pumpkinhead",
+        "King Bud of Noland",
+        "Dorothy",
+        "Button-Bright",
+        "Billina",
+        "Polly",
+        "Polychrome",
+        "Toto",
+        "Tik-tok",
+        "Johnny Dooit",
+        "Santa Claus",
+        "Scarecrow",
+        "Jellia Jamb",
+        "Princess",
+        "High Chamberlain",
+        "John Dough",
+        "Mombi",
+        "THE shaggy man",
+        "King Dox"
+      ],
+      "note": "evidence/evolution/key_moments are null/empty on ALL relationships with rels>0 in this book (series-wide finding, see new_issues #2)"
+    },
+    "regression": {
+      "prefixed_keys": "pass",
+      "epub_ids": "pass",
+      "entity_type_null": "pass",
+      "alias_duplicates": "pass",
+      "cross_serie": "pass",
+      "evolution_quality": "fail",
+      "temporal_context": "pass",
+      "ground_truth": "n/a",
+      "page_generation": "fail"
+    },
+    "verdict": "35 pages, 6 failed generation (17.1%), full batch coverage, no cross-series/alias/infobox regressions; evidence/evolution/key_moments empty on all populated relationships.",
+    "new_issues": [
+      "generate_wiki_pages.py emits invalid JSON for long PLACE pages (studio_invalid_output) - recurring on Emerald City/Kansas/Land of Oz across most Oz books",
+      "evidence/evolution/key_moments always empty in relationship discovery output - 100% of relationships, all 6 Oz books"
+    ]
+  },
+  {
+    "run": 1,
+    "date": "2026-07-28",
+    "providers": {
+      "generation": "claude-code/claude-sonnet-5",
+      "verdict_agents": "not inspected (pinned per-agent yaml, STU-624)",
+      "chapter_summaries": "ollama/qwen2.5 (book yaml override)"
+    },
+    "book": "06-the_emerald_city_of_oz",
+    "pages_generated": 47,
+    "infobox_pct": 57.4,
+    "lang_fr_pct": 4.3,
+    "expected_language": "en (book output_language; lang_fr_pct is a contamination sniff, not a target)",
+    "alias_duplicates": 0,
+    "hallucinations": 0,
+    "gt_violations": [],
+    "gt_status": "n/a - no ground-truth corpus for l_frank_baum/oz series",
+    "coverage": {
+      "batch_entities": 47,
+      "pages_generated": 47,
+      "missing": [],
+      "failed": [
+        "Emerald City",
+        "Land of Oz",
+        "Kansas",
+        "Flutterbudgets",
+        "Chief of the Whimsies",
+        "Billina",
+        "BUNNYBURY",
+        "FUDDLECUMJIG",
+        "Bunbury",
+        "Fuddles",
+        "Utensia",
+        "Forbidden Fountain",
+        "Rigmarole Town",
+        "Rigmaroles",
+        "Water of Oblivion"
+      ],
+      "filtered_before_batch": 2
+    },
+    "weak_entities": {
+      "zero_relations": [
+        "Emerald City",
+        "Land of Oz",
+        "Nomes",
+        "Growleywogs",
+        "Phanfasms",
+        "Kansas",
+        "Flutterbudgets",
+        "Chief of the Whimsies",
+        "BUNNYBURY",
+        "FUDDLECUMJIG",
+        "Bunbury",
+        "Fuddles",
+        "Utensia",
+        "Princess",
+        "Forbidden Fountain",
+        "Rigmarole Town",
+        "Rigmaroles",
+        "Water of Oblivion",
+        "Winkies",
+        "Munchkins"
+      ],
+      "no_evidence_no_evolution_no_key_moments": [
+        "Roquat",
+        "Dorothy",
+        "General Guph",
+        "Glinda the Good",
+        "Ozma",
+        "King",
+        "Wizard",
+        "Aunt Em",
+        "Billina",
+        "Uncle Henry",
+        "Shaggy Man",
+        "Omby Amby",
+        "Keeper of the Wicket",
+        "Lord High Chigglewitz",
+        "Nick Chopper",
+        "Pop Over",
+        "Scarecrow",
+        "Toto",
+        "Captain",
+        "Jack Pumpkinhead",
+        "Grand Gallipoot",
+        "Grandmother Gnit",
+        "Mr. Bunn",
+        "Emperor",
+        "Tiktok",
+        "Judge Sifter",
+        "Blinkem"
+      ],
+      "note": "evidence/evolution/key_moments are null/empty on ALL relationships with rels>0 in this book (series-wide finding, see new_issues #2)"
+    },
+    "regression": {
+      "prefixed_keys": "pass",
+      "epub_ids": "pass",
+      "entity_type_null": "pass",
+      "alias_duplicates": "pass",
+      "cross_serie": "pass",
+      "evolution_quality": "fail",
+      "temporal_context": "pass",
+      "ground_truth": "n/a",
+      "page_generation": "fail"
+    },
+    "verdict": "47 pages, 15 failed generation (31.9%), full batch coverage, no cross-series/alias/infobox regressions; evidence/evolution/key_moments empty on all populated relationships.",
+    "new_issues": [
+      "generate_wiki_pages.py emits invalid JSON for long PLACE pages (studio_invalid_output) - recurring on Emerald City/Kansas/Land of Oz across most Oz books",
+      "evidence/evolution/key_moments always empty in relationship discovery output - 100% of relationships, all 6 Oz books"
+    ]
+  }
+]
