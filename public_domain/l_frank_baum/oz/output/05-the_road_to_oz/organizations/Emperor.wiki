@@ -1,0 +1,20 @@
+{{Infobox organization
+|name=Emperor
+|affiliation=tin castle
+|status=Active
+|nom=Emperor
+|apparition=Appears in book 5
+}}
+
+== Infobox ==
+
+* Name: Emperor
+* Affiliation: tin castle
+* Status: Active
+
+== Biography ==
+
+The Emperor rules from a tin castle whose furniture, floors, and walls are all made of brightly polished tin, a detail he takes pride in showing visitors. He dresses only in tin himself and offers hospitality to guests, inviting them to prepare for dinner served in his grand tin dining-hall.
+
+[[Category:Organizations]]
+[[Category:Organizations of Book 5]]
