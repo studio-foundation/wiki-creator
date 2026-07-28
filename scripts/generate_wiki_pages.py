@@ -101,7 +101,10 @@ _MIN_CONTENT_CHARS_WARNING = 80  # warn when LLM output is suspiciously short bu
 _ANTI_REPEAT_SECTIONS = frozenset({"personality", "physical", "powers", "trivia"})
 
 # Language-neutral: an angle-bracket token leaked from the prompt (`<if known>`).
-_ANGLE_PLACEHOLDER = re.compile(r"<[^>\n]{1,80}>")
+# STU-699: `<references/>` and `<ref>` are wikitext the prompt explicitly ORDERS
+# the model to emit (references_rule), so matching them rejected every
+# single-shot page that actually reached its References section.
+_ANGLE_PLACEHOLDER = re.compile(r"<(?!/?ref(?:erences)?[\s/>])[^>\n]{1,80}>", re.IGNORECASE)
 
 
 def _placeholder_patterns(lang: str) -> tuple[re.Pattern, ...]:

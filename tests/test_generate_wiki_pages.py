@@ -568,6 +568,38 @@ def test_contains_template_placeholder_detects_marker_in_infobox():
     assert _contains_template_placeholder(page) is True
 
 
+# STU-699: `references_rule` orders the model to emit `<references/>`, so the
+# angle-bracket placeholder detector must not read it back as a prompt leak —
+# it failed every single-shot page (PLACE/ORG/EVENT) that reached that section.
+@pytest.mark.parametrize(
+    "markup",
+    [
+        "<references/>",
+        "<references />",
+        "<ref>Le Magicien d'Oz, chapitre 3</ref>",
+        '<ref name="ch3">Le Magicien d\'Oz</ref>',
+    ],
+)
+def test_contains_template_placeholder_accepts_wikitext_ref_markup(markup):
+    page = {"content": f"## Biographie\n\nTexte.\n\n## Références\n\n{markup}", "infobox_fields": {}}
+    assert _contains_template_placeholder(page) is False
+
+
+def test_parse_response_keeps_page_with_references_backmatter():
+    raw = json.dumps(
+        {
+            "title": "Cité d'Émeraude",
+            "importance": "principal",
+            "entity_type": "PLACE",
+            "infobox_fields": {"type": "ville"},
+            "content": "## Biographie\n\nUne ville verte.\n\n## Références\n\n<references/>",
+        }
+    )
+    page = parse_response(raw, _entity())
+    assert page.get("_failed") is not True
+    assert "<references/>" in page["content"]
+
+
 def test_extract_stage_output_from_run_payload_reads_successful_stage_output() -> None:
     run_payload = {
         "id": "run-123",
