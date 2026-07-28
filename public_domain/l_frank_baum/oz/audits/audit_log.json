@@ -81,7 +81,8 @@
     "verdict": "31 pages, 5 failed generation (16.1%), full batch coverage, no cross-series/alias/infobox regressions; evidence/evolution/key_moments empty on all populated relationships.",
     "new_issues": [
       "generate_wiki_pages.py emits invalid JSON for long PLACE pages (studio_invalid_output) - recurring on Emerald City/Kansas/Land of Oz across most Oz books",
-      "evidence/evolution/key_moments always empty in relationship discovery output - 100% of relationships, all 6 Oz books"
+      "evidence/evolution/key_moments always empty in relationship discovery output - 100% of relationships, all 6 Oz books",
+      "extraction junk / casing artifacts surface as named entities - 'The' (books 01/04/05), 'L. FRANK BAUM' extracted from the copyright page (book 04), and all-caps canonical variants (DOROTHY / WIZARD / BILLINA / LAND OF OZ / TWINKLE / 'THE shaggy man') - stopword + copyright-boilerplate + small-caps normalization gap in extraction/classification"
     ]
   },
   {
@@ -163,7 +164,8 @@
     "verdict": "29 pages, 4 failed generation (13.8%), full batch coverage, no cross-series/alias/infobox regressions; evidence/evolution/key_moments empty on all populated relationships.",
     "new_issues": [
       "generate_wiki_pages.py emits invalid JSON for long PLACE pages (studio_invalid_output) - recurring on Emerald City/Kansas/Land of Oz across most Oz books",
-      "evidence/evolution/key_moments always empty in relationship discovery output - 100% of relationships, all 6 Oz books"
+      "evidence/evolution/key_moments always empty in relationship discovery output - 100% of relationships, all 6 Oz books",
+      "extraction junk / casing artifacts surface as named entities - 'The' (books 01/04/05), 'L. FRANK BAUM' extracted from the copyright page (book 04), and all-caps canonical variants (DOROTHY / WIZARD / BILLINA / LAND OF OZ / TWINKLE / 'THE shaggy man') - stopword + copyright-boilerplate + small-caps normalization gap in extraction/classification"
     ]
   },
   {
@@ -235,7 +237,8 @@
     "verdict": "24 pages, 0 failed generation (0.0%), full batch coverage, no cross-series/alias/infobox regressions; evidence/evolution/key_moments empty on all populated relationships.",
     "new_issues": [
       "generate_wiki_pages.py emits invalid JSON for long PLACE pages (studio_invalid_output) - recurring on Emerald City/Kansas/Land of Oz across most Oz books",
-      "evidence/evolution/key_moments always empty in relationship discovery output - 100% of relationships, all 6 Oz books"
+      "evidence/evolution/key_moments always empty in relationship discovery output - 100% of relationships, all 6 Oz books",
+      "extraction junk / casing artifacts surface as named entities - 'The' (books 01/04/05), 'L. FRANK BAUM' extracted from the copyright page (book 04), and all-caps canonical variants (DOROTHY / WIZARD / BILLINA / LAND OF OZ / TWINKLE / 'THE shaggy man') - stopword + copyright-boilerplate + small-caps normalization gap in extraction/classification"
     ]
   },
   {
@@ -325,7 +328,8 @@
     "verdict": "36 pages, 5 failed generation (13.9%), full batch coverage, no cross-series/alias/infobox regressions; evidence/evolution/key_moments empty on all populated relationships.",
     "new_issues": [
       "generate_wiki_pages.py emits invalid JSON for long PLACE pages (studio_invalid_output) - recurring on Emerald City/Kansas/Land of Oz across most Oz books",
-      "evidence/evolution/key_moments always empty in relationship discovery output - 100% of relationships, all 6 Oz books"
+      "evidence/evolution/key_moments always empty in relationship discovery output - 100% of relationships, all 6 Oz books",
+      "extraction junk / casing artifacts surface as named entities - 'The' (books 01/04/05), 'L. FRANK BAUM' extracted from the copyright page (book 04), and all-caps canonical variants (DOROTHY / WIZARD / BILLINA / LAND OF OZ / TWINKLE / 'THE shaggy man') - stopword + copyright-boilerplate + small-caps normalization gap in extraction/classification"
     ]
   },
   {
@@ -415,7 +419,8 @@
     "verdict": "35 pages, 6 failed generation (17.1%), full batch coverage, no cross-series/alias/infobox regressions; evidence/evolution/key_moments empty on all populated relationships.",
     "new_issues": [
       "generate_wiki_pages.py emits invalid JSON for long PLACE pages (studio_invalid_output) - recurring on Emerald City/Kansas/Land of Oz across most Oz books",
-      "evidence/evolution/key_moments always empty in relationship discovery output - 100% of relationships, all 6 Oz books"
+      "evidence/evolution/key_moments always empty in relationship discovery output - 100% of relationships, all 6 Oz books",
+      "extraction junk / casing artifacts surface as named entities - 'The' (books 01/04/05), 'L. FRANK BAUM' extracted from the copyright page (book 04), and all-caps canonical variants (DOROTHY / WIZARD / BILLINA / LAND OF OZ / TWINKLE / 'THE shaggy man') - stopword + copyright-boilerplate + small-caps normalization gap in extraction/classification"
     ]
   },
   {
@@ -526,7 +531,8 @@
     "verdict": "47 pages, 15 failed generation (31.9%), full batch coverage, no cross-series/alias/infobox regressions; evidence/evolution/key_moments empty on all populated relationships.",
     "new_issues": [
       "generate_wiki_pages.py emits invalid JSON for long PLACE pages (studio_invalid_output) - recurring on Emerald City/Kansas/Land of Oz across most Oz books",
-      "evidence/evolution/key_moments always empty in relationship discovery output - 100% of relationships, all 6 Oz books"
+      "evidence/evolution/key_moments always empty in relationship discovery output - 100% of relationships, all 6 Oz books",
+      "extraction junk / casing artifacts surface as named entities - 'The' (books 01/04/05), 'L. FRANK BAUM' extracted from the copyright page (book 04), and all-caps canonical variants (DOROTHY / WIZARD / BILLINA / LAND OF OZ / TWINKLE / 'THE shaggy man') - stopword + copyright-boilerplate + small-caps normalization gap in extraction/classification"
     ]
   }
 ]
