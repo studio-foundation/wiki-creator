@@ -1,5 +1,5 @@
 from pathlib import Path
-from wiki_creator.paths import book_paths_from_epub, book_paths_from_yaml
+from wiki_creator.paths import book_paths_from_epub, book_paths_from_yaml, series_output_dir
 
 def test_book_paths_from_epub():
     paths = book_paths_from_epub("library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.epub")
@@ -31,3 +31,17 @@ def test_book_registry_delta_path():
     assert paths.book_registry_delta == Path(
         "library/sarah_j_maas/throne-of-glass/processing_output/01-throne-of-glass/registry_delta.json"
     )
+
+
+def test_series_output_dir():
+    """STU-705: series-scoped published wiki, sibling of per-tome output/<slug>/."""
+    assert series_output_dir("library/sarah_j_maas/throne-of-glass") == Path(
+        "library/sarah_j_maas/throne-of-glass/output/_series"
+    )
+
+
+def test_series_output_matches_across_tome_and_series_dir():
+    """The BookPaths property and the standalone deriver agree for any tome."""
+    paths = book_paths_from_yaml("library/sarah_j_maas/throne-of-glass/books/01-throne-of-glass.yaml")
+    assert paths.series_output == Path("library/sarah_j_maas/throne-of-glass/output/_series")
+    assert paths.series_output == series_output_dir("library/sarah_j_maas/throne-of-glass")
