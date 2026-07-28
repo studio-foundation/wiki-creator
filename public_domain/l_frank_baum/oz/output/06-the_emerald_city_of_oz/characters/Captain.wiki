@@ -1,0 +1,12 @@
+{{Infobox character
+|nom=Captain
+|apparition=Appears in book 6
+|status=Alive
+}}
+
+== Biography ==
+
+The Captain leads a group of captives through a crowd to a range at the center of a clearing, beside which stands a butcher block with a large cleaver. He wakes a sleeping figure addressed as "your Majesty," announcing, "Here are prisoners." When questioned about a girl among the captives, the Captain states he found her in the forest and brought her back as a prisoner.
+
+[[Category:Characters]]
+[[Category:Characters of Book 6]]
