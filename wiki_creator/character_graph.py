@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict, dataclass, field
+from typing import cast
 
 import networkx as nx
 
@@ -40,7 +41,7 @@ class CharacterGraph:
                 f"(got keys: {set(data.keys())})"
             )
         g = cls()
-        g._g = nx.node_link_graph(data, edges="links")
+        g._g = cast(nx.DiGraph, nx.node_link_graph(data, edges="links"))
         return g
 
     # ── Mutations ──────────────────────────────────────────────────────────
