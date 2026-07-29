@@ -334,6 +334,102 @@ def _build_toc_title_map(toc, parent_title: str = "") -> dict:
     return result
 
 
+def _build_toc_fragment_map(toc) -> dict:
+    """Map each spine filename to the TOC's in-file `#fragment` anchors, in order.
+
+    `_build_toc_title_map` keeps only the file half of every href; this keeps the
+    fragment half it discards. A publisher that packs many chapters into one spine
+    item declares their boundaries here — one TOC entry per chapter, each a
+    `file.xhtml#anchor` into the shared file (STU-727). A TOC that points only at
+    whole files (every commercial EPUB in the library) yields an empty map, and
+    nothing splits.
+    """
+    result: dict[str, list[tuple[str, str]]] = {}
+
+    def walk(items):
+        for item in items:
+            if isinstance(item, tuple):
+                section, children = item
+                walk([section])
+                walk(children)
+                continue
+            href = item.href or ''
+            if '#' not in href:
+                continue
+            filename, fragment = href.split('#', 1)
+            if not fragment:
+                continue
+            result.setdefault(os.path.basename(filename), []).append((fragment, item.title or ''))
+
+    walk(toc)
+    return result
+
+
+# A split marker planted before each anchor: a Private Use codepoint never occurs
+# in prose, is non-whitespace (so get_text(strip=True) keeps it as its own string),
+# and clean_chapter_text — which runs per segment, after the split — never sees it.
+_SPLIT_MARK = ''
+
+
+def _clears_min_chars(cleaned: str) -> bool:
+    """The MIN_CHAPTER_CHARS gate: prose length, not structure (STU-523)."""
+    return len(cleaned) - cleaned.count('\n\n') >= MIN_CHAPTER_CHARS
+
+
+def _resolve_anchors_in_order(soup, fragments: list) -> list:
+    """The declared fragments that resolve to an element, in document order.
+
+    `find_all(id=True)` yields elements in document order, so this is robust to
+    anchors nested at different depths (Oz packs some in a `<div>`) — the marker
+    lands wherever the anchor sits, and get_text reads the same order.
+    """
+    wanted = {fragment for fragment, _ in fragments}
+    ordered, seen = [], set()
+    for el in soup.find_all(id=True):
+        fid = el.get('id')
+        if fid in wanted and fid not in seen:
+            ordered.append((el, fid))
+            seen.add(fid)
+    return ordered
+
+
+def _split_item_chapters(soup, item, fragments: list) -> list:
+    """Split one spine item into a chapter per resolving TOC anchor (STU-727).
+
+    Plant a marker before each anchor in document order, run the text pipeline
+    once, then split the flat text on the marker: segment 0 is the front matter
+    before the first anchor, segments 1..N align with the anchors. Titles come
+    from the TOC entry (the anchor's own heading, on the Gutenberg books).
+    """
+    ordered = _resolve_anchors_in_order(soup, fragments)
+    if not ordered:
+        return []
+    title_of: dict[str, str] = {}
+    for fragment, title in fragments:
+        title_of.setdefault(fragment, title)
+
+    lead_title = _extract_chapter_title(soup, item, {})
+    for el, _fid in ordered:
+        el.insert_before(_SPLIT_MARK)
+    _mark_paragraph_breaks(soup)
+    segments = soup.get_text(separator="\n", strip=True).split(_SPLIT_MARK)
+
+    chapters = []
+    lead = clean_chapter_text(segments[0])
+    if _clears_min_chars(lead):
+        chapters.append({"id": item.get_id(), "title": lead_title, "content": lead})
+    for (el, fid), segment in zip(ordered, segments[1:]):
+        cleaned = clean_chapter_text(segment)
+        if not _clears_min_chars(cleaned):
+            continue
+        chapters.append({
+            "id": f"{item.get_id()}#{fid}",
+            "title": title_of.get(fid) or fid,
+            "content": cleaned,
+        })
+    return chapters
+
+
 def _extract_chapter_title(soup, item, toc_titles: dict) -> str:
     """Find the best human-readable title for a chapter item."""
     name = item.get_name()
@@ -385,6 +481,7 @@ def parse_epub(file_path: str, language: str = "fr", max_chapters: int | None = 
     author = author[0][0] if author else None
 
     toc_titles = _build_toc_title_map(book.toc)
+    toc_fragments = _build_toc_fragment_map(book.toc)
 
     # Use EPUB spine order (the official reading order).
     spine_ids = [item_id for item_id, _ in book.spine]
@@ -401,6 +498,14 @@ def parse_epub(file_path: str, language: str = "fr", max_chapters: int | None = 
         soup = BeautifulSoup(item.get_content(), "html.parser")
         _flatten_inline_markup(soup)
         _merge_block_dropcaps(soup)
+        # A spine item the TOC declares fragment anchors in holds several chapters;
+        # split it at those publisher-declared boundaries (STU-727).
+        fragments = toc_fragments.get(os.path.basename(item.get_name()))
+        if fragments:
+            split = _split_item_chapters(soup, item, fragments)
+            if split:
+                chapters.extend(split)
+                continue
         chapter_title = _extract_chapter_title(soup, item, toc_titles)
         _mark_paragraph_breaks(soup)
         raw_text = soup.get_text(separator="\n", strip=True)
@@ -408,7 +513,7 @@ def parse_epub(file_path: str, language: str = "fr", max_chapters: int | None = 
         # The bar gates prose, so it must not count structure: \n\n is one char
         # wider than the space it replaced, and on 01_eragon.epub that alone was
         # enough to lift seven boilerplate pages over it (STU-523).
-        if len(cleaned) - cleaned.count('\n\n') < MIN_CHAPTER_CHARS:
+        if not _clears_min_chars(cleaned):
             continue
         chapters.append({
             "id": item.get_id(),

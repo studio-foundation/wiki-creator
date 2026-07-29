@@ -738,3 +738,167 @@ def test_gutenberg_start_marker_matches_this_variant_case_insensitively():
     ]
     result = strip_gutenberg_boilerplate(chapters)
     assert result[0]["content"] == "Story."
+
+
+# --- Splitting a many-chapter spine item at TOC fragment anchors (STU-727) ---
+
+
+def _packed_epub(tmp_path, *, wrap_in_div=False, lead_paragraphs=0, fragment_toc=True):
+    """One spine item holding several chapters, boundaries declared in the TOC.
+
+    The shape `tests/fixtures/e2e/` cannot cover — its whole point is one XHTML per
+    chapter. Every Project Gutenberg EPUB packs a dozen chapters into one file and
+    separates them only with `file.xhtml#anchor` TOC entries.
+    """
+    from ebooklib import epub
+
+    book = epub.EpubBook()
+    book.set_identifier("packed")
+    book.set_title("Packed Book")
+    book.set_language("en")
+
+    titles = ["The First Day", "The Second Day", "The Third Day"]
+    body = "<html><body>"
+    body += "".join(
+        f"<p>Front matter paragraph {j} that is long enough on its own.</p>"
+        for j in range(lead_paragraphs)
+    )
+    for i, name in enumerate(titles, start=1):
+        heading = f'<h2 id="ch{i}">Chapter {i}. {name}</h2>'
+        paras = "".join(
+            f"<p>Chapter {i} paragraph {j}, with plenty of words to clear the length bar.</p>"
+            for j in range(4)
+        )
+        chunk = heading + paras
+        if wrap_in_div:
+            chunk = f'<div class="section">{chunk}</div>'
+        body += chunk
+    body += "</body></html>"
+
+    item = epub.EpubHtml(uid="packed", title="Packed", file_name="chapters.xhtml", lang="en")
+    item.set_content(body.encode())
+    book.add_item(item)
+    book.spine = [item]
+    if fragment_toc:
+        book.toc = [epub.Link(f"chapters.xhtml#ch{i}", f"Chapter {i}", f"ch{i}") for i in range(1, 4)]
+    else:
+        book.toc = (item,)
+    book.add_item(epub.EpubNcx())
+    book.add_item(epub.EpubNav())
+
+    path = str(tmp_path / "packed.epub")
+    epub.write_epub(path, book)
+    return path
+
+
+def test_packed_item_splits_at_fragment_anchors(tmp_path):
+    """A spine item the TOC declares fragments in becomes one chapter per anchor."""
+    from scripts.parse_epub import parse_epub
+
+    chapters = parse_epub(_packed_epub(tmp_path), language="en")["chapters"]
+    assert [c["id"] for c in chapters] == ["packed#ch1", "packed#ch2", "packed#ch3"]
+    assert [c["title"] for c in chapters] == ["Chapter 1", "Chapter 2", "Chapter 3"]
+    assert chapters[0]["content"].startswith("Chapter 1. The First Day")
+    assert chapters[1]["content"].startswith("Chapter 2. The Second Day")
+    # No text bleeds across the boundary.
+    assert "Second Day" not in chapters[0]["content"]
+
+
+def test_packed_item_split_preserves_all_prose(tmp_path):
+    """Splitting partitions the text; it never drops or duplicates prose."""
+    from scripts.parse_epub import parse_epub
+
+    chapters = parse_epub(_packed_epub(tmp_path), language="en")["chapters"]
+    for i, ch in enumerate(chapters, start=1):
+        assert ch["content"].count(f"Chapter {i} paragraph 3") == 1
+    assert len(chapters) == 3
+
+
+def test_packed_item_split_carries_paragraph_structure(tmp_path):
+    """Each split chapter keeps its \\n\\n block boundaries (STU-523 holds)."""
+    from scripts.parse_epub import parse_epub
+
+    first = parse_epub(_packed_epub(tmp_path), language="en")["chapters"][0]
+    blocks = first["content"].split("\n\n")
+    assert blocks[0] == "Chapter 1. The First Day"
+    assert len(blocks) == 5  # heading + 4 paragraphs
+
+
+def test_packed_item_splits_even_when_anchors_are_nested(tmp_path):
+    """Oz wraps some anchors in a <div>; document-order marking still splits right."""
+    from scripts.parse_epub import parse_epub
+
+    chapters = parse_epub(_packed_epub(tmp_path, wrap_in_div=True), language="en")["chapters"]
+    assert [c["id"] for c in chapters] == ["packed#ch1", "packed#ch2", "packed#ch3"]
+    assert chapters[1]["content"].startswith("Chapter 2. The Second Day")
+    assert "Second Day" not in chapters[0]["content"]
+
+
+def test_packed_item_keeps_substantial_front_matter_before_first_anchor(tmp_path):
+    """Content before the first anchor is its own leading chapter when it has heft."""
+    from scripts.parse_epub import parse_epub
+
+    chapters = parse_epub(_packed_epub(tmp_path, lead_paragraphs=3), language="en")["chapters"]
+    assert chapters[0]["id"] == "packed"  # the anchorless lead keeps the item id
+    assert "Front matter paragraph 0" in chapters[0]["content"]
+    assert [c["id"] for c in chapters[1:]] == ["packed#ch1", "packed#ch2", "packed#ch3"]
+
+
+def test_fragment_free_toc_is_left_untouched(tmp_path):
+    """A TOC pointing at whole files (every library EPUB) never splits — one
+    chapter per spine item, the pre-STU-727 path, byte-for-byte."""
+    from scripts.parse_epub import parse_epub
+
+    chapters = parse_epub(_packed_epub(tmp_path, fragment_toc=False), language="en")["chapters"]
+    assert len(chapters) == 1
+    assert chapters[0]["id"] == "packed"
+
+
+def test_declared_anchors_that_do_not_resolve_fall_back_to_whole_item(tmp_path):
+    """A TOC fragment naming no element in the file leaves the item whole."""
+    from ebooklib import epub
+    from scripts.parse_epub import parse_epub
+
+    book = epub.EpubBook()
+    book.set_title("Ghost Anchors")
+    book.set_language("en")
+    item = epub.EpubHtml(uid="only", title="Only", file_name="chapters.xhtml", lang="en")
+    item.set_content(
+        ("<html><body><h1>Story</h1><p>" + "word " * 60 + "</p></body></html>").encode()
+    )
+    book.add_item(item)
+    book.spine = [item]
+    book.toc = [epub.Link("chapters.xhtml#missing", "Ghost", "ghost")]
+    book.add_item(epub.EpubNcx())
+    book.add_item(epub.EpubNav())
+    path = str(tmp_path / "ghost.epub")
+    epub.write_epub(path, book)
+
+    chapters = parse_epub(path, language="en")["chapters"]
+    assert len(chapters) == 1
+    assert chapters[0]["id"] == "only"
+
+
+def test_build_toc_fragment_map_keeps_only_in_file_fragments():
+    """The map carries `#fragment` hrefs, in order, keyed by filename; whole-file
+    hrefs (what `_build_toc_title_map` handles) are absent."""
+    from scripts.parse_epub import _build_toc_fragment_map
+
+    class _Link:
+        def __init__(self, href, title):
+            self.href, self.title = href, title
+
+    toc = [
+        _Link("front.xhtml", "Front matter"),
+        _Link("body.xhtml#c1", "Chapter 1"),
+        _Link("body.xhtml#c2", "Chapter 2"),
+        (_Link("body.xhtml#part", "Part One"), [_Link("body.xhtml#c3", "Chapter 3")]),
+    ]
+    result = _build_toc_fragment_map(toc)
+    assert "front.xhtml" not in result
+    assert result["body.xhtml"] == [
+        ("c1", "Chapter 1"),
+        ("c2", "Chapter 2"),
+        ("part", "Part One"),
+        ("c3", "Chapter 3"),
+    ]
