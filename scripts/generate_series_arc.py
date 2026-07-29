@@ -24,7 +24,12 @@ from pathlib import Path
 
 import yaml
 
-from scripts.generate_wiki_pages import _execute_wiki_page_item, load_book_title
+from scripts.generate_wiki_pages import (
+    _execute_wiki_page_item,
+    load_book_title,
+    page_from_map_result,
+    wiki_pages_map_item,
+)
 from wiki_creator import studio_io
 from wiki_creator.page_templates import output_language
 from wiki_creator.paths import book_paths_from_yaml
@@ -128,16 +133,17 @@ def build_arc_inputs(series_dir: Path | str) -> ArcInputs | None:
     return ArcInputs(prompt=prompt, lang=lang, cache_path=series_dir / CACHE_FILENAME)
 
 
-def generate_arc(prompt: str, *, lang: str, timeout: int = 120) -> str | None:
-    """One arc paragraph from the prompt, via the wiki-page-item pipeline. None on
-    a generation failure — the hub then renders its deterministic frame without an
-    arc (STU-707), which is the safe reader-facing default."""
-    entity = {
+def arc_entity() -> dict:
+    """The synthetic entity the wiki-page-item machinery binds the generation to."""
+    return {
         "canonical_name": ARC_TITLE,
         "importance": ARC_IMPORTANCE,
         "type": ARC_ENTITY_TYPE,
     }
-    item_input = {
+
+
+def arc_item_input(prompt: str, lang: str) -> dict:
+    return {
         "title": ARC_TITLE,
         "importance": ARC_IMPORTANCE,
         "entity_type": ARC_ENTITY_TYPE,
@@ -145,15 +151,32 @@ def generate_arc(prompt: str, *, lang: str, timeout: int = 120) -> str | None:
         "language": lang,
         "prompt": prompt,
     }
-    result = _execute_wiki_page_item(item_input, entity, timeout)
+
+
+def _arc_from_result(result: dict) -> str | None:
+    """The arc as the hub injects it, or None on a generation failure — the hub
+    then renders its deterministic frame without an arc (STU-707), which is the
+    safe reader-facing default."""
     if result.get("error"):
         print(f"[series-arc] generation failed: {result['error']}", file=sys.stderr)
+        raw = str(result.get("raw_response", "") or "").strip()
+        if raw:
+            print(f"[series-arc] {raw[-1000:]}", file=sys.stderr)
         return None
     arc = clean_arc(result.get("content", ""))
     if not arc:
         print("[series-arc] generation returned no prose", file=sys.stderr)
         return None
     return arc
+
+
+def generate_arc(prompt: str, *, lang: str, timeout: int = 120) -> str | None:
+    """One arc paragraph from the prompt, via a nested `studio run` — the
+    standalone `--series` path only. Inside `wiki-series` the call is the native
+    `series-arc-verdict` stage (STU-720)."""
+    return _arc_from_result(
+        _execute_wiki_page_item(arc_item_input(prompt, lang), arc_entity(), timeout)
+    )
 
 
 def run_for_series(
@@ -188,6 +211,71 @@ def run_for_series(
         return None
     save_arc_cache(inputs.cache_path, key, arc)
     print(f"[series-arc] wrote arc to {inputs.cache_path}", file=sys.stderr)
+    return arc
+
+
+VERDICT_STAGE = "series-arc-verdict"
+
+
+def _arc_map_result(payload: dict) -> dict | None:
+    """The arc's result from the `series-arc-verdict` call's map output."""
+    verdict = payload.get("all_stage_outputs", {}).get(VERDICT_STAGE)
+    if verdict is None:
+        verdict = payload.get("previous_outputs", {}).get(VERDICT_STAGE)
+    if not isinstance(verdict, dict):
+        return None
+    for result in verdict.get("results") or []:
+        if isinstance(result, dict) and result.get("index") == 0:
+            return result
+    return None
+
+
+def run_pre(payload: dict) -> dict:
+    """Studio pre stage (STU-720): the one `wiki-pages` map item for the arc.
+
+    `needs_verdict` is false when no tome carries material to ground an arc on,
+    or when the cached arc still matches its inputs — the call is then
+    condition-skipped and the post half replays the cache.
+    """
+    series_dir = studio_io.paths_from_payload(payload).series_dir
+    inputs = build_arc_inputs(series_dir)
+    if inputs is None:
+        print(
+            "[series-arc] no tome carries a synopsis or events — skipping arc",
+            file=sys.stderr,
+        )
+        return {"items": [], "prompt_fingerprint": "", "needs_verdict": False}
+
+    fingerprint = arc_prompt_fingerprint()
+    if load_cached_arc(inputs.cache_path, arc_cache_key(inputs.prompt, fingerprint)):
+        print(f"[series-arc] cache hit — {inputs.cache_path}", file=sys.stderr)
+        return {"items": [], "prompt_fingerprint": "", "needs_verdict": False}
+
+    return {
+        "items": [wiki_pages_map_item(arc_item_input(inputs.prompt, inputs.lang), attempt=1)],
+        "prompt_fingerprint": fingerprint,
+        "needs_verdict": True,
+    }
+
+
+def arc_from_payload(payload: dict) -> str | None:
+    """Studio post half (STU-720): the arc from the `series-arc-verdict` map
+    output, cached on disk. Serves the cache when the call was condition-skipped."""
+    inputs = build_arc_inputs(studio_io.paths_from_payload(payload).series_dir)
+    if inputs is None:
+        return None
+
+    key = arc_cache_key(inputs.prompt, arc_prompt_fingerprint())
+    cached = load_cached_arc(inputs.cache_path, key)
+    if cached:
+        return cached
+
+    arc = _arc_from_result(
+        page_from_map_result(_arc_map_result(payload), arc_entity(), inputs.lang)
+    )
+    if arc:
+        save_arc_cache(inputs.cache_path, key, arc)
+        print(f"[series-arc] wrote arc to {inputs.cache_path}", file=sys.stderr)
     return arc
 
 

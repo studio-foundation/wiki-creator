@@ -115,8 +115,13 @@ def _fake_hf_modules(monkeypatch, from_pretrained):
 
     hf = ModuleType("huggingface_hub.constants")
     hf.HF_HUB_OFFLINE = False
+    hf.session_resets = []
     hf_pkg = ModuleType("huggingface_hub")
     hf_pkg.constants = hf
+    utils = ModuleType("huggingface_hub.utils")
+    http = ModuleType("huggingface_hub.utils._http")
+    http.reset_sessions = lambda: hf.session_resets.append(hf.HF_HUB_OFFLINE)
+    utils._http = http
 
     gliner = ModuleType("gliner")
     gliner.GLiNER = type("GLiNER", (), {"from_pretrained": staticmethod(from_pretrained)})
@@ -125,6 +130,8 @@ def _fake_hf_modules(monkeypatch, from_pretrained):
         ("gliner", gliner),
         ("huggingface_hub", hf_pkg),
         ("huggingface_hub.constants", hf),
+        ("huggingface_hub.utils", utils),
+        ("huggingface_hub.utils._http", http),
     ]:
         monkeypatch.setitem(sys.modules, name, mod)
     return hf
@@ -165,6 +172,25 @@ def test_load_falls_back_to_network_on_a_cache_miss(monkeypatch):
     assert _from_pretrained_offline_first("m") == "MODEL"
     assert calls == [True, False]
     assert sys_hf.HF_HUB_OFFLINE is False
+
+
+def test_the_network_retry_drops_the_session_the_offline_attempt_cached(monkeypatch):
+    """Restoring the flag alone leaves the retry offline: the failed attempt caches
+    a session whose adapters were mounted while the flag was True, and it refuses
+    every request afterwards. Each flip must be followed by a session reset."""
+    from wiki_creator.nlp.gliner_ner import _from_pretrained_offline_first
+
+    calls = []
+
+    def from_pretrained(name):
+        calls.append(sys_hf.HF_HUB_OFFLINE)
+        if len(calls) == 1:
+            raise OSError("not cached")
+        return "MODEL"
+
+    sys_hf = _fake_hf_modules(monkeypatch, from_pretrained)
+    _from_pretrained_offline_first("m")
+    assert sys_hf.session_resets == [True, False, False]
 
 
 # --- windows -----------------------------------------------------------------

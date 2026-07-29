@@ -99,19 +99,29 @@ def _from_pretrained_offline_first(model_name: str):
     toggled instead, which every call reads (``transformers.utils.hub.is_offline_mode``
     reads the same global live, not a separate snapshot). A genuine cache miss
     (first pull) restores it and falls back to the network.
+
+    Restoring the flag is not enough to restore the network: the offline attempt
+    leaves a cached ``requests`` session whose adapters were mounted from the flag
+    at build time, and it raises ``OfflineModeIsEnabled`` whatever the flag says
+    afterwards. Every session is dropped around each flip so the next call builds
+    its adapters from the flag now in force.
     """
     from gliner import GLiNER
     import huggingface_hub.constants as hf
+    from huggingface_hub.utils._http import reset_sessions
 
     hf_prev = hf.HF_HUB_OFFLINE
     hf.HF_HUB_OFFLINE = True
+    reset_sessions()
     try:
         return GLiNER.from_pretrained(model_name)
     except Exception:
         hf.HF_HUB_OFFLINE = False
+        reset_sessions()
         return GLiNER.from_pretrained(model_name)
     finally:
         hf.HF_HUB_OFFLINE = hf_prev
+        reset_sessions()
 
 
 class GlinerNer:
