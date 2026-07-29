@@ -1,0 +1,106 @@
+{
+  "kaliko": {
+    "canonical_aliases_book1": [
+      "Kaliko",
+      "King Kaliko"
+    ],
+    "known_facts_book1": [
+      "The King and ruler of all the nomes at the time of this story, seated on an ivory throne, a little round man with a pointed beard and hair rising to a tall curl on top of his head.",
+      "Wears a diamond crown and silken robes with buttons of cut rubies, and carries a golden sceptre with a big jeweled ball at one end.",
+      "Recognizes King Gos's story as a clever lie 'woven without a thread of truth' and takes the treasure and the prisoners anyway, on the stated policy that powerful Kings must stand together and trample the weaker underfoot.",
+      "Refuses to touch anyone under Ozma's protection, saying Ozma of Oz is far more powerful than he is.",
+      "Treats his captives more considerately than King Gos did, having Klik remove their chains once their door is locked.",
+      "Has his second-best crown mashed when Bilbil throws him against a jeweled wall, and is not in the least amused.",
+      "Owns the Three Trick Caverns, from which no one has escaped alive in hundreds of years, and pivots Inga's whole bedroom on its axis to feed him into them.",
+      "Tries on Rinkitink in turn: falling rocks, a skein of golden thread that weaves itself into a net, a trapdoor over the Bottomless Gulf, and a cavern of flying knives — every one of which fails.",
+      "Makes a joke of the knives — telling them to be 'pieceful' — and is not laughed at.",
+      "Loses his own crown to Rinkitink in a wager that Inga has died in the caverns, and greets the boy's survival with 'Tarts and tadpoles!'",
+      "Gives up the captives the instant Dorothy begins to lift the cover from her basket of eggs, pleading with his teeth chattering.",
+      "Suffers a severe headache from revelling with Gos and Cor, which makes him unusually cross when Inga first arrives."
+    ],
+    "known_relations_book1": {
+      "King Gos": "The King who bribes him to keep the prisoners, and whose lie he sees through.",
+      "Inga": "The boy he tries and fails to destroy in the Three Trick Caverns.",
+      "Rinkitink": "The King whose magic he cannot overcome and to whom he loses his crown in a wager.",
+      "Klik": "His chamberlain, who carries his orders.",
+      "Dorothy": "The Princess of Oz whose eggs make him surrender at once.",
+      "Ozma": "The Ruler he dares not offend."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Kaliko is deposed",
+        "Kaliko is destroyed by the eggs",
+        "Kaliko refuses to give up the captives",
+        "Kaliko is the old Nome King Ruggedo"
+      ],
+      "relationships": [
+        "Kaliko is a friend of Inga",
+        "Kaliko is an ally of Ozma"
+      ]
+    },
+    "hallucination_signals": [
+      "Kaliko is deposed",
+      "Kaliko is killed by an egg",
+      "Ruggedo rules the nomes in this book",
+      "Kaliko refuses Dorothy"
+    ]
+  },
+  "klik": {
+    "canonical_aliases_book1": [
+      "Klik"
+    ],
+    "known_facts_book1": [
+      "The nome who wears a gold collar around his neck and carries a bunch of golden keys, and serves as King Kaliko's chamberlain.",
+      "Escorts King Gos and Queen Cor and their prisoners into the royal presence, and later leads Kitticut and Garee to a small cavern, removes their chains and gives them a good supper.",
+      "Tells the visitors they are neither prisoners nor welcome guests, and bids them 'Eat hearty, sleep tight, and pleasant dreams to you.'",
+      "Presses the secret spring that opens the wall and reveals Inga alive after the Three Trick Caverns.",
+      "Runs in with his hair standing on end to report that the Wizard of Oz and Dorothy are approaching, and tells Inga that Dorothy is a terrible foe to deal with.",
+      "Is the name Inga must call aloud, after clapping four times, to be admitted to the Nome King's caverns."
+    ],
+    "known_relations_book1": {
+      "Kaliko": "His King, whose orders he carries out.",
+      "Inga": "Whom he guides in and out of the caverns.",
+      "King Kitticut": "Whose chains he removes and whom he feeds."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Klik betrays Kaliko",
+        "Klik helps Inga escape",
+        "Klik is the Nome King"
+      ]
+    },
+    "hallucination_signals": [
+      "Klik betrays the Nome King",
+      "Klik frees the prisoners",
+      "Klik rules the nomes"
+    ]
+  },
+  "long_eared_hearer_and_lookout": {
+    "canonical_aliases_book1": [
+      "The Long-Eared Hearer",
+      "The Lookout"
+    ],
+    "known_facts_book1": [
+      "Two of the crooked nomes who spring from the ground around King Gos and Queen Cor at the unguarded entrance to the caverns.",
+      "The Long-Eared Hearer has very long ears and says he heard the visitors coming early that morning.",
+      "The Lookout has eyes that look in different directions at the same time, curiously bright and penetrating, and can see over a hill or around a corner; he says he saw them coming the day before.",
+      "Appear in one scene only, to prove that the Nome King already expects his visitors, and take no further part in the story."
+    ],
+    "known_relations_book1": {
+      "Kaliko": "Their King, who is forewarned by them.",
+      "King Gos": "The visitor whose approach they detect."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Long-Eared Hearer detects Inga's approach",
+        "the Lookout finds the Magic Pearls",
+        "the Hearer and the Lookout serve Ruggedo"
+      ]
+    },
+    "hallucination_signals": [
+      "the Hearer detects Inga",
+      "the Lookout finds the pearls",
+      "they serve Ruggedo"
+    ]
+  }
+}

@@ -1,0 +1,149 @@
+{
+  "dorothy": {
+    "canonical_aliases_book1": [
+      "Dorothy",
+      "Princess Dorothy"
+    ],
+    "known_facts_book1": [
+      "A little girl who once lived in Kansas and now lives in Ozma's palace as a Princess of Oz.",
+      "Reads the whole destruction of Pingaree and the finding of the Magic Pearls in Glinda's Great Book of Records while visiting the Sorceress.",
+      "Follows Inga's later adventures in Ozma's Magic Picture and is roused to pity and indignation by his helplessness in the Nome King's caverns.",
+      "Asks Ozma's leave to go and help, takes the Wizard for company, and crosses the Deadly Desert on Ozma's Magic Carpet, which unrolls before them as they walk.",
+      "Carries a covered basket containing a dozen eggs, knowing this makes her more powerfully armed than a regiment of soldiers.",
+      "Scolds Kaliko for trying to harm his guests, saying trying is just as bad if not worse, and stamps her foot at him.",
+      "Is the one who actually frees King Kitticut and Queen Garee, by beginning to lift the cover from the egg basket — Inga never manages it himself.",
+      "Brings the news, read in Glinda's Record Book, that King Gos and Queen Cor were both drowned in a storm at sea.",
+      "Warns Kaliko not to be wicked any more if he can help it, and writes down the words of Rinkitink's banquet song."
+    ],
+    "known_relations_book1": {
+      "Inga": "The boy Prince she comes to rescue, having never met him before.",
+      "the Wizard": "Her companion on the journey, who identifies Bilbil.",
+      "Ozma": "The Ruler who lends her the Magic Carpet and watches over her.",
+      "Kaliko": "The Nome King she frightens into obedience with eggs.",
+      "Glinda": "The Sorceress whose Record Book tells her everything."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "ruby slippers",
+        "there is no place like home"
+      ],
+      "not_in_this_book": [
+        "Dorothy throws the eggs",
+        "Dorothy meets Inga before this book",
+        "Dorothy travels to Regos or Coregos",
+        "Dorothy returns to Kansas"
+      ]
+    },
+    "hallucination_signals": [
+      "Dorothy throws eggs at the nomes",
+      "Dorothy goes to Regos",
+      "Dorothy already knew Inga",
+      "ruby slippers"
+    ]
+  },
+  "the_wizard": {
+    "canonical_aliases_book1": [
+      "the Wizard of Oz",
+      "the Wizard"
+    ],
+    "known_facts_book1": [
+      "A cheery little man with a bald head and a winning smile, found planting shoe-trees in the garden when Dorothy comes for him.",
+      "Harnesses the Sawhorse to the Red Wagon, loads Ozma's Magic Carpet, and carries a little black bag of the tools of wizardry.",
+      "Had been to the Nome King's caverns before and conquered the nomes with ease, so is not at all afraid.",
+      "Stoops down and gazes into Bilbil's eyes and recognizes at once that the goat is under an enchantment — and identifies him as Prince Bobo of Boboland.",
+      "Knows the story of the cruel magician who transformed the gallant Prince years ago, and that a diligent search for him has been made without result.",
+      "Admits that with all his skill he cannot restore Prince Bobo, the magician being dead and the anti-charm lost, and says Glinda might be able to.",
+      "Is the only person besides Glinda present at the incantation that breaks the enchantment."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Whom he accompanies to the Nome Country.",
+      "Bilbil": "The goat whose enchantment he detects and names.",
+      "Glinda": "His superior, who performs the disenchantment he cannot.",
+      "Kaliko": "The Nome King who says the Wizard is chock-full of magic he cannot overcome."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "the Wizard is a humbug in this book",
+        "the Wizard leaves in a balloon"
+      ],
+      "not_in_this_book": [
+        "the Wizard restores Prince Bobo",
+        "the Wizard frees Inga's parents",
+        "the Wizard fights the nomes"
+      ]
+    },
+    "hallucination_signals": [
+      "the Wizard disenchants Bilbil",
+      "the Wizard frees the captives",
+      "the Wizard is a humbug"
+    ]
+  },
+  "ozma": {
+    "canonical_aliases_book1": [
+      "Ozma",
+      "Ozma of Oz"
+    ],
+    "known_facts_book1": [
+      "The lovely girl Ruler of the Land of Oz, who never leaves her palace in this book.",
+      "Gives Dorothy leave to go to the Nome Country, suggests she take the Wizard, and lends her the Magic Carpet.",
+      "Promises to watch Dorothy in the Magic Picture and to see she comes to no harm.",
+      "Is named by Kaliko as the one power he dare not offend, being far more powerful than he is.",
+      "Sees the liberation of Inga's parents in the Magic Picture and orders a splendid banquet prepared before the party arrives.",
+      "Has royal outfits made in advance for Queen Garee, King Kitticut, King Rinkitink and Prince Inga, so the Queen will not be shamed at the banquet.",
+      "Seats the animal guests at a table of their own, served the sort of food their natures require."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Whom she sends and watches over.",
+      "Glinda": "The Sorceress who comes to her palace by stork-flock to break the enchantment.",
+      "Kaliko": "The Nome King who fears her at a distance and never meets her.",
+      "Queen Garee": "The Queen she clothes before the banquet."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Ozma travels to the Nome Kingdom",
+        "Ozma confronts Kaliko",
+        "Ozma frees the captives herself"
+      ]
+    },
+    "hallucination_signals": [
+      "Ozma goes to the Nome Kingdom",
+      "Ozma confronts Kaliko",
+      "Ozma frees Kitticut"
+    ]
+  },
+  "glinda": {
+    "canonical_aliases_book1": [
+      "Glinda",
+      "Glinda the Good"
+    ],
+    "known_facts_book1": [
+      "Ozma's Royal Sorceress, whose Great Book of Records inscribes all important events that happen in every part of the world.",
+      "Learns from the Record Book of the events in the Nome King's caverns and becomes especially interested in the enchantment of the Prince of Boboland.",
+      "Is summoned to Ozma's palace by her flock of sixteen white storks, arriving before the Red Wagon does.",
+      "Questions Bilbil long and earnestly about the manner of his enchantment, and persuades him that his misfortune will make him better beloved by his subjects.",
+      "Breaks an enchantment the Wizard cannot, through a deliberate chain: goat to lamb, lamb to ostrich, then — the direct attempt having utterly failed — ostrich to tottenhot, tottenhot to mifket, and mifket to the true Prince Bobo.",
+      "Allows no one present at the incantation except her assistant, the Wizard, because she is not positive of success.",
+      "Is described as the most complete mistress of magic who has ever existed, and as having taught the Wizard all the real magic he knows."
+    ],
+    "known_relations_book1": {
+      "Bilbil": "The enchanted Prince she restores after five transformations.",
+      "the Wizard": "Her assistant, the only witness of the incantation.",
+      "Dorothy": "Who reads the Record Book in her palace and learns Inga's story there.",
+      "Ozma": "The Ruler whose palace she flies to."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Glinda travels to the Nome Kingdom",
+        "Glinda frees Inga's parents",
+        "Glinda restores Bobo on the first attempt",
+        "Glinda fails to break the enchantment"
+      ]
+    },
+    "hallucination_signals": [
+      "Glinda goes to the Nome Kingdom",
+      "Glinda frees the captives",
+      "Glinda restores Bobo at once",
+      "Glinda fails"
+    ]
+  }
+}

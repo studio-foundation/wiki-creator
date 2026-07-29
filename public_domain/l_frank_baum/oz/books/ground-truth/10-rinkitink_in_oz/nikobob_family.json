@@ -1,0 +1,74 @@
+{
+  "nikobob": {
+    "canonical_aliases_book1": [
+      "Nikobob"
+    ],
+    "known_facts_book1": [
+      "A poor charcoal-burner of Regos who lives with his wife and daughter in a log cabin more than a mile off the beaten path, to avoid the King's lawless soldiers.",
+      "Is left alone by the wild beasts of the forest, who have come to regard him as one of its natural dwellers because he never hunts them.",
+      "Finds one of Inga's shoes lying by the palace wall and the other on a dust-heap round the corner, and pockets both as a present for his daughter Zella.",
+      "Kills Choggenmugger, the Great Beast that had eaten every dragon, serpent and crocodile in Regos, chopping it into small pieces with his axe — and believes it was his own strength, never knowing the pearls were in his coat pocket.",
+      "Refuses on his bended knees to be made King of the Twin Islands, saying the warriors would murder him within a month.",
+      "Refuses also to be made rich, arguing that he has been safe for years precisely because he owned nothing anyone could envy.",
+      "Says the poor and humble man who lives unnoticed escapes the troubles of the rich and famous and is the only one who can appreciate the joy of living — advice the whole council profits by.",
+      "Directs the men of Pingaree in rebuilding their homes, and asks only to move his family there.",
+      "Is made general manager of the buildings and the pearl fisheries, and at the end is made Lord High Chamberlain of Pingaree by King Kitticut."
+    ],
+    "known_relations_book1": {
+      "Zella": "His daughter, to whom he gives the magic shoes without knowing what they are.",
+      "Inga": "The Prince who offers him a crown and riches, both of which he refuses.",
+      "King Kitticut": "The King who finally makes him Lord High Chamberlain.",
+      "Choggenmugger": "The Great Beast he destroys by accident of the pearls."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Nikobob becomes King of Regos",
+        "Nikobob knows about the Magic Pearls",
+        "Nikobob accepts riches",
+        "Nikobob stays in Regos"
+      ]
+    },
+    "hallucination_signals": [
+      "Nikobob is crowned King",
+      "Nikobob knows about the pearls",
+      "Nikobob accepts a fortune",
+      "Nikobob remains in Regos"
+    ]
+  },
+  "zella": {
+    "canonical_aliases_book1": [
+      "Zella"
+    ],
+    "known_facts_book1": [
+      "The little daughter of Nikobob the charcoal-burner and his wife, who had never owned shoes before her father brought her Inga's pair.",
+      "Gathers wild honey with her mother from hollow trees, and carries a pail of it once a year to Queen Cor, who is fond of it.",
+      "Sets out for Coregos with two pails instead of one, wearing the red pointed shoes, and so carries both Magic Pearls across Regos without knowing it.",
+      "Snaps a barrier of branches like dried twigs, lifts a fallen log six men could not move, and throws a charging wild boar by one ear — and is worried by a strength she did not know she had.",
+      "Stands unharmed in a swarm of angry bees, and afterwards keeps working while her mother runs away.",
+      "Meets Inga at the back door of Queen Cor's palace and gives up the shoes willingly in exchange for his new red leather ones, never knowing what she has traded.",
+      "Is comforted by Inga when she cannot sell her honey, and is paid for it out of Queen Cor's abandoned purse by Rinkitink.",
+      "Cooks the party's meals aboard the boat and in Queen Cor's palace, being a good little cook who often helped her mother.",
+      "Moves with her parents to Pingaree, where Inga finds her living happily in the cottage her father built near the King's palace."
+    ],
+    "known_relations_book1": {
+      "Nikobob": "Her father, who brings her the shoes from Regos.",
+      "Inga": "The Prince who trades her his own shoes for the magic pair.",
+      "Queen Cor": "The Queen she brings honey to each year and never actually sells it to.",
+      "Rinkitink": "Who pays her several gold pieces for the honey."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Zella knows about the Magic Pearls",
+        "Zella sells her honey to Queen Cor",
+        "Zella refuses to give up the shoes",
+        "Zella is captured"
+      ]
+    },
+    "hallucination_signals": [
+      "Zella knows about the pearls",
+      "Zella sells the honey",
+      "Zella refuses Inga",
+      "Zella is enslaved"
+    ]
+  }
+}

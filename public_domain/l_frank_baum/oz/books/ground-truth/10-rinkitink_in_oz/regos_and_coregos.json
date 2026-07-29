@@ -1,0 +1,121 @@
+{
+  "king_gos": {
+    "canonical_aliases_book1": [
+      "King Gos",
+      "Gos"
+    ],
+    "known_facts_book1": [
+      "The big, powerful, black-bearded King of the Island of Regos, at war with all the rest of the world.",
+      "Sends raiding parties to conquer and pillage neighboring islands, and his slaves — captured in many countries — work his gold and silver mines under cruel overseers with whips.",
+      "Orders the palace of Pingaree torn down so that not one stone remains upon another, and every house on the island destroyed.",
+      "Does not believe in magic and calls Buzzub a coward and a weakling for reporting it — then flees his own city when Inga bursts the gates.",
+      "Is a coward at heart, like all bullies and marauders, and abandons Regos entirely rather than face the boy.",
+      "Is taunted by his own wife for being driven out by a boy, a roly-poly King and a billy goat.",
+      "Fetches King Kitticut from the mines the night before Inga arrives, at Queen Cor's suggestion, so the parents can be used as hostages.",
+      "Carries both royal prisoners to the Nome King and buys their keeping with bags of gold and jewels the prisoners themselves are forced to carry.",
+      "Tells Kaliko an elaborate lie — that the King and Queen of Pingaree are evil invaders and their son a terrible wizard — which Kaliko recognizes as a lie and accepts anyway.",
+      "Is drowned with Queen Cor in a storm at sea on the way back to Regos, which Dorothy reads in Glinda's Record Book; neither is ever seen again in the book after the caverns."
+    ],
+    "known_relations_book1": {
+      "Queen Cor": "His wife and fellow ruler, drowned with him.",
+      "Inga": "The boy Prince who takes his city without a blow.",
+      "King Kitticut": "The King he enslaves, then sells to the nomes.",
+      "Kaliko": "The Nome King he bribes to keep his prisoners.",
+      "Buzzub": "His big captain, whom he calls a coward."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "King Gos is killed by Inga",
+        "King Gos is captured",
+        "King Gos repents",
+        "King Gos returns to Regos"
+      ],
+      "relationships": [
+        "King Gos is an ally of Inga",
+        "King Gos is a friend of Kitticut"
+      ]
+    },
+    "hallucination_signals": [
+      "Inga kills Gos",
+      "Gos is captured",
+      "Gos reforms",
+      "Gos returns to his throne"
+    ]
+  },
+  "queen_cor": {
+    "canonical_aliases_book1": [
+      "Queen Cor",
+      "Cor"
+    ],
+    "known_facts_book1": [
+      "Queen of the Island of Coregos, wedded to King Gos, and so stern and cruel that her people cannot decide which of their sovereigns they dread most.",
+      "A big woman almost as tall as Gos, with flashing black eyes and a dark complexion, whose evil expression she tries to cover by smiling sweetly when she means the most mischief.",
+      "Rules the grain fields of Coregos with slaves who are mostly women, and puts Queen Garee in the royal dairy to make butter.",
+      "Is fond of honey and buys it once a year from Zella, the charcoal-burner's daughter.",
+      "Calls her husband a coward and says no magic can stand against a woman's cunning.",
+      "Captures Inga by walking up to him under pretence of an invitation and throwing both long arms around him in a grip like a vise, then kicking Rinkitink in the stomach and calling for ropes.",
+      "Makes Inga her page and threatens to use Rinkitink as a pincushion and to tickle the soles of his feet with a feather.",
+      "Slaps Inga twice for brushing her ear with a peacock-feather fan, and sends for the whip with the seven lashes to beat the women of Pingaree.",
+      "Learns the magic is real only when her dagger rebounds from Inga's breast, by which time she has already lost.",
+      "Drags Queen Garee out of the butter-house and across the bridge of boats in her flight, and conceives the whole hostage plot that sends the prisoners to the nomes.",
+      "Is drowned with King Gos in a storm at sea, as Dorothy reads in Glinda's Record Book."
+    ],
+    "known_relations_book1": {
+      "King Gos": "Her husband, whom she taunts as a coward and drowns beside.",
+      "Inga": "The boy she captures with her own arms and makes her page.",
+      "Queen Garee": "Her dairy slave, dragged away as a hostage.",
+      "Rinkitink": "The King she threatens to use as a pincushion.",
+      "Zella": "The girl who brings her honey each year."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Queen Cor is killed by Inga",
+        "Queen Cor is captured",
+        "Queen Cor repents",
+        "Queen Cor buys Zella's honey in this book"
+      ],
+      "relationships": [
+        "Queen Cor is a friend of Zella",
+        "Queen Cor is an ally of Inga"
+      ]
+    },
+    "hallucination_signals": [
+      "Inga kills Queen Cor",
+      "Cor is captured",
+      "Cor buys the honey",
+      "Cor reforms"
+    ]
+  },
+  "buzzub": {
+    "canonical_aliases_book1": [
+      "Buzzub",
+      "Captain Buzzub"
+    ],
+    "known_facts_book1": [
+      "The big captain who leads the warriors of Regos down to the shore to meet Inga's boat.",
+      "Jeers at the 'baby Prince' and says Rinkitink will make a fine slave for Queen Cor, who loves to tickle fat men and see them jump.",
+      "Orders two flights of arrows and spears at the three strangers, all of which bound harmlessly back.",
+      "Is caught by Bilbil's charge, sprawls headlong, rolls over two or three times and runs yelling after his own fleeing men.",
+      "Reports the magic to King Gos and is called a coward and a weakling for it.",
+      "Tells Inga, on his return from the mines, that the King and Queen have run away with forty rowers and taken the King and Queen of Pingaree with them.",
+      "Is given command of the warriors by Inga and made to promise to keep his men quiet and orderly — if he can."
+    ],
+    "known_relations_book1": {
+      "King Gos": "His King, who scorns his report of magic.",
+      "Inga": "The boy who first routs him and later puts him in command.",
+      "Bilbil": "The goat that knocks him sprawling."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Buzzub becomes King of Regos",
+        "Buzzub captures Inga",
+        "Buzzub is killed"
+      ]
+    },
+    "hallucination_signals": [
+      "Buzzub is made King",
+      "Buzzub captures Inga",
+      "Buzzub is killed"
+    ]
+  }
+}
