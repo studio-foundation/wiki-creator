@@ -104,6 +104,9 @@ class ClassifiedEntity:
     source_ids: list[str] = field(default_factory=list)
     aliases: list[str] = field(default_factory=list)
     relevant: bool = True
+    # STU-716: every mention of this name sits inside another character's
+    # reported speech — a name talked about, never a presence on the page.
+    offstage: bool = False
     # STU-285 provenance: alias_resolution._merge_entities stamps this block
     # ({merged_from, evidence, confidence, method}) onto merged PERSON entities.
     # Registry.from_artifacts reads it for audit trail, so it must survive the

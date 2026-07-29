@@ -591,6 +591,49 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
 
 - `generate_event_pages.py` (SP3/STU-481, STU-502) consumes `events.json` (SP0) and writes `processing_output/<slug>/event_pages.json` — one `EVENT` page per event with `salience >= threshold` (default `0.7`, raised from `0.6` in STU-502 to drop the low-value long tail) that has ≥1 participant. Title and infobox `{participants, lieu, chapitre, issue}` are built deterministically from the event; the writer LLM only authors the `## Déroulement` prose (grounded, spoiler-safe via forbidden_names). To stop the writer paraphrasing the title (STU-502), `build_event_prompt` injects the `DEFAULT_CONTEXT_WINDOW` (=3) neighbouring events before/after in narrative order as **read-only** NARRATIVE CONTEXT — background to situate the event (what leads up to it / what it brings about), never facts to attribute to it; `neighbor_context` windows the full events list, so context spans below-threshold neighbours too. `assemble_wiki_pages.py` appends the pages; `wiki_export.py` renders each under `output/wiki/events/` with `Infobox_event` + `[[Category:Événements]]`. Thresholds are configurable via book YAML `generation.event_pages` (`salience_threshold`, `max_pages`, `max_tokens`). Absent/empty `events.json` warns and skips — never fails the run. Titles are the full event description (grounded, unique) — LLM-named events are a possible fast-follow.
 
+- Offstage names (STU-716): an entity whose every occurrence sits **inside quoted
+  speech** is flagged `offstage` by `entity-classification`, which caps its tier at
+  `figurant` and drops it from the `discover-relationships` roster
+  (`relationship_discovery._in_roster`). The defect is Alice's `Tortoise` — the
+  Mock Turtle's pun on his schoolmaster's name, three sentences of reported speech
+  in one chapter, which cleared `min_mentions_absolute: 3` exactly and reached the
+  pages with a `mentor` relation on the Mock Turtle's infobox. The relation is an
+  accurate reading of the sentence; the sentence is a joke about a name, not a scene
+  between two characters.
+  **The signal reads the chapter text, not the extracted mentions**, and that is the
+  whole difference between a usable rule and a harmful one. Scored on the extracted
+  spans (`mention_spans_by_chapter`), Alice flags 4 entities and 2 are real —
+  `Bill` and the `Duchess` are on the page, but the extractor caught only their
+  in-dialogue mentions, so the signal inherited an extraction gap and dropped 4 true
+  relations (`Alice ↔ Duchess`, `Duchess ↔ White Rabbit`, …). Matched against the
+  text (case-sensitive, whole-word, over canonical + aliases) it flags exactly
+  `Tortoise` and `Mabel`, and the only relation lost in the library is
+  `Mock Turtle ↔ Tortoise`. Measured over the 8 books with cached artifacts
+  (`entities_classified.json` + `chapters.json`, no re-extraction, no LLM): 0
+  offstage on le-jeu-de-lange, the Hobbit; 6 on Eragon (`Vrael`-class offstage
+  legends and false names, no tier moved); 4 on Narnia (`Sons of Adam` /
+  `Daughters of Eve`, forms of address STU-543 already lists as forbidden
+  confusions, demoted from principal/secondary); 8 on Notre-Dame, all of them
+  extraction junk (`Yes`, `Apple`, `Tis well` — the STU-701 class), which the cap
+  demotes off the principal/secondary pages for free.
+  Two properties are load-bearing. (1) **Nothing is dropped**: an offstage name
+  keeps its page (Mary Ann is offstage-but-real and must stay), it just stops
+  asserting relationships and can never rank above `figurant` — the STU-538/543
+  anti-invention bias, where a false page is a page that is still correct and a
+  false relation invents canon. (2) **No chapter text, no signal**:
+  `classify_entities` without `chapter_texts` flags nothing and leaves every tier
+  where it was, so a stale artifact set still classifies. That also means the
+  signal is scoped to the chapters present — a `WIKI_MAX_CHAPTERS` run flags what
+  is offstage *in that slice* (throne-of-glass's 5-chapter cache flags `Rifthold`,
+  which the full book puts in narration), the STU-497/539 subset trap in its usual
+  form. Quote detection (`wiki_creator/quoted_speech.py`) handles `“ ”`, `« »`,
+  `„ “` and toggling `"`, treats an unterminated opener as running to the end of
+  its paragraph (speech continuing across paragraphs), and does **not** detect
+  dash-introduced dialogue — a book using it has no offstage entity rather than a
+  wrong one.
+  Cross-tome, `Registry.accumulate` ANDs the flag: a character spoken about in tome
+  1 who walks on in tome 2 is onstage in the series registry.
+
 - Notability tiers (STU-509): the book YAML `notability` block is the single source
   for importance thresholds — it replaced `thresholds: auto`, whose explicit form
   (`characters`/`locations`/`organizations`, keyed by domain nouns) was deleted. That
