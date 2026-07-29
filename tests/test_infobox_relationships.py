@@ -5,6 +5,8 @@ from wiki_creator.infobox_relationships import (
 
 
 def _entity(relationships):
+    for rel in relationships:
+        rel.setdefault("cooccurrence_count", 2)
     return {"canonical_name": "Alice", "aliases": ["Ali"], "relationships": relationships}
 
 
@@ -54,7 +56,7 @@ def test_deceased_marker():
 def test_ordered_by_cooccurrence_then_name():
     fields = relationship_infobox_fields(_entity([
         {"entity_a": "Alice", "entity_b": "Low", "relationship_type": "friend",
-         "cooccurrence_count": 1},
+         "cooccurrence_count": 2},
         {"entity_a": "Alice", "entity_b": "High", "relationship_type": "ally",
          "cooccurrence_count": 9},
         {"entity_a": "Alice", "entity_b": "Mid", "relationship_type": "mentor",
@@ -80,6 +82,59 @@ def test_legacy_french_type_resolves_to_bucket():
     assert fields == {"romance": "[[Chaol]]"}
 
 
+def test_single_cooccurrence_earns_no_infobox_slot():
+    # Alice <-> Dodo: one chunk, one quote — an incidental adjacency, not an ally (STU-715).
+    fields = relationship_infobox_fields(_entity([
+        {"entity_a": "Alice", "entity_b": "Dodo", "relationship_type": "ally",
+         "cooccurrence_count": 1},
+    ]))
+    assert fields == {}
+
+
+def test_two_cooccurrences_earn_a_slot():
+    fields = relationship_infobox_fields(_entity([
+        {"entity_a": "Alice", "entity_b": "Dormouse", "relationship_type": "friend",
+         "cooccurrence_count": 2},
+    ]))
+    assert fields == {"friends_allies": "[[Dormouse]]"}
+
+
+def test_threshold_applies_per_bucket():
+    # A weakly-supported enemy is dropped; a well-supported one survives.
+    fields = relationship_infobox_fields(_entity([
+        {"entity_a": "Alice", "entity_b": "Bill", "relationship_type": "enemy",
+         "cooccurrence_count": 1},
+        {"entity_a": "Alice", "entity_b": "Queen", "relationship_type": "enemy",
+         "cooccurrence_count": 5},
+    ]))
+    assert fields == {"enemies": "[[Queen]]"}
+
+
+def test_missing_cooccurrence_count_is_below_threshold():
+    fields = relationship_infobox_fields({
+        "canonical_name": "Alice", "aliases": [],
+        "relationships": [{"entity_a": "Alice", "entity_b": "Dodo", "relationship_type": "ally"}],
+    })
+    assert fields == {}
+
+
+def test_threshold_gates_regardless_of_confidence_grade():
+    # confidence is null across the run (STU-700), so the support gate is the only
+    # thing standing between an incidental adjacency and a hard infobox slot; it must
+    # gate whether confidence is null or graded.
+    for conf in (None, "interpretation", "explicit"):
+        weak = relationship_infobox_fields(_entity([
+            {"entity_a": "Alice", "entity_b": "Dodo", "relationship_type": "ally",
+             "cooccurrence_count": 1, "confidence": conf},
+        ]))
+        assert weak == {}, conf
+        strong = relationship_infobox_fields(_entity([
+            {"entity_a": "Alice", "entity_b": "Queen", "relationship_type": "enemy",
+             "cooccurrence_count": 5, "confidence": conf},
+        ]))
+        assert strong == {"enemies": "[[Queen]]"}, conf
+
+
 _EN = {"generation": {"output_language": "en"}}
 
 
@@ -88,11 +143,12 @@ def test_sub_role_qualifier_uses_other_partys_role():
     # qualifier shown for the OTHER party is that party's own role (STU-665).
     child = {"canonical_name": "Harry", "aliases": [], "relationships": [
         {"entity_a": "James", "entity_b": "Harry", "relationship_type": "family",
-         "sub_role_a": "father", "sub_role_b": "son", "other_deceased": True},
+         "sub_role_a": "father", "sub_role_b": "son", "other_deceased": True,
+         "cooccurrence_count": 2},
     ]}
     parent = {"canonical_name": "James", "aliases": [], "relationships": [
         {"entity_a": "James", "entity_b": "Harry", "relationship_type": "family",
-         "sub_role_a": "father", "sub_role_b": "son"},
+         "sub_role_a": "father", "sub_role_b": "son", "cooccurrence_count": 2},
     ]}
     assert relationship_infobox_fields(child, _EN) == {"family": "[[James]] (father) †"}
     assert relationship_infobox_fields(parent, _EN) == {"family": "[[Harry]] (son)"}
@@ -101,7 +157,7 @@ def test_sub_role_qualifier_uses_other_partys_role():
 def test_sub_role_localized_label():
     child = {"canonical_name": "Harry", "aliases": [], "relationships": [
         {"entity_a": "James", "entity_b": "Harry", "relationship_type": "family",
-         "sub_role_a": "father", "sub_role_b": "son"},
+         "sub_role_a": "father", "sub_role_b": "son", "cooccurrence_count": 2},
     ]}
     assert relationship_infobox_fields(child) == {"family": "[[James]] (père)"}
 
@@ -109,13 +165,14 @@ def test_sub_role_localized_label():
 def test_symmetric_sub_role_shown_both_sides():
     a = {"canonical_name": "Alice", "aliases": [], "relationships": [
         {"entity_a": "Alice", "entity_b": "Bob", "relationship_type": "romance",
-         "sub_role_a": "partner", "sub_role_b": "partner"},
+         "sub_role_a": "partner", "sub_role_b": "partner", "cooccurrence_count": 2},
     ]}
     assert relationship_infobox_fields(a, _EN) == {"romance": "[[Bob]] (partner)"}
 
 
 def test_missing_sub_role_falls_back_to_bare_link():
     a = {"canonical_name": "Alice", "aliases": [], "relationships": [
-        {"entity_a": "Alice", "entity_b": "Bob", "relationship_type": "family"},
+        {"entity_a": "Alice", "entity_b": "Bob", "relationship_type": "family",
+         "cooccurrence_count": 2},
     ]}
     assert relationship_infobox_fields(a, _EN) == {"family": "[[Bob]]"}

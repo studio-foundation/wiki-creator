@@ -36,6 +36,14 @@ _BUCKET_BY_TYPE = {
 # Infobox row order: identity bonds first, conflict last.
 INFOBOX_BUCKET_TOKENS = ("family", "romance", "friends_allies", "enemies")
 
+# A pair needs at least this much co-occurrence support before it states a bond as
+# fact in the infobox (STU-715). One incidental adjacency — Alice kicking Bill up a
+# chimney without a word, or her one comic transaction with the Dodo — is not a
+# friendship or an enmity; below the bar the pair stays in the hedged prose section,
+# not the infobox. A book-level default, not a per-book knob: "how many
+# co-occurrences make a friendship?" is a question about us, not about the novel.
+MIN_INFOBOX_COOCCURRENCE = 2
+
 _DECEASED_MARK = "†"
 
 
@@ -55,6 +63,9 @@ def relationship_infobox_fields(entity: dict, book_config: dict | None = None) -
     deceased ones (``rel['other_deceased']``, stamped at bundle build from
     ``entity_status.json``) carry a ``†``. Ordered by co-occurrence so the most
     prominent bond leads. Empty buckets are omitted.
+
+    A pair below ``MIN_INFOBOX_COOCCURRENCE`` support earns no infobox slot (STU-715);
+    it can still surface, hedged, in the prose Relationships section.
     """
     own = {entity.get("canonical_name")} | set(entity.get("aliases") or [])
     lang = output_language(book_config)
@@ -70,6 +81,9 @@ def relationship_infobox_fields(entity: dict, book_config: dict | None = None) -
         other = other.strip()
         if not other or other in seen[bucket]:
             continue
+        count = int(rel.get("cooccurrence_count", 0) or 0)
+        if count < MIN_INFOBOX_COOCCURRENCE:
+            continue
         seen[bucket].add(other)
         # The qualifier is the OTHER party's role: sub_role_a is what entity_a is,
         # sub_role_b what entity_b is (STU-665).
@@ -77,7 +91,6 @@ def relationship_infobox_fields(entity: dict, book_config: dict | None = None) -
         qualifier = f" ({sub_role_label(sub_role, lang)})" if sub_role else ""
         deceased = f" {_DECEASED_MARK}" if rel.get("other_deceased") else ""
         entry = f"[[{other}]]{qualifier}{deceased}"
-        count = int(rel.get("cooccurrence_count", 0) or 0)
         buckets[bucket].append((count, other, entry))
     fields: dict[str, str] = {}
     for token in INFOBOX_BUCKET_TOKENS:
