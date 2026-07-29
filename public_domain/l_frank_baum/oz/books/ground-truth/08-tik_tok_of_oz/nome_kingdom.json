@@ -1,0 +1,183 @@
+{
+  "ruggedo": {
+    "canonical_aliases_book1": [
+      "Ruggedo",
+      "the Nome King",
+      "the Metal Monarch"
+    ],
+    "known_facts_book1": [
+      "King of the Nomes and Monarch of all the Metals and Precious Stones of the Underground World, seated on a throne of virgin gold in a jeweled cavern under a mountain.",
+      "Was formerly named Roquat; the book states outright that after he drank of the Waters of Oblivion he forgot his own name and had to take another.",
+      "A round little man with a flowing white beard, a red face, bright eyes and a scowl that covers all his forehead, wearing a crown cut from a single blood-red ruby.",
+      "Is surly and cross because mortals dug treasure out of the earth and kept it above ground, and hates both mortals and fairies.",
+      "Threw Tik-Tok down a well, and later dropped the whole party down the Forbidden Tube after having the path twisted toward it and the opening made invisible.",
+      "Had been warned repeatedly by Tititi-Hoochoo never to use the Tube, and did it anyway over Kaliko's protest.",
+      "Keeps a covered pit in the passage to trap invaders, a Magic Spyglass in the wall, and a great gong he beats to summon Kaliko.",
+      "Amuses himself by throwing his sceptre at Kaliko's head, and breaks the tip off the Long-Eared Hearer's ear by accident.",
+      "Transforms Shaggy into a dove and Ozga into a fiddle, and is about to transform Files into a fiddle bow when Quox interrupts.",
+      "Loses every magical power the instant he plainly looks at the pink ribbon around Quox's neck, which Tititi-Hoochoo enchanted for exactly that purpose.",
+      "Is driven from his kingdom not by force but by six hen's eggs rolled out of Quox's locket, which pursue him; nomes wither and blow away if the inside of an egg touches them.",
+      "Flees so fast that he forgets to fill his pockets, then has a poor woman sew pockets all over his robe and sneaks back through a secret passage into the Metal Forest.",
+      "Is captured there by the officers of Oogaboo, allowed by Kaliko to fill his pockets, and loses nearly all of it because the woman used poor thread and the pockets burst one by one along the passage.",
+      "Cannot remember how to break the charm of ugliness he cast on Shaggy's brother, beyond that it needs a certain kind of kiss.",
+      "Reforms at the end and is allowed by Kaliko to stay underground as a common nome, as long as he behaves — he is not left wandering the earth."
+    ],
+    "known_relations_book1": {
+      "Kaliko": "His Royal Chamberlain, whom he abuses and who succeeds him as King.",
+      "General Guph": "His General, who leads the nome army against the invaders.",
+      "Tititi-Hoochoo": "The Great Jinjin whose orders he defies and who condemns him.",
+      "Quox": "The dragon sent as Instrument of Vengeance, whose ribbon strips his magic.",
+      "the Ugly One": "His prisoner, whom he enchanted into ugliness out of spite.",
+      "Shaggy Man": "Whose brother he imprisoned and whom he transforms into a dove.",
+      "Betsy Bobbin": "The mortal girl he orders locked in the Slimy Cave, and who later pities him."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Ruggedo is named Roquat throughout this book",
+        "Ruggedo keeps his throne",
+        "Ruggedo is destroyed",
+        "Ruggedo wanders the earth forever at the end",
+        "Ruggedo breaks the charm of ugliness"
+      ],
+      "relationships": [
+        "Ruggedo is a friend of Betsy",
+        "Ruggedo is an ally of Shaggy Man",
+        "Ruggedo is an ally of Queen Ann"
+      ]
+    },
+    "hallucination_signals": [
+      "Ruggedo is killed",
+      "Ruggedo keeps his kingdom",
+      "Ruggedo wanders the earth at the end",
+      "Ruggedo befriends Shaggy",
+      "Roquat rules the nomes in this book"
+    ]
+  },
+  "kaliko": {
+    "canonical_aliases_book1": [
+      "Kaliko"
+    ],
+    "known_facts_book1": [
+      "Ruggedo's High Chamberlain, the one nome intelligent and obedient enough that the King dares not mash him.",
+      "Is one of the nomes himself and as much abused as any; when the nomes throw down their hammers and picks, only Kaliko can get them working again.",
+      "Warns Ruggedo repeatedly not to use the Forbidden Tube and not to anger Tititi-Hoochoo, and is proved right on every count.",
+      "Writes himself letters of recommendation — honest man, good servant, small eater — expecting to need another job soon.",
+      "Kicks Tik-Tok's knee-joints from behind to bring him down, but then secretly hides Betsy and Hank in his own private room and feeds them mineral bread and broiled mushrooms.",
+      "Pleads with Ruggedo to spare Betsy, to release the Ugly One, and not to melt Tik-Tok — every time at risk to himself.",
+      "Is made King of the Nomes by Quox on the Jinjin's authority, because he believes he could rule no worse than Ruggedo and the nomes like him better.",
+      "Appoints Guph his Royal Chamberlain and promises not to throw the sceptre at his head unless he deserves it.",
+      "Does not know the way to the Metal Forest, since Ruggedo changed the location of its three secret passages every week.",
+      "Lets the deposed Ruggedo stay underground at Betsy's urging, on condition of good behavior."
+    ],
+    "known_relations_book1": {
+      "Ruggedo": "His cruel master, whom he succeeds as King and then shelters.",
+      "General Guph": "His own Royal Chamberlain once he becomes King.",
+      "Betsy Bobbin": "The mortal girl he hides and feeds against his King's orders.",
+      "Quox": "The dragon who names him King of the Nomes.",
+      "Shaggy Man": "Whose brother he had long urged Ruggedo to release."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Kaliko is an enemy of Betsy",
+        "Kaliko fights the travelers",
+        "Kaliko knows the way to the Metal Forest",
+        "Kaliko is banished"
+      ]
+    },
+    "hallucination_signals": [
+      "Kaliko fights the travelers",
+      "Kaliko is banished",
+      "Kaliko refuses the crown",
+      "Kaliko leads the nomes into battle"
+    ]
+  },
+  "general_guph": {
+    "canonical_aliases_book1": [
+      "General Guph"
+    ],
+    "known_facts_book1": [
+      "Ruggedo's most famous General, who leads hundreds of nomes armed with sharp magic spears to the mouth of the Tube.",
+      "Waves his sword and calls the travelers down to be captured, then has his nomes hurl their spears — which rattle off Quox's silver scales and bound back into their owners' hands.",
+      "Is kicked into the Nome King by Hank's heels, flattening Ruggedo against the rock wall.",
+      "Tries repeatedly and fails to seize Polychrome, whose body is not where his hands close.",
+      "Flees with the other nomes when the six eggs roll out of Quox's locket, and bars the door in Ruggedo's face.",
+      "Is glad to be rid of so hard a master and is appointed Royal Chamberlain by King Kaliko."
+    ],
+    "known_relations_book1": {
+      "Ruggedo": "His King, whom he serves and then abandons behind a barred door.",
+      "Kaliko": "The new King who makes him Royal Chamberlain.",
+      "Hank": "The mule who kicks him across the cavern.",
+      "Polychrome": "The sky fairy he cannot lay a hand on."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "General Guph captures the travelers",
+        "General Guph recruits allies for the Nome King in this book",
+        "General Guph is killed"
+      ]
+    },
+    "hallucination_signals": [
+      "Guph captures the travelers",
+      "Guph recruits the Growleywogs",
+      "Guph is killed"
+    ]
+  },
+  "long_eared_hearer": {
+    "canonical_aliases_book1": [
+      "Long-Eared Hearer"
+    ],
+    "known_facts_book1": [
+      "A nome with enormous ears who can hear anything anywhere in the world, and who reports what he hears to the Nome King.",
+      "Spreads out his great ears and sways them to listen, and can judge distance to the furlong, foot and inch from the sound of voices.",
+      "Has one ear-tip broken off by Ruggedo's flung sceptre, which the King regrets because those ears are valuable to him.",
+      "Reports that Shaggy Man is coming to rescue his brother, and that the Army of Oogaboo means to take the King's metals and jewels.",
+      "Overhears Shaggy's plan to use the Love Magnet on Ruggedo, which is what makes the King have Shaggy bound before he can reach his pocket.",
+      "Cannot hear an egg, as Kaliko points out — only the Magic Spyglass can reveal those."
+    ],
+    "known_relations_book1": {
+      "Ruggedo": "His master, who pulls and twists his ears when angry and breaks one with the sceptre.",
+      "Kaliko": "The Chamberlain who suggests using him and who corrects him about eggs."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Long-Eared Hearer hears the eggs coming",
+        "the Long-Eared Hearer betrays Ruggedo",
+        "the Long-Eared Hearer joins the travelers"
+      ]
+    },
+    "hallucination_signals": [
+      "the Hearer detects the eggs",
+      "the Hearer joins the travelers",
+      "the Hearer warns the travelers"
+    ]
+  },
+  "pang": {
+    "canonical_aliases_book1": [
+      "Pang"
+    ],
+    "known_facts_book1": [
+      "The leader of Ruggedo's score of executioners, nearly as evil looking as their master.",
+      "His nomes carry great golden pincers, silver prods, clamps, chains and other wicked-looking instruments, all of precious metals set with diamonds and rubies.",
+      "Is sent to fetch the Army of Oogaboo from the pit and finds them gone, then sent to the Slimy Cave and finds Betsy and Hank gone.",
+      "Reports that the prisoners 'left no address', and insists there is only one Slimy Cave.",
+      "Cuts the cords binding the dove's wings at Ruggedo's order after Shaggy is transformed.",
+      "Tortures nobody in the course of the book."
+    ],
+    "known_relations_book1": {
+      "Ruggedo": "His King, whose torture orders he twice cannot carry out.",
+      "Kaliko": "Fellow servant of the Nome King."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Pang tortures the prisoners",
+        "Pang captures Betsy",
+        "Pang serves King Kaliko"
+      ]
+    },
+    "hallucination_signals": [
+      "Pang tortures the prisoners",
+      "Pang catches Betsy",
+      "the executioners carry out the torture"
+    ]
+  }
+}

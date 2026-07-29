@@ -1,0 +1,107 @@
+{
+  "ozga": {
+    "canonical_aliases_book1": [
+      "Ozga",
+      "the Rose Princess",
+      "Princess Ozga of Roseland"
+    ],
+    "known_facts_book1": [
+      "A Royal Princess who grew on the central Royal Bush in the Royal Garden of the Rose Kingdom, and is a distant cousin of Ozma of Oz.",
+      "Is the only royal on the bushes ripe enough to pick; all the other growing royalties are still green and lifeless.",
+      "Is picked by Betsy and Shaggy, who each take an arm and a twist of her feet frees her from the branch; she steps down and thanks them.",
+      "Is refused as Ruler by her own subjects because they want a King and will have no girl rule over them.",
+      "Is driven out of the Rose Kingdom with the others by the Roses' thorns and over the drawbridge across the boundary gulf.",
+      "Ceases to be a fairy the moment she is exiled and will never again be more than a mere mortal, which is why she eats ordinary food on the journey.",
+      "Asks the field-flowers, whom Files calls her second-cousins, which way leads to Ruggedo's kingdom, and every stem bends and nods three times to the right.",
+      "Is transformed by Ruggedo into a fiddle and restored by being touched to Quox's pink ribbon.",
+      "Offers her kiss to break the Ugly One's charm, as a Mortal Maid who was once a Fairy, but it fails.",
+      "Is sent to Oogaboo with Files at the end, because Ozma will not separate two who have become such good friends."
+    ],
+    "known_relations_book1": {
+      "Files": "The Private of Oogaboo who becomes her constant companion and goes to Oogaboo with her.",
+      "the Roses": "Her rebellious subjects, who refuse a girl Ruler and drive her out.",
+      "Royal Gardener": "The acting Ruler who expels her from her own kingdom.",
+      "Ozma": "Her distant cousin, who sends her to Oogaboo with Files.",
+      "Ruggedo": "The Nome King who turns her into a fiddle."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Ozga rules the Rose Kingdom",
+        "Ozga returns to the Rose Kingdom",
+        "Ozga remains a fairy after her exile",
+        "Ozga's kiss breaks the charm of ugliness",
+        "Ozga goes to the Emerald City"
+      ]
+    },
+    "hallucination_signals": [
+      "Ozga rules the Roses",
+      "Ozga returns to Roseland",
+      "Ozga's kiss restores the Ugly One",
+      "Ozga lives in the Emerald City"
+    ]
+  },
+  "royal_gardener": {
+    "canonical_aliases_book1": [
+      "Royal Gardener"
+    ],
+    "known_facts_book1": [
+      "A funny little man in a rose-colored costume with ribbons at his knees and elbows and a bunch of ribbons in his hair, with small twinkling eyes and a puckered, deeply lined face.",
+      "Rules the Rose Kingdom himself because no man-rose on the Royal Bushes is ripe enough to pick, the last Ruler having got mildewed and withered before his time.",
+      "Quotes page thirteen of his little book of Law: any stranger who enters the Rose Kingdom shall at once be condemned by the Ruler and put to death.",
+      "Falls at Shaggy's feet in adoration the moment he sees the Love Magnet, but insists that no true man neglects his duty for the sake of love — and drives them out anyway.",
+      "Is kicked out of the greenhouse door by Hank without touching the ground.",
+      "Lets down the drawbridge over the boundary gulf for the outcasts and draws it up again behind them."
+    ],
+    "known_relations_book1": {
+      "the Roses": "His subjects and, in the matter of the Ruler, his masters.",
+      "Ozga": "The Princess he must expel from her own kingdom.",
+      "Shaggy Man": "Loves him on sight because of the Love Magnet, and expels him regardless.",
+      "Hank": "The mule that kicks him out of the greenhouse."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Royal Gardener puts anyone to death",
+        "the Royal Gardener is a Rose",
+        "the Royal Gardener joins the travelers"
+      ]
+    },
+    "hallucination_signals": [
+      "the Royal Gardener executes the strangers",
+      "the Royal Gardener is a Rose",
+      "the Royal Gardener travels with them"
+    ]
+  },
+  "the_roses": {
+    "canonical_aliases_book1": [
+      "the Roses"
+    ],
+    "known_facts_book1": [
+      "Magnificent rosebushes in a great crystal greenhouse, each bearing on its central stem one splendid Rose with the face of a lovely girl in its center.",
+      "Named individuals among them are a dainty Moss Rose, a delicate Tea Rose and a Jacque Rose.",
+      "Sleep with drooping heads and closed eyelids until Hank's bray wakes them, and are terrified of his voice.",
+      "Declare that only Roses are allowed in the Rose Kingdom and that strangers must be cast back into the sea.",
+      "Are entirely unmoved by the Love Magnet, because their stems have thorns but no hearts — the one thing in the book the Magnet cannot win.",
+      "Refuse Ozga because they want a King and will have no girl rule over them, and will wait until a man-rose is ripe enough to pick.",
+      "Drive the outcasts out of the garden and the greenhouse with the sharp thorns hidden beneath their draperies of green leaves."
+    ],
+    "known_relations_book1": {
+      "Ozga": "The Princess they refuse to be ruled by and expel.",
+      "Royal Gardener": "Their acting Ruler, whom they command.",
+      "Shaggy Man": "Whose Love Magnet fails on them entirely."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Roses accept Ozga as their Ruler",
+        "the Roses are charmed by the Love Magnet",
+        "the Roses have hearts",
+        "a Rose King is picked in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "the Roses accept Ozga",
+      "the Love Magnet wins the Roses",
+      "a Rose King is crowned",
+      "the Roses have hearts"
+    ]
+  }
+}

@@ -1,0 +1,147 @@
+{
+  "ann_soforth": {
+    "canonical_aliases_book1": [
+      "Ann Soforth",
+      "Queen Ann"
+    ],
+    "known_facts_book1": [
+      "Queen of Oogaboo, a small valley kingdom in a far corner of the Land of Oz, over which she rules eighteen men, twenty-seven women and forty-four children.",
+      "Acts as Queen because her father King Jol Jemkiph Soforth crept over the pass and disappeared, and her mother went in search of him.",
+      "Sets out to conquer the world because she resents her tiny kingdom, after her sister Salye taunts her with the idea.",
+      "Raises an Army of exactly seventeen: sixteen officers — four Generals, four Colonels, four Majors and four Captains — and one Private, Files.",
+      "Wears an imposing green uniform covered with gold braid, with a green soldier-cap and a purple plume.",
+      "Never reaches the Land of Oz at all: Glinda reads of her plan in the Record Book and twists the mountain pass so the army emerges in an adjoining country instead.",
+      "Falls into Ruggedo's covered pit with all sixteen officers, escapes by touching a secret spring with her elbow, and crawls through a jagged tunnel that leads to the Metal Forest.",
+      "Emerges from the tunnel in rags, her crown bent and battered and her shoes cut to pieces.",
+      "Gives up conquering the world at the end and wishes only to be home; Ozma has the Wizard transport her and all her people back to Oogaboo.",
+      "Is allowed by King Kaliko to tie up a handkerchief full of diamonds before she leaves."
+    ],
+    "known_relations_book1": {
+      "Salye": "Her younger sister, who taunts her into the conquest and stays behind in Oogaboo.",
+      "Files": "Her sole Private Soldier, who resigns rather than bind three girls.",
+      "Tik-Tok": "The Clockwork Man who becomes her Army after Files resigns.",
+      "Shaggy Man": "Whose Love Magnet makes her embrace him and abandon her plan to conquer his party.",
+      "Ruggedo": "The Nome King she sets out to conquer, whose pit she falls into.",
+      "Ozma": "The Ruler whose kingdom she meant to seize and who finally sends her home."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Queen Ann conquers the Land of Oz",
+        "Queen Ann conquers the Nome King",
+        "Queen Ann reaches the Emerald City",
+        "Queen Ann's army fights a battle"
+      ],
+      "relationships": [
+        "Queen Ann is an ally of Ruggedo",
+        "Queen Ann is the sister of Ozma"
+      ]
+    },
+    "hallucination_signals": [
+      "Queen Ann conquers Oz",
+      "Queen Ann defeats the Nome King",
+      "Queen Ann reaches the Emerald City",
+      "Ann is Ozma's sister"
+    ]
+  },
+  "salye": {
+    "canonical_aliases_book1": [
+      "Salye"
+    ],
+    "known_facts_book1": [
+      "Ann's younger sister, who refuses to sweep the floor of the palace living room and points out that Ann is the eldest and head of the family.",
+      "Taunts Ann by suggesting she raise an army and conquer Oz, which is what gives Ann the idea.",
+      "Warns Ann that in Ozma's country she will be a nobody, while in Oogaboo she is a Queen.",
+      "Leans out of the palace window to laugh at the Army and observe that it can run better than it can fight.",
+      "Stays behind in Oogaboo and appears in no other scene."
+    ],
+    "known_relations_book1": {
+      "Ann Soforth": "Her elder sister, the Queen, whom she taunts into leaving."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Salye joins the Army of Oogaboo",
+        "Salye becomes Queen of Oogaboo",
+        "Salye leaves Oogaboo"
+      ]
+    },
+    "hallucination_signals": [
+      "Salye joins the army",
+      "Salye becomes Queen",
+      "Salye travels with Ann"
+    ]
+  },
+  "files": {
+    "canonical_aliases_book1": [
+      "Files",
+      "Private Files",
+      "Jo Files"
+    ],
+    "known_facts_book1": [
+      "The eighteenth and last man of Oogaboo, an intelligent and ambitious young fellow who owns twelve trees bearing steel files and nine book-trees.",
+      "The books on his trees grow in green husks that turn deep red when ripe; picked too soon the stories are confused and the spelling bad, and once a book is read the words disappear and the leaves wither.",
+      "Insists on being sole Private rather than an officer, arguing from his story-books that it is always the private soldiers who do the fighting.",
+      "Picks his own musket from a gun-tree and his bullets from a bullet-tree.",
+      "Is the only one who faces the Rak: he loads his gun in the dark and shoots it, breaking its jaw, its left wing and its right leg.",
+      "Grows more cheerful the worse things get, which is what makes Ann consult him more often than her officers.",
+      "Resigns from the Army rather than obey the order to bind Betsy, Polychrome and Ozga, and throws down his gun and knapsack.",
+      "Suggests the Rose Princess ask the field-flowers the way, and they bend and nod three times toward Ruggedo's kingdom.",
+      "Becomes such a good friend of Ozga that Ozma sends her back to Oogaboo with him rather than separate them."
+    ],
+    "known_relations_book1": {
+      "Ann Soforth": "His Queen, whom he serves as sole Private and then resigns from.",
+      "Ozga": "The Rose Princess he befriends, protects and finally goes to Oogaboo with.",
+      "Tik-Tok": "The Clockwork Man who takes over his gun and his post as the Army.",
+      "the Rak": "The monster he shoots and wounds in three places."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Files kills the Rak",
+        "Files fights the nomes",
+        "Files marries the Rose Princess in this book",
+        "Files stays in the Emerald City"
+      ]
+    },
+    "hallucination_signals": [
+      "Files kills the Rak",
+      "Files marries Ozga",
+      "Files fights a battle",
+      "Files remains in Oz"
+    ]
+  },
+  "officers_of_oogaboo": {
+    "canonical_aliases_book1": [
+      "Officers of Oogaboo",
+      "Army of Oogaboo"
+    ],
+    "known_facts_book1": [
+      "Sixteen men of Oogaboo, all named after the crop their orchard bears: Generals Apple, Bunn, Cone and Clock; Colonels Plum, Egg, Banjo and Cheese; Majors Nails, Cake, Ham and Stockings; Captains Sandwich, Padlocks, Sundae and Buttons.",
+      "Wear gorgeous uniforms and carry sharp glittering swords, but every one of them refuses to fight, saying they are brave in every way until it comes to fighting.",
+      "Each carries a tiny white tent in his pocket that grows to full size when placed on the ground.",
+      "Flee shrieking from the Rak, and afterwards argue that by running away they preserved themselves to assist the Queen.",
+      "Are routed twice by Hank's heels alone, dropping their swords and hiding behind trees and bushes.",
+      "March straight into Ruggedo's covered pit and are imprisoned there, then crawl for days through a jagged tunnel that rubs the skin off their knees and reduces their uniforms to rags.",
+      "Capture Ruggedo in the Metal Forest — their one act of courage in the whole book — not knowing he has already been deposed.",
+      "Are sent home to Oogaboo by the Wizard's magic at Ozma's command, every one of them longing for his orchard."
+    ],
+    "known_relations_book1": {
+      "Ann Soforth": "Their Queen, whom they follow and then reproach for their troubles.",
+      "Files": "Their sole Private, whose resignation they call treason.",
+      "Ruggedo": "The Nome King they capture in the Metal Forest.",
+      "Hank": "The mule whose heels scatter them twice."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the officers of Oogaboo win a battle",
+        "the officers of Oogaboo are killed",
+        "the officers of Oogaboo conquer the nomes",
+        "Jo Candy joins the army"
+      ]
+    },
+    "hallucination_signals": [
+      "the officers win a battle",
+      "the officers are killed",
+      "the officers conquer the nomes",
+      "Jo Candy marches with the army"
+    ]
+  }
+}

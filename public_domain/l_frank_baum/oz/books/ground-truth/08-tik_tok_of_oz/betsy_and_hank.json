@@ -1,0 +1,85 @@
+{
+  "betsy_bobbin": {
+    "canonical_aliases_book1": [
+      "Betsy Bobbin",
+      "Betsy"
+    ],
+    "known_facts_book1": [
+      "A little mortal girl from Oklahoma, shipwrecked when her ship struck a rock, blew up and sank.",
+      "Is washed ashore in the Rose Kingdom clinging to a hatch-cover torn from the ship's deck, holding first to Hank's tail and then helping the mule aboard the raft.",
+      "Has no home to go back to and no friends but Hank and, later, the Shaggy Man.",
+      "Suggests picking the Rose Princess from her bush, which brings Ozga to life and gets them all driven out of the Rose Kingdom.",
+      "Winds up Tik-Tok's thoughts, speech and action after he is hauled from the well.",
+      "Discovers that the Roses are unmoved by the Love Magnet because they have no hearts.",
+      "Rides Hank into Ruggedo's throne cavern and demands something to eat, which so impresses the King by her coolness that he asks what she wants — and her mention of hard-boiled eggs makes every nome present shudder.",
+      "Is saved by Kaliko, who hides her and Hank in his own private room with mineral bread and broiled mushrooms and tells her to open the door only to three raps.",
+      "Volunteers to kiss the Ugly One in the dark to break the charm; her kiss as a Mortal Maid does not work, nor does Ozga's, but Polychrome's does.",
+      "Takes food and drink to the fallen Ruggedo out of pity and persuades Kaliko to let him stay.",
+      "Is brought to the Land of Oz by the Wizard's magic at the end, given a suite of rooms opposite Dorothy's, and becomes Dorothy's playmate."
+    ],
+    "known_relations_book1": {
+      "Hank": "Her mule and comrade, shipwrecked with her and her constant protector.",
+      "Shaggy Man": "The friend who promises never to desert her as long as she needs a friend.",
+      "Polychrome": "A friend she is billeted with as Queen Erma's guest.",
+      "Kaliko": "The nome who hides and feeds her while Ruggedo means her harm.",
+      "Ruggedo": "The Nome King who orders her locked in the Slimy Cave, and whom she later pities.",
+      "Dorothy": "The Oz girl who runs to meet her and becomes her playmate.",
+      "Ozma": "The Ruler who admits her to Oz and builds Hank a golden stall."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "ruby slippers",
+        "Over the Rainbow"
+      ],
+      "not_in_this_book": [
+        "Betsy comes from Kansas",
+        "Betsy's kiss breaks the charm of ugliness",
+        "Betsy returns to the outside world at the end",
+        "Betsy arrives in Oz by cyclone"
+      ]
+    },
+    "hallucination_signals": [
+      "Betsy is from Kansas",
+      "Betsy breaks the ugliness charm",
+      "Betsy goes home at the end",
+      "Betsy is Dorothy's sister"
+    ]
+  },
+  "hank": {
+    "canonical_aliases_book1": [
+      "Hank"
+    ],
+    "known_facts_book1": [
+      "A thin, sad-faced little mule thrown into the sea by the same shock that wrecked the ship, who swims to Betsy's raft.",
+      "Says nothing but 'Hee-haw!' for the whole book, which the Roses find a horrid noise and which frightens the Royal Gardener.",
+      "Kicks the Royal Gardener out of the greenhouse door so hard the man never touches the ground.",
+      "Scatters the sixteen officers of Oogaboo twice with his heels, making no exception for Queen Ann herself.",
+      "Kicks General Guph into Ruggedo, flattening the King against the opposite rock wall, which is what lets Kaliko spirit Betsy away.",
+      "Falls into the dry water of the Rubber Country stream and comes out perfectly dry.",
+      "Discovers Tik-Tok at the bottom of the old well by looking into it and braying.",
+      "Is given a stall beside the Sawhorse in Ozma's stable, and finds on arriving in Oz that he can talk — which frightens him.",
+      "Insists to the Sawhorse, the Cowardly Lion and the Hungry Tiger that Betsy is the dearest, sweetest girl in the world, and offers to fight all three of them over it."
+    ],
+    "known_relations_book1": {
+      "Betsy Bobbin": "His little mistress, whom he guards through the whole journey.",
+      "Sawhorse": "The wooden horse who questions his 'hee-haw' and finally shakes hoofs with him.",
+      "Cowardly Lion": "Defends Dorothy against Hank's claim and then befriends him.",
+      "Hungry Tiger": "Defends Dorothy against Hank's claim and then rubs noses with him.",
+      "General Guph": "The nome he kicks into the Nome King."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Hank talks before reaching the Land of Oz",
+        "Hank is a donkey in this book's final chapters",
+        "Hank is killed",
+        "Hank stays outside Oz"
+      ]
+    },
+    "hallucination_signals": [
+      "Hank speaks in the Rose Kingdom",
+      "Hank talks to Betsy on the road",
+      "Hank is killed",
+      "Hank remains outside Oz"
+    ]
+  }
+}

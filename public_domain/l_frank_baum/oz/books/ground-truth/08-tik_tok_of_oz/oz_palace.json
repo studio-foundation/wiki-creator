@@ -1,0 +1,266 @@
+{
+  "ozma": {
+    "canonical_aliases_book1": [
+      "Ozma",
+      "Ozma of Oz",
+      "Princess Ozma"
+    ],
+    "known_facts_book1": [
+      "The lovely Ruler of the Land of Oz, who never leaves the Emerald City in this book and acts entirely through her Magic Picture and the Wizard's magic.",
+      "Watches the whole adventure day by day in a Magic Picture in a radium frame in her boudoir, with the Wizard seated beside her.",
+      "Sent Tik-Tok to tell Shaggy where his brother was, having seen both in the Magic Picture, and let Shaggy take the Love Magnet from the gateway of the Emerald City.",
+      "Is entirely unaware of the Army of Oogaboo's plan to conquer her; Glinda deals with it without ever mentioning it to her.",
+      "Has the Wizard send Ann, her officers, Files and the Rose Princess home to Oogaboo, keeping Files and Ozga together because they have become such good friends.",
+      "Speaks with Shaggy by a wireless telephone of the Wizard's invention, two tiny instruments held to the ear that need no wire.",
+      "Holds that the Land of Oz is not a refuge for all mortals in distress and that Shaggy's brother has no claim on her — and admits him anyway rather than lose Shaggy.",
+      "Gives Betsy a suite of rooms opposite Dorothy's and orders a golden stall built for Hank beside the Sawhorse.",
+      "Rebukes the Sawhorse, the Lion and the Tiger for quarreling, saying Oz is a Land of Love where friendship outranks every other quality.",
+      "Reveals that the spell of the fairyland has given Toto speech too, and that he simply prefers not to talk."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her dearest friend, whose advice she asks about admitting the strangers.",
+      "the Wizard": "Her attendant, who performs the transportations at her word.",
+      "Shaggy Man": "Her subject, whose refusal to desert his friends forces her decision.",
+      "Betsy Bobbin": "The mortal girl she admits to Oz and lodges opposite Dorothy.",
+      "Ozga": "Her distant cousin, whom she sends to Oogaboo with Files.",
+      "Glinda": "The Sorceress who turned the Oogaboo pass without telling her."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Ozma leaves the Emerald City in this book",
+        "Ozma confronts Ruggedo",
+        "Ozma knows of the Army of Oogaboo before the end",
+        "Ozma refuses Shaggy's brother"
+      ]
+    },
+    "hallucination_signals": [
+      "Ozma travels to the Nome Kingdom",
+      "Ozma fights Ruggedo",
+      "Ozma refuses Shaggy's brother",
+      "Ozma leads an army"
+    ]
+  },
+  "dorothy": {
+    "canonical_aliases_book1": [
+      "Dorothy",
+      "Princess Dorothy"
+    ],
+    "known_facts_book1": [
+      "A Princess of Oz living in Ozma's palace, who came to the Land of Oz from the United States and is known to Shaggy as an old chum.",
+      "Does not appear until the last two chapters; before that she is only spoken of by others.",
+      "Has watched Betsy and Hank in the Magic Picture and already thinks Betsy a dear little girl and Hank a darling.",
+      "Is asked by Ozma for advice on admitting the strangers, and answers that they cannot afford to lose their Shaggy Man.",
+      "Runs down the stairs two at a time to meet Betsy herself, so the new girl will not feel strange in the big palace.",
+      "Owns a Pink Kitten upstairs in her room that talks very nicely, and Toto, who has been with her in Oz a long time and has never said a word.",
+      "Blows a small silver whistle to call Toto, and coaxes one sentence out of him: 'All right. Here I go!'",
+      "Is defended in the stable by the Cowardly Lion, the Hungry Tiger and the Sawhorse as the dearest, sweetest girl in the world."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Her dearest friend, whose advice she gives.",
+      "Betsy Bobbin": "The new girl she runs to meet and becomes a playmate to.",
+      "Toto": "Her little black dog, who is proved able to talk.",
+      "Cowardly Lion": "Her first friend and companion, who champions her.",
+      "Shaggy Man": "An old chum from the outside world."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "ruby slippers",
+        "Silver Shoes",
+        "there is no place like home",
+        "Miss Gulch",
+        "Over the Rainbow"
+      ],
+      "not_in_this_book": [
+        "Dorothy travels with the party",
+        "Dorothy goes to the Nome Kingdom in this book",
+        "Dorothy returns to Kansas"
+      ]
+    },
+    "hallucination_signals": [
+      "Dorothy joins the journey",
+      "Dorothy faces the Nome King",
+      "Dorothy returns to Kansas",
+      "ruby slippers"
+    ]
+  },
+  "the_wizard": {
+    "canonical_aliases_book1": [
+      "the Wizard of Oz",
+      "the Wizard"
+    ],
+    "known_facts_book1": [
+      "The little Wizard of Oz, who came to the Land of Oz from the United States and sits beside Ozma watching the Magic Picture.",
+      "Invented the wireless telephone — two tiny instruments held to the ear that record the same vibrations and need no wire connection.",
+      "Transports the Oogaboo party home and later Shaggy, his brother, Betsy and Hank into Oz, using a silver plate, a pink powder from a crystal vial, and an incantation Glinda the Good taught him.",
+      "The transportation ends in a puff of pungent perfumed smoke, which he says is a very necessary part of his wizardry.",
+      "Is described in this book only as Ozma's attendant and magician; he never leaves the palace and never meets Ruggedo."
+    ],
+    "known_relations_book1": {
+      "Ozma": "The Ruler he serves and whose commands he performs.",
+      "Glinda": "The Sorceress who taught him the incantation he uses.",
+      "Tik-Tok": "The Clockwork Man he transports back to Oz first."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "the Wizard is a humbug in this book",
+        "the Wizard leaves in a balloon"
+      ],
+      "not_in_this_book": [
+        "the Wizard travels to the Nome Kingdom",
+        "the Wizard defeats Ruggedo"
+      ]
+    },
+    "hallucination_signals": [
+      "the Wizard defeats Ruggedo",
+      "the Wizard leaves in a balloon",
+      "the Wizard is a humbug"
+    ]
+  },
+  "toto": {
+    "canonical_aliases_book1": [
+      "Toto"
+    ],
+    "known_facts_book1": [
+      "Dorothy's little fuzzy black dog, who has been with her in Oz a long time and has never said anything but 'Bow-wow!'",
+      "Appears only in the final chapter, running up the path when Dorothy blows her silver whistle.",
+      "Is revealed by Ozma to have been under the fairyland's speech spell all along — he understands everything and simply prefers not to talk.",
+      "Answers Dorothy with his bark and his tail, 'Bow-wow' meaning yes and 'Woof' meaning no.",
+      "Finally says one sentence — 'All right. Here I go!' — and darts away as swift as an arrow."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "His mistress, who coaxes his first words out of him.",
+      "Ozma": "Who explains that the spell affects him like any other animal in Oz."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "Miss Gulch takes Toto",
+        "Toto pulls back the curtain"
+      ],
+      "not_in_this_book": [
+        "Toto travels with Betsy and Shaggy",
+        "Toto talks throughout this book",
+        "Toto goes to the Nome Kingdom"
+      ]
+    },
+    "hallucination_signals": [
+      "Toto joins the journey",
+      "Toto talks freely",
+      "Miss Gulch takes Toto"
+    ]
+  },
+  "sawhorse": {
+    "canonical_aliases_book1": [
+      "Sawhorse"
+    ],
+    "known_facts_book1": [
+      "Ozma's favorite steed, a wooden horse with knot eyes and a branch for a tail, living in a gold-panelled stall in the stable behind the palace.",
+      "Is shod with plates of gold and never sleeps, so he has no need of the cushions Hank is given.",
+      "Is the only horse of any description in the Land of Oz.",
+      "Questions Hank about whether 'hee-haw' is all he can say, and tells him all animals talk in Oz.",
+      "Declares that no girl living can compare with his mistress Ozma, and snorts and stamps when Hank claims Betsy is the sweetest girl in the world.",
+      "Shakes hoofs with Hank after Ozma's rebuke."
+    ],
+    "known_relations_book1": {
+      "Ozma": "His mistress, whom he champions as the sweetest girl alive.",
+      "Hank": "The new mule in the neighbouring stall, whom he first challenges and then befriends."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Sawhorse leaves the Emerald City in this book",
+        "the Sawhorse carries Betsy",
+        "the Sawhorse fights Hank"
+      ]
+    },
+    "hallucination_signals": [
+      "the Sawhorse fights the mule",
+      "the Sawhorse carries Betsy",
+      "the Sawhorse travels to the Nome Kingdom"
+    ]
+  },
+  "cowardly_lion": {
+    "canonical_aliases_book1": [
+      "Cowardly Lion"
+    ],
+    "known_facts_book1": [
+      "One of Ozma's beasts, living in the stable behind the palace in a room filled with soft cushions and a golden trough.",
+      "Appears only in the final chapter, stretched out on the marble floor eyeing Hank with a calm and critical gaze.",
+      "Declares he will fight anyone, animal or human, who denies that Dorothy is the dearest, sweetest girl in the world, because she was his first friend and companion.",
+      "Tells Hank that any friend of a friend of their beloved Ruler is a friend of the Cowardly Lion, and offers him help or advice whenever he needs it.",
+      "Says there are other Lions in Oz besides himself."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "His first friend and companion, whom he champions.",
+      "Hungry Tiger": "His companion in the stable.",
+      "Hank": "The new mule he first challenges and then accepts as a friend."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "the Cowardly Lion asks the Wizard for courage in this book"
+      ],
+      "not_in_this_book": [
+        "the Cowardly Lion travels with Betsy",
+        "the Cowardly Lion fights in this book",
+        "the Cowardly Lion goes to the Nome Kingdom"
+      ]
+    },
+    "hallucination_signals": [
+      "the Cowardly Lion asks for courage",
+      "the Cowardly Lion fights Hank",
+      "the Cowardly Lion joins the journey"
+    ]
+  },
+  "hungry_tiger": {
+    "canonical_aliases_book1": [
+      "Hungry Tiger"
+    ],
+    "known_facts_book1": [
+      "Ozma's other great beast, crouching in the palace stable and eyeing Hank with interest.",
+      "Appears only in the final chapter and takes no part in the adventure.",
+      "Snarls that he too will fight for Dorothy, showing two rows of enormous white teeth.",
+      "Says he has many relatives living in the Jungle Country but is the only Tiger living in the Emerald City.",
+      "Rubs noses with Hank once Ozma has rebuked them all."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "The girl he defends as sweetest in the world.",
+      "Cowardly Lion": "His companion in the stable.",
+      "Hank": "The new mule he first challenges and then befriends."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Hungry Tiger eats a baby",
+        "the Hungry Tiger travels with Betsy",
+        "the Hungry Tiger fights Hank"
+      ]
+    },
+    "hallucination_signals": [
+      "the Hungry Tiger eats a baby",
+      "the Hungry Tiger fights the mule",
+      "the Hungry Tiger joins the journey"
+    ]
+  },
+  "jellia_jamb": {
+    "canonical_aliases_book1": [
+      "Jellia Jamb"
+    ],
+    "known_facts_book1": [
+      "Ozma's favorite maid, who is sent to fetch Dorothy and who announces the arrivals at the palace.",
+      "Reports that Shaggy is crying like a baby but says they are tears of joy.",
+      "Reports that a girl and a small-sized mule have mysteriously arrived and do not know where they are or how they came.",
+      "Appears only in the closing chapters and takes no part in the adventure."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Her mistress, whom she serves as favorite maid.",
+      "Dorothy": "Whom she is sent to summon."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Jellia Jamb travels with the party",
+        "Jellia Jamb works magic"
+      ]
+    },
+    "hallucination_signals": [
+      "Jellia Jamb joins the journey",
+      "Jellia Jamb works magic"
+    ]
+  }
+}
