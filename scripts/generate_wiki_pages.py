@@ -1055,6 +1055,13 @@ def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> No
                 page["infobox_fields"][slot.token] = value
             else:
                 page["infobox_fields"].pop(slot.token, None)
+    # STU-729: every infobox slot is pipeline-owned (batch-bound/extracted-fact),
+    # so the writer owns no infobox field — drop any key it emitted that is not a
+    # declared token. Such a key (`region`, `place_type`, `name`) matches no
+    # template parameter and would render nowhere. Rebuilt in slot order.
+    declared = [slot.token for slot in resolved.infobox()]
+    fields = page["infobox_fields"]
+    page["infobox_fields"] = {t: fields[t] for t in declared if fields.get(t)}
 
 
 # The neutral error codes check_identity_match emits (scripts/wiki_page_validator.py).

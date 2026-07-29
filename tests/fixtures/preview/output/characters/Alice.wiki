@@ -1,9 +1,8 @@
 {{Infobox character
-|name=Alice
+|nom=Alice
 |status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
 |species=Human
-|residence=Victorian England
-|first_seen=Chapter 1
+|apparition=Chapter 1
 }}
 
 == Biography ==

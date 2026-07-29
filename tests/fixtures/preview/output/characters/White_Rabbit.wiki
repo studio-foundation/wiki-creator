@@ -1,10 +1,9 @@
 {{Infobox character
-|name=White Rabbit
+|nom=White Rabbit
 |species=Rabbit
 |status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
-|occupation=Herald
 |affiliation=[[Court of Hearts]]
-|first_seen=Chapter 1
+|apparition=Chapter 1
 }}
 
 == Biography ==

@@ -1,8 +1,8 @@
 {{Infobox event
-|name=A Mad Tea-Party
+|nom=A Mad Tea-Party
 |participants=[[Alice]], [[Cheshire Cat]]
-|location=[[Wonderland]]
-|chapter=Chapter 7
+|lieu=[[Wonderland]]
+|chapitre=Chapter 7
 }}
 
 == Overview ==
