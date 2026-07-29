@@ -81,15 +81,16 @@ def test_every_slot_token_has_a_label():
     assert tokens <= labels.keys(), sorted(tokens - labels.keys())
 
 
-def test_every_infobox_row_has_a_label():
+def test_every_generated_infobox_row_carries_a_label():
+    """The generated template (STU-729) labels every row but the header from the
+    pack, so an unlabelled token would ship a titlecased English token as the row
+    label of a French wiki."""
     base = pt.load_base_template()
     labels = pt.load_lang_template(REFERENCE)["labels"]
     for etype in et.declared_types(base):
-        for row in (base["entity_types"][etype].get("export") or {}).get("infobox_rows") or []:
-            if isinstance(row, dict) and "header" in row:
-                continue  # the name row renders the value, no label
-            token = row if isinstance(row, str) else row["label"]
-            assert token in labels, f"{etype}.infobox_rows: {token} has no label"
+        _header, *rows = pt.infobox_tokens(etype, base) or [None]
+        for token in rows:
+            assert token in labels, f"{etype} infobox row {token} has no label"
 
 
 def test_every_relationship_and_sub_role_token_has_a_label():

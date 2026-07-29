@@ -1,6 +1,5 @@
 {{Infobox location
-|name=Rabbit Hole
-|type=Passage
+|nom=Rabbit Hole
 }}
 
 == Overview ==

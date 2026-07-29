@@ -6,7 +6,7 @@ is a `base.yaml` edit — nothing here enumerates the types.
 """
 from __future__ import annotations
 
-from wiki_creator.page_templates import localized, load_base_template, slot_label
+from wiki_creator.page_templates import load_base_template, localized, render_infobox_source
 
 
 def _types(base: dict | None = None) -> dict:
@@ -98,31 +98,12 @@ def infobox_template_name(etype: str, base: dict | None = None) -> str | None:
 
 
 def infobox_source(etype: str, lang: str = "en", base: dict | None = None) -> str | None:
-    """Build the MediaWiki infobox template for a type from its declared
-    ``export.infobox_rows`` and the ``lang`` pack's ``labels`` map (STU-730), so the
-    row labels render in the wiki's output language instead of a hardcoded French
-    literal. Each row is a bare token (label key = parameter name) or
-    ``{label, param}`` when they differ; ``{header: <param>}`` is the name row
-    (colspan, value only). None when the type declares no template."""
-    export = _export(etype, base)
-    rows = export.get("infobox_rows")
-    if not rows or not export.get("infobox_template"):
-        return None
-    lines = ["<includeonly>", '{| class="infobox"']
-    for row in rows:
-        lines.append("|-")
-        if isinstance(row, dict) and "header" in row:
-            lines.append('! colspan="2" | {{{' + row["header"] + "}}}")
-            continue
-        if isinstance(row, str):
-            token = param = row
-        else:
-            token = row["label"]
-            param = row.get("param", token)
-        lines.append("| '''" + slot_label(token, lang) + "''' || {{{" + param + "|}}}")
-    lines.append("|}")
-    lines.append("</includeonly>")
-    return "\n".join(lines)
+    """The MediaWiki infobox template source for a type, generated from its declared
+    infobox slot tokens and localized by ``lang`` (STU-729/730). Neither a hand-kept
+    wikitext string nor a hand-kept row list: the template's parameters ARE the slot
+    tokens the page renderer emits, so the two vocabularies cannot drift. None when
+    the type declares no infobox."""
+    return render_infobox_source(etype, lang, base if base is not None else load_base_template())
 
 
 def category_key(etype: str, base: dict | None = None) -> str | None:

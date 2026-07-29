@@ -320,6 +320,35 @@ def slot_label(token, lang) -> str:
         or token.replace("_", " ").title()
 
 
+def infobox_tokens(entity_type, base=None) -> list[str]:
+    """The infobox slot tokens a type declares, in order (every tier). This is the
+    vocabulary the page renderer emits into ``infobox_fields``, so it is also the
+    parameter list of the generated infobox template (STU-729)."""
+    raw = base if base is not None else load_base_template()
+    spec = (raw.get("entity_types") or {}).get(str(entity_type).upper()) or {}
+    return [s["token"] for s in (spec.get("infobox") or []) if s.get("token")]
+
+
+def render_infobox_source(entity_type, lang, base=None) -> str | None:
+    """Generate the MediaWiki infobox template for a type from its declared infobox
+    tokens (STU-729): the first token is the header (the name), each remaining token
+    a row labelled from the `lang` template pack. Deriving the template from the same
+    vocabulary the renderer emits is what stops the two from drifting — a hand-kept
+    template declared ``{{{name}}}`` while the renderer emitted ``nom=``, so every
+    row rendered empty. Returns None for a type with no infobox (OTHER, SYNOPSIS)."""
+    tokens = infobox_tokens(entity_type, base)
+    if not tokens:
+        return None
+    header, *rows = tokens
+    lines = ['<includeonly>', '{| class="infobox"', '|-', "! colspan=\"2\" | {{{" + header + "}}}"]
+    for token in rows:
+        lines.append("|-")
+        lines.append("| '''" + slot_label(token, lang) + "''' || {{{" + token + "|}}}")
+    lines.append("|}")
+    lines.append("</includeonly>")
+    return "\n".join(lines)
+
+
 def chrome_label(key, lang) -> str:
     """Localized reader-facing export chrome string (pack ``chrome``), e.g. the
     spoiler collapsible controls. Returns the raw template — callers that

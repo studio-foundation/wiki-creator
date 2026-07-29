@@ -38,7 +38,7 @@ def test_build_index_matches_the_api_shape():
 
 def test_load_templates_keys_by_name():
     templates = preview.load_templates(FIXTURE)
-    assert "{{{name}}}" in templates["Infobox character"]
+    assert "{{{nom}}}" in templates["Infobox character"]
     assert "Infobox location" in templates
 
 

@@ -1,6 +1,5 @@
 {{Infobox location
-|name=Wonderland
-|type=Dream world
+|nom=Wonderland
 |location=Below the [[Rabbit Hole]]
 }}
 

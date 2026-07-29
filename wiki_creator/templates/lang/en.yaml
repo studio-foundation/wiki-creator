@@ -37,13 +37,6 @@ labels:
   enemies:        Enemies
   location:       Location
   leaders:        Leaders
-  # STU-730: infobox row labels used only by the template builder
-  # (entity_taxonomy.infobox_source).
-  occupation:     Occupation
-  residence:      Residence
-  residents:      "Notable residents"
-  members:        "Notable members"
-  headquarters:   Headquarters
   participants:   Participants
   lieu:           Place
   chapitre:       Chapter

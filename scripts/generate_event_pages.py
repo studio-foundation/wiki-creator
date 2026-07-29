@@ -83,7 +83,7 @@ def _base_page(title: str, event: dict, content: str) -> dict:
         "title": title,
         "importance": EVENT_IMPORTANCE,
         "entity_type": EVENT_ENTITY_TYPE,
-        "infobox_fields": {"name": title, **event_infobox_fields(event)},
+        "infobox_fields": {"nom": title, **event_infobox_fields(event)},
         "content": content,
     }
 

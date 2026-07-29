@@ -21,11 +21,6 @@ labels:
   enemies:        Ennemis
   location:       Localisation
   leaders:        Leaders
-  occupation:     Occupation
-  residence:      Résidence
-  residents:      "Résidents notables"
-  members:        "Membres notables"
-  headquarters:   Siège
   participants:   Participants
   lieu:           Lieu
   chapitre:       Chapitre
