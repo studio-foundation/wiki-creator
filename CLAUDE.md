@@ -43,6 +43,8 @@ make generate-pages-dry
 make generate-synopsis
 make generate-synopsis-dry
 make consolidate-stance
+make check-wikilinks         # STU-725: assert every [[link]] in output/<book>/ resolves to a page
+make check-wikilinks-series  # same over output/_series/
 make smoke        # e2e smoke test on the committed fixture novella
 make golden       # golden regression run: chained resolution stages vs committed goldens (~2s, no spaCy/LLM)
 make golden-update  # regenerate goldens after an INTENTIONAL behavior change, then review the diff
@@ -255,6 +257,7 @@ library/sarah_j_maas/throne-of-glass/output/_series/
 - [scripts/consolidate_editorial_stance.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/consolidate_editorial_stance.py): post-generation editorial-stance consolidation pass (STU-508), writes `editorial_stance_report.json`; pure logic in `wiki_creator/consolidation.py`
 - [scripts/entity_status.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/entity_status.py): per-tome character status stage of wiki-preparation (STU-488; pre/call/post split since STU-457, with `entity_status_pre.py`), writes `entity_status.json`; pure logic in `wiki_creator/entity_status.py`
 - [scripts/wiki_export.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/wiki_export.py): Markdown -> wikitext
+- [scripts/check_wikilinks.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/check_wikilinks.py): wikilink integrity gate (STU-725) over a rendered `.wiki` set (book or `--series`), exits non-zero on a dead link; pure logic in `wiki_creator/wikilinks.py` (`find_dead_links`, book/series scope share it). Intentional red links live in book YAML `export.red_links`
 - [scripts/resolve_clusters.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/resolve_clusters.py): resolves NER clusters
 - [scripts/alias_resolution.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/alias_resolution.py): conservative PERSON alias merging, runs after resolve-clusters
 - [scripts/entity_classification.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/entity_classification.py): classifies entities, reads from alias-resolution output
