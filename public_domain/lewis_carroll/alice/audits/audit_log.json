@@ -1,5 +1,77 @@
 [
   {
+    "run": 4,
+    "date": "2026-07-28",
+    "book": "01-alice_in_wonderland",
+    "providers": {
+      "generation": "claude-code / claude-haiku-4-5 (config defaults STUDIO_BULK_*: discover/classify-relationships, wiki-pages, synopsis, event-pages, consolidation)",
+      "verdict_agents": "claude-code / claude-haiku-4-5 (STUDIO_SMART_*: section-filter, alias-adjudication, entity-status/affiliation/species)",
+      "chapter_summaries": "summary_method=llm on 12/12 chapters; book yaml still pins generation.chapter_summary.llm_model: qwen2.5 for the legacy ollama path, and chapter_summaries.json carries no provider stamp to confirm which one ran",
+      "note": "audit scope = the run committed in PR #333 (regenerated .wiki output). Focus: generated characters/Alice.wiki vs the reference real-wiki/Alice.wiki."
+    },
+    "pages_generated": 28,
+    "failed_pages": [],
+    "infobox_pct": 100,
+    "lang_fr_pct": 0,
+    "lang_note": "100% English, intended (export.categories.language: en).",
+    "alias_duplicates": 0,
+    "hallucinations": 0,
+    "gt_violations": "n/a - no ground-truth corpus for lewis_carroll/alice; worth writing one now that a reference wiki sits on disk under output/01-alice_in_wonderland/real-wiki/",
+    "coverage": {
+      "batch_entities": 28,
+      "pages_generated": 28,
+      "missing": [],
+      "failed": [],
+      "filtered_before_batch": 0,
+      "event_pages": 16,
+      "no_place_pages": "28 pages all PERSON, 0 PLACE/ORG/FACTION - unchanged from run 3",
+      "context_truncation": "Alice, the only entity above the 8000-char budget: context_chapters [7,8,9,10,11] of 12 present, chapter_summary_context 5 against a cap of 20. Every other entity keeps all its chapters. STU-711",
+      "narrative_arc": "18 of Alice's 65 participant events; chapters 2, 5, 10 get zero beats (Caterpillar/mushroom, Pool of Tears, Lobster Quadrille); ch1 keeps only its 3 anchor beats, so DRINK ME / EAT ME are cut. STU-713",
+      "white_rabbit": "4 mentions / 2 chapters in the registry against 22 'White Rabbit' + 22 'the Rabbit' in the source text. STU-714"
+    },
+    "relationships": {
+      "discovered_pairs": 48,
+      "discovery_chunks": "29/29 covered, 0 uncached",
+      "classified": 48,
+      "classified_typed": 48,
+      "with_evidence": 0,
+      "with_confidence": 0,
+      "with_evolution": 0,
+      "with_key_moments": 0,
+      "classification_error": 0,
+      "note": "relationships_classified.json is identical to relationships_discovered.json in those four fields - classify contributes nothing over discovery and stamps no error. Reproduces STU-700 outside Oz. Starves event_layer source 1, leaving chapter-summary bullets (max_bullets 8) as the only event supply: exactly 96 events, 8 per chapter."
+    },
+    "events": {
+      "total": 96,
+      "per_chapter": 8,
+      "sources": "chapter-summary bullets only (key_moments empty on 48/48 relations)",
+      "event_pages": 16,
+      "selection": "salience >= 0.7, cap 20"
+    },
+    "weak_entities": [
+      "Alice (context truncated to 5 of 12 chapters)",
+      "White Rabbit (4 mentions, 2 chapters)"
+    ],
+    "regression": {
+      "prefixed_keys": "OK",
+      "epub_ids": "OK",
+      "entity_type_null": "OK",
+      "alias_duplicates": "OK",
+      "cross_serie": "OK",
+      "evolution_quality": "FAIL - 0/48 evolution, 0/48 key_moments, 0/48 evidence, 0/48 confidence; typed count holds at 48/48. Run 3 did not record these fields, so this is newly measured, not proven new.",
+      "temporal_context": "OK - 12/12 present, 0 flashback (correct for this novel)",
+      "ground_truth": "n/a"
+    },
+    "verdict": "Mechanics stay green (28/28 pages, 0 failed, 100% infobox, 0 hallucination, 0 junk, 48/48 typed relations) - every defect this run is a content-coverage defect, and they compound on the one page that matters most. Alice's page is written from chapters 7-11 only: extract_context string-sorts itemN keys and hard-breaks on the 8k budget, so the protagonist loses the first half of the novel (STU-711). Her arc then draws 18 events under a hardcoded cap that leaves chapters 2/5/10 unrepresented - no Caterpillar, no DRINK ME/EAT ME (STU-713) - and orders the ones it keeps by salience within each chapter, which is why the ch9 paragraph reads as three unrelated beats in reverse (STU-712). Underneath all of it, classify-relationships returns nothing on 48/48 pairs, so the event layer runs on one source instead of two (STU-700). Next action: STU-711 - a sort plus a budget policy, and the one that decides whether the protagonist's page is written from the whole book.",
+    "new_issues": [
+      "STU-711 (bug, claude:web, Urgent): extract_context string-sorts itemN and hard-breaks on the 8k budget - the protagonist loses 7 of 12 chapters",
+      "STU-712 (bug, claude:web, High): narrative_role arc intra-chapter order is salience order, not narrative order",
+      "STU-713 (claude:web, Medium): narrative_role event budget hardcoded at 18, whole chapters fall out of the arc",
+      "STU-714 (bug, claude:local, High): White Rabbit reaches the pages with 4 mentions in 2 chapters",
+      "STU-700 (existing, Backlog): commented with the Alice reproduction and the _PROSE_KEYS drop that makes evidence structurally unreachable on the discovery path"
+    ]
+  },
+  {
     "run": 3,
     "date": "2026-07-23",
     "book": "01-alice_in_wonderland",
