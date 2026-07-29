@@ -32,6 +32,7 @@ from dataclasses import asdict
 from wiki_creator import studio_io
 from wiki_creator.paths import BookPaths
 from wiki_creator.character_graph import CharacterGraph
+from wiki_creator.coverage import log_drop
 from wiki_creator.collation import (
     collation_config,
     collation_labels,
@@ -119,12 +120,20 @@ def extract_context(
     # ids are not zero-padded, sorted() yields item10 before item2 and iteration
     # would start mid-book (STU-711/550).
     chapter_numbers = chapter_numbers or {}
-    ordered_keys = [
+    ordered_all = [
         key for _, key in sorted(
             ((resolve_chapter_number(k, chapter_numbers), k) for k in combined),
             key=lambda pair: (pair[0] is None, pair[0] or 0),
         )
-    ][:MAX_CHAPTERS]
+    ]
+    ordered_keys = ordered_all[:MAX_CHAPTERS]
+    if len(ordered_all) > MAX_CHAPTERS:
+        log_drop(
+            "wiki-preparation.extract_context",
+            entity.get("canonical_name", ""),
+            len(ordered_all) - MAX_CHAPTERS,
+            "chapters over MAX_CHAPTERS cap",
+        )
     capped = {key: combined[key][:MAX_MENTIONS_PER_CHAPTER] for key in ordered_keys}
 
     # Spend the char budget breadth-first across the entity's chapters instead of
@@ -132,16 +141,28 @@ def extract_context(
     # everywhere rather than full coverage of an arbitrary early window (STU-711).
     result: dict[str, list[str]] = {}
     total_chars = 0
+    budget_hit = False
     for depth in range(MAX_MENTIONS_PER_CHAPTER):
+        if budget_hit:
+            break
         for chapter, mentions in capped.items():
             if depth >= len(mentions):
                 continue
             mention = mentions[depth]
             if total_chars + len(mention) > MAX_CONTEXT_CHARS_PER_ENTITY:
-                return result
+                budget_hit = True
+                break
             result.setdefault(chapter, []).append(mention)
             total_chars += len(mention)
 
+    dropped = [chapter for chapter in capped if chapter not in result]
+    if dropped:
+        log_drop(
+            "wiki-preparation.extract_context",
+            entity.get("canonical_name", ""),
+            len(dropped),
+            "chapters cut by MAX_CONTEXT_CHARS_PER_ENTITY budget",
+        )
     return result
 
 
