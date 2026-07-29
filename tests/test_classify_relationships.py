@@ -38,7 +38,7 @@ def test_merge_pretyped_keeps_discovery_type_and_takes_prose():
     contributes prose and the confidence grade — it cannot overwrite the type."""
     pair = {"entity_a": "A", "entity_b": "B", "relationship_type": "mentor",
             "direction": "A→B", "evidence": "discovered quote"}
-    classification = {"relationship_type": "friend", "direction": "symétrique",
+    classification = {"relationship_type": "friend", "direction": "symmetric",
                       "evidence": "other", "evolution": "grows warmer",
                       "key_moments": ["ch1: meet"], "confidence": "inferred"}
     merged = _merge_classification(pair, classification, pre_typed=True)
@@ -53,11 +53,11 @@ def test_merge_pretyped_keeps_discovery_type_and_takes_prose():
 def test_merge_untyped_takes_classifier_type():
     """The co-occurrence fallback pair has no type; the classifier types it (legacy)."""
     pair = {"entity_a": "A", "entity_b": "B", "relationship_type": None}
-    classification = {"relationship_type": "friend", "direction": "symétrique",
+    classification = {"relationship_type": "friend", "direction": "symmetric",
                       "evolution": "grows", "key_moments": [], "confidence": "inferred"}
     merged = _merge_classification(pair, classification, pre_typed=False)
     assert merged["relationship_type"] == "friend"
-    assert merged["direction"] == "symétrique"
+    assert merged["direction"] == "symmetric"
 
 
 def test_main_persists_classifier_fingerprint(tmp_path, monkeypatch):
@@ -157,7 +157,7 @@ def test_pretyped_discovered_graph_survives_fold_end_to_end(tmp_path, monkeypatc
     discovered = RelationshipBundle(relationships=[clf.Relationship(
         entity_a="Peter", entity_b="Susan", cooccurrence_count=3,
         chapters=["ch01"], sample_contexts=["they are siblings"],
-        relationship_type="family", direction="symétrique",
+        relationship_type="family", direction="symmetric",
     )])
     studio_io.save_artifact(
         processing / "relationships_discovered.json", discovered, RelationshipBundle
@@ -174,7 +174,7 @@ def test_pretyped_discovered_graph_survives_fold_end_to_end(tmp_path, monkeypatc
     )
     rel = out.relationships[0]
     assert rel.relationship_type == "family"
-    assert rel.direction == "symétrique"
+    assert rel.direction == "symmetric"
 
 
 def test_studio_error_is_marked_in_artifact(tmp_path, monkeypatch):

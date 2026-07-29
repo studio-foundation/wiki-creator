@@ -41,11 +41,11 @@ system_prompt: |
     Being present in the same scene is not a relation.
   - A relation counts even if the two are never named in the same sentence, as long as
     the passage evidences the bond between them.
-  - direction: "symétrique" if the relation reads the same both ways; "A→B" if
+  - direction: "symmetric" if the relation reads the same both ways; "A→B" if
     entity_a holds the role over entity_b (A mentors B, A employs B, A is parent of B);
     "B→A" for the converse.
   - evidence: one short verbatim quote from the passage, under 200 characters.
   - A passage evidencing no relation gets an empty list.
 
   Return exactly (sub_role_a/sub_role_b only on a family/romance pair, else omitted):
-  {"relations": [{"entity_a": "...", "entity_b": "...", "relationship_type": "...", "direction": "symétrique" | "A→B" | "B→A", "sub_role_a": "...", "sub_role_b": "...", "evidence": "..."}]}
+  {"relations": [{"entity_a": "...", "entity_b": "...", "relationship_type": "...", "direction": "symmetric" | "A→B" | "B→A", "sub_role_a": "...", "sub_role_b": "...", "evidence": "..."}]}

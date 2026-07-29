@@ -82,7 +82,7 @@ def test_chunk_spans_multiple_chapters_in_order():
 
 def test_valid_relations_drops_off_roster_name():
     raw = [{"entity_a": "Eragon", "entity_b": "Nobody",
-            "relationship_type": "friend", "direction": "symétrique"}]
+            "relationship_type": "friend", "direction": "symmetric"}]
     kept, rejected = valid_relations(raw, ROSTER, TYPES)
     assert kept == []
     assert rejected and "Nobody" in rejected[0]
@@ -90,14 +90,14 @@ def test_valid_relations_drops_off_roster_name():
 
 def test_valid_relations_drops_self_pair():
     raw = [{"entity_a": "Eragon", "entity_b": "Eragon",
-            "relationship_type": "friend", "direction": "symétrique"}]
+            "relationship_type": "friend", "direction": "symmetric"}]
     kept, rejected = valid_relations(raw, ROSTER, TYPES)
     assert kept == []
 
 
 def test_valid_relations_drops_off_vocabulary_type():
     raw = [{"entity_a": "Eragon", "entity_b": "Brom",
-            "relationship_type": "nemesis", "direction": "symétrique"}]
+            "relationship_type": "nemesis", "direction": "symmetric"}]
     kept, rejected = valid_relations(raw, ROSTER, TYPES)
     assert kept == []
 
@@ -116,13 +116,29 @@ def test_valid_relations_truncates_evidence():
 def test_flip_inverts_asymmetric_direction():
     assert flip("A→B") == "B→A"
     assert flip("B→A") == "A→B"
-    assert flip("symétrique") == "symétrique"
+    assert flip("symmetric") == "symmetric"
+
+
+def test_legacy_french_direction_is_accepted_on_read():
+    """STU-733: the token the agents emitted before the rename still folds.
+
+    A relationships artifact already on disk carries `symétrique`; dropping it
+    would fail `valid_relations` and lose every symmetric relation of that book.
+    """
+    assert flip("symétrique") == "symmetric"
+    kept, rejected = valid_relations(
+        [{"entity_a": "Eragon", "entity_b": "Brom", "relationship_type": "mentor",
+          "direction": "symétrique", "evidence": "ev"}],
+        {"Eragon", "Brom"}, ["mentor"],
+    )
+    assert not rejected
+    assert kept[0]["direction"] == "symmetric"
 
 
 # --- aggregate --------------------------------------------------------------
 
 
-def _vote(chapter_id, a, b, rtype, direction="symétrique", evidence="ev"):
+def _vote(chapter_id, a, b, rtype, direction="symmetric", evidence="ev"):
     return {"chapter_id": chapter_id, "relations": [
         {"entity_a": a, "entity_b": b, "relationship_type": rtype,
          "direction": direction, "evidence": evidence}]}
@@ -278,7 +294,7 @@ def test_canonicalize_maps_surface_form_to_canonical():
 
 def test_canonicalize_leaves_unknown_name_untouched():
     raw = [{"entity_a": "Ghost", "entity_b": "Eragon",
-            "relationship_type": "friend", "direction": "symétrique"}]
+            "relationship_type": "friend", "direction": "symmetric"}]
     out = canonicalize_relations(raw, {"Eragon": "Eragon"})
     assert out[0]["entity_a"] == "Ghost"  # dropped later by valid_relations
 
