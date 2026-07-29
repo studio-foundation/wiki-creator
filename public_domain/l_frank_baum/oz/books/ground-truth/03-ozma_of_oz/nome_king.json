@@ -1,0 +1,69 @@
+{
+  "entity": "Nome King",
+  "canonical_aliases_book1": [
+    "Nome King",
+    "Roquat of the Rocks",
+    "Roquat"
+  ],
+  "known_facts_book1": [
+    "Ruler of the Underground World, commanding thousands of Nomes who labour at furnaces and forges making gold, silver and jewels.",
+    "A little fat man clothed in rock-brown garments, with rock-colored hair, beard and face; Dorothy says he looks like Santa Claus of a different color.",
+    "His only ornament is a broad jewel-studded magic belt that works all his transformations and gives him his power.",
+    "Bought the Queen of Ev and her ten children as slaves from King Evoldo in exchange for a long life, then transformed them into ornaments and bric-a-brac to decorate his rooms.",
+    "Refuses Ozma's demand to free the royal family, arguing the King of Ev had a right to sell them.",
+    "Shows Ozma his vast army of mail-clad Nome warriors to prove no ruler dares fight him.",
+    "Offers each visitor a guessing game: touch objects saying 'Ev' to free the transformed royals, but be transformed yourself if all guesses fail.",
+    "Entraps Ozma, the Tin Woodman, the Scarecrow, Tiktok, all twenty-six officers and the private, turning them into ornaments — the Oz people made green, the Ev royals purple.",
+    "His secret (the royal family are purple ornaments) is overheard by Billina while she hides under his throne.",
+    "Is terrified of eggs, which are poison to Nomes; leaps in fright when Billina lays an egg under his throne.",
+    "Is blinded by two of Billina's eggs hurled by the Scarecrow, letting Dorothy unbuckle and steal his magic belt.",
+    "Without his belt his magic fails; he cannot transform his foes into scorpions and cries 'It's gone, and I am ruined!'",
+    "Fails a last attempt to trap the party; Dorothy uses his own belt to turn his pursuing warriors into eggs.",
+    "Is left scowling on his rock throne, defeated, as the rescuers depart."
+  ],
+  "known_relations_book1": {
+    "Ozma": "His adversary — she demands the prisoners' release; he entraps her into becoming an emerald grasshopper.",
+    "Dorothy": "His adversary — she defies him, steals his magic belt, and turns his warriors into eggs to escape.",
+    "Billina": "The yellow hen who overhears his secret and whose eggs terrify and blind him, undoing his power.",
+    "Scarecrow": "Blinds him by hurling Billina's eggs into both his eyes during the fight.",
+    "Chief Steward": "His impudent Nome steward, who scolds him and lets slip the ornaments' colors within Billina's hearing.",
+    "Queen of Ev": "His slave, whom he bought from King Evoldo and transformed into a purple ornament.",
+    "Evoldo": "The King of Ev who sold his own wife and children to him for a long life."
+  },
+  "forbidden_book1": {
+    "relationships": [
+      "the Nome King is Dorothy's ally",
+      "the Nome King is Dorothy's friend",
+      "the Nome King is Dorothy's companion",
+      "the Nome King is Ozma's ally",
+      "the Nome King is Ozma's friend",
+      "the Nome King helps rescue the royal family"
+    ],
+    "later_tome_bleed": [
+      "Ruggedo",
+      "the Metal Monarch",
+      "Kaliko becomes Nome King",
+      "the Nome King invades the Emerald City",
+      "the Nome King tunnels under the Deadly Desert",
+      "the Nome King drinks the Water of Oblivion",
+      "General Guph",
+      "the Nome King allies with the Whimsies and Growleywogs"
+    ],
+    "attribute_confusion": [
+      "the Nome King keeps the magic belt",
+      "the Nome King wields the magic belt at the end"
+    ]
+  },
+  "hallucination_signals": [
+    "the Nome King befriends Dorothy",
+    "the Nome King helps Ozma",
+    "the Nome King is an ally",
+    "Ruggedo",
+    "the Metal Monarch",
+    "the Nome King invades the Emerald City",
+    "General Guph",
+    "the Nome King drinks the Water of Oblivion",
+    "the Nome King keeps his magic belt",
+    "the green-skinned Nome King"
+  ]
+}

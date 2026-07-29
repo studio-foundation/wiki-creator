@@ -1,0 +1,67 @@
+{
+  "nomes": {
+    "canonical_aliases_book1": [
+      "Nomes",
+      "the Nomes"
+    ],
+    "known_facts_book1": [
+      "Rock fairies who serve the Nome King and labour at the furnaces and forges of the Underground World, making gold, silver, jewels and metals.",
+      "Squat and fat, rock-colored, they cling to the cliff face like flies and greet the visitors with weird mocking laughter.",
+      "The King's soldiers wear glittering steel armor, an electric light on each brow, and bear spears, swords and bronze battle-axes.",
+      "They fill the underground cavern in vast numbers to intimidate Ozma's small army.",
+      "Cannot bear eggs, which are rank poison to them in the underground kingdom; they flee in terror when the Scarecrow throws Billina's eggs.",
+      "Their pursuit collapses when Dorothy turns the foremost warriors into eggs with the magic belt."
+    ],
+    "known_relations_book1": {
+      "Nome King": "Their ruler Roquat, whom they serve and obey.",
+      "Chief Steward": "A Nome of higher rank who serves the King's table.",
+      "Ozma": "The invading Ruler of Oz whose army they vastly outnumber.",
+      "Billina": "Whose eggs are the poison that routs them."
+    },
+    "forbidden_book1": {
+      "later_tome_bleed": [
+        "the Nomes tunnel under the Deadly Desert",
+        "the Nomes ally with the Whimsies and Growleywogs",
+        "the Nomes invade the Emerald City"
+      ],
+      "not_in_this_book": [
+        "the Nomes befriend Dorothy",
+        "the Nomes are immune to eggs"
+      ]
+    },
+    "hallucination_signals": [
+      "the Nomes invade the Emerald City",
+      "the Nomes tunnel under the desert",
+      "the Nomes are immune to eggs",
+      "the Nomes help Dorothy",
+      "the Growleywogs"
+    ]
+  },
+  "chief_steward": {
+    "canonical_aliases_book1": [
+      "Chief Steward"
+    ],
+    "known_facts_book1": [
+      "A Nome who wears a heavy gold chain to show his rank as Chief Steward of the Nome King, and serves the King's refreshments.",
+      "Speaks bluntly to his master, calling him a fool for playing the guessing game one victim at a time.",
+      "Lets slip within Billina's hearing that the royal family are purple ornaments and the Oz people green ornaments.",
+      "Wishes aloud that he wore the magic belt so he could be a wiser King.",
+      "Later mops the broken eggs from the blinded King's face and points out the King's magic belt is gone."
+    ],
+    "known_relations_book1": {
+      "Nome King": "His master, whom he scolds and serves and whose secret he carelessly reveals.",
+      "Billina": "The hidden hen who overhears his indiscretion and uses it to free everyone."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Chief Steward seizes the throne",
+        "the Chief Steward is named Kaliko"
+      ]
+    },
+    "hallucination_signals": [
+      "the Chief Steward becomes King",
+      "the Chief Steward is named Kaliko",
+      "the Chief Steward betrays the rescuers"
+    ]
+  }
+}

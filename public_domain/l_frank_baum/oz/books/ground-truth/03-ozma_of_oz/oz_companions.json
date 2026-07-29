@@ -1,0 +1,146 @@
+{
+  "scarecrow": {
+    "canonical_aliases_book1": [
+      "Scarecrow"
+    ],
+    "known_facts_book1": [
+      "Dorothy's old friend from Oz, stuffed with straw, who rides behind Ozma's chariot on the Sawhorse.",
+      "Reads the sign on Langwidere's palace door and is the first of the Oz party Dorothy calls to from her tower.",
+      "Proud of the brains the great Wizard of Oz gave him, and afraid of the Nome King's furnaces because a single spark could burn him up.",
+      "Guesses wrongly in the palace and is transformed into a solid gold card-receiver, then restored by Billina.",
+      "Collects Billina's eggs in his jacket pockets and hurls two of them into the Nome King's eyes, blinding him.",
+      "Proposes threatening the King with being turned into a goose-egg to force him to fetch the Tin Woodman.",
+      "Commands the army in the Tin Woodman's absence and rides back to the Emerald City in triumph.",
+      "Was once driven from the Emerald City throne by Jinjur's army of women."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "His beloved little friend, whom he greets with a close embrace.",
+      "Tin Woodman": "His dearest old comrade, whose loss as an ornament grieves him deeply.",
+      "Nome King": "His adversary, whom he blinds with Billina's eggs to win the fight.",
+      "Billina": "The yellow hen whose eggs he carries and throws to defeat the Nome King.",
+      "Ozma": "The Ruler of Oz he advises during the expedition."
+    },
+    "forbidden_book1": {
+      "later_tome_bleed": [
+        "the Scarecrow's cornfield home",
+        "the Patchwork Girl",
+        "the Scarecrow marries"
+      ],
+      "relationships": [
+        "the Scarecrow is the Nome King's ally"
+      ]
+    },
+    "hallucination_signals": [
+      "the Scarecrow is the Nome King's friend",
+      "the Patchwork Girl",
+      "the Scarecrow rules the Emerald City",
+      "the Scarecrow melts"
+    ]
+  },
+  "tin_woodman": {
+    "canonical_aliases_book1": [
+      "Tin Woodman",
+      "Nick Chopper"
+    ],
+    "known_facts_book1": [
+      "Dorothy's old friend from Oz, a man of tin who was born a real man named Nick Chopper and got his tin body a piece at a time.",
+      "Marches on foot as commander of Ozma's army of twenty-seven soldiers, his axe over his shoulder.",
+      "Boasts his army has eight generals, six colonels, seven majors, five captains and a single private.",
+      "Claims the privilege of following Ozma into the palace and is transformed into a green tin whistle shaped like a pig.",
+      "Little Prince Evring pockets the whistle, which is why neither the Nome King nor the magic belt can find the Tin Woodman.",
+      "Is disenchanted at last when Billina touches the whistle and says 'Ev', restoring him on the road back to Ev.",
+      "Is given a new diamond-studded axe at the Emerald City feast."
+    ],
+    "known_relations_book1": {
+      "Scarecrow": "His dearest old comrade, reunited joyfully after his recovery.",
+      "Dorothy": "His old friend, who embraces him when he is disenchanted.",
+      "Ozma": "The Ruler he serves as army commander.",
+      "Nome King": "His captor, who transforms him into a whistle and laughs at him as the funniest ornament.",
+      "Evring": "The little Prince who unknowingly carries the whistle he was transformed into."
+    },
+    "forbidden_book1": {
+      "later_tome_bleed": [
+        "the Tin Woodman becomes Emperor of the Winkies",
+        "the tin castle",
+        "Nimmie Amee"
+      ],
+      "relationships": [
+        "the Tin Woodman is the Nome King's ally"
+      ]
+    },
+    "hallucination_signals": [
+      "the Tin Woodman is the Nome King's friend",
+      "Emperor of the Winkies",
+      "Nimmie Amee",
+      "the tin castle",
+      "the Tin Woodman rusts in the rain"
+    ]
+  },
+  "cowardly_lion": {
+    "canonical_aliases_book1": [
+      "Cowardly Lion"
+    ],
+    "known_facts_book1": [
+      "Dorothy's old friend, who now draws Ozma's golden chariot shoulder to shoulder with the Hungry Tiger.",
+      "Wears a big bow of blue ribbon between his ears.",
+      "Ruled the great forest as King of Beasts and journeyed to the Emerald City after Ozma became reigning princess, bringing his friend the Hungry Tiger.",
+      "Admits he is as cowardly as ever and has never been in danger without being afraid.",
+      "Leaps under the iron giant's hammer carrying Ozma, and makes twelve daring passages to carry the terrified officers across.",
+      "Guards Dorothy in the Nome King's throne room, snarling to keep the warriors back."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "His old friend, whom he greets and carries under the hammer.",
+      "Hungry Tiger": "His companion beast, harnessed beside him to Ozma's chariot.",
+      "Ozma": "The Ruler whose chariot he pulls and whom he begged to accompany.",
+      "Nome King": "His enemy; he tries and fails to spring upon the King's throne."
+    },
+    "forbidden_book1": {
+      "relationships": [
+        "the Cowardly Lion is the Nome King's ally"
+      ],
+      "not_in_this_book": [
+        "the Lion drinks courage from the Wizard"
+      ]
+    },
+    "hallucination_signals": [
+      "the Cowardly Lion is the Nome King's friend",
+      "the Lion gains courage from the Wizard",
+      "the Lion is truly brave now"
+    ]
+  },
+  "hungry_tiger": {
+    "canonical_aliases_book1": [
+      "Hungry Tiger",
+      "the Tiger"
+    ],
+    "known_facts_book1": [
+      "A new friend of the Cowardly Lion, an immense Tiger who draws Ozma's chariot beside him and wears a red ribbon on his tail.",
+      "Always hungry, with an appetite too large for his body; he longs to eat a fat baby but his conscience forbids it.",
+      "Says he is a good beast but a disgracefully bad tiger for refusing to eat harmless creatures, which is why he left the forest.",
+      "Repeatedly threatens to eat Billina, Nanda, and even Dorothy in jest, but never does.",
+      "Leaps under the iron giant's hammer carrying Dorothy on his back.",
+      "At the Emerald City feast eats everything and declares he has, somehow, actually lost his appetite."
+    ],
+    "known_relations_book1": {
+      "Cowardly Lion": "His friend, harnessed beside him to Ozma's chariot.",
+      "Dorothy": "Rides on his back under the hammer; he jokingly threatens to eat her and Billina.",
+      "Billina": "The hen he longs to crunch but decides is not worth eating.",
+      "Ozma": "The Ruler whose chariot he helps pull."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Hungry Tiger actually eats a baby",
+        "the Hungry Tiger eats Billina"
+      ],
+      "relationships": [
+        "the Hungry Tiger is the Nome King's ally"
+      ]
+    },
+    "hallucination_signals": [
+      "the Hungry Tiger eats Billina",
+      "the Hungry Tiger devours a fat baby",
+      "the Hungry Tiger is the Nome King's friend",
+      "the Hungry Tiger is never hungry"
+    ]
+  }
+}

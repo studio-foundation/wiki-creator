@@ -1,0 +1,166 @@
+{
+  "langwidere": {
+    "canonical_aliases_book1": [
+      "Langwidere"
+    ],
+    "known_facts_book1": [
+      "A niece of the late King Evoldo who lives in the royal palace of Ev and is the nearest thing Ev has to a ruler, though she does not truly rule.",
+      "Owns thirty interchangeable heads, one for each day of the month, kept in velvet-lined cupboards in her cabinet.",
+      "Wears only one head at a time on her single neck, recognizable to her subjects by the blood-red ruby key on her wrist that unlocks the cupboards.",
+      "Lives in a sitting-room panelled floor to ceiling with mirrors so she can admire whichever head she wears.",
+      "While wearing her fiery-tempered head No. 17 she demands Dorothy's head for her collection, offering No. 26 in exchange.",
+      "Locks Dorothy in the North Tower and orders Billina to the chicken-house when Dorothy refuses.",
+      "Is compelled by Ozma to free Dorothy, and gladly gives up her duties, staying home rather than facing the Nome King's heat.",
+      "Is permitted by the restored Queen to keep her rooms and cabinet of heads for life."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her prisoner, whose head she covets and whom she locks in the tower.",
+      "Ozma": "The Ruler of Oz who forces her to release Dorothy.",
+      "Queen of Ev": "Her aunt by marriage, restored at the end and letting her keep her heads.",
+      "Evoldo": "Her late uncle, the drowned King of Ev.",
+      "Nanda": "Her little maid-servant."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Langwidere is a witch",
+        "Langwidere joins the rescue of the royal family",
+        "Langwidere takes Dorothy's head successfully"
+      ],
+      "relationships": [
+        "Langwidere is Dorothy's friend"
+      ]
+    },
+    "hallucination_signals": [
+      "Langwidere is a witch",
+      "Langwidere takes Dorothy's head",
+      "Langwidere has thirty faces of one head",
+      "Langwidere befriends Dorothy",
+      "Langwidere rescues the royal family"
+    ]
+  },
+  "queen_of_ev": {
+    "canonical_aliases_book1": [
+      "Queen of Ev"
+    ],
+    "known_facts_book1": [
+      "The wife of the late King Evoldo and mother of ten children — five boys and five girls.",
+      "Was sold with her children to the Nome King by her husband and transformed into a purple footstool ornament.",
+      "Is the first ornament Billina disenchants, restored as a tall, slender, beautifully robed lady.",
+      "Weeps for her children until Billina restores all ten, then embraces each of the nine older ones and her rescued youngest Evring.",
+      "Reminds Billina that the missing green ornament she seeks is the grasshopper — Ozma.",
+      "Returns to the palace of Ev, crowns her eldest son Evardo the new King, and rewards Billina with a pearl-and-sapphire necklace."
+    ],
+    "known_relations_book1": {
+      "Nome King": "Her captor, who bought her as a slave and made her an ornament.",
+      "Evoldo": "Her husband, the King of Ev who sold her and their children.",
+      "Billina": "The hen who disenchants her first of all the ornaments.",
+      "Evardo": "Her eldest son, whom she crowns King of Ev.",
+      "Evring": "Her youngest son, rescued by Dorothy.",
+      "Ozma": "The Ruler of Oz who led the expedition to free her."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Queen of Ev rules alongside her husband",
+        "the Queen of Ev is freed by Ozma's correct guess"
+      ]
+    },
+    "hallucination_signals": [
+      "the Queen of Ev is a widow who rules alone",
+      "the Queen of Ev is freed by Ozma",
+      "the Queen of Ev has eleven children",
+      "the Queen of Ev is green"
+    ]
+  },
+  "evardo": {
+    "canonical_aliases_book1": [
+      "Evardo",
+      "King Evardo"
+    ],
+    "known_facts_book1": [
+      "The eldest son of the Queen of Ev, fifteen years old, disenchanted by Billina from a purple ornament.",
+      "A grave and quiet youth who inherits his father's throne as King Evardo Fifteenth.",
+      "Crowned by his mother on a balcony before the people, with fifteen silver buckles on his jacket, as the fifteenth Evardo to rule Ev.",
+      "Promptly goes off to look for cake in the royal pantry after his coronation.",
+      "Gives Billina a pearl-and-sapphire necklace and promises Ozma his lasting gratitude and service."
+    ],
+    "known_relations_book1": {
+      "Queen of Ev": "His mother, who crowns him King.",
+      "Evring": "His younger brother, the little Prince Dorothy rescued.",
+      "Billina": "The hen he rewards with a necklace for freeing his family.",
+      "Ozma": "The Ruler of Oz to whom he pledges gratitude."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Evardo is rescued by Dorothy",
+        "Evardo refuses the throne"
+      ]
+    },
+    "hallucination_signals": [
+      "Evardo is the youngest child",
+      "Dorothy rescues Evardo",
+      "Evardo is a purple kitten"
+    ]
+  },
+  "evanna": {
+    "canonical_aliases_book1": [
+      "Evanna"
+    ],
+    "known_facts_book1": [
+      "A princess of Ev, one of the five daughters of the Queen of Ev.",
+      "Was transformed by the Nome King into a purple ornament and held in his palace.",
+      "Is the first of the children Billina disenchants, appearing as a sweet-faced girl with golden hair falling over her shoulders.",
+      "Is embraced and kissed by her mother, who cries 'Evanna! my own Evanna!'",
+      "Restored to her proper form and returned to the palace of Ev with the rest of her family."
+    ],
+    "known_relations_book1": {
+      "Queen of Ev": "Her mother, who embraces her first of the restored children.",
+      "Billina": "The hen who disenchants her from a purple ornament.",
+      "Evardo": "Her eldest brother, who becomes King of Ev.",
+      "Evring": "Her youngest brother, rescued by Dorothy."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Evanna is rescued by Dorothy",
+        "Evanna rules the Land of Ev",
+        "Evanna speaks at length"
+      ]
+    },
+    "hallucination_signals": [
+      "Dorothy rescues Evanna",
+      "Evanna becomes Queen",
+      "Evanna is a purple kitten",
+      "Evanna leads the royal family"
+    ]
+  },
+  "evring": {
+    "canonical_aliases_book1": [
+      "Evring",
+      "Prince Evring"
+    ],
+    "known_facts_book1": [
+      "The youngest son of the Queen of Ev, transformed by the Nome King into a purple kitten.",
+      "Is the one royal Dorothy restores, appearing as a fair-haired boy when she touches the kitten and says 'Ev'.",
+      "Announces proudly 'I am a Prince of Ev, and my name is Evring.'",
+      "Shy of the Scarecrow at first, but becomes fond of Dorothy and rides with her on the Sawhorse.",
+      "Unknowingly pockets the green tin pig-whistle that is the transformed Tin Woodman, which is why the Woodman cannot be found.",
+      "Cries for his whistle when Billina uses it to restore the Tin Woodman."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "The girl who restores him from a purple kitten; his rescuer and friend.",
+      "Queen of Ev": "His mother, who takes him in her lap as her youngest born.",
+      "Evardo": "His elder brother, who becomes King of Ev.",
+      "Tin Woodman": "Whose whistle-form Evring carries in his pocket, hiding him from the search."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Evring becomes King of Ev",
+        "Evring is transformed into a footstool"
+      ]
+    },
+    "hallucination_signals": [
+      "Evring becomes King",
+      "Evring is the eldest prince",
+      "Dorothy rescues Evring from a footstool"
+    ]
+  }
+}

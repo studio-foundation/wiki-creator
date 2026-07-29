@@ -1,0 +1,82 @@
+{
+  "entity": "Dorothy",
+  "canonical_aliases_book1": [
+    "Dorothy",
+    "Dorothy Gale",
+    "Miss Gale"
+  ],
+  "known_facts_book1": [
+    "A little Kansas girl travelling with her Uncle Henry by ship to Australia, where he is going to visit relatives and rest his failing health.",
+    "Goes on deck during a storm to look for Uncle Henry and is blown overboard clinging to a wooden chicken-coop, which floats her away as the ship disappears.",
+    "Names herself: 'My name is Dorothy Gale—just Dorothy to my friends and Miss Gale to strangers.'",
+    "Drifts ashore in the Land of Ev with the yellow hen, whom she renames Billina.",
+    "Digs a golden key out of the sand, which later unlocks the rock chamber holding the copper man.",
+    "Picks a lunch-box and a dinner-pail from the trees and is chased by the Wheelers up a rocky hill.",
+    "Winds up Tiktok with the clock-key and makes him her servant.",
+    "Is taken prisoner by Princess Langwidere, who wants to trade heads with her, and is locked in the North Tower.",
+    "Is freed when Ozma of Oz arrives across the desert on Glinda's magic carpet with her army.",
+    "Joins the expedition to the Nome King's underground palace to rescue the royal family of Ev.",
+    "Makes eleven guesses in the Nome King's palace, touches a purple kitten saying 'Ev', and restores it to little Prince Evring, saving herself from transformation.",
+    "Unbuckles the Nome King's magic belt from his back while the Scarecrow blinds him with Billina's eggs, and fastens it around her own waist.",
+    "Uses the magic belt to open the passage, to still the iron giant's hammer, and to turn the pursuing Nome warriors into eggs.",
+    "Returns with Ozma to the Emerald City, is made a Princess of Oz, and given a coronet.",
+    "Sees Aunt Em, Toto and Uncle Henry in Ozma's magic picture.",
+    "Gives the magic belt to Ozma, then waves her handkerchief and is wished to Uncle Henry in Australia, where the book ends with their reunion.",
+    "Recalls that a cyclone once carried her to Oz and that a pair of silver shoes carried her back, but she lost them."
+  ],
+  "known_relations_book1": {
+    "Billina": "The talking yellow hen she is castaway with and renames; her friend and constant companion through Ev.",
+    "Tiktok": "The clockwork man she winds up and who becomes her obedient servant; she keeps his key.",
+    "Ozma": "The girl Ruler of Oz who crosses the desert to rescue her; the two become dear friends.",
+    "Nome King": "Her adversary — she defies him, wins his magic belt, and turns his warriors into eggs to escape.",
+    "Scarecrow": "Her beloved old friend from Oz who helps defeat the Nome King with Billina's eggs.",
+    "Tin Woodman": "Her old friend from Oz, transformed by the Nome King and later disenchanted from a tin whistle.",
+    "Cowardly Lion": "Her old friend, now drawing Ozma's chariot; she rides him under the iron giant's hammer.",
+    "Princess Langwidere": "Captor who demands Dorothy's head for her collection and locks her in a tower.",
+    "Evring": "The little Prince of Ev she restores from a purple kitten and befriends.",
+    "Uncle Henry": "Her uncle, whom she sails with and is reunited with in Australia at the end.",
+    "Aunt Em": "Her aunt, left at home in Kansas, whom Dorothy sees only in the magic picture."
+  },
+  "forbidden_book1": {
+    "adaptation_inventions": [
+      "ruby slippers",
+      "the ruby slippers",
+      "clicks her heels together",
+      "there is no place like home",
+      "Professor Marvel",
+      "Miss Gulch",
+      "over the rainbow"
+    ],
+    "later_tome_bleed": [
+      "the Shaggy Man",
+      "Button-Bright",
+      "Polychrome",
+      "the Rainbow's Daughter",
+      "Ozma's birthday party",
+      "Dorothy moves to Oz permanently",
+      "Zeb and Jim the cab-horse",
+      "Eureka the pink kitten"
+    ],
+    "relationships": [
+      "the Nome King is Dorothy's friend",
+      "the Nome King is Dorothy's ally",
+      "the Nome King is Dorothy's companion",
+      "Langwidere is Dorothy's friend"
+    ]
+  },
+  "hallucination_signals": [
+    "ruby slippers",
+    "clicks her heels",
+    "there is no place like home",
+    "the Nome King befriends Dorothy",
+    "the Nome King is Dorothy's friend",
+    "the Shaggy Man",
+    "Button-Bright",
+    "Polychrome",
+    "Dorothy uses the silver shoes",
+    "Toto follows Dorothy to Ev",
+    "Aunt Em travels with Dorothy",
+    "Aunt Em and Uncle Henry move to Oz",
+    "Dorothy is crowned Queen of Oz"
+  ]
+}
