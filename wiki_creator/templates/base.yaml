@@ -23,29 +23,8 @@ entity_types:
       category_default: {fr: Personnages, en: Characters}
       importance_categories: true
       tome_label_key: persons_by_tome
-      # STU-730: the infobox template is BUILT from these rows and the localized
-      # `labels` map (see entity_taxonomy.infobox_source), so an English wiki gets
-      # English row labels. A bare token is both the label key and the parameter
-      # name; `{label, param}` splits them when they differ. `header` renders the
-      # name row (colspan, value only, no label).
-      infobox_rows:
-        - {header: name}
-        - {label: alias, param: aliases}
-        - titles
-        - status
-        - death
-        - species
-        - occupation
-        - residence
-        - affiliation
-        - {label: apparition, param: first_seen}
-        - family
-        - romance
-        - friends_allies
-        - enemies
     infobox:
       - {token: nom,         group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
-      - {token: type,        group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: alias,       group: infobox, provenance: batch-bound,    obligation: OPT, tiers: [figurant, secondary, principal]}
       - {token: apparition,  group: infobox, provenance: batch-bound,    obligation: OPT, tiers: [figurant, secondary, principal]}
       - {token: status,      group: infobox, provenance: extracted-fact, obligation: MIN, fallback: unknown, tiers: [figurant, secondary, principal]}
@@ -79,15 +58,8 @@ entity_types:
       category_key: locations
       category_default: {fr: Lieux, en: Locations}
       tome_label_key: locations_by_tome
-      infobox_rows:
-        - {header: name}
-        - type
-        - location
-        - {label: apparition, param: first_seen}
-        - residents
     infobox:
       - {token: nom,         group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
-      - {token: type,        group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: apparition,  group: infobox, provenance: batch-bound,    obligation: OPT, tiers: [figurant, secondary, principal]}
       - {token: location,    group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
     sections:
@@ -107,16 +79,8 @@ entity_types:
       category_key: organizations
       category_default: {fr: Organisations, en: Organizations}
       tome_label_key: organizations_by_tome
-      infobox_rows:
-        - {header: name}
-        - type
-        - leaders
-        - members
-        - headquarters
-        - {label: apparition, param: first_seen}
     infobox:
       - {token: nom,     group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
-      - {token: type,    group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: apparition, group: infobox, provenance: batch-bound, obligation: OPT, tiers: [figurant, secondary, principal]}
       - {token: leaders, group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
     sections:
@@ -132,16 +96,17 @@ entity_types:
       infobox_template: Infobox event
       category_key: events
       category_default: {fr: Événements, en: Events}
-      infobox_rows:
-        - {header: name}
-        - participants
-        - lieu
-        - chapitre
-        - issue
+    # STU-729: `participants`/`lieu`/`chapitre`/`issue` are the deterministic event
+    # facts `generate_event_pages.py` fills (extracted-fact; a plain EVENT entity
+    # from extraction leaves them empty). Declared here so the generated template
+    # carries their rows and the emit vocabulary stays a subset of it.
     infobox:
-      - {token: nom,  group: infobox, provenance: batch-bound, obligation: MIN, tiers: [figurant, secondary, principal]}
-      - {token: type, group: infobox, provenance: batch-bound, obligation: MIN, tiers: [figurant, secondary, principal]}
-      - {token: apparition, group: infobox, provenance: batch-bound, obligation: OPT, tiers: [figurant, secondary, principal]}
+      - {token: nom,          group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
+      - {token: apparition,   group: infobox, provenance: batch-bound,    obligation: OPT, tiers: [figurant, secondary, principal]}
+      - {token: participants, group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [figurant, secondary, principal]}
+      - {token: lieu,         group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [figurant, secondary, principal]}
+      - {token: chapitre,     group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [figurant, secondary, principal]}
+      - {token: issue,        group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [figurant, secondary, principal]}
     sections:
       - {token: biography,     group: section, provenance: llm-prose,      obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: relationships, group: section, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
@@ -158,15 +123,8 @@ entity_types:
       infobox_template: Infobox faction
       category_key: factions
       category_default: {fr: Factions, en: Factions}
-      infobox_rows:
-        - {header: name}
-        - type
-        - leaders
-        - members
-        - {label: apparition, param: first_seen}
     infobox:
       - {token: nom,     group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
-      - {token: type,    group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: apparition, group: infobox, provenance: batch-bound, obligation: OPT, tiers: [figurant, secondary, principal]}
       - {token: leaders, group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
     sections:
@@ -375,13 +333,6 @@ labels:
   enemies:        {en: Enemies,          fr: Ennemis}
   location:      {en: Location,    fr: Localisation}
   leaders:       {en: Leaders,     fr: Leaders}
-  # STU-730: infobox row labels used only by the template builder
-  # (entity_taxonomy.infobox_source), localized like every other reader-facing label.
-  occupation:    {en: Occupation,  fr: Occupation}
-  residence:     {en: Residence,   fr: Résidence}
-  residents:     {en: "Notable residents", fr: "Résidents notables"}
-  members:       {en: "Notable members", fr: "Membres notables"}
-  headquarters:  {en: Headquarters, fr: Siège}
   participants:  {en: Participants, fr: Participants}
   lieu:          {en: Place,       fr: Lieu}
   chapitre:      {en: Chapter,     fr: Chapitre}
