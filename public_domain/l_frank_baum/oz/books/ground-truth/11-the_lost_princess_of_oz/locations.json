@@ -1,0 +1,149 @@
+{
+  "yip_country": {
+    "canonical_aliases_book1": [
+      "Yip Country"
+    ],
+    "known_facts_book1": [
+      "A broad tableland in the far southwestern corner of the Winkie Country, reachable only by climbing a steep hill covered with bramble bushes and cactus and having no paths at all.",
+      "Its people, the Yips, had never left it and no Oz person had ever climbed up to it before this story.",
+      "Their houses are scattered over the flat surface wherever fancy dictated, with odd little paths connecting them, and there is no King or Queen at all.",
+      "Holds a hidden enchanted pool, unknown to the Yips, containing the magic skosh that made the Frogman large and intelligent.",
+      "Is where Cayke's dishpan was stolen on the very night Ozma disappeared, by Ugu climbing the mountain in the dark.",
+      "Its people refuse to go down the mountain with Cayke, saying contentment with one's lot is true wisdom, and turn back at the great gulf."
+    ],
+    "known_relations_book1": {
+      "Cayke": "Its Cookie Cook, who leaves it to find her dishpan.",
+      "the Frogman": "Its adviser and leader, who leaves it out of ambition.",
+      "Ugu the Shoemaker": "The thief who climbed it in the night."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Yip Country is outside the Land of Oz",
+        "the Yips have a King",
+        "the Yips follow Cayke to the end"
+      ]
+    },
+    "hallucination_signals": [
+      "the Yip Country is outside Oz",
+      "the Yips have a King",
+      "the Yips reach the wicker castle"
+    ]
+  },
+  "merry_go_round_mountains": {
+    "canonical_aliases_book1": [
+      "Merry-Go-Round Mountains"
+    ],
+    "known_facts_book1": [
+      "Several rows of cone-shaped mountains extending for miles, all whirling steadily around, some one way and some the other.",
+      "Each is surrounded by a deep narrow gulf, and they are set so close together that the outer gulf is continuous and bars all advance.",
+      "The Lion refuses to jump them, and no one can tell where the bottom of the gulf is, if there is any bottom at all.",
+      "Are crossed by swinging on the Sawhorse's harness buckled end to end into one long strap and tied to a limb overhanging the gulf — Scraps's idea.",
+      "Bounce every traveller from one whirling peak to the next, five successive bumps for Dorothy, until they land unhurt on a green meadow beyond.",
+      "The Lion guesses they must be made of rubber; the Wizard points out that nobody stayed on one long enough to find out."
+    ],
+    "known_relations_book1": {
+      "Scraps": "Who devises the crossing and goes first.",
+      "the Wizard": "Who crosses last, wrapped in two blankets."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "anyone is injured crossing the Merry-Go-Round Mountains",
+        "the mountains are proved to be rubber",
+        "the party climbs the mountains"
+      ]
+    },
+    "hallucination_signals": [
+      "someone is hurt on the mountains",
+      "the mountains are rubber",
+      "the party climbs over"
+    ]
+  },
+  "truth_pond": {
+    "canonical_aliases_book1": [
+      "Truth Pond"
+    ],
+    "known_facts_book1": [
+      "A beautiful solitary pond ringed by a circle of evergreens set close together, in the Winkie Country east of the Yip mountain.",
+      "Its bottom and sides are lined with glossy tiles of a light pink color, with one place left free where the water bubbles up from a hidden spring.",
+      "A golden plate set just above the water line reads: 'This is THE TRUTH POND. Whoever bathes in this water must always afterward tell THE TRUTH.'",
+      "Is bathed in by the Frogman by accident, for the love of water, before he has read the plate — which ends his career as a humbug.",
+      "Cayke refuses flatly to bathe in it, saying it is often very embarrassing to tell the truth."
+    ],
+    "known_relations_book1": {
+      "the Frogman": "Whose bath in it forces him to confess he is not wise.",
+      "Cayke": "Who refuses to enter it."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Cayke bathes in the Truth Pond",
+        "the Truth Pond's effect wears off",
+        "the Truth Pond grants wishes"
+      ]
+    },
+    "hallucination_signals": [
+      "Cayke bathes in the pond",
+      "the effect wears off",
+      "the pond grants wishes"
+    ]
+  },
+  "great_orchard": {
+    "canonical_aliases_book1": [
+      "Great Orchard"
+    ],
+    "known_facts_book1": [
+      "An immense orchard extending for miles right and left across the party's path, holding quinces, citrons, crab apples, limes, lemons, oranges, apples, plums, apricots, cherries, tangerines and whole groves of nut trees.",
+      "At its exact center stands one solitary peach tree, thickly leaved and bearing a single splendid peach hanging far out of reach.",
+      "The peach was placed and enchanted there by Ugu the Shoemaker so no one would ever find it; the birds knew better than to eat it.",
+      "Button-Bright climbs for it, eats it, and pockets the golden pit — which holds the imprisoned Ozma.",
+      "A Bluefinch and a White Rabbit both warn him about Ugu, and both flee before he can ask more."
+    ],
+    "known_relations_book1": {
+      "Button-Bright": "Who eats the enchanted peach and carries the pit away.",
+      "Ozma": "Imprisoned inside its golden pit.",
+      "Ugu the Shoemaker": "Who planted and enchanted the peach."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the peach makes Button-Bright ill",
+        "the peach is guarded",
+        "the birds eat the enchanted peach"
+      ]
+    },
+    "hallucination_signals": [
+      "the peach harms Button-Bright",
+      "the peach is guarded",
+      "the birds eat the peach"
+    ]
+  },
+  "wicker_castle": {
+    "canonical_aliases_book1": [
+      "wicker castle"
+    ],
+    "known_facts_book1": [
+      "Ugu's stronghold on the crest of a low mountain, a good-sized building whose sides, roofs and domes are all of closely woven wicker, like fine basketry.",
+      "Is defended by three barriers in turn: a circle of tall flames, a wall of steel thickly covered with dagger-like points, and an illusory regiment of hundreds of fierce girl-soldiers in scarlet jackets.",
+      "Its gates stand invitingly open and slam shut with heavy bars once the party is inside; the inner doors bolt behind them too.",
+      "Its great central hall is circular under a high dome, with Glinda's chained Book of Records on a bolted table, Ozma's Magic Picture on the wall, and all the stolen magic behind glass doors.",
+      "The whole hall slowly turns upside down at Ugu's command, dropping the party into the dome around the chandelier while his golden cage keeps him in place.",
+      "Is where a gaudy peacock on the wall cackles 'Poor fools! Poor fools!' at the arriving party.",
+      "Is stripped by Ozma at the end of everything magical, stolen and inherited alike."
+    ],
+    "known_relations_book1": {
+      "Ugu the Shoemaker": "Its builder and sole inhabitant.",
+      "the Wizard": "Who defeats two of its three barriers with a match and a pin.",
+      "Dorothy": "Whose daily wish rights the upside-down hall."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the wicker castle is destroyed",
+        "the girl-soldiers are real",
+        "Ozma is imprisoned in the wicker castle"
+      ]
+    },
+    "hallucination_signals": [
+      "the castle is burned down",
+      "the girl army is real",
+      "Ozma is held in the castle"
+    ]
+  }
+}
