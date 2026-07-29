@@ -14,9 +14,9 @@ def page_filename(canonical_name: str) -> str:
     return name
 
 
-# STU-651: importance and per-tome category labels default via base.yaml chrome,
-# keyed by output_language — the per-type ones via entity_types.export.category_default.
-# So a book need not spell out every key for its wiki to stay in one language.
+# STU-651: importance and per-tome category labels default via the output_language
+# pack's `chrome` — the per-type ones via its `category_defaults`. So a book need
+# not spell out every key for its wiki to stay in one language.
 _IMPORTANCE_TOME_KEYS = (
     "principal",
     "secondary",
@@ -27,15 +27,15 @@ _IMPORTANCE_TOME_KEYS = (
 
 
 def category_labels(labels_cfg: dict | None, lang: str, base: dict | None = None) -> dict:
-    """Build the export category/showcase label dict: each key defaults to its
-    language-keyed base.yaml value (English default, French only for a French book,
-    STU-651), overridable per book via ``export.categories.labels``."""
+    """Build the export category/showcase label dict: each key defaults to the
+    ``lang`` template pack's value (STU-651), overridable per book via
+    ``export.categories.labels``."""
     cfg = labels_cfg or {}
-    labels = {key: cfg.get(key) or chrome_label(key, lang, base) for key in _IMPORTANCE_TOME_KEYS}
+    labels = {key: cfg.get(key) or chrome_label(key, lang) for key in _IMPORTANCE_TOME_KEYS}
     for etype in entity_taxonomy.declared_types(base):
         cat_key = entity_taxonomy.category_key(etype, base)
         if cat_key and cat_key not in labels:
-            labels[cat_key] = cfg.get(cat_key) or entity_taxonomy.category_default(etype, lang, base)
+            labels[cat_key] = cfg.get(cat_key) or entity_taxonomy.category_default(etype, lang)
     return labels
 
 

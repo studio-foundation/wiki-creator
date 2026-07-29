@@ -4,6 +4,7 @@ side effects. Consumed by generation (slices B-E)."""
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 
 import yaml
@@ -37,12 +38,69 @@ def should_validate_page(importance: str, setting: str = DEFAULT_VALIDATE_PAGES)
 
 
 DEFAULT_BASE_PATH = Path(__file__).resolve().parent / "templates" / "base.yaml"
+LANG_PACK_DIR = Path(__file__).resolve().parent / "templates" / "lang"
+FALLBACK_LANG = "en"
+_PACK_DOCS = "docs/adding-a-language.md"
 
 
 def load_base_template(path: str | Path | None = None) -> dict:
     p = Path(path) if path else DEFAULT_BASE_PATH
     with open(p, encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
+
+
+class TemplatePackError(Exception):
+    """A localized string is declared nowhere, not even in the reference pack."""
+
+
+def shipped_languages() -> tuple[str, ...]:
+    """Language codes that ship a template pack, English first."""
+    codes = (p.stem for p in LANG_PACK_DIR.glob("*.yaml"))
+    return tuple(sorted(codes, key=lambda c: (c != FALLBACK_LANG, c)))
+
+
+@lru_cache(maxsize=None)
+def load_lang_template(lang: str) -> dict:
+    """Output strings for one language (``templates/lang/<lang>.yaml``, STU-732).
+
+    Empty when the language ships no pack: resolution then runs entirely through
+    the English fallback, so a book in an unsupported output language renders
+    English chrome rather than failing — or, before the split, French chrome.
+    """
+    path = LANG_PACK_DIR / f"{lang}.yaml"
+    if not path.exists():
+        return {}
+    with open(path, encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
+
+
+_RAISE = object()
+
+
+def localized(lang, *path, default=_RAISE):
+    """Resolve one localized value: requested language -> ``en`` -> ``default``.
+
+    The single fallback chain (STU-732). Before the split each helper had its own,
+    and most ended in French — a German book missing a key got a French string.
+    A ``default`` of ``_RAISE`` means the key is required: absent from ``en.yaml``
+    it is declared nowhere, which is a bug in the repo, not in the book.
+    """
+    for code in (lang, FALLBACK_LANG):
+        node = load_lang_template(str(code))
+        for key in path:
+            if not isinstance(node, dict):
+                node = None
+                break
+            node = node.get(key)
+        if node not in (None, ""):
+            return node
+    if default is _RAISE:
+        raise TemplatePackError(
+            f"No string for {'.'.join(str(k) for k in path)} in lang pack "
+            f"{lang!r} nor in the {FALLBACK_LANG!r} reference pack. "
+            f"Declare it in {LANG_PACK_DIR.name}/{FALLBACK_LANG}.yaml (see {_PACK_DOCS})."
+        )
+    return default
 
 
 def _iter_slots(raw: dict):
@@ -211,12 +269,10 @@ def sub_role_definitions(base=None) -> list[dict[str, str]]:
     ]
 
 
-def sub_role_label(token, lang, base=None) -> str:
-    """Reader-facing localized sub-role label, or the token itself when unknown (STU-665)."""
-    spec = _sub_role_enum(base).get(token)
-    if not spec:
-        return token
-    return (spec.get("labels") or {}).get(lang, token)
+def sub_role_label(token, lang) -> str:
+    """Reader-facing localized sub-role label, or the token itself when the packs
+    declare none (STU-665)."""
+    return localized(lang, "sub_role_labels", token, default=token)
 
 
 def _confidence_enum(base: dict | None):
@@ -251,55 +307,56 @@ def canonical_relationship(value, base=None, book_config=None):
 
 
 def relationship_label(token, lang, base=None, book_config=None) -> str:
-    spec = _rel_enum(base).get(token)
-    if not spec:
+    if token not in _rel_enum(base):
         return token  # a book type's name is already its reader-facing label (STU-472)
-    return (spec.get("labels") or {}).get(lang, token)
+    return localized(lang, "relationship_labels", token, default=token)
 
 
-def slot_label(token, lang, base=None) -> str:
-    raw = base if base is not None else load_base_template()
-    entry = (raw.get("labels") or {}).get(token)
-    if entry and lang in entry:
-        return entry[lang]
-    return token.replace("_", " ").title()
+def slot_label(token, lang) -> str:
+    """Reader-facing name of a page token (pack ``labels``). A token no pack
+    declares renders titlecased, so a book-declared custom slot needs no pack
+    edit."""
+    return localized(lang, "labels", token, default=None) \
+        or token.replace("_", " ").title()
 
 
-def chrome_label(key, lang, base=None) -> str:
-    """Localized reader-facing export chrome string (base.yaml ``chrome``), e.g.
-    the spoiler collapsible controls. Returns the raw template — callers that
+def chrome_label(key, lang) -> str:
+    """Localized reader-facing export chrome string (pack ``chrome``), e.g. the
+    spoiler collapsible controls. Returns the raw template — callers that
     interpolate (``reveal`` carries ``{chapter}``) format it themselves."""
-    raw = base if base is not None else load_base_template()
-    entry = (raw.get("chrome") or {}).get(key) or {}
-    return entry.get(lang) or entry.get("fr") or str(key)
+    return localized(lang, "chrome", key)
 
 
-def stub_content(kind, lang, base=None) -> str:
-    """Localized reader-facing stub page body (base.yaml ``stubs``). ``kind`` is
-    ``failed`` or ``insufficient``. Rendered under the biography heading."""
-    raw = base if base is not None else load_base_template()
-    heading = slot_label("biography", lang, raw)
-    entry = (raw.get("stubs") or {}).get(kind) or {}
-    message = entry.get(lang) or entry.get("fr") or ""
-    return f"## {heading}\n\n*{message}*"
+def stub_message(kind, lang) -> str:
+    """Localized stub body text (pack ``stubs``) — the sentence rendered in place
+    of a page that could not be generated. ``stub_content`` wraps it under the
+    biography heading; the event pages use the ``course`` heading instead."""
+    return localized(lang, "stubs", kind)
 
 
-def validator_message(code, lang, base=None, **params) -> str:
-    """Localized wiki-page-validator error message (base.yaml ``validator.errors``),
-    keyed by a stable neutral ``code``. Falls back to French, then the raw code
-    (STU-517). ``params`` fill the ``{placeholders}`` in the template."""
-    raw = base if base is not None else load_base_template()
-    entry = ((raw.get("validator") or {}).get("errors") or {}).get(code) or {}
-    template = entry.get(lang) or entry.get("fr") or code
+def stub_content(kind, lang) -> str:
+    """Localized reader-facing stub page body. ``kind`` is ``failed`` or
+    ``insufficient``. Rendered under the biography heading."""
+    return f"## {slot_label('biography', lang)}\n\n*{stub_message(kind, lang)}*"
+
+
+def validator_message(code, lang, **params) -> str:
+    """Localized wiki-page-validator error message (pack ``validator_errors``),
+    keyed by a stable neutral ``code`` (STU-517). ``params`` fill the
+    ``{placeholders}`` in the template."""
+    template = localized(lang, "validator_errors", code)
     return template.format(**params) if params else template
 
 
-def language_name(lang, base=None) -> str:
+def language_name(lang) -> str:
     """English display name of a language code, for the (English) prompt
-    scaffolding — e.g. ``language_name("fr") == "French"``."""
-    raw = base if base is not None else load_base_template()
-    names = raw.get("language_names") or {}
-    return names.get(lang, str(lang))
+    scaffolding — e.g. ``language_name("fr") == "French"``.
+
+    The one key with no English fallback: it names the pack itself, so a language
+    that ships none degrades to its own code. Answering "English" for a German
+    book would order English prose from the writer.
+    """
+    return load_lang_template(str(lang)).get("language_name") or str(lang)
 
 
 def length_guide(tier, base=None) -> str:
@@ -311,24 +368,21 @@ def length_guide(tier, base=None) -> str:
     return guides.get(tier) or guides.get("figurant") or "1 short paragraph only."
 
 
-def section_brief(entity_type, token, lang, base=None) -> str | None:
+def section_brief(entity_type, token, lang) -> str | None:
     """Localized writing brief for one (entity_type, section token), or None when
     none is declared. Unknown types fall back to PERSON (STU-510)."""
-    raw = base if base is not None else load_base_template()
-    briefs = raw.get("briefs") or {}
     etype = str(entity_type).upper()
-    by_type = briefs.get(etype) or briefs.get("PERSON") or {}
-    entry = by_type.get(token)
-    if not entry:
-        return None
-    return entry.get(lang) or entry.get("fr")
+    for code in (lang, FALLBACK_LANG):
+        briefs = load_lang_template(str(code)).get("briefs") or {}
+        by_type = briefs.get(etype) or briefs.get("PERSON") or {}
+        if by_type.get(token):
+            return by_type[token]
+    return None
 
 
-def few_shot_example(lang, base=None) -> dict:
-    """Localized few-shot tone/format example (base.yaml ``few_shot``)."""
-    raw = base if base is not None else load_base_template()
-    examples = raw.get("few_shot") or {}
-    return examples.get(lang) or examples.get("fr") or {}
+def few_shot_example(lang) -> dict:
+    """Localized few-shot tone/format example (pack ``few_shot``)."""
+    return localized(lang, "few_shot")
 
 
 def output_language(book_config) -> str:

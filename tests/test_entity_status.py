@@ -445,15 +445,20 @@ def test_a_pre_existing_poisoned_cache_is_treated_as_a_miss(tmp_path):
 from scripts.generate_wiki_pages import _extracted_fact_value
 from wiki_creator.entity_status import status_label
 from wiki_creator import entity_taxonomy
-from wiki_creator.page_templates import load_base_template
+from wiki_creator.page_templates import (
+    load_base_template,
+    load_lang_template,
+    shipped_languages,
+)
 
 
-def test_every_enum_value_has_a_label_in_both_languages():
-    # No French string literal may live in a .py — the labels are data.
-    chrome = load_base_template()["chrome"]
-    for status in STATUS_VALUES:
-        entry = chrome[f"status_{status}"]
-        assert entry["fr"] and entry["en"]
+def test_every_enum_value_has_a_label_in_every_shipped_pack():
+    # No French string literal may live in a .py — the labels are data, one
+    # template pack per language (STU-732).
+    for code in shipped_languages():
+        chrome = load_lang_template(code)["chrome"]
+        for status in STATUS_VALUES:
+            assert chrome[f"status_{status}"]
 
 
 def test_status_label_is_localized():
@@ -552,10 +557,11 @@ def test_death_label_is_none_without_a_field():
     assert death_label("", "  ", "fr") is None
 
 
-def test_death_label_falls_back_to_fr_for_an_unknown_lang():
-    # chrome_label's own fallback chain; the slot must not vanish for a book
-    # whose output_language has no chrome entry.
-    assert death_label("Durza", None, "de") == "Tué par Durza"
+def test_death_label_falls_back_to_english_for_an_unknown_lang():
+    # STU-732: one fallback chain, requested lang -> en. The slot must not vanish
+    # for a book whose output_language ships no template pack, and it must not
+    # render French either (that was the pre-split chain).
+    assert death_label("Durza", None, "de") == "Killed by Durza"
 
 
 def _index():

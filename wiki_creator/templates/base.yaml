@@ -1,3 +1,7 @@
+# STU-732: STRUCTURE ONLY. Every reader-facing string lives in a per-language
+# template pack (`templates/lang/<code>.yaml`) — see `lang/en.yaml`, the reference
+# pack. What stays here is the shape of a page plus the English prompt scaffolding
+# (the classifier criteria, `length_by_tier`), which never localizes.
 version: 1
 entity_types:
   # STU-505: each type is the single authority for its NER labels and export
@@ -20,10 +24,9 @@ entity_types:
       full_key: persons
       infobox_template: Infobox character
       category_key: persons
-      category_default: {fr: Personnages, en: Characters}
       importance_categories: true
       tome_label_key: persons_by_tome
-      # STU-730: the infobox template is BUILT from these rows and the localized
+      # STU-730: the infobox template is BUILT from these rows and the pack's
       # `labels` map (see entity_taxonomy.infobox_source), so an English wiki gets
       # English row labels. A bare token is both the label key and the parameter
       # name; `{label, param}` splits them when they differ. `header` renders the
@@ -77,7 +80,6 @@ entity_types:
       full_key: places
       infobox_template: Infobox location
       category_key: locations
-      category_default: {fr: Lieux, en: Locations}
       tome_label_key: locations_by_tome
       infobox_rows:
         - {header: name}
@@ -105,7 +107,6 @@ entity_types:
       full_key: orgs
       infobox_template: Infobox organization
       category_key: organizations
-      category_default: {fr: Organisations, en: Organizations}
       tome_label_key: organizations_by_tome
       infobox_rows:
         - {header: name}
@@ -131,7 +132,6 @@ entity_types:
       full_key: events
       infobox_template: Infobox event
       category_key: events
-      category_default: {fr: Événements, en: Events}
       infobox_rows:
         - {header: name}
         - participants
@@ -157,7 +157,6 @@ entity_types:
       full_key: factions
       infobox_template: Infobox faction
       category_key: factions
-      category_default: {fr: Factions, en: Factions}
       infobox_rows:
         - {header: name}
         - type
@@ -191,31 +190,27 @@ entity_types:
 # STU-477: the single authority for the relationship-classifier's type vocabulary.
 # `description` is the application criterion injected into the classifier prompt —
 # prompt scaffolding, so English regardless of the wiki's output language (STU-510).
-# `labels` are reader-facing and localized; `legacy` maps the French surface strings
-# earlier runs emitted onto the canonical token.
+# The reader-facing labels live in the packs (`relationship_labels`); `legacy` maps
+# the French surface strings earlier runs emitted onto the canonical token.
 relationships:
   enum:
     family:
       legacy: [famille]
-      labels: {en: Family, fr: Famille}
       description: >-
         Kinship by blood, marriage or adoption. Applies whenever the text establishes
         the kin tie, whether the bond is warm or hostile.
     mentor:
       legacy: ["mentor/protégé"]
-      labels: {en: Mentor, fr: "Mentor/protégé"}
       description: >-
         One party trains, guides or instructs the other, and that teaching is the
         primary dynamic rather than an incidental scene.
     romance:
       legacy: [amoureux]
-      labels: {en: Romance, fr: Amoureux}
       description: >-
         A romantic or sexual bond the text makes EXPLICIT — declared, reciprocated or
         consummated on the page. Mutual pull that is only felt and never acted on is
         budding_attraction, not romance.
     budding_attraction:
-      labels: {en: Budding attraction, fr: "Attirance naissante"}
       description: >-
         Signs of mutual romantic interest not yet explicit or consummated: a noticed
         look, a caught breath, deflected flirtation, a reaction the character does not
@@ -223,19 +218,16 @@ relationships:
         acted on it. Prefer over romance while the bond stays deniable, and over friend
         when the text marks a charge no friendship explains.
     strained_friendship:
-      labels: {en: Strained friendship, fr: "Amitié tendue"}
       description: >-
         An established friendly bond carrying an unresolved tension — duty against
         loyalty, an unspoken attraction, a withheld truth. Use when the excerpts show
         BOTH the trust and the friction, so that friend alone would undersell the strain.
     friendly_rivalry:
-      labels: {en: Friendly rivalry, fr: "Rivalité amicale"}
       description: >-
         The parties compete against each other without real hostility — sparring,
         contests, needling. Use when the competition is genuine but mutual regard
         survives it; enemy requires actual enmity.
     wary_alliance:
-      labels: {en: Wary alliance, fr: "Alliance méfiante"}
       description: >-
         The parties cooperate toward a shared goal while withholding trust — a pact of
         convenience, a truce, collaboration under watch. Use when ally would overstate
@@ -245,39 +237,33 @@ relationships:
       # Naming Chaol the antagonist of Cain implies Cain heads his own novel. Readers
       # say enemy; the classifier reached for the literary term as its catch-all.
       legacy: [antagoniste, antagonist]
-      labels: {en: Enemy, fr: Ennemi}
       description: >-
         The parties work against each other with real enmity — opposed goals, harm done
         or intended. Competition without hostility is friendly_rivalry.
     ally:
       legacy: [allié]
-      labels: {en: Ally, fr: Allié}
       description: >-
         The parties act toward a shared goal with established mutual trust. Cooperation
         that withholds trust is wary_alliance.
     employment:
       legacy: ["employeur/employé"]
-      labels: {en: Employment, fr: "Employeur/employé"}
       description: >-
         A hierarchical employment or service bond — one party engages, commands or pays
         the other — and it is the PRIMARY dynamic. Never use it as a catch-all for
         allies, friends, family or romantic interests, which take their own type.
     friend:
       legacy: [ami]
-      labels: {en: Friend, fr: Ami}
       description: >-
         A bond of mutual affection and trust with no unresolved tension and no romantic
         charge. When the excerpts mark either, use strained_friendship or
         budding_attraction instead.
     acquaintance:
       legacy: [connaissance]
-      labels: {en: Acquaintance, fr: Connaissance}
       description: >-
         The parties know each other and interact directly, but the excerpts establish no
         stronger bond. Requires a direct interaction — mere co-occurrence stays null.
     other:
       legacy: [autre]
-      labels: {en: Other, fr: Autre}
       description: >-
         A directly-attested relationship no other type fits. Last resort: exhaust every
         other type first, and prefer null over other when no bond is attested at all.
@@ -295,50 +281,36 @@ relationships:
   # (`child`, `sibling`, `parent`) whenever the text does not establish the party's sex.
   sub_roles:
     father:
-      labels: {en: father, fr: père}
       description: The party is the male parent (biological or adoptive) of the other.
     mother:
-      labels: {en: mother, fr: mère}
       description: The party is the female parent (biological or adoptive) of the other.
     parent:
-      labels: {en: parent, fr: parent}
       description: The party is a parent of the other whose sex the text does not establish.
     son:
-      labels: {en: son, fr: fils}
       description: The party is the male child of the other.
     daughter:
-      labels: {en: daughter, fr: fille}
       description: The party is the female child of the other.
     child:
-      labels: {en: child, fr: enfant}
       description: The party is a child of the other whose sex the text does not establish.
     brother:
-      labels: {en: brother, fr: frère}
       description: The party is the male sibling of the other.
     sister:
-      labels: {en: sister, fr: sœur}
       description: The party is the female sibling of the other.
     sibling:
-      labels: {en: sibling, fr: frère ou sœur}
       description: The party is a sibling of the other whose sex the text does not establish.
     spouse:
-      labels: {en: spouse, fr: époux/épouse}
       description: The party is married to the other. Symmetric — both parties are spouses.
     ex_spouse:
-      labels: {en: ex-spouse, fr: ex-époux/épouse}
       description: The party was married to the other and the marriage has ended. Symmetric.
     partner:
-      labels: {en: partner, fr: partenaire}
       description: >-
         The party is the other's committed romantic partner short of marriage — the
         pair is a couple on the page. Symmetric.
     ex_partner:
-      labels: {en: ex-partner, fr: ex-partenaire}
       description: >-
         The party was the other's romantic partner and the relationship has ended.
         Symmetric.
     betrothed:
-      labels: {en: betrothed, fr: fiancé/fiancée}
       description: The party is engaged to marry the other, not yet wed. Symmetric.
   # STU-476: how strongly the evidence sentence supports the type — graded by the
   # classifier, which is the only step that reads the excerpts. Keys are the tiers
@@ -359,273 +331,9 @@ relationships:
         The type rests on reading meaning into a gesture, a look, a silence, a
         proximity. Another reader could take the same sentence and type the pair
         differently. Grade here rather than round up — a smile is not a declaration.
-labels:
-  nom:           {en: Name,        fr: Nom}
-  type:          {en: Type,        fr: Type}
-  alias:         {en: Aliases,     fr: Alias}
-  apparition:    {en: Appearance,  fr: Apparition}
-  status:        {en: Status,      fr: Statut}
-  death:         {en: Death,       fr: Décès}
-  species:       {en: Species,     fr: Espèce}
-  affiliation:   {en: Affiliation, fr: Affiliation}
-  titles:        {en: Titles,      fr: Titres}
-  family:         {en: Family,           fr: Famille}
-  romance:        {en: Romance,          fr: Amours}
-  friends_allies: {en: "Friends & Allies", fr: "Amis et alliés"}
-  enemies:        {en: Enemies,          fr: Ennemis}
-  location:      {en: Location,    fr: Localisation}
-  leaders:       {en: Leaders,     fr: Leaders}
-  # STU-730: infobox row labels used only by the template builder
-  # (entity_taxonomy.infobox_source), localized like every other reader-facing label.
-  occupation:    {en: Occupation,  fr: Occupation}
-  residence:     {en: Residence,   fr: Résidence}
-  residents:     {en: "Notable residents", fr: "Résidents notables"}
-  members:       {en: "Notable members", fr: "Membres notables"}
-  headquarters:  {en: Headquarters, fr: Siège}
-  participants:  {en: Participants, fr: Participants}
-  lieu:          {en: Place,       fr: Lieu}
-  chapitre:      {en: Chapter,     fr: Chapitre}
-  issue:         {en: Outcome,     fr: Issue}
-  infobox:       {en: Infobox,     fr: Infobox}
-  biography:     {en: Biography,   fr: Biographie}
-  backstory:     {en: "Before the events of the book", fr: "Avant les événements du livre"}
-  relationships: {en: Relationships, fr: Relations}
-  personality:   {en: Personality, fr: Personnalité}
-  physical:      {en: Appearance,  fr: "Description physique"}
-  powers:        {en: Powers,      fr: Pouvoirs}
-  trivia:        {en: Trivia,      fr: Anecdotes}
-  narrative_role: {en: "Narrative role", fr: "Rôle dans le récit"}
-  events:        {en: Events,      fr: Événements}
-  references:    {en: References,  fr: Références}
-  # STU-514: event-page section heading (Déroulement), localized like every
-  # other output-anchoring section title.
-  course:        {en: "Course of events", fr: "Déroulement"}
-# STU-510: language display names for the (English) prompt scaffolding, and the
-# per-tier prose length guide — previously hardcoded in generate_wiki_pages.py.
-language_names:
-  fr: French
-  en: English
-# STU-510: reader-facing export chrome (spoiler collapsible controls, relationship
-# index label). Localized like the rest of the output, never hardcoded in Python.
-chrome:
-  reveal:    {fr: "Chapitre {chapter} — révéler", en: "Chapter {chapter} — reveal"}
-  reveal_spoiler: {fr: "Spoiler — révéler", en: "Spoiler — reveal"}
-  collapse:  {fr: "Masquer", en: "Hide"}
-  evolution: {fr: "Évolution :", en: "Evolution:"}
-  # STU-668: the tome axis of the collapsible (series wiki). `reveal` is the
-  # chapter axis; these gate one section per tome on a merged character page.
-  reveal_tome:  {fr: "Tome {tome} — révéler", en: "Book {tome} — reveal"}
-  tome_heading: {fr: "Tome {tome}", en: "Book {tome}"}
-  # STU-488: the `status` infobox slot. Reader-facing chrome, so the
-  # enum's labels are data — the enum itself lives in wiki_creator/entity_status.py.
-  status_alive:    {fr: "Vivant",   en: "Alive"}
-  status_deceased: {fr: "Décédé",   en: "Deceased"}
-  status_missing:  {fr: "Disparu",  en: "Missing"}
-  status_unknown:  {fr: "Inconnu",  en: "Unknown"}
-  status_undead:   {fr: "Mort-vivant", en: "Undead"}
-  death_by_at:     {fr: "Tué par {agent} à {place}", en: "Killed by {agent} at {place}"}
-  death_by:        {fr: "Tué par {agent}",           en: "Killed by {agent}"}
-  death_at:        {fr: "Mort à {place}",            en: "Died at {place}"}
-  # STU-514: Main_Page navigation, showcase headings, and statistics. Reader-facing
-  # chrome — localized by output_language, was hardcoded French in export_helpers.py.
-  main_characters:    {fr: "Personnages principaux", en: "Main characters"}
-  main_locations:     {fr: "Lieux importants", en: "Important locations"}
-  navigation:         {fr: "Navigation", en: "Navigation"}
-  # STU-707: series hub (front page) — heading of the tome list.
-  reading_order:      {fr: "Ordre de lecture", en: "Reading order"}
-  statistics:         {fr: "Statistiques", en: "Statistics"}
-  synopsis:           {fr: "Synopsis", en: "Synopsis"}
-  synopsis_link:      {fr: "Synopsis du livre", en: "Book synopsis"}
-  all_characters:     {fr: "Tous les personnages", en: "All characters"}
-  all_locations:      {fr: "Tous les lieux", en: "All locations"}
-  all_organizations:  {fr: "Toutes les organisations", en: "All organizations"}
-  stat_pages:         {fr: "pages wiki", en: "wiki pages"}
-  stat_characters:    {fr: "personnages", en: "characters"}
-  stat_locations:     {fr: "lieux", en: "locations"}
-  stat_organizations: {fr: "organisations", en: "organizations"}
-  # STU-514: collective-page (collation) chrome — titles and per-entry lines.
-  minor_persons:       {fr: "Personnages mineurs", en: "Minor characters"}
-  minor_locations:     {fr: "Lieux mineurs", en: "Minor locations"}
-  minor_organizations: {fr: "Organisations mineures", en: "Minor organizations"}
-  minor_other:         {fr: "Autres entités mineures", en: "Other minor entities"}
-  collation_aliases:   {fr: "Alias : {aliases}", en: "Aliases: {aliases}"}
-  collation_mentions:  {fr: "Mentionné {mentions} fois dans {chapters} chapitre(s).", en: "Mentioned {mentions} times in {chapters} chapter(s)."}
-  # STU-514: event-page title disambiguation suffix (chapter tag on colliding titles).
-  chapter_tag:         {fr: "chapitre {chapter}", en: "chapter {chapter}"}
-  # STU-651: export category / showcase label defaults, keyed by output_language
-  # (English default, French only when the book is French) — a book need not spell
-  # out every key in export.categories.labels for its wiki to stay in one language.
-  # `{n}` is the tome number. Overridable per book via export.categories.labels.
-  principal:             {fr: "Personnages principaux", en: "Main characters"}
-  secondary:             {fr: "Personnages secondaires", en: "Secondary characters"}
-  persons_by_tome:       {fr: "Personnages du Tome {n}", en: "Characters of Book {n}"}
-  locations_by_tome:     {fr: "Lieux du Tome {n}", en: "Locations of Book {n}"}
-  organizations_by_tome: {fr: "Organisations du Tome {n}", en: "Organizations of Book {n}"}
-# STU-516: reader-facing stub-page bodies, rendered as-is in the wiki when an
-# entity's page cannot be generated. Localized like the rest of the output.
-stubs:
-  failed:       {fr: "Échec technique de la génération pour cette entité.", en: "Technical failure while generating this entity."}
-  insufficient: {fr: "Informations insuffisantes disponibles pour cette entité.", en: "Insufficient information available for this entity."}
-  # STU-514: event-page stubs (dry-run / generation failure), rendered under the
-  # localized "course" heading.
-  event_failed:  {fr: "Échec technique de la génération.", en: "Technical failure while generating this page."}
-  event_dry_run: {fr: "Page d'événement non générée (dry-run).", en: "Event page not generated (dry run)."}
-# STU-517: wiki-page-validator error messages, localized. Each error also carries
-# a stable neutral `code` (see scripts/wiki_page_validator.py) that generate_wiki_pages
-# matches on for identity-only recovery — the prose here is free to be reworded.
-validator:
-  errors:
-    language_contamination:    {fr: "Contenu en anglais détecté (marqueurs : {markers})", en: "English content detected (markers: {markers})"}
-    epub_id:                   {fr: "ID EPUB dans le contenu (ex: C07.xhtml)", en: "EPUB ID in the content (e.g. C07.xhtml)"}
-    infobox_key_prefix:        {fr: "Clé infobox préfixée par '- ' : {key}", en: "Infobox key prefixed with '- ': {key}"}
-    series_anchor_missing:     {fr: "Le titre de série '{series}' est absent du premier paragraphe", en: "The series title '{series}' is missing from the first paragraph"}
-    forbidden_series:          {fr: "Hallucination cross-série détectée : {hit}", en: "Cross-series hallucination detected: {hit}"}
-    forbidden_name:            {fr: "Spoiler détecté (nom interdit) : {name}", en: "Spoiler detected (forbidden name): {name}"}
-    identity_title_mismatch:   {fr: "Titre de page '{page_title}' ≠ entité demandée '{expected}'", en: "Page title '{page_title}' ≠ requested entity '{expected}'"}
-    identity_infobox_mismatch: {fr: "Infobox '{key}: {value}' ne correspond pas à l'entité '{expected}'", en: "Infobox '{key}: {value}' does not match entity '{expected}'"}
-    ungrounded_name:           {fr: "Nom non ancré dans les extraits source : {name}", en: "Name not grounded in the source excerpts: {name}"}
-    ungrounded_claim:          {fr: "Affirmation non ancrée dans les extraits source : {claim}", en: "Statement not grounded in the source excerpts: {claim}"}
-    unauthorized_reference_title: {fr: "Titre non autorisé dans Références : '{title}'", en: "Unauthorized title in References: '{title}'"}
+# Per-tier prose length guide, injected into the generation prompt. Scaffolding,
+# not output — English whatever the wiki's language, so it stays out of the packs.
 length_by_tier:
   principal: "4 to 6 paragraphs total across all sections."
   secondary: "1 to 2 paragraphs for the main section. Keep all other sections brief."
   figurant: "1 short paragraph only. Use only the most relevant section."
-# STU-510: per-section writing briefs, keyed by entity_type then section token,
-# localized. Extracted from the SECTION_DEFINITIONS f-strings. OTHER falls back
-# to PERSON (as the old SECTION_DEFINITIONS.get(etype, ...["PERSON"]) did).
-briefs:
-  PERSON:
-    infobox:        {fr: "Champs factuels clés : nom, alias, rôle, affiliation, statut. Omets les champs inconnus.", en: "Key factual fields: name, aliases, role, affiliation, status. Omit unknown fields."}
-    biography:      {fr: "Qui est ce personnage et quel est son rôle dans le monde. Les événements servent de contexte, pas de liste chronologique.", en: "Who this character is and their role in the world. Events serve as context, not a chronological list."}
-    backstory:      {fr: "Le passé du personnage révélé en flashback, avant le récit présent du livre. Prose ancrée uniquement sur le contexte de backstory. Ne pas répéter la biographie présente.", en: "The character's past revealed in flashback, before the book's present-day narrative. Prose grounded only in the backstory context. Do not repeat the present-day biography."}
-    narrative_role: {fr: "Arc chronologique du personnage à travers l'intrigue, en prose, ancré uniquement sur les événements listés.", en: "The character's chronological arc through the plot, in prose, grounded only in the listed events."}
-    personality:    {fr: "Traits observés avec ancrage textuel. Évite les adjectifs génériques sans preuve. Montre les contradictions ou tensions internes si elles existent.", en: "Observed traits with textual grounding. Avoid generic adjectives without evidence. Show internal contradictions or tensions where they exist."}
-    physical:       {fr: "Détails physiques confirmés par le texte uniquement, concis. Omets entièrement cette section si le texte ne décrit pas l'apparence — ne la remplis pas de traits de personnalité.", en: "Physical details confirmed by the text only, concise. Omit this section entirely if the text gives no physical description — do not pad it with personality traits."}
-    powers:         {fr: "Pouvoirs, capacités surnaturelles ou compétences exceptionnelles qui démarquent le personnage. Omets entièrement cette section s'il n'en a aucune — ne la remplis pas de traits humains ordinaires.", en: "Powers, supernatural abilities, or exceptional skills that set the character apart. Omit this section entirely if the character has none — do not pad it with ordinary human traits."}
-    relationships:  {fr: "Une entrée en gras par relation significative, suivie d'une description de la nature du lien. Format: **Nom** — description.", en: "One bold entry per significant relationship, followed by a description of the nature of the bond. Format: **Name** — description."}
-    trivia:         {fr: "Faits spécifiques et concrets qui ne rentrent pas dans les autres sections. Omets entièrement cette section si tu n'as aucun fait de ce genre — ne la remplis pas en reformulant un fait déjà couvert ailleurs (biographie comprise).", en: "Specific, concrete facts that do not fit the other sections. Omit this section entirely if you have no such fact — do not pad it by restating a fact already covered elsewhere (biography included)."}
-  PLACE:
-    infobox:        {fr: "Nom, type de lieu, région/pays, statut (actif, ruiné, etc.). Omets les champs inconnus.", en: "Name, place type, region/country, status (active, ruined, etc.). Omit unknown fields."}
-    biography:      {fr: "Ce qu'est ce lieu, où il se trouve, à quoi il ressemble d'après les extraits.", en: "What this place is, where it is, and what it looks like according to the excerpts."}
-    physical:       {fr: "Détails physiques et géographiques du lieu confirmés par le texte.", en: "Physical and geographic details of the place confirmed by the text."}
-    events:         {fr: "Ce qui se passe à cet endroit — les événements narratifs qui s'y déroulent, ancrés sur le bloc « Events at this place » ci-dessus. Ne pas se limiter à la géographie ou à l'architecture.", en: "What happens at this place — the narrative events occurring here, grounded in the 'Events at this place' block above. Do not limit yourself to geography or architecture."}
-    relationships:  {fr: "Groupes ou personnages associés à ce lieu.", en: "Groups or characters associated with this place."}
-    trivia:         {fr: "Détails spécifiques qui ne rentrent pas ailleurs.", en: "Specific details that do not fit elsewhere."}
-  ORG:
-    infobox:        {fr: "Nom, type d'organisation, affiliation, statut. Omets les champs inconnus.", en: "Name, organization type, affiliation, status. Omit unknown fields."}
-    biography:      {fr: "Ce qu'est cette organisation, son rôle et ses objectifs d'après les extraits.", en: "What this organization is, its role and objectives according to the excerpts."}
-    relationships:  {fr: "Personnages affiliés mentionnés dans le texte.", en: "Affiliated characters mentioned in the text."}
-  EVENT:
-    infobox:        {fr: "Nom, type d'événement, lieu, période si mentionnée. Omets les champs inconnus.", en: "Name, event type, location, time period if mentioned. Omit unknown fields."}
-    biography:      {fr: "Ce qu'est cet événement et son importance dans le récit.", en: "What this event is and its importance in the narrative."}
-    relationships:  {fr: "Personnages impliqués.", en: "Characters involved."}
-# STU-510: few-shot tone/format example, localized. Extracted from the
-# FEW_SHOT_EXAMPLE dict in generate_wiki_pages.py. A single PERSON/principal
-# example, used regardless of entity type (as before).
-few_shot:
-  fr:
-    title: "John Doe"
-    importance: principal
-    entity_type: PERSON
-    infobox_fields:
-      nom: "John Doe"
-      nom complet: "Jonathan Aldric Doe"
-      alias: "Le Fantôme, Jay"
-      rôle: "Espion de la Couronne, ancien soldat"
-      affiliation: "La Guilde des Ombres (ancienne), Couronne d'Arenell"
-      statut: "Actif"
-    content: |-
-      ## Infobox
-
-      - Nom: John Doe
-      - Nom complet: Jonathan Aldric Doe
-      - Alias: Le Fantôme, Jay
-      - Rôle: Espion de la Couronne, ancien soldat
-      - Affiliation: La Guilde des Ombres (ancienne), Couronne d'Arenell
-      - Statut: Actif
-
-      ## Biographie
-
-      John Doe, né Jonathan Aldric Doe, est un espion au service de la Couronne d'Arenell. Ancien soldat reconverti après la chute de la forteresse de Veldrath, il opère sous le pseudonyme **Le Fantôme** dans les cercles criminels de la capitale. Sa double identité — homme de cour le jour, informateur la nuit — lui permet d'infiltrer des réseaux que les services officiels du roi ne peuvent atteindre.
-
-      Après la trahison de son ancien commandant lors du siège de Veldrath, Doe a rompu avec l'armée régulière et disparu pendant trois ans. Il réapparaît à Arenell sous une fausse identité marchande, avant d'être recruté par la conseillère Mira Vayne pour des missions que le Conseil préfère nier.
-
-      ## Personnalité
-
-      Doe est méthodique et difficile à lire. Il parle peu, observe beaucoup, et donne rarement son opinion sans qu'on la lui demande. Ceux qui le côtoient décrivent une loyauté sélective : il honore ses engagements à la lettre, mais ne s'investit pas au-delà de ce qui a été convenu. Sous cette froideur calculée affleure parfois un humour sec, surtout dans les situations les plus tendues.
-
-      Son rapport à la violence est pragmatique — ni enthousiaste ni réticent. Il considère les moyens selon leur efficacité, ce qui le met régulièrement en friction avec les idéalistes de son entourage.
-
-      ## Description physique
-
-      Grand, brun, avec une cicatrice linéaire qui part du coin de l'œil gauche jusqu'à la mâchoire — séquelle d'un interrogatoire à Veldrath. Il s'habille de façon à ne pas attirer l'attention : teintes sombres, coupes fonctionnelles, aucun bijou. Seul détail invariable : une chevalière en argent terne à l'annulaire droit, dont l'origine n'est jamais expliquée.
-
-      ## Pouvoirs et compétences
-
-      Doe ne possède aucune magie. Ses compétences sont entièrement acquises : infiltration, déguisement, combat rapproché, et une mémoire quasi photographique des visages et des plans d'architecture. Il parle couramment quatre langues, dont le dialecte du Sud qu'il utilise pour ses couvertures marchandes.
-
-      ## Relations
-
-      **[[Mira Vayne]]** — mentor/protégé. Sa recruteuse et supérieure directe ; leur relation est professionnelle, teintée d'une méfiance mutuelle que ni l'un ni l'autre ne cherche vraiment à dissoudre.
-
-      **[[Lira]]** — allié. Une informante de la Guilde des Ombres avec qui Doe a partagé une mission à Veldrath.
-
-      **[[Le Commandant Arek]]** — ennemi. L'ancien supérieur dont la trahison à Veldrath a redéfini la trajectoire de Doe.
-
-      ## Anecdotes
-
-      - Le surnom "Le Fantôme" lui a été donné par les membres de la Guilde, non par ses alliés de la Couronne.
-      - Sa couverture marchande implique un commerce de tissus importés du Sud — un choix qui justifie ses déplacements fréquents entre les provinces.
-  en:
-    title: "John Doe"
-    importance: principal
-    entity_type: PERSON
-    infobox_fields:
-      name: "John Doe"
-      full name: "Jonathan Aldric Doe"
-      aliases: "The Ghost, Jay"
-      role: "Crown spy, former soldier"
-      affiliation: "The Shadow Guild (former), Crown of Arenell"
-      status: "Active"
-    content: |-
-      ## Infobox
-
-      - Name: John Doe
-      - Full name: Jonathan Aldric Doe
-      - Aliases: The Ghost, Jay
-      - Role: Crown spy, former soldier
-      - Affiliation: The Shadow Guild (former), Crown of Arenell
-      - Status: Active
-
-      ## Biography
-
-      John Doe, born Jonathan Aldric Doe, is a spy in the service of the Crown of Arenell. A former soldier who reinvented himself after the fall of the fortress of Veldrath, he operates under the alias **The Ghost** in the criminal circles of the capital. His double identity — courtier by day, informant by night — lets him infiltrate networks the king's official services cannot reach.
-
-      After the betrayal of his former commander during the siege of Veldrath, Doe broke with the regular army and vanished for three years. He resurfaces in Arenell under a false merchant identity, before being recruited by councillor Mira Vayne for missions the Council prefers to deny.
-
-      ## Personality
-
-      Doe is methodical and hard to read. He speaks little, observes much, and rarely offers his opinion unasked. Those around him describe a selective loyalty: he honors his commitments to the letter, but invests nothing beyond what was agreed. Beneath this calculated coldness a dry humor sometimes surfaces, especially in the tensest situations.
-
-      His relationship to violence is pragmatic — neither eager nor reluctant. He weighs means by their effectiveness, which regularly puts him at odds with the idealists around him.
-
-      ## Appearance
-
-      Tall, dark-haired, with a linear scar running from the corner of his left eye to his jaw — a legacy of an interrogation at Veldrath. He dresses so as not to draw attention: dark tones, functional cuts, no jewelry. The one constant detail: a dull silver signet ring on his right ring finger, whose origin is never explained.
-
-      ## Powers and skills
-
-      Doe has no magic. His skills are entirely acquired: infiltration, disguise, close combat, and a near-photographic memory for faces and architectural plans. He speaks four languages fluently, including the Southern dialect he uses for his merchant covers.
-
-      ## Relationships
-
-      **[[Mira Vayne]]** — mentor. His recruiter and direct superior; their relationship is professional, tinged with a mutual wariness neither truly seeks to dissolve.
-
-      **[[Lira]]** — ally. A Shadow Guild informant with whom Doe shared a mission at Veldrath.
-
-      **[[Commander Arek]]** — enemy. The former superior whose betrayal at Veldrath redefined Doe's trajectory.
-
-      ## Trivia
-
-      - The nickname "The Ghost" was given to him by Guild members, not by his Crown allies.
-      - His merchant cover involves a trade in fabrics imported from the South — a choice that justifies his frequent travels between provinces.

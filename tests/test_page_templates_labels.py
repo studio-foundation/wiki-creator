@@ -53,5 +53,5 @@ def test_few_shot_example_localized():
     assert pt.few_shot_example("fr")["content"].startswith("## Infobox")
     assert "## Biography" in pt.few_shot_example("en")["content"]
     assert "## Biographie" in pt.few_shot_example("fr")["content"]
-    # unknown language degrades to the French example
-    assert pt.few_shot_example("xx") == pt.few_shot_example("fr")
+    # STU-732: a language with no pack degrades to the English example, not the French one
+    assert pt.few_shot_example("xx") == pt.few_shot_example("en")

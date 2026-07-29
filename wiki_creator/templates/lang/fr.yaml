@@ -1,0 +1,224 @@
+# French output strings (STU-732). See `en.yaml` for what each block feeds and
+# for the key-by-key comments — this pack is a translation of that reference.
+
+# The (English) display name of this pack's language: it names the language to an
+# English-instructed writer, it is not a string the reader sees.
+language_name: French
+
+labels:
+  nom:            Nom
+  type:           Type
+  alias:          Alias
+  apparition:     Apparition
+  status:         Statut
+  death:          Décès
+  species:        Espèce
+  affiliation:    Affiliation
+  titles:         Titres
+  family:         Famille
+  romance:        Amours
+  friends_allies: "Amis et alliés"
+  enemies:        Ennemis
+  location:       Localisation
+  leaders:        Leaders
+  occupation:     Occupation
+  residence:      Résidence
+  residents:      "Résidents notables"
+  members:        "Membres notables"
+  headquarters:   Siège
+  participants:   Participants
+  lieu:           Lieu
+  chapitre:       Chapitre
+  issue:          Issue
+  infobox:        Infobox
+  biography:      Biographie
+  backstory:      "Avant les événements du livre"
+  relationships:  Relations
+  personality:    Personnalité
+  physical:       "Description physique"
+  powers:         Pouvoirs
+  trivia:         Anecdotes
+  narrative_role: "Rôle dans le récit"
+  events:         Événements
+  references:     Références
+  course:         Déroulement
+
+chrome:
+  reveal:         "Chapitre {chapter} — révéler"
+  reveal_spoiler: "Spoiler — révéler"
+  collapse:       Masquer
+  evolution:      "Évolution :"
+  reveal_tome:    "Tome {tome} — révéler"
+  tome_heading:   "Tome {tome}"
+  status_alive:    Vivant
+  status_deceased: Décédé
+  status_missing:  Disparu
+  status_unknown:  Inconnu
+  status_undead:   Mort-vivant
+  death_by_at:     "Tué par {agent} à {place}"
+  death_by:        "Tué par {agent}"
+  death_at:        "Mort à {place}"
+  main_characters:    "Personnages principaux"
+  main_locations:     "Lieux importants"
+  navigation:         Navigation
+  reading_order:      "Ordre de lecture"
+  statistics:         Statistiques
+  synopsis:           Synopsis
+  synopsis_link:      "Synopsis du livre"
+  all_characters:     "Tous les personnages"
+  all_locations:      "Tous les lieux"
+  all_organizations:  "Toutes les organisations"
+  stat_pages:         "pages wiki"
+  stat_characters:    personnages
+  stat_locations:     lieux
+  stat_organizations: organisations
+  minor_persons:       "Personnages mineurs"
+  minor_locations:     "Lieux mineurs"
+  minor_organizations: "Organisations mineures"
+  minor_other:         "Autres entités mineures"
+  collation_aliases:   "Alias : {aliases}"
+  collation_mentions:  "Mentionné {mentions} fois dans {chapters} chapitre(s)."
+  chapter_tag:         "chapitre {chapter}"
+  principal:             "Personnages principaux"
+  secondary:             "Personnages secondaires"
+  persons_by_tome:       "Personnages du Tome {n}"
+  locations_by_tome:     "Lieux du Tome {n}"
+  organizations_by_tome: "Organisations du Tome {n}"
+
+stubs:
+  failed:        "Échec technique de la génération pour cette entité."
+  insufficient:  "Informations insuffisantes disponibles pour cette entité."
+  event_failed:  "Échec technique de la génération."
+  event_dry_run: "Page d'événement non générée (dry-run)."
+
+validator_errors:
+  language_contamination:       "Contenu en anglais détecté (marqueurs : {markers})"
+  epub_id:                      "ID EPUB dans le contenu (ex: C07.xhtml)"
+  infobox_key_prefix:           "Clé infobox préfixée par '- ' : {key}"
+  series_anchor_missing:        "Le titre de série '{series}' est absent du premier paragraphe"
+  forbidden_series:             "Hallucination cross-série détectée : {hit}"
+  forbidden_name:               "Spoiler détecté (nom interdit) : {name}"
+  identity_title_mismatch:      "Titre de page '{page_title}' ≠ entité demandée '{expected}'"
+  identity_infobox_mismatch:    "Infobox '{key}: {value}' ne correspond pas à l'entité '{expected}'"
+  ungrounded_name:              "Nom non ancré dans les extraits source : {name}"
+  ungrounded_claim:             "Affirmation non ancrée dans les extraits source : {claim}"
+  unauthorized_reference_title: "Titre non autorisé dans Références : '{title}'"
+
+briefs:
+  PERSON:
+    infobox:        "Champs factuels clés : nom, alias, rôle, affiliation, statut. Omets les champs inconnus."
+    biography:      "Qui est ce personnage et quel est son rôle dans le monde. Les événements servent de contexte, pas de liste chronologique."
+    backstory:      "Le passé du personnage révélé en flashback, avant le récit présent du livre. Prose ancrée uniquement sur le contexte de backstory. Ne pas répéter la biographie présente."
+    narrative_role: "Arc chronologique du personnage à travers l'intrigue, en prose, ancré uniquement sur les événements listés."
+    personality:    "Traits observés avec ancrage textuel. Évite les adjectifs génériques sans preuve. Montre les contradictions ou tensions internes si elles existent."
+    physical:       "Détails physiques confirmés par le texte uniquement, concis. Omets entièrement cette section si le texte ne décrit pas l'apparence — ne la remplis pas de traits de personnalité."
+    powers:         "Pouvoirs, capacités surnaturelles ou compétences exceptionnelles qui démarquent le personnage. Omets entièrement cette section s'il n'en a aucune — ne la remplis pas de traits humains ordinaires."
+    relationships:  "Une entrée en gras par relation significative, suivie d'une description de la nature du lien. Format: **Nom** — description."
+    trivia:         "Faits spécifiques et concrets qui ne rentrent pas dans les autres sections. Omets entièrement cette section si tu n'as aucun fait de ce genre — ne la remplis pas en reformulant un fait déjà couvert ailleurs (biographie comprise)."
+  PLACE:
+    infobox:        "Nom, type de lieu, région/pays, statut (actif, ruiné, etc.). Omets les champs inconnus."
+    biography:      "Ce qu'est ce lieu, où il se trouve, à quoi il ressemble d'après les extraits."
+    physical:       "Détails physiques et géographiques du lieu confirmés par le texte."
+    events:         "Ce qui se passe à cet endroit — les événements narratifs qui s'y déroulent, ancrés sur le bloc « Events at this place » ci-dessus. Ne pas se limiter à la géographie ou à l'architecture."
+    relationships:  "Groupes ou personnages associés à ce lieu."
+    trivia:         "Détails spécifiques qui ne rentrent pas ailleurs."
+  ORG:
+    infobox:        "Nom, type d'organisation, affiliation, statut. Omets les champs inconnus."
+    biography:      "Ce qu'est cette organisation, son rôle et ses objectifs d'après les extraits."
+    relationships:  "Personnages affiliés mentionnés dans le texte."
+  EVENT:
+    infobox:        "Nom, type d'événement, lieu, période si mentionnée. Omets les champs inconnus."
+    biography:      "Ce qu'est cet événement et son importance dans le récit."
+    relationships:  "Personnages impliqués."
+
+few_shot:
+  title: "John Doe"
+  importance: principal
+  entity_type: PERSON
+  infobox_fields:
+    nom: "John Doe"
+    nom complet: "Jonathan Aldric Doe"
+    alias: "Le Fantôme, Jay"
+    rôle: "Espion de la Couronne, ancien soldat"
+    affiliation: "La Guilde des Ombres (ancienne), Couronne d'Arenell"
+    statut: "Actif"
+  content: |-
+    ## Infobox
+
+    - Nom: John Doe
+    - Nom complet: Jonathan Aldric Doe
+    - Alias: Le Fantôme, Jay
+    - Rôle: Espion de la Couronne, ancien soldat
+    - Affiliation: La Guilde des Ombres (ancienne), Couronne d'Arenell
+    - Statut: Actif
+
+    ## Biographie
+
+    John Doe, né Jonathan Aldric Doe, est un espion au service de la Couronne d'Arenell. Ancien soldat reconverti après la chute de la forteresse de Veldrath, il opère sous le pseudonyme **Le Fantôme** dans les cercles criminels de la capitale. Sa double identité — homme de cour le jour, informateur la nuit — lui permet d'infiltrer des réseaux que les services officiels du roi ne peuvent atteindre.
+
+    Après la trahison de son ancien commandant lors du siège de Veldrath, Doe a rompu avec l'armée régulière et disparu pendant trois ans. Il réapparaît à Arenell sous une fausse identité marchande, avant d'être recruté par la conseillère Mira Vayne pour des missions que le Conseil préfère nier.
+
+    ## Personnalité
+
+    Doe est méthodique et difficile à lire. Il parle peu, observe beaucoup, et donne rarement son opinion sans qu'on la lui demande. Ceux qui le côtoient décrivent une loyauté sélective : il honore ses engagements à la lettre, mais ne s'investit pas au-delà de ce qui a été convenu. Sous cette froideur calculée affleure parfois un humour sec, surtout dans les situations les plus tendues.
+
+    Son rapport à la violence est pragmatique — ni enthousiaste ni réticent. Il considère les moyens selon leur efficacité, ce qui le met régulièrement en friction avec les idéalistes de son entourage.
+
+    ## Description physique
+
+    Grand, brun, avec une cicatrice linéaire qui part du coin de l'œil gauche jusqu'à la mâchoire — séquelle d'un interrogatoire à Veldrath. Il s'habille de façon à ne pas attirer l'attention : teintes sombres, coupes fonctionnelles, aucun bijou. Seul détail invariable : une chevalière en argent terne à l'annulaire droit, dont l'origine n'est jamais expliquée.
+
+    ## Pouvoirs et compétences
+
+    Doe ne possède aucune magie. Ses compétences sont entièrement acquises : infiltration, déguisement, combat rapproché, et une mémoire quasi photographique des visages et des plans d'architecture. Il parle couramment quatre langues, dont le dialecte du Sud qu'il utilise pour ses couvertures marchandes.
+
+    ## Relations
+
+    **[[Mira Vayne]]** — mentor/protégé. Sa recruteuse et supérieure directe ; leur relation est professionnelle, teintée d'une méfiance mutuelle que ni l'un ni l'autre ne cherche vraiment à dissoudre.
+
+    **[[Lira]]** — allié. Une informante de la Guilde des Ombres avec qui Doe a partagé une mission à Veldrath.
+
+    **[[Le Commandant Arek]]** — ennemi. L'ancien supérieur dont la trahison à Veldrath a redéfini la trajectoire de Doe.
+
+    ## Anecdotes
+
+    - Le surnom "Le Fantôme" lui a été donné par les membres de la Guilde, non par ses alliés de la Couronne.
+    - Sa couverture marchande implique un commerce de tissus importés du Sud — un choix qui justifie ses déplacements fréquents entre les provinces.
+
+category_defaults:
+  PERSON:  Personnages
+  PLACE:   Lieux
+  ORG:     Organisations
+  EVENT:   Événements
+  FACTION: Factions
+
+relationship_labels:
+  family:              Famille
+  mentor:              "Mentor/protégé"
+  romance:             Amoureux
+  budding_attraction:  "Attirance naissante"
+  strained_friendship: "Amitié tendue"
+  friendly_rivalry:    "Rivalité amicale"
+  wary_alliance:       "Alliance méfiante"
+  enemy:               Ennemi
+  ally:                Allié
+  employment:          "Employeur/employé"
+  friend:              Ami
+  acquaintance:        Connaissance
+  other:               Autre
+
+sub_role_labels:
+  father:    père
+  mother:    mère
+  parent:    parent
+  son:       fils
+  daughter:  fille
+  child:     enfant
+  brother:   frère
+  sister:    sœur
+  sibling:   frère ou sœur
+  spouse:    époux/épouse
+  ex_spouse: ex-époux/épouse
+  partner:   partenaire
+  ex_partner: ex-partenaire
+  betrothed: fiancé/fiancée
