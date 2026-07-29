@@ -365,6 +365,80 @@ def _build_toc_fragment_map(toc) -> dict:
     return result
 
 
+def _count_toc_entries(toc) -> int:
+    """How many sections the EPUB TOC declares, fragment or whole file.
+
+    The thin-TOC gate (STU-728) compares against this, not against the fragment
+    count alone: a commercial EPUB declares one *whole-file* entry per chapter, so
+    counting fragments would read its TOC as declaring nothing and let any
+    three-entry list of in-file links — endnotes, an index — supersede it.
+    """
+    total = 0
+    for item in toc:
+        if isinstance(item, tuple):
+            section, children = item
+            total += 1 + _count_toc_entries(children)
+        else:
+            total += 1
+    return total
+
+
+# A list/table of in-file links is the book's own printed contents only if it has
+# entries to spare; below this it is a cross-reference, not a table of contents.
+MIN_PRINTED_CONTENTS_ANCHORS = 3
+
+# Where a printed contents list is laid out. A `<div>` is deliberately absent: it
+# is also the wrapper *around* the list, so it would absorb whatever sits beside
+# it (a list of illustrations, a footnote block) into the same set of anchors.
+_CONTENTS_CONTAINERS: tuple[str, ...] = ('table', 'ul', 'ol')
+
+
+def _contents_entry_title(anchor) -> str:
+    """The printed label of one contents entry: its row, minus the link itself.
+
+    A printed contents splits the entry across cells and the link is never the
+    title: The Road to Oz links the chapter number (`1.`) and prints the title
+    beside it, the Patchwork Girl links the page number (`19`) and prints the
+    title before it. Reading the row and dropping the anchor's own text gets the
+    title on both, where the row alone drags a page number into it. A contents
+    whose link *is* the whole entry falls back to the link.
+    """
+    row = anchor.find_parent(['tr', 'li'])
+    if row is None:
+        return anchor.get_text(' ', strip=True)
+    outside = [t.strip() for t in row.strings if t.strip() and anchor not in t.parents]
+    return ' '.join(outside) or anchor.get_text(' ', strip=True)
+
+
+def _build_printed_contents(soups) -> list[tuple[str, str]]:
+    """The book's own printed list of chapters: `(fragment, title)`, in order.
+
+    A publisher can print the list of chapters in the body — a table of
+    `file.xhtml#anchor` links — and leave the EPUB TOC anchoring only front
+    matter, which is the thin-TOC shape STU-727 deferred (STU-728). The densest
+    such list in the spine is that contents; a book printing none yields `[]`.
+
+    Only the fragment is kept, never the filename: a converter that split the
+    source file in two leaves every href naming the first half — The Road to Oz
+    points all 24 entries at `-h-0` while chapters 12-24 live in `-h-1` — so the
+    anchor is found by id in whichever spine item holds it.
+    """
+    best: list[tuple[str, str]] = []
+    for soup in soups:
+        for container in soup.find_all(_CONTENTS_CONTAINERS):
+            fragments: list[tuple[str, str]] = []
+            seen: set[str] = set()
+            for anchor in container.find_all('a', href=True):
+                fragment = anchor['href'].partition('#')[2]
+                if not fragment or fragment in seen:
+                    continue
+                seen.add(fragment)
+                fragments.append((fragment, _contents_entry_title(anchor)))
+            if len(fragments) > len(best):
+                best = fragments
+    return best if len(best) >= MIN_PRINTED_CONTENTS_ANCHORS else []
+
+
 # A split marker planted before each anchor: a Private Use codepoint never occurs
 # in prose, is non-whitespace (so get_text(strip=True) keeps it as its own string),
 # and clean_chapter_text — which runs per segment, after the split — never sees it.
@@ -376,41 +450,42 @@ def _clears_min_chars(cleaned: str) -> bool:
     return len(cleaned) - cleaned.count('\n\n') >= MIN_CHAPTER_CHARS
 
 
-def _resolve_anchors_in_order(soup, fragments: list) -> list:
-    """The declared fragments that resolve to an element, in document order.
+def _plant_split_marks(soup, fragments: list) -> list[str]:
+    """Mark every declared fragment that resolves, in document order; return its id.
 
     `find_all(id=True)` yields elements in document order, so this is robust to
     anchors nested at different depths (Oz packs some in a `<div>`) — the marker
     lands wherever the anchor sits, and get_text reads the same order.
+
+    Runs **before** `_flatten_inline_markup`: a printed contents list anchors an
+    empty `<a id=…/>` (STU-728), and unwrapping that tag would erase the anchor
+    before it could be found.
     """
     wanted = {fragment for fragment, _ in fragments}
     ordered, seen = [], set()
     for el in soup.find_all(id=True):
         fid = el.get('id')
         if fid in wanted and fid not in seen:
-            ordered.append((el, fid))
+            el.insert_before(_SPLIT_MARK)
+            ordered.append(fid)
             seen.add(fid)
     return ordered
 
 
-def _split_item_chapters(soup, item, fragments: list) -> list:
-    """Split one spine item into a chapter per resolving TOC anchor (STU-727).
+def _split_item_chapters(soup, item, fragments: list, marked: list[str]) -> list:
+    """Split one spine item into a chapter per marked anchor (STU-727).
 
-    Plant a marker before each anchor in document order, run the text pipeline
-    once, then split the flat text on the marker: segment 0 is the front matter
-    before the first anchor, segments 1..N align with the anchors. Titles come
-    from the TOC entry (the anchor's own heading, on the Gutenberg books).
+    `_plant_split_marks` has already marked each resolving anchor in document
+    order; run the text pipeline once, then split the flat text on the marker:
+    segment 0 is the front matter before the first anchor, segments 1..N align
+    with `marked`. Titles come from the contents entry (the anchor's own heading,
+    on the Gutenberg books).
     """
-    ordered = _resolve_anchors_in_order(soup, fragments)
-    if not ordered:
-        return []
     title_of: dict[str, str] = {}
     for fragment, title in fragments:
         title_of.setdefault(fragment, title)
 
     lead_title = _extract_chapter_title(soup, item, {})
-    for el, _fid in ordered:
-        el.insert_before(_SPLIT_MARK)
     _mark_paragraph_breaks(soup)
     segments = soup.get_text(separator="\n", strip=True).split(_SPLIT_MARK)
 
@@ -418,7 +493,7 @@ def _split_item_chapters(soup, item, fragments: list) -> list:
     lead = clean_chapter_text(segments[0])
     if _clears_min_chars(lead):
         chapters.append({"id": item.get_id(), "title": lead_title, "content": lead})
-    for (el, fid), segment in zip(ordered, segments[1:]):
+    for fid, segment in zip(marked, segments[1:]):
         cleaned = clean_chapter_text(segment)
         if not _clears_min_chars(cleaned):
             continue
@@ -490,19 +565,32 @@ def parse_epub(file_path: str, language: str = "fr", max_chapters: int | None = 
         for item in book.get_items_of_type(ebooklib.ITEM_DOCUMENT)
     }
 
+    spine = [
+        (items_by_id[spine_id], BeautifulSoup(items_by_id[spine_id].get_content(), "html.parser"))
+        for spine_id in spine_ids
+        if spine_id in items_by_id
+    ]
+
+    # A thin TOC — one declaring fewer sections than the book's own printed list of
+    # chapters — is superseded by that list, whole (STU-728). The more complete
+    # contents wins; the two are never unioned, or a printed list would inherit the
+    # thin TOC's front-matter anchors as extra chapter boundaries.
+    printed_contents = _build_printed_contents(soup for _, soup in spine)
+    if len(printed_contents) > _count_toc_entries(book.toc):
+        toc_fragments = {}
+    else:
+        printed_contents = []
+
     chapters = []
-    for spine_id in spine_ids:
-        item = items_by_id.get(spine_id)
-        if item is None:
-            continue
-        soup = BeautifulSoup(item.get_content(), "html.parser")
+    for item, soup in spine:
+        # A spine item holding fragment anchors the contents declares holds several
+        # chapters; split it at those publisher-declared boundaries (STU-727).
+        fragments = toc_fragments.get(os.path.basename(item.get_name())) or printed_contents
+        marked = _plant_split_marks(soup, fragments) if fragments else []
         _flatten_inline_markup(soup)
         _merge_block_dropcaps(soup)
-        # A spine item the TOC declares fragment anchors in holds several chapters;
-        # split it at those publisher-declared boundaries (STU-727).
-        fragments = toc_fragments.get(os.path.basename(item.get_name()))
-        if fragments:
-            split = _split_item_chapters(soup, item, fragments)
+        if marked:
+            split = _split_item_chapters(soup, item, fragments, marked)
             if split:
                 chapters.extend(split)
                 continue
