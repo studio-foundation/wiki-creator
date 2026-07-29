@@ -1,0 +1,16 @@
+name: series-assemble
+version: 1
+schema:
+  required_fields:
+    - series_dir
+    - tomes
+    - characters
+# series_dir: the series root the assembly was built from
+# tomes: number of tomes gathered, in reading order
+# characters: number of cross-tome entities that reached a page (all types, STU-706)
+expected_outputs:
+  files:
+    # series_assemble.py writes the assembly at the SERIES root, one level above
+    # the per-tome processing_output/<slug>/ — a new path shape for the STU-623
+    # glob note. Glob: cwd = repo root.
+    - "{library,public_domain}/*/*/series_assembly.json"

@@ -195,3 +195,14 @@ def test_pages_export_generates_before_assembling() -> None:
     stance_idx = next(i for i, s in enumerate(scripts) if "consolidate_editorial_stance.py" in s)
     assemble_idx = next(i for i, s in enumerate(scripts) if "assemble_wiki_pages.py" in s)
     assert pages_idx < synopsis_idx < events_idx < stance_idx < assemble_idx
+
+
+def test_wiki_series_assembles_before_exporting() -> None:
+    """STU-709: the series wiki is one pipeline run once after the tome loop —
+    assemble gathers every tome's artifacts from disk, export renders them into
+    the series-scoped output dir (STU-705)."""
+    pipeline = _pipeline("wiki-series")
+    assert _stage_names(pipeline) == ["series-assemble", "series-export"]
+    assert _scripts(pipeline) == ["scripts/series_assemble.py", "scripts/series_export.py"]
+    assert any("series_assembly.json" in f for f in _expected_output_files("series-assemble"))
+    assert any("output/_series/" in f for f in _expected_output_files("series-export"))

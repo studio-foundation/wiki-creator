@@ -1,0 +1,30 @@
+name: wiki-series
+description: Assemble one wiki across every tome of a series, then export it to wikitext
+version: 1
+
+# STU-709: run ONCE, after the per-tome loop (`wiki series run` / `make run-series`).
+# The input is any tome's book yaml — the series is derived from its path, and the
+# tome artifacts are read from disk (STU-455: each tome ran as its own `studio run`,
+# so nothing about them reaches this pipeline through Studio context).
+stages:
+  - name: series-assemble
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/series_assemble.py
+    contract: series-assemble
+    timeout_ms: 1800000
+    context:
+      include:
+        - input
+
+  - name: series-export
+    kind: extraction
+    executor: script
+    runtime: python
+    script: scripts/series_export.py
+    contract: series-export
+    timeout_ms: 600000
+    context:
+      include:
+        - input

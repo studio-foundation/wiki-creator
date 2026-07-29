@@ -1,4 +1,4 @@
-.PHONY: run run-series run-coref run-extraction run-resolution run-preparation pages-export \
+.PHONY: run run-series run-series-wiki run-coref run-extraction run-resolution run-preparation pages-export \
         test-extraction test-clustering test-relationships classify-relationships classify-relationships-dry \
         run-events generate-synopsis generate-synopsis-dry \
         generate-event-pages generate-event-pages-dry consolidate-stance \
@@ -37,9 +37,9 @@ export PYTHONPATH := $(CURDIR)$(if $(PYTHONPATH),:$(PYTHONPATH))
 run:
 	studio run wiki-full --input-file $(BOOK) --live
 
-# Full series run: every tome in reading order (STU-487). Tome order comes from
-# wiki_creator.series (numeric prefixes, 04.5 between 04 and 05) — not a shell
-# glob sort, which puts 04.5_ before 04_.
+# Full series run: every tome in reading order (STU-487), then the series wiki
+# once (STU-709). Tome order comes from wiki_creator.series (numeric prefixes,
+# 04.5 between 04 and 05) — not a shell glob sort, which puts 04.5_ before 04_.
 run-series:
 	@python -c "from wiki_creator.series import discover_series_books; \
 	print('\n'.join(str(b) for b in discover_series_books('$(SERIES)')))" | \
@@ -47,6 +47,17 @@ run-series:
 		echo "=== $$book ==="; \
 		studio run wiki-full --input-file $$book --live || exit 1; \
 	done
+	@echo "=== series wiki ==="
+	studio run wiki-series --input-file $(FIRST_TOME) --live
+
+# Any tome's yaml names the series; the first is where the arc pass reads
+# language and register from anyway.
+FIRST_TOME = $$(python -c "from wiki_creator.series import discover_series_books; \
+	print(discover_series_books('$(SERIES)')[0])")
+
+# Series wiki alone: assemble every tome's artifacts, then export output/_series/.
+run-series-wiki:
+	studio run wiki-series --input-file $(FIRST_TOME) --live
 
 # Relationship extraction with coreference on real book data.
 # device auto-detects CUDA (STU-466); on GPU workers is forced to 1.
