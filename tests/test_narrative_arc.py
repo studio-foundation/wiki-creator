@@ -169,3 +169,20 @@ def test_narrative_events_honors_explicit_ranges():
     # budget than the default position split, which cuts it at ~ch2.
     assert early(picked) > early(default)
     assert [e["chapter"] for e in picked] == sorted(e["chapter"] for e in picked)
+
+
+def test_narrative_events_preserves_narrative_order_within_a_chapter():
+    import scripts.generate_wiki_pages as gwp
+
+    # One chapter whose narrative order is the reverse of its salience order
+    # (STU-712): the Duchess moralizes first, the croquet climax comes last, but
+    # salience ranks them last-to-first.
+    events = [
+        {"chapter": 1, "description": "opening", "salience": 0.1},
+        {"chapter": 9, "description": "duchess", "salience": 0.3},
+        {"chapter": 9, "description": "croquet", "salience": 0.9},
+        {"chapter": 9, "description": "gryphon", "salience": 0.6},
+    ]
+    picked = gwp._narrative_events(_person(events))
+    ch9 = [e["description"] for e in picked if e["chapter"] == 9]
+    assert ch9 == ["duchess", "croquet", "gryphon"]
