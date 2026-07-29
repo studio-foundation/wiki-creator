@@ -136,3 +136,10 @@ def test_gavriel_page_key_properties():
     # relationships merged to one index line per target, latest tome's span winning
     assert "* [[Aedion]] — family (ch.3→ch.20)" in wiki
     assert "ch.10" not in wiki  # tome-1 span superseded by the latest-wins merge
+    # STU-718: no duplicated top-level sections. Embedded tome bodies demote to H3,
+    # so Biography nests under Book N; only the merged index keeps == Relationships ==.
+    assert "\n== Biography ==" not in wiki
+    assert wiki.count("=== Biography ===") == 2
+    assert wiki.count("\n== Relationships ==") == 1
+    # the per-tome prose Relationships is dropped in favor of the merged index
+    assert "reunited at last" not in wiki and "unknown to him" not in wiki

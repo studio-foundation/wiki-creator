@@ -6,14 +6,14 @@
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
 == Book 1 ==
 
-== Overview ==
+=== Overview ===
 
 The royal seat of Adarlan.
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 2 — reveal" data-collapsetext="Hide">
 == Book 2 ==
 
-== Overview ==
+=== Overview ===
 
 Shattered in the siege.
 </div>

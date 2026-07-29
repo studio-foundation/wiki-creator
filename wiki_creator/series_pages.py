@@ -50,13 +50,42 @@ def _infobox_fields(character: SeriesCharacter, lang: str) -> dict:
     return gate_infobox_spoilers(fields, lang)
 
 
+_HEADING_LINE_RE = re.compile(r"(?m)^(=+) (.+?) (=+)$")
+_H2_SECTION_RE = re.compile(r"(?m)^(== .+? ==)$")
+
+
+def _demote_headings(wikitext: str) -> str:
+    """Add one level to every heading so an embedded page body nests under the
+    collapsible ``== Book N ==`` tome heading instead of siding it (STU-718): the
+    tome's ``== Biography ==`` becomes ``=== Biography ===``, a subsection of Book N."""
+    return _HEADING_LINE_RE.sub(lambda m: f"={m.group(1)} {m.group(2)} {m.group(3)}=", wikitext)
+
+
+def _strip_relationships_section(wikitext: str, lang: str) -> str:
+    """Drop the tome body's own ``== Relationships ==`` section (STU-718) — the
+    merged cross-tome evolution index replaces it, so keeping the per-tome prose
+    duplicated a second Relationships onto every page."""
+    title = slot_label("relationships", lang).strip("= ").strip().lower()
+    parts = _H2_SECTION_RE.split(wikitext)
+    out = [parts[0]]
+    for heading, content in zip(parts[1::2], parts[2::2]):
+        if heading.strip("= ").strip().lower() == title:
+            continue
+        out.append(heading + content)
+    return "".join(out).rstrip()
+
+
 def _tome_body(contribution: TomeContribution, lang: str) -> str:
-    """One tome's contribution as wikitext: its page body, then its events."""
+    """One tome's contribution as wikitext: its page body (headings demoted to
+    nest under the tome heading, its own Relationships prose dropped for the merged
+    index — STU-718), then its events."""
     parts: list[str] = []
     page = contribution.page or {}
     content = page.get("content")
     if content:
-        parts.append(convert(content))
+        body = _demote_headings(_strip_relationships_section(convert(content), lang))
+        if body.strip():
+            parts.append(body)
     events = sorted(contribution.events, key=lambda e: e.get("chapter") or 0)
     if events:
         heading = slot_label("events", lang)
