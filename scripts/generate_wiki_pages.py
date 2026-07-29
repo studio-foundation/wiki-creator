@@ -43,6 +43,7 @@ from wiki_creator.chapters import resolve_chapter_number
 from wiki_creator.lang import load_lang_config
 from wiki_creator.editorial_stance import GROUNDING_BLOCK, EditorialStance, editorial_stance
 from wiki_creator.register import DEFAULT_REGISTER, register_clause
+from wiki_creator.coverage import log_drop
 from wiki_creator.narrative_arc import NarrativeArc, narrative_arc
 from wiki_creator.page_templates import (
     DEFAULT_VALIDATE_PAGES,
@@ -346,9 +347,18 @@ def _narrative_events(entity: dict, arc: NarrativeArc | None = None) -> list[dic
     # is stable on the salience-descending pick order, so same-chapter beats came
     # out shuffled (STU-712); entity_events is already in narrative order.
     order = {id(e): i for i, e in enumerate(events)}
-    return sorted(
+    chosen_events = sorted(
         picked[:budget], key=lambda e: (chapter_of(e), order[id(e)])
     )
+    dropped_chapters = {chapter_of(e) for e in events} - {chapter_of(e) for e in chosen_events}
+    if dropped_chapters:
+        log_drop(
+            "generate-wiki-pages.narrative_arc",
+            entity.get("canonical_name", ""),
+            len(dropped_chapters),
+            f"chapters cut by narrative-arc event budget ({budget})",
+        )
+    return chosen_events
 
 
 def _has_backstory(entity: dict) -> bool:

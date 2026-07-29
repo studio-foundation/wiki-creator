@@ -36,6 +36,7 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 from wiki_creator import studio_io
 from wiki_creator.chapters import is_frontmatter_chapter
+from wiki_creator.coverage import log_drop
 from wiki_creator.entity_taxonomy import (
     full_registry_files,
     gliner_label_map,
@@ -80,11 +81,15 @@ def _entity_total_mentions(entity: dict) -> int:
 
 def filter_entities_by_min_mentions(entities_full: dict, min_mentions_absolute: int) -> dict:
     """Keep only entities whose total mentions are >= min_mentions_absolute."""
-    return {
-        entity_id: entity
-        for entity_id, entity in entities_full.items()
-        if _entity_total_mentions(entity) >= min_mentions_absolute
-    }
+    kept = {}
+    for entity_id, entity in entities_full.items():
+        total = _entity_total_mentions(entity)
+        if total >= min_mentions_absolute:
+            kept[entity_id] = entity
+        else:
+            name = (entity.get("raw_mentions") or [entity_id])[0]
+            log_drop("entity-extraction.min_mentions", name, total, f"below min_mentions_absolute ({min_mentions_absolute})")
+    return kept
 
 
 def _audit_ner_labels(nlp) -> None:
