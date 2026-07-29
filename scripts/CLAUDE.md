@@ -444,6 +444,41 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   run to verify — left in place.
 
 
+- Packed spine items (STU-727/728): a Project Gutenberg EPUB puts a dozen chapters
+  in one spine item and declares their boundaries only as `file.xhtml#anchor`
+  entries, so the one-chapter-per-spine-item rule collapsed 16 of 21
+  `public_domain/` books into 1-5 "chapters" with nothing warning. `parse_epub`
+  splits such an item at those anchors: a marker before each resolving anchor in
+  document order, one run of the text pipeline, split the flat text on the marker.
+  **Two contents sources, never unioned** — the EPUB TOC, and the book's own printed
+  LIST OF CHAPTERS (`_build_printed_contents`: the densest `table`/`ul`/`ol` of
+  in-file fragment links in the spine). The printed one wins only where it declares
+  **more sections than the whole TOC**: The Road to Oz anchors 6 in its TOC and
+  prints 24, the Patchwork Girl 8 against 27 — 4 → 26 and 10 → 31 chapters. Over all
+  21 `public_domain` books the other 19 stay **byte-identical**, and `make golden` /
+  `make smoke` are untouched by construction (a library TOC yields no fragments, and
+  those books print no in-file contents).
+  Three things are load-bearing. (1) **The gate counts TOC *entries*, not fragments**
+  (`_count_toc_entries`). A commercial EPUB declares one whole-file entry per
+  chapter, so a fragment count reads its TOC as declaring nothing and lets any
+  three-link endnote list supersede it — and since a sub-minimum segment is
+  *dropped*, that leak costs prose without moving the chapter count, which is why
+  the test asserts the note text survives rather than the count. (2) **A `<div>` is
+  not a contents container**: it also wraps the list, so it absorbs whatever sits
+  beside it — dracula, Ozma of Oz and Dorothy and the Wizard each print a 20-27-entry
+  `Page_N` list of illustrations that would cut their chapters mid-scene. (3) **The
+  mark is planted before `_flatten_inline_markup`**: a printed contents anchors an
+  empty `<a id=…/>`, and unwrapping that tag erases the anchor.
+  **`01-the_call_of_cthulhu` stays at 1 chapter, and that is measured, not skipped.**
+  Its 3 sections are marked only by CSS class (`<hr class="chap">` +
+  `<p class="ph1">`), and `hr.chap` is not a chapter boundary: dracula prints 32 of
+  them for 32 chapters (every boundary would move) and glinda_of_oz 35 for 28 (the
+  count would change), both correct today. Reaching it needs the book YAML to declare
+  its own chapter mark — the STU-559 shape, a fast-follow.
+  Splitting changes chapter text, so it moves every STU-489 mention offset on the two
+  recovered books; `public_domain/l_frank_baum/oz/output/05-the_road_to_oz/` is a
+  rendering of the 4-chapter parse and is stale until a re-run.
+
 - Block dropcaps (STU-532): a dropcap can be its own **block**, not its own span
   — `<p>I</p><p>n a hole…</p>`, The Hobbit's opening sentence. Inline flattening
   cannot reach it, so `_mark_paragraph_breaks` used to put a paragraph break
