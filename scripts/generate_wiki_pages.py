@@ -246,15 +246,14 @@ def _place_events_block(entity: dict) -> str:
 # SP1 (STU-479): "Arc perso" projection over the Event Layer (events.json, SP0)
 # — events_for_entity() in wiki_preparation.py filters events where the PERSON
 # participates into entity["entity_events"].
-_MAX_PERSON_EVENTS = 18
-
+#
 # STU-663: an arc is three acts, not a flat salience ranking. The event budget is
 # split across setup / rising action (péripéties) / resolution by chapter position,
 # so a long exposition (an adult novel whose first chapters are the initial
 # situation) is represented in proportion to its length, and a solo-protagonist
-# opening is never starved by the multi-character climax. The act structure is a
-# property of the book (STU-666): the default 25/50/25 lives in `narrative_arc`,
-# which a book may override via `generation.narrative_arc`.
+# opening is never starved by the multi-character climax. The act structure and the
+# budget are both properties of the book (STU-666/713): the default 25/50/25 and
+# 18-event budget live in `narrative_arc`, overridable via `generation.narrative_arc`.
 
 # The opening beats of the first chapter are the exposition — a solo protagonist,
 # no set piece — so they score lowest and a salience pick drops them, opening the
@@ -276,13 +275,21 @@ def _narrative_events(entity: dict, arc: NarrativeArc | None = None) -> list[dic
     `arc`, STU-666, defaulting to 25/50/25) and the most salient beats are taken
     within each, so the exposition and the resolution each get a share proportional
     to their length while the dramatic middle stays dense — not one beat per chapter
-    (a disjointed checklist), not salience-only (no beginning)."""
+    (a disjointed checklist), not salience-only (no beginning).
+
+    Salience still under-scores a solo-protagonist episode (Alice and one creature),
+    so an episodic novel's set-piece chapters were dropped whole by the act quota
+    (STU-713: Wonderland's ch5 caterpillar, absent). A coverage floor takes the most
+    salient beat of every chapter the character appears in, before the salience
+    quota spends the rest — so no chapter falls out of the arc while the budget can
+    still hold one beat of it."""
     if entity.get("type") != "PERSON":
         return []
     events = entity.get("entity_events") or []
     if not events:
         return []
     arc = arc or NarrativeArc()
+    budget = arc.max_events
     salience = lambda e: (-float(e.get("salience", 0.0)), int(e.get("chapter", 0)))
     chapter_of = lambda e: int(e.get("chapter", 0))
     chapters = sorted({chapter_of(e) for e in events})
@@ -304,8 +311,23 @@ def _narrative_events(entity: dict, arc: NarrativeArc | None = None) -> list[dic
         picked.append(best_of(chapters[-1]))
     chosen = {id(e) for e in picked}
 
+    # Coverage floor (STU-713): one beat per chapter the character appears in, taken
+    # before the act quota so a solo-protagonist episode salience under-scores is
+    # never dropped whole. Chronological, so a budget too small to cover every
+    # chapter keeps the earliest — the beginning, the part salience already starves.
+    covered = {chapter_of(e) for e in picked}
+    for ch in chapters:
+        if len(picked) >= budget:
+            break
+        if ch in covered:
+            continue
+        beat = best_of(ch)
+        picked.append(beat)
+        chosen.add(id(beat))
+        covered.add(ch)
+
     for act_chapters, weight in zip(acts, act_weights):
-        quota = round(_MAX_PERSON_EVENTS * weight)
+        quota = round(budget * weight)
         already = sum(1 for e in picked if chapter_of(e) in act_chapters)
         act_events = sorted(
             (e for e in events if chapter_of(e) in act_chapters and id(e) not in chosen),
@@ -316,16 +338,16 @@ def _narrative_events(entity: dict, arc: NarrativeArc | None = None) -> list[dic
             chosen.add(id(event))
     # An act smaller than its quota leaves budget on the table — spend it on the
     # next most salient events anywhere in the arc.
-    if len(picked) < _MAX_PERSON_EVENTS:
+    if len(picked) < budget:
         rest = sorted((e for e in events if id(e) not in chosen), key=salience)
-        picked += rest[: _MAX_PERSON_EVENTS - len(picked)]
+        picked += rest[: budget - len(picked)]
 
     # Chronological between chapters, narrative order within one. chapter_of alone
     # is stable on the salience-descending pick order, so same-chapter beats came
     # out shuffled (STU-712); entity_events is already in narrative order.
     order = {id(e): i for i, e in enumerate(events)}
     return sorted(
-        picked[:_MAX_PERSON_EVENTS], key=lambda e: (chapter_of(e), order[id(e)])
+        picked[:budget], key=lambda e: (chapter_of(e), order[id(e)])
     )
 
 

@@ -97,6 +97,15 @@ def test_series_run_ends_with_one_series_wiki_run(fake_lib, monkeypatch, capsys)
     assert "01_eragon.yaml" in runs[-1]
 
 
+def test_series_wiki_only_skips_tome_loop(fake_lib, monkeypatch, capsys):
+    # STU-721: just the series wiki (assemble+export), no per-tome wiki-full.
+    monkeypatch.setattr(library, "_PROJECT_ROOT", fake_lib)
+    assert cli.main(["--dry-run", "series", "run", "inherit", "--wiki-only"]) == 0
+    runs = [line for line in capsys.readouterr().out.splitlines() if line.startswith("$ ")]
+    assert [r.split()[3] for r in runs] == ["wiki-series"]
+    assert "01_eragon.yaml" in runs[-1]
+
+
 def test_unknown_book_returns_2(fake_lib, monkeypatch, capsys):
     monkeypatch.setattr(library, "_PROJECT_ROOT", fake_lib)
     assert cli.main(["book", "run", "zzz"]) == 2
@@ -123,6 +132,26 @@ def test_book_pages_entities_uses_generator_script(fake_lib, monkeypatch, capsys
     # The slice re-exports so the .wiki files reflect the regenerated JSON.
     assert "export_pages.py --book" in out
     assert "studio run" not in out
+
+
+def test_preview_series_targets_series_output_dir(fake_lib, monkeypatch, capsys):
+    # STU-722: `preview --series <alias>` resolves the series and serves
+    # output/_series/ (the wiki-series hub + merged pages), not a single book.
+    monkeypatch.setattr(library, "_PROJECT_ROOT", fake_lib)
+    series_out = fake_lib / "library/paolini/inheritance/output/_series"
+    series_out.mkdir(parents=True)
+    (series_out / "index.wiki").write_text("x", encoding="utf-8")
+    assert cli.main(["--dry-run", "preview", "inherit", "--series"]) == 0
+    out = capsys.readouterr().out
+    assert str(series_out) in out
+
+
+def test_preview_series_missing_output_points_at_series_wiki(fake_lib, monkeypatch, capsys):
+    monkeypatch.setattr(library, "_PROJECT_ROOT", fake_lib)
+    assert cli.main(["preview", "inherit", "--series"]) == 2
+    err = capsys.readouterr().err
+    assert "no exported wiki" in err
+    assert "wiki series wiki inheritance" in err
 
 
 def test_replay_plain(capsys):

@@ -96,7 +96,14 @@ def _find_entry_for_source_id(entity: dict, source_id: str, persons: dict, place
     return None
 
 
-def extract_context(entity: dict, persons: dict, places: dict, orgs: dict, events: dict) -> dict:
+def extract_context(
+    entity: dict,
+    persons: dict,
+    places: dict,
+    orgs: dict,
+    events: dict,
+    chapter_numbers: dict[str, int] | None = None,
+) -> dict:
     """Extract context_by_chapter, with cross-registry fallback for retagged entities."""
     combined: dict[str, list[str]] = {}
     for sid in entity.get("source_ids", []):
@@ -108,16 +115,32 @@ def extract_context(entity: dict, persons: dict, places: dict, orgs: dict, event
                 combined[chapter] = []
             combined[chapter].extend(mentions)
 
-    # Cap per chapter and total chapters to limit bundle size
-    result = {}
+    # Sort by resolved chapter number, not by key string: on a book whose section
+    # ids are not zero-padded, sorted() yields item10 before item2 and iteration
+    # would start mid-book (STU-711/550).
+    chapter_numbers = chapter_numbers or {}
+    ordered_keys = [
+        key for _, key in sorted(
+            ((resolve_chapter_number(k, chapter_numbers), k) for k in combined),
+            key=lambda pair: (pair[0] is None, pair[0] or 0),
+        )
+    ][:MAX_CHAPTERS]
+    capped = {key: combined[key][:MAX_MENTIONS_PER_CHAPTER] for key in ordered_keys}
+
+    # Spend the char budget breadth-first across the entity's chapters instead of
+    # front-to-back, so a protagonist present in every chapter gets thin coverage
+    # everywhere rather than full coverage of an arbitrary early window (STU-711).
+    result: dict[str, list[str]] = {}
     total_chars = 0
-    for chapter in sorted(combined.keys())[:MAX_CHAPTERS]:
-        mentions = combined[chapter][:MAX_MENTIONS_PER_CHAPTER]
-        chapter_chars = sum(len(m) for m in mentions)
-        if total_chars + chapter_chars > MAX_CONTEXT_CHARS_PER_ENTITY:
-            break
-        result[chapter] = mentions
-        total_chars += chapter_chars
+    for depth in range(MAX_MENTIONS_PER_CHAPTER):
+        for chapter, mentions in capped.items():
+            if depth >= len(mentions):
+                continue
+            mention = mentions[depth]
+            if total_chars + len(mention) > MAX_CONTEXT_CHARS_PER_ENTITY:
+                return result
+            result.setdefault(chapter, []).append(mention)
+            total_chars += len(mention)
 
     return result
 
@@ -426,7 +449,7 @@ def build_entity_bundle(
 ) -> dict:
     canonical_name = entity["canonical_name"]
     chapter_numbers = chapter_numbers or {}
-    context_by_chapter = extract_context(entity, persons, places, orgs, events)
+    context_by_chapter = extract_context(entity, persons, places, orgs, events, chapter_numbers)
     # Resolve each context section id to its chapter *position* once, so every
     # consumer of the bundle reads a number instead of counting digits out of the
     # id (STU-580, same class as STU-550). generate_wiki_pages labels excerpts

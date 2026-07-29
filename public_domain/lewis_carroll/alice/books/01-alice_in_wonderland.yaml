@@ -48,8 +48,12 @@ generation:
   # a long sprawling middle of self-contained encounters, and a brief trial
   # resolution. The default 25/50/25 over-weights the exposition; shift the budget
   # into the rising action so Alice's arc reads as the string of episodes it is.
+  # STU-713: 12 episodic chapters need more than the default 18 beats to keep each
+  # self-contained encounter (the caterpillar, the pool of tears) alongside the
+  # crowd scenes the salience quota favours.
   narrative_arc:
     weights: [0.15, 0.70, 0.15]
+    max_events: 21
   principal:
     sections: [infobox, biography, narrative_role, personality, physical, powers, relationships, trivia, references]
     sections_by_type:
