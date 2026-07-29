@@ -274,14 +274,15 @@ def chrome_label(key, lang, base=None) -> str:
     return entry.get(lang) or entry.get("fr") or str(key)
 
 
-def stub_content(kind, lang, base=None) -> str:
-    """Localized reader-facing stub page body (base.yaml ``stubs``). ``kind`` is
-    ``failed`` or ``insufficient``. Rendered under the biography heading."""
+def stub_content(kind, lang, base=None, *, heading="biography") -> str:
+    """Localized reader-facing stub page body (base.yaml ``stubs``), rendered under
+    the localized ``heading`` section title. ``kind`` names the stub: an entity
+    page's ``failed``/``insufficient`` under `biography`, an event page's
+    ``event_*`` under `course`, the synopsis' ``synopsis_*`` under `synopsis`."""
     raw = base if base is not None else load_base_template()
-    heading = slot_label("biography", lang, raw)
     entry = (raw.get("stubs") or {}).get(kind) or {}
     message = entry.get(lang) or entry.get("fr") or ""
-    return f"## {heading}\n\n*{message}*"
+    return f"## {slot_label(heading, lang, raw)}\n\n*{message}*"
 
 
 def validator_message(code, lang, base=None, **params) -> str:

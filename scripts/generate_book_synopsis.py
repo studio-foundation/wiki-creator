@@ -36,6 +36,7 @@ from scripts.generate_wiki_pages import (
 )
 from wiki_creator import studio_io
 from wiki_creator.lang import book_language
+from wiki_creator.page_templates import slot_label, stub_content
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.synopsis import (
     DEFAULT_MAX_EVENTS_PER_CHAPTER,
@@ -49,13 +50,14 @@ from wiki_creator.synopsis import (
 from wiki_creator.register import register_clause
 from wiki_creator.types import EventBundle
 
-_STUB_CONTENT_FAILED = "## Synopsis\n\n*Échec technique de la génération du synopsis.*"
-_STUB_CONTENT_DRY = "## Synopsis\n\n*Synopsis non généré (dry-run).*"
-
-# Mirrors _strip_relations_section in generate_wiki_pages.py: the writer is
-# told not to author a Références section (it is appended deterministically),
-# but the instruction can be ignored — strip it before appending ours.
-_REFERENCES_SECTION_RE = re.compile(r"(?m)^## Références\s*\n(?:(?!^##\s).*\n?)*")
+def _strip_references_section(content: str, lang: str) -> str:
+    """Mirrors _strip_relations_section in generate_wiki_pages.py: the writer is
+    told not to author a References section (it is appended deterministically),
+    but the instruction can be ignored — strip it before appending ours. The
+    heading follows ``lang``; hardcoding ``## Références`` left the English
+    heading in place and the page carried two References sections (STU-734)."""
+    heading = re.escape(slot_label("references", lang))
+    return re.sub(rf"(?m)^## {heading}\s*\n(?:(?!^##\s).*\n?)*", "", content)
 
 
 def _synopsis_entity() -> dict:
@@ -68,13 +70,15 @@ def _synopsis_entity() -> dict:
     }
 
 
-def _stub_page(*, failed: bool = False) -> dict:
+def _stub_page(lang: str, *, failed: bool = False) -> dict:
     page = {
         "title": SYNOPSIS_TITLE,
         "importance": SYNOPSIS_IMPORTANCE,
         "entity_type": SYNOPSIS_ENTITY_TYPE,
         "infobox_fields": {},
-        "content": _STUB_CONTENT_FAILED if failed else _STUB_CONTENT_DRY,
+        "content": stub_content(
+            "synopsis_failed" if failed else "synopsis_dry_run", lang, heading="synopsis"
+        ),
     }
     if failed:
         page["_failed"] = True
@@ -96,17 +100,17 @@ def read_events(processing_dir: Path) -> list[dict] | None:
     return studio_io.to_dict(bundle.events)
 
 
-def _finalize_page(result: dict, book_title: str) -> dict:
+def _finalize_page(result: dict, book_title: str, lang: str) -> dict:
     """Reduce a wiki-page-item result to the page contract, drop any authored
-    Références section, and append the deterministic one."""
+    References section, and append the deterministic one."""
     content = str(result.get("content", "") or "")
-    content = _REFERENCES_SECTION_RE.sub("", content).rstrip("\n")
+    content = _strip_references_section(content, lang).rstrip("\n")
     return {
         "title": SYNOPSIS_TITLE,
         "importance": SYNOPSIS_IMPORTANCE,
         "entity_type": SYNOPSIS_ENTITY_TYPE,
         "infobox_fields": {},
-        "content": content + "\n\n" + _references_block(book_title),
+        "content": content + "\n\n" + _references_block(book_title, lang=lang),
     }
 
 
@@ -150,7 +154,9 @@ def build_synopsis_item(
     return item_input, _synopsis_entity(), forbidden_names
 
 
-def finalize_synopsis(result: dict, *, book_title: str, forbidden_names: list[str]) -> dict:
+def finalize_synopsis(
+    result: dict, *, book_title: str, forbidden_names: list[str], lang: str
+) -> dict:
     """The post-LLM half: turn one wiki-page-item result into the synopsis page.
 
     A generation error stubs the page; a forbidden name that survived the
@@ -158,14 +164,14 @@ def finalize_synopsis(result: dict, *, book_title: str, forbidden_names: list[st
     """
     if result.get("error"):
         print(f"[synopsis] generation failed: {result['error']}", file=sys.stderr)
-        return _stub_page(failed=True)
+        return _stub_page(lang, failed=True)
     if forbidden_names and _check_forbidden_names(result, forbidden_names):
         hits = _check_forbidden_names(result, forbidden_names)
         print(f"[synopsis] spoiler persists ({', '.join(hits)}), rejecting", file=sys.stderr)
-        page = _stub_page(failed=True)
+        page = _stub_page(lang, failed=True)
         page["_spoiler_rejected"] = True
         return page
-    return _finalize_page(result, book_title)
+    return _finalize_page(result, book_title, lang)
 
 
 def generate_synopsis_page(
@@ -181,7 +187,7 @@ def generate_synopsis_page(
     (`--book` path: one nested `studio run` subprocess with a host-level
     forbidden-name re-roll)."""
     if dry_run:
-        return _stub_page()
+        return _stub_page(language)
 
     item_input, entity, forbidden_names = build_synopsis_item(
         events, book_title=book_title, book_cfg=book_cfg, language=language
@@ -190,7 +196,9 @@ def generate_synopsis_page(
     if not result.get("error") and forbidden_names and _check_forbidden_names(result, forbidden_names):
         print("[synopsis] spoiler detected, retrying…", file=sys.stderr)
         result = _execute_wiki_page_item(item_input, entity, timeout)
-    return finalize_synopsis(result, book_title=book_title, forbidden_names=forbidden_names)
+    return finalize_synopsis(
+        result, book_title=book_title, forbidden_names=forbidden_names, lang=language
+    )
 
 
 def _write_synopsis_page(page: dict, processing_dir: Path) -> None:
@@ -285,9 +293,11 @@ def run_post(payload: dict, *, book_cfg: dict, language: str) -> dict:
         events, book_title=book_title, book_cfg=book_cfg, language=language
     )
     result = page_from_map_result(
-        _result_at_index(_map_output_from_payload(payload), 0), entity, language
+        _result_at_index(_map_output_from_payload(payload), 0), entity, language=language
     )
-    page = finalize_synopsis(result, book_title=book_title, forbidden_names=forbidden_names)
+    page = finalize_synopsis(
+        result, book_title=book_title, forbidden_names=forbidden_names, lang=language
+    )
     _write_synopsis_page(page, paths.processing)
     return {"failed": bool(page.get("_failed"))}
 
