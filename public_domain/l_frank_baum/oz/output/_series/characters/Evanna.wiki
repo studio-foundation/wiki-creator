@@ -1,0 +1,21 @@
+{{Infobox character
+|nom=Evanna
+|apparition=Appears in book 3
+|status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 3 — reveal" data-collapsetext="Hide">
+== Book 3 ==
+
+== Biography ==
+
+Evanna is one of the five Princesses of Ev, a daughter of the Queen of Ev, named alongside her sisters Evrose, Evella, Evirene, and Evedna, and her brothers Evrob, Evington, Evardo, and Evroland. She was among the royal family transformed by the Nome King's enchantment into ornaments; she was freed when the yellow hen broke the spell binding one of the purple ornaments, revealing a sweet-faced girl whose golden hair fell in a cloud over her shoulders. The Queen of Ev recognized her at once, crying "Evanna! my own Evanna!" and clasped her to her bosom, covering her face with kisses.
+</div>
+
+== Relationships ==
+
+''Evolution:''
+* [[Queen of Ev]] — Family (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
+
+[[Category:Characters]]
+[[Category:Characters of Book 3]]

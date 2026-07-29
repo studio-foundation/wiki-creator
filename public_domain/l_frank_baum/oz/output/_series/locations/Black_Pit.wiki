@@ -1,0 +1,25 @@
+{{Infobox location
+|nom=Black Pit
+|apparition=Appears in book 4
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
+== Book 4 ==
+
+== Infobox ==
+
+* Name: Black Pit
+* Place type: Pit in mountain
+* Status: Active
+
+== Biography ==
+
+The Black Pit lies within a mountain. The Princess orders that Jim, Eureka, and the other animals be driven there instead of being cast into the Garden of the Twining Vines, telling the Wizard that her subjects cannot bear to have the animals around.
+
+== Events ==
+
+The new Princess spares Dorothy, Zeb, and the Wizard but condemns Jim, Eureka, and the piglets to be driven into the Black Pit in the mountain.
+</div>
+
+[[Category:Locations]]
+[[Category:Locations of Book 4]]

@@ -1,0 +1,19 @@
+{{Infobox event
+|nom=Journey
+|apparition=Appears in book 2
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 2 — reveal" data-collapsetext="Hide">
+== Book 2 ==
+
+== Infobox ==
+
+* Name: Journey
+* Destination: Emerald City
+
+== Biography ==
+
+The Journey is the expedition undertaken toward the Emerald City, prepared in haste by the emperor, who instructed his Lord High Chancellor to run the kingdom during his absence. Once underway, the party — including the Tin Woodman and, later, the one-legged Pumpkinhead, who was perched upon the Saw-Horse and tied to his seat with cords so he could not fall off — pressed onward toward the Emerald City. Despite knowing every step of the route by heart, the Tin Woodman found that something curious had happened and feared the group had already lost its way, a disturbance caused by Mombi's secret magic, which she worked from a locked tower room to prevent the travelers' return.
+</div>
+
+[[Category:Events]]

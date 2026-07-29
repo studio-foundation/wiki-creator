@@ -1,0 +1,36 @@
+{{Infobox location
+|name=Royal Palace
+|status=Inhabited
+|nom=Royal Palace
+|apparition=Appears in book 5
+}}
+
+== Infobox ==
+
+* Name: Royal Palace
+* Type: Palace
+* Location: Emerald City
+* Status: Inhabited
+
+== Biography ==
+
+The Royal Palace is a vast, noble, and elegant building so distinctive that it can be recognized on sight. Its gardens and grounds are enclosed by a separate wall, one that is lower and thinner than the wall surrounding the Emerald City itself but more daintily designed, and built entirely of green marble. Visitors are received in a grand hall upon entering. Several residents keep permanent quarters there: Tik-Tok lives at the Royal Palace, the Tin Woodman is given the same room each time he visits Ozma, and Dorothy keeps a suite of rooms that she occupies whenever she is in the Emerald City. According to Dorothy, all of her friends are welcome at Ozma's palace.
+
+== Appearance ==
+
+The palace grounds are set apart by their own boundary wall, distinct from the wall around the City. This inner wall is described as more daintily designed than the City wall, though not as high or thick, and it is built entirely of green marble.
+
+== Events ==
+
+Ozma's golden chariot, escorted by the Cowardly Lion and the Hungry Tiger, meets an arriving party and brings them through the Emerald City into the Royal Palace, where they are received in the grand hall.
+
+== Trivia ==
+
+* The servants of the Royal Palace marched together as their own group during a public procession, positioned ahead of the general crowd.
+
+== References ==
+
+<references/>
+
+[[Category:Locations]]
+[[Category:Locations of Book 5]]

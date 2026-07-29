@@ -1,0 +1,27 @@
+{{Infobox character
+|nom=Keeper of the Wicket
+|alias=Bristle
+|apparition=Appears in book 6
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
+== Book 6 ==
+
+== Biography ==
+
+The Keeper of the Wicket, also known as Bristle, is an official among the rabbit people encountered by Dorothy. His dress is described as rich, though it is noted as commonplace when set against the more splendid silk-and-satin costumes worn by the other rabbit folk around him. In this capacity he acts as herald: it is he who, in a pompous voice, calls out for the crowd to make way for Princess Dorothy as she arrives from Ozma of Oz, and who later commands the line of rabbit soldiers before the palace entrance to salute her. His exchange with the King, in which he inquires whether His Majesty is at leisure, suggests his position places him in service to the King.
+
+== Relationships ==
+
+'''[[Dorothy]]''' — acquaintance. The Keeper of the Wicket personally announced Dorothy's arrival and called for her salute both at the city gates and at the palace, a formal reception that seems to reflect the regard owed a visiting dignitary rather than a personal bond.
+
+'''[[King]]''' — employment. The Keeper of the Wicket inquired whether the King was at leisure, which suggests a position of service or subordination within the King's court.
+
+== References ==
+
+<references/>
+</div>
+
+[[Category:Characters]]
+[[Category:Secondary Characters]]
+[[Category:Characters of Book 6]]

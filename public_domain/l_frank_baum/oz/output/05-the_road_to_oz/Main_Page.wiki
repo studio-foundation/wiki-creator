@@ -12,6 +12,11 @@
 * [[King Bud of Noland]]
 
 == Important locations ==
+* [[Emerald City]]
+* [[LAND OF OZ]]
+* [[Kansas]]
+* [[The]]
+* [[Deadly Desert]]
 
 == Navigation ==
 * [[:Category:Characters|All characters]]
@@ -19,7 +24,7 @@
 * [[:Category:Organizations|All organizations]]
 
 == Statistics ==
-* 30 wiki pages
+* 36 wiki pages
 * 25 characters
-* 0 locations
+* 6 locations
 * 1 organizations

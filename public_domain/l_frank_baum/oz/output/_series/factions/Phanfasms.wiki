@@ -1,0 +1,14 @@
+{{Infobox faction
+|nom=Phanfasms
+|apparition=Appears in book 6
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
+== Book 6 ==
+
+== Biography ==
+
+''Insufficient information available for this entity.''
+</div>
+
+[[Category:Factions]]

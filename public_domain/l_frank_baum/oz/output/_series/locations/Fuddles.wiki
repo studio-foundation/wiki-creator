@@ -1,0 +1,24 @@
+{{Infobox location
+|nom=Fuddles
+|apparition=Appears in book 6
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
+== Book 6 ==
+
+== Infobox ==
+
+* Name: Fuddles
+* Region: Near Fuddlecumjig, Land of Oz
+
+== Biography ==
+
+Fuddles is a name given both to a people and to the territory they occupy, lying about two miles beyond Fuddlecumjig in the Land of Oz. The region is reached by the main road that passes through pleasant farming country. The Fuddles are said to be the most peculiar people in all the Land of Oz, though the exact nature of their peculiarity is not detailed. Grandmother Gnit, a maker of mittens, is counted among the Fuddles, suggesting the inhabitants of this area practice crafts such as knitting.
+
+== References ==
+
+<references/>
+</div>
+
+[[Category:Locations]]
+[[Category:Locations of Book 6]]

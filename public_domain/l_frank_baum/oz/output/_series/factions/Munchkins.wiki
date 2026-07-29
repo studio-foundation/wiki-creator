@@ -1,0 +1,55 @@
+{{Infobox faction
+|nom=Munchkins
+|alias=Munchkin
+|apparition=First appears in book 1, last appears in book 6
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
+== Book 1 ==
+
+== Infobox ==
+
+* Name: Munchkins
+* Aliases: Munchkin
+* Role: Farmers and other inhabitants of a country where blue is the customary color of dress
+
+== Biography ==
+
+The Munchkins are the people of a country where blue is worn as a matter of custom; those who live there, such as a Munchkin farmer described making a figure for his cornfield, dress in faded blue suits and boots with blue tops, "such as every man wore in this country." This farmer built a straw-stuffed figure with a sack head painted with eyes, nose, and mouth, topping it with an old, pointed blue hat that had belonged to some Munchkin.
+
+While the farmer worked, another Munchkin stood by and offered opinions on the figure's construction, remarking that the painted ears were not straight and later approving of the blue paint chosen for its eye, saying, "Blue paint is just the color for eyes." The finished figure, left standing on a pole among the corn, was mistaken by passing crows for a Munchkin, a mistake it found gratifying.
+
+Among the Munchkins was a girl of notable beauty, whom the Tin Woodman came to love. He resolved to marry her once he had earned enough money to build her a better house, and she in turn promised to marry him once that house was built.
+
+== References ==
+
+<references/>
+</div>
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 2 — reveal" data-collapsetext="Hide">
+== Book 2 ==
+
+== Biography ==
+
+''Insufficient information available for this entity.''
+</div>
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
+== Book 4 ==
+
+== Biography ==
+
+This Munchkin is a small figure who, despite standing barely tall enough to reach Zeb's shoulder, seemed to be the wrestling champion among his people during a gathering held before Ozma and her guests. Twice Zeb's apparent age, he wore a peaked hat ringed with little bells that tinkled as he moved, and sported long pointed whiskers. When Zeb wrestled him, the Munchkin threw the boy to the ground three times with apparent ease, prompting Zeb to challenge him to a boxing match instead. That contest ended when Zeb landed a sharp blow to his ears, at which the Munchkin sat down on the ground and cried, his tears running down his whiskers, because he had been hurt.
+</div>
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
+== Book 6 ==
+
+== Biography ==
+
+''Insufficient information available for this entity.''
+</div>
+
+== Relationships ==
+
+''Evolution:''
+* [[Zeb]] — Friendly rivalry (ch.2)<ref>Dorothy and the Wizard in Oz, chapter 2</ref>
+
+[[Category:Factions]]

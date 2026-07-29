@@ -1,0 +1,36 @@
+{{Infobox character
+|nom=Guardian
+|apparition=Appears in book 2
+|status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 2 — reveal" data-collapsetext="Hide">
+== Book 2 ==
+
+== Biography ==
+
+The Guardian of the Gates admits visitors to the Emerald City on behalf of His Majesty, the Scarecrow. When a stranger is brought before him, he decides he must take him to the Scarecrow, deferring judgment on his fate to "His Majesty's business." Later, when General Jinjur's army threatens to conquer the city, the Guardian grows uneasy and rings the bell for the Soldier with the Green Whiskers, only to find himself surrounded by Jinjur's girls, who jab knitting-needles near his face until, howling for mercy, he offers no resistance as Jinjur takes the bunch of keys from around his neck.
+
+== Relationships ==
+
+'''[[General Jinjur]]''' — enemy. Jinjur's advance on the city seems to have made the Guardian uneasy, suggesting an adversarial dynamic between them.
+
+'''[[Jack Pumpkinhead]]''' — acquaintance. The Guardian's decision to bring him before the Scarecrow suggests a passing acquaintance rather than any deeper bond.
+
+'''[[Soldier with the Green Whiskers]]''' — acquaintance. The Guardian's habit of ringing for him suggests a working acquaintance between the two.
+
+=== Events ===
+
+* Tip, a Gillikin youth whose full name is Tippetarius, lives in the North of Oz under guardian old Mombi, a woman suspected of magical arts.
+* The Guardian of the Gates questions Jack, who does not know his own errand, and fits him with green spectacles.
+* Army marches to Emerald City gate; Guardian of Gate dismisses them until threatened with knitting needles and surrenders his keys.
+* The Saw-Horse bursts through the gate, knocking over several of Jinjur's girl guards and the new Guardian of the Gate as the trio escapes the City.
+</div>
+
+== Relationships ==
+
+''Evolution:''
+* [[General Jinjur]] — Enemy (ch.8)<ref>The Marvelous Land of Oz, chapter 8</ref>
+
+[[Category:Characters]]
+[[Category:Characters of Book 2]]

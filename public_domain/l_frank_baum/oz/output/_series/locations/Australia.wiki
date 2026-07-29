@@ -1,0 +1,26 @@
+{{Infobox location
+|nom=Australia
+|apparition=Appears in book 3
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 3 — reveal" data-collapsetext="Hide">
+== Book 3 ==
+
+== Infobox ==
+
+* Name: Australia
+* Place type: country
+* Notable location: Sydney
+* Status: non-fairy country
+
+== Biography ==
+
+Australia is a country outside the fairy lands, home to Uncle Henry, who lives in a pleasant room in Sydney. Unlike the Land of Oz or the Land of Ev, Australia has no magical properties of its own — the magic belt only works while its wearer remains in a fairy country, so a wish made with it would not carry its power to Australia once the destination was reached.
+
+== Events ==
+
+Dorothy uses Ozma's magic picture to look in on Uncle Henry, seeing him in Australia, sad and unwell, which leads her to decide she must return to him. She later says goodbye to her friends in Oz and is transported to Uncle Henry in Australia, where she comforts him as he recovers.
+</div>
+
+[[Category:Locations]]
+[[Category:Locations of Book 3]]

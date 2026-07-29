@@ -1,0 +1,37 @@
+{{Infobox location
+|name=Land of Oz
+|place_type=Country
+|status=Unreachable by ordinary means
+|nom=LAND OF OZ
+|apparition=Appears in book 5
+}}
+
+== Infobox ==
+
+* Name: Land of Oz
+* Place type: Country
+* Status: Unreachable by ordinary means
+
+== Biography ==
+
+The Land of Oz is a country lying beyond the Deadly Sands, a barrier desert that "will Turn Any Living Flesh to Dust in an Instant." A sign at the edge of the sands names it "the LAND OF OZ" and states that "no one can Reach that Beautiful Country because of these Destroying Sands." Dorothy confirms the danger of the sands from her own experience, saying "it's true no one can live who tries to walk upon the sands." The Land of Oz encompasses the Emerald City, which Dorothy identifies as a place where she has friends who "would take care of them and send them safe home again."
+
+== Appearance ==
+
+No description of the land's interior is given beyond the sign calling it a "Beautiful Country." What is confirmed is the nature of its border: the surrounding sands turn any living flesh that touches them into dust, making the country's edge a lethal barrier rather than an ordinary frontier.
+
+== Events ==
+
+Dorothy, the shaggy man, Button-Bright, Toto, and Polychrome find themselves stranded at the edge of the Deadly Desert, unable to find a way across the sands to reach the Land of Oz.
+
+== Trivia ==
+
+* Dorothy states she has crossed the desert to the Land of Oz "more than once" before this occasion.
+* The shaggy man brings in Johnny Dooit specifically to help the group find a way to cross the sands into the Land of Oz.
+
+== References ==
+
+<references/>
+
+[[Category:Locations]]
+[[Category:Locations of Book 5]]

@@ -1,0 +1,83 @@
+{{Infobox character
+|nom=Woggle-Bug
+|apparition=First appears in book 2, last appears in book 4
+|status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 2 — reveal" data-collapsetext="Hide">
+== Book 2 ==
+
+== Biography ==
+
+The Woggle-Bug is an insect of extraordinary size, appearing before the Scarecrow, the Tin Woodman, and their companions dressed as a dandy: a dark-blue swallowtail coat with yellow lining, a white duck vest, fawn-colored knickerbockers with gilt buckles, and a tall silk hat. Standing as tall as the Tin Woodman, he is remarked to be larger than any bug ever seen in the Land of Oz. He takes evident pride in his own strangeness, declaring that surprising people affords him pleasure and that he is entitled to curiosity and admiration rather than being classed with ordinary insects.
+
+According to his own account, the Woggle-Bug spent about three years hidden near the hearth of a country school-house, secretly listening to the lectures of Professor Nowitall, and credits this period with the vast learning he claims for himself, styling himself "T.E.", Thoroughly Educated. He travels afterward with the Scarecrow, the Tin Woodman, Tip, Jack Pumpkinhead, and the Saw-Horse, offering frequent, often unwelcome, remarks on puns and education along the way. He is present through the group's confrontation with General Jinjur in the Emerald City, the escape from the palace roof, the building of the flying Thing from two sofas and a Gump's head, and the journey south, during which he complains of sea-sickness and survives an attack by Jackdaws that scatters the Scarecrow's straw stuffing, afterward helping see the Scarecrow refilled with money recovered from the Jackdaws' nest.
+
+== Relationships ==
+
+'''[[Nick Chopper]]''' — friend. The Tin Woodman tolerates the Woggle-Bug's abrupt arrival and lengthy self-introduction ("You may say what you please," he tells him briefly), and the two seem bound afterward through shared adventures, from building the flying Thing together to fending off the Jackdaw attack.
+
+'''[[The Scarecrow]]''' — friend. The Scarecrow greets the Woggle-Bug's sudden appearance with startled courtesy ("your abrupt appearance has caused me surprise"), and later praises one of his remarks as "Spoken like a philosopher!", suggesting an easy companionship between them.
+
+'''[[Tip]]''' — acquaintance. Tip grows visibly provoked by the Woggle-Bug's insistence on puns, telling him "your joke is a poor one, and as old as it is poor," yet still crawls free to assist the Woggle-Bug after the Jackdaws' assault, hinting at a wary but loyal bond.
+
+'''[[Jack Pumpkinhead]]''' — acquaintance. Stranded on the mountain, the Woggle-Bug laments "This is a worse prison than the palace," echoed by Jack Pumpkinhead's own fear that "the mountain air isn't good for pumpkins," suggesting shared unease between them in moments of danger.
+
+'''[[General Jinjur]]''' — enemy. When the Woggle-Bug suggests she marry the Queen to settle her rebellion, Jinjur "glared at the insect fiercely," indicating open hostility between them.
+
+== References ==
+
+<references/>
+
+=== Events ===
+
+* A strange giant insect approaches and presents a card reading 'Mr. H. M. Woggle-Bug, T. E.'
+* The Woggle-Bug explains he is 'Highly Magnified' and 'Thoroughly Educated,' then sits to tell his story to the group.
+* The Woggle-Bug tells his life story: born an ordinary tiny Woggle-Bug living among stones and grass roots.
+* Two girls fell from a window in fright, and while the Professor and pupils rushed to check on them, the Woggle-Bug escaped, now permanently enlarged.
+* The Woggle-Bug says he intends to visit the Emerald City to lecture on the 'Advantages of Magnification,' and the group invites him to travel with them.
+* The Saw-Horse's broken leg cannot be fixed since Jack Pumpkinhead must ride; the Woggle-Bug suggests using one of Jack's wooden legs as a replacement.
+* The Woggle-Bug argues that puns display superior education, irritating Tip and drawing a warning from the Scarecrow and Tin Woodman to restrain himself.
+* The Woggle-Bug and Jack Pumpkinhead voice fear of being eaten, since Jinjur threatened to turn them into tarts, goulash, or soup.
+* The Gump flies south with Tip, Scarecrow, Tin Woodman, Jack Pumpkinhead, Woggle-Bug, and Saw-Horse aboard.
+* The travelers fall unharmed into a hidden Jackdaw's nest full of stolen treasures, and the Woggle-Bug gives a found diamond necklace to the Tin Woodman.
+* Hearing the Jackdaws returning, Scarecrow has Tip and the Woggle-Bug hide, Jack's head laid down, and his own straw scattered over them for protection just as the angry birds attack.
+* The Woggle-Bug swallows a pill without pain and wishes the Gump's broken wings mended.
+</div>
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
+== Book 4 ==
+
+== Biography ==
+
+The Woggle-Bug serves as Public Accuser at the trial of Dorothy's kitten, chosen for the role because he is so learned that no one can deceive him. Addressing the jury, his tone is pompous, and he struts up and down in an absurd attempt to appear dignified. He shows a fastidious regard for order in his own thinking, curtly telling Dorothy not to interrupt him because he does not like anything upsetting his thoughts once he has them arranged.
+
+== Relationships ==
+
+'''[[Princess Ozma]]''' — employment. Woggle-Bug's role as Public Accuser, assigned at Ozma's signal, seems to place him in Ozma's service.
+
+'''[[DOROTHY]]''' — acquaintance. Woggle-Bug's rebuke of DOROTHY during the trial ("Don't interrupt, little girl") suggests only a passing acquaintance between them.
+
+'''[[Eureka]]''' — enemy. As Public Accuser prosecuting Eureka, Woggle-Bug's position could indicate an adversarial standing toward her.
+
+'''[[Scarecrow]]''' — friendly_rivalry. Their connection seems to suggest a rivalry, though the nature of it is not established.
+
+'''[[WIZARD]]''' — acquaintance. Their association appears to be no more than an acquaintance.
+
+=== Events ===
+
+* In Oz they reunite with the Scarecrow, Tin Woodman, Billina, the Cowardly Lion, the Hungry Tiger, and the Woggle-Bug, ending with a race between Jim and the Sawhorse.
+</div>
+
+== Relationships ==
+
+''Evolution:''
+* [[Eureka]] — Enemy (ch.3)<ref>Dorothy and the Wizard in Oz, chapter 3</ref>
+* [[Scarecrow]] — Friendly rivalry (ch.3)<ref>Dorothy and the Wizard in Oz, chapter 3</ref>
+* [[Jackdaws]] — Enemy (ch.18)<ref>The Marvelous Land of Oz, chapter 18</ref>
+* [[General Jinjur]] — Enemy (ch.15→ch.16)<ref>The Marvelous Land of Oz, chapter 15</ref>
+* [[Nick Chopper]] — Friend (ch.12→ch.20)<ref>The Marvelous Land of Oz, chapter 12</ref>
+* [[The Scarecrow]] — Friend (ch.12→ch.21)<ref>The Marvelous Land of Oz, chapter 12</ref>
+
+[[Category:Characters]]
+[[Category:Characters of Book 2]]
+[[Category:Characters of Book 4]]

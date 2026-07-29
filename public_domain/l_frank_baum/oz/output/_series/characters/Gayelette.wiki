@@ -1,0 +1,26 @@
+{{Infobox character
+|nom=Gayelette
+|apparition=Appears in book 1
+|status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
+== Book 1 ==
+
+== Biography ==
+
+Gayelette is a sorceress who lives in a handsome palace built from great blocks of ruby, using all her magic to help the people and never harming anyone who was good. Everyone loved her, but her greatest sorrow was that she could find no one to love in return, since all the men were said to be too stupid and ugly to mate with one so beautiful and wise. At last she found a boy who was handsome, manly, and wise beyond his years; she took him to her ruby palace and used her magic to make him as strong and good and lovely as any woman could wish, resolving to make him her husband once he grew to manhood.
+
+=== Events ===
+
+* He tells the story of Gayelette, a sorceress princess, and Quelala, the man she loved and made her husband.
+* As punishment, Gayelette bound the Winged Monkeys to obey three times whoever owns the Golden Cap, which later passed to Quelala, then to the Wicked Witch of the West, and now to Dorothy.
+</div>
+
+== Relationships ==
+
+''Evolution:''
+* [[Quelala]] — Romance (ch.14)<ref>The Wonderful Wizard of Oz, chapter 14</ref>
+
+[[Category:Characters]]
+[[Category:Characters of Book 1]]

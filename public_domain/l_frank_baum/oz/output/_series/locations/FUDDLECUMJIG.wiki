@@ -1,0 +1,25 @@
+{{Infobox location
+|nom=FUDDLECUMJIG
+|alias=Fuddlecumjig
+|apparition=Appears in book 6
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
+== Book 6 ==
+
+== Infobox ==
+
+* Name: Fuddlecumjig
+* Region: Land of Oz
+
+== Biography ==
+
+Fuddlecumjig is a destination within the Land of Oz, reached by a road marked with a sign-post reading "THIS WAY TO FUDDLECUMJIG." It is known as the home of the Fuddles, described as the most peculiar people in all the Land of Oz. Ozma is said to have thought that visitors might enjoy the Fuddles, prompting a detour to the place.
+
+== References ==
+
+<references/>
+</div>
+
+[[Category:Locations]]
+[[Category:Locations of Book 6]]

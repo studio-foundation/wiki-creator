@@ -1,0 +1,21 @@
+{{Infobox character
+|nom=TWINKLE
+|alias=Twinkle
+|apparition=Appears in book 5
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 5 — reveal" data-collapsetext="Hide">
+== Book 5 ==
+
+== Biography ==
+
+Twinkle is a little girl at the center of several separate adventures. In one, she captures a mud turtle that turns out to be a fairy prince. In another, she is taken underground to visit Mr. Woodchuck's family and neighbors, where she discovers what they think of traps and of the people who set them. Twinkle also keeps a pet, Jim Crow, who later escapes and becomes a robber among the birds.
+
+== References ==
+
+<references/>
+</div>
+
+[[Category:Characters]]
+[[Category:Secondary Characters]]
+[[Category:Characters of Book 5]]

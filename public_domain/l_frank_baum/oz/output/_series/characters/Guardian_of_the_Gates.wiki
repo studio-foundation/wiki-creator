@@ -1,0 +1,30 @@
+{{Infobox character
+|nom=Guardian of the Gates
+|apparition=Appears in book 1
+|status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
+== Book 1 ==
+
+== Biography ==
+
+The Guardian of the Gates is an officer of the Emerald City who lives in a room by its gate and is responsible for admitting travelers. When Dorothy and her companions first arrive, he unlocks their green spectacles, returns them to his great box, and opens the gate for them. Asked which road leads to the Wicked Witch of the West, he answers that there is no road, since no one ever wishes to go that way; on learning the travelers mean to destroy her, he remarks that this is different, as he had assumed she would make slaves of them as she has of others. When the group returns to the Emerald City after Dorothy melts the Wicked Witch of the West, the Guardian of the Gates greets them again, surprised at their return, and it is through him that the people of the city first learn of the Witch's defeat.
+
+== Relationships ==
+
+'''[[Dorothy]]''' — acquaintance
+
+'''[[Scarecrow]]''' — acquaintance
+
+'''[[Wizard]]''' — employment
+
+=== Events ===
+
+* The Guardian of the Gates leads them to the Palace of Oz, where a soldier tells them Oz will see each of them alone, one per day.
+* The Guardian of the Gates tells Dorothy there is no road to the Wicked Witch of the West and advises them to head West.
+* The Guardian of the Gates admits them again and locks the green spectacles onto their eyes.
+</div>
+
+[[Category:Characters]]
+[[Category:Characters of Book 1]]

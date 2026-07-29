@@ -1,0 +1,20 @@
+{{Infobox character
+|nom=Mr. Joker
+|apparition=Appears in book 1
+|status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
+== Book 1 ==
+
+== Biography ==
+
+Mr. Joker is one of the clowns among the china people, known for constantly trying to stand on his head. He has broken himself so often in this pursuit that he is mended in a hundred places, leaving him, as the china lady notes, not at all pretty. Despite his cracked and mended body, he remains jolly, greeting strangers with a saucy nod and a playful rhyme mocking Dorothy's stiff demeanor, then promptly standing on his head when reminded to show respect. According to the Princess, Mr. Joker is considerably cracked in his head, which she says makes him foolish.
+
+=== Events ===
+
+* The Princess introduces Mr. Joker, a much-cracked clown mended in many places who jokes and stands on his head.
+</div>
+
+[[Category:Characters]]
+[[Category:Characters of Book 1]]

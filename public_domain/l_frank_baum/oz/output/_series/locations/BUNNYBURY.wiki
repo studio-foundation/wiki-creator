@@ -1,0 +1,28 @@
+{{Infobox location
+|nom=BUNNYBURY
+|alias=Bunnybury
+|apparition=Appears in book 6
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
+== Book 6 ==
+
+== Infobox ==
+
+* Name: Bunnybury
+
+== Biography ==
+
+Bunnybury is reached by a road branching off near a signpost marked with two signs, one reading "TAKE THE OTHER ROAD TO BUNBURY" and the other "TAKE THE OTHER ROAD TO BUNNYBURY," set upon a large oak where the path splits and disappears into the trees in both directions. The road leading to Bunnybury is a narrow strip, worn hard and smooth, but not wide enough for Dorothy's feet to tread. Strangers arriving there were welcomed upon entry.
+
+== Events ==
+
+Dorothy later recounts her day's adventures to Aunt Em and Uncle Henry, describing her visits to Utensia, Bunbury, and Bunnybury.
+
+== References ==
+
+<references/>
+</div>
+
+[[Category:Locations]]
+[[Category:Locations of Book 6]]

@@ -1,0 +1,30 @@
+{{Infobox character
+|nom=King Dox
+|apparition=Appears in book 5
+|status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 5 — reveal" data-collapsetext="Hide">
+== Book 5 ==
+
+== Biography ==
+
+King Dox rules Foxville; the excerpts note his full title as King Renard of Foxville, though he prefers to be called King Dox. Dorothy asked Ozma to invite him, along with King Kik-a-bray of Dunkiton, to Ozma's birthday celebration, and Ozma confirmed the invitations had already been sent. He arrived at the Throne-Room magnificently dressed in a new feather costume, wearing white kid mittens over his paws, a flower in his buttonhole, and his hair parted in the middle. He thanked Dorothy fervently for securing his invitation, having longed all his life to visit Oz, and strutted rather absurdly as he was introduced to the assembled guests. On learning that Dorothy was a Princess of Oz, he insisted on kneeling at her feet before retiring backward — a maneuver considered dangerous, since he might have stubbed his paw and fallen.
+
+== Relationships ==
+
+King Dox, also called King Renard, rules Foxville. He arrives at Ozma's birthday party in a feather costume, white kid mittens, a flower in his button-hole, and hair parted in the middle. He thanks Dorothy for securing his invitation to Oz, a place he had long wished to visit, and kneels at her feet upon learning she is a Princess of Oz.
+
+== References ==
+
+<references/>
+</div>
+
+== Relationships ==
+
+''Evolution:''
+* [[Button-Bright]] — Enemy (ch.1)<ref>The Road to Oz, chapter 1</ref>
+
+[[Category:Characters]]
+[[Category:Secondary Characters]]
+[[Category:Characters of Book 5]]

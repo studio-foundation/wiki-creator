@@ -1,0 +1,21 @@
+{{Infobox faction
+|nom=Nomes
+|apparition=First appears in book 3, last appears in book 6
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 3 — reveal" data-collapsetext="Hide">
+== Book 3 ==
+
+== Biography ==
+
+''Insufficient information available for this entity.''
+</div>
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
+== Book 6 ==
+
+== Biography ==
+
+''Insufficient information available for this entity.''
+</div>
+
+[[Category:Factions]]

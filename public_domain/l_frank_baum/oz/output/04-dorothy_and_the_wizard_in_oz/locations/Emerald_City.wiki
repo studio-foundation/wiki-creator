@@ -1,0 +1,30 @@
+{{Infobox location
+|name=Emerald City
+|place_type=City
+|region=Oz
+|status=Active
+|nom=Emerald City
+|apparition=Appears in book 4
+}}
+
+== Infobox ==
+
+* Name: Emerald City
+* Place type: City
+* Region: Oz
+* Status: Active
+
+== Biography ==
+
+The Emerald City is a city in Oz, formerly ruled by the Wizard before he "went up in a balloon" and escaped, after which Dorothy got back to Kansas by means of a pair of magical silver shoes. On a later return, Jellia Jamb greets the visitors but tells the Wizard he cannot rule the Emerald City as he used to, because the people now have "a beautiful Princess whom everyone loves dearly," and a Captain-General adds that the people will not willingly part with her. The city's people are described as so well-behaved that there was not a single lawyer among them, and it had been years since any Ruler had sat in judgment upon an offender of the law — until the arrest and trial of Eureka. Ozma keeps a palace in the city, in whose apartments she carries her own piglet after the Wizard returns it to her.
+
+== Events ==
+
+When news of Eureka's arrest and trial becomes known, tremendous excitement prevails in the Emerald City. After the trial, Ozma gives the Wizard back the piglet he had allowed Nick Chopper to substitute for the lost one, and the citizens of the Emerald City scatter to their homes, well content with the day's amusement. Dorothy also signals Ozma, who uses the Magic Belt to whisk her, then the rest of the group, to the Emerald City.
+
+== References ==
+
+<references/>
+
+[[Category:Locations]]
+[[Category:Locations of Book 4]]

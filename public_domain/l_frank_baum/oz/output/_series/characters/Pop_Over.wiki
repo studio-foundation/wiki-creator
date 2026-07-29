@@ -1,0 +1,27 @@
+{{Infobox character
+|nom=Pop Over
+|alias=Mr. Over
+|apparition=Appears in book 6
+|status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
+== Book 6 ==
+
+== Biography ==
+
+Pop Over, also called Mr. Over, welcomes Dorothy alongside Mr. Muffin, offering to feed her when she arrives hungry. He leads Dorothy, Billina, and Toto to his own house, inviting them into his back yard to get waffles. As they walk toward his house, he remarks nervously that he "sort of" hates to let his fence go, suggesting the fence is something he values and is reluctant to part with.
+
+== Relationships ==
+
+'''[[Dorothy]]''' — connaissance
+'''[[Mr. Bunn]]''' — connaissance
+
+== References ==
+
+<references/>
+</div>
+
+[[Category:Characters]]
+[[Category:Secondary Characters]]
+[[Category:Characters of Book 6]]

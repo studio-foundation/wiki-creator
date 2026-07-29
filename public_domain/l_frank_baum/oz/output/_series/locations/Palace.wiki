@@ -1,0 +1,25 @@
+{{Infobox location
+|nom=Palace
+|apparition=Appears in book 1
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
+== Book 1 ==
+
+== Infobox ==
+
+* Name: Palace
+* Place type: Royal residence
+* Region: Emerald City
+
+== Biography ==
+
+The Palace stands in the Emerald City and serves as the residence of Oz. Guest chambers reached through seven passages and up three flights of stairs hold beds with sheets of green silk and a green velvet counterpane. The Palace keeps a stock of silk on hand, later used to build a balloon, and its back yard houses a green cock and a hen. Oz himself remains largely confined to a set of rooms within the Palace, avoiding the outside world so his people will not discover he is not truly a Wizard.
+
+== Events ==
+
+The Guardian of the Gates leads visitors through the city streets to the Palace, where a soldier tells them Oz will see each of them alone, one per day. A balloon is later carried out in front of the Palace, drawing a crowd who watch it filled with hot air over a fire. Seen from a distance, the Palace's dome remains visible among the towers of the Emerald City.
+</div>
+
+[[Category:Locations]]
+[[Category:Locations of Book 1]]

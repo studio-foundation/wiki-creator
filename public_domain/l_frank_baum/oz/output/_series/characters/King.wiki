@@ -1,0 +1,100 @@
+{{Infobox character
+|nom=King
+|apparition=First appears in book 1, last appears in book 6
+|status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
+== Book 1 ==
+
+== Biography ==
+
+The King leads the Winged Monkeys, a band bound to obey whoever speaks the charm of the Golden Cap. Summoned by Dorothy, he bows before her and asks for her command, then carries out her orders at once — flying her and her companions to the Emerald City, and later carrying them over the hill into the country of the Quadlings when asked. During the flight to the Emerald City, the King himself is one of the two Monkeys bearing Dorothy, forming a chair of his hands to hold her safely.
+
+=== Events ===
+
+* During the flight, the Monkey King explains why the Winged Monkeys must obey the owner of the Golden Cap.
+* His grandfather, then King of the Winged Monkeys, played a prank by dropping Quelala into a river, ruining his wedding clothes.
+* Dorothy summons the Winged Monkeys with the Golden Cap, but the Monkey King says they cannot cross the desert or enter Kansas.
+* The tiger greets the Lion as King of Beasts and explains a giant spider-like monster has been killing the animals.
+* The Lion agrees to fight the monster if the beasts will obey him as King of the Forest afterward.
+* The beasts bow to the Lion as King, and he promises to return and rule once Dorothy is safely on her way to Kansas.
+* After the third command, Glinda intends to give the Golden Cap to the King of the Monkeys so his band will be free forever.
+</div>
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 3 — reveal" data-collapsetext="Hide">
+== Book 3 ==
+
+== Biography ==
+
+The King claims lawful possession of the Queen of Ev and her ten children, stating he purchased them as slaves from the former King of Ev. He justifies the arrangement by invoking the laws of Ev, under which, in his words, "the king can do no wrong," giving the former King a perfect right to sell his family in exchange for a long life. When Ozma tells him the arrangement was wrong, and Dorothy points out that the former King of Ev never received the long life he was promised — having instead drowned after jumping into the sea — the King refuses to release the Queen and her children, insisting they belong to him regardless of the former King's fate.
+
+== Relationships ==
+
+'''[[Scarecrow]]''' — ennemi (lien inféré). Le Roi semble le menacer directement, lui promettant de rejoindre « sa collection » et que « ce sera votre tour ».
+
+'''[[Ozma]]''' — ennemi (lien inféré). Ozma lui reproche de ne pas les avoir traités honnêtement, ce qui suggère une opposition entre eux.
+
+'''[[BILLINA]]''' — ennemi (lien inféré). Il semble s'adresser à elle avec mépris, la qualifiant de volaille stupide incapable de deviner juste là où « ses supérieurs » ont échoué.
+
+'''[[DOROTHY]]''' — ennemi (lien inféré). Aucune citation directe ne détaille ce lien dans les extraits, mais leur association fréquente suggère une hostilité.
+
+'''[[Nome King]]''' — autre (lien inféré). Un lien existe entre les deux, sans que sa nature précise soit détaillée dans les extraits.
+
+== References ==
+
+<references/>
+
+=== Events ===
+
+* Ozma leads an expedition of Dorothy, the Scarecrow, the Tin Woodman, Tiktok, Billina, the Cowardly Lion, and an army of Oz to free the Queen of Ev and her ten children from the Nome King.
+* The party passes a giant iron hammer-wielding guardian and reaches the Nome King's underground palace.
+* The Nome King challenges Ozma to identify the enchanted royal family among his ornaments in eleven guesses, or become an ornament herself.
+* Billina overhears the Nome King reveal that the Ev family are hidden as purple ornaments and the Oz party as green ones, then uses this secret to free everyone except the Tin Woodman.
+* When Nome warriors attack, the Scarecrow throws Billina's poisonous eggs at the King, letting Dorothy steal his magic belt and gain power over his enchantments.
+* The Queen's eldest son is crowned King Evardo Fifteenth of Ev in a public ceremony.
+</div>
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
+== Book 6 ==
+
+== Biography ==
+
+The King receives a report from General Guph on the progress of a planned invasion. On hearing that the Growleywogs will join the effort, he reacts with shock, crying "No!" before catching himself and listening on "with interest." He is suspicious of the price the Growleywogs demand for their support, questioning Guph closely on what reward they ask, since he knows "how greedy the Growleywogs were" — his suspicion is confirmed when Guph reveals the Growleywogs mean to take some of the Oz people as slaves.
+
+According to a legend recounted by the girl Ruler, a wicked King once ruled Oz long ago and made himself and his people miserable. Glinda the Good Sorceress placed a fountain to remedy this, and the King drank of its water, forgetting all his wickedness and becoming innocent and vacant-minded. Because his people still remembered and feared his former cruelty, he in turn made them all drink of the same Water of Oblivion, erasing their memories so that they became as simple and innocent as he was.
+
+== Relationships ==
+
+'''[[Dorothy]]''' — acquaintance
+'''[[General Guph]]''' — employment
+'''[[Blinkem]]''' — employment
+'''[[Captain]]''' — employment
+'''[[Glinda the Good]]''' — other
+
+== References ==
+
+<references/>
+
+=== Events ===
+
+* Dorothy tells the group she is not hungry, having eaten a wheelbarrow and a piano and lunched with a King, prompting disbelief from Aunt Em.
+* The Tin Woodman reveals Ozma saw in her Magic Picture that the Nome King dug a tunnel under the desert to invade Oz alongside the Whimsies, Growleywogs, and Phanfasms.
+* The Scarecrow's secret plan succeeds: dust in the tunnel makes the invading army thirsty, they drink from the Forbidden Fountain and forget their hostility, the resistant Nome King is thrown in too, and Ozma banishes the rest home with the Magic Belt.
+</div>
+
+== Relationships ==
+
+''Evolution:''
+* [[Ozma]] — Enemy (ch.1)<ref>The Emerald City of Oz, chapter 1</ref>
+* [[Scarecrow]] — Enemy (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
+* [[BILLINA]] — Enemy (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
+* [[DOROTHY]] — Enemy (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
+* [[Queen of Ev]] — Family (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
+* [[Prince]] — Family (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
+* [[Princess Langwidere]] — Family (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
+* [[Tin Woodman]] — Enemy (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
+
+[[Category:Characters]]
+[[Category:Secondary Characters]]
+[[Category:Characters of Book 1]]
+[[Category:Characters of Book 3]]
+[[Category:Characters of Book 6]]

@@ -1,0 +1,16 @@
+{{Infobox character
+|nom=Uncle Hugson
+|apparition=Appears in book 4
+|status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
+== Book 4 ==
+
+== Biography ==
+
+Uncle Hugson is the owner of Hugson's Ranch. When a horse-drawn buggy reaches the ranch gates, he comes out himself, standing with uplifted arms and wide open mouth, staring in amazement at the arrival. He is said to have been having "a fine visit" with another visitor. One character remarks that laboring for him amounts to "a great deal," a claim answered with the retort that the speaker is "a splendid worker" — suggesting Hugson expects diligent work from those in his employ.
+</div>
+
+[[Category:Characters]]
+[[Category:Characters of Book 4]]

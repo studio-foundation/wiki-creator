@@ -1,0 +1,29 @@
+{{Infobox character
+|nom=Princess Langwidere
+|apparition=Appears in book 3
+|status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 3 — reveal" data-collapsetext="Hide">
+== Book 3 ==
+
+== Biography ==
+
+Princess Langwidere once ruled the kingdom of Ev. She is the niece of Evoldo, whom she calls "a very wicked man," remarking that if he had drowned himself before selling his family, no one would have cared. Vain and languid, she cannot bear heat and refuses to join expeditions requiring it, declaring herself "heartily tired of ruling this stupid kingdom" and preferring leisure to admire her collection of heads. She keeps a mirrored chamber where she tries on her heads, including one with rich chestnut hair, dreamy walnut eyes, and a shapely hickorynut nose. Once relieved of her duties to the people of Ev, she was permitted by the Queen to keep her rooms and her cabinet of heads for as long as she lived.
+
+== Relationships ==
+
+'''[[King]]''' — family. The excerpts only hint at this tie; it is not stated outright.
+
+'''[[Ozma]]''' — acquaintance. Their shared appearance seated opposite each other in the palace drawing-room suggests only a passing connection, nothing more.
+
+'''[[Queen of Ev]]''' — other. Langwidere's relief from ruling seems linked to the Queen, who allowed her to keep her chamber and her cabinet of heads, though the excerpts do not spell out the nature of their bond.
+</div>
+
+== Relationships ==
+
+''Evolution:''
+* [[King]] — Family (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
+
+[[Category:Characters]]
+[[Category:Characters of Book 3]]

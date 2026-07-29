@@ -1,0 +1,21 @@
+{{Infobox faction
+|nom=Quadlings
+|apparition=First appears in book 1, last appears in book 2
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
+== Book 1 ==
+
+== Biography ==
+
+''Insufficient information available for this entity.''
+</div>
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 2 — reveal" data-collapsetext="Hide">
+== Book 2 ==
+
+== Biography ==
+
+''Insufficient information available for this entity.''
+</div>
+
+[[Category:Factions]]

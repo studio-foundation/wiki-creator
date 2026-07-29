@@ -1,0 +1,39 @@
+{{Infobox character
+|nom=Soldier with the Green Whiskers
+|alias=Soldier
+|apparition=Appears in book 2
+|status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 2 — reveal" data-collapsetext="Hide">
+== Book 2 ==
+
+== Biography ==
+
+The Soldier with the Green Whiskers, also known simply as the Soldier, is the sole soldier of the Emerald City and is himself referred to as the Royal Army of Oz. He guards the City's gates and palace, escorting visitors such as Jack Pumpkinhead into the presence of the Scarecrow and searching, on the Scarecrow's orders, for someone who understands the language of the Gillikins. When General Jinjur leads an army of girls armed with knitting-needles to conquer the Emerald City, he is summoned to the gate, confronted and overwhelmed by the attackers, and flees—without his hat or gun—to warn the Scarecrow that the City has fallen.
+
+== Relationships ==
+
+'''[[The Scarecrow]]''' — employment. The Soldier with the Green Whiskers carries out orders from The Scarecrow, escorting visitors to the palace and searching out an interpreter at his command, which suggests a position in his service.
+
+'''[[General Jinjur]]''' — enemy. Confronted at the gateway by General Jinjur's Army, the Soldier stands against her forces before being overwhelmed, suggesting an adversarial relation between the two.
+
+'''[[Guardian]]''' — acquaintance. The Soldier is summoned by the Guardian of the Gates during the standoff with Jinjur's Army, suggesting some working association between them.
+
+'''[[Jack Pumpkinhead]]''' — acquaintance. The Soldier escorts Jack Pumpkinhead into the palace to see the Scarecrow, suggesting a brief acquaintance formed through that duty.
+
+=== Events ===
+
+* A Soldier with Green Whiskers leads Jack and the Saw-Horse through the emerald city streets to the royal palace.
+* Soldier with Green Whiskers confronts them but his gun is unloaded, so girls rush past him.
+* Tip follows the Soldier with the Green Whiskers to the palace, arriving before news spreads that the girl army has conquered the Emerald City.
+* The Soldier bursts in on the Scarecrow and Jack Pumpkinhead playing quoits to report the city's fall; the Scarecrow reacts with calm.
+</div>
+
+== Relationships ==
+
+''Evolution:''
+* [[General Jinjur]] — Enemy (ch.8)<ref>The Marvelous Land of Oz, chapter 8</ref>
+
+[[Category:Characters]]
+[[Category:Characters of Book 2]]

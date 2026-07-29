@@ -1,0 +1,28 @@
+{{Infobox location
+|name=Land of Oz
+|place_type=Country
+|isolation=Cut off from the rest of the world, never civilized
+|nom=Land of Oz
+|apparition=Appears in book 1
+}}
+
+== Infobox ==
+
+* Name: Land of Oz
+* Place type: Country
+* Isolation: Cut off from the rest of the world, never civilized
+
+== Biography ==
+
+The Land of Oz is a country cut off from the rest of the world, a condition said to explain why witches and wizards still dwell there when, in the civilized countries, none are said to remain. Within its bounds live at least four witches: those of the North and South, described as good, and those of the East and West, described as wicked. After the Witch of the East is killed, only the Wicked Witch of the West remains as the land's sole remaining wicked witch. Regions of the Land of Oz are marked by distinct local dress; travelers nearing the Emerald City encounter people clothed in emerald-green and wearing peaked hats like those of the Munchkins. Dorothy is brought to the Land of Oz by a cyclone that carries her away from the gray country of Kansas, and she later recounts to the Witch how the cyclone brought her there and how she found her companions. Toto, who accompanies her, is said not to care whether he is in Kansas or the Land of Oz so long as Dorothy is with him.
+
+== Events ==
+
+On returning home, Dorothy tells Aunt Em that she has come from the Land of Oz.
+
+== References ==
+
+<references/>
+
+[[Category:Locations]]
+[[Category:Locations of Book 1]]
