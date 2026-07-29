@@ -1240,3 +1240,56 @@ def test_notability_scalar_is_rejected_not_silently_defaulted():
     looks meaningful must not silently resolve to the defaults."""
     with pytest.raises(ValueError, match="must be a mapping"):
         compute_thresholds(_MENTIONS, "auto")
+
+
+# --- Offstage names (STU-716) ---
+
+_MOCK_TURTLE_CHAPTER = (
+    "The Mock Turtle sighed deeply. “The master was an old Turtle—we used to "
+    "call him Tortoise—”\n\n"
+    "“We called him Tortoise because he taught us,” said the Mock Turtle."
+)
+
+
+def _offstage_entities() -> tuple[list[dict], dict]:
+    entities = [
+        {"canonical_name": "Tortoise", "type": "PERSON", "source_ids": ["e1"], "relevant": True},
+        {"canonical_name": "Mock Turtle", "type": "PERSON", "source_ids": ["e2"], "relevant": True},
+    ]
+    persons = _pf({
+        "e1": {"type": "PERSON", "raw_mentions": ["Tortoise"],
+               "mentions_by_chapter": {"C01": ["a", "b", "c"]}},
+        "e2": {"type": "PERSON", "raw_mentions": ["Mock Turtle"],
+               "mentions_by_chapter": {"C01": ["a", "b"]}},
+    })
+    return entities, {"PERSON": persons}
+
+
+def test_a_name_only_spoken_about_is_flagged_offstage():
+    entities, registries = _offstage_entities()
+    enriched = classify_entities(
+        entities, registries, chapter_texts={"C01": _MOCK_TURTLE_CHAPTER}
+    )
+    by_name = {e["canonical_name"]: e for e in enriched}
+    assert by_name["Tortoise"]["offstage"] is True
+    assert by_name["Mock Turtle"]["offstage"] is False
+
+
+def test_offstage_caps_importance_at_figurant():
+    entities, registries = _offstage_entities()
+    thresholds = {"per_type": {"PERSON": {"principal": 1, "secondary": 1, "figurant": 1}},
+                  "strategy": "absolute"}
+    enriched = classify_entities(
+        entities, registries, notability=thresholds,
+        chapter_texts={"C01": _MOCK_TURTLE_CHAPTER},
+    )
+    by_name = {e["canonical_name"]: e for e in enriched}
+    assert by_name["Tortoise"]["importance"] == "figurant"
+    assert by_name["Mock Turtle"]["importance"] == "principal"
+
+
+def test_without_chapter_text_nothing_is_offstage():
+    """The signal reads the text the mentions came from; absent it, tiers stand."""
+    entities, registries = _offstage_entities()
+    enriched = classify_entities(entities, registries)
+    assert all(e["offstage"] is False for e in enriched)

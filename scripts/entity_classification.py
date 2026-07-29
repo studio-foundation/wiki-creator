@@ -41,6 +41,7 @@ import yaml
 from wiki_creator import studio_io
 from wiki_creator.entity_taxonomy import full_registry_files, resolution_types
 from wiki_creator.lang import load_lang_config, infer_language
+from wiki_creator.quoted_speech import is_offstage, quoted_spans_by_chapter
 from wiki_creator.registry import normalize_name as _normalize_name
 from wiki_creator.types import ClassifiedBundle, ClassifiedEntity, Relationship
 
@@ -258,41 +259,59 @@ def classify_entities(
     role_words=None,
     role_patterns=None,
     geo_suffixes=None,
+    chapter_texts: Mapping[str, str] | None = None,
 ) -> list[dict]:
-    """Enrich entities with total_mentions, chapters_present, and importance.
+    """Enrich entities with total_mentions, chapters_present, importance, offstage.
 
     Args:
         entities: resolved entities from entity-resolution / relationship-extraction
         registries: {entity_type: *_full.json registry}, derived from the taxonomy
         notability: book.input.yaml `notability` block; None yields the defaults
+        chapter_texts: {chapter_id: content} from chapters.json — the offstage
+            signal (STU-716) reads the book text, not the extracted mentions;
+            without it no entity is offstage and tiers are unchanged.
 
     Returns:
-        Same list with 3 new fields per entity.
+        Same list with 4 new fields per entity.
     """
     # Step 1: compute mention counts for all entities. The surface index folds
     # in mentions from un-merged extraction clusters (STU-474) so a canonical
     # entity is counted from every surface form of its name, not just source_ids.
     surface_index = build_surface_index(*registries.values())
-    mention_data: list[tuple[str, str, int, int]] = []
+    chapter_texts = chapter_texts or {}
+    quoted = quoted_spans_by_chapter(chapter_texts)
+    mention_data: list[tuple[str, str, int, int, bool]] = []
     for entity in entities:
         if not entity.get("relevant", True):
-            mention_data.append((entity["canonical_name"], entity.get("type", "OTHER"), 0, 0))
+            mention_data.append((entity["canonical_name"], entity.get("type", "OTHER"), 0, 0, False))
             continue
         total, chapters = get_total_mentions(entity, registries, surface_index)
-        mention_data.append((entity["canonical_name"], entity.get("type", "OTHER"), total, chapters))
+        surfaces = [entity.get("canonical_name", ""), *entity.get("aliases", [])]
+        offstage = is_offstage(surfaces, chapter_texts, quoted)
+        mention_data.append(
+            (entity["canonical_name"], entity.get("type", "OTHER"), total, chapters, offstage)
+        )
 
     # Step 2: compute thresholds
-    threshold_input = [(name, etype, total) for name, etype, total, _ in mention_data]
+    threshold_input = [(name, etype, total) for name, etype, total, _, _ in mention_data]
     thresholds = compute_thresholds(threshold_input, notability)
 
     # Step 3: assign importance
     result = []
-    for entity, (name, etype, total, chapters) in zip(entities, mention_data):
+    for entity, (name, etype, total, chapters, offstage) in zip(entities, mention_data):
         if entity.get("relevant", True):
             importance = assign_importance(etype, total, chapters, thresholds)
         else:
             importance = "ignored"
-        enriched = {**entity, "total_mentions": total, "chapters_present": chapters, "importance": importance}
+        if offstage and importance in ("principal", "secondary"):
+            importance = "figurant"
+        enriched = {
+            **entity,
+            "total_mentions": total,
+            "chapters_present": chapters,
+            "importance": importance,
+            "offstage": offstage,
+        }
         result.append(enriched)
     return result
 
@@ -654,6 +673,22 @@ def _load_entity_files(processing_dir: Path) -> dict[str, dict]:
     return registries
 
 
+def _load_chapter_texts(processing_dir: Path) -> dict[str, str]:
+    """{chapter_id: content} from chapters.json, empty when it is missing.
+
+    Absent chapter text means no offstage signal (STU-716), never a failure —
+    a stale artifact set must still classify.
+    """
+    path = processing_dir / "chapters.json"
+    if not path.exists():
+        print(f"[WARN] {path.name} not found — no offstage signal", file=sys.stderr)
+        return {}
+    chapters = json.loads(path.read_text(encoding="utf-8")).get("chapters", {})
+    if isinstance(chapters, list):
+        return {c["id"]: c["content"] for c in chapters}
+    return chapters
+
+
 def run_studio_mode() -> None:
     payload = studio_io.read_payload()
     prev_outputs = payload.get("previous_outputs", {})
@@ -714,6 +749,7 @@ def run_studio_mode() -> None:
 
     paths = studio_io.paths_from_payload(payload)
     registries = _load_entity_files(paths.processing)
+    chapter_texts = _load_chapter_texts(paths.processing)
 
     # Deterministic type normalization before scoring.
     for entity in entities:
@@ -755,6 +791,7 @@ def run_studio_mode() -> None:
         role_words=role_words,
         role_patterns=role_patterns,
         geo_suffixes=geo_suffixes,
+        chapter_texts=chapter_texts,
     )
 
     from collections import Counter

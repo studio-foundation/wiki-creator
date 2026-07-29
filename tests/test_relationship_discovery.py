@@ -5,6 +5,8 @@ deterministic halves of the discovery stage: split a chapter into
 paragraph-aligned chunks, and fold the per-chunk votes into one book-level
 typed pair. No LLM here.
 """
+import json
+
 from wiki_creator.relationship_discovery import (
     aggregate,
     build_roster,
@@ -174,6 +176,26 @@ def test_build_roster_keeps_only_persons():
     ]
     names, _, _ = build_roster(entities)
     assert names == {"Eragon"}
+
+
+def test_build_roster_drops_offstage_persons():
+    """STU-716: a name only ever spoken about holds no interpersonal relation."""
+    entities = [
+        {"canonical_name": "Mock Turtle", "entity_type": "PERSON", "aliases": []},
+        {"canonical_name": "Tortoise", "entity_type": "PERSON", "aliases": [], "offstage": True},
+    ]
+    names, alias_to_canonical, lines = build_roster(entities)
+    assert names == {"Mock Turtle"}
+    assert "Tortoise" not in alias_to_canonical
+    assert lines == ["Mock Turtle"]
+
+
+def test_roster_entries_drops_offstage_persons():
+    entities = [
+        {"canonical_name": "Mock Turtle", "entity_type": "PERSON", "aliases": []},
+        {"canonical_name": "Tortoise", "entity_type": "PERSON", "aliases": [], "offstage": True},
+    ]
+    assert [e["line"] for e in roster_entries(entities)] == ["Mock Turtle"]
 
 
 def test_build_roster_maps_aliases_to_canonical():
@@ -501,3 +523,30 @@ def test_aggregate_omits_sub_roles_when_absent():
     pairs = aggregate(votes, ROSTER)
     assert "sub_role_a" not in pairs[0]
     assert "sub_role_b" not in pairs[0]
+
+
+def test_prepare_discovery_reads_offstage_from_the_registry(tmp_path):
+    """STU-716 wiring: drop the field here and the roster filter silently no-ops."""
+    from scripts.discover_relationships import prepare_discovery
+    from wiki_creator.paths import BookPaths
+    from wiki_creator.registry import EntityRecord, Registry
+
+    registry = Registry(entities=[
+        EntityRecord(entity_id="mock_turtle", canonical_name="Mock Turtle",
+                     entity_type="PERSON", aliases=["Mock Turtle"]),
+        EntityRecord(entity_id="tortoise", canonical_name="Tortoise",
+                     entity_type="PERSON", aliases=["Tortoise"], offstage=True),
+    ])
+    registry.save(tmp_path / "registry.json")
+    (tmp_path / "epub_data.json").write_text(json.dumps({
+        "chapters": [{"id": "ch01", "title": "IX", "content": "The Mock Turtle sighed."}]
+    }))
+    paths = BookPaths(
+        epub=tmp_path / "book.epub", processing=tmp_path,
+        wiki_inputs=tmp_path, output=tmp_path,
+    )
+
+    prep, reason = prepare_discovery({}, paths)
+
+    assert reason is None
+    assert prep["roster_names"] == {"Mock Turtle"}

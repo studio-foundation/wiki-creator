@@ -134,7 +134,8 @@
    "books": [
     "smoke-novella"
    ],
-   "first_book": "smoke-novella"
+   "first_book": "smoke-novella",
+   "offstage": false
   },
   {
    "entity_id": "heron",
@@ -148,7 +149,8 @@
    "books": [
     "smoke-novella"
    ],
-   "first_book": "smoke-novella"
+   "first_book": "smoke-novella",
+   "offstage": false
   },
   {
    "entity_id": "port_saffron",
@@ -193,7 +195,8 @@
    "books": [
     "smoke-novella"
    ],
-   "first_book": "smoke-novella"
+   "first_book": "smoke-novella",
+   "offstage": false
   },
   {
    "entity_id": "salt_guild",
@@ -238,7 +241,8 @@
    "books": [
     "smoke-novella"
    ],
-   "first_book": "smoke-novella"
+   "first_book": "smoke-novella",
+   "offstage": false
   },
   {
    "entity_id": "warehouse_nine",
@@ -286,7 +290,8 @@
    "books": [
     "smoke-novella"
    ],
-   "first_book": "smoke-novella"
+   "first_book": "smoke-novella",
+   "offstage": false
   },
   {
    "entity_id": "captain_elias_thorn",
@@ -404,7 +409,8 @@
    "books": [
     "smoke-novella"
    ],
-   "first_book": "smoke-novella"
+   "first_book": "smoke-novella",
+   "offstage": false
   }
  ],
  "decisions": [

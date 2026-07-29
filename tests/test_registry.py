@@ -900,6 +900,7 @@ def _book_registry(book_id: str, entities: list[dict]) -> Registry:
         ]
         record.books = [book_id]
         record.first_book = book_id
+        record.offstage = spec.get("offstage", False)
         records.append(record)
         decisions.update(record_decisions)
     return Registry(entities=records, decisions=decisions)
@@ -1163,3 +1164,31 @@ def test_live_merge_strategies_covers_every_method_the_scripts_emit():
     for name in ("alias_resolution.py", "alias_adjudication.py"):
         emitted |= set(re.findall(r'"method":\s*"([a-z_]+)"', (scripts / name).read_text()))
     assert emitted <= LIVE_MERGE_STRATEGIES
+
+
+def test_from_artifacts_carries_the_offstage_flag():
+    """STU-716: classification decides it; the registry is what discovery reads."""
+    alias_output = {"entities": [
+        {"canonical_name": "Tortoise", "type": "PERSON", "source_ids": [], "offstage": True},
+        {"canonical_name": "Mock Turtle", "type": "PERSON", "source_ids": []},
+    ]}
+    registry = Registry.from_artifacts({}, alias_output, {})
+    by_name = {r.canonical_name: r for r in registry.entities}
+    assert by_name["Tortoise"].offstage is True
+    assert by_name["Mock Turtle"].offstage is False
+
+
+def test_offstage_survives_the_json_round_trip(tmp_path):
+    registry = _book_registry("book1", [{"canonical": "Tortoise", "offstage": True}])
+    path = tmp_path / "registry.json"
+    registry.save(path)
+    assert Registry.load(path).entities[0].offstage is True
+
+
+def test_accumulate_a_character_seen_on_the_page_in_any_tome_is_not_offstage():
+    """A name spoken about in tome 1 can walk on in tome 2 (STU-716)."""
+    series = Registry()
+    series.accumulate(_book_registry("book1", [{"canonical": "Elva", "offstage": True}]))
+    assert series.entities[0].offstage is True
+    series.accumulate(_book_registry("book2", [{"canonical": "Elva"}]))
+    assert series.entities[0].offstage is False
