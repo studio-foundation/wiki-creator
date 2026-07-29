@@ -4,14 +4,14 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
-== Book 1 ==
+== Throne of Glass ==
 
 === Overview ===
 
 The royal seat of Adarlan.
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 2 — reveal" data-collapsetext="Hide">
-== Book 2 ==
+== Crown of Midnight ==
 
 === Overview ===
 

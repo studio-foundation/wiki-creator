@@ -40,9 +40,10 @@ def _fixture() -> list:
     })
     tome1 = TomeArtifacts(
         book_id="01-heir",
+        title="Throne of Glass",
         pages=[
             {"title": "Gavriel", "importance": "secondary", "entity_type": "PERSON",
-             "content": "## Biography\n\nA warrior of the Cadre.\n\n## Relationships\n\n**[[Aedion]]** — his son, unknown to him.",
+             "content": "## Biography\n\nA warrior of the Cadre.\n\n## Personality\n\nProud and haunted.\n\n## Relationships\n\n**[[Aedion]]** — his son, unknown to him.",
              "relationship_index": ["* [[Aedion]] — family (ch.10)"]},
             {"title": "Celaena Sardothien", "importance": "principal", "entity_type": "PERSON",
              "content": "## Biography\n\nAn assassin in Rifthold.",
@@ -56,9 +57,10 @@ def _fixture() -> list:
     )
     tome2 = TomeArtifacts(
         book_id="02-crown",
+        title="Crown of Midnight",
         pages=[
             {"title": "Gavriel", "importance": "principal", "entity_type": "PERSON",
-             "content": "## Biography\n\nHe joins the war.\n\n## Relationships\n\n**[[Aedion]]** — reunited at last.",
+             "content": "## Biography\n\nHe joins the war.\n\n## Personality\n\nWeary but resolute.\n\n## Relationships\n\n**[[Aedion]]** — reunited at last.",
              "relationship_index": ["* [[Aedion]] — family (ch.3→ch.20)"]},
             {"title": "Aelin Galathynius", "importance": "principal", "entity_type": "PERSON",
              "content": "## Biography\n\nQueen of Terrasen.",
@@ -111,8 +113,8 @@ def test_non_person_page_has_no_status_row():
     assert relpath == "locations/Glass_Castle.wiki"
     assert castle.status is None
     assert "Deceased" not in wiki and "status" not in wiki.lower()
-    # still a real cross-tome page: one collapsible section per tome
-    assert "== Book 1 ==" in wiki and "== Book 2 ==" in wiki
+    # still a real cross-tome page: one collapsible section per tome, headed by its title
+    assert "== Throne of Glass ==" in wiki and "== Crown of Midnight ==" in wiki
 
 
 def test_gavriel_page_key_properties():
@@ -125,10 +127,10 @@ def test_gavriel_page_key_properties():
     # latest-wins status, collapsed behind the spoiler span
     assert "mw-collapsible mw-collapsed" in wiki and "Deceased" in wiki
     assert "Alive" not in wiki
-    # one collapsible tome section per tome, tome-axis reveal labels
+    # one collapsible tome section per tome, headed by the tome title, tome-axis controls
     assert wiki.count("data-expandtext=\"Book 1 — reveal\"") == 1
     assert wiki.count("data-expandtext=\"Book 2 — reveal\"") == 1
-    assert "== Book 1 ==" in wiki and "== Book 2 ==" in wiki
+    assert "== Throne of Glass ==" in wiki and "== Crown of Midnight ==" in wiki
     # multi-tome appearance line
     assert "First appears in book 1, last appears in book 2" in wiki
     # tome-2 event rendered under its tome section
@@ -136,10 +138,12 @@ def test_gavriel_page_key_properties():
     # relationships merged to one index line per target, latest tome's span winning
     assert "* [[Aedion]] — family (ch.3→ch.20)" in wiki
     assert "ch.10" not in wiki  # tome-1 span superseded by the latest-wins merge
-    # STU-718: no duplicated top-level sections. Embedded tome bodies demote to H3,
-    # so Biography nests under Book N; only the merged index keeps == Relationships ==.
-    assert "\n== Biography ==" not in wiki
-    assert wiki.count("=== Biography ===") == 2
+    # STU-718: no duplicated sections. The Biography récit is inlined under each tome
+    # title (no Biography heading anywhere), attribute sections are consolidated once,
+    # and Relationships is the single merged index.
+    assert "Biography ==" not in wiki
+    assert wiki.count("== Personality ==") == 1  # consolidated, not once per tome
+    assert "Weary but resolute." in wiki and "Proud and haunted." not in wiki  # latest tome wins
     assert wiki.count("\n== Relationships ==") == 1
     # the per-tome prose Relationships is dropped in favor of the merged index
     assert "reunited at last" not in wiki and "unknown to him" not in wiki
