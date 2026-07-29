@@ -161,13 +161,19 @@ def _cmd_series(args: argparse.Namespace) -> int:
         return 2
     if args.max_chapters is not None:
         os.environ["WIKI_MAX_CHAPTERS"] = str(args.max_chapters)
-    for book_path in discover_series_books(library._PROJECT_ROOT / series_dir):
+    books = discover_series_books(library._PROJECT_ROOT / series_dir)
+    for book_path in books:
         rel = Path(book_path).relative_to(library._PROJECT_ROOT)
         print(f"=== {rel} ===")
         rc = _exec(_studio_command("wiki-full", rel), dry_run=args.dry_run)
         if rc != 0:
             return rc
-    return 0
+    # The series wiki is built once, after every tome (STU-709). Any tome's yaml
+    # names the series; the first one is where the arc pass reads language and
+    # register from anyway.
+    print("=== series wiki ===")
+    first = Path(books[0]).relative_to(library._PROJECT_ROOT)
+    return _exec(_studio_command("wiki-series", first), dry_run=args.dry_run)
 
 
 # --- top-level: ls / replay / status / logs --------------------------------

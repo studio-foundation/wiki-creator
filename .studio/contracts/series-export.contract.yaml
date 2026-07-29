@@ -1,0 +1,12 @@
+name: series-export
+version: 1
+schema:
+  required_fields:
+    - files_written
+    - wiki_dir
+expected_outputs:
+  files:
+    # The series wiki is published beside the per-tome output/<slug>/ dirs
+    # (STU-705). The hub is the one page every series has, so it is what proves
+    # the export ran. Glob: cwd = repo root.
+    - "{library,public_domain}/*/*/output/_series/Main_Page.wiki"

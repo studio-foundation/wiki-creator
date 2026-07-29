@@ -24,6 +24,8 @@ The workflow is split into five Studio pipelines, each with structurally validat
 
 5. **pages-export** -- Assembles the generated pages, runs a copyright check (no verbatim passages from the source), and exports to wikitext format.
 
+A multi-tome series adds a sixth pipeline, **wiki-series**, run once after every tome: it merges each entity's per-tome pages into one series page (collapsed per tome), builds the series hub with a grounded arc paragraph, and publishes them to `library/<author>/<series>/output/_series/`.
+
 ## Getting started
 
 ### Prerequisites
@@ -91,7 +93,7 @@ wiki book preparation narnia
 wiki book pages narnia
 wiki book pages narnia --entities "Lucy" "Peter" --force
 
-wiki series run inheritance       # every tome of a series, reading order
+wiki series run inheritance       # every tome in reading order, then the series wiki
 wiki book add path/to.epub        # import an epub + scaffold a minimal YAML
 wiki replay <run-id> --stage wiki-resolution   # restart from a boundary
 wiki status [run-id]  ·  wiki logs <run-id>    # observability

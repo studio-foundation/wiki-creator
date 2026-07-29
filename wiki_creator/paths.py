@@ -26,9 +26,14 @@ class BookPaths:
     output: Path       # …/output/<slug>/
 
     @property
+    def series_dir(self) -> Path:
+        """Series root: library/<author>/<series>/"""
+        return self.epub.parent.parent
+
+    @property
     def series_character_graph(self) -> Path:
         """Series-level graph: library/<author>/<series>/character_graph.json"""
-        return self.epub.parent.parent / "character_graph.json"
+        return self.series_dir / "character_graph.json"
 
     @property
     def book_graph_delta(self) -> Path:
@@ -38,7 +43,7 @@ class BookPaths:
     @property
     def series_registry(self) -> Path:
         """Series-level identity registry: library/<author>/<series>/registry.json"""
-        return self.epub.parent.parent / "registry.json"
+        return self.series_dir / "registry.json"
 
     @property
     def book_registry_delta(self) -> Path:
@@ -48,7 +53,7 @@ class BookPaths:
     @property
     def series_canon(self) -> Path:
         """Series-level canon policy: library/<author>/<series>/canon.yaml"""
-        return self.epub.parent.parent / "canon.yaml"
+        return self.series_dir / "canon.yaml"
 
     @property
     def series_output(self) -> Path:

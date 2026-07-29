@@ -33,6 +33,7 @@ mypy wiki_creator/
 
 make run          # studio run wiki-full: the whole build, one Studio run
 make run-series
+make run-series-wiki   # studio run wiki-series: the series wiki alone (STU-709)
 make run-extraction
 make run-resolution
 make run-preparation
@@ -60,7 +61,7 @@ wiki book run tog --max-chapters 3        # sets WIKI_MAX_CHAPTERS
 wiki book pages narnia                    # whole pages-export
 wiki book pages narnia --entities "Lucy" --force   # regenerate only some pages (the page-slice)
 wiki book add path/to.epub                # import epub + scaffold a minimal book YAML (--llm, --force)
-wiki series run inheritance               # wiki-full over every tome, reading order
+wiki series run inheritance               # wiki-full over every tome, then wiki-series once
 wiki cache clean tog [--llm | --all]      # clear a book's caches (verdicts + map-cache); --all wipes every artifact
 wiki replay <run-id> [--stage wiki-resolution]     # studio replay, restart from a boundary
 wiki status [run-id]  ·  wiki logs <run-id>        # observability (run-ids feed replay)
@@ -102,7 +103,8 @@ sequencing. What replaced run_wiki's interface:
   no skip, no stale skip. `extraction_config.json` is still written and asserted
   (STU-600).
 - **Series**: `make run-series` loops `discover_series_books` (reading order,
-  `04.5_` between `04_` and `05_`) over `studio run wiki-full`.
+  `04.5_` between `04_` and `05_`) over `studio run wiki-full`, then runs
+  `wiki-series` once (STU-709).
 The `make test` / `test-coref` chains stay deleted (STU-592); the single-stage
 dev tools (`test-extraction`/`test-clustering`/`test-relationships`) stay — they
 sequence nothing.
@@ -121,6 +123,21 @@ the book yaml as each child's input:
 2. `wiki-resolution` — chapter-summary, resolve-clusters, relationship-extraction, alias-resolution, alias-adjudication (pre/call/post), entity-classification, write-registry
 3. `wiki-preparation` — entity-status/affiliation/species (each pre/call/post), discover-relationships, classify-relationships, build-character-graph, build-event-layer, wiki-preparation
 4. `pages-export` — generate-wiki-pages, generate-book-synopsis, generate-event-pages, consolidate-editorial-stance, assemble, copyright-check, wiki-export
+
+A multi-tome series runs a fifth pipeline **once, after the tome loop** (STU-709):
+
+```bash
+studio run wiki-series --input-file <any tome.yaml> --live   # = make run-series-wiki
+```
+
+`wiki-series.pipeline.yaml` has two stages — `series-assemble`
+(`scripts/series_assemble.py`: every tome's `{wiki_pages,entity_status,events}.json`
+from disk, joined on the series registry, plus the hub model and its arc paragraph,
+into `<series>/series_assembly.json`) and `series-export`
+(`scripts/series_export.py`: one merged page per entity + the hub, into
+`output/_series/`, a stateless full rebuild). The input is any tome's book yaml —
+the series is derived from its path, and language/register/labels come from the
+first tome, as the arc pass already does.
 
 Important:
 - **Every former run_wiki.py pre-step is a pipeline stage (STU-457).** The
@@ -212,6 +229,13 @@ library/sarah_j_maas/throne-of-glass/wiki_inputs/01-throne-of-glass/
 library/sarah_j_maas/throne-of-glass/output/01-throne-of-glass/
 ```
 
+The series wiki is series-scoped, beside the per-tome dirs (STU-705/709):
+
+```text
+library/sarah_j_maas/throne-of-glass/series_assembly.json
+library/sarah_j_maas/throne-of-glass/output/_series/
+```
+
 ## Files To Know
 
 - [Makefile](/home/arianeguay/dev/src/wiki-creator-by-studio/Makefile): command entrypoints
@@ -220,6 +244,8 @@ library/sarah_j_maas/throne-of-glass/output/01-throne-of-glass/
 - [scripts/relationship_extraction.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/relationship_extraction.py): co-occurrence graph, optional coref, CLI/live mode
 - [scripts/discover_relationships.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/discover_relationships.py): schema-guided typed relation discovery (STU-556), writes `relationships_discovered.json`; pure logic in `wiki_creator/relationship_discovery.py`. One `studio run discover-relationships` per book — the engine fans out one child run per paragraph-aligned chunk (`map` stage, STU-589), and per-item resume (STU-605) replaces the old script-side votes cache (see "A Long Run Persists")
 - [scripts/build_character_graph.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/build_character_graph.py): series character graph stage of wiki-preparation, runs after typing (STU-575/457), writes `character_graph.json` + `character_graph_delta.json`; pure logic in `wiki_creator/character_graph.py`
+- [scripts/series_assemble.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/series_assemble.py): `wiki-series` stage 1 (STU-709) — every tome's artifacts read from disk, joined on the series registry, plus the hub model and its arc; writes `<series>/series_assembly.json`. Pure logic in `wiki_creator/series.py` + `series_hub.py`
+- [scripts/series_export.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/series_export.py): `wiki-series` stage 2 — renders the assembly into `output/_series/` (one merged page per entity + the hub), stateless full rebuild; pure logic in `wiki_creator/series_pages.py`
 - [scripts/chapter_summary.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/chapter_summary.py): chapter summaries used during preparation
 - [scripts/wiki_preparation.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/wiki_preparation.py): batch generation
 - [scripts/generate_wiki_pages.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_wiki_pages.py): standalone generation. One `studio run wiki-pages` per book — the engine fans out one child run per planned item call (`map` stage, STU-612/589) via a plan walk → fan-out → replay (the walk records every `wiki-page-item` the generation would dispatch, the map runs them, the replay serves results back keyed on the item input); per-item resume (STU-605) keyed on the rendered prompt + `prompt_fingerprint` + `attempt` (the retry counter that makes a forbidden-name re-roll a real second call rather than a cache replay)
