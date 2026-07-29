@@ -1,0 +1,88 @@
+{
+  "glinda": {
+    "canonical_aliases_book1": [
+      "Glinda",
+      "Glinda the Good",
+      "the Sorceress",
+      "the Great Sorceress"
+    ],
+    "known_facts_book1": [
+      "The good Sorceress of Oz, whose palace is in the Quadling Country, attended by a hundred of the most beautiful girls in Oz as maids of honor; Ozma is the only one in all the land Glinda bows to.",
+      "Owns the **Great Book of Records**, in which a record of every event anywhere in the world is printed at the moment it happens; it is chained to a marble table with golden chains and locked with **five jeweled padlocks** whose keys she carries in her bosom.",
+      "Had never heard of the Flatheads or the Skeezers before this book, and admits her sorcery can learn little about either, because both are magic-workers.",
+      "Advises Ozma, honestly and unsuccessfully, that she might simply pay no attention to a quarrel she would never have known about.",
+      "Gives Dorothy the **alarm ring** — one turn right, one turn left rings a bell in Glinda's palace — with strict instructions to use it only in danger of destruction.",
+      "**Fails, repeatedly and openly**: she can find no magic to raise a sunken island, builds a model island in a pond by her castle to experiment on, and every experiment fails.",
+      "Travels to the Emerald City by stork chariot, then sends the chariot home so the whole Rescue Expedition can keep together on foot.",
+      "Saves Button Bright from a tiger and a wolf by fixing both beasts to the ground with an incantation, having first found him in a small round mirror dusted with white powder.",
+      "Makes the abandoned submarine obey **sorcery** instead of witchcraft, using magic recipe No. 1163, the Wizard's skeropythrope, a powder and a vial of liquid.",
+      "Is stopped by the marble basement door, which was commanded to open only to one magic word — no other magic word can move it, and Coo-ee-oh has forgotten it.",
+      "Recognises the grayish powder in the hidden drawer as **Gaulau**, a rare mineral powder known to sorcerers, more wonderful than radium.",
+      "Takes Scraps's joke seriously — draw down the lake — and turns it into the plan that works: lower the water until the Dome shows, and remove one pane.",
+      "Refills the lake afterward with an incantation recited from the bridge with the Wizard and the Adepts.",
+      "**Ends the Flathead problem by opening every can of brains**, spreading the contents on each flat head and growing the head over them — so no one can ever be robbed of brains again."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Her Ruler and friend, whom she rescues.",
+      "Dorothy": "Whom she arms with the alarm ring.",
+      "the Wizard of Oz": "Her pupil and co-leader of the expedition.",
+      "the three Adepts": "The magic-workers who join her and supply the missing knowledge.",
+      "Coo-ee-oh": "The witch whose stolen arts she has to reconstruct."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Glinda raises the island by her own sorcery",
+        "Glinda opens the marble door",
+        "Glinda knows the magic words",
+        "Glinda destroys the Diamond Swan",
+        "Glinda punishes the Su-dic personally"
+      ]
+    },
+    "hallucination_signals": [
+      "Glinda raises the island alone",
+      "Glinda opens the marble door",
+      "Glinda knows Coo-ee-oh's words",
+      "Glinda kills the Swan"
+    ]
+  },
+  "the_wizard": {
+    "canonical_aliases_book1": [
+      "the Wizard",
+      "the Wizard of Oz",
+      "the little Wizard"
+    ],
+    "known_facts_book1": [
+      "A little bald man with a shiny head, a merry twinkle in his eyes and the spryness of a schoolboy, second only to Glinda in all the mystic arts, having been taught by her.",
+      "Is, with Glinda, one of only two people permitted by law to practice wizardry or sorcery in Oz, and both use it only for good.",
+      "Is not as powerful as Glinda, Dorothy says, because Glinda did not teach him everything she knows — but what he knows he knows very well.",
+      "Argues, and is agreed with, that the expedition should go to the lake first and punish the Su-dic afterward, so nothing delays the rescue.",
+      "Carries the **skeropythrope** in his black bag and hands it to Glinda for the boat-enchantment.",
+      "Says plainly that he is helpless to raise the island himself — 'Leave that to Glinda.'",
+      "First raises the idea of finding and restoring the three enchanted fishes, which turns out to be the key, though he cannot see how to single them out of a whole lake.",
+      "Meets the three restored Adepts on the shore, guesses at once they are important, and asks them no questions because he sees they do not wish to be questioned.",
+      "Removes one large pane from the Dome with tools from his black bag and goes down the rope first, hand over hand, ahead of everyone.",
+      "Rigs a chair on the doubled rope so Glinda and the Adepts can be lowered comfortably.",
+      "Refuses to let Scraps transform the lake's fishes into polliwogs: it is wicked to transform any living creature without its consent, and the lake belongs to the fishes."
+    ],
+    "known_relations_book1": {
+      "Glinda": "His teacher and the leader of the expedition.",
+      "Ozma": "The Ruler he goes to rescue.",
+      "the three Adepts": "Whom he escorts to Glinda's tent without prying.",
+      "Ervic": "The Skeezer he first sees trailing behind the three maidens."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Wizard raises the island",
+        "the Wizard restores the Adepts",
+        "the Wizard punishes the Su-dic",
+        "the Wizard opens the marble door"
+      ]
+    },
+    "hallucination_signals": [
+      "the Wizard raises the island",
+      "the Wizard frees the fishes",
+      "the Wizard defeats the Su-dic",
+      "the Wizard opens the door"
+    ]
+  }
+}

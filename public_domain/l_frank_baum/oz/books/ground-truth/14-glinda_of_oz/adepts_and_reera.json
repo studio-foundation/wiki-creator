@@ -1,0 +1,92 @@
+{
+  "the_three_adepts": {
+    "canonical_aliases_book1": [
+      "the three Adepts",
+      "Audah",
+      "Aurah",
+      "Aujah",
+      "the Adepts at Magic"
+    ],
+    "known_facts_book1": [
+      "Three beautiful girls who were **not Flatheads** but wandered to the Flat Mountain and made their home there, and whom the mountain people gladly made their rulers.",
+      "Used their magic only for good: they taught the Flatheads how to use their canned brains and how to work metals into clothing that never wears out, and built the Skeezers their glass Dome and marble houses.",
+      "Were betrayed at a banquet by Coo-ee-oh, who stole their charms and magical instruments and transformed them into a gold, a silver and a bronze fish.",
+      "Warned her, while gasping on the banquet-room floor, that if one of them died or was destroyed she would become shrivelled and helpless and lose all her stolen magic — which is why she threw them into the lake alive.",
+      "Waited in the lake for years, knowing Coo-ee-oh would one day meet the fate she deserved.",
+      "Approach **Ervic** the night after the Queen's transformation, drag his iron boat ashore with the silver cord in their mouths, and direct every step of their own rescue.",
+      "Are restored not by Glinda, not by Ozma and not by the Wizard, but by **Reera the Red**, tricked into it by Ervic — and they promise never to tell who did it.",
+      "Take the names **Audah** (golden hair, blue eyes, fair skin), **Aurah** (dark brown hair, gray eyes) and **Aujah** (snow-white hair, deep brown eyes, pink cheeks) — the goldfish, bronzefish and silverfish respectively.",
+      "Say modestly to Glinda that some of the secret arts they have gleaned from Nature, but do not place their skill beside hers.",
+      "Explain the whole basement machinery — that the cog-wheels open the submarine rooms and extend the steel bridge, and control the island not at all.",
+      "**Aujah remembers teaching Coo-ee-oh how to expand steel**, which is the insight that identifies the steel pillar as the island's lift.",
+      "Aurah confirms that the method of hiding a spell behind a spoken word is one they themselves taught her.",
+      "Return to the Flathead mountain to rule again, at Ozma's request, and their mere appearance makes the whole Flathead army throw down its arms."
+    ],
+    "known_relations_book1": {
+      "Coo-ee-oh": "The Queen who betrayed and transformed them.",
+      "Ervic": "The Skeezer who carried them in a kettle and won their freedom.",
+      "Reera the Red": "The Yookoohoo who restored them and made them Adepts again.",
+      "the Flatheads": "The people they ruled and rule again.",
+      "Glinda": "The Sorceress they join to raise the island."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Glinda restores the three Adepts",
+        "the Adepts are Flatheads",
+        "the Adepts know the magic words",
+        "the Adepts punish Coo-ee-oh",
+        "the Adepts reveal who freed them"
+      ]
+    },
+    "hallucination_signals": [
+      "Glinda frees the fishes",
+      "the Adepts were Flatheads",
+      "the Adepts name Reera",
+      "the Adepts punish the Swan"
+    ]
+  },
+  "reera_the_red": {
+    "canonical_aliases_book1": [
+      "Reera the Red",
+      "Red Reera",
+      "the Yookoohoo"
+    ],
+    "known_facts_book1": [
+      "A powerful **Yookoohoo** — said to be the only real one in all Oz — living alone in a purple cottage with white trimmings on an untilled, isolated stretch of meadow past the lake.",
+      "Assumes all sorts of forms, sometimes changing several times a day, so that no one knows what her real form is; she meets Ervic as a **huge gray ape in a lace cap and apron, knitting**.",
+      "Keeps her cottage full of creatures she transforms for amusement — a crocodile, horned toads, four washbasin-sized spiders, a red-and-green fire-spitting lizard, black rats — and changes them to a red wolf, kittens and chipmunks at a touch.",
+      "Works her transformations by **touch alone**, using something taken from the second-from-bottom drawer of her cupboard and held closed in her right hand; she speaks no incantation.",
+      "**Cannot be bribed with treasure, coaxed through friendship, or won by pity**, has never assisted anyone and never wronged anyone, and uses all her powers purely for her own selfish amusement.",
+      "Makes it her rule never to perform magic to assist others, because there would be crowds at her cottage and she hates crowds.",
+      "Is disarmed entirely by a visitor who asks for nothing, expects nothing, and shows no fear — she says she likes Ervic precisely because he is crabbed and unsociable.",
+      "Is manoeuvred into performing the one favor of her life, believing it was her own idea, and adds 'Adepts at Magic' to the transformation herself on the grounds that no Adept is as powerful as a Yookoohoo.",
+      "Takes her **true form** for the banquet: a young woman fully as lovely as the Adepts, more rounded, in a jeweled girdle and pearls, with bright auburn red hair and large dark eyes — the hair that names her.",
+      "Says she seldom wears her own shape because there is no one there to admire it and she tires of admiring it herself.",
+      "Does not regret the rescue once it is done, and hopes the Adepts will be of use in raising the Skeezers' island.",
+      "Extracts two promises: that they never come to her cottage again, and that they never tell anyone what she did — which is why Glinda never learns her name."
+    ],
+    "known_relations_book1": {
+      "Ervic": "The Skeezer who outwits her by wanting nothing.",
+      "the three Adepts": "The fishes she restores, believing it her own whim."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Reera helps Glinda",
+        "Reera joins the rescue expedition",
+        "Reera is evil",
+        "Reera grants a favor when asked",
+        "Reera transforms Ervic"
+      ],
+      "relationships": [
+        "Reera is an enemy of the Adepts",
+        "Reera is an ally of Coo-ee-oh"
+      ]
+    },
+    "hallucination_signals": [
+      "Reera joins the rescue",
+      "Reera meets Glinda",
+      "Reera grants a request",
+      "Reera transforms Ervic"
+    ]
+  }
+}

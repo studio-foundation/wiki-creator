@@ -1,0 +1,161 @@
+{
+  "su_dic": {
+    "canonical_aliases_book1": [
+      "the Su-dic",
+      "the Supreme Dictator"
+    ],
+    "known_facts_book1": [
+      "A rather lean and rather old Flathead, distinguished from the rest only by the sly and cunning expression of his face and his half-closed eyes.",
+      "Calls himself the Su-dic, short for Supreme Dictator, and says his word is law: 'I'm the head of the Flatheads on this flat headland.'",
+      "Runs a mock democracy — everyone on the mountain is a dictator of something, which keeps them contented, and the Su-dic is elected once a year under a law that **he always counts the votes himself**.",
+      "Carries **three cans of brains**: his own, one taken from a Flathead who tried to rebel, and one taken from his own wife when she scolded him.",
+      "Made the law that anyone who steals or even borrows another's brains forfeits his own brains to the Su-dic — after his wife had already robbed several women.",
+      "Became a ruler of the Flatheads only because the three Adepts were lost, and he and Rora were the only two on the mountain glad of it.",
+      "Made a law that any Flathead may fish in the Lake of the Skeezers whenever he wants, and blames the war on the Skeezers defying that law.",
+      "Refuses Ozma's just settlement, defies her authority to her face, and orders her and Dorothy bound with wire ropes and thrown into the **bronze prison** — only to find they have vanished.",
+      "Knew perfectly well how to make people visible again, and remembers it only after the girls have escaped.",
+      "Brings **two copper vessels** of poison to the lake, uses one on Coo-ee-oh's face and then tips the other over with his heel, spilling every drop.",
+      "Cannot make more poison, because only his wife knew the secret and she is now a brainless pig.",
+      "Turns the Queen into a **Diamond Swan** and dances with wicked glee, then orders his men to shoot her when she mocks him.",
+      "Refuses to take the stranded Skeezers prisoner even when they beg him to feed and keep them, and marches home to feast while everyone else waits on him.",
+      "Is abandoned by his own people the moment they see the Adepts return, runs away and hides, is found, imprisoned and stripped of every can of brains.",
+      "Is finally given his own fair portion of brains and a round head like everyone else, but is left powerless to work mischief and watched constantly."
+    ],
+    "known_relations_book1": {
+      "Rora": "His wife, transformed into a Golden Pig.",
+      "Coo-ee-oh": "The Queen he transforms into a swan in revenge.",
+      "Ozma": "The Ruler he defies and fails to imprison.",
+      "the three Adepts": "The former rulers whose return ends his power."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Su-dic poisons the fishes",
+        "the Su-dic captures Ozma",
+        "the Su-dic conquers the island",
+        "the Su-dic is destroyed",
+        "the Su-dic keeps his three cans of brains"
+      ],
+      "relationships": [
+        "the Su-dic is an ally of Coo-ee-oh"
+      ]
+    },
+    "hallucination_signals": [
+      "the Su-dic poisons the lake",
+      "the Su-dic imprisons Ozma",
+      "the Su-dic takes the island",
+      "the Su-dic is killed"
+    ]
+  },
+  "rora": {
+    "canonical_aliases_book1": [
+      "Rora",
+      "Rora Flathead",
+      "the Golden Pig"
+    ],
+    "known_facts_book1": [
+      "The Su-dic's wife, once the most beautiful Flathead on the mountain, who became a remarkable witch by holding **four cans of brains**.",
+      "Got the extra brains by robbery: her husband took her can away after she scolded him, so she went out and robbed several women of theirs.",
+      "Seized the magic tools the three Adepts had left behind on the mountain and used them to make herself a witch.",
+      "Loved to eat fish better than anyone, fish being brain food, and vowed to destroy every fish in the lake unless the Flatheads were allowed to catch what they wanted.",
+      "Prepared a kettleful of magic poison and went down to the lake at night to dump it in, and was caught in the act by Coo-ee-oh, who transformed her into a **Golden Pig** — solid gold, with joints at the bends of the legs and neck, ruby eyes and polished ivory teeth.",
+      "Lost all four cans of brains to Coo-ee-oh in the same moment, so she is a common grunting pig without even brains enough to know her own name.",
+      "Could not work witchcraft even with her brains restored, because a witch has to use her fingers and a pig has only cloven hoofs.",
+      "Grunts only one thing in the entire book: 'Fight the Skeezers, fight the Skeezers, fight the Skeezers!'",
+      "**Trips her own husband** as he chases the invisible girls, sending him and his four men down in a heap and saving Ozma and Dorothy.",
+      "Is disenchanted at the very end by Glinda, given brains and a round head, and — having forgotten all her wickedness — is likely to be a good woman thereafter.",
+      "Was once even more wicked than her evil husband, by the narrator's own statement."
+    ],
+    "known_relations_book1": {
+      "the Su-dic": "Her husband, who took her brains and later made war for her sake.",
+      "Coo-ee-oh": "The Queen who transformed her and stole her four cans of brains.",
+      "Glinda": "The Sorceress who finally restores her."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Rora poisons the fishes successfully",
+        "Rora works magic as a pig",
+        "the Golden Pig is eaten",
+        "Rora keeps her four cans of brains"
+      ]
+    },
+    "hallucination_signals": [
+      "Rora poisons the lake",
+      "the pig works witchcraft",
+      "the Golden Pig is eaten",
+      "Rora regains four cans"
+    ]
+  },
+  "the_flatheads": {
+    "canonical_aliases_book1": [
+      "the Flatheads",
+      "Felo Flathead",
+      "the Mountaineers"
+    ],
+    "known_facts_book1": [
+      "About one hundred people living in a saucer-shaped basin on the flat top of a mountain whose sides are straight up and down like the wall of a house.",
+      "Have heads flat on top as if cut off just above the eyes and ears, bald, with big out-thrust ears, small stubby noses, well-shaped mouths and large bright deep-violet eyes.",
+      "Wear costumes made of small thin discs of gold, silver, tin and iron wired together into checks and stripes, so they look like knights in armor; the Adepts taught them to work the metals so the clothing never wears out.",
+      "Build everything of rock — houses, garden walls, paved paths — because rock is their only material.",
+      "Had **no brains at all** originally; a band of fairies passing over the country found them stupid and unable to think, and the Fairy Queen gave each one a **can of brains** to carry in his pocket, labeled 'Flathead Concentrated Brains, Extra Quality'.",
+      "Were ruled wisely by the three Adepts in Sorcery, who were not Flatheads but wanderers, and who taught them to use their canned brains.",
+      "Reach the plain by an **up-and-down stairway** — ten steps up, five down, and a turn — which gains only five steps a trip and rings a warning bell on the mountain top at every tenth step.",
+      "Are guarded by an **invisible wall** of cemented stone built in front of the stairway entrance, with a gap at one end so the Flatheads themselves can get around it; making it invisible is what keeps strangers from finding the gap.",
+      "Include **Dictator Felo Flathead**, who guards the Stairway, and who brings Ozma and Dorothy to the Su-dic before being sent back to his post.",
+      "**Throw down their arms** the moment they see the three Adepts returning, and beg their former rulers to protect them from their own Dictator.",
+      "Are each given their own brains back — spread on the flat head, which Glinda then grows over — so no one can ever be robbed of brains again, and are renamed **Mountaineers**, there being no more Flatheads at all."
+    ],
+    "known_relations_book1": {
+      "the Su-dic": "Their Supreme Dictator, whom they fear and finally abandon.",
+      "the three Adepts": "Their former and restored rulers.",
+      "the Skeezers": "Their enemies over the fish of the lake.",
+      "Glinda": "The Sorceress who gives them proper heads."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Flatheads destroy the Skeezer island",
+        "the Flatheads are punished by Ozma",
+        "the Flatheads keep their canned brains",
+        "the Flatheads are naturally brainless at the end"
+      ]
+    },
+    "hallucination_signals": [
+      "the Flatheads destroy the island",
+      "the Flatheads are punished",
+      "the cans of brains remain",
+      "the Flatheads stay flat"
+    ]
+  },
+  "canned_brains": {
+    "canonical_aliases_book1": [
+      "cans of brains",
+      "Flathead Concentrated Brains"
+    ],
+    "known_facts_book1": [
+      "Bright tin cans with a pretty red label reading 'Flathead Concentrated Brains, Extra Quality', carried in the pocket.",
+      "Were given one per person by the **Fairy Queen** whose band made this country a fairyland, because the Flatheads had no place in their bodies to put brains and were unable to think.",
+      "Are all alike, and one can makes a Flathead as intelligent as other people.",
+      "Can be **taken away as punishment** and carried by someone else, which is how the Su-dic reached three cans and Rora four.",
+      "More cans make a stronger magic-worker: three made the Su-dic a good Sorcerer, four made Rora a remarkable witch.",
+      "Are governed by the Su-dic's own law: stealing or even borrowing another's brains forfeits your own to him.",
+      "Are abolished at the end — Glinda opens each one, spreads the contents on its owner's flat head and grows the head over them, so every person has exactly the share he is entitled to and none can be robbed again."
+    ],
+    "known_relations_book1": {
+      "the Flatheads": "Their owners.",
+      "the Su-dic": "Who confiscates them and holds three.",
+      "Rora": "Who robbed several women and held four.",
+      "Glinda": "Who ends the whole system."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the cans of brains are magical weapons",
+        "the Wizard made the cans of brains",
+        "the cans of brains are destroyed"
+      ]
+    },
+    "hallucination_signals": [
+      "the Wizard canned the brains",
+      "the cans are weapons",
+      "the brains are destroyed"
+    ]
+  }
+}
