@@ -330,6 +330,27 @@ def test_build_entity_bundle_related_context_empty_without_relationships():
     assert bundle["related_context"] == []
 
 
+def test_extract_context_spreads_budget_across_chapters_by_number():
+    # STU-711: itemN keys string-sort (item10 < item2), and the char budget used
+    # to break front-to-back — Alice, present in 12 chapters, kept only the
+    # lexicographic middle (item10..item15) and lost the whole first half.
+    mentions_by_chapter = {
+        f"item{n}": ["x" * 600 for _ in range(5)]
+        for n in range(4, 16)
+    }
+    persons = _pf({"p1": {"mentions_by_chapter": mentions_by_chapter}})
+    entity = {"canonical_name": "Alice", "type": "PERSON", "source_ids": ["p1"]}
+    chapter_numbers = {f"item{n}": n for n in range(4, 16)}
+
+    ctx = extract_context(entity, persons, {}, {}, {}, chapter_numbers)
+
+    kept = sorted(int(k.removeprefix("item")) for k in ctx)
+    # Every chapter is represented (breadth-first spread), not a mid-book window.
+    assert kept == list(range(4, 16))
+    # And the budget is genuinely binding — coverage is thin, not five full chapters.
+    assert sum(len(v) for v in ctx.values()) <= 15
+
+
 def test_extract_context_falls_back_across_registries_for_retyped_entity():
     persons, places, orgs, events = _registries()
     # Source id exists in persons registry, but entity type was retagged to PLACE.
