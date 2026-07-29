@@ -1,0 +1,83 @@
+{
+  "mombi": {
+    "canonical_aliases_book1": [
+      "Mombi",
+      "Old Mombi"
+    ],
+    "known_facts_book1": [
+      "A witch of the Gillikin country (legally only a 'Sorceress' or 'Wizardess') who reared Tip and worked him like a servant.",
+      "Trades secrets with a crooked wizard for the Powder of Life and other magic, and uses it to bring Jack Pumpkinhead to life.",
+      "Plans to transform Tip into a marble statue for her flower garden; he flees, stealing her Powder of Life.",
+      "Is hired by Jinjur to stop the Scarecrow, and throws magical illusions (sunflowers, walls, whirling roads, fire) in the travelers' path.",
+      "Disguises Jellia Jamb as herself to fool Glinda; exposed, she becomes in turn a rose, a shadow, a black ant, and a Griffin to escape.",
+      "Is run down by the Saw-Horse and captured by Glinda with a golden thread, then made to speak truth by the white pearl.",
+      "Confesses that, at the Wizard's bidding, she transformed the infant Princess Ozma into the boy Tip, and undoes the enchantment.",
+      "Is to be stripped of her magic after the reveal; the boy promises to provide for her in her old age."
+    ],
+    "known_relations_book1": {
+      "Tip": "Reared him and meant to make him a statue; years earlier she transformed the infant Ozma into Tip at the Wizard's request. His enchanter and guardian, not his mother.",
+      "Jinjur": "Her ally and Jinjur's chief counsellor during the revolt.",
+      "Glinda": "Her adversary and better, who captures her and forces the confession.",
+      "Wizard of Oz": "Paid her with magic lessons and three secret visits to hide the transformed Ozma."
+    },
+    "forbidden_book1": {
+      "identity_confusion": [
+        "Mombi is the Wicked Witch of the West",
+        "Mombi is the Wicked Witch of the East",
+        "Mombi melts when splashed with water"
+      ],
+      "relationships": [
+        "Mombi is Ozma's mother",
+        "Mombi is Tip's mother"
+      ],
+      "cross_tome": [
+        "the Nome King"
+      ]
+    },
+    "hallucination_signals": [
+      "Mombi is the Wicked Witch",
+      "Mombi melts",
+      "Mombi is Ozma's mother",
+      "Mombi is Tip's mother",
+      "the Nome King"
+    ]
+  },
+  "jinjur": {
+    "canonical_aliases_book1": [
+      "Jinjur",
+      "General Jinjur",
+      "Queen Jinjur"
+    ],
+    "known_facts_book1": [
+      "A pretty, discontented Gillikin girl who commands the Army of Revolt, some four hundred girls armed only with knitting-needles.",
+      "Leads the revolt because 'the Emerald City has been ruled by men long enough,' and to seize its gems and treasury.",
+      "Conquers the Emerald City without bloodshed; the one-man Royal Army flees and the Guardian surrenders his keys.",
+      "Proclaims herself Queen, wears the Scarecrow's second-best crown, eats caramels on the throne, and sets the men to housework.",
+      "Orders the captured Scarecrow's party destroyed, but her army is stampeded by the field mice hidden in the Scarecrow's straw.",
+      "Allies with Mombi as her chief counsellor and is besieged by Glinda's army.",
+      "Is captured in her courtyard by Glinda's soldiers, ending the war, and is later released on promise of good behavior after returning the stolen gems."
+    ],
+    "known_relations_book1": {
+      "Scarecrow": "The ruler she dethrones and whose throne and crown she usurps.",
+      "Mombi": "Her chief counsellor and magical ally against the Scarecrow.",
+      "Glinda": "Her conqueror, who besieges the city and takes her prisoner.",
+      "Ozma": "The rightful heir who supplants her; Jinjur is deposed so Ozma can take the throne."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Jinjur is a witch",
+        "Jinjur kills the Scarecrow",
+        "Jinjur spills blood conquering the city"
+      ],
+      "relationships": [
+        "Jinjur marries the Scarecrow"
+      ]
+    },
+    "hallucination_signals": [
+      "Jinjur is a witch",
+      "Jinjur marries the Scarecrow",
+      "Jinjur kills the Scarecrow",
+      "the Nome King"
+    ]
+  }
+}

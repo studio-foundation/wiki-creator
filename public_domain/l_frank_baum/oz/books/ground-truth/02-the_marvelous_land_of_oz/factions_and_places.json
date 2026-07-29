@@ -1,0 +1,189 @@
+{
+  "gillikins": {
+    "canonical_aliases_book1": [
+      "Gillikins",
+      "Gillikin"
+    ],
+    "known_facts_book1": [
+      "The people of the northern country of Oz, where everything is colored purple.",
+      "Tip and Mombi live among them; Jinjur and Jellia Jamb are both from the Gillikin country.",
+      "Gillikin girls in Jinjur's Army of Revolt wear the purple strip in front of their skirts."
+    ],
+    "known_relations_book1": {},
+    "forbidden_book1": {
+      "wrong_color_or_direction": [
+        "the Gillikins live in the south",
+        "the Gillikins' color is yellow"
+      ],
+      "cross_tome": [
+        "the Nome King"
+      ]
+    },
+    "hallucination_signals": [
+      "the Gillikins are yellow",
+      "the Gillikins live in the west",
+      "the Nome King"
+    ]
+  },
+  "munchkins": {
+    "canonical_aliases_book1": [
+      "Munchkins",
+      "Munchkin"
+    ],
+    "known_facts_book1": [
+      "The people of the eastern country of Oz, where everything is colored blue.",
+      "The single tongue of all Oz is called 'the language of the Munchkins.'",
+      "Munchkin girls in Jinjur's army wear the blue strip in front of their skirts."
+    ],
+    "known_relations_book1": {},
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "the Lollipop Guild",
+        "Munchkinland",
+        "the Munchkins sing to welcome Dorothy"
+      ],
+      "wrong_color_or_direction": [
+        "the Munchkins live in the west",
+        "the Munchkins' color is yellow"
+      ]
+    },
+    "hallucination_signals": [
+      "Lollipop Guild",
+      "Munchkinland",
+      "the Munchkins sing",
+      "the Munchkins are yellow"
+    ]
+  },
+  "quadlings": {
+    "canonical_aliases_book1": [
+      "Quadlings",
+      "Quadling"
+    ],
+    "known_facts_book1": [
+      "The people of the southern country of Oz, where everything is colored red; ruled by Glinda the Good.",
+      "Quadling girls in Jinjur's army wear the red strip in front of their skirts."
+    ],
+    "known_relations_book1": {
+      "Glinda": "Their ruler, the Sorceress of the red South country."
+    },
+    "forbidden_book1": {
+      "wrong_color_or_direction": [
+        "the Quadlings live in the north",
+        "the Quadlings' color is blue"
+      ],
+      "cross_tome": [
+        "the Nome King"
+      ]
+    },
+    "hallucination_signals": [
+      "the Quadlings are blue",
+      "the Quadlings live in the north",
+      "the Nome King"
+    ]
+  },
+  "winkies": {
+    "canonical_aliases_book1": [
+      "Winkies",
+      "Winkie"
+    ],
+    "known_facts_book1": [
+      "The people of the western country of Oz, where everything is colored yellow; ruled by the Tin Woodman, Nick Chopper, who calls himself their Emperor.",
+      "Invited the Tin Woodman to rule them after the Wicked Witch of the West was destroyed (recalled as past history).",
+      "Winkie girls in Jinjur's army wear the yellow strip in front of their skirts."
+    ],
+    "known_relations_book1": {
+      "Nick Chopper": "The Tin Woodman, their ruler and self-styled Emperor."
+    },
+    "forbidden_book1": {
+      "adaptation_or_book1": [
+        "the Winkies are the Wicked Witch's green guards",
+        "the Winkies serve the Wicked Witch"
+      ],
+      "wrong_color_or_direction": [
+        "the Winkies live in the east",
+        "the Winkies' color is blue"
+      ]
+    },
+    "hallucination_signals": [
+      "O-Ee-Yah",
+      "the Winkies serve the Wicked Witch",
+      "the Winkies are green guards",
+      "the Winkies are blue"
+    ]
+  },
+  "field_mice": {
+    "canonical_aliases_book1": [
+      "Field Mice"
+    ],
+    "known_facts_book1": [
+      "Tiny grey mice of a meadow village, ruled by the Queen of the Field Mice, who wears a golden crown.",
+      "Their Queen is an old friend of the Tin Woodman, who once saved her life; he summons her with a silver whistle.",
+      "Twelve field mice hide in the Scarecrow's straw and, released, stampede Jinjur's army out of the throne room.",
+      "Their Queen guides the party safely through Mombi's illusions to the Emerald City."
+    ],
+    "known_relations_book1": {
+      "Nick Chopper": "The Tin Woodman, whose life saving of the Queen earned the mice's loyal aid.",
+      "Scarecrow": "Hides twelve of the mice in his straw to rout Jinjur's army."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the field mice serve the Wicked Witch",
+        "the field mice belong to Dorothy"
+      ],
+      "cross_tome": [
+        "the Nome King"
+      ]
+    },
+    "hallucination_signals": [
+      "the field mice serve the Wicked Witch",
+      "the field mice are Dorothy's",
+      "the Nome King"
+    ]
+  },
+  "emerald_city": {
+    "canonical_aliases_book1": [
+      "Emerald City"
+    ],
+    "known_facts_book1": [
+      "The green capital city at the center of Oz, built by the Wizard; everything in it is green and studded with emeralds, and visitors wear green spectacles.",
+      "Ruled by the Scarecrow until Jinjur's Army of Revolt conquers it, and retaken for Princess Ozma at the book's end.",
+      "Its emeralds are pried from the walls and pavements by Jinjur's girls with their knitting-needles."
+    ],
+    "known_relations_book1": {
+      "Scarecrow": "Its King until Jinjur's revolt.",
+      "Ozma": "Its rightful Queen, restored to the throne at the book's end."
+    },
+    "forbidden_book1": {
+      "cross_tome": [
+        "the Nome King tunnels beneath the Emerald City",
+        "the Wizard rules the Emerald City"
+      ]
+    },
+    "hallucination_signals": [
+      "the Nome King invades the Emerald City",
+      "the Wizard still rules the Emerald City",
+      "the ruby slippers"
+    ]
+  },
+  "land_of_oz": {
+    "canonical_aliases_book1": [
+      "Land of Oz"
+    ],
+    "known_facts_book1": [
+      "The fairy country divided into four colored lands around the central Emerald City: purple Gillikin North, blue Munchkin East, red Quadling South, and yellow Winkie West.",
+      "One language is spoken throughout; its houses are dome-shaped; it is ringed by a deadly sandy desert separating it from the outside world."
+    ],
+    "known_relations_book1": {},
+    "forbidden_book1": {
+      "cross_tome": [
+        "the Nome King rules part of Oz",
+        "the Land of Ev"
+      ]
+    },
+    "hallucination_signals": [
+      "the Nome King",
+      "the deadly desert of Ev",
+      "Ozma rules a fifth country"
+    ]
+  }
+}
