@@ -48,9 +48,9 @@ from wiki_creator.event_pages import (
 )
 from wiki_creator.page_templates import (
     chrome_label,
-    load_base_template,
     output_language,
     slot_label,
+    stub_message,
 )
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.register import DEFAULT_REGISTER, register_clause
@@ -58,10 +58,7 @@ from wiki_creator.register import DEFAULT_REGISTER, register_clause
 
 def _event_stub(lang: str, kind: str) -> str:
     """Reader-facing stub body under the localized ``course`` heading (STU-514)."""
-    heading = slot_label("course", lang)
-    entry = (load_base_template().get("stubs") or {}).get(kind) or {}
-    message = entry.get(lang) or entry.get("fr") or ""
-    return f"## {heading}\n\n*{message}*"
+    return f"## {slot_label('course', lang)}\n\n*{stub_message(kind, lang)}*"
 
 
 # Mirrors generate_book_synopsis: the writer is told not to author a references

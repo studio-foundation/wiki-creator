@@ -860,7 +860,7 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
 
 - Never add hardcoded word lists to scripts. All vocabulary belongs in `wiki_creator/cue_words/<lang>.json` (language-wide) or the book YAML `classification` section (book-specific). No script may define a fallback vocabulary constant — if a key is absent from cue_words, degrade gracefully to an empty collection.
 
-- English is the default and the only language allowed in code. Nothing user-visible may be hardcoded in another language — no French (or any non-English) string literals in `.py`. Anything that needs translation is data, not code: it lives in YAML (`wiki_creator/templates/base.yaml` for template/output strings — `labels`, `briefs`, `few_shot`, `length_by_tier`, `chrome`, `language_names`; cue_words for detection vocabulary) keyed by language, and is read via helpers (`slot_label`, `section_brief`, `chrome_label`, …). Prompt *scaffolding* (instructions, grounding labels) stays English regardless of output language; only output-anchoring content (section titles, briefs, few-shot, the write-in-`<language>` directive) and reader-facing chrome follow `output_language(book_config)` (STU-510).
+- English is the default and the only language allowed in code. Nothing user-visible may be hardcoded in another language — no French (or any non-English) string literals in `.py`. Anything that needs translation is data, not code, and it lives in **one file per language**: `wiki_creator/templates/lang/<code>.yaml` for output strings (`labels`, `chrome`, `stubs`, `validator_errors`, `briefs`, `few_shot`, `category_defaults`, `relationship_labels`, `sub_role_labels`, `language_name`), `wiki_creator/cue_words/<code>.json` for detection vocabulary. It is read via helpers (`slot_label`, `section_brief`, `chrome_label`, `stub_message`, `validator_message`, `few_shot_example`, `language_name`, `entity_taxonomy.category_default`), all resolving through one chain — **requested language → `en` → raise** (STU-732). `en.yaml` is the reference pack and must hold every key; `tests/test_template_packs.py` fails on a gap in any shipped pack. `base.yaml` keeps structure only: prompt *scaffolding* (instructions, grounding labels, the classifier `description` criteria, `length_by_tier`) stays English regardless of output language, and only output-anchoring content (section titles, briefs, few-shot, the write-in-`<language>` directive) and reader-facing chrome follow `output_language(book_config)` (STU-510).
 
 - `tests/test_e2e_golden.py` chains all deterministic resolution stages on the fixture novella and compares every stage output to goldens in `tests/fixtures/e2e/golden/stages/`. Any intentional behavior change in those stages requires `make golden-update` and a review of the golden diff in the same PR. The extraction seed is committed (`golden/seed/`, regenerate with `gen_seed.py`); a `@requires_en_sm` test keeps it shape-compatible with real extraction in CI.
 
@@ -1136,7 +1136,8 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   authority for the type vocabulary AND its routing. Each type declares
   `ner_labels` (the stock+custom NER labels it absorbs) and an `export` block
   (`subdir`, `full_key`, `infobox_template`, `category_key`,
-  `category_default`, `importance_categories`, `tome_label_key`) — the data the
+  `importance_categories`, `tome_label_key`; its default category label moved to
+  the template packs' `category_defaults` in STU-732) — the data the
   five old Python tables (`types.py` Literal, `entity_extraction.LABEL_TO_TYPE`,
   `export_helpers._INFOBOX_TEMPLATES`, `wiki_export._SUBDIR`,
   `md2wiki._TEMPLATE_NAMES`) encoded separately. All consumers read it via
