@@ -79,10 +79,10 @@ def category_tags(
     return tags
 
 
-def infobox_template_content(entity_type: str) -> str:
-    """Return the MediaWiki template source for the given entity type
-    (base.yaml#entity_types.export.infobox_source, STU-505)."""
-    source = entity_taxonomy.infobox_source(entity_type)
+def infobox_template_content(entity_type: str, lang: str = "en") -> str:
+    """Return the MediaWiki template source for the given entity type, built from
+    base.yaml#entity_types.export.infobox_rows and localized labels (STU-730)."""
+    source = entity_taxonomy.infobox_source(entity_type, lang)
     if not source:
         raise ValueError(f"No infobox template for entity type: {entity_type!r}")
     return source

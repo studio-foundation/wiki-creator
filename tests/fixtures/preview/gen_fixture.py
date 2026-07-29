@@ -275,7 +275,7 @@ def build() -> dict[str, str]:
     files: dict[str, str] = {}
 
     for etype in entity_taxonomy.declared_types():
-        source = entity_taxonomy.infobox_source(etype)
+        source = entity_taxonomy.infobox_source(etype, LANG)
         template_name = entity_taxonomy.infobox_template_name(etype)
         if not source or not template_name:
             continue

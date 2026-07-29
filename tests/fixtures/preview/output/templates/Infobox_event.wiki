@@ -5,10 +5,10 @@
 |-
 | '''Participants''' || {{{participants|}}}
 |-
-| '''Lieu''' || {{{lieu|}}}
+| '''Place''' || {{{lieu|}}}
 |-
-| '''Chapitre''' || {{{chapitre|}}}
+| '''Chapter''' || {{{chapitre|}}}
 |-
-| '''Issue''' || {{{issue|}}}
+| '''Outcome''' || {{{issue|}}}
 |}
 </includeonly>

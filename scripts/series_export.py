@@ -45,10 +45,10 @@ def load_assembly(series_dir: Path | str) -> tuple[SeriesHub, list[SeriesCharact
     return hub, characters, arc if isinstance(arc, str) else None
 
 
-def _write_infobox_templates(wiki_dir: Path) -> int:
+def _write_infobox_templates(wiki_dir: Path, lang: str) -> int:
     written = 0
     for entity_type in entity_taxonomy.declared_types():
-        source = entity_taxonomy.infobox_source(entity_type)
+        source = entity_taxonomy.infobox_source(entity_type, lang)
         template_name = entity_taxonomy.infobox_template_name(entity_type)
         if not source or not template_name:
             continue
@@ -77,7 +77,7 @@ def export_series(series_dir: Path | str) -> dict:
     for subdir in entity_taxonomy.subdirs():
         (wiki_dir / subdir).mkdir()
 
-    files_written = _write_infobox_templates(wiki_dir)
+    files_written = _write_infobox_templates(wiki_dir, lang)
 
     for character in characters:
         rel_path, content = render_series_character_page(
