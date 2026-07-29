@@ -1,0 +1,95 @@
+{
+  "santa_claus": {
+    "canonical_aliases_book1": [
+      "Santa Claus"
+    ],
+    "known_facts_book1": [
+      "Arrives at Ozma's party as the most dearly beloved and important guest, so that all present rise and bow before his name is announced.",
+      "Is round as an apple with a white bushy beard, a red ermine-trimmed cloak, and a basket of presents for Ozma.",
+      "Brings with him a band of Ryls from the Happy Valley and a dozen crooked Knooks from the Forest of Burzee.",
+      "Knows Dorothy, seeing her every Christmas Eve while she sleeps, and knows Button-Bright's home.",
+      "Whispers to the Wizard where Button-Bright lives and promises to tell Polychrome's father where she is.",
+      "Rides the Saw-Horse about the Emerald City and in the procession because he is fat and short of breath.",
+      "Leaves at the end floating home inside one of the Wizard's soap-bubbles, with smaller bubbles for his Ryls and Knooks, having left his reindeer at home."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "The girl he visits every Christmas Eve and greets fondly at the party.",
+      "Button-Bright": "The boy whose home he knows and whose father he supplies at Christmas.",
+      "Ryls": "The flower-painting sprites he brings along from the Happy Valley.",
+      "Knooks": "The tree-tending sprites he brings from the Forest of Burzee.",
+      "Polychrome": "Whose father he promises to notify so she can be fetched home."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Santa Claus travels the road with Dorothy",
+        "Santa Claus brings his reindeer to Oz",
+        "Santa Claus rules a kingdom in Oz"
+      ]
+    },
+    "hallucination_signals": [
+      "Santa Claus's reindeer in Oz",
+      "Santa Claus joins the journey to Oz",
+      "Santa Claus lives in the Emerald City"
+    ]
+  },
+  "john_dough": {
+    "canonical_aliases_book1": [
+      "John Dough",
+      "King Dough"
+    ],
+    "known_facts_book1": [
+      "A gingerbread man baked to a lovely brown, with white frosting shirt-front and licorice-drop buttons, who carries a candy cane.",
+      "Announced as King Dough the First, Ruler of the Two Kingdoms of Hiland and Loland, a foreign guest at Ozma's party.",
+      "Arrives with his Head Booleywag, Chick the Cherub, and their friend Para Bruin the rubber bear.",
+      "Brings Ozma a gingerbread crown set with pearls as a birthday present.",
+      "Worries anxiously that his hosts might be fond of gingerbread, and is reassured by the Scarecrow.",
+      "Sits on a golden throne at the banquet and floats home in one of the Wizard's bubbles."
+    ],
+    "known_relations_book1": {
+      "Chick the Cherub": "His Head Booleywag, who arrives and travels with him.",
+      "Para Bruin": "The rubber bear who is their faithful friend.",
+      "Ozma": "The Ruler whose birthday he attends as a foreign king.",
+      "Dorothy": "The Princess who introduces him to the company."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "John Dough is eaten in this book",
+        "John Dough travels the road to Oz with Dorothy",
+        "John Dough rules the Emerald City"
+      ]
+    },
+    "hallucination_signals": [
+      "John Dough is eaten",
+      "John Dough joins Dorothy's journey",
+      "King Dough of Oz"
+    ]
+  },
+  "king_bud": {
+    "canonical_aliases_book1": [
+      "King Bud"
+    ],
+    "known_facts_book1": [
+      "Announced as His Serene and Tremendous Majesty, King Bud of Noland, a foreign guest at Ozma's party.",
+      "Arrives together with his sister the Princess Fluff and their friend Queen Zixi of Ix, whose kingdoms adjoin.",
+      "Is so frank and boyish that Button-Bright takes to him as a chum at once.",
+      "Brings splendid gifts for Ozma and floats home to Noland in one of the Wizard's bubbles."
+    ],
+    "known_relations_book1": {
+      "Princess Fluff": "His sister, who travels and departs with him.",
+      "Queen Zixi": "The friendly neighboring queen he travels with.",
+      "Button-Bright": "The boy who befriends him as a chum at the party.",
+      "Ozma": "The Ruler whose birthday he honors."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "King Bud travels the road to Oz with Dorothy",
+        "King Bud rules in Oz"
+      ]
+    },
+    "hallucination_signals": [
+      "King Bud joins Dorothy's journey",
+      "King Bud of Oz",
+      "King Bud gets a fox head"
+    ]
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "ozma": {
+    "canonical_aliases_book1": [
+      "Ozma",
+      "Princess Ozma"
+    ],
+    "known_facts_book1": [
+      "The girl Ruler of the whole Land of Oz and the Emerald City, whose birthday celebration is the climax of the book.",
+      "Secretly mixed up the roads near Dorothy's farm to start her wandering toward Oz.",
+      "Watched Dorothy's whole journey in her Magic Picture and twice nearly used the Magic Belt to rescue her, from the Scoodlers and at the Deadly Desert.",
+      "Sent Tik-tok and Billina into the Winkie country to welcome Dorothy, being too busy to come herself.",
+      "Sent her golden chariot, drawn by the Cowardly Lion and Hungry Tiger, to carry Dorothy into the city.",
+      "Receives her guests seated on a throne of carved malachite among green satin cushions.",
+      "Had already invited King Dox and King Kik-a-bray before Dorothy asked her to.",
+      "Long ago was transformed into a boy and lived with the Witch Mombi before she became Princess; she built Jack Pumpkinhead and brought him to life with the Powder of Life.",
+      "Sends the foreign guests home in the Wizard's bubbles and Dorothy home by the Magic Belt at the close."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her dear friend, whom she made a Princess of Oz and guides secretly toward the birthday party.",
+      "Wizard": "Her court magician, whom she makes Master of Ceremonies at the celebration.",
+      "Jack Pumpkinhead": "His maker and 'parent', who carved his head and gave him life.",
+      "Jellia Jamb": "Her favorite attendant.",
+      "Shaggy Man": "The stranger she permits to live in Oz on probation."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Ozma is married to the Scarecrow",
+        "Ozma is the Nome King's ally",
+        "Ozma is rescued from the Nome King in this book",
+        "Ozma was born a princess of the Emerald City"
+      ]
+    },
+    "hallucination_signals": [
+      "Ozma marries",
+      "Ozma is the Nome King's friend",
+      "Queen Ozma",
+      "Ozma is Dorothy's sister"
+    ]
+  },
+  "wizard": {
+    "canonical_aliases_book1": [
+      "Wizard",
+      "Wizard of Oz"
+    ],
+    "known_facts_book1": [
+      "A dried-up little old man clothed all in black, with a cheery face and twinkling eyes, famed as a humbug magician.",
+      "Long ago gave the Tin Woodman his heart and the Cowardly Lion his courage.",
+      "Entertains Ozma's guests by making tiny white piglets perform tricks on the dinner table.",
+      "Is made Master of Ceremonies at the birthday celebration, where he juggles glass balls and lighted candles.",
+      "Invents a machine that blows huge tough soap-bubbles, and sends the foreign guests home floating inside them.",
+      "Is told privately by Santa Claus where Button-Bright's home is."
+    ],
+    "known_relations_book1": {
+      "Ozma": "The Ruler he serves, who puts him in charge of the celebration.",
+      "Dorothy": "An old friend he greets with much affection.",
+      "Santa Claus": "Whispers with him about Button-Bright's home.",
+      "Tin Woodman": "The tin man to whom he once gave a heart.",
+      "Cowardly Lion": "The lion to whom he once gave courage."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Wizard arrives by balloon in this book",
+        "the Wizard is exposed as a fraud in this book",
+        "the Wizard sends Dorothy home"
+      ]
+    },
+    "hallucination_signals": [
+      "the man behind the curtain",
+      "the Wizard's balloon",
+      "the Wizard is unmasked",
+      "the Wizard grants brains and a heart in this book"
+    ]
+  },
+  "jellia_jamb": {
+    "canonical_aliases_book1": [
+      "Jellia Jamb"
+    ],
+    "known_facts_book1": [
+      "A pretty little maid with dark hair and eyes, dressed in green embroidered with silver; Ozma's favorite attendant.",
+      "Greets Dorothy at the palace door and tells her Ozma is in her room and wishes to see her.",
+      "Escorts Polychrome to her apartments and later leads a troop of maidens to attend Queen Zixi.",
+      "Places the guests' birthday presents on the table in the Throne-Room."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Her mistress, whose favorite attendant she is.",
+      "Dorothy": "The Princess she welcomes and serves at the palace."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Jellia Jamb travels the road with Dorothy",
+        "Jellia Jamb performs magic"
+      ]
+    },
+    "hallucination_signals": [
+      "Jellia Jamb casts a spell",
+      "Jellia Jamb joins the journey",
+      "Jellia Jamb is a princess"
+    ]
+  },
+  "high_chamberlain": {
+    "canonical_aliases_book1": [
+      "High Chamberlain"
+    ],
+    "known_facts_book1": [
+      "Ozma's palace officer who announces the names of the arriving birthday guests in a loud, official voice.",
+      "Kneels in an awed voice to announce Santa Claus.",
+      "Introduces King Dough, Chick the Cherub, Para Bruin, the Queen of Merryland, the Queen of Ev, Queen Zixi, King Bud and Princess Fluff as they arrive.",
+      "Is never given a personal name."
+    ],
+    "known_relations_book1": {
+      "Ozma": "The Ruler in whose palace he serves as Chamberlain.",
+      "Santa Claus": "Whose arrival he announces on his knees."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the High Chamberlain has a name in this book",
+        "the High Chamberlain travels the road to Oz"
+      ]
+    },
+    "hallucination_signals": [
+      "the High Chamberlain named",
+      "the Chamberlain performs magic",
+      "the Chamberlain joins Dorothy's journey"
+    ]
+  }
+}

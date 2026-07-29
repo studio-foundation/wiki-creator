@@ -1,0 +1,64 @@
+{
+  "dyna": {
+    "canonical_aliases_book1": [
+      "Dyna"
+    ],
+    "known_facts_book1": [
+      "An old woman who lives in the Emerald City, spoken about only by the Tin Woodman; she never appears in person.",
+      "Inherited the crooked Sorcerer's possessions, including a bottle of the Powder of Life she mistook for moth-powder.",
+      "Accidentally brought her blue bear-skin rug to life by sprinkling the Powder on it and wishing her dear bear alive again.",
+      "Is troubled by the living Blue Bear Rug, which will not stay flat to be walked upon.",
+      "Her Blue Bear Rug (not Dyna herself) appears in the birthday procession, walking before Ozma."
+    ],
+    "known_relations_book1": {
+      "Tin Woodman": "Tells the shaggy man her story; the two never meet on the page.",
+      "Ozma": "Owns the Blue Bear Rug that flops down for Ozma to stand upon in the procession, though Dyna herself is absent."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Dyna appears in person",
+        "Dyna speaks",
+        "Dyna travels with Dorothy",
+        "Dyna meets the shaggy man"
+      ]
+    },
+    "hallucination_signals": [
+      "Dyna said",
+      "Dyna appears",
+      "Dyna welcomes Dorothy",
+      "Dyna joins the party"
+    ]
+  },
+  "nome_king": {
+    "canonical_aliases_book1": [
+      "Nome King"
+    ],
+    "known_facts_book1": [
+      "Named only in backstory; the Nome King never appears, never speaks, and meets no one in this book.",
+      "Is remembered as the enemy from whom Dorothy once captured the Magic Belt she now leaves with Ozma.",
+      "Is remembered as the tyrant who once enslaved the Queen of Ev and her ten children until Ozma's people rescued them."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her past adversary, from whom she captured the Magic Belt before this story; they do not meet here.",
+      "Queen of Ev": "His former captive, freed from him in an earlier adventure recalled at the party."
+    },
+    "forbidden_book1": {
+      "relationships": [
+        "the Nome King is Dorothy's ally",
+        "the Nome King is Ozma's friend",
+        "the Nome King befriends the shaggy man"
+      ],
+      "not_in_this_book": [
+        "the Nome King appears",
+        "the Nome King attacks the Emerald City in this book",
+        "the Nome King attends Ozma's party"
+      ]
+    },
+    "hallucination_signals": [
+      "the Nome King befriends Dorothy",
+      "the Nome King attends the birthday party",
+      "the Nome King invades the Emerald City",
+      "Roquat greets Ozma"
+    ]
+  }
+}
