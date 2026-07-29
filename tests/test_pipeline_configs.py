@@ -213,3 +213,113 @@ def test_enum_restatement_detector_calibration() -> None:
     # A passing mention of one or two types is fine.
     assert not restates("# narrator metadata from entity-resolution-PERSON, or null")
     assert not restates("# adjudicated PERSON and PLACE entries")
+
+
+# STU-733: the two regressions the audit found, pinned by shape rather than by a
+# blanket non-ASCII gate (agent prompts legitimately carry `—`, `→`, `Ebrithil`).
+# A prompt that names an output language contradicts the language directive
+# `generate_wiki_pages.build_prompt` already emits from `output_language`; a
+# validator prompt written in French checks a Spanish book's groundedness in French.
+_LANGUAGE_DIRECTIVE_RE = re.compile(r"\b(?:in|en)\s+(?:French|français|francais)\b", re.I)
+
+# Function words no non-French agent prompt would contain, as whole words.
+_FRENCH_MARKERS = (
+    "vérifie", "retourne", "reçois", "règles", "aucune", "tu es", "n'utilise",
+    "extraits", "affirmation", "chaque", "les deux", "générée",
+)
+
+
+def _agent_prompts() -> list[tuple[str, str]]:
+    prompts = []
+    for agent_path in sorted(AGENTS_DIR.glob("*.agent.yaml")):
+        doc = _load_yaml(agent_path)
+        prompt = doc.get("system_prompt") or ""
+        assert prompt, f"{agent_path.name} declares no system_prompt"
+        prompts.append((agent_path.name, prompt))
+    return prompts
+
+
+def test_no_agent_prompt_hardcodes_an_output_language() -> None:
+    """The write-in-<language> directive comes from `output_language`, not a prompt.
+
+    `wiki-page-item` used to order French unconditionally ("Always write content
+    in French, even if the source excerpts are in English"), so every non-French
+    book generated against a contradiction — and the system prompt is the
+    stronger channel.
+    """
+    offenders = [
+        f"{name}: {match.group(0)!r}"
+        for name, prompt in _agent_prompts()
+        for match in [_LANGUAGE_DIRECTIVE_RE.search(prompt)]
+        if match
+    ]
+    assert not offenders, (
+        "Agent prompt names a hardcoded output language — the prompt builder "
+        "emits it from output_language(book_config):\n" + "\n".join(offenders)
+    )
+
+
+def test_agent_prompts_are_written_in_english() -> None:
+    """Prompt scaffolding stays English whatever the book's output language.
+
+    The three validators emit structured JSON verdicts, not reader text, so a
+    French prompt gave a Spanish book a French groundedness check (STU-733).
+    """
+    offenders = [
+        f"{name}: {marker!r}"
+        for name, prompt in _agent_prompts()
+        for marker in _FRENCH_MARKERS
+        if re.search(rf"(?<!\w){re.escape(marker)}(?!\w)", prompt, re.I)
+    ]
+    assert not offenders, (
+        "Agent prompt is written in French — scaffolding is English "
+        "unconditionally (scripts/CLAUDE.md):\n" + "\n".join(offenders)
+    )
+
+
+def test_no_agent_prompt_hardcodes_a_non_english_section_heading() -> None:
+    """Section headings reach the writer through `slot_label`, in the output language.
+
+    `wiki-page-item` hardcoded `## Relations`, so an English page got the French
+    heading and `_isolate_section` — matching on `slot_label(section, lang)` —
+    found no `Relationships` block to extract (STU-733). Only headings whose
+    non-English label differs from the English one are evidence of hardcoding;
+    the rest (`Type`, `Infobox`) are the same word in both.
+    """
+    labels = (_load_yaml(BASE_YAML).get("labels") or {}).values()
+    translated = {
+        heading
+        for entry in labels
+        if isinstance(entry, dict)
+        for lang, heading in entry.items()
+        if lang != "en" and heading != entry.get("en")
+    }
+    offenders = [
+        f"{name}: '## {heading}'"
+        for name, prompt in _agent_prompts()
+        for heading in sorted(translated)
+        if f"## {heading}" in prompt
+    ]
+    assert not offenders, (
+        "Agent prompt hardcodes a non-English section heading — input['prompt'] "
+        "carries it from slot_label:\n" + "\n".join(offenders)
+    )
+
+
+def test_french_prompt_detectors_catch_the_pre_stu733_prompts() -> None:
+    """The three gates above fire on what `.studio/agents/` actually held."""
+    assert _LANGUAGE_DIRECTIVE_RE.search(
+        "Always write content in French, even if the source excerpts are in English."
+    )
+    assert _LANGUAGE_DIRECTIVE_RE.search("Rédige la page en français.")
+    assert not _LANGUAGE_DIRECTIVE_RE.search("Write in the output language input[\"prompt\"] names.")
+
+    def is_french(text: str) -> bool:
+        return any(
+            re.search(rf"(?<!\w){re.escape(marker)}(?!\w)", text, re.I)
+            for marker in _FRENCH_MARKERS
+        )
+
+    assert is_french("Tu es un validateur de pages wiki pour un roman fantasy.")
+    assert is_french("Pour chaque bullet, vérifie qu'il est ancré dans le texte.")
+    assert not is_french("You validate wiki pages for a fantasy novel.")
