@@ -181,7 +181,7 @@ def main() -> None:
 
     # Write infobox templates (one per declared type with an infobox source)
     for entity_type in entity_taxonomy.declared_types():
-        source = entity_taxonomy.infobox_source(entity_type)
+        source = entity_taxonomy.infobox_source(entity_type, lang)
         template_name = entity_taxonomy.infobox_template_name(entity_type)
         if not source or not template_name:
             continue

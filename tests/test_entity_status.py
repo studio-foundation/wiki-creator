@@ -444,6 +444,7 @@ def test_a_pre_existing_poisoned_cache_is_treated_as_a_miss(tmp_path):
 
 from scripts.generate_wiki_pages import _extracted_fact_value
 from wiki_creator.entity_status import status_label
+from wiki_creator import entity_taxonomy
 from wiki_creator.page_templates import load_base_template
 
 
@@ -494,7 +495,7 @@ def test_person_declares_the_death_slot_as_optional():
     slots = {s["token"]: s for s in person["infobox"]}
     assert slots["death"]["provenance"] == "extracted-fact"
     assert slots["death"]["obligation"] == "OPT"
-    assert "{{{death|}}}" in person["export"]["infobox_source"]
+    assert "{{{death|}}}" in entity_taxonomy.infobox_source("PERSON", "en")
 
 
 def test_the_stage_is_wired_before_wiki_preparation():

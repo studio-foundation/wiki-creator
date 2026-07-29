@@ -5,12 +5,12 @@
 |-
 | '''Type''' || {{{type|}}}
 |-
-| '''Leader(s)''' || {{{leaders|}}}
+| '''Leaders''' || {{{leaders|}}}
 |-
-| '''Membres notables''' || {{{members|}}}
+| '''Notable members''' || {{{members|}}}
 |-
-| '''Siège''' || {{{headquarters|}}}
+| '''Headquarters''' || {{{headquarters|}}}
 |-
-| '''Première mention''' || {{{first_seen|}}}
+| '''Appearance''' || {{{first_seen|}}}
 |}
 </includeonly>

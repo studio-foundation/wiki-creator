@@ -180,6 +180,34 @@ def test_infobox_template_place():
     assert "{{{name}}}" in content
 
 
+# STU-730: an English wiki must not ship French infobox row labels.
+_FRENCH_LABELS = [
+    "Aussi connu comme", "Titre(s)", "Statut", "Décès", "Espèce/Race", "Espèce",
+    "Résidence", "Première apparition", "Première mention", "Amours",
+    "Amis et alliés", "Ennemis", "Localisation", "Membres notables", "Siège",
+    "Chapitre", "Événement", "Alias", "Titres", "Apparition", "Famille",
+]
+
+
+def test_infobox_labels_localized_to_english():
+    for etype in ("PERSON", "PLACE", "ORG", "EVENT", "FACTION"):
+        content = infobox_template_content(etype, "en")
+        for french in _FRENCH_LABELS:
+            assert f"'''{french}'''" not in content, f"{etype}: French label {french!r} in en template"
+    person = infobox_template_content("PERSON", "en")
+    assert "'''Aliases'''" in person
+    assert "'''Species'''" in person
+    assert "'''Appearance'''" in person
+
+
+def test_infobox_labels_follow_output_language():
+    fr = infobox_template_content("PERSON", "fr")
+    en = infobox_template_content("PERSON", "en")
+    assert "'''Décès'''" in fr and "'''Death'''" in en
+    # Parameter names are language-independent — only the labels move.
+    assert "{{{death|}}}" in fr and "{{{death|}}}" in en
+
+
 def test_main_page_content_contains_title():
     pages = [
         {"title": "David Martín", "importance": "principal", "entity_type": "PERSON"},

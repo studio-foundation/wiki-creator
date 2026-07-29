@@ -1100,7 +1100,7 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
 - Unified entity taxonomy (STU-505): `base.yaml#entity_types` is the single
   authority for the type vocabulary AND its routing. Each type declares
   `ner_labels` (the stock+custom NER labels it absorbs) and an `export` block
-  (`subdir`, `full_key`, `infobox_template`, `infobox_source`, `category_key`,
+  (`subdir`, `full_key`, `infobox_template`, `infobox_rows`, `category_key`,
   `category_default`, `importance_categories`, `tome_label_key`) — the data the
   five old Python tables (`types.py` Literal, `entity_extraction.LABEL_TO_TYPE`,
   `export_helpers._INFOBOX_TEMPLATES`, `wiki_export._SUBDIR`,

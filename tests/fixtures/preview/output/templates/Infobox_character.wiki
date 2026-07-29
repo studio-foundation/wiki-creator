@@ -3,30 +3,30 @@
 |-
 ! colspan="2" | {{{name}}}
 |-
-| '''Aussi connu comme''' || {{{aliases|}}}
+| '''Aliases''' || {{{aliases|}}}
 |-
-| '''Titre(s)''' || {{{titles|}}}
+| '''Titles''' || {{{titles|}}}
 |-
-| '''Statut''' || {{{status|}}}
+| '''Status''' || {{{status|}}}
 |-
-| '''Décès''' || {{{death|}}}
+| '''Death''' || {{{death|}}}
 |-
-| '''Espèce/Race''' || {{{species|}}}
+| '''Species''' || {{{species|}}}
 |-
 | '''Occupation''' || {{{occupation|}}}
 |-
-| '''Résidence''' || {{{residence|}}}
+| '''Residence''' || {{{residence|}}}
 |-
 | '''Affiliation''' || {{{affiliation|}}}
 |-
-| '''Première apparition''' || {{{first_seen|}}}
+| '''Appearance''' || {{{first_seen|}}}
 |-
-| '''Famille''' || {{{family|}}}
+| '''Family''' || {{{family|}}}
 |-
-| '''Amours''' || {{{romance|}}}
+| '''Romance''' || {{{romance|}}}
 |-
-| '''Amis et alliés''' || {{{friends_allies|}}}
+| '''Friends & Allies''' || {{{friends_allies|}}}
 |-
-| '''Ennemis''' || {{{enemies|}}}
+| '''Enemies''' || {{{enemies|}}}
 |}
 </includeonly>

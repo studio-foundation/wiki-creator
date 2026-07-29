@@ -23,39 +23,26 @@ entity_types:
       category_default: {fr: Personnages, en: Characters}
       importance_categories: true
       tome_label_key: persons_by_tome
-      infobox_source: |-
-        <includeonly>
-        {| class="infobox"
-        |-
-        ! colspan="2" | {{{name}}}
-        |-
-        | '''Aussi connu comme''' || {{{aliases|}}}
-        |-
-        | '''Titre(s)''' || {{{titles|}}}
-        |-
-        | '''Statut''' || {{{status|}}}
-        |-
-        | '''Décès''' || {{{death|}}}
-        |-
-        | '''Espèce/Race''' || {{{species|}}}
-        |-
-        | '''Occupation''' || {{{occupation|}}}
-        |-
-        | '''Résidence''' || {{{residence|}}}
-        |-
-        | '''Affiliation''' || {{{affiliation|}}}
-        |-
-        | '''Première apparition''' || {{{first_seen|}}}
-        |-
-        | '''Famille''' || {{{family|}}}
-        |-
-        | '''Amours''' || {{{romance|}}}
-        |-
-        | '''Amis et alliés''' || {{{friends_allies|}}}
-        |-
-        | '''Ennemis''' || {{{enemies|}}}
-        |}
-        </includeonly>
+      # STU-730: the infobox template is BUILT from these rows and the localized
+      # `labels` map (see entity_taxonomy.infobox_source), so an English wiki gets
+      # English row labels. A bare token is both the label key and the parameter
+      # name; `{label, param}` splits them when they differ. `header` renders the
+      # name row (colspan, value only, no label).
+      infobox_rows:
+        - {header: name}
+        - {label: alias, param: aliases}
+        - titles
+        - status
+        - death
+        - species
+        - occupation
+        - residence
+        - affiliation
+        - {label: apparition, param: first_seen}
+        - family
+        - romance
+        - friends_allies
+        - enemies
     infobox:
       - {token: nom,         group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: type,        group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
@@ -92,21 +79,12 @@ entity_types:
       category_key: locations
       category_default: {fr: Lieux, en: Locations}
       tome_label_key: locations_by_tome
-      infobox_source: |-
-        <includeonly>
-        {| class="infobox"
-        |-
-        ! colspan="2" | {{{name}}}
-        |-
-        | '''Type''' || {{{type|}}}
-        |-
-        | '''Localisation''' || {{{location|}}}
-        |-
-        | '''Première mention''' || {{{first_seen|}}}
-        |-
-        | '''Résidents notables''' || {{{residents|}}}
-        |}
-        </includeonly>
+      infobox_rows:
+        - {header: name}
+        - type
+        - location
+        - {label: apparition, param: first_seen}
+        - residents
     infobox:
       - {token: nom,         group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: type,        group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
@@ -129,23 +107,13 @@ entity_types:
       category_key: organizations
       category_default: {fr: Organisations, en: Organizations}
       tome_label_key: organizations_by_tome
-      infobox_source: |-
-        <includeonly>
-        {| class="infobox"
-        |-
-        ! colspan="2" | {{{name}}}
-        |-
-        | '''Type''' || {{{type|}}}
-        |-
-        | '''Leader(s)''' || {{{leaders|}}}
-        |-
-        | '''Membres notables''' || {{{members|}}}
-        |-
-        | '''Siège''' || {{{headquarters|}}}
-        |-
-        | '''Première mention''' || {{{first_seen|}}}
-        |}
-        </includeonly>
+      infobox_rows:
+        - {header: name}
+        - type
+        - leaders
+        - members
+        - headquarters
+        - {label: apparition, param: first_seen}
     infobox:
       - {token: nom,     group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: type,    group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
@@ -164,21 +132,12 @@ entity_types:
       infobox_template: Infobox event
       category_key: events
       category_default: {fr: Événements, en: Events}
-      infobox_source: |-
-        <includeonly>
-        {| class="infobox"
-        |-
-        ! colspan="2" | {{{name}}}
-        |-
-        | '''Participants''' || {{{participants|}}}
-        |-
-        | '''Lieu''' || {{{lieu|}}}
-        |-
-        | '''Chapitre''' || {{{chapitre|}}}
-        |-
-        | '''Issue''' || {{{issue|}}}
-        |}
-        </includeonly>
+      infobox_rows:
+        - {header: name}
+        - participants
+        - lieu
+        - chapitre
+        - issue
     infobox:
       - {token: nom,  group: infobox, provenance: batch-bound, obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: type, group: infobox, provenance: batch-bound, obligation: MIN, tiers: [figurant, secondary, principal]}
@@ -199,21 +158,12 @@ entity_types:
       infobox_template: Infobox faction
       category_key: factions
       category_default: {fr: Factions, en: Factions}
-      infobox_source: |-
-        <includeonly>
-        {| class="infobox"
-        |-
-        ! colspan="2" | {{{name}}}
-        |-
-        | '''Type''' || {{{type|}}}
-        |-
-        | '''Chef(s)''' || {{{leaders|}}}
-        |-
-        | '''Membres notables''' || {{{members|}}}
-        |-
-        | '''Première mention''' || {{{first_seen|}}}
-        |}
-        </includeonly>
+      infobox_rows:
+        - {header: name}
+        - type
+        - leaders
+        - members
+        - {label: apparition, param: first_seen}
     infobox:
       - {token: nom,     group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: type,    group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
@@ -425,6 +375,17 @@ labels:
   enemies:        {en: Enemies,          fr: Ennemis}
   location:      {en: Location,    fr: Localisation}
   leaders:       {en: Leaders,     fr: Leaders}
+  # STU-730: infobox row labels used only by the template builder
+  # (entity_taxonomy.infobox_source), localized like every other reader-facing label.
+  occupation:    {en: Occupation,  fr: Occupation}
+  residence:     {en: Residence,   fr: Résidence}
+  residents:     {en: "Notable residents", fr: "Résidents notables"}
+  members:       {en: "Notable members", fr: "Membres notables"}
+  headquarters:  {en: Headquarters, fr: Siège}
+  participants:  {en: Participants, fr: Participants}
+  lieu:          {en: Place,       fr: Lieu}
+  chapitre:      {en: Chapter,     fr: Chapitre}
+  issue:         {en: Outcome,     fr: Issue}
   infobox:       {en: Infobox,     fr: Infobox}
   biography:     {en: Biography,   fr: Biographie}
   backstory:     {en: "Before the events of the book", fr: "Avant les événements du livre"}

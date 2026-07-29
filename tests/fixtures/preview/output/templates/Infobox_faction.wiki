@@ -5,10 +5,10 @@
 |-
 | '''Type''' || {{{type|}}}
 |-
-| '''Chef(s)''' || {{{leaders|}}}
+| '''Leaders''' || {{{leaders|}}}
 |-
-| '''Membres notables''' || {{{members|}}}
+| '''Notable members''' || {{{members|}}}
 |-
-| '''Première mention''' || {{{first_seen|}}}
+| '''Appearance''' || {{{first_seen|}}}
 |}
 </includeonly>

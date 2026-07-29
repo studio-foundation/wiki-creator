@@ -5,10 +5,10 @@
 |-
 | '''Type''' || {{{type|}}}
 |-
-| '''Localisation''' || {{{location|}}}
+| '''Location''' || {{{location|}}}
 |-
-| '''Première mention''' || {{{first_seen|}}}
+| '''Appearance''' || {{{first_seen|}}}
 |-
-| '''Résidents notables''' || {{{residents|}}}
+| '''Notable residents''' || {{{residents|}}}
 |}
 </includeonly>

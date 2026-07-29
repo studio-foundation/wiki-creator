@@ -6,7 +6,7 @@ is a `base.yaml` edit — nothing here enumerates the types.
 """
 from __future__ import annotations
 
-from wiki_creator.page_templates import load_base_template
+from wiki_creator.page_templates import load_base_template, slot_label
 
 
 def _types(base: dict | None = None) -> dict:
@@ -97,8 +97,32 @@ def infobox_template_name(etype: str, base: dict | None = None) -> str | None:
     return _export(etype, base).get("infobox_template")
 
 
-def infobox_source(etype: str, base: dict | None = None) -> str | None:
-    return _export(etype, base).get("infobox_source")
+def infobox_source(etype: str, lang: str = "en", base: dict | None = None) -> str | None:
+    """Build the MediaWiki infobox template for a type from its declared
+    ``export.infobox_rows`` and the localized ``labels`` map (STU-730), so the row
+    labels render in the wiki's output language instead of a hardcoded French
+    literal. Each row is a bare token (label key = parameter name) or
+    ``{label, param}`` when they differ; ``{header: <param>}`` is the name row
+    (colspan, value only). None when the type declares no template."""
+    export = _export(etype, base)
+    rows = export.get("infobox_rows")
+    if not rows or not export.get("infobox_template"):
+        return None
+    lines = ["<includeonly>", '{| class="infobox"']
+    for row in rows:
+        lines.append("|-")
+        if isinstance(row, dict) and "header" in row:
+            lines.append('! colspan="2" | {{{' + row["header"] + "}}}")
+            continue
+        if isinstance(row, str):
+            token = param = row
+        else:
+            token = row["label"]
+            param = row.get("param", token)
+        lines.append("| '''" + slot_label(token, lang, base) + "''' || {{{" + param + "|}}}")
+    lines.append("|}")
+    lines.append("</includeonly>")
+    return "\n".join(lines)
 
 
 def category_key(etype: str, base: dict | None = None) -> str | None:
