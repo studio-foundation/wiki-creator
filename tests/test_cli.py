@@ -125,6 +125,26 @@ def test_book_pages_entities_uses_generator_script(fake_lib, monkeypatch, capsys
     assert "studio run" not in out
 
 
+def test_preview_series_targets_series_output_dir(fake_lib, monkeypatch, capsys):
+    # STU-722: `preview --series <alias>` resolves the series and serves
+    # output/_series/ (the wiki-series hub + merged pages), not a single book.
+    monkeypatch.setattr(library, "_PROJECT_ROOT", fake_lib)
+    series_out = fake_lib / "library/paolini/inheritance/output/_series"
+    series_out.mkdir(parents=True)
+    (series_out / "index.wiki").write_text("x", encoding="utf-8")
+    assert cli.main(["--dry-run", "preview", "inherit", "--series"]) == 0
+    out = capsys.readouterr().out
+    assert str(series_out) in out
+
+
+def test_preview_series_missing_output_points_at_series_wiki(fake_lib, monkeypatch, capsys):
+    monkeypatch.setattr(library, "_PROJECT_ROOT", fake_lib)
+    assert cli.main(["preview", "inherit", "--series"]) == 2
+    err = capsys.readouterr().err
+    assert "no exported wiki" in err
+    assert "wiki series wiki inheritance" in err
+
+
 def test_replay_plain(capsys):
     cli.main(["--dry-run", "replay", "abc123"])
     assert capsys.readouterr().out.strip() == "$ studio replay abc123"
