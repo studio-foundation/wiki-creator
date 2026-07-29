@@ -41,6 +41,22 @@ class SeriesHub:
     main_characters: list[str] = field(default_factory=list)
 
 
+def main_characters(
+    characters: list[SeriesCharacter], tier: str = HUB_MAIN_CHARACTER_TIER
+) -> list[str]:
+    """Canonical names of the series' main characters, in assembly order: the
+    PERSON entities whose reconciled tier reaches ``tier``. Each one's series page
+    title is its canonical name (A2: exactly one page per entity)."""
+    floor = TIERS.index(tier if tier in TIERS else HUB_MAIN_CHARACTER_TIER)
+    return [
+        character.canonical_name
+        for character in characters
+        if character.entity_type == "PERSON"
+        and character.importance in TIERS
+        and TIERS.index(character.importance) >= floor
+    ]
+
+
 def build_series_hub(
     series_title: str,
     author: str,
@@ -49,22 +65,12 @@ def build_series_hub(
     tier: str = HUB_MAIN_CHARACTER_TIER,
 ) -> SeriesHub:
     """Hub model from the tome list (reading order) and the assembled series
-    characters. Main characters keep the assembly order, and are the PERSON
-    entities whose reconciled tier reaches ``tier``; each one's series page title
-    is its canonical name (A2: exactly one page per entity)."""
-    floor = TIERS.index(tier if tier in TIERS else HUB_MAIN_CHARACTER_TIER)
-    main = [
-        character.canonical_name
-        for character in characters
-        if character.entity_type == "PERSON"
-        and character.importance in TIERS
-        and TIERS.index(character.importance) >= floor
-    ]
+    characters."""
     return SeriesHub(
         series_title=series_title,
         author=author,
         tomes=list(tomes),
-        main_characters=main,
+        main_characters=main_characters(characters, tier),
     )
 
 

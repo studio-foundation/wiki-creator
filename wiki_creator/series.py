@@ -37,6 +37,13 @@ def discover_series_books(series_dir: Path | str) -> list[Path]:
     return books
 
 
+def series_title(series_dir: Path | str) -> str:
+    """Display title of a series, from its library directory name
+    (``throne-of-glass`` -> ``Throne Of Glass``). The layout is the only series
+    manifest there is (STU-487), so the directory name is the only declared name."""
+    return Path(series_dir).name.replace("_", " ").replace("-", " ").title()
+
+
 # --- Cross-tome assembly (STU-668) -----------------------------------------
 #
 # The series wiki is a pure function of every tome's already-persisted artifacts
