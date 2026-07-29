@@ -1,0 +1,42 @@
+{{Infobox character
+|nom=Jackdaws
+|apparition=Appears in book 2
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 2 — reveal" data-collapsetext="Hide">
+== Book 2 ==
+
+== Biography ==
+
+The Jackdaws are a colony of birds that has built an immense nest in a hollow ledge of rock. Over the years the Jackdaws have stolen money from villages and cities, hoarding bills of various denominations along with jewels and trinkets inside their nest. When intruders fall into their territory, the Jackdaws react with jabbering and a great flopping of wings, and are considered dangerous enough that Tip warns the group they would surely be killed by the birds' anger. The Woggle-Bug identifies the Jackdaws as the greatest enemies of his race, and during the encounter the birds tear apart the Scarecrow's straw stuffing, scattering it into the chasm below.
+
+== Relationships ==
+
+'''[[Nick Chopper]]''' — possibly an enemy, as the Jackdaws' assault on the party while he was present suggests mutual hostility.
+
+'''[[Saw-Horse]]''' — possibly an enemy, given the Jackdaws' attack on the group during the Saw-Horse's presence.
+
+'''[[The Scarecrow]]''' — possibly an enemy; the Jackdaws' attack scattered the Scarecrow's stuffing into the chasm, leaving him an empty suit of clothes.
+
+'''[[Woggle-Bug]]''' — possibly an enemy; the Woggle-Bug describes Jackdaws as the greatest enemies of his race.
+
+=== Events ===
+
+* Hearing the Jackdaws returning, Scarecrow has Tip and the Woggle-Bug hide, Jack's head laid down, and his own straw scattered over them for protection just as the angry birds attack.
+* Jackdaws attack the group perched in the Gump's nest, and the Tin Woodman fights them off with his axe while the Saw-Horse kicks with its wooden legs.
+* The Jackdaws tear apart and scatter all of the Scarecrow's straw stuffing into the chasm below, leaving him an empty suit of clothes.
+* Tip suggests restuffing the Scarecrow with the money found in the nest, which the Jackdaws had stolen from towns over the years, and the group refills him with bills of various denominations.
+* The travelers wait until daylight before leaving the Jackdaws' nest, spending the evening gathering jewels and trinkets from it.
+* At dawn, as Jackdaws return to attack the nest, the party escapes aboard the Gump, flying north over Oz's desert border.
+</div>
+
+== Relationships ==
+
+''Evolution:''
+* [[Nick Chopper]] — Enemy (ch.19)<ref>The Marvelous Land of Oz, chapter 19</ref>
+* [[Saw-Horse]] — Enemy (ch.19)<ref>The Marvelous Land of Oz, chapter 19</ref>
+* [[The Scarecrow]] — Enemy (ch.19)<ref>The Marvelous Land of Oz, chapter 19</ref>
+* [[Woggle-Bug]] — Enemy (ch.18)<ref>The Marvelous Land of Oz, chapter 18</ref>
+
+[[Category:Characters]]
+[[Category:Characters of Book 2]]

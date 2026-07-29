@@ -10,6 +10,8 @@
 * [[Scarecrow]]
 
 == Important locations ==
+* [[Emerald City]]
+* [[Kansas]]
 
 == Events ==
 * [[The]]
@@ -40,7 +42,7 @@
 * [[:Category:Organizations|All organizations]]
 
 == Statistics ==
-* 47 wiki pages
+* 52 wiki pages
 * 17 characters
-* 3 locations
+* 7 locations
 * 0 organizations

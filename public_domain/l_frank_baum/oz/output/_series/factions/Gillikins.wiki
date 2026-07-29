@@ -1,0 +1,14 @@
+{{Infobox faction
+|nom=Gillikins
+|apparition=Appears in book 2
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 2 — reveal" data-collapsetext="Hide">
+== Book 2 ==
+
+== Biography ==
+
+''Insufficient information available for this entity.''
+</div>
+
+[[Category:Factions]]

@@ -1,0 +1,26 @@
+{{Infobox character
+|nom=Pastoria
+|apparition=Appears in book 2
+|status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Deceased</span>
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 2 — reveal" data-collapsetext="Hide">
+== Book 2 ==
+
+== Biography ==
+
+Pastoria was the former King of the Emerald City before the Wonderful Wizard took the crown from him. According to Glinda, the throne of the Emerald City rightfully belongs to Pastoria rather than to Jinjur or the Scarecrow, since it was usurped from him by the Wizard. Pastoria is now dead, and is said to have had a daughter who is the rightful heir to the throne of the Emerald City.
+
+=== Events ===
+
+* Glinda reveals that the true heir to the Emerald City throne is Ozma, daughter of the former King Pastoria, hidden away by the Wizard with old Mombi's help.
+</div>
+
+== Relationships ==
+
+''Evolution:''
+* [[Tip]] — Family (ch.20)<ref>The Marvelous Land of Oz, chapter 20</ref>
+* [[Wizard of Oz]] — Enemy (ch.20)<ref>The Marvelous Land of Oz, chapter 20</ref>
+
+[[Category:Characters]]
+[[Category:Characters of Book 2]]

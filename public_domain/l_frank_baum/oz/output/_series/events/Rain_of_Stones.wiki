@@ -1,0 +1,19 @@
+{{Infobox event
+|nom=Rain of Stones
+|apparition=Appears in book 4
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
+== Book 4 ==
+
+== Infobox ==
+
+* Event type: Disaster
+* Location: Land of the Mangaboos
+
+== Biography ==
+
+The Rain of Stones is a disaster that struck the city of the Mangaboos, cracking and breaking houses. A man of authority accuses Zeb of having caused it, and later holds Dorothy and her companions responsible for the damage unless they can prove their innocence.
+</div>
+
+[[Category:Events]]

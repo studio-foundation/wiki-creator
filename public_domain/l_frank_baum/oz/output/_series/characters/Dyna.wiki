@@ -1,0 +1,23 @@
+{{Infobox character
+|nom=Dyna
+|apparition=Appears in book 5
+|status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 5 — reveal" data-collapsetext="Hide">
+== Book 5 ==
+
+== Biography ==
+
+Dyna is an old woman living in the Emerald City. She is a relative of the crooked Sorcerer who invented the magic Powder of Life; when the Sorcerer fell down a precipice and was killed, all his possessions passed to her. Dyna traveled to the mountains where the Sorcerer had lived and took away everything she considered of value, including a small bottle of the Powder of Life — though she did not know it was magic.
+
+Dyna once kept a large blue bear as a pet, until it choked to death on a fishbone. She loved the bear so dearly that she made a rug from its skin, leaving the head and four paws on the hide, and kept the rug on the floor of her front parlor.
+
+== References ==
+
+<references/>
+</div>
+
+[[Category:Characters]]
+[[Category:Secondary Characters]]
+[[Category:Characters of Book 5]]

@@ -1,0 +1,20 @@
+{{Infobox character
+|nom=Musicker
+|apparition=Appears in book 5
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 5 — reveal" data-collapsetext="Hide">
+== Book 5 ==
+
+== Biography ==
+
+The Musicker is a performer known for producing music considered too noisy to be enjoyed in company. Princess Ozma declines to invite him to her celebration, explaining that when music is not very good and is indulged in constantly, it is better that the performer remain alone. Button-Bright, however, declares that he likes the Musicker's music, a view Dorothy does not share.
+
+== References ==
+
+<references/>
+</div>
+
+[[Category:Characters]]
+[[Category:Secondary Characters]]
+[[Category:Characters of Book 5]]

@@ -12,8 +12,11 @@
 * [[Princess]]
 * [[WIZARD]]
 * [[Princess Ozma]]
+* [[Wizard]]
 
 == Important locations ==
+* [[Kansas]]
+* [[Valley of Voe]]
 
 == Events ==
 * [[Rain of Stones]]
@@ -28,7 +31,7 @@
 * [[:Category:Organizations|All organizations]]
 
 == Statistics ==
-* 36 wiki pages
-* 24 characters
-* 3 locations
+* 42 wiki pages
+* 25 characters
+* 8 locations
 * 0 organizations

@@ -1,0 +1,16 @@
+{{Infobox character
+|nom=Blinkem
+|apparition=Appears in book 6
+|status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
+== Book 6 ==
+
+== Biography ==
+
+Blinkem is an attendant in the King's palace. He informs the King of the time when asked, and announces luncheon, directing a dozen rabbits in livery to bring in trays and arrange the dishes before being dismissed. The King later instructs Bristle to summon Blinkem to attend him immediately, before proceeding to the reception hall.
+</div>
+
+[[Category:Characters]]
+[[Category:Characters of Book 6]]

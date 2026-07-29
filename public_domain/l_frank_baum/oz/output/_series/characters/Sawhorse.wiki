@@ -1,0 +1,38 @@
+{{Infobox character
+|nom=Sawhorse
+|apparition=Appears in book 4
+|status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
+== Book 4 ==
+
+== Biography ==
+
+The Sawhorse is a creature encountered in the company of the Cowardly Lion, the King of the Forest and vassal of Princess Ozma, and the Hungry Tiger, the terror of the jungle. It introduces the newcomer known as the Real Horse to these two in a calm tone and with as much dignity as it can muster, bowing its head toward them. The Sawhorse openly admires the Real Horse, calling it a beautiful animal. When the Scarecrow proposes a race between the Sawhorse and the Cab-horse, the Sawhorse draws back, protesting that such a contest would not be fair.
+
+== Relationships ==
+
+'''[[Jim]]''' — rivalité amicale
+'''[[Princess Ozma]]''' — ami
+'''[[Hungry Tiger]]''' — ami
+'''[[Scarecrow]]''' — connaissance
+'''[[Tin Woodman]]''' — ami
+
+=== Events ===
+
+* In Oz they reunite with the Scarecrow, Tin Woodman, Billina, the Cowardly Lion, the Hungry Tiger, and the Woggle-Bug, ending with a race between Jim and the Sawhorse.
+* Jim loses race against Sawhorse and kicks it in anger, breaking its leg and ear; Hungry Tiger tackles Jim in response.
+* Ozma crowns Sawhorse "Prince of Horses" and Tin Woodman repairs its leg and ear.
+</div>
+
+== Relationships ==
+
+''Evolution:''
+* [[Tin Woodman]] — Friend (ch.3)<ref>Dorothy and the Wizard in Oz, chapter 3</ref>
+* [[Jim]] — Friendly rivalry (ch.2→ch.3)<ref>Dorothy and the Wizard in Oz, chapter 2</ref>
+* [[Princess Ozma]] — Friend (ch.2→ch.3)<ref>Dorothy and the Wizard in Oz, chapter 2</ref>
+* [[Hungry Tiger]] — Friend (ch.2)<ref>Dorothy and the Wizard in Oz, chapter 2</ref>
+
+[[Category:Characters]]
+[[Category:Characters of Book 4]]

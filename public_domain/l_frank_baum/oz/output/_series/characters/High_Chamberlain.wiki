@@ -1,0 +1,25 @@
+{{Infobox character
+|nom=High Chamberlain
+|apparition=Appears in book 5
+|status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 5 — reveal" data-collapsetext="Hide">
+== Book 5 ==
+
+== Biography ==
+
+The High Chamberlain serves at the palace, with duties centered on receiving and announcing visitors to the Throne-Room. During festivities held there, the High Chamberlain threw open the doors of the Throne-Room to admit arriving guests, among them a gingerbread man. After King John Dough presented Ozma with a birthday gift, the High Chamberlain escorted the visitors from Hiland and Loland to their rooms, then hurried back to receive further arrivals in a most official manner, again announcing entrants such as a band of Ryls from the Happy Valley. The role seems to place the High Chamberlain in Ozma's service, hurrying forward to announce arriving names on her behalf.
+
+== Relationships ==
+
+'''[[Ozma]]''' — employment. The High Chamberlain seems to serve in Ozma's court, as suggested by the moment he "hurried forward to announce the names" of arriving visitors.
+
+== References ==
+
+<references/>
+</div>
+
+[[Category:Characters]]
+[[Category:Secondary Characters]]
+[[Category:Characters of Book 5]]

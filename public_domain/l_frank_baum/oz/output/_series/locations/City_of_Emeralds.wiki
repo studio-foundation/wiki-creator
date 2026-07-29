@@ -1,0 +1,25 @@
+{{Infobox location
+|nom=City of Emeralds
+|alias=CITY OF EMERALDS
+|apparition=Appears in book 1
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
+== Book 1 ==
+
+== Infobox ==
+
+* Name: City of Emeralds
+* Place type: City
+
+== Biography ==
+
+The City of Emeralds is spoken of as the home of a being more powerful than the Wicked Witches, and it becomes the destination Dorothy is instructed to reach. A magic slate names it as the place she must go, and she sets about preparing for the journey there, gathering fruit and water and readying her one spare dress.
+
+== Events ==
+
+Using a magic slate, the Witch of the North determines that Dorothy must travel to the City of Emeralds to seek help from Oz, the Great Wizard.
+</div>
+
+[[Category:Locations]]
+[[Category:Locations of Book 1]]

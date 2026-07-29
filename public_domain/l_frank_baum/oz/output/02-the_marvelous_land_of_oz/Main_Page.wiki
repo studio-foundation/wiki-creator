@@ -10,6 +10,8 @@
 * [[Nick Chopper]]
 
 == Important locations ==
+* [[Land of Oz]]
+* [[Emerald City]]
 
 == Events ==
 * [[Journey]]
@@ -40,7 +42,7 @@
 * [[:Category:Organizations|All organizations]]
 
 == Statistics ==
-* 46 wiki pages
-* 17 characters
-* 2 locations
+* 50 wiki pages
+* 18 characters
+* 5 locations
 * 0 organizations

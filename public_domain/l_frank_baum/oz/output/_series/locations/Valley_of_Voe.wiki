@@ -1,0 +1,40 @@
+{{Infobox location
+|nom=Valley of Voe
+|alias=Voe
+|apparition=Appears in book 4
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
+== Book 4 ==
+
+== Infobox ==
+
+* Name: Valley of Voe
+* Also known as: Voe
+* Place type: Valley
+* Status: Inhabited
+
+== Biography ==
+
+The Valley of Voe, also known as Voe, is a valley reached through a tunnel in a glass mountain. It is inhabited by the people of Voe, who are invisible — when asked "are you all invisible?", a woman of Voe answers "Surely" and adds, with a low, rippling laugh, "Are you surprised that you are unable to see the people of Voe?" The valley holds pretty cottages along a broad stream, with fruits and flowers growing plentifully, including cherries, plums, and a fruit called damas that the people of Voe are fond of. Dangerous bears, themselves unseen, live near the orchards of the valley.
+
+== Appearance ==
+
+From a landing reached partway up the stairs leading out of the valley, a rift in the mountainside opens onto a view of the Valley of Voe lying far below, its cottages appearing like toy houses at that distance. The stairway itself is broad and low, wide enough for a horse to draw a buggy up it.
+
+== Events ==
+
+A group fleeing through a tunnel in a glass mountain emerges into the invisible Valley of Voe, where unseen inhabitants warn them of dangerous invisible bears nearby. To escape the bears, the people of Voe's secret is used: rubbing certain leaves on the soles of the feet allows a person to walk on water without sinking, a method the people of Voe rely on themselves to travel and evade enemies. The group crosses water this way before climbing the mountain stairway to leave the valley.
+
+== Trivia ==
+
+* The leaf-rubbing method of walking on water is described as a secret the bears themselves do not know.
+* The valley's stairway is broad and low enough for a horse harnessed to a buggy to climb it.
+
+== References ==
+
+<references/>
+</div>
+
+[[Category:Locations]]
+[[Category:Locations of Book 4]]

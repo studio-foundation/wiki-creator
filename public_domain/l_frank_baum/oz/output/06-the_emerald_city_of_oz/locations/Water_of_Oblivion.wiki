@@ -1,0 +1,30 @@
+{{Infobox location
+|name=Water of Oblivion
+|place_type=Fountain
+|region=Land of Oz
+|status=Active
+|nom=Water of Oblivion
+|apparition=Appears in book 6
+}}
+
+== Infobox ==
+
+* Name: Water of Oblivion
+* Place type: Fountain
+* Region: Land of Oz
+* Status: Active
+
+== Biography ==
+
+The Water of Oblivion is, according to Ozma, "the most dangerous thing in all the Land of Oz." It fills the Forbidden Fountain, and whoever drinks from it at once forgets everything he has ever known. In the past, a King made his people drink of the Water of Oblivion so that they would forget how wicked he had been, and they became as simple and innocent as their King; afterward, they all grew wise together, and their wisdom was good, so that peace and happiness reigned in the land.
+
+== Events ==
+
+Ozma explains to her companions that the Forbidden Fountain holds the Water of Oblivion, warning that it erases all memory from anyone who drinks it. She and the others then stand on the far side of the fountain to watch what happens, as the ground beyond it gives way and the First and Foremost rises up with his warriors.
+
+== References ==
+
+<references/>
+
+[[Category:Locations]]
+[[Category:Locations of Book 6]]

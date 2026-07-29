@@ -1,0 +1,20 @@
+{{Infobox location
+|nom=Land of the South
+|apparition=Appears in book 1
+}}
+
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
+== Book 1 ==
+
+== Infobox ==
+
+* Name: Land of the South
+* Place type: region
+
+== Biography ==
+
+The Land of the South is a region that Dorothy resolves to travel to on the Scarecrow's advice, in order to ask Glinda for help returning to Kansas. The Tin Woodman decides to accompany her, offering that his axe may be of service on the journey. The group sets out from the outer gate of the Emerald City, turning their faces toward the Land of the South under bright sunshine, in good spirits as they begin the journey.
+</div>
+
+[[Category:Locations]]
+[[Category:Locations of Book 1]]
