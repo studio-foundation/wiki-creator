@@ -51,6 +51,7 @@ Trois contraintes, chacune apprise d'un faux positif ou d'un faux négatif obser
 1. **Vérifier chaque fait contre le texte du livre, jamais contre sa mémoire.** Les corpus Narnia et Eragon ont été écrits en grepant `chapters.json`. Ça a corrigé des faits que la mémoire donnait à l'envers : `Jadis` **est** dans LWW (une fois, dans l'avis d'arrestation de Maugrim), `Pevensie` **n'y est pas** (0 occurrence) ; `Vroengard`, `Doru Araeba` et le `Rock of Kuthian` **sont** dans Eragon. Un fait faux dans le GT est pire qu'un GT absent : il transforme le rédacteur correct en violation.
 2. **Les alias sont matchés en substring bidirectionnel** (`a in title or title in a`). Un alias trop long ou traduit crée de fausses liaisons : `the Chief of the Witch's Secret Police` liait la page `Witch` à Maugrim (donc les 10 signaux de la Sorcière ne tournaient jamais) ; `Madame Castor` liait la page `Adam` à Mrs Beaver (`adam` ⊂ `madame`). Garder les alias courts, non traduits, et discriminants.
 3. **Les termes `forbidden` doivent être des phrases discriminantes, pas des tokens nus.** Le loader ignore déjà `len <= 4`, mais ça ne suffit pas : `Aren` (l'anneau de Brom) matche `aren't`, `Bree` matche `breeze`, `How` matche le mot `how`. Préférer `Aren l'anneau de Brom` à `Aren`.
+4. **Une relation interdite doit nommer les DEUX personnages et le type de lien** (STU-717). Le check structuré de l'étape 1b lit les slots d'infobox (`friends_allies`, `enemies`, `family`, `romance`) et ne déclenche que si un `forbidden_book1` nomme à la fois l'entité de la page ET la cible du slot, **avec** un mot de polarité (`friend`/`ally`, `enemy`, `married`/`spouse`, `mother`/`sister`…). `Bill is an enemy of Alice` déclenche `enemies=[[Bill]]` sur la page Alice ; `Bill` seul, ou `Bill n'est pas dans ce livre`, ne déclenche rien. La phrase peut vivre sur l'entité de l'un OU l'autre des deux personnages (`Bill is an enemy of Alice` est chez Bill ; `Tortoise is a character the Mock Turtle knows in the present` est chez Mock Turtle) — le check regarde les deux côtés.
 
 ## Workflow
 
@@ -175,6 +176,7 @@ pages = data.get('pages', data) if isinstance(data, dict) else data
 
 print("=== VALIDATION GROUND-TRUTH ===\n")
 violations_found = 0
+advisories_found = 0
 
 for p in pages:
     title = p['title']
@@ -182,6 +184,7 @@ for p in pages:
     ib_str = str(p.get('infobox_fields', {}))
     full_text = content + ' ' + ib_str
     page_violations = []
+    page_advisories = []  # signaux faibles (STU-717) — jamais comptés comme violations
 
     import re as _re
     def _extract_match_phrases(signal):
@@ -296,27 +299,106 @@ for p in pages:
         if real_hit:
             page_violations.append(f"FORBIDDEN [{entity}/{cat}]: '{term}'")
 
-    # 3. Vérifie les relations contre known_relations_book1
-    # Cherche des noms de personnages liés à cet entity qui ne devraient pas apparaître
-    for gt_name, gt in gt_by_entity.items():
-        if gt_name.lower() in title.lower() or any(a.lower() in title.lower() for a in gt.get('canonical_aliases_book1', [])):
-            # C'est la page de cette entité — vérifie les relations déclarées
-            known_rels = set(gt.get('known_relations_book1', {}).keys())
-            forbidden_rels = gt.get('forbidden_book1', {}).get('relationships', [])
-            for fr in forbidden_rels:
-                rel_name = fr.split("(")[0].strip()
-                if rel_name and rel_name.lower() in full_text.lower():
-                    page_violations.append(f"FORBIDDEN_REL [{gt_name}]: '{rel_name}' — {fr}")
+    # 3. Vérifie les SLOTS DE RELATION de l'infobox contre le ground-truth (STU-717).
+    #    L'ancienne passe ne lisait que la prose : elle cherchait un forbidden en substring
+    #    de `content + str(infobox_fields)`. Une violation énoncée dans un slot structuré
+    #    (`enemies` → [[Bill]]) dit exactement ce que le corpus interdit ("Bill is an enemy
+    #    of Alice") mais ne matche JAMAIS en substring — le corpus écrit une phrase de wiki,
+    #    l'infobox écrit une paire clé→valeur. L'audit passait vert sur la page qu'il était
+    #    écrit pour attraper. On lit ici les slots eux-mêmes.
+    if page_entity:
+        # Mots-clés de polarité par slot : un forbidden ne contredit un slot que s'il porte
+        # le bon TYPE de relation. Sans ce garde, "the Cheshire Cat guides Alice to the
+        # Queen's garden" (simple co-occurrence de noms) ferait un faux positif sur le slot
+        # friends_allies=[[Cheshire Cat]] — une relation pourtant réelle et légitime.
+        REL_POLARITY = {
+            'friends_allies': ('friend', 'ally', 'allies', 'allié', 'companion', 'knows'),
+            'enemies': ('enemy', 'enemies', 'ennemi', 'adversar', 'attack', 'hostile', 'rival', 'foe'),
+            'romance': ('married', 'marries', 'marry', 'spouse', 'lover', 'romance', 'betroth', 'wife', 'husband', 'in love', 'épous'),
+            'family': ('mother', 'father', 'sister', 'brother', 'aunt', 'uncle', 'cousin',
+                       'relative', 'daughter', 'son ', 'parent', 'spouse', 'married',
+                       'belonging to', 'niece', 'nephew', 'grandmother', 'grandfather'),
+        }
+
+        def _entity_aliases(ent):
+            obj = gt_by_entity.get(ent, {})
+            return obj.get('canonical_aliases_book1', []) or [ent]
+
+        def _named_in(ent, phrase_lower):
+            return any(re.search(r'(?<!\w)' + re.escape(a.lower()) + r'(?!\w)', phrase_lower)
+                       for a in _entity_aliases(ent))
+
+        def _forbidden_phrases(ent):
+            out = []
+            for items in gt_by_entity.get(ent, {}).get('forbidden_book1', {}).values():
+                if isinstance(items, list):
+                    out.extend(items)
+            return out
+
+        def _resolve_target(name):
+            n = name.strip().lower()
+            hit = all_canonical_lookup.get(n)
+            if hit:
+                return hit
+            n2 = re.sub(r'^the\s+', '', n)  # infobox [[Mouse]] ↔ GT "the Mouse", [[Queen]] ↔ "the King"
+            for alias_lower, ent in all_canonical_lookup.items():
+                if n2 == re.sub(r'^the\s+', '', alias_lower):
+                    return ent
+            return None
+
+        ib = p.get('infobox_fields', {})
+        page_known_rels = gt_by_entity.get(page_entity, {}).get('known_relations_book1', {})
+        for slot, keywords in REL_POLARITY.items():
+            slot_val = ib.get(slot)
+            if not slot_val:
+                continue
+            # Les slots sont des chaînes "[[A]] (rôle) †, [[B]]" (infobox_relationships.py).
+            targets = re.findall(r'\[\[([^\]|]+)', str(slot_val))
+            if not targets:
+                targets = [t.strip() for t in str(slot_val).split(',') if t.strip()]
+            for tgt in targets:
+                tgt = tgt.strip()
+                target_entity = _resolve_target(tgt)
+                # DUR : un forbidden (côté page OU côté cible — la phrase interdite peut vivre
+                # sur l'un ou l'autre : "Bill is an enemy of Alice" est chez Bill, "Tortoise ...
+                # the Mock Turtle knows in the present" est chez Mock Turtle) nomme les DEUX
+                # bouts et porte la bonne polarité → la relation est explicitement interdite.
+                hit = None
+                for src in [page_entity] + ([target_entity] if target_entity else []):
+                    for ph in _forbidden_phrases(src):
+                        pl = ph.lower()
+                        if (target_entity and _named_in(page_entity, pl) and _named_in(target_entity, pl)
+                                and any(k in pl for k in keywords)):
+                            hit = ph
+                            break
+                    if hit:
+                        break
+                if hit:
+                    page_violations.append(f"STRUCTURED_REL [{page_entity}/{slot}]: [[{tgt}]] — interdit par le corpus : '{hit}'")
+                    continue
+                # FAIBLE (non compté) : slot nommant une entité GT absente de known_relations_book1.
+                # known_relations n'est pas exhaustif par construction, donc une absence est un
+                # signal faible, jamais une violation dure (STU-717).
+                if target_entity and target_entity != page_entity:
+                    known = any(_resolve_target(k) == target_entity for k in page_known_rels)
+                    if not known:
+                        page_advisories.append(f"REL_ABSENT [{page_entity}/{slot}]: [[{tgt}]] absent de known_relations_book1 (signal faible)")
 
     if page_violations:
         violations_found += len(page_violations)
         print(f"❌ {title}")
         for v in page_violations:
             print(f"   {v}")
+    elif page_advisories:
+        print(f"⚠️  {title}")
     else:
         print(f"✅ {title}")
+    for a in page_advisories:
+        advisories_found += 1
+        print(f"   ℹ {a}")
 
 print(f"\nTotal violations ground-truth: {violations_found}")
+print(f"Signaux faibles (non comptés, known_relations non exhaustif): {advisories_found}")
 print(f"Pages propres: {sum(1 for p in pages if True)}/{len(pages)}")
 ```
 
