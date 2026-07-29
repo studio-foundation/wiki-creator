@@ -6,7 +6,7 @@ is a `base.yaml` edit — nothing here enumerates the types.
 """
 from __future__ import annotations
 
-from wiki_creator.page_templates import load_base_template, render_infobox_source
+from wiki_creator.page_templates import load_base_template, localized, render_infobox_source
 
 
 def _types(base: dict | None = None) -> dict:
@@ -110,13 +110,11 @@ def category_key(etype: str, base: dict | None = None) -> str | None:
     return _export(etype, base).get("category_key")
 
 
-def category_default(etype: str, lang: str | None = None, base: dict | None = None) -> str | None:
-    """Default [[Category:X]] label for a type, keyed by ``lang`` (STU-651). English
-    is the default; a non-English label is data, never a hardcoded Python literal."""
-    value = _export(etype, base).get("category_default")
-    if isinstance(value, dict):
-        return value.get(lang) or value.get("en") or value.get("fr")
-    return value
+def category_default(etype: str, lang: str | None = None) -> str | None:
+    """Default [[Category:X]] label for a type, from the ``lang`` template pack's
+    ``category_defaults`` (STU-651/732). None for a type the packs give no default
+    (OTHER, and the generation-only pseudo-types)."""
+    return localized(lang, "category_defaults", etype, default=None)
 
 
 def tome_label_key(etype: str, base: dict | None = None) -> str | None:

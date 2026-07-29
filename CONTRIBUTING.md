@@ -59,8 +59,8 @@ CI (`.github/workflows/ci.yml`) runs `mypy wiki_creator/`, `pytest -q`, and the
   touch only what the task requires. Every changed line should trace to the change
   you set out to make.
 - **No hardcoded vocabulary in Python.** Detection words live in
-  `cue_words/<lang>.json` (language-wide) or the book YAML; output strings live in
-  `wiki_creator/templates/base.yaml`, keyed by language. See
+  `cue_words/<code>.json` (language-wide) or the book YAML; output strings live in
+  `wiki_creator/templates/lang/<code>.yaml` — one file per language. See
   [adding a language](docs/adding-a-language.md) and
   [adding a template](docs/adding-a-template.md).
 - **English is the only language in code.** Comments, identifiers, commit
