@@ -1,0 +1,50 @@
+{
+  "entity": "Mrs. Yoop",
+  "canonical_aliases_book1": [
+    "Mrs. Yoop"
+  ],
+  "known_facts_book1": [
+    "An immense Giantess living alone in the purple stone Yoop Castle, in a cup-shaped valley of the Gillikin Country.",
+    "Is the wife of Mr. Yoop, the giant who was captured and caged by the little folks for taking their cows and sheep; she escaped by transforming herself into a mouse and hiding in a cupboard.",
+    "Says she is glad her husband is gone, because he often kicked her on the shins when she would not wait on him.",
+    "Is **not exactly a Witch** but an Artist in Transformations — a **yookoohoo** — and claims the Yookoohoos are the cleverest magic-workers in the world.",
+    "Wears silver robes embroidered with floral designs and, over them, a short **lace apron** which is the only thing in the castle that can open its doors and windows.",
+    "Makes her food by transformation: biscuits from field-mice, honey from a wasp's nest, oatmeal from weeds, fish-balls from pebbles, coffee from water.",
+    "Cannot undo any transformation she makes — 'nothing I transform ever gets back to its former shape again' — which she cites as proof that even a clever Yookoohoo's powers are limited.",
+    "Had caught Polychrome asleep weeks earlier and caged her as a Canary-Bird, and complains the bird has been no company at all.",
+    "Transforms the Tin Woodman into a Tin Owl (forgetting to wish him meat), the Scarecrow into a straw-stuffed Brown Bear, and Woot into a Green Monkey — and adds magic to make each contented with the new form.",
+    "Says she never has friends, because friends get too familiar and always forget to mind their own business.",
+    "Snaps her fingers at the mention of Ozma, saying she cares nothing for a girl she has never seen.",
+    "Is locked in her own bedroom when Woot steals the Apron, but escapes by other magic and is later seen weaving a **new lace apron** to replace the lost one.",
+    "Is given the form of Woot the Wanderer by Ozma at a distance, smashes her mirror in rage on seeing it, and is then exchanged into the **Green Monkey** she herself created.",
+    "In that form she can perform no magical arts whatsoever, and will always remain a Green Monkey."
+  ],
+  "known_relations_book1": {
+    "Woot": "The boy she makes a Green Monkey and whose form she is finally given in exchange.",
+    "Polychrome": "The Rainbow's Daughter she caged as a Canary.",
+    "Tin Woodman": "Whom she makes a Tin Owl.",
+    "Scarecrow": "Whom she makes a Brown Bear.",
+    "Ozma": "The Ruler she scorns and who punishes her at a distance.",
+    "Mr. Yoop": "Her caged giant husband, whom she is glad to be rid of."
+  },
+  "forbidden_book1": {
+    "not_in_this_book": [
+      "Mrs. Yoop is destroyed",
+      "Mrs. Yoop undoes her own transformations",
+      "Mrs. Yoop is a Witch",
+      "Mrs. Yoop starves to death",
+      "Mr. Yoop appears in this book"
+    ],
+    "relationships": [
+      "Mrs. Yoop is a friend of Polychrome",
+      "Mrs. Yoop is an ally of Ozma"
+    ]
+  },
+  "hallucination_signals": [
+    "Mrs. Yoop is destroyed",
+    "Mrs. Yoop undoes her spells",
+    "Mrs. Yoop is a witch",
+    "Mr. Yoop appears",
+    "Mrs. Yoop starves"
+  ]
+}

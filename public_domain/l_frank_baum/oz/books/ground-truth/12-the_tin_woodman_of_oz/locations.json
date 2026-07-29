@@ -1,0 +1,150 @@
+{
+  "yoop_castle": {
+    "canonical_aliases_book1": [
+      "Yoop Castle"
+    ],
+    "known_facts_book1": [
+      "An enormous purple stone castle in a cup-shaped valley of the Gillikin Country, with no turrets or towers and one small window and one big door on each side.",
+      "Bears the words 'YOOP CASTLE' engraved over the doorway; its latch is so high that Woot must stand on the Tin Woodman's shoulders to reach it.",
+      "Was the home of Mr. Yoop the giant, and is now run by his wife to suit herself.",
+      "Its doors close of their own accord and can be opened only by a spoken command from whoever wears the **Magic Lace Apron** — nothing else will move them.",
+      "Its great hall is lined with plates of polished gold and lit without any visible lamp; furniture appears and disappears at a clap of the Giantess's hands.",
+      "In this Valley, Mrs. Yoop says, no one ever dies.",
+      "Is escaped from once, by Woot stealing the Apron in the dark, and Mrs. Yoop is later seen back in the great hall weaving a replacement."
+    ],
+    "known_relations_book1": {
+      "Mrs. Yoop": "Its mistress and only inhabitant.",
+      "Woot": "Who steals the Apron and locks her in her own bedroom.",
+      "Polychrome": "Who was caged in its bedroom for weeks."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Yoop Castle is destroyed",
+        "Mr. Yoop lives in the castle",
+        "the doors can be forced open"
+      ]
+    },
+    "hallucination_signals": [
+      "the castle is destroyed",
+      "Mr. Yoop is home",
+      "they break down the doors"
+    ]
+  },
+  "loonville": {
+    "canonical_aliases_book1": [
+      "Loonville"
+    ],
+    "known_facts_book1": [
+      "A vast circular clearing deep in a Gillikin forest, roofed over by the top branches of tall trees and glowing with a soft white light from no visible source.",
+      "Is announced by a sign on the path warning all strangers not to follow it.",
+      "Is the whole world of the Loons, who cannot get out of the enclosure and so can harm no one who does not come to them.",
+      "Holds a throne with a string running up to the dome, so the King can be pulled down and tied in.",
+      "Has a pump for re-inflating punctured Loons, wheeled out in front of the throne when needed."
+    ],
+    "known_relations_book1": {
+      "the Loons": "Its only inhabitants.",
+      "Woot": "The visitor whose thorn empties half of it."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Loons escape Loonville",
+        "Loonville is destroyed",
+        "there is no warning sign"
+      ]
+    },
+    "hallucination_signals": [
+      "the Loons leave the clearing",
+      "Loonville is destroyed",
+      "they enter unwarned"
+    ]
+  },
+  "invisible_country": {
+    "canonical_aliases_book1": [
+      "the Invisible Country"
+    ],
+    "known_facts_book1": [
+      "A streak of the Munchkin plain whose magic quality makes everyone within it invisible — even fairies fall under the charm.",
+      "The grass, the flowers, the plain and Mount Munch in the distance all remain visible; only the travellers cannot see themselves or one another.",
+      "Is crossed by holding hands in a line and walking toward Mount Munch, with Woot whistling so Polychrome can find him.",
+      "Is where the two tin men collide, denting the Tin Woodman's side and bending the Tin Soldier's right leg — damage they discover only on leaving it.",
+      "Is the hunting ground of the Hip-po-gy-raf, who tracks by smell because nothing there can be seen.",
+      "Is avoided entirely on the return journey, at the Scarecrow's urging."
+    ],
+    "known_relations_book1": {
+      "the Hip-po-gy-raf": "The beast that hunts in it.",
+      "Tin Woodman": "Whose side is dented there.",
+      "Captain Fyter": "Whose leg is bent there."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Invisible Country is inhabited by people",
+        "the enchantment is broken",
+        "the party crosses it twice"
+      ]
+    },
+    "hallucination_signals": [
+      "the invisible people",
+      "the enchantment is broken",
+      "they return through the Invisible Country"
+    ]
+  },
+  "wall_of_solid_air": {
+    "canonical_aliases_book1": [
+      "Wall of Solid Air"
+    ],
+    "known_facts_book1": [
+      "A circular wall of air made hard by powerful sorcery, six feet thick and perhaps a mile high, surrounding Nimmie Amee's house at the foot of Mount Munch.",
+      "Is entirely invisible, so it does not mar the beauty of the landscape, and yet keeps all strangers away.",
+      "Was built by **Nimmie Amee herself**, using the one magic formula she carried away from the Witch's house.",
+      "Cannot be climbed, pushed through or walked around to any entrance — the circle has none.",
+      "Is passed only by shrinking small enough to use the Blue Rabbit's burrow, which runs underneath it."
+    ],
+    "known_relations_book1": {
+      "Nimmie Amee": "Who built it and lives at its centre.",
+      "the Blue Rabbit": "Whose burrow undermines it.",
+      "Polychrome": "Who shrinks the party to use the burrow."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Wall of Solid Air is broken",
+        "the wall is made of glass",
+        "the wall was built by a witch"
+      ]
+    },
+    "hallucination_signals": [
+      "the air wall is broken",
+      "the wall is glass",
+      "a witch built the wall"
+    ]
+  },
+  "kuklips_workshop": {
+    "canonical_aliases_book1": [
+      "Ku-Klip's workshop"
+    ],
+    "known_facts_book1": [
+      "The back part of Ku-Klip's dark blue house at the far edge of the great Munchkin forest, facing the plains eastward, with a lean-to addition for more room.",
+      "Holds hammers, anvils, soldering irons, a charcoal furnace, two work-benches, a long table and scraps of tin of all shapes and sizes.",
+      "Contains the **barrel in the corner** where every meat part cut from Nick Chopper and Captain Fyter was saved.",
+      "Contains the **cupboards** where the heads were kept, and where the Tin Woodman finds his own old Head still alive on a shelf.",
+      "Is where both tin men were made, and where Chopfyt was later glued together from the leftovers.",
+      "Captain Fyter opens every cupboard door looking for his own old head and finds none — it is on Chopfyt."
+    ],
+    "known_relations_book1": {
+      "Ku-Klip": "Its owner and the maker of everything in it.",
+      "Tin Woodman": "Who says it seems almost like home to him.",
+      "the old Head": "Which lives on a cupboard shelf there."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Captain Fyter's old head is in the cupboard",
+        "the barrel is empty",
+        "Ku-Klip destroys the cast-off parts"
+      ]
+    },
+    "hallucination_signals": [
+      "Fyter's head is in the cupboard",
+      "the barrel is empty",
+      "the parts are destroyed"
+    ]
+  }
+}

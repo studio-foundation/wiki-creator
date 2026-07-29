@@ -1,0 +1,81 @@
+{
+  "nimmie_amee": {
+    "canonical_aliases_book1": [
+      "Nimmie Amee"
+    ],
+    "known_facts_book1": [
+      "A beautiful Munchkin girl, so fair that the sunsets blushed when their rays fell upon her, who lived as the slave of the Wicked Witch of the East.",
+      "Was loved first by the woodchopper Nick Chopper and then, after he vanished, by the soldier Captain Fyter — and lost both of them to the same enchanted-weapon curse.",
+      "Carried Nick Chopper's severed limbs to the tinsmith in a bundle and stole his severed head back from the Witch, and declared she would marry him anyway.",
+      "Preferred a tin sweetheart to a meat one, saying a tin man appealed to her artistic instincts, and listed all the advantages: no cooking, no bed-making, no tiring at dances, no temper.",
+      "Was beaten with the Witch's crooked stick for weeping when the Tin Soldier failed to come to their wedding, and the Witch went out to gather herbs to transform her into an old hag — and was crushed by Dorothy's house before she could.",
+      "Was sent by Ku-Klip to find the Witch's Silver Shoes, but Dorothy had already taken them to the Emerald City.",
+      "Left the forest to live with friends on **Mount Munch**, taking with her one magic formula from the Witch's house.",
+      "Used that formula to build the **Wall of Solid Air** around her house — a circle six feet thick and perhaps a mile high, invisible and impassable, to keep all strangers away.",
+      "Married **Chopfyt**, because both her sweethearts had deserted her and because he reminded her strongly of them both — he even had a tin arm.",
+      "Says she must chide her husband gently, both with her tongue and with her broomstick, but that she will keep him because he is trained to draw water, carry wood, hoe cabbages and dust the furniture.",
+      "Refuses to be made Empress of the Winkies — 'that would be a lot of bother' — and says she cares nothing for society, pomp or posing.",
+      "Calls herself the mistress of all she surveys, the queen of her little domain, and says she is happy; the rabbit confirms she does not weep at all.",
+      "Advises both tin men to go back to their own homes and forget her, as she has forgotten them."
+    ],
+    "known_relations_book1": {
+      "Tin Woodman": "Her first sweetheart, who rusted before he could return.",
+      "Captain Fyter": "Her second sweetheart, who rusted on their wedding day.",
+      "Chopfyt": "Her husband, whom she married for his resemblance to both of them.",
+      "Ku-Klip": "The tinsmith who sent her after the Silver Shoes and gave her the Witch's leftovers.",
+      "the Blue Rabbit": "Whom she has thrown stones at and shooed away from her cabbages."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Nimmie Amee marries the Tin Woodman",
+        "Nimmie Amee marries Captain Fyter",
+        "Nimmie Amee becomes Empress of the Winkies",
+        "Nimmie Amee is unhappy",
+        "Nimmie Amee is still the Witch's slave"
+      ]
+    },
+    "hallucination_signals": [
+      "Nimmie Amee marries the Tin Woodman",
+      "Nimmie Amee becomes Empress",
+      "Nimmie Amee weeps for her sweethearts",
+      "Nimmie Amee is a slave"
+    ]
+  },
+  "ku_klip": {
+    "canonical_aliases_book1": [
+      "Ku-Klip"
+    ],
+    "known_facts_book1": [
+      "The famous tinsmith of the Munchkin forest, a stout short man with a long gray beard, a leathern apron, big spectacles and ears that stick out like two fans.",
+      "Made both tin men: first Nick Chopper, piece by piece, and later Captain Fyter, 'having had experience in making another tin man before'.",
+      "Kept every meat part the two young men brought him in a barrel in the corner of his workshop, and their heads in a cupboard.",
+      "Took from the dead Witch's house some magic powders he did not know how to use and a bottle of **Magic Glue** — a preparation for mending people who cut themselves.",
+      "Once glued his own severed finger back on with it, and says no one else he ever heard of had this glue.",
+      "Could not glue the tin men together because the Witch herself had enchanted the axe and the sword and would not allow it — so tin was the only remedy.",
+      "Used the Magic Glue years later to assemble **Chopfyt** out of the leftovers, wanting an assistant, and chose the head with his eyes shut.",
+      "Never told Chopfyt what he was made of, and advises the tin men to keep the secret to themselves.",
+      "Is a kind-hearted, merry and agreeable man who greets both his tin men proudly as proof that he is a good workman.",
+      "Offers to remake the Scarecrow in tin, and calls Polychrome the most beautiful maiden he has ever seen.",
+      "Is the one who tells them Nimmie Amee went to Mount Munch, without knowing the name of the friends she went to."
+    ],
+    "known_relations_book1": {
+      "Tin Woodman": "His first tin man, whom he made piece by piece.",
+      "Captain Fyter": "His second tin man.",
+      "Chopfyt": "The assistant he glued together and was glad to be rid of.",
+      "Nimmie Amee": "Whom he sent after the Silver Shoes and who left him the Witch's leftovers."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Ku-Klip refuses to help",
+        "Ku-Klip made Chopfyt from Nick Chopper's head",
+        "Ku-Klip knows where Nimmie Amee lives now",
+        "Ku-Klip is a magician"
+      ]
+    },
+    "hallucination_signals": [
+      "Ku-Klip used Nick Chopper's head",
+      "Ku-Klip is a magician",
+      "Ku-Klip knows Nimmie Amee's address"
+    ]
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "ozma": {
+    "canonical_aliases_book1": [
+      "Ozma",
+      "Ozma of Oz"
+    ],
+    "known_facts_book1": [
+      "The fairy girl Ruler of the Land of Oz, who watches the whole journey in her Magic Picture with Dorothy.",
+      "Studies Woot's case in her Magic Room before setting out, and travels in the Red Wagon behind the Sawhorse to meet the party at Jinjur's ranch.",
+      "Breaks the Scarecrow's and the Tin Woodman's enchantments easily with a small silver Wand, reasoning that yookoohoo magic could only make a straw bear of a straw man and a tin owl of a tin man.",
+      "Breaks Polychrome's enchantment only after a chain of experiments: Canary to Dove, Dove to Speckled Hen, Hen to rabbit, rabbit to Fawn, then powders on the Fawn.",
+      "**Cannot free Woot at all** by any magic known to fairies or yookoohoos: the Green Monkey must exist in Oz for all future time and can only be transferred to someone else.",
+      "States plainly that Glinda's power in transformations is no greater than her own.",
+      "Refuses to force the form on any unwilling person, saying that would make them as cruel and wicked as Mrs. Yoop.",
+      "Adopts Polychrome's solution — giving the Green Monkey's form to its own creator — and performs it at a distance using a silver broth in a platter and her Wand.",
+      "Tells the Tin Woodman there is no harm in asking Nimmie Amee whether she still wishes to marry him, and offers a grand wedding at the Emerald City.",
+      "Rules at the end that Chopfyt need not be considered at all, and that they have no just cause to blame Ku-Klip.",
+      "Takes Captain Fyter into her service and sends him to keep order in the Gillikin Country, since two identical tin men could not live together in harmony."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her friend, who watches the Magic Picture with her and comes along.",
+      "Woot": "The boy she cannot free by ordinary means and finally frees by exchange.",
+      "Mrs. Yoop": "The yookoohoo she punishes with the monkey's form.",
+      "Captain Fyter": "The Tin Soldier she takes into her service."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Ozma travels to Yoop Castle",
+        "Ozma restores Woot directly",
+        "Glinda breaks the enchantments",
+        "Ozma forbids the journey"
+      ]
+    },
+    "hallucination_signals": [
+      "Ozma goes to Yoop Castle",
+      "Ozma restores Woot directly",
+      "Glinda breaks the spells",
+      "Ozma forbids the quest"
+    ]
+  },
+  "dorothy": {
+    "canonical_aliases_book1": [
+      "Dorothy",
+      "Princess Dorothy"
+    ],
+    "known_facts_book1": [
+      "A little Kansas girl living in Ozma's palace, who came to Oz in a house carried by a cyclone and never seems a day older.",
+      "Is the one who idly wishes to see the Tin Woodman in the Magic Picture and so discovers the journey, and who watches the transformations with indignation and horror.",
+      "Travels with Ozma and Toto in the Red Wagon to Jinjur's ranch and greets each transformed friend by name.",
+      "Refuses point-blank to let Toto be made a Green Monkey to free Woot — 'I don't want a green monkey'.",
+      "Is the one whose falling house crushed the Wicked Witch of the East, though in this book that is background: the Witch turned to dust and blew away.",
+      "Took the Witch's Silver Shoes to the Emerald City, which is why Nimmie Amee could not find them.",
+      "Does not go on the second half of the journey, because the Tin Woodman does not invite her and she will not intrude on his courtship.",
+      "Remarks at the end that it would have been wasteful for Ku-Klip not to have used the cast-off parts."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Her dearest friend, whose Magic Picture she uses.",
+      "Toto": "Her dog, whom she refuses to have transformed.",
+      "Tin Woodman": "Her old friend, whom she and the Scarecrow once freed from rust.",
+      "Woot": "The boy she pities and cannot help."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "ruby slippers",
+        "there is no place like home",
+        "Miss Gulch"
+      ],
+      "not_in_this_book": [
+        "Dorothy travels to Mount Munch",
+        "Dorothy meets Nimmie Amee",
+        "Toto becomes a Green Monkey"
+      ]
+    },
+    "hallucination_signals": [
+      "Dorothy meets Nimmie Amee",
+      "Toto is transformed",
+      "ruby slippers",
+      "Dorothy goes to Mount Munch"
+    ]
+  },
+  "jinjur": {
+    "canonical_aliases_book1": [
+      "Jinjur",
+      "General Jinjur"
+    ],
+    "known_facts_book1": [
+      "A girl farmer of the Munchkin Country who once raised an army of girls, called herself General Jinjur, captured the Emerald City and drove the Scarecrow out of it.",
+      "Was punished by Ozma for that, and afterward she and the Scarecrow became fast friends.",
+      "Now lives peacefully on a ranch raising fields of cream-puffs, chocolate-caramels and macaroons.",
+      "Is an artist who paints pictures so perfect one can scarcely tell them from nature; she once painted the Scarecrow a straw-stack he could stuff himself from.",
+      "Repaints the Scarecrow's face when it gets worn or mussy, and had done so about a month before the transformations.",
+      "Attacks the transformed party with a broomstick, taking them for wild animals, and knocks the Brown Bear over before he can explain.",
+      "Scrubs the sooty Green Monkey in a tub of cold water with a stiff brush and yellow soap, over his whines and struggles.",
+      "Argues that all persons are judged by the shapes in which they appear to others, and comforts Woot when Ozma cannot help him.",
+      "Gives Woot a basket of ripe cream-puffs and caramels when the party leaves."
+    ],
+    "known_relations_book1": {
+      "Scarecrow": "Her old enemy and now fast friend, whose face she paints.",
+      "Woot": "The Green Monkey she scrubs and then comforts.",
+      "Ozma": "Who once punished her and whose magic she watches at her own hearth."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Jinjur raises an army in this book",
+        "Jinjur works magic",
+        "Jinjur joins the journey",
+        "Jinjur is an enemy of the Scarecrow"
+      ]
+    },
+    "hallucination_signals": [
+      "Jinjur raises an army",
+      "Jinjur works magic",
+      "Jinjur joins the party",
+      "Jinjur attacks the Emerald City"
+    ]
+  },
+  "toto": {
+    "canonical_aliases_book1": [
+      "Toto"
+    ],
+    "known_facts_book1": [
+      "Dorothy's shaggy little black dog and faithful companion, who rides in the Red Wagon because he cannot keep up with the Sawhorse.",
+      "Growls at the Tin Owl and is reproved by Dorothy several times for it.",
+      "Is proposed as the recipient of the Green Monkey's form and refuses flatly: 'I wouldn't become a Green Monkey for anything.'",
+      "Says being a dog is at least a matter of opinion when Woot claims a green monkey is better than a dog.",
+      "Appears only in the Emerald City chapters and takes no part in the journey."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "His mistress, who will not have him transformed.",
+      "Woot": "The boy whose monkey form he refuses to take."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Toto becomes a Green Monkey",
+        "Toto travels with the Tin Woodman",
+        "Toto cannot speak"
+      ]
+    },
+    "hallucination_signals": [
+      "Toto is transformed",
+      "Toto joins the journey",
+      "Toto agrees to the exchange"
+    ]
+  }
+}
