@@ -1,11 +1,11 @@
 <includeonly>
 {| class="infobox"
 |-
-! colspan="2" | {{{name}}}
+! colspan="2" | {{{nom}}}
 |-
-| '''Aliases''' || {{{aliases|}}}
+| '''Aliases''' || {{{alias|}}}
 |-
-| '''Titles''' || {{{titles|}}}
+| '''Appearance''' || {{{apparition|}}}
 |-
 | '''Status''' || {{{status|}}}
 |-
@@ -13,13 +13,9 @@
 |-
 | '''Species''' || {{{species|}}}
 |-
-| '''Occupation''' || {{{occupation|}}}
-|-
-| '''Residence''' || {{{residence|}}}
-|-
 | '''Affiliation''' || {{{affiliation|}}}
 |-
-| '''Appearance''' || {{{first_seen|}}}
+| '''Titles''' || {{{titles|}}}
 |-
 | '''Family''' || {{{family|}}}
 |-

@@ -54,7 +54,7 @@ def test_run_dry_writes_stub_artifacts(tmp_path):
     assert page["title"] == "Celaena defeats Cain"
     assert page["entity_type"] == EVENT_ENTITY_TYPE
     assert page["infobox_fields"]["chapitre"] == "12"
-    assert page["infobox_fields"]["name"] == "Celaena defeats Cain"
+    assert page["infobox_fields"]["nom"] == "Celaena defeats Cain"
     assert not page.get("_failed")
     data = json.loads((tmp_path / "event_pages.json").read_text(encoding="utf-8"))
     assert data["pages"] == pages
