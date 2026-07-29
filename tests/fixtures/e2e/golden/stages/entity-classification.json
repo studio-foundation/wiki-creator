@@ -12,7 +12,8 @@
    "relevant": true,
    "total_mentions": 11,
    "chapters_present": 4,
-   "importance": "secondary"
+   "importance": "secondary",
+   "offstage": false
   },
   {
    "canonical_name": "Heron",
@@ -26,7 +27,8 @@
    "relevant": true,
    "total_mentions": 0,
    "chapters_present": 0,
-   "importance": "ignored"
+   "importance": "ignored",
+   "offstage": false
   },
   {
    "canonical_name": "Port Saffron",
@@ -40,7 +42,8 @@
    "relevant": true,
    "total_mentions": 3,
    "chapters_present": 3,
-   "importance": "figurant"
+   "importance": "figurant",
+   "offstage": false
   },
   {
    "canonical_name": "Salt Guild",
@@ -54,7 +57,8 @@
    "relevant": true,
    "total_mentions": 3,
    "chapters_present": 3,
-   "importance": "figurant"
+   "importance": "figurant",
+   "offstage": false
   },
   {
    "canonical_name": "Warehouse Nine",
@@ -69,7 +73,8 @@
    "relevant": true,
    "total_mentions": 3,
    "chapters_present": 1,
-   "importance": "figurant"
+   "importance": "figurant",
+   "offstage": false
   },
   {
    "canonical_name": "Captain Elias Thorn",
@@ -85,7 +90,8 @@
    "relevant": true,
    "total_mentions": 10,
    "chapters_present": 4,
-   "importance": "secondary"
+   "importance": "secondary",
+   "offstage": false
   }
  ],
  "relationships": [

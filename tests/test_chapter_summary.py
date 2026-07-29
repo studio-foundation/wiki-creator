@@ -853,7 +853,14 @@ def test_load_classified_entities_reads_file(tmp_path):
     p.write_text(json.dumps({"entities": [entity], "relationships": [], "stats": {}, "narrator": None}))
     ents = _load_classified_entities(p)
     assert ents == [
-        {**entity, "source_ids": [], "aliases": [], "relevant": True, "alias_resolution": None}
+        {
+            **entity,
+            "source_ids": [],
+            "aliases": [],
+            "relevant": True,
+            "offstage": False,
+            "alias_resolution": None,
+        }
     ]
 
 

@@ -107,6 +107,9 @@ class EntityRecord:
     # `books`). Vide quand la provenance est inconnue. ``first_book`` = books[0].
     books: list[str] = field(default_factory=list)
     first_book: str | None = None
+    # STU-716: every mention is inside another character's reported speech.
+    # A name nobody has seen act asserts no relationships.
+    offstage: bool = False
 
 
 def normalize_name(text: str) -> str:
@@ -388,6 +391,7 @@ class Registry:
                 decisions=decision_ids,
                 books=list(incoming.books),
                 first_book=incoming.first_book,
+                offstage=incoming.offstage,
             )
             self.entities.append(record)
             order[id(record)] = len(self.entities) - 1
@@ -426,6 +430,9 @@ class Registry:
                     f"series accumulation: kept entity_type '{target.entity_type}' for "
                     f"'{target.entity_id}' (book '{book_label}' says '{incoming.entity_type}')"
                 )
+
+        # A character on the page in any tome is on the page (STU-716).
+        target.offstage = target.offstage and incoming.offstage
 
         added_aliases: list[str] = []
         existing = {alias.casefold() for alias in target.aliases}
@@ -537,6 +544,7 @@ class Registry:
                     "decisions": list(r.decisions),
                     "books": list(r.books),
                     "first_book": r.first_book,
+                    "offstage": r.offstage,
                 }
                 for r in self.entities
             ],
@@ -581,6 +589,7 @@ class Registry:
                     decisions=[str(d) for d in e.get("decisions") or []],
                     books=books,
                     first_book=str(first_book) if first_book else None,
+                    offstage=bool(e.get("offstage")),
                 )
             )
         return cls(
@@ -777,6 +786,7 @@ class Registry:
                     decisions=decision_ids,
                     books=[book_id] if book_id else [],
                     first_book=book_id,
+                    offstage=bool(raw.get("offstage")),
                 )
             )
 
