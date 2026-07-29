@@ -416,6 +416,10 @@ chrome:
   # chapter axis; these gate one section per tome on a merged character page.
   reveal_tome:  {fr: "Tome {tome} — révéler", en: "Book {tome} — reveal"}
   tome_heading: {fr: "Tome {tome}", en: "Book {tome}"}
+  # STU-734: the `apparition` infobox slot — an entity's tome provenance. `{first}`
+  # and `{last}` are tome numbers; `appearance_range` renders when they differ.
+  appearance_one:   {fr: "Apparaît au tome {first}", en: "Appears in book {first}"}
+  appearance_range: {fr: "Apparaît au tome {first}, dernière apparition tome {last}", en: "First appears in book {first}, last appears in book {last}"}
   # STU-488: the `status` infobox slot. Reader-facing chrome, so the
   # enum's labels are data — the enum itself lives in wiki_creator/entity_status.py.
   status_alive:    {fr: "Vivant",   en: "Alive"}
@@ -452,6 +456,10 @@ chrome:
   collation_mentions:  {fr: "Mentionné {mentions} fois dans {chapters} chapitre(s).", en: "Mentioned {mentions} times in {chapters} chapter(s)."}
   # STU-514: event-page title disambiguation suffix (chapter tag on colliding titles).
   chapter_tag:         {fr: "chapitre {chapter}", en: "chapter {chapter}"}
+  # STU-734: categories.wiki heading + blurb — the last two literals of the page
+  # (every category name below them already comes from export.categories.labels).
+  categories_heading:  {fr: "Catégories", en: "Categories"}
+  categories_blurb:    {fr: "Cette page documente la hiérarchie de catégories utilisée dans ce wiki.", en: "This page documents the category hierarchy used in this wiki."}
   # STU-651: export category / showcase label defaults, keyed by output_language
   # (English default, French only when the book is French) — a book need not spell
   # out every key in export.categories.labels for its wiki to stay in one language.
@@ -470,12 +478,16 @@ stubs:
   # localized "course" heading.
   event_failed:  {fr: "Échec technique de la génération.", en: "Technical failure while generating this page."}
   event_dry_run: {fr: "Page d'événement non générée (dry-run).", en: "Event page not generated (dry run)."}
+  # STU-734: book-synopsis stubs (dry-run / generation failure), rendered under
+  # the localized "synopsis" heading — were hardcoded French in the stage script.
+  synopsis_failed:  {fr: "Échec technique de la génération du synopsis.", en: "Technical failure while generating the synopsis."}
+  synopsis_dry_run: {fr: "Synopsis non généré (dry-run).", en: "Synopsis not generated (dry run)."}
 # STU-517: wiki-page-validator error messages, localized. Each error also carries
 # a stable neutral `code` (see scripts/wiki_page_validator.py) that generate_wiki_pages
 # matches on for identity-only recovery — the prose here is free to be reworded.
 validator:
   errors:
-    language_contamination:    {fr: "Contenu en anglais détecté (marqueurs : {markers})", en: "English content detected (markers: {markers})"}
+    language_contamination:    {fr: "Contenu dans une autre langue détecté (marqueurs : {markers})", en: "Content in another language detected (markers: {markers})"}
     epub_id:                   {fr: "ID EPUB dans le contenu (ex: C07.xhtml)", en: "EPUB ID in the content (e.g. C07.xhtml)"}
     infobox_key_prefix:        {fr: "Clé infobox préfixée par '- ' : {key}", en: "Infobox key prefixed with '- ': {key}"}
     series_anchor_missing:     {fr: "Le titre de série '{series}' est absent du premier paragraphe", en: "The series title '{series}' is missing from the first paragraph"}

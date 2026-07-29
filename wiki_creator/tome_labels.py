@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import re
 
+from wiki_creator.page_templates import chrome_label
+
 _LEADING_TOME_NUMBER = re.compile(r"^(\d+(?:\.\d+)?)")
 _LEADING_ZEROS = re.compile(r"^0+(?=\d)")
 
@@ -25,7 +27,7 @@ def tome_number(book_id: str | None) -> str:
     return _LEADING_ZEROS.sub("", match.group(1))
 
 
-def appearance_label(books: list[str], *, lang: str = "fr") -> str:
+def appearance_label(books: list[str], *, lang: str) -> str:
     """Infobox appearance line from an entity's ``books`` provenance
     (EntityRecord.books, in first-appearance order). Empty when ``books`` is
     empty — no known provenance (registry absent or pre-multi-tome artifact),
@@ -33,10 +35,5 @@ def appearance_label(books: list[str], *, lang: str = "fr") -> str:
     numbers = [tome_number(b) for b in books if b]
     if not numbers:
         return ""
-    if lang == "en":
-        if len(numbers) == 1:
-            return f"Appears in book {numbers[0]}"
-        return f"First appears in book {numbers[0]}, last appears in book {numbers[-1]}"
-    if len(numbers) == 1:
-        return f"Apparaît au tome {numbers[0]}"
-    return f"Apparaît au tome {numbers[0]}, dernière apparition tome {numbers[-1]}"
+    key = "appearance_one" if len(numbers) == 1 else "appearance_range"
+    return chrome_label(key, lang).format(first=numbers[0], last=numbers[-1])
