@@ -6,23 +6,20 @@
 
 == Biography ==
 
-Five is one of three gardeners in the Queen's garden tasked with painting white roses red to conceal a planting error before the Queen's discovery. He exhibits a sulky disposition and characteristically deflects blame for his own mistakes; when his painting splashes, he attributes the incident to Seven jogging his elbow rather than acknowledging his own carelessness.
+Five is one of three gardeners in the Queen's garden, engaged in the curious task of repainting white roses red. A character of sulky disposition, he is quick to deflect blame for his own mishaps. When warned by a companion against splashing paint during his labour, Five protested that he could not help it, insisting that Seven had jogged his elbow and caused the accident. Seven, observing this pattern of excuse-making, remarked pointedly that Five was always inclined to lay the blame on others rather than himself.
 
 == Relationships ==
 
-'''[[Alice]]''' — ally. Five's connection with Alice appears to form through her presence at the gardeners' work.
+'''[[Seven]]''' — friendly_rivalry. Five and Seven work in close proximity; their interactions suggest frequent mutual blame and defensiveness between them.
 
-'''[[Queen]]''' — enemy. The Queen represents the threat of execution should she discover their planting error.
+'''[[Alice]]''' — ally. Alice encounters Five while observing the gardeners at their task.
 
-'''[[Seven]]''' — acquaintance. Seven and Five exchange accusations over the spilled paint, each deflecting blame.
-
-'''[[Two]]''' — ally. Two works alongside Five on the task of repainting the roses.
+'''[[Queen]]''' — enemy. Five appears to serve under the Queen's authority in the royal garden.
 
 ''Evolution:''
-* [[Alice]] — Ally (ch.8)
-* [[Queen]] — Enemy (ch.8)
-* [[Seven]] — Acquaintance (ch.8)
-* [[Two]] — Ally (ch.8)
+* [[Alice]] — Ally (ch.8)<ref>Alice's Adventures in Wonderland, chapter 8</ref>
+* [[Queen]] — Enemy (ch.8)<ref>Alice's Adventures in Wonderland, chapter 8</ref>
+* [[Seven]] — Friendly rivalry (ch.8)<ref>Alice's Adventures in Wonderland, chapter 8</ref>
 
 
 [[Category:Characters]]

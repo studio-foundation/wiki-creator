@@ -2,30 +2,26 @@
 |nom=Gryphon
 |apparition=Appears in book 1
 |status=Unknown
+|friends_allies=[[Mock Turtle]]
 }}
 
 == Biography ==
 
-The Gryphon is a creature of Wonderland who regularly associates with the Mock Turtle. It exhibits a critical and impatient disposition. When Alice asks the Gryphon about the Mock Turtle's sorrow, the Gryphon responds dismissively, declaring it "all his fancy" and asserting that the Mock Turtle "hasn't got no sorrow." Upon posing what the Gryphon considers a simple question, Alice receives a sharp rebuke: "You ought to be ashamed of yourself for asking such a simple question." Both the Gryphon and Mock Turtle then regard her in silent disapproval. The Gryphon appears to exercise authority over the Mock Turtle, issuing commands such as "Drive on, old fellow! Don't be all day about it!" The Gryphon's presence in Wonderland is marked by distinctive shrieks that sound among the characteristic noises of the realm.
+The Gryphon is a creature of Wonderland, marked by decided opinions and little patience with those deemed foolish. Upon encountering Alice, it reproaches her sharply for asking what it considers a simple question. The Gryphon maintains close companionship with the Mock Turtle; the two are frequently found together, sitting in silent regard or moving about Wonderland as a pair. In matters of emotion and sorrow, the Gryphon takes a pragmatic view, dismissing such concerns as fancy rather than genuine affliction—"It's all his fancy," as it tersely observes. Its distinctive shriek is among the many peculiar sounds that characterize this curious land.
 
 == Relationships ==
 
-'''[[Alice]]''' — acquaintance. The Gryphon encounters Alice and criticizes her for asking basic questions, though she remains in their presence.
+'''[[Alice]]''' — acquaintance. The Gryphon finds genuine amusement in Alice's presence and expresses delight in her company, though he reproaches her sharply for asking what he deems an elementary question.
 
-'''[[Mock Turtle]]''' — strained_friendship. The Gryphon appears to be a close companion of the Mock Turtle, though demonstrates impatience and takes a commanding stance during their time together.
+'''[[Mock Turtle]]''' — friend. The Gryphon and the Mock Turtle share an easy, comfortable rapport; they sit together in understanding silence while observing the world around them, and the Gryphon directs his companion's movements with casual, affectionate authority.
 
-'''[[Queen]]''' — suggests involvement with Wonderland's broader social order, though specific details of any direct relationship remain undocumented.
-
-'''[[Tortoise]]''' — indirectly connected through the Mock Turtle's account of the Tortoise as a former teacher from their schooldays at sea.
+'''[[Queen]]''' — The Gryphon's distinctive shriek is noted within the Queen's court and proceedings, suggesting his presence within her domain.
 
 ''Evolution:''
-* [[Alice]] — Acquaintance (ch.9→ch.11)
-* [[Mock Turtle]] — Strained friendship (ch.9→ch.10)
-* [[Queen]] — Employment (ch.9)
-* [[Tortoise]] — Mentor (ch.9)
+* [[Mock Turtle]] — Friend (ch.9→ch.10)<ref>Alice's Adventures in Wonderland, chapter 9</ref>
 == References ==
 
-* Alice's Adventures in Wonderland
+<references/>
 
 [[Category:Characters]]
 [[Category:Secondary Characters]]

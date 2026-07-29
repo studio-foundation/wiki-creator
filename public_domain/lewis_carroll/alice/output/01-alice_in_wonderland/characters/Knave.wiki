@@ -2,26 +2,26 @@
 |nom=Knave
 |apparition=Appears in book 1
 |status=Unknown
+|enemies=[[Queen]]
 }}
 
 == Biography ==
 
-The Knave of Hearts serves as an attendant in the royal court of Hearts. He carries ceremonial objects, such as the King's crown on a crimson velvet cushion, during formal processions and executes the Queen's commands with meticulous care. When instructed to manipulate objects, he complies "very carefully."
+The Knave of Hearts carries the King's crown upon a crimson velvet cushion during the royal procession. He receives his commands directly from the Queen; when she addresses him, he replies with only a bow and a smile. The Queen dismisses his courtesy harshly, calling him an 'idiot.' The Knave executes her orders with careful precision—when she commands him to 'turn them over,' he complies very carefully, using one foot.
 
-The Knave is brought before the court in chains, guarded by soldiers. During the proceedings, he defends himself concerning an unspecified matter, asserting that he did not write something and that the absence of a signature absolves him of responsibility. His demeanor throughout is one of melancholy resignation.
+The Knave stands trial for the theft of the Queen's tarts. Before the King, he defends himself by asserting that he did not write the incriminating evidence and that his name is not signed to it. When questioned further, he shakes his head sadly.
 
 == Relationships ==
 
-'''[[King]]''' — employment. The Knave carries the King's crown during formal processions, suggesting he serves in an official capacity at court.
+'''[[King]]''' — employment. The Knave appears to serve the King in a position of ceremonial trust, suggested by his role bearing the royal crown during the procession.
 
-'''[[Queen]]''' — employment. The Knave responds to the Queen's direct commands with obedience, suggesting he is subordinate to her authority.
+'''[[Queen]]''' — adversary. The Queen's treatment of the Knave suggests opposition: she addresses him dismissively and later initiates his trial for theft, resulting in his imprisonment in chains—establishing their relationship as one where the Knave holds little power.
 
 ''Evolution:''
-* [[King]] — Employment (ch.8→ch.12)
-* [[Queen]] — Employment (ch.8→ch.11)
+* [[Queen]] — Enemy (ch.8→ch.12)<ref>Alice's Adventures in Wonderland, chapter 8</ref>
 == References ==
 
-* Alice's Adventures in Wonderland
+<references/>
 
 [[Category:Characters]]
 [[Category:Secondary Characters]]

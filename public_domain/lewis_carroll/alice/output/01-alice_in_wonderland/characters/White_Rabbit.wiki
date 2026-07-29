@@ -6,31 +6,23 @@
 
 == Biography ==
 
-The White Rabbit serves as an official of the King's court, bearing the symbols of his office—a trumpet and a scroll of parchment. He appears at the trial of the Knave of Hearts, where he enforces the court's proceedings with stern authority. When Alice speaks out of turn during the trial, he cries out "Silence in the court!", demonstrating his responsibility for maintaining order. His manner is anxious and hurried; he moves with urgency through his duties, described as "jumping up in a great hurry" and "trotting along in a great hurry".
+The White Rabbit is a figure of authority in Wonderland's court, bearing a trumpet and a scroll of parchment. During the trial of the Knave of Hearts, he maintains order and decorum, calling out "Silence in the court!" when others speak out of turn. His manner toward the King is fastidiously respectful, though he does not hesitate to correct what he perceives as the monarch's errors—once interrupting to say "Unimportant, your Majesty means, of course" in a dutiful tone, even as he frowned and made faces in contradiction.
 
-Despite his evident deference toward the King—he speaks in "a very respectful tone"—the White Rabbit shows willingness to correct the monarch when necessary. When the King refers to evidence as "very important," the White Rabbit interrupts respectfully to clarify that the King meant "unimportant" instead. He actively participates in the trial's proceedings, announcing new evidence and reporting on a letter discovered during the case. The White Rabbit maintains a residence, indicated by the brass nameplate reading "W. RABBIT" affixed to his house. He is described as appearing "splendidly dressed," carrying white kid gloves and a large fan, suggesting he maintains a formal and proper appearance befitting his official station.
+The White Rabbit carries himself with considerable consequence and concern for propriety. He dresses splendidly, with white kid gloves and a large fan always in hand. He maintains a household marked with his initials—"W. RABBIT"—engraved upon a bright brass plate, and appears to command servants who run his errands, fetching his gloves and fan at his word. His attention is much occupied with the Duchess, whose favor he anxiously seeks, muttering to himself in worry lest he has kept her waiting.
 
 == Relationships ==
 
-'''[[Alice]]''' — acquaintance. Alice approaches the White Rabbit with evident deference and hesitation.
+'''[[Alice]]''' — acquaintance. The Rabbit reacts with alarm to Alice's approach, dropping his gloves and fan in a startled fashion.
 
-'''[[King]]''' — employment. The White Rabbit serves as an official in the King's Court, maintaining order during proceedings and presenting evidence at the court's direction.
+'''[[King]]''' — appears to serve as a court official. The Rabbit maintains courtroom order, presents evidence at the sovereign's direction, and demonstrates careful deference to royal authority, though he permits himself gentle corrections of the King's language.
 
-'''[[Duchess]]''' — employment. The White Rabbit appears to serve the Duchess, attending to her needs and concerns with considerable urgency.
+'''[[Duchess]]''' — seems to work in service to the Duchess. The Rabbit's anxious concern for his mistress dominates his attention, and he greatly fears her displeasure.
 
-'''[[Bill]]''' — employment. Bill seems to work under the White Rabbit's direction.
+'''[[Mary Ann]]''' — appears to command household servants. The Rabbit gives urgent orders to Mary Ann to fetch his gloves and fan, suggesting he holds authority over domestic staff.
 
-'''[[Mary Ann]]''' — employment. Mary Ann serves the White Rabbit, responding to his direct commands to fetch items and perform errands on his behalf.
-
-''Evolution:''
-* [[King]] — Employment (ch.11→ch.12)
-* [[Bill]] — Employment (ch.4)
-* [[Mary Ann]] — Employment (ch.4)
-* [[Alice]] — Acquaintance (ch.2→ch.8)
-* [[Duchess]] — Employment (ch.2→ch.4)
 == References ==
 
-* Alice's Adventures in Wonderland
+<references/>
 
 [[Category:Characters]]
 [[Category:Secondary Characters]]

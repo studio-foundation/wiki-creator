@@ -2,26 +2,26 @@
 |nom=Mouse
 |apparition=Appears in book 1
 |status=Unknown
+|friends_allies=[[Alice]]
 }}
 
 == Biography ==
 
-The Mouse is a creature encountered by Alice in a pool in Wonderland. When Alice addressed it with inquiries, the Mouse responded with apparent interest and seemed to wink with one of its eyes, though Alice could not determine whether it understood English. Given its possible incomprehension, Alice speculated that the Mouse was French and had come with William the Conqueror.
+The Mouse is a creature of Wonderland whom Alice encounters in the pool. When she addresses it in formal Latin declension, the Mouse observes her with apparent curiosity and seems to wink with one of its little eyes, though it offers no response. Alice wonders whether it understands English at all, and speculates that it might be a French mouse, come over with William the Conqueror.
 
-The Mouse subsequently established itself as a figure of authority among the wet animals gathered to dry themselves. It called them to sit and listen, speaking with an important air and promising to make them dry enough. This remedy it undertook through what it considered the driest approach available—a recitation of the history of William the Conqueror.
+When the wet creatures later gather to discuss how to dry off, the Mouse commands their attention and positions itself at the center of their assembled ring. With an air of importance, it promises to make them dry with what it calls "the driest thing I know." Among the strange assembly of Wonderland's denizens, the Mouse holds evident authority that the others seem willing to accept.
 
 == Relationships ==
 
-'''[[Alice]]''' — wary alliance. When Alice offers to avoid discussing cats and dogs, the Mouse responds by swimming slowly back, suggesting an uneasy, tentative understanding rather than genuine rapport.
+'''[[Alice]]''' — wary alliance. Mouse and Alice form a connection born of circumstance and mystery. When Alice sought his help escaping the pool, Mouse examined her with apparent interest but offered no reply, leaving her to puzzle over his nature. He later indicated he would accompany her to shore and tell her his history, a gesture suggesting some degree of alliance, though its exact nature remains uncertain and somewhat guarded.
 
-'''[[Dinah]]''' — enemy. Based on the Mouse's statement that its family has "always hated cats: nasty, low, vulgar things," the Mouse seemingly harbors animosity toward Dinah rooted in her feline nature.
+'''[[Lory]]''' — acquaintance. Mouse held command over the assembly of animals and birds that included Lory, suggesting familiarity among Wonderland's strange inhabitants.
 
 ''Evolution:''
-* [[Alice]] — Wary alliance (ch.2→ch.3)
-* [[Dinah]] — Enemy (ch.2)
+* [[Alice]] — Wary alliance (ch.2→ch.3)<ref>Alice's Adventures in Wonderland, chapter 2</ref>
 == References ==
 
-* Alice's Adventures in Wonderland
+<references/>
 
 [[Category:Characters]]
 [[Category:Secondary Characters]]

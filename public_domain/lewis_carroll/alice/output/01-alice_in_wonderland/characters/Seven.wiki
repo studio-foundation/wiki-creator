@@ -6,23 +6,20 @@
 
 == Biography ==
 
-Seven is one of three gardeners tasked with repainting white roses red to conceal a planting error. He exhibits a sardonic manner, particularly regarding responsibility: when Five blames him for jogging his elbow and causing an accidental paint splash, Seven responds with, "That's right, Five! Always lay the blame on others!"—a remark that reveals his mocking approach to accountability. Like his companions, Seven appears anxious about the Queen's potential discovery of their deception. Upon noticing Alice observing their work, he abruptly ceases his protest ("Well, of all the unjust things—") and falls silent.
+Seven is one of the gardeners at the Queen's garden, painting roses red. When Five splashed paint during their work and blamed Seven for jogging his elbow, Seven replied with "That's right, Five! Always lay the blame on others." Sharp-spoken with his companions, he told Two, "That's none of your business, Two!" when Two interjected in a matter.
 
 == Relationships ==
 
-'''[[Alice]]''' — ally.
+'''[[Five]]''' — friendly_rivalry. Seems to exchange quips and blame with Five over a painting incident.
 
-'''[[Five]]''' — acquaintance. Works alongside Five as a gardener painting the roses.
+'''[[Alice]]''' — ally. Appears connected to the croquet-ground experience, though the nature of this connection is unclear.
 
-'''[[Queen]]''' — enemy. Fears the Queen's violent retribution.
-
-'''[[Two]]''' — acquaintance. Works alongside Two as a gardener.
+'''[[Queen]]''' — enemy. Seems to exist in relation to the Queen's authority, though details remain sparse.
 
 ''Evolution:''
-* [[Alice]] — Ally (ch.8)
-* [[Five]] — Acquaintance (ch.8)
-* [[Queen]] — Enemy (ch.8)
-* [[Two]] — Acquaintance (ch.8)
+* [[Alice]] — Ally (ch.8)<ref>Alice's Adventures in Wonderland, chapter 8</ref>
+* [[Five]] — Friendly rivalry (ch.8)<ref>Alice's Adventures in Wonderland, chapter 8</ref>
+* [[Queen]] — Enemy (ch.8)<ref>Alice's Adventures in Wonderland, chapter 8</ref>
 
 
 [[Category:Characters]]
