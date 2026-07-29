@@ -5,7 +5,7 @@
         check-wikilinks check-wikilinks-series \
         generate-pages generate-pages-dry generate-pages-primary generate-pages-entity \
         discover-relationships \
-        smoke golden golden-update eval-relationships \
+        smoke golden golden-update eval-relationships coverage \
         clean
 
 #BOOK ?= library/carlos-ruiz-zafon/el-cementerio-de-los-libros-olvidados/books/02-le-jeu-de-lange.yaml
@@ -150,6 +150,9 @@ golden:  ## Golden regression run: chained resolution stages vs committed golden
 
 golden-update:  ## Regenerate goldens after an INTENTIONAL behavior change, then review the diff
 	UPDATE_GOLDENS=1 python -m pytest tests/test_e2e_golden.py -q
+
+coverage:  ## Coverage/faithfulness report over a run's artifacts (STU-723): chapter/alias/relation ledgers + drop log. Never fails; writes <processing>/coverage_report.json
+	python scripts/coverage_report.py --book $(BOOK)
 
 eval-relationships:  ## Score the relationship classifier against the hand-labelled gold fixture (STU-499). PREDICTIONS=<file> to score offline, else --run (needs studio/LLM)
 	python scripts/eval_relationship_classifier.py \
