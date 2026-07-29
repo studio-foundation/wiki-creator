@@ -83,14 +83,30 @@ def test_conflicting_merged_types_collapse_to_none():
     """When folded surface edges disagree on type, neither wins."""
     rels = [
         {"entity_a": "Chaol Westfall", "entity_b": "Celaena", "cooccurrence_count": 5,
-         "relationship_type": "enemy", "direction": "symétrique"},
+         "relationship_type": "enemy", "direction": "symmetric"},
         {"entity_a": "Captain Westfall", "entity_b": "Celaena", "cooccurrence_count": 3,
-         "relationship_type": "ally", "direction": "symétrique"},
+         "relationship_type": "ally", "direction": "symmetric"},
     ]
     folded = fold_relationships(rels, _registry(CHAOL, CELAENA))
     assert len(folded) == 1
     assert folded[0]["relationship_type"] is None
-    assert folded[0]["direction"] == "symétrique"  # agree → kept
+    assert folded[0]["direction"] == "symmetric"  # agree → kept
+
+
+def test_legacy_french_direction_folds_onto_the_canonical_token():
+    """STU-733: an artifact written before the rename must not split the merge.
+
+    Left unnormalized, `symétrique` and `symmetric` are two values `_sole`
+    collapses to None — a direction silently lost on a re-run over old artifacts.
+    """
+    rels = [
+        {"entity_a": "Chaol Westfall", "entity_b": "Celaena", "cooccurrence_count": 5,
+         "relationship_type": "ally", "direction": "symétrique"},
+        {"entity_a": "Captain Westfall", "entity_b": "Celaena", "cooccurrence_count": 3,
+         "relationship_type": "ally", "direction": "symmetric"},
+    ]
+    folded = fold_relationships(rels, _registry(CHAOL, CELAENA))
+    assert folded[0]["direction"] == "symmetric"
 
 
 def test_self_pair_after_folding_is_dropped():
@@ -132,7 +148,7 @@ def test_folding_pre_typed_discovered_graph_keeps_all_typed():
     pairs = [(a, b) for i, a in enumerate(names) for b in names[i + 1:]][:32]
     rels = [
         {"entity_a": a, "entity_b": b, "cooccurrence_count": 5,
-         "relationship_type": "enemy", "direction": "symétrique"}
+         "relationship_type": "enemy", "direction": "symmetric"}
         for a, b in pairs
     ]
     assert len(rels) == 32

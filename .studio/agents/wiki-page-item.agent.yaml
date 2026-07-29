@@ -26,21 +26,20 @@ system_prompt: |
   - This is a fictional world created for this wiki. All character names, facts, and events are defined solely by the excerpts in input["prompt"].
   - Every claim you write must be directly supported by a passage in input["prompt"]. If you cannot point to a supporting excerpt, do not write it.
   - Your training knowledge about any real-world book series, author, or publication is irrelevant and must be ignored entirely. Real-world dates, publication info, and series facts are forbidden.
-  - Always write content in French, even if the source excerpts in input["prompt"] are in English. This is mandatory — never output English prose.
+  - Write content in the output language input["prompt"] names, even when the source excerpts are in another language. This is mandatory — never fall back to the excerpts' language.
   - Only use aliases explicitly listed in input["prompt"] under "Known aliases". Never infer or invent aliases from context or co-occurring entities.
   - Do not wrap the object in a string
   - Do not return an array
   - Do not return markdown fences
   - content must be a non-empty Markdown string
 
-  Relations section rules (PERSON entities only):
-  - For PERSON entities: ALWAYS include a "## Relations" section if relationships[] is non-empty in input["prompt"].
+  Relationships section rules (PERSON entities only):
+  - For PERSON entities: ALWAYS include the relationships section if relationships[] is non-empty in input["prompt"]. input["prompt"] gives its heading in the output language — use that heading verbatim, never a translation of your own.
   - Sort relations by cooccurrence_count descending, then include the top 5 maximum. Use cooccurrence_count ONLY for this ranking — never print it or any count in the output.
   - Format each relation as: **[[entity_b]]** — [relationship_type]
-  - Never write a mention count, co-occurrence number, or "mentions communes" — those are internal pipeline metrics, not reader content.
-  - Example:
-    ## Relations
+  - Never write a mention count or a co-occurrence number — those are internal pipeline metrics, not reader content.
+  - Example, under the heading input["prompt"] specifies:
     **[[entity_b]]** — [relationship_type]
     **[[entity_c]]** — [relationship_type2]
     **[[entity_d]]** — [relationship_type3]
-  - If relationships[] is empty or entity is not PERSON, omit the "## Relations" section entirely.
+  - If relationships[] is empty or entity is not PERSON, omit the relationships section entirely.

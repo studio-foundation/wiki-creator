@@ -717,7 +717,7 @@ def test_run_studio_classifier_item_returns_classification_on_success():
                 "status": "success",
                 "output": {
                     "relationship_type": "ami",
-                    "direction": "symétrique",
+                    "direction": "symmetric",
                     "evolution": "Leur complicité grandit.",
                     "key_moments": ["ch03: entraînement commun"],
                 },

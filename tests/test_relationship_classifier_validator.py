@@ -8,12 +8,12 @@ from scripts.relationship_classifier_validator import (
 
 
 def test_check_relationship_type_valid_passes():
-    clf = {"relationship_type": "friend", "direction": "symétrique", "evolution": "ils se rapprochent.", "key_moments": ["ch01: rencontre"]}
+    clf = {"relationship_type": "friend", "direction": "symmetric", "evolution": "ils se rapprochent.", "key_moments": ["ch01: rencontre"]}
     assert check_relationship_type_valid(clf) == []
 
 
 def test_check_relationship_type_valid_unknown():
-    clf = {"relationship_type": "rival", "direction": "symétrique", "evolution": "x", "key_moments": []}
+    clf = {"relationship_type": "rival", "direction": "symmetric", "evolution": "x", "key_moments": []}
     errors = check_relationship_type_valid(clf)
     assert errors != []
 
@@ -45,7 +45,7 @@ def test_check_evolution_empty_string_fails():
 def test_validate_classification_valid():
     clf = {
         "relationship_type": "friend",
-        "direction": "symétrique",
+        "direction": "symmetric",
         "evolution": "Leur complicité grandit au fil des chapitres.",
         "key_moments": ["ch03: ils s'entraînent ensemble"],
         "confidence": "explicit",
@@ -57,7 +57,7 @@ def test_validate_classification_valid():
 def test_validate_classification_invalid():
     clf = {
         "relationship_type": "rival",
-        "direction": "symétrique",
+        "direction": "symmetric",
         "evolution": "relation stable dans les extraits fournis",
         "key_moments": [],
     }
@@ -225,7 +225,7 @@ def test_validate_classification_invalid_when_evidence_lacks_entity():
     """validate_classification fails when evidence doesn't mention both entities."""
     clf = {
         "relationship_type": "friend",
-        "direction": "symétrique",
+        "direction": "symmetric",
         "evolution": "Leur complicité grandit.",
         "key_moments": ["ch01: rencontre"],
         "evidence": "Dorian se battit à l'épée avec Chaol.",
@@ -266,7 +266,7 @@ def test_check_confidence_graded_requires_null_when_the_type_is_null():
 def test_validate_classification_rejects_an_ungraded_typed_relation():
     clf = {
         "relationship_type": "friend",
-        "direction": "symétrique",
+        "direction": "symmetric",
         "evolution": "Leur complicité grandit.",
         "key_moments": ["ch03: entraînement"],
     }
