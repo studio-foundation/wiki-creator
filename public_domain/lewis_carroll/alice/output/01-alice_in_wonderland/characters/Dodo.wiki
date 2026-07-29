@@ -2,26 +2,26 @@
 |nom=Dodo
 |apparition=Appears in book 1
 |status=Unknown
+|friends_allies=[[Alice]]
 }}
 
 == Biography ==
 
-The Dodo is a creature of formal demeanor and practical initiative. Among the birds and animals that had fallen into the pool, the Dodo rose to take charge, speaking with solemnity. When the Eaglet challenged the Dodo's use of complex language, the Dodo responded with offended dignity. The Dodo proposed that a Caucus-race would be the best means by which the gathered creatures could dry themselves.
+The Dodo is a creature of Wonderland, notably present among the pool of animals and birds who gathered together after an unusual deluge. When the waterlogged party came ashore, the Dodo proved to be a creature of formal bearing and practical temperament. It speaks with measured solemnity, consulting the group on matters of consequence—though its elaborate vocabulary sometimes provokes confusion among its companions, who found its turns of phrase unnecessarily ornate.
 
-The Dodo marked out a race-course in a circular pattern and positioned all the party along its length. When questioned whether the precise shape mattered, the Dodo explained that it did not, suggesting a pragmatic approach to the undertaking.
+The Dodo is perhaps most recognized for its ingenuity in addressing the problem of persistent dampness that plagued the drowned creatures. When simple methods failed to dry the assembly, the Dodo proposed an alternative remedy: the Caucus-race, a curious competition whose rules—or lack thereof—it undertook to organize. The Dodo marked out a race-course in a circle, dismissing concerns about its exact shape as irrelevant to the endeavor, and set all the party upon the course in various positions. It appears the Dodo's approach to solving problems is to demonstrate rather than merely explain, embodying a peculiar Wonderland logic of its own.
 
 == Relationships ==
 
-'''[[Alice]]''' — acquaintance. The Dodo appears to interact with Alice as part of the gathering of creatures at the shore.
+'''[[Alice]]''' — ally. The Dodo gestures toward Alice, suggesting some degree of partnership in the Caucus-race gathering.
 
-'''[[Eaglet]]''' — friendly_rivalry. The Eaglet's open criticism of the Dodo's formal manner of speech and the Dodo's defensive response suggest a competitive dynamic between them.
+'''[[Eaglet]]''' — acquaintance. The two appear acquainted, though the Eaglet's public mockery of the Dodo's elaborate speech introduces tension to their interaction.
 
 ''Evolution:''
-* [[Alice]] — Acquaintance (ch.3)
-* [[Eaglet]] — Friendly rivalry (ch.3)
+* [[Alice]] — Ally (ch.3)<ref>Alice's Adventures in Wonderland, chapter 3</ref>
 == References ==
 
-* Alice's Adventures in Wonderland
+<references/>
 
 [[Category:Characters]]
 [[Category:Secondary Characters]]
