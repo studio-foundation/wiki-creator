@@ -2,6 +2,7 @@
         test-extraction test-clustering test-relationships classify-relationships classify-relationships-dry \
         run-events generate-synopsis generate-synopsis-dry \
         generate-event-pages generate-event-pages-dry consolidate-stance \
+        check-wikilinks check-wikilinks-series \
         generate-pages generate-pages-dry generate-pages-primary generate-pages-entity \
         discover-relationships \
         smoke golden golden-update eval-relationships \
@@ -110,6 +111,15 @@ generate-event-pages-dry:
 # generated pages vs the declared editorial_stance.mode. Never fails the run.
 consolidate-stance:
 	python scripts/consolidate_editorial_stance.py --book $(BOOK)
+
+# Wikilink integrity (STU-725): assert every [[link]] in the rendered wiki
+# resolves to a page. Hard gate — exits non-zero on a dead link. Intentional red
+# links go in the book YAML export.red_links list.
+check-wikilinks:
+	python scripts/check_wikilinks.py --book $(BOOK)
+
+check-wikilinks-series:
+	python scripts/check_wikilinks.py --book $(BOOK) --series
 
 test-extraction:
 	python scripts/test_extraction.py --book $(BOOK)

@@ -443,9 +443,11 @@ def test_narrative_events_caps_by_salience_then_orders_by_chapter():
 
 def test_narrative_events_splits_budget_across_three_acts():
     # STU-663: the exposition (ch 1-3) is low-salience but must get a share of the
-    # budget proportional to its length — not one endpoint beat, not one per
-    # chapter. The middle stays salience-dense; low-salience middle chapters are
-    # crowded out by the set pieces, exactly as a plot summary would weight them.
+    # budget proportional to its length — not one endpoint beat. STU-713: on top of
+    # that, the coverage floor guarantees every chapter the character appears in
+    # keeps at least one beat, so a low-salience episode is never dropped whole; the
+    # salient set-piece chapters still keep multiple beats with the remaining budget.
+    from wiki_creator.narrative_arc import DEFAULT_MAX_EVENTS
     import scripts.generate_wiki_pages as gwp
 
     events = []
@@ -458,16 +460,11 @@ def test_narrative_events_splits_budget_across_three_acts():
 
     picked = gwp._narrative_events(entity)
     chapters = [e["chapter"] for e in picked]
-    assert len(picked) == gwp._MAX_PERSON_EVENTS
+    assert len(picked) == DEFAULT_MAX_EVENTS
     assert chapters == sorted(chapters)  # chronological
-    # The low-salience exposition act is represented in proportion to its length,
-    # not reduced to a single opening beat.
-    assert {1, 2, 3} <= set(chapters)
-    # The epilogue act is present.
-    assert any(c >= 11 for c in chapters)
-    # Within the middle act, salience decides: the low-salience ch4-6 are crowded
-    # out by the ch7-10 set pieces, which keep multiple beats.
-    assert 4 not in chapters
+    # Every chapter (13, budget 18) keeps at least one beat — no chapter falls out.
+    assert set(chapters) == set(range(1, 14))
+    # The salient set-piece chapters still carry multiple beats with the rest.
     assert max(chapters.count(c) for c in set(chapters)) > 1
 
 
