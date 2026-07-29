@@ -1,0 +1,101 @@
+{
+  "mock_turtle": {
+    "canonical_aliases_book1": [
+      "Mock Turtle"
+    ],
+    "known_facts_book1": [
+      "The Queen describes him as 'the thing Mock Turtle Soup is made from'.",
+      "Is first seen sitting sad and lonely on a little ledge of rock, sighing as if his heart would break.",
+      "Says 'Once, I was a real Turtle', followed by a long silence.",
+      "Went to school in the sea; the master was an old Turtle whom the pupils called Tortoise 'because he taught us'.",
+      "Lists the school subjects as Reeling and Writhing, and the branches of Arithmetic: Ambition, Distraction, Uglification and Derision.",
+      "Says lessons are called lessons because they lessen from day to day.",
+      "Describes and dances the Lobster Quadrille with the Gryphon while Alice watches.",
+      "Sings 'Beautiful Soup, so rich and green' and 'Soo—oop of the e—e—evening, Beautiful, beautiful Soup!'",
+      "Weeps through most of his own history without ever explaining what his sorrow is."
+    ],
+    "known_relations_book1": {
+      "Gryphon": "Old companion who brings Alice to him, interrupts and corrects his story, and dances the Lobster Quadrille with him.",
+      "Alice": "Tells her his history; she admits she has never lived under the sea, never been introduced to a lobster, and never tasted one.",
+      "Queen": "Sends Alice to hear his history."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Mock Turtle appears at the trial",
+        "the Mock Turtle has a name",
+        "Tortoise is a character the Mock Turtle knows in the present"
+      ]
+    },
+    "hallucination_signals": [
+      "the Mock Turtle at the trial",
+      "the Mock Turtle's name is",
+      "Tortoise accompanies the Mock Turtle",
+      "the Mock Turtle explains his sorrow",
+      "the reason for his sorrow is"
+    ]
+  },
+  "gryphon": {
+    "canonical_aliases_book1": [
+      "Gryphon"
+    ],
+    "known_facts_book1": [
+      "Is found lying fast asleep in the sun when the Queen brings Alice to it.",
+      "Laughs at the Queen's sentences and tells Alice 'It's all her fancy, that: they never executes nobody, you know.'",
+      "Takes Alice to the Mock Turtle by the Queen's order.",
+      "Interrupts and corrects the Mock Turtle's story throughout, and hurries it along.",
+      "Dances the Lobster Quadrille with the Mock Turtle, solemnly, round and round Alice, treading on her toes.",
+      "Makes Alice recite ''Tis the voice of the Lobster', which comes out wrong.",
+      "Cuts the Mock Turtle's song short with 'Come on!' and drags Alice off to the trial.",
+      "Says of its own schooling: 'I went to the Classics master, though. He was an old crab, he was.'"
+    ],
+    "known_relations_book1": {
+      "Mock Turtle": "Old companion; hurries his story along and dances the Quadrille with him.",
+      "Alice": "Escorts her, explains Wonderland's executions are empty threats, and makes her recite; she finds its company preferable to the Queen's.",
+      "Queen": "Acts on her order to take Alice to the Mock Turtle, while privately mocking her sentences."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Gryphon has a name",
+        "the Gryphon fights or threatens Alice"
+      ],
+      "sequel_only": [
+        "the Gryphon appears in the Looking-Glass world"
+      ]
+    },
+    "hallucination_signals": [
+      "the Gryphon attacks",
+      "the Gryphon threatens Alice",
+      "the Gryphon's name is",
+      "the Gryphon is hostile"
+    ]
+  },
+  "tortoise": {
+    "canonical_aliases_book1": [
+      "Tortoise"
+    ],
+    "known_facts_book1": [
+      "Not a character in the story. 'Tortoise' is the nickname the Mock Turtle and his schoolfellows gave their master, an old Turtle, 'because he taught us'.",
+      "Appears in exactly three sentences, all inside the Mock Turtle's account of his schooldays, and never acts, speaks or is present."
+    ],
+    "known_relations_book1": {
+      "Mock Turtle": "His former schoolmaster, referred to in the past tense only."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Tortoise meets Alice",
+        "Tortoise speaks",
+        "Tortoise is present in any scene",
+        "Tortoise is a distinct creature from the old Turtle"
+      ]
+    },
+    "hallucination_signals": [
+      "Tortoise meets Alice",
+      "Tortoise said",
+      "Tortoise tells",
+      "Tortoise appears",
+      "Tortoise is a character",
+      "Tortoise and Alice",
+      "Tortoise lives in"
+    ]
+  }
+}

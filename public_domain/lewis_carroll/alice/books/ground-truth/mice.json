@@ -1,0 +1,69 @@
+{
+  "_note": "the Mouse and the Dormouse share a file, in this order, on purpose. The GT loader binds a page to the first entity whose alias matches by bidirectional substring, and the page title 'Mouse' is a substring of the alias 'Dormouse'. Listing the Mouse first makes 'Mouse' bind to the Mouse and 'Dormouse' bind to the Dormouse; splitting them across files leaves the binding to glob order. A string value here is skipped by the loader, which only reads dict values.",
+  "mouse": {
+    "canonical_aliases_book1": [
+      "the Mouse"
+    ],
+    "known_facts_book1": [
+      "Is swimming in the pool of Alice's tears when she meets it — the first creature she speaks to in Wonderland.",
+      "Alice addresses it with 'O Mouse!', remembering her brother's Latin Grammar, then in French with 'Où est ma chatte?', which terrifies it.",
+      "Says 'Our family always hated cats: nasty, low, vulgar things!' and asks 'Would you like cats if you were me?'",
+      "Is offended a second time when Alice praises a farmer's terrier for catching mice.",
+      "Leads the swimming party to the shore and calls the meeting to order.",
+      "Recites the driest thing it knows — the passage about William the Conqueror and Stigand, archbishop of Canterbury — to dry the party out.",
+      "Says 'Mine is a long and a sad tale!', which Alice takes for a long tail, and the tale is printed in the shape of one.",
+      "Walks off offended in the middle of its own story and does not come back."
+    ],
+    "known_relations_book1": {
+      "Alice": "Offended by her twice, over cats and then over dogs; leaves the beach rather than finish its history.",
+      "Dodo": "Fellow member of the draggled party on the bank; the Dodo proposes the Caucus-race after the Mouse's history fails to dry anyone.",
+      "Lory": "Part of the same party; interrupts the Mouse's recitation.",
+      "Dinah": "Never meets her — Alice's talk about Dinah is what frightens and offends it."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Mouse finishes its history",
+        "the Mouse reappears after chapter III",
+        "the Mouse is the Dormouse"
+      ]
+    },
+    "hallucination_signals": [
+      "the Mouse at the trial",
+      "the Mouse in the teapot",
+      "the Mouse falls asleep at the tea party",
+      "the Mouse finishes its history",
+      "the Mouse's sad history was"
+    ]
+  },
+  "dormouse": {
+    "canonical_aliases_book1": [
+      "Dormouse"
+    ],
+    "known_facts_book1": [
+      "Sits between the Hatter and the March Hare, fast asleep, and the other two use it as a cushion.",
+      "Talks in its sleep and is pinched and shaken awake.",
+      "Tells the story of three little sisters — Elsie, Lacie and Tillie — who lived at the bottom of a treacle-well.",
+      "Says the sisters were learning to draw things that begin with an M — mouse-traps, the moon, memory, muchness.",
+      "Falls asleep mid-story; the last Alice sees of the party is the other two trying to put it into the teapot.",
+      "Comes into the court arm-in-arm with the March Hare; when the Hatter says the tea party began on the fourteenth of March and the March Hare says the fifteenth, the Dormouse says the sixteenth.",
+      "Says 'Treacle' in a sleepy voice from behind the cook, and the Queen shrieks 'Collar that Dormouse! Behead that Dormouse! Turn that Dormouse out of court!'"
+    ],
+    "known_relations_book1": {
+      "Hatter": "Is woken, pinched and doused with hot tea by him.",
+      "March Hare": "Is used as a cushion and finally stuffed toward the teapot by him.",
+      "Alice": "Its story is interrupted by her questions, which the other two treat as rudeness."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Dormouse is a mouse belonging to Alice",
+        "the Dormouse is a friend of Alice"
+      ]
+    },
+    "hallucination_signals": [
+      "the Dormouse in the pool of tears",
+      "the Dormouse tells its sad history",
+      "the Dormouse is Alice's",
+      "the Dormouse recites the history of William"
+    ]
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "caterpillar": {
+    "canonical_aliases_book1": [
+      "Caterpillar"
+    ],
+    "known_facts_book1": [
+      "Is large and blue, sits on the top of a mushroom with its arms folded, quietly smoking a long hookah.",
+      "Is exactly three inches high, and says so when Alice complains that three inches is a wretched height.",
+      "Opens with 'Who are you?' and returns to the same question after every digression.",
+      "Tells Alice to keep her temper.",
+      "Makes Alice recite 'You are old, Father William', and pronounces it wrong from beginning to end.",
+      "Gets down off the mushroom and crawls away, remarking as it goes: 'One side will make you grow taller, and the other side will make you grow shorter.'",
+      "Never says which side is which, leaving Alice to work it out from a round mushroom with no sides."
+    ],
+    "known_relations_book1": {
+      "Alice": "Interrogates her, contradicts her, makes her recite a poem she gets wrong, and finally gives her the mushroom instruction — the only practical help she receives in the book."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Caterpillar turns into a butterfly on the page",
+        "the Caterpillar has a name",
+        "the Caterpillar reappears later in the book"
+      ],
+      "adaptation_inventions": [
+        "the Caterpillar blows smoke letters",
+        "the Caterpillar sings"
+      ]
+    },
+    "hallucination_signals": [
+      "becomes a butterfly",
+      "turns into a butterfly",
+      "the Caterpillar's name",
+      "the Caterpillar blows smoke",
+      "the Caterpillar sings",
+      "the Caterpillar reappears"
+    ]
+  },
+  "pigeon": {
+    "canonical_aliases_book1": [
+      "Pigeon"
+    ],
+    "known_facts_book1": [
+      "Flies into Alice's face and beats her with its wings when her neck, stretched enormously long, comes down among the treetops.",
+      "Insists Alice is a serpent, on the grounds of her long neck and her admission that she has eaten eggs.",
+      "Complains it has tried the roots of trees, banks and hedges, and that serpents are never satisfied.",
+      "Says it has not had a wink of sleep for three weeks for watching out for serpents.",
+      "Tells Alice to be off when she says she is a little girl, and goes back down into its nest."
+    ],
+    "known_relations_book1": {
+      "Alice": "Mistakes her for a serpent after eggs and drives her away from its nest."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Pigeon has eggs stolen by Alice",
+        "the Pigeon appears more than once"
+      ]
+    },
+    "hallucination_signals": [
+      "Alice takes the eggs",
+      "Alice steals the eggs",
+      "the Pigeon's eggs are eaten by Alice",
+      "the Pigeon reappears"
+    ]
+  },
+  "father_william": {
+    "canonical_aliases_book1": [
+      "Father William"
+    ],
+    "known_facts_book1": [
+      "Is not a character in the story: he is the subject of the poem Alice recites to the Caterpillar, 'You are old, Father William'.",
+      "In the poem he stands on his head, turns somersaults in at the door, eats a goose bones and beak, and balances an eel on the end of his nose.",
+      "Answers a young man's four questions and ends by threatening to kick him downstairs."
+    ],
+    "known_relations_book1": {
+      "Alice": "None. She recites the poem about him and gets the words wrong.",
+      "Caterpillar": "None. The Caterpillar asks for the recitation."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Father William meets Alice",
+        "Father William appears in Wonderland",
+        "Father William speaks to any character in the story"
+      ]
+    },
+    "hallucination_signals": [
+      "Father William meets Alice",
+      "Father William tells Alice",
+      "Father William in Wonderland",
+      "Father William said to Alice",
+      "Father William lives in Wonderland"
+    ]
+  }
+}

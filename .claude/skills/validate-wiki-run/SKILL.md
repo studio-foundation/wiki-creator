@@ -28,6 +28,9 @@ Séries couvertes à ce jour :
 | Throne of Glass | `library/sarah_j_maas/throne-of-glass/books/ground-truth/` | `celeana`, `chaol`, `dorian`, `elena_and_gavin`, `king-of-adarlan`, `nehemia`, `perrington` |
 | Narnia | `library/c_w_lewis/narnia/books/ground-truth/` | `aslan`, `the_four_children`, `white_witch`, `tumnus`, `the_beavers`, `maugrim`, `narnia_and_cair_paravel`, `professor_and_macready` |
 | Inheritance (Eragon) | `library/christopher_paolini/inheritance/books/ground-truth/` | `eragon`, `saphira`, `brom`, `murtagh`, `arya`, `antagonists`, `varden`, `angela_and_solembum`, `carvahall` |
+| Alice (public domain) | `public_domain/lewis_carroll/alice/books/ground-truth/` | `alice`, `white_rabbit`, `mad_tea_party`, `mice`, `court_of_hearts`, `duchess_household`, `caterpillar_and_pigeon`, `mock_turtle_and_gryphon`, `pool_of_tears`, `minor_and_offstage` |
+
+Le chemin est `<book_dir>/books/ground-truth/` — pour un livre du domaine public, `book_dir` est sous `public_domain/`, pas sous `library/`.
 
 Si le répertoire n'existe pas pour la série auditée, l'étape 1b est **n/a** — le noter explicitement dans l'audit plutôt que de la sauter en silence.
 

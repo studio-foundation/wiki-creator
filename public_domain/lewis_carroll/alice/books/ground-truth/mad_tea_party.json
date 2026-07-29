@@ -1,0 +1,79 @@
+{
+  "hatter": {
+    "canonical_aliases_book1": [
+      "Hatter"
+    ],
+    "known_facts_book1": [
+      "Sits at a table set out under a tree in front of the March Hare's house, having tea.",
+      "Cries 'No room! No room!' when Alice arrives, at a table with plenty of room.",
+      "Opens by telling Alice her hair wants cutting, which she calls a very rude personal remark.",
+      "Asks the riddle 'Why is a raven like a writing-desk?' and later admits he hasn't the slightest idea of the answer.",
+      "Takes his watch out of his pocket; it tells the day of the month and not the hour.",
+      "Says he quarrelled with Time last March at a concert given by the Queen of Hearts, where he sang 'Twinkle, twinkle, little bat'.",
+      "Says the Queen bawled out 'He's murdering the time! Off with his head!' and that Time has refused to move for him ever since, so it is always six o'clock and always tea-time.",
+      "Pours hot tea on the Dormouse's nose to wake it.",
+      "Appears at the trial as first witness, still holding a teacup and a piece of bread-and-butter.",
+      "Is terrified in the witness box, bites a large piece out of his teacup instead of the bread-and-butter."
+    ],
+    "known_relations_book1": {
+      "March Hare": "Tea-party companion; the two of them use the sleeping Dormouse as a cushion and speak almost interchangeably.",
+      "Dormouse": "Wakes it, pinches it, pours tea on it and tells it to go on with its story.",
+      "Alice": "Offends her with personal remarks and unanswerable riddles; she leaves in disgust and never comes back.",
+      "Queen": "Sentenced him to death at her concert for murdering the time; he is plainly terrified of her at the trial."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "the Mad Hatter",
+        "the Hatter is Alice's friend",
+        "the Hatter helps Alice escape",
+        "an unbirthday party",
+        "a 10/6 price card in his hat"
+      ],
+      "sequel_only": [
+        "Hatta",
+        "the Anglo-Saxon Messenger"
+      ]
+    },
+    "hallucination_signals": [
+      "Mad Hatter",
+      "the Hatter befriends",
+      "the Hatter helps Alice",
+      "unbirthday",
+      "the answer to the riddle is",
+      "because it can produce a few notes",
+      "price card 10/6",
+      "Hatta"
+    ]
+  },
+  "march_hare": {
+    "canonical_aliases_book1": [
+      "March Hare"
+    ],
+    "known_facts_book1": [
+      "Lives in a house with chimneys shaped like ears and a roof thatched with fur.",
+      "Hosts the endless tea party outside his house.",
+      "Offers Alice wine when there is no wine on the table.",
+      "Says Alice should say what she means, launching the round of literal-mindedness that drives her away.",
+      "Dips his watch into his cup of tea after the Hatter says the butter wouldn't suit the works.",
+      "Suggests moving on to a clean cup as the party's answer to dirty crockery.",
+      "Denies everything at the trial: 'I deny it!'"
+    ],
+    "known_relations_book1": {
+      "Hatter": "Tea-party companion, speaks and acts almost as one with him.",
+      "Dormouse": "Sits with the Hatter using it as a cushion; helps try to stuff it into the teapot.",
+      "Alice": "Refuses her a seat, offers her wine there is none of, and contradicts her; she leaves the party in anger."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "an unbirthday party",
+        "the March Hare as Alice's friend"
+      ]
+    },
+    "hallucination_signals": [
+      "unbirthday",
+      "the March Hare befriends",
+      "the March Hare helps Alice",
+      "Haigha"
+    ]
+  }
+}

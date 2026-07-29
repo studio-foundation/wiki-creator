@@ -1,0 +1,86 @@
+{
+  "dodo": {
+    "canonical_aliases_book1": [
+      "Dodo"
+    ],
+    "known_facts_book1": [
+      "One of the birds and animals that fell into the pool of tears with Alice.",
+      "Speaks with an important air and uses long words: 'the best thing to get us dry would be a Caucus-race'.",
+      "Marks out a race-course in a sort of circle and sets everyone running with no start and no finish.",
+      "Calls out 'The race is over!' after half an hour and declares 'Everybody has won, and all must have prizes.'",
+      "Makes Alice supply the prizes from the box of comfits in her pocket, then solemnly presents Alice with her own thimble.",
+      "Does not appear again after chapter III."
+    ],
+    "known_relations_book1": {
+      "Alice": "Turns to her for prizes and hands her back her own thimble with great solemnity.",
+      "the Mouse": "Fellow member of the wet party on the bank; steps in when the Mouse's dry history fails.",
+      "Lory": "Fellow bird in the same party."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Dodo is a friend or ally of Alice",
+        "the Dodo appears after the Caucus-race"
+      ]
+    },
+    "hallucination_signals": [
+      "the Dodo is Alice's friend",
+      "the Dodo reappears",
+      "the Dodo at the trial",
+      "the Dodo's name"
+    ]
+  },
+  "lory": {
+    "canonical_aliases_book1": [
+      "Lory"
+    ],
+    "known_facts_book1": [
+      "One of the birds in the pool of tears.",
+      "Has a long argument with Alice and turns sulky, saying only 'I am older than you, and must know better.'",
+      "Refuses to tell its age, which ends the argument.",
+      "Shivers and says 'Ugh!' during the Mouse's recitation about William the Conqueror.",
+      "Sighs 'What a pity it wouldn't stay!' when the Mouse walks off."
+    ],
+    "known_relations_book1": {
+      "Alice": "Argues with her about who knows better and refuses to settle it by giving its age.",
+      "the Mouse": "Interrupts its recitation and regrets its departure."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Lory appears after chapter III",
+        "the Lory has a name"
+      ]
+    },
+    "hallucination_signals": [
+      "the Lory reappears",
+      "the Lory at the trial",
+      "the Lory's name is",
+      "the Lory tells its age"
+    ]
+  },
+  "eaglet": {
+    "canonical_aliases_book1": [
+      "Eaglet"
+    ],
+    "known_facts_book1": [
+      "One of the birds that fell into the pool of tears, listed alongside a Duck, a Dodo and a Lory.",
+      "Tells the Dodo 'Speak English! I don't know the meaning of half those long words, and, what's more, I don't believe you do either!' and laughs.",
+      "Has no other line and does not appear again."
+    ],
+    "known_relations_book1": {
+      "Dodo": "Mocks its long words.",
+      "Alice": "No direct exchange."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Eaglet speaks to Alice",
+        "the Eaglet appears after chapter III"
+      ]
+    },
+    "hallucination_signals": [
+      "the Eaglet speaks to Alice",
+      "the Eaglet reappears",
+      "the Eaglet at the trial",
+      "the Eaglet's friendship"
+    ]
+  }
+}

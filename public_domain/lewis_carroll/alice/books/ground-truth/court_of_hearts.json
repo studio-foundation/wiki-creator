@@ -1,0 +1,128 @@
+{
+  "queen": {
+    "canonical_aliases_book1": [
+      "Queen",
+      "Queen of Hearts"
+    ],
+    "known_facts_book1": [
+      "Arrives at the head of a procession of ten soldiers carrying clubs, ten courtiers, the royal children, and the guests.",
+      "Her first words to Alice are 'Who is this?', addressed to the Knave, and her second are 'Off with her head!'",
+      "Orders the three gardeners beheaded for planting a white rose-tree, and Alice hides them in a flower-pot.",
+      "Screams 'Off with his head!' or 'Off with her head!' about once a minute at the croquet-ground.",
+      "Runs the croquet game with live flamingoes for mallets, hedgehogs for balls, and doubled-up soldiers for arches.",
+      "Sentences everyone but the King, herself and Alice to execution during the game.",
+      "Gave a great concert at which the Hatter sang, and sentenced him to death for murdering the time.",
+      "Sends Alice off with the Gryphon to hear the Mock Turtle's history.",
+      "At the trial, demands 'Sentence first — verdict afterwards.'",
+      "Turns purple and shouts 'Off with her head!' at Alice, who answers 'Who cares for you? You're nothing but a pack of cards!'"
+    ],
+    "known_relations_book1": {
+      "King": "Rules the court beside him; he follows her about apologising and quietly pardoning the people she condemns.",
+      "Alice": "Adversary from their first exchange; sentences her to death and is contradicted loudly and decidedly in return.",
+      "Knave": "Puts him on trial for stealing her tarts; he carries the King's crown in her procession.",
+      "Duchess": "Sentenced her to execution for boxing the royal ears; the Duchess's affection is plainly fear.",
+      "Gryphon": "Orders him to take Alice to the Mock Turtle.",
+      "Hatter": "Sentenced him to death at her concert; he trembles under her stare in the witness box."
+    },
+    "forbidden_book1": {
+      "sequel_only": [
+        "the Red Queen",
+        "the White Queen",
+        "the living chess game"
+      ],
+      "not_in_this_book": [
+        "anyone is actually beheaded in Wonderland",
+        "the Queen is the ruler of all Wonderland",
+        "the Queen of Hearts is Alice's aunt or relative"
+      ],
+      "relationships": [
+        "the Queen is married to the King (never stated; they are seated together on their throne as King and Queen of Hearts)"
+      ]
+    },
+    "hallucination_signals": [
+      "the Red Queen",
+      "the White Queen",
+      "actually beheaded",
+      "is beheaded on her order",
+      "ruler of all Wonderland",
+      "the Queen's sister",
+      "married to the King"
+    ]
+  },
+  "king": {
+    "canonical_aliases_book1": [
+      "the King",
+      "King of Hearts"
+    ],
+    "known_facts_book1": [
+      "Walks beside the Queen in the procession; the Knave carries his crown on a crimson velvet cushion.",
+      "Says of the sleeping gardeners hidden by Alice, and of Alice herself, 'Consider, my dear: she is only a child!'",
+      "Pardons quietly behind the Queen's back everyone she has ordered executed.",
+      "Wears his crown over his judge's wig at the trial and serves as judge.",
+      "Tries to have Alice removed under 'Rule Forty-two: All persons more than a mile high to leave the court.'",
+      "Repeatedly tells the jury to consider their verdict, and reads the tart-stealing verse as evidence.",
+      "Interrogates the Hatter, the Duchess's cook and Alice as witnesses."
+    ],
+    "known_relations_book1": {
+      "Queen": "Rules beside her and spends the book softening her sentences.",
+      "Alice": "Questions her at the trial and invents a rule to expel her; earlier reminds the Queen she is only a child.",
+      "Knave": "Tries him for stealing the tarts.",
+      "Cheshire Cat": "Objects to the Cat's manner of looking at him, and orders it beheaded — starting the argument about whether a head without a body can be cut off."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the King is afraid of the Queen to the point of hiding",
+        "the King has no role at the trial"
+      ],
+      "sequel_only": [
+        "the Red King",
+        "the White King",
+        "the King dreaming Alice"
+      ]
+    },
+    "hallucination_signals": [
+      "the Red King",
+      "the White King",
+      "the King dreaming",
+      "the King orders Alice's execution",
+      "the King supports the execution",
+      "the King hides from"
+    ]
+  },
+  "knave": {
+    "canonical_aliases_book1": [
+      "Knave",
+      "Knave of Hearts"
+    ],
+    "known_facts_book1": [
+      "Walks in the royal procession carrying the King's crown on a crimson velvet cushion.",
+      "Is tried for stealing the Queen's tarts, standing in chains before the court with a soldier on each side.",
+      "The accusation is read out as the nursery rhyme: 'The Queen of Hearts, she made some tarts... The Knave of Hearts, he stole those tarts, and took them quite away!'",
+      "Denies writing the verses produced as evidence — 'I didn't write it, and they can't prove I did: there's no name signed at the end' — and the King answers that not signing only makes it worse.",
+      "The trial breaks up before any verdict is reached, when Alice grows and the pack of cards flies at her."
+    ],
+    "known_relations_book1": {
+      "Queen": "Accused of stealing her tarts; she demands sentence before verdict.",
+      "King": "Tried before him as judge.",
+      "Alice": "No direct exchange; she is a witness at his trial and ends it by growing to full size."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Knave is found guilty",
+        "the Knave is beheaded",
+        "the Knave confesses"
+      ],
+      "sequel_only": [
+        "the Knave appears in the Looking-Glass world"
+      ]
+    },
+    "hallucination_signals": [
+      "the Knave is found guilty",
+      "the Knave is beheaded",
+      "the Knave confesses",
+      "the verdict was",
+      "found guilty of stealing the tarts",
+      "the Knave did steal"
+    ]
+  }
+}

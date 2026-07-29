@@ -1,0 +1,45 @@
+{
+  "entity": "White Rabbit",
+  "canonical_aliases_book1": [
+    "White Rabbit"
+  ],
+  "known_facts_book1": [
+    "Runs past Alice on the bank saying 'Oh dear! Oh dear! I shall be late!' and takes a watch out of its waistcoat-pocket.",
+    "Goes down a large rabbit-hole under the hedge, which is how Alice reaches Wonderland.",
+    "Appears in the long hall carrying a pair of white kid gloves and a large fan, muttering about the Duchess and her savage temper.",
+    "Drops the gloves and the fan and scurries away when Alice speaks to him.",
+    "Mistakes Alice for his housemaid Mary Ann and orders her home to fetch him another pair of gloves and a fan.",
+    "Has a house with a bright brass plate reading 'W. RABBIT' engraved on it.",
+    "Calls for Pat and for Bill when Alice, grown huge, fills his house.",
+    "Appears at the Queen's procession as herald, dressed in court dress, with a trumpet in one hand and a scroll of parchment in the other.",
+    "Tells Alice in a whisper that the Duchess is under sentence of execution for boxing the Queen's ears.",
+    "Blows three blasts on the trumpet at the trial and reads the accusation against the Knave of Hearts.",
+    "Interrupts the King at the trial with 'Unimportant, your Majesty means, of course.'"
+  ],
+  "known_relations_book1": {
+    "Alice": "Mistakes her for his housemaid Mary Ann and orders her about; is frightened of her and runs from her. Not a friendship.",
+    "Duchess": "Fears her savage temper — 'Oh! the Duchess, the Duchess! Oh! won't she be savage if I've kept her waiting!'",
+    "Queen": "Serves the court as herald; announces the procession and reads the charge at the trial.",
+    "Mary Ann": "His housemaid, named but never present on the page.",
+    "Bill": "One of the servants he sends down his own chimney to deal with the giant Alice."
+  },
+  "forbidden_book1": {
+    "not_in_this_book": [
+      "the White Rabbit guides Alice through Wonderland",
+      "the White Rabbit is Alice's friend",
+      "the White Rabbit appears in the Looking-Glass world"
+    ],
+    "adaptation_inventions": [
+      "the White Rabbit works for the Queen as a personal servant",
+      "the White Rabbit is named in the story"
+    ]
+  },
+  "hallucination_signals": [
+    "the White Rabbit guides",
+    "guides Alice through Wonderland",
+    "her friend the White Rabbit",
+    "the White Rabbit befriends",
+    "the White Rabbit helps Alice",
+    "the White Rabbit's name is"
+  ]
+}
