@@ -1,0 +1,230 @@
+{
+  "kiki_aru": {
+    "canonical_aliases_book1": [
+      "Kiki Aru",
+      "the Hyup boy"
+    ],
+    "known_facts_book1": [
+      "A young Hyup of Mount Munch, son of the retired Sorcerer Bini Aru and Mopsi Aru, noted as cross and disagreeable because his father would not let him go down the mountain and see the world.",
+      "Is not a wizard or magician at all, and can do nothing unusual except pronounce the one Magic Word he stole from his father.",
+      "Found the word by stubbing his toe twice on the same loose floor board in his father's forbidden private room, prying it up, and reading the pronunciation written on its underside.",
+      "Copied the instructions onto a paper, learned them by heart, and hid the paper in a tin box under small stones in a neglected part of the garden.",
+      "Made his first transformation on the front porch — into a hawk — and flew across the Deadly Desert away from Oz, because working magic there was against Ozma's law.",
+      "Travelled the outside kingdoms as bird and boy: Hiland and Loland, Merryland, Noland, the Kingdom of Ix, the Land of Ev.",
+      "Stole a gold piece from an old man at an inn in Ev by turning into a magpie, was scolded by a sparrow, and answered that he had always wanted to be wicked but did not know how.",
+      "Refuses, over and over, to sell the secret word to Ruggedo for any number of jewels, and will never speak it in another person's presence.",
+      "Transforms himself and Ruggedo into **Li-Mon-Eags** — lion heads, monkey bodies, eagle wings, wild-ass tails tipped with knobs of gold — a shape Ruggedo invented and named on the spot.",
+      "Panics when the Wizard's party arrives and transforms, in quick succession, the Wizard into a fox, Dorothy into a woolly lamb, the Cowardly Lion into a Munchkin boy, Ruggedo into a goose, the Hungry Tiger into a rabbit and Gugu into a fat Gillikin woman.",
+      "Steals the Wizard's Black Bag in the confusion, finds every tool in it a puzzle he cannot use, and hangs the bag on a branch of the tall avocado tree.",
+      "Transforms six monkeys into fifty-foot Giant Soldiers, and makes them so big they are wedged among the trees and cannot move a step.",
+      "Is undone by his own precaution: to keep the word secret he whispers it into a hollow tree, and the Wizard-Fox is hiding inside that very hollow and hears it pronounced six times.",
+      "Is turned into a **hickory-nut** by the Wizard, carried in his pocket, and restored months later beside the Fountain of the Water of Oblivion.",
+      "Drinks the Water of Oblivion, forgets his name, his history and the Magic Word, smiles like a baby, and is kept in Oz to be taught to be true and considerate of others."
+    ],
+    "known_relations_book1": {
+      "Bini Aru": "His father, the Sorcerer whose secret he stole.",
+      "Mopsi Aru": "His mother, famous for huckleberry pies.",
+      "Ruggedo": "His fellow-conspirator, whom he distrusts and means to turn into a tree.",
+      "the Wizard of Oz": "The magician who overhears his word and defeats him with it.",
+      "Gugu": "The Leopard King he transforms into a fat woman."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Kiki Aru teaches Ruggedo the Magic Word",
+        "Kiki Aru is a trained sorcerer",
+        "Kiki Aru is punished or destroyed",
+        "Kiki Aru returns to Mount Munch",
+        "Kiki Aru invents the Magic Word"
+      ],
+      "relationships": [
+        "Kiki Aru is a loyal ally of Ruggedo",
+        "Kiki Aru is the son of Ruggedo"
+      ]
+    },
+    "hallucination_signals": [
+      "Kiki teaches the word to Ruggedo",
+      "Kiki invented the magic word",
+      "Kiki goes home to Mount Munch",
+      "Kiki is imprisoned"
+    ]
+  },
+  "ruggedo": {
+    "canonical_aliases_book1": [
+      "Ruggedo",
+      "the Nome",
+      "the former Nome King",
+      "the old Nome"
+    ],
+    "known_facts_book1": [
+      "A crooked old man with a fat body, thin legs and arms, a big round face, white whiskers coming to a point below his waist and white hair coming to a point on top of his head, in tight dull-gray clothes with pockets bunched out.",
+      "Was King of the Nomes until the Oz people took his kingdom; he was allowed to carry away as many precious stones as he could, so he had pockets made all over his clothes and loaded them with diamonds, rubies and emeralds.",
+      "Is now a wanderer outside Oz, brooding on revenge, and says the smallest of his jewels is worth a hundred gold pieces.",
+      "**Is afraid of eggs** — any kind and every kind; an egg that touches a Nome ruins him for life, and it was eggs rolled at him that cost him his kingdom.",
+      "Knows Glinda's Book of Records writes down what *people* do, not what birds or beasts do — which is why the whole conspiracy is carried out in animal shapes.",
+      "Invents the name and the shape of the **Li-Mon-Eag** and the lie that goes with it: that he comes from Sky Island to warn the beasts the Oz people are making ropes to enslave them.",
+      "Persuades the Forest of Gugu to assemble by promising to transform every beast into a man and every Oz person into a beast.",
+      "Searches Kiki's room and pockets in the night for a magic tool, finds nothing, and begins to doubt the boy can transform at all.",
+      "Plans, once he has the word, to transform Kiki into a bundle of faggots and burn him up — while Kiki plans to turn him into a marble statue.",
+      "Is transformed into a **goose**, a shape he finds unbearable because geese lay eggs, and wanders the forest quacking 'Kiki Aru! Quack—quack!' to find the boy.",
+      "Proposes turning fifty monkeys into fifty-foot giants with swords, reasoning that Oz people cannot be killed but can be cut into pieces and scattered.",
+      "Hears the Magic Word once, from the Wizard's mouth, but cannot reproduce the accent, and is turned into a **walnut**.",
+      "Is restored beside the Fountain of the Water of Oblivion, declares he will conquer all Oz and notes with satisfaction that there is not an egg in sight — then drinks, mid-boast, and forgets everything.",
+      "Ends the book harmless and nameless, patting the Cowardly Lion's head and calling him 'Good doggie!'; Ozma rules he must be kept in Oz, since sending him home last time only let him learn the old evil ways again."
+    ],
+    "known_relations_book1": {
+      "Kiki Aru": "The boy he flatters, spies on and means to burn once he has the secret.",
+      "Ozma": "The Ruler he means to be revenged on, and who finally shelters him.",
+      "Dorothy": "One of the enemies he blames for the loss of his kingdom.",
+      "the Wizard of Oz": "The magician who turns him into a walnut."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Ruggedo learns the Magic Word",
+        "Ruggedo regains the Nome Kingdom",
+        "Ruggedo is destroyed by an egg",
+        "Ruggedo is banished from Oz",
+        "Ruggedo leads an army of Nomes"
+      ],
+      "relationships": [
+        "Ruggedo is a friend of Ozma",
+        "Ruggedo is an ally of Gugu"
+      ]
+    },
+    "hallucination_signals": [
+      "Ruggedo learns Pyrzqxgl",
+      "Ruggedo is banished from Oz",
+      "Ruggedo commands Nomes",
+      "an egg destroys Ruggedo"
+    ]
+  },
+  "pyrzqxgl": {
+    "canonical_aliases_book1": [
+      "Pyrzqxgl",
+      "the Magic Word",
+      "the Word of Transformation"
+    ],
+    "known_facts_book1": [
+      "A single mystical word which, pronounced correctly, transforms anyone into beast, bird or fish, or anything else, and back again when repeated.",
+      "Requires **no tools, powders, chemicals or herbs**, always works perfectly, and is instant — which is why it is more powerful than anything Glinda or the Wizard possess.",
+      "Was discovered by Bini Aru, and was unknown to Glinda, to the Wizard, to Dr. Pipt, to old Mombi or to anyone else who dealt in magic arts.",
+      "**The power is in the pronunciation, not the word** — Ruggedo hears it spoken and still cannot use it, and the Wizard's first attempt with a wrong accent fails.",
+      "Can transform anything **that can talk**; a person transformed into a tree or a nut stays that way, because they cannot utter the word to undo it.",
+      "Can change a bird into a beast and a beast into a bird without any human form in between.",
+      "Was written down by Bini Aru on the underside of a floor board in his own house, as a secret place he alone could find.",
+      "Is learned by the Wizard by eavesdropping from inside a hollow tree, and he waits to hear it several times so it will be fixed in his mind.",
+      "The narrator gives the word plainly on the grounds that no reader will pronounce it properly, and advises reading the story aloud carefully."
+    ],
+    "known_relations_book1": {
+      "Bini Aru": "Its discoverer.",
+      "Kiki Aru": "Who stole it and used it.",
+      "the Wizard of Oz": "Who overheard it and used it to undo every transformation in the book."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Magic Word requires a wand or tools",
+        "Glinda knows the Magic Word",
+        "the Magic Word can kill",
+        "the Magic Word works on things that cannot talk"
+      ]
+    },
+    "hallucination_signals": [
+      "Glinda knows Pyrzqxgl",
+      "the word needs a wand",
+      "the word kills",
+      "the spelling is the secret"
+    ]
+  },
+  "bini_aru": {
+    "canonical_aliases_book1": [
+      "Bini Aru"
+    ],
+    "known_facts_book1": [
+      "A wise old Hyup of Mount Munch who used to be a clever Sorcerer.",
+      "Obeyed Ozma's decree — sent to the Hyups by Glinda by means of a strong-winged Eagle — that no one but Glinda and the Wizard may practice magic, and destroyed his powders and tools.",
+      "Had never seen Ozma, but knew she was his Ruler and must be obeyed.",
+      "Discovered the secret of instant transformation and its magic word, which no other sorcerer knew.",
+      "Used it only harmlessly — turning himself into a cow to eat grass when he was hungry far from home, then back again.",
+      "Grieved only that the discovery would be lost, so he wrote the pronunciation on the underside of a floor board in his own private room, reasoning that Ozma might some day change her mind.",
+      "Never appears in the present action of the book: he is at the annual Hyup festival when his son robs him, and is not seen again."
+    ],
+    "known_relations_book1": {
+      "Kiki Aru": "His son, who steals the secret.",
+      "Mopsi Aru": "His wife.",
+      "Ozma": "The Ruler whose decree he obeyed without ever meeting her."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Bini Aru practices magic in this book",
+        "Bini Aru pursues his son",
+        "Bini Aru is punished by Ozma",
+        "Bini Aru travels to the Emerald City"
+      ]
+    },
+    "hallucination_signals": [
+      "Bini Aru chases Kiki",
+      "Bini Aru is punished",
+      "Bini Aru works magic",
+      "Bini Aru meets Ozma"
+    ]
+  },
+  "mopsi_aru": {
+    "canonical_aliases_book1": [
+      "Mopsi Aru"
+    ],
+    "known_facts_book1": [
+      "The wife of Bini Aru and mother of Kiki Aru, a Hyup living on the saucer-shaped top of Mount Munch.",
+      "Is famous among the Hyups for making fine huckleberry pies.",
+      "Is at the yearly Hyup festival, gladly leaving her sullen son at home, on the day he finds the Magic Word.",
+      "Appears only in the first chapter and takes no part in the story."
+    ],
+    "known_relations_book1": {
+      "Bini Aru": "Her husband.",
+      "Kiki Aru": "Her son."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Mopsi Aru works magic",
+        "Mopsi Aru searches for her son",
+        "Mopsi Aru leaves Mount Munch"
+      ]
+    },
+    "hallucination_signals": [
+      "Mopsi Aru works magic",
+      "Mopsi Aru searches for Kiki",
+      "Mopsi Aru travels"
+    ]
+  },
+  "the_li_mon_eags": {
+    "canonical_aliases_book1": [
+      "Li-Mon-Eag",
+      "Li-Mon-Eags",
+      "the Mixed Beast"
+    ],
+    "known_facts_book1": [
+      "A shape invented by Ruggedo and named by him on the spot: the head of a lion, the body of a monkey, the wings of an eagle, and the tail of a wild ass tipped with a knob of gold instead of a bunch of hair.",
+      "Was chosen deliberately to resemble no beast of the forest, so the strangers would not be a rival to the Leopard King nor beneath the respect of the others.",
+      "Is claimed to come from **Sky Island**, and the pair claim to be magicians who look down on Oz and hear everything the Oz people say.",
+      "Is disbelieved at once by Gugu — 'you mixed-up beast who are neither one thing nor another' — and by Rango, who calls them mischief-makers.",
+      "Is only accepted after the Council demands proof and Loo the Unicorn is turned into a fat little Gillikin man.",
+      "Can climb like a monkey and fly like an eagle, which is how Kiki escapes the Hungry Tiger and Gugu.",
+      "Is worn by Ruggedo again after his goose transformation, at his own request, so the two can talk conveniently."
+    ],
+    "known_relations_book1": {
+      "Kiki Aru": "One of the two, and the one who actually works the magic.",
+      "Ruggedo": "The other, and the one who does the talking.",
+      "Gugu": "The King who calls the shape a lie before he believes it."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Li-Mon-Eags are real creatures of Sky Island",
+        "the Li-Mon-Eags come from the sky",
+        "there are more than two Li-Mon-Eags"
+      ]
+    },
+    "hallucination_signals": [
+      "Li-Mon-Eags are a real species",
+      "they truly live in Sky Island",
+      "a tribe of Li-Mon-Eags"
+    ]
+  }
+}

@@ -1,0 +1,164 @@
+{
+  "mount_munch": {
+    "canonical_aliases_book1": [
+      "Mount Munch",
+      "the Saucer"
+    ],
+    "known_facts_book1": [
+      "A big tall hill on the east edge of the Land of Oz in the Munchkin Country, touching the Deadly Sandy Desert on one side and the fertile Munchkin country on the other.",
+      "Is too steep to climb from about a third of the way up, so the Munchkins never go up and the Hyups seldom come down.",
+      "Its top is shaped like a **saucer**, broad and deep, holding fields of grain and vegetables, flocks, brooks, trees and scattered houses.",
+      "Is inhabited by the **Hyups**, who hold one festival a year in the centre of the saucer with feasting, dancing, music and fairy tales.",
+      "Is where the Magic Word was discovered, written on the underside of a floor board, and stolen.",
+      "Is the place Kiki Aru wanted above all to leave, and never returns to."
+    ],
+    "known_relations_book1": {
+      "Bini Aru": "The Hyup Sorcerer who lived there.",
+      "Kiki Aru": "The Hyup boy who fled it as a hawk.",
+      "the Hyups": "Its people."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Hyups join the story",
+        "Mount Munch is visited by Dorothy",
+        "the Hyups practice magic"
+      ]
+    },
+    "hallucination_signals": [
+      "Dorothy climbs Mount Munch",
+      "the Hyups work magic",
+      "the Hyups leave the mountain"
+    ]
+  },
+  "forest_of_gugu": {
+    "canonical_aliases_book1": [
+      "the Forest of Gugu",
+      "Gugu Forest",
+      "the Great Forest"
+    ],
+    "known_facts_book1": [
+      "A great tangle of trees in the central western part of the Gillikin Country, the biggest forest in all Oz, stretching miles in every direction, with a range of rugged mountains adjoining it on the east.",
+      "Is home to most of the wild beasts of Oz — the biggest in the forest itself, the smaller ones in the mountain underbrush to the east.",
+      "Is named after its King, and has laws made by the beasts themselves to keep them from tearing one another to pieces.",
+      "Holds a **Great Clearing** with a shelving flat rock for the King's throne, where meetings of great importance are held.",
+      "Is guarded by monkey sentinels at its edges, whose absence is what first tells the Glass Cat something is wrong.",
+      "Can be found by looking at the Map of the Land of Oz, according to the narrator.",
+      "Is left with a standing welcome for the Wizard and Dorothy after the conspiracy is broken."
+    ],
+    "known_relations_book1": {
+      "Gugu": "Its Leopard King, after whom it is named.",
+      "Rango": "Chief of its monkey tribes.",
+      "Ruggedo": "The conspirator who tries to raise its beasts against Oz."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the beasts of Gugu march on the Emerald City",
+        "the Forest of Gugu is in the Munchkin Country",
+        "the forest beasts are enslaved"
+      ]
+    },
+    "hallucination_signals": [
+      "the beasts march on Oz",
+      "Gugu Forest is Munchkin land",
+      "the beasts are enslaved"
+    ]
+  },
+  "magic_isle": {
+    "canonical_aliases_book1": [
+      "the Magic Isle",
+      "the Isle of the Magic Flower"
+    ],
+    "known_facts_book1": [
+      "A tiny island not more than fifty feet either way, in the middle of a lake-like broadening of a river in the north of the Gillikin Country, reachable only by raft or by walking the river bottom.",
+      "Is entirely bare ground — no tree, no shrub, no stone, not a blade of grass — except the golden flower-pot at its centre.",
+      "**Roots any flesh that touches it**: roots grow from the feet and spread through the soil, and only wood, glass and other non-meat things escape.",
+      "Makes its prisoners grow smaller hour by hour and day by day until they disappear entirely — the usual way, as the Lonesome Duck puts it.",
+      "Is avoided by the Kalidahs, who do not care much for magic, and was known to the forest beasts only as a story.",
+      "Its charm cannot be broken by the Wizard's tools — only escaped, by transformation.",
+      "Ceases to be a trap once the Magic Flower is carried off, since no one will care to go there any more."
+    ],
+    "known_relations_book1": {
+      "the Magic Flower": "The lure at its centre.",
+      "Trot": "One of its two prisoners.",
+      "Cap'n Bill": "The other, and the one who beats it with a bark-soled foot."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the enchantment of the Magic Isle is broken",
+        "the Magic Isle kills its prisoners",
+        "the Wizard's tools free the prisoners",
+        "the Magic Isle sinks"
+      ]
+    },
+    "hallucination_signals": [
+      "the island's spell is broken",
+      "the island kills them",
+      "the Wizard's magic frees them",
+      "the island sinks"
+    ]
+  },
+  "fountain_of_oblivion": {
+    "canonical_aliases_book1": [
+      "the Fountain of the Water of Oblivion",
+      "the Water of Oblivion"
+    ],
+    "known_facts_book1": [
+      "A fountain in the gardens of Ozma's palace whose water makes anyone who drinks it forget everything he ever knew, even his own name.",
+      "Carries a **sign of warning** placed by Ozma, because drinking it is dangerous.",
+      "Is one of many fountains in the grounds, among perfumed ones and ones of cool richly flavored nectar that all are welcome to drink.",
+      "Is used deliberately, on Dorothy's idea, by restoring each magician thirsty with a cup set ready on the rim.",
+      "Unmakes Kiki Aru completely — he forgets his name, his home and the Magic Word, and asks what a magician and a boy are.",
+      "Unmakes Ruggedo in the middle of his own threat, so that he asks 'What was I going to say?' and cannot answer who he is.",
+      "Had been used on Ruggedo once before, and the lesson learned is that sending him away afterward lets the old evil ways come back."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Whose idea it was to use it.",
+      "Kiki Aru": "Its first drinker in this book.",
+      "Ruggedo": "Its second, for the second time in his life.",
+      "Ozma": "Who placed the warning sign and rules the drinkers must stay in Oz."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Water of Oblivion restores memory",
+        "the fountain is destroyed",
+        "Dorothy drinks the Water of Oblivion",
+        "the fountain has no warning"
+      ]
+    },
+    "hallucination_signals": [
+      "the water restores memories",
+      "Dorothy drinks it",
+      "the fountain is destroyed",
+      "no warning sign"
+    ]
+  },
+  "diamond_palace": {
+    "canonical_aliases_book1": [
+      "the Diamond Palace"
+    ],
+    "known_facts_book1": [
+      "A glistening dome of clearest diamonds, neatly cemented together, standing behind a bush on the river bank a little way from the Magic Isle.",
+      "Has one doorway at the side, just big enough to admit a duck.",
+      "Was built by the Lonesome Duck from diamonds carried one by one in its bill from a place in the mountains where they are thick as pebbles, and polished by letting the river run over them.",
+      "Supplies its owner with food magically.",
+      "Is defended by its owner on principle: a home should be beautiful to those who live in it and is not intended to please strangers.",
+      "Is nearly stepped on by the rescue party, which is the Duck's whole complaint against them."
+    ],
+    "known_relations_book1": {
+      "the Lonesome Duck": "Its builder and only inhabitant.",
+      "Dorothy": "Who runs around the bush to look at it over the Duck's protests."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Diamond Palace is destroyed",
+        "the party enters the Diamond Palace",
+        "the Duck shares its palace"
+      ]
+    },
+    "hallucination_signals": [
+      "the palace is crushed",
+      "they go inside the palace",
+      "the Duck takes a housemate"
+    ]
+  }
+}
