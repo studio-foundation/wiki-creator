@@ -92,6 +92,15 @@ def _roster_line(canonical: str, extra: list[str]) -> str:
     return f"{canonical} (also called: {', '.join(extra)})" if extra else canonical
 
 
+def _in_roster(entity: dict) -> bool:
+    """Only a PERSON who is on the page holds interpersonal relations.
+
+    An offstage name (STU-716) is spoken about and never present, so every
+    relation read off its sentences describes the speaker, not a scene.
+    """
+    return entity.get("entity_type") == "PERSON" and not entity.get("offstage")
+
+
 def build_roster(entities: list[dict]) -> tuple[set[str], dict[str, str], list[str]]:
     """Build the PERSON roster the discovery prompt reads.
 
@@ -105,7 +114,7 @@ def build_roster(entities: list[dict]) -> tuple[set[str], dict[str, str], list[s
     alias_to_canonical: dict[str, str] = {}
     lines: list[str] = []
     for entity in entities:
-        if entity.get("entity_type") != "PERSON":
+        if not _in_roster(entity):
             continue
         canonical = entity["canonical_name"]
         names.add(canonical)
@@ -127,7 +136,7 @@ def roster_entries(entities: list[dict]) -> list[dict]:
     """
     entries: list[dict] = []
     for entity in entities:
-        if entity.get("entity_type") != "PERSON":
+        if not _in_roster(entity):
             continue
         canonical = entity["canonical_name"]
         extra = [a for a in entity.get("aliases") or [] if a and a != canonical]

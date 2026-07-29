@@ -176,7 +176,12 @@ def prepare_discovery(
     epub_data = json.loads(epub_data_path.read_text(encoding="utf-8"))
     registry = Registry.load(registry_path)
     entities = [
-        {"canonical_name": r.canonical_name, "entity_type": r.entity_type, "aliases": r.aliases}
+        {
+            "canonical_name": r.canonical_name,
+            "entity_type": r.entity_type,
+            "aliases": r.aliases,
+            "offstage": r.offstage,
+        }
         for r in registry.entities
     ]
     roster_names, alias_to_canonical, roster_lines = build_roster(entities)
