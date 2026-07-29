@@ -1,0 +1,238 @@
+{
+  "jack_pumpkinhead": {
+    "canonical_aliases_book1": [
+      "Jack Pumpkinhead",
+      "Pumpkinhead"
+    ],
+    "known_facts_book1": [
+      "A wooden-limbed man with a carved pumpkin head, built and dressed by Tip and brought to life by Mombi's Powder of Life.",
+      "Wears purple trousers, a red shirt and a pink spotted vest taken from Mombi's chest; his face is carved into a permanent smile.",
+      "Calls Tip his father and parent and owes him obedience while Tip owes him support.",
+      "Lives in constant terror of spoiling (rotting), especially from water, heat, or old age.",
+      "Rides the Saw-Horse because his wooden joints wear out from walking.",
+      "Loses his pumpkin head in the river and again in a rabbit hole; it is retrieved and replaced each time.",
+      "Has his left leg amputated by the Tin Woodman to mend the Saw-Horse, and later gets a carved mahogany table-leg.",
+      "Wrongly assumes he speaks a separate 'Pumpkinhead' language, until Jellia Jamb reveals only one tongue is spoken in all Oz.",
+      "Remains with Queen Ozma to the end of his days, never spoiling as soon as he feared but staying as stupid as ever."
+    ],
+    "known_relations_book1": {
+      "Tip": "His maker, whom he calls 'father'; when Tip becomes the girl Ozma the fatherhood ends and Jack is not sorry to escape it.",
+      "Scarecrow": "Fellow artificial being who befriends him at the palace.",
+      "Saw-Horse": "His steed and frequent quarrel-partner; Jack's amputated leg becomes the Saw-Horse's new leg.",
+      "Nick Chopper": "The Tin Woodman, who catches his falling head and carves him new legs.",
+      "Woggle-Bug": "Suggests using Jack's leg for the Saw-Horse; later tries and fails to educate him."
+    },
+    "forbidden_book1": {
+      "later_tomes": [
+        "Jack Pumpkinhead lives in a giant pumpkin house",
+        "the Nome King",
+        "Tik-Tok"
+      ],
+      "not_in_this_book": [
+        "Jack has brains"
+      ]
+    },
+    "hallucination_signals": [
+      "Jack Pumpkinhead lives in a giant pumpkin",
+      "Jack is Ozma's father",
+      "the Nome King",
+      "Tik-Tok",
+      "Jack is highly intelligent"
+    ]
+  },
+  "scarecrow": {
+    "canonical_aliases_book1": [
+      "Scarecrow"
+    ],
+    "known_facts_book1": [
+      "Ruler of the Emerald City, made King by its people after the Wizard fled; a straw-stuffed man with a painted sack head and prized brains from the Wizard.",
+      "Dethroned by General Jinjur's Army of Revolt, which conquers the city while he plays quoits.",
+      "Escapes with Tip and Jack on the Saw-Horse, all tied together, and flees to his friend the Tin Woodman.",
+      "Hides twelve field mice in his straw; releasing them stampedes Jinjur's army out of the throne room.",
+      "Conceives the plan to escape Jinjur's palace by air, having the Tin Woodman build the Gump.",
+      "Is stuffed with banknotes stolen by the Jackdaws after the birds carry off his straw, becoming 'the richest man in the world.'",
+      "Willingly yields the throne once he learns the rightful heir Ozma still lives.",
+      "Is made Royal Treasurer by the Tin Woodman at the end and resolves never to be parted from him.",
+      "Prizes his brains above all, and repeatedly stops to 'take time to think.'"
+    ],
+    "known_relations_book1": {
+      "Nick Chopper": "The Tin Woodman, his oldest and dearest friend; flees to him, is restored to the throne by him, and at the end is made his Royal Treasurer, the two vowing never to part.",
+      "Jinjur": "The rebel who dethrones him and usurps his crown.",
+      "Tip": "Befriends the boy and, after the reveal, pats him and stays his faithful friend.",
+      "Glinda": "The Sorceress he appeals to for help, who reveals the true heir Ozma.",
+      "Ozma": "The rightful heir he gladly steps aside for; he had held the crown only since the Wizard passed it to him."
+    },
+    "forbidden_book1": {
+      "book1_or_film": [
+        "the Scarecrow seeks a brain",
+        "the Scarecrow wants brains",
+        "the Scarecrow has no brains",
+        "the Scarecrow melts the Wicked Witch"
+      ],
+      "cross_tome": [
+        "the Nome King",
+        "Tik-Tok",
+        "the Shaggy Man"
+      ],
+      "relationships": [
+        "the Scarecrow marries Jinjur"
+      ]
+    },
+    "hallucination_signals": [
+      "the Scarecrow seeks a brain",
+      "the Scarecrow wants brains",
+      "the Scarecrow marries Jinjur",
+      "the Scarecrow melts the Wicked Witch",
+      "the Nome King",
+      "Tik-Tok"
+    ]
+  },
+  "nick_chopper": {
+    "canonical_aliases_book1": [
+      "Nick Chopper",
+      "Tin Woodman",
+      "Tin-Woodman",
+      "Emperor"
+    ],
+    "known_facts_book1": [
+      "Emperor of the Winkies (the yellow West country), who prefers 'Emperor' to 'King'; his real name is Nick Chopper.",
+      "Made entirely of tin and newly nickel-plated so he shines; wears an engraved star over the heart the Wizard gave him.",
+      "The Scarecrow's oldest friend; shelters him and resolves to restore his throne.",
+      "Fights off the Jackdaws with his axe and frightens Jinjur's guards with its whirling sweep.",
+      "Builds the Gump flying machine from two sofas, palm-leaf wings, a mounted Gump's head, and a broom tail.",
+      "Unwittingly captures Mombi by plucking the red rose (her transformed shape) and wearing it in his tin buttonhole.",
+      "Values his kind heart above brains or education.",
+      "At the end makes the Scarecrow his Royal Treasurer and invites Ozma to visit his Winkie kingdom."
+    ],
+    "known_relations_book1": {
+      "Scarecrow": "His dearest friend, whom he shelters, restores to the throne, and makes Royal Treasurer, vowing never to part.",
+      "Queen of the Field Mice": "An old friend whose life he once saved; he summons her with a silver whistle for aid.",
+      "Tip": "Befriends the boy and comforts him about becoming a girl.",
+      "Mombi": "Unknowingly carries her out of the city as a rose in his buttonhole.",
+      "Glinda": "The Sorceress he and the Scarecrow know and turn to for help."
+    },
+    "forbidden_book1": {
+      "book1_or_film": [
+        "the Tin Woodman seeks a heart",
+        "the Tin Woodman wants a heart",
+        "the Tin Woodman has no heart",
+        "Dorothy oils the Tin Woodman"
+      ],
+      "later_tomes": [
+        "Nimmie Amee",
+        "the Nome King",
+        "Tik-Tok"
+      ]
+    },
+    "hallucination_signals": [
+      "the Tin Woodman seeks a heart",
+      "the Tin Woodman wants a heart",
+      "Dorothy oils the Tin Woodman",
+      "Nimmie Amee",
+      "the Nome King",
+      "Tik-Tok"
+    ]
+  },
+  "woggle_bug": {
+    "canonical_aliases_book1": [
+      "Woggle-Bug"
+    ],
+    "known_facts_book1": [
+      "A once-ordinary insect who lived for years in Professor Nowitall's schoolhouse hearth, absorbing the lessons.",
+      "Caught and thrown upon a screen 'highly magnified,' he escaped while still enlarged; 'H. M.' means Highly Magnified.",
+      "'T. E.' means Thoroughly Educated; he prides himself on learning and endless puns that annoy his companions.",
+      "Dressed by a tailor whose ninth life he saved; wears a swallowtail coat, vest, knickerbockers and a tall silk hat.",
+      "Joins the party on the road to the Emerald City and suggests using Jack's leg to mend the Saw-Horse.",
+      "Swallows a Wishing Pill without pain and wishes the Gump's broken wings mended.",
+      "Is appointed Public Educator to Queen Ozma at the end and tries, in vain, to educate Jack."
+    ],
+    "known_relations_book1": {
+      "Professor Nowitall": "The schoolmaster in whose classroom he was educated and magnified.",
+      "Scarecrow": "Travelling companion who tolerates but tires of his puns.",
+      "Nick Chopper": "The Tin Woodman, a travelling companion who twice threatens him with the axe over his jokes.",
+      "Tip": "Companion who curbs his puns; the Woggle-Bug offers to tutor Tip once he becomes a girl."
+    },
+    "forbidden_book1": {
+      "cross_tome": [
+        "the Nome King",
+        "Tik-Tok"
+      ],
+      "not_in_this_book": [
+        "the Woggle-Bug is a villain",
+        "the Woggle-Bug is an ordinary tiny insect"
+      ]
+    },
+    "hallucination_signals": [
+      "the Nome King",
+      "Tik-Tok",
+      "the Woggle-Bug is a villain",
+      "the Woggle-Bug attacks the party"
+    ]
+  },
+  "saw_horse": {
+    "canonical_aliases_book1": [
+      "Saw-Horse"
+    ],
+    "known_facts_book1": [
+      "A wooden sawbuck brought to life by Tip with the Powder of Life; it has knot eyes, a branch for a tail, and no knee-joints.",
+      "Cannot hear until Tip whittles and fits bark ears on it; it rocks side to side 'like a cradle' as it paces.",
+      "Carries Jack Pumpkinhead, and bolts and races ahead, separating from Tip on the road.",
+      "Breaks a leg in a rabbit hole and is given one of Jack Pumpkinhead's legs as a replacement.",
+      "Carries Glinda in the chase and outruns Mombi's Griffin form across the desert, forcing her capture.",
+      "Becomes Queen Ozma's personal property; she has its wooden legs shod with gold."
+    ],
+    "known_relations_book1": {
+      "Tip": "Brought to life by Tip; on the reveal it becomes Ozma's personal steed, shod with gold.",
+      "Jack Pumpkinhead": "Carries him and quarrels with him; wears one of Jack's amputated legs.",
+      "Glinda": "Carries the Sorceress in the pursuit that runs down and captures Mombi."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Saw-Horse is made of tin",
+        "the Saw-Horse is Dorothy's horse"
+      ],
+      "cross_tome": [
+        "the Nome King",
+        "the Horse of a Different Color"
+      ]
+    },
+    "hallucination_signals": [
+      "the Saw-Horse is made of tin",
+      "the Horse of a Different Color",
+      "the Nome King",
+      "the Saw-Horse belongs to Dorothy"
+    ]
+  },
+  "gump": {
+    "canonical_aliases_book1": [
+      "Gump"
+    ],
+    "known_facts_book1": [
+      "Originally only a mounted Gump's head, like an elk's, hung over the palace mantel; the Woggle-Bug fetches it for the flying machine.",
+      "The Gump is a Thing built of two sofas, four palm-leaf wings, the Gump's head as figure-head, and a broom for a tail, brought to life when Tip sprinkles the Powder of Life on its head.",
+      "Only its head is alive; its sofa legs are not, so it flies but cannot walk.",
+      "Carries the party south, is blown off course to the outside world, and crashes on a mountain, breaking its right wings.",
+      "Its broken wings are mended by the Woggle-Bug's Wishing-Pill wish.",
+      "At its own request Ozma has it taken apart; the talking head is re-hung over the mantel and keeps startling visitors."
+    ],
+    "known_relations_book1": {
+      "Tip": "Brought to life by Tip with the last of the Powder of Life.",
+      "Nick Chopper": "The Tin Woodman built its body; the Gump serves the party as an aircraft.",
+      "Ozma": "Grants its wish to be dispersed after it has carried the party to victory."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Gump is a living forest beast that joins the party",
+        "the Gump keeps flying forever"
+      ],
+      "cross_tome": [
+        "the Nome King"
+      ]
+    },
+    "hallucination_signals": [
+      "the Gump is a real flying beast",
+      "the Gump remains a permanent airship",
+      "the Nome King"
+    ]
+  }
+}

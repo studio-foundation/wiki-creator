@@ -1,0 +1,164 @@
+{
+  "nome_king": {
+    "canonical_aliases_book1": [
+      "Nome King",
+      "Roquat"
+    ],
+    "known_facts_book1": [
+      "The Nome King, named Roquat the Red, ruler of the underground Nomes beneath the mountains of Ev, whom no one loves.",
+      "Vows to destroy the Emerald City, enslave Ozma and Dorothy and all the Oz people, and recover the Magic Belt Ozma took from him.",
+      "Orders a tunnel dug under the Deadly Desert, right up to the Emerald City, to take Oz by surprise.",
+      "Makes General Guph his general after his Chief Steward Kaliko refuses the post.",
+      "Allies with the Whimsies, the Growleywogs and the Phanfasms, whom Guph recruits, to invade Oz.",
+      "Plans to march at midnight and conquer Oz by daybreak, then burn and devastate the land.",
+      "Alone refuses to drink the Water of Oblivion at the Forbidden Fountain and keeps his rage.",
+      "Is thrown into the fountain by the Scarecrow and Tin Woodman, drinks, and forgets everything he ever knew.",
+      "Is gently sent home by Ozma to order his fifty thousand Nomes to march back, remembering nothing."
+    ],
+    "known_relations_book1": {
+      "General Guph": "His newly appointed general, who recruits the allied armies and then knocks the King down at the fountain.",
+      "Ozma": "The Ruler of Oz he means to conquer and enslave; his enemy, never his friend.",
+      "Dorothy": "Whom he means to enslave along with Ozma; he cannot forgive her for the loss of his Magic Belt.",
+      "Kaliko": "His Chief Steward, who refuses to be made general.",
+      "First and Foremost": "The Phanfasm leader who takes over Roquat's own throne and demands to lead the invasion."
+    },
+    "forbidden_book1": {
+      "relationships": [
+        "the Nome King is Dorothy's ally",
+        "the Nome King is Dorothy's friend",
+        "Roquat is Ozma's friend",
+        "Roquat is an ally of Ozma",
+        "the Nome King helps Dorothy"
+      ],
+      "not_in_this_book": [
+        "the Nome King wins and conquers Oz",
+        "the Nome King keeps his memory at the end",
+        "Roquat is transformed into an ornament in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "the Nome King befriends Dorothy",
+      "Roquat is Dorothy's ally",
+      "Roquat allies with Ozma",
+      "the Nome King conquers Oz",
+      "the Nome King helps save Oz",
+      "the Nome King is a good friend to the Oz people"
+    ]
+  },
+  "general_guph": {
+    "canonical_aliases_book1": [
+      "Guph",
+      "General Guph"
+    ],
+    "known_facts_book1": [
+      "An old, ambitious Nome whom Roquat makes General of his armies to conquer Oz.",
+      "Proposes gaining allies with terrible magic powers to help the Nomes overwhelm Oz.",
+      "Visits the Chief of the Whimsies and wins their pledge of aid.",
+      "Wins the Growleywogs and their Grand Gallipoot to the alliance.",
+      "Climbs the Mountain of Phantastico and persuades the dread Phanfasms and their First and Foremost to join.",
+      "Reports the completed tunnel to the assembled allied leaders in Roquat's cavern.",
+      "At the fountain, mad with thirst, knocks his own King over, drinks the Water of Oblivion, and becomes as happy and forgetful as a child."
+    ],
+    "known_relations_book1": {
+      "Nome King": "His master Roquat, whom he serves as general and then knocks down at the fountain.",
+      "Grand Gallipoot": "The Growleywog leader he recruits to the alliance.",
+      "First and Foremost": "The Phanfasm leader he recruits, at great personal danger.",
+      "Chief of the Whimsies": "The Whimsie leader he first recruits."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "General Guph defeats the Oz army",
+        "General Guph betrays the Nome King to help Ozma",
+        "General Guph keeps his memory at the end"
+      ]
+    },
+    "hallucination_signals": [
+      "General Guph helps Ozma",
+      "Guph conquers the Emerald City",
+      "General Guph is a friend of Dorothy"
+    ]
+  },
+  "grand_gallipoot": {
+    "canonical_aliases_book1": [
+      "Grand Gallipoot"
+    ],
+    "known_facts_book1": [
+      "The ruler of the Growleywogs, gigantic creatures of bone and muscle who can hurl an elephant seven miles.",
+      "Is persuaded by General Guph to join the Nome King's invasion of Oz.",
+      "Demands at the war council that Ozma shall be his own slave, quarreling with the First and Foremost over her.",
+      "Rushes from the tunnel at the fountain, drinks the Water of Oblivion, and forgets his enmity."
+    ],
+    "known_relations_book1": {
+      "General Guph": "The Nome general who recruits him to the alliance.",
+      "First and Foremost": "The Phanfasm leader with whom he quarrels over who shall own Ozma as a slave.",
+      "Nome King": "Roquat, whose invasion of Oz he joins."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Grand Gallipoot is Ozma's ally",
+        "the Grand Gallipoot conquers Oz",
+        "the Growleywogs live in Oz"
+      ]
+    },
+    "hallucination_signals": [
+      "the Grand Gallipoot befriends Ozma",
+      "the Grand Gallipoot saves Oz",
+      "the Growleywogs are peaceful"
+    ]
+  },
+  "first_and_foremost": {
+    "canonical_aliases_book1": [
+      "First and Foremost"
+    ],
+    "known_facts_book1": [
+      "The leader of the Phanfasms, dread Erbs who dwell atop the Mountain of Phantastico.",
+      "Appears in a hairy skin with a bear's head, his true form unknown even to Roquat.",
+      "Catches General Guph with a brass hoop when Guph comes to recruit him, then releases him and agrees to join.",
+      "Demands to lead his Phanfasms through the tunnel ahead of all the others and takes Roquat's own throne.",
+      "Vows Ozma shall be his slave and that Oz will be left a desert wilderness.",
+      "Leaps up first at the Forbidden Fountain, drinks the Water of Oblivion, and forgets everything, merely admiring Ozma's beauty."
+    ],
+    "known_relations_book1": {
+      "General Guph": "The Nome general who recruits him at great risk.",
+      "Grand Gallipoot": "The Growleywog leader with whom he quarrels over owning Ozma.",
+      "Nome King": "Roquat, whose throne he usurps and whose invasion he leads."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the First and Foremost is Ozma's ally",
+        "the Phanfasms defend Oz",
+        "the First and Foremost is killed in battle"
+      ]
+    },
+    "hallucination_signals": [
+      "the First and Foremost befriends Ozma",
+      "the Phanfasms protect Oz",
+      "the First and Foremost is slain"
+    ]
+  },
+  "kaliko": {
+    "canonical_aliases_book1": [
+      "Kaliko"
+    ],
+    "known_facts_book1": [
+      "The Nome King's Chief Steward, a fat round Nome with spindle legs.",
+      "Refuses when Roquat offers to make him General, saying he knows nothing of warfare.",
+      "Dodges the gems and objects the angry King throws at him and hastily withdraws.",
+      "Fetches the King's pipe and tobacco and serves him in his cavern."
+    ],
+    "known_relations_book1": {
+      "Nome King": "His master Roquat, whom he serves as Chief Steward and whose generalship he declines."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Kaliko becomes King of the Nomes in this book",
+        "Kaliko leads the invasion of Oz"
+      ]
+    },
+    "hallucination_signals": [
+      "Kaliko becomes the Nome King",
+      "Kaliko commands the army",
+      "Kaliko drinks the Water of Oblivion"
+    ]
+  }
+}

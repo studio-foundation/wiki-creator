@@ -1,0 +1,109 @@
+{
+  "lavender_bear": {
+    "canonical_aliases_book1": [
+      "the Lavender Bear",
+      "Bear King",
+      "King of Bear Center"
+    ],
+    "known_facts_book1": [
+      "A huge toy bear of a lovely lavender color who rules the City of Bear Center, walking on his hind legs and wearing a tin crown set with diamonds and amethysts.",
+      "Is light lavender rather than royal purple, which the Brown Bear explains is second cousin to purple and therefore good enough for a King.",
+      "Is stuffed with extra-quality curled hair, not cotton, and squeaks in the chest whenever anything pushes against it — which in Bear Center it is bad manners to notice.",
+      "Carries a short wand of a glittering metal that resembles silver but is not, and with three waves of it conjures the image of Cayke's dishpan and later the image of Ugu himself.",
+      "His magic is limited to what the fairies slyly dropped into his stuffing when he was made; he can do that magic and nothing else.",
+      "Condemns Cayke and the Frogman to death as a matter of form, the execution to take place ten years hence, since in Oz no one ever dies and in ten years they will all have forgotten.",
+      "Rules in his own absence, saying a King is not required to stay at home forever, and threatens naughty bears with being sent to some girl or boy in America to play with.",
+      "Carries the little Pink Bear in his arms the whole journey rather than let it out of his sight.",
+      "Sulks and refuses to let the Pink Bear be questioned after his oracle is doubted, and is vindicated with 'He never makes a mistake!'",
+      "Accepts Ozma's invitation to visit the Emerald City, leaving Corporal Waddle in charge of his bears."
+    ],
+    "known_relations_book1": {
+      "the little Pink Bear": "His oracle, the best bit of magic he possesses and unique in the world.",
+      "Corporal Waddle": "His sentry, who captures the intruders and is left in charge.",
+      "Cayke": "The Cookie Cook he condemns to death as a formality and then helps.",
+      "the Frogman": "The one member of the party whose honesty he likes from the start.",
+      "Ozma": "Who thanks him and hangs an emerald chain on his Pink Bear."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Lavender Bear is stuffed with cotton",
+        "the Lavender Bear executes anyone",
+        "the Lavender Bear defeats Ugu",
+        "the Lavender Bear is purple"
+      ]
+    },
+    "hallucination_signals": [
+      "the Bear King is stuffed with cotton",
+      "the Bear King executes the prisoners",
+      "the Bear King defeats Ugu",
+      "the Bear King is purple"
+    ]
+  },
+  "little_pink_bear": {
+    "canonical_aliases_book1": [
+      "the little Pink Bear",
+      "Pink Pinkerton"
+    ],
+    "known_facts_book1": [
+      "A tiny pink toy bear, smaller than any other in Bear Center, lifeless until the crank in its side is turned.",
+      "Can tell anything that HAS happened, anywhere, and his words are always words of truth — but he can tell nothing that is GOING to happen.",
+      "Names Ugu the Shoemaker as the thief of Cayke's dishpan, and gives the distance to his castle as nineteen miles and three furlongs northeast of Bear Center.",
+      "Answers in rhyme when asked whether the two parties are safe together: 'Safe for you and safe for me; Perhaps no others safe will be.'",
+      "Says Ozma is 'in a hole in the ground a half mile away at your left', and is disbelieved when only Button-Bright is found there.",
+      "Then says Ozma is NOT in the hole and is 'here, among you', which the party takes for a contradiction and for madness.",
+      "Is proved right on every count: Ozma was in the hole because Button-Bright was in it with the peach pit in his pocket, and was among them for the same reason.",
+      "Finally names the exact place: in Button-Bright's left-hand jacket pocket.",
+      "Receives a chain of emeralds from Ozma's own neck, and thanks her — after the King turns his crank."
+    ],
+    "known_relations_book1": {
+      "the Lavender Bear": "His King, who carries him and defends his infallibility.",
+      "Button-Bright": "The boy whose pocket held the answer to every one of his replies.",
+      "Ozma": "Whom his answers locate and who honors him for it."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the little Pink Bear makes a mistake",
+        "the little Pink Bear predicts the future",
+        "the little Pink Bear tells how to conquer Ugu",
+        "the little Pink Bear speaks without his crank being turned"
+      ]
+    },
+    "hallucination_signals": [
+      "the Pink Bear is wrong",
+      "the Pink Bear predicts the future",
+      "the Pink Bear says how to beat Ugu",
+      "the Pink Bear speaks on his own"
+    ]
+  },
+  "corporal_waddle": {
+    "canonical_aliases_book1": [
+      "Corporal Waddle"
+    ],
+    "known_facts_book1": [
+      "A chubby, fuzzy brown toy bear whose head comes about as high as Cayke's waist, stuffed with a very good quality of curled hair and skinned in the best plush ever made.",
+      "Is the sentry guarding the way to Bear Center, and carries a gun with a tin barrel, a cork in the end and a string tying the cork to the handle.",
+      "Declares the Frogman and Cayke his prisoners, admitting he does not wish to but that it is his duty — and that their trial and execution should afford much entertainment.",
+      "Fires the popgun to summon the bears out of every hollow tree in the clearing.",
+      "Adds a second charge against the prisoners for having asked whether the bears stole the dishpan.",
+      "Protests when the King lets them go unpunished, and pops his cork as a parting salute when the party leaves.",
+      "Is left in charge of the bears while the King is away."
+    ],
+    "known_relations_book1": {
+      "the Lavender Bear": "His King, who overrules his charges and leaves him in command.",
+      "Cayke": "The prisoner who laughs aloud at his threats.",
+      "the Frogman": "The prisoner who agrees to come peaceably."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Corporal Waddle's gun fires a bullet",
+        "Corporal Waddle executes the prisoners",
+        "Corporal Waddle joins the journey"
+      ]
+    },
+    "hallucination_signals": [
+      "Corporal Waddle shoots someone",
+      "Corporal Waddle joins the party",
+      "the prisoners are executed"
+    ]
+  }
+}

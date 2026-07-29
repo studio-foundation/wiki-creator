@@ -1,0 +1,72 @@
+{
+  "pessim": {
+    "canonical_aliases_book1": [
+      "Pessim",
+      "the Observer"
+    ],
+    "known_facts_book1": [
+      "A little man with a long pointed beard, living alone in a shed of boughs on a small island, who calls himself the Observer and observes everything he sees.",
+      "Was brought to the island and abandoned there by his neighbors, who said he was quarrelsome and fault-finding and that if he quarreled with himself no one else would be made unhappy.",
+      "Finds fault with everything: the trees are too green, the rocks too hard, the sand too grainy, the water dreadfully wet, and a footprint is one-millionth part of a calamity.",
+      "Calls himself King of the island and calls his rude stool his throne.",
+      "Discovered both magic fruits himself: he ate a lavender berry and shrank to two inches, then found the dark purple berry that restored him.",
+      "Is the source of the information that the deep purple berry is the antidote to the lavender one, without which the party could never have left the island.",
+      "Laughs until he chokes and rolls on the ground when he hears the Ork has shrunk.",
+      "Ties the sunbonnet round the Ork's neck, prophesies the travellers will be smashed or drowned, and is knocked over backward by the wind of the Ork's tail."
+    ],
+    "known_relations_book1": {
+      "the Ork": "The shrunken creature he is delighted by and then helps restore.",
+      "Trot": "Whose sunbonnet he ties round the Ork's neck.",
+      "Cap'n Bill": "Whom he considers no good as he is."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Pessim leaves his island",
+        "Pessim is a wizard",
+        "Pessim goes to the Land of Oz",
+        "Pessim is happy"
+      ]
+    },
+    "hallucination_signals": [
+      "Pessim leaves the island",
+      "Pessim joins the travelers",
+      "Pessim works magic"
+    ]
+  },
+  "bumpy_man": {
+    "canonical_aliases_book1": [
+      "the Bumpy Man",
+      "the Mountain Ear"
+    ],
+    "known_facts_book1": [
+      "A rugged man covered with bumps — on his head, body, arms, legs, hands and even the ends of his fingers — with kind twinkling eyes and a rather bumpy voice.",
+      "Says he was born with the bumps and suspects they were a gift from the fairies, making him look rugged and big like the mountain he serves.",
+      "Lives alone in a stone house on the flat top of a mountain in the Land of Mo.",
+      "Is called the Mountain Ear because he listens to all the sounds of Nature and tells them to the mountain, which is hard of hearing, so it will not get uneasy and quake.",
+      "Predicts the weather by his bumps and is never wrong: he feels winter and a snowstorm coming before it arrives.",
+      "Serves his guests hot molasses candy poured onto stone plates, which he eats scalding with a stone spoon and which Trot pulls and cuts before eating.",
+      "Has never heard of water; he offers lemonade caught in a jar the last time it rained, since it always rains lemonade in Mo.",
+      "Digs Button-Bright out of a bank of popcorn snow with his snow-shovel.",
+      "Gives Cap'n Bill his old suit of gray clothes to be cut into rope for the swings."
+    ],
+    "known_relations_book1": {
+      "Trot": "His guest, who astonishes him by pulling molasses candy.",
+      "Button-Bright": "The boy he digs out of the popcorn snow.",
+      "the Ork": "The guest who will not drink lemonade and says he cannot stay in a country without water."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Bumpy Man leaves the Land of Mo",
+        "the Bumpy Man is a magician",
+        "the Bumpy Man travels to Jinxland",
+        "there is water in the Land of Mo"
+      ]
+    },
+    "hallucination_signals": [
+      "the Bumpy Man leaves Mo",
+      "the Mountain Ear works magic",
+      "the Bumpy Man joins the journey",
+      "the snow of Mo is cold"
+    ]
+  }
+}

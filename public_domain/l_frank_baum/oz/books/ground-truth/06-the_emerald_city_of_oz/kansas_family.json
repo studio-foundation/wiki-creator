@@ -1,0 +1,64 @@
+{
+  "aunt_em": {
+    "canonical_aliases_book1": [
+      "Aunt Em"
+    ],
+    "known_facts_book1": [
+      "Dorothy's aunt, a poor Kansas farm-wife married to Uncle Henry.",
+      "Faces losing the mortgaged farm and expects to have to work or depend on Dorothy.",
+      "Is transported to the Emerald City by Ozma's Magic Belt, without warning, along with Uncle Henry.",
+      "Given comfortable rooms and told she need never work hard again, settling in Oz permanently.",
+      "Faces down the Cowardly Lion with a determined glare in the throne room, mistaking him for a dangerous beast.",
+      "Rides in the Wizard's red wagon on the tour and is astonished by the Cuttenclips, Fuddles and other odd towns.",
+      "Declares she would rather share the others' fate than be sent back to Kansas when Oz is threatened."
+    ],
+    "known_relations_book1": {
+      "Uncle Henry": "Her husband; the two are brought from Kansas to Oz together.",
+      "Dorothy": "Her niece, who arranges for her and Uncle Henry to live in Oz.",
+      "Ozma": "The Ruler who invites her to live in Oz and provides for her comfort.",
+      "Cowardly Lion": "The great beast she cows with a fierce look, not knowing he is Dorothy's gentle friend."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Aunt Em stays in Kansas",
+        "Aunt Em is a young woman",
+        "Aunt Em fights the Nome King"
+      ]
+    },
+    "hallucination_signals": [
+      "Aunt Em remains in Kansas",
+      "Aunt Em returns to the farm",
+      "Aunt Em battles the Nomes"
+    ]
+  },
+  "uncle_henry": {
+    "canonical_aliases_book1": [
+      "Uncle Henry"
+    ],
+    "known_facts_book1": [
+      "Dorothy's uncle, a poor and hard-working Kansas farmer.",
+      "Borrowed money against his farm and cannot repay it, so the farm is to be taken from him.",
+      "Is transported to the Emerald City by Ozma's Magic Belt without warning, along with Aunt Em.",
+      "Settles permanently in Oz, given a home where he need not work more than he cares to.",
+      "Rides on the wagon tour and is repeatedly amazed by the country's strange people.",
+      "Guesses that Jack Pumpkinhead, a fellow farmer, grows his own heads in a pumpkin field."
+    ],
+    "known_relations_book1": {
+      "Aunt Em": "His wife; brought from Kansas to Oz with him.",
+      "Dorothy": "His niece, who arranges the move to Oz to save him from losing the farm.",
+      "Ozma": "The Ruler who invites him to live comfortably in Oz."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Uncle Henry stays in Kansas",
+        "Uncle Henry keeps his farm in Kansas",
+        "Uncle Henry fights in the war"
+      ]
+    },
+    "hallucination_signals": [
+      "Uncle Henry remains in Kansas",
+      "Uncle Henry keeps the farm",
+      "Uncle Henry dies"
+    ]
+  }
+}

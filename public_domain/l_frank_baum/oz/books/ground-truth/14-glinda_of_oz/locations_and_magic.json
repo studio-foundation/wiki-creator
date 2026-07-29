@@ -1,0 +1,216 @@
+{
+  "the_magic_isle": {
+    "canonical_aliases_book1": [
+      "the Magic Isle",
+      "the Great Dome",
+      "the Isle of the Skeezers"
+    ],
+    "known_facts_book1": [
+      "An island in the center of a lake a full mile from shore to shore, at the far northern edge of the Gillikin Country, bordering the desert and near the mountains of Oogaboo.",
+      "Is almost entirely covered by a huge round building with glass walls and a high glass dome, with only polished white marble between the building and the water's edge — no grass, flowers or shrubbery.",
+      "Contains under the dome a whole village of colored marble houses with stained-glass windows, streets, gardens and parks, lit at night by brilliant incandescent lamps.",
+      "**Rests on a base of solid marble** carried by a great steel pillar that runs from the basement up into the palace, whose hollowed upper end forms a basin in the Room of Magic.",
+      "Is raised and lowered by burning **Gaulau powder** in that basin and speaking one word, which expands or shortens the steel pillar — an art the Adepts had taught Coo-ee-oh as 'how to expand steel'.",
+      "The Dome does not leak and has been submerged several times before, though Coo-ee-oh disliked doing it because it takes a lot of hard work to operate the machinery.",
+      "Is left with no way out once submerged: no door or window opens, the basement doors need magic words, and the submarines obey only spoken commands.",
+      "Was built for the Skeezers by the **three Adepts**, along with their marble houses, back when the two peoples were friends.",
+      "Ends the book raised higher than before, because the lake had been drawn down; Glinda refills the lake and the Scarecrow replaces the removed pane."
+    ],
+    "known_relations_book1": {
+      "the Skeezers": "Its people.",
+      "Coo-ee-oh": "The Queen who alone could sink or raise it.",
+      "the three Adepts": "Who built the Dome and identified the pillar.",
+      "Glinda": "Who lowers the lake to reach it."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Great Dome is broken open",
+        "the Dome leaks",
+        "the island is destroyed",
+        "the island is raised by machinery alone"
+      ]
+    },
+    "hallucination_signals": [
+      "the Dome shatters",
+      "water floods the village",
+      "the island is destroyed",
+      "the machinery lifts the island"
+    ]
+  },
+  "flathead_mountain": {
+    "canonical_aliases_book1": [
+      "Flathead Mountain",
+      "the Enchanted Mountain"
+    ],
+    "known_facts_book1": [
+      "An oblong hill towering above a flowery plain, with sides straight up and down like the wall of a house and a flat, level top.",
+      "Its top is shaped like a **saucer**, so that the rock houses and buildings inside cannot be seen from the plain below.",
+      "Is reached only by an entrance cut in the rock wall on the side facing the palm trees, leading to an **up-and-down stairway**: ten steps up, five steps down, then a turn — gaining only five steps a trip and forcing everyone to walk three times as far as necessary.",
+      "Rings a bell on the mountain top at every tenth step, warning the Flatheads of anyone coming; Ozma hears it from the first flight because she is holding her wand.",
+      "Is guarded by an **invisible wall** of stone and cement built a short distance in front of the entrance, with a gap at one end close to the mountainside just wide enough for one person.",
+      "The wall was made invisible on purpose: a visible wall would show strangers where to walk around it, and the Flatheads themselves need the gap to get out.",
+      "The wall was built **after the Adepts were transformed**, not before.",
+      "Holds at its center the palace of the Supreme Dictator, with a bronze prison for anyone he chooses to confine.",
+      "Is visited last, on the way home, so the Su-dic can be punished after the rescue rather than before."
+    ],
+    "known_relations_book1": {
+      "the Flatheads": "Its people.",
+      "the Su-dic": "Its Supreme Dictator.",
+      "the three Adepts": "Its former and restored rulers.",
+      "Ozma": "Who escapes it invisible and returns to end its Dictator."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the invisible wall is broken",
+        "the mountain is destroyed",
+        "the stairway is a straight climb",
+        "the Flatheads keep Ozma prisoner"
+      ]
+    },
+    "hallucination_signals": [
+      "the wall is torn down",
+      "a straight stairway",
+      "Ozma is imprisoned",
+      "the mountain is destroyed"
+    ]
+  },
+  "the_magic_words": {
+    "canonical_aliases_book1": [
+      "the magic words",
+      "Gaulau"
+    ],
+    "known_facts_book1": [
+      "Coo-ee-oh's whole system rests on **three magic words**, one to work the bridge, one to send out the submarines, one to raise and lower the island.",
+      "Hiding a spell behind a spoken word is a method **the Adepts themselves taught her**, which is why nobody else's magic can open the doors.",
+      "The three words are the three syllables of her own name — **Coo**, **ee**, **oh** — a guess made by Dorothy from the fact that both come in threes.",
+      "**'Coo'** sends every submarine loose out of its room and under water; **'ee'** extends the steel bridge joint by joint to the shore; **'Oh-h-h!'** raises the island.",
+      "Each word only works while a measure of **Gaulau** — a rare grayish mineral powder whose tiny grains constantly move as if alive — is burning in the basin atop the steel pillar.",
+      "The powder is kept in a hidden drawer that pops out of the wall of the Room of Magic when a thumb is pressed into a slight hollow, with a tiny golden measuring cup inside.",
+      "Glinda recognises Gaulau as known to sorcerers and more wonderful than radium, and wonders where Coo-ee-oh ever obtained it.",
+      "The marble basement door is a separate problem: it was commanded to open only to its one word, so **no other magic word has any effect on it at all** — which is why Glinda's sorcery cannot force it."
+    ],
+    "known_relations_book1": {
+      "Coo-ee-oh": "Who invented the words and forgot them.",
+      "Dorothy": "Who deduces them from the Queen's name.",
+      "Ozma": "Who speaks the word that raises the island.",
+      "the three Adepts": "Who taught the method and identified the pillar."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Glinda discovers the magic words",
+        "the marble door is opened",
+        "the words work without the powder",
+        "Coo-ee-oh reveals the words"
+      ]
+    },
+    "hallucination_signals": [
+      "Glinda finds the words",
+      "the marble door opens",
+      "the words work alone",
+      "the Swan tells them"
+    ]
+  },
+  "the_submarines": {
+    "canonical_aliases_book1": [
+      "the submarines",
+      "the under-water boat"
+    ],
+    "known_facts_book1": [
+      "Several enclosed boats of blackened steel kept in little rooms in the basement of the island, each room with two doors — one to the basement, one to the lake.",
+      "Have a collapsible roof that rises from the sides and joins overhead into a water-tight chamber with four glass windows, one on each side and one at either end.",
+      "Are **not operated by machinery but by mystic words** spoken by Coo-ee-oh, which is why her own crew is left helpless the moment she is transformed.",
+      "Have no oars, no sails and no motive power of any kind.",
+      "Are launched by opening the basement door, closing it, then slowly opening the outer door to flood the room and float the boat out under water; a pump empties the room again for the return.",
+      "One is left stranded and empty on the beach after Coo-ee-oh's defeat, and drifts there while three Skeezers wait beside it for three days.",
+      "Are made to obey **sorcery instead of witchcraft** by Glinda, using magic recipe No. 1163 with the Wizard's skeropythrope, a powder and a vial of liquid, in a shower of violet sparks."
+    ],
+    "known_relations_book1": {
+      "Coo-ee-oh": "Whose spoken words alone moved them.",
+      "Glinda": "Who re-enchants one to obey her.",
+      "Ervic": "One of the four Skeezers left adrift in one."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the submarines are driven by machinery",
+        "the Skeezers operate the submarine",
+        "the submarine opens the marble door",
+        "the submarine is destroyed"
+      ]
+    },
+    "hallucination_signals": [
+      "the boat has an engine",
+      "the Skeezers steer it",
+      "the boat opens the door",
+      "the submarine sinks"
+    ]
+  },
+  "dorothys_protections": {
+    "canonical_aliases_book1": [
+      "the Magic Belt",
+      "the Magic Ring",
+      "the Silver Wand"
+    ],
+    "known_facts_book1": [
+      "The **Magic Belt** was taken from the Nome King and is worn by Dorothy around her waist; it protects her from harm and makes the Spider King unable even to touch her.",
+      "The **Magic Ring** is Glinda's, given to Dorothy at the start with instructions to turn it once right and once left only if she is in actual danger of destruction.",
+      "Turning the ring rings the great alarm bell in Glinda's palace, and that bell is the sole reason the Rescue Expedition exists.",
+      "The ring conveys no other message: Glinda has to go to her magic room to learn what the danger is, and the answer is only that the two are prisoners under the lake.",
+      "The **Silver Wand** is Ozma's, tipped with a great sparkling emerald, slipped into the bosom of her gown; fairies use no chemicals, herbs or wizards' tools.",
+      "The wand is Ozma's one weapon of offence and defence: it conjures the Magic Tent and its meals, renders her and Dorothy invisible, lights the dark stairway with green-tinted light, lets her hear sounds a great distance off, changes the crab's color and draws the silence-circle around Lady Aurex's house.",
+      "**None of the three can raise the island**, which is the point: Dorothy's Belt, Glinda's ring and Ozma's wand together leave them still prisoners under the water."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Who wears the Belt and the Ring.",
+      "Ozma": "Who carries the Wand.",
+      "Glinda": "Whose ring summons her."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Magic Belt raises the island",
+        "the Magic Ring transports Dorothy",
+        "the Silver Wand opens the marble door",
+        "Dorothy loses the Magic Belt"
+      ]
+    },
+    "hallucination_signals": [
+      "the Belt lifts the island",
+      "the ring teleports her",
+      "the wand opens the door",
+      "the Belt is stolen"
+    ]
+  },
+  "book_of_records": {
+    "canonical_aliases_book1": [
+      "the Great Book of Records",
+      "the Record Book"
+    ],
+    "known_facts_book1": [
+      "Glinda's greatest treasure, prized above all her magical possessions, lying open on a big marble table in her palace court.",
+      "Is firmly attached to the table by **golden chains**, and whenever Glinda leaves home she locks it with **five jeweled padlocks** and carries the keys hidden in her bosom.",
+      "Prints a record of every event that happens in any part of the world at exactly the moment it happens, and the records are always truthful — though brief, since so many things happen.",
+      "Records little about the Land of Oz, which is usually peaceful and uneventful.",
+      "Prints the notice of the Skeezer–Flathead war **while Dorothy is looking at the page**, which is how the whole book begins.",
+      "Is consulted by Glinda every day, and tells her of Ozma's arrival at the mountain, the escape, the submerging of the island and the Queen's transformation into a swan.",
+      "**Its usefulness ends when Glinda leaves home**: Ervic's rescue of the three fishes is recorded in the Book after she has set out, so she knows nothing of it and searches the lake for fishes already gone."
+    ],
+    "known_relations_book1": {
+      "Glinda": "Its owner and daily reader.",
+      "Dorothy": "Who reads the war notice as it prints.",
+      "Ozma": "Whose journey it records."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Book of Records tells Glinda about Ervic",
+        "the Book of Records explains the magic words",
+        "the Book of Records is stolen",
+        "the Book of Records predicts the future"
+      ]
+    },
+    "hallucination_signals": [
+      "the Book reports Ervic",
+      "the Book gives the magic words",
+      "the Book predicts events",
+      "the Book is stolen"
+    ]
+  }
+}

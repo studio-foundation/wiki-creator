@@ -1,0 +1,161 @@
+{
+  "glinda": {
+    "canonical_aliases_book1": [
+      "Glinda",
+      "Glinda the Good"
+    ],
+    "known_facts_book1": [
+      "The powerful Sorceress of Oz, whose castle in the Quadling Country is robbed the same night Ozma disappears.",
+      "Her Great Book of Records is chained to a gold table with six stout golden padlocks whose keys she wears on a chain around her own neck; the chains are found cut with a sharp instrument.",
+      "Loses the Book, all her magical instruments and all her rare chemical compounds, but not her knowledge — no thief can rob one of knowledge.",
+      "Points out that whoever did it is a very foolish person, since in time he is sure to be found out.",
+      "Organizes the search, dividing it into four parties by country, and takes charge of Oz in Ozma's absence.",
+      "Cannot go herself because she must work to create new instruments of sorcery, and stays behind the entire book.",
+      "Invented the Barrier of Fire that Ugu uses; her stolen book tells how to make the flames but not how to quench them, which is why the Wizard's match works.",
+      "Flies in an aerial chariot drawn by twenty milk-white swans, and is waiting at the royal palace when the party returns."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Her mistress, whose loss she cannot trace without her Book.",
+      "the Wizard": "Her pupil, who rides to her with the news and finds her robbed too.",
+      "Ugu the Shoemaker": "The thief whose stolen Barrier of Fire she once invented."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Glinda joins the search party",
+        "Glinda locates Ozma in her Book",
+        "Glinda confronts Ugu",
+        "Glinda keeps her Book of Records"
+      ]
+    },
+    "hallucination_signals": [
+      "Glinda joins the search",
+      "Glinda confronts Ugu",
+      "Glinda finds Ozma in the Book"
+    ]
+  },
+  "capn_bill": {
+    "canonical_aliases_book1": [
+      "Cap'n Bill"
+    ],
+    "known_facts_book1": [
+      "An old sailor man with one wooden leg, Trot's former friend and comrade, living in Ozma's palace.",
+      "Comes to see the party off and suggests they put food and blankets in the Red Wagon — the blankets that later get the Lion and Mule over the thistles.",
+      "Is asked by Glinda to remain in the Emerald City and take charge of the royal palace while everyone else is away, and agrees.",
+      "Takes no part in the journey; he appears again only at the end, hanging the recovered Magic Picture on Ozma's wall with the Wizard."
+    ],
+    "known_relations_book1": {
+      "Trot": "His old comrade, whom he stays behind from.",
+      "Glinda": "Who asks him to keep the palace."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Cap'n Bill joins the search party",
+        "Cap'n Bill fights Ugu",
+        "Cap'n Bill finds Ozma"
+      ]
+    },
+    "hallucination_signals": [
+      "Cap'n Bill joins the search",
+      "Cap'n Bill fights the magician"
+    ]
+  },
+  "other_search_parties": {
+    "canonical_aliases_book1": [
+      "other search parties"
+    ],
+    "known_facts_book1": [
+      "Glinda divides the searchers by country: Ojo the Lucky, Unc Nunkie and Dr. Pipt into the Munchkin Country; the Scarecrow and the Tin Woodman into the Quadling Country; the Shaggy Man, his brother, Tik-Tok and Jack Pumpkinhead into the Gillikin Country; Dorothy's own party into the Winkie Country.",
+      "The Scarecrow and the Tin Woodman are found at Professor Wogglebug's college taking a course of his Patent Educational Pills when the news reaches them.",
+      "**Only Dorothy's party ever reaches Ugu**; the others search their assigned countries and return without finding anything.",
+      "The Scarecrow and the Tin Woodman do, by pure chance, pick up Cayke's dishpan lying under the dove's tree in the northeast Quadling Country — meaning to use it as a foot-bath — and present it to Ozma on their return.",
+      "The Soldier with the Green Whiskers, the only soldier in Oz, is unavailable: he went fishing about two months ago and has not come back."
+    ],
+    "known_relations_book1": {
+      "Glinda": "Who assigns each party its country.",
+      "Cayke": "Whose dishpan the Scarecrow and Tin Woodman recover by accident.",
+      "Ozma": "To whom they present the dishpan as a token of joy at her return."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Scarecrow reaches the wicker castle",
+        "the Tin Woodman fights Ugu",
+        "Ojo finds Ozma",
+        "the Soldier with the Green Whiskers joins the search"
+      ]
+    },
+    "hallucination_signals": [
+      "the Scarecrow reaches the castle",
+      "the Tin Woodman fights Ugu",
+      "the Soldier joins the search",
+      "Ojo finds Ozma"
+    ]
+  },
+  "search_party_animals": {
+    "canonical_aliases_book1": [
+      "Cowardly Lion",
+      "Hank",
+      "the Woozy",
+      "Sawhorse"
+    ],
+    "known_facts_book1": [
+      "The four beasts who carry the searchers after the Red Wagon has to be abandoned at the Merry-Go-Round Mountains.",
+      "The **Cowardly Lion** trembles when he faces danger but has faced it many times and never refused to fight when necessary; he rides across the thistles balanced on the Woozy's flat back.",
+      "**Hank** is Betsy's lean, bony mule, faithful and steady, who insists a mule is as brave as a lion any day and follows her across the whirling mountains.",
+      "The **Woozy** is square in head, body, legs and tail, with leather-tough skin the thistles cannot prick, and can stay awake a month at a time; he snores terribly.",
+      "The **Sawhorse** is wooden, never sleeps, never eats, and argues that being made of wood he is the most beautiful animal among them.",
+      "Their long night argument about beauty is settled by the Lion, who says variety is the spice of life and that to be different is the only way to be distinguished.",
+      "None of the four does anything decisive against Ugu; the Lion says outright that the mere mention of a fight sets him trembling."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Whom the Lion carries and whose old companion he is.",
+      "Betsy Bobbin": "Hank's mistress.",
+      "Scraps": "The Woozy's great friend, whom he follows over the mountains.",
+      "Toto": "The dog who argues with all of them about his lost growl."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Cowardly Lion fights Ugu",
+        "the Woozy's eyes flash fire in this book",
+        "the Sawhorse pulls the Red Wagon to the castle",
+        "the animals are harmed by the thistles"
+      ]
+    },
+    "hallucination_signals": [
+      "the Lion fights the magician",
+      "the Woozy flashes fire",
+      "the Red Wagon reaches the castle"
+    ]
+  },
+  "wiljon_and_the_ferryman": {
+    "canonical_aliases_book1": [
+      "Wiljon",
+      "the unhappy ferryman"
+    ],
+    "known_facts_book1": [
+      "**Wiljon the Winkie** and his wife **Nellary** are the first people the Frogman and Cayke meet after descending the mountain; Wiljon answers the Frogman's haughty question about a diamond dishpan with an equally haughty remark about a copper-plated lobster.",
+      "Wiljon is entirely unimpressed by the Frogman's claim to be the wisest creature in the world, and says it is his good fortune to know very little.",
+      "The **ferryman** on the west branch of the Winkie River is a Winkie with a very small head and a very large body who lives alone in a little yellow house.",
+      "He cut the tail off a fox, stole birds' eggs for an omelet and left a fish gasping on the bank until it died — and was punished by the Tin Woodman, whose tin heart is very tender.",
+      "His punishment is to be denied all communication with beasts, birds and fishes: the Frogman's speech sounds to him only like a frog's croak, and nothing he says reaches any creature.",
+      "Refuses to let the Frogman into his house or even to look at him, for fear he will weep, and rows the pair across the river keeping his back turned the whole way.",
+      "Neither Wiljon nor the ferryman takes any further part in the story."
+    ],
+    "known_relations_book1": {
+      "the Frogman": "Whom Wiljon deflates and whom the ferryman cannot hear.",
+      "Cayke": "Who must interpret between the ferryman and her companion.",
+      "Tin Woodman": "The Emperor whose tender tin heart imposed the ferryman's punishment."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the ferryman's punishment is lifted",
+        "Wiljon knows where the dishpan is",
+        "the ferryman joins the party"
+      ]
+    },
+    "hallucination_signals": [
+      "the ferryman is forgiven",
+      "Wiljon knows about the dishpan",
+      "the ferryman joins the journey"
+    ]
+  }
+}

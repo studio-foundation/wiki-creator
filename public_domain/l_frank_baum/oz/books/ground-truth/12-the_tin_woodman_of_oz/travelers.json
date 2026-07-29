@@ -1,0 +1,122 @@
+{
+  "woot": {
+    "canonical_aliases_book1": [
+      "Woot",
+      "Woot the Wanderer"
+    ],
+    "known_facts_book1": [
+      "A small boy from a far corner of the Gillikin Country, near Oogaboo, who left home because his friends were so quiet and happy and comfortable that he found them dismally stupid.",
+      "Has been a wanderer for nearly a full year, and says the more he wanders the less he finds that he knows.",
+      "Is the one who tells the Tin Woodman that deserting Nimmie Amee was unkind, and so is the cause of the whole journey.",
+      "Bursts his bonds at Loonville when a thorn pricks his leg, and routs the whole tribe by chasing them with that same thorn, popping them one after another.",
+      "Is transformed by Mrs. Yoop into a **Green Monkey** with silk-like green fur, and is made contented with the form by an extra bit of her magic.",
+      "Steals the Magic Lace Apron from the bedpost while the Giantess snores, pushes a giant chair under the birdcage to reach Polychrome, and locks Mrs. Yoop in her own bedroom.",
+      "Escapes the Jaguar by shouting 'Open!' while wearing the Apron, and falls straight through the earth into the cavern of the Dragons.",
+      "Escapes the Dragons the same way, opening a hole in the cavern roof above his head.",
+      "Is scrubbed in a tub of cold water by Jinjur after climbing up her chimney, and dried with a coarse towel.",
+      "**Cannot be restored by Ozma or by Glinda**: the Green Monkey must exist in the Land of Oz for all future time and can only be transferred to someone else.",
+      "Refuses to let the form be put on Toto or on anyone else, saying it would be wicked to ask another to take his place.",
+      "Is restored only when Ozma, at Polychrome's suggestion, gives the Green Monkey's form to Mrs. Yoop herself.",
+      "Is allowed by Ozma at the end to wander wherever he desires, with her promise to watch over him."
+    ],
+    "known_relations_book1": {
+      "Tin Woodman": "Whose conscience he pricks, starting the quest.",
+      "Scarecrow": "His travelling companion and defender.",
+      "Polychrome": "The fairy whose idea finally frees him.",
+      "Mrs. Yoop": "The Giantess who makes him a Green Monkey and ends up wearing the form herself.",
+      "Jinjur": "Who scrubs him and comforts him."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Woot remains a Green Monkey",
+        "Toto becomes the Green Monkey",
+        "Glinda restores Woot",
+        "Woot is from the Munchkin Country"
+      ]
+    },
+    "hallucination_signals": [
+      "Woot stays a monkey",
+      "Toto takes the monkey form",
+      "Glinda restores Woot",
+      "Woot is a Munchkin"
+    ]
+  },
+  "scarecrow": {
+    "canonical_aliases_book1": [
+      "Scarecrow"
+    ],
+    "known_facts_book1": [
+      "The Tin Woodman's best friend, a suit of clothes stuffed with straw whose head is a gunnysack of bran with a painted face.",
+      "Was made by a Munchkin farmer in the very forest the party travels through, and his current painted expression was done by Jinjur about a month before the transformations.",
+      "Recites poems learned from Professor Wogglebug, including one in praise of straw stuffing.",
+      "Is transformed by Mrs. Yoop into a **little Brown Bear**, still stuffed with straw and just as wobbly, after telling the Giantess she is acting like a bear.",
+      "Is the easiest of the four to restore, since even yookoohoo magic could only make a straw-stuffed bear out of a straw-stuffed man.",
+      "Sacrifices his own straw stuffing to the Hip-po-gy-raf so the party can be lifted over the ditch, and is restuffed with hay by Woot and Polychrome — badly, with a hump on his back.",
+      "Gets proper straw again at the Swynes' straw-stack, and is so pleased he tries to dance a jig.",
+      "Argues that thoughts should be restrained like the Tin Woodman's oil, applied only when necessary and for a good purpose.",
+      "Is the one who suggests the exchange of forms as a way to free Woot, though the version that works is Polychrome's.",
+      "Refuses Ku-Klip's offer to remake him in tin, saying he likes himself better as he is."
+    ],
+    "known_relations_book1": {
+      "Tin Woodman": "His best friend, whom he accompanies without hesitation.",
+      "Jinjur": "The friend who repaints his face and once painted him a straw-stack.",
+      "the Hip-po-gy-raf": "The beast he feeds his own stuffing to.",
+      "Mrs. Yoop": "Who turns him into a Brown Bear for being rude."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "the Scarecrow asks the Wizard for brains in this book"
+      ],
+      "not_in_this_book": [
+        "the Scarecrow is eaten entirely",
+        "the Scarecrow is remade in tin",
+        "the Scarecrow keeps the hay stuffing"
+      ]
+    },
+    "hallucination_signals": [
+      "the Scarecrow asks for brains",
+      "the Scarecrow is made of tin",
+      "the Scarecrow is destroyed"
+    ]
+  },
+  "polychrome": {
+    "canonical_aliases_book1": [
+      "Polychrome",
+      "the Rainbow's Daughter"
+    ],
+    "known_facts_book1": [
+      "A Sky Fairy, daughter of the Rainbow, who danced off her bow after a rain and fell asleep on a mound in Mrs. Yoop's valley.",
+      "Was transformed by the sleeping Giantess into a **Canary-Bird** in a gold cage studded with diamonds, and refused to speak a single word for weeks.",
+      "Says she could easily have protected herself had she been awake; the Giantess took unfair advantage of her.",
+      "Is the one who discovers that only the **Magic Lace Apron** can open the doors and windows of Yoop Castle, having watched Mrs. Yoop forget to put it on one morning.",
+      "Knows the Giantess still has six magic hairpins, an invisible magic ring on her thumb and magic bracelets on both ankles, so she is not really trapped.",
+      "Conjures scrambled eggs on toast for the hungry Jaguar rather than let it eat any living thing.",
+      "Removes ten of Tommy Kwikstep's twenty legs — and the corns from the ten toes she leaves him.",
+      "Oils Captain Fyter's jaws with the Tin Woodman's oil-can and so frees him from years of rust.",
+      "Mends the Tin Soldier's bent leg and the dent in the Tin Woodman's side with rhymed fairy charms, remarking that her magic works splendidly on tin.",
+      "Shrinks the entire party small enough to pass through the Blue Rabbit's burrow under the Wall of Solid Air, and enlarges them again.",
+      "Is restored by Ozma only after a chain of experiments: Canary to Dove to Speckled Hen to rabbit to Fawn, then powders sprinkled on the Fawn.",
+      "Proposes the solution that frees Woot: give the Green Monkey's form to the woman who created it.",
+      "Leaves on her Rainbow at the very end, after the storm, having kissed Woot lightly on the forehead."
+    ],
+    "known_relations_book1": {
+      "Mrs. Yoop": "The Giantess who caught her asleep and caged her.",
+      "Woot": "The boy she frees twice — once from the castle, once from the monkey form.",
+      "Captain Fyter": "The Tin Soldier she unrusts and later mends.",
+      "Ozma": "The Ruler who breaks her enchantment after several failures."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Polychrome breaks her own enchantment",
+        "Polychrome is restored on the first attempt",
+        "Polychrome goes to the Emerald City",
+        "Polychrome stays in Oz"
+      ]
+    },
+    "hallucination_signals": [
+      "Polychrome frees herself",
+      "Ozma restores her at once",
+      "Polychrome settles in Oz"
+    ]
+  }
+}

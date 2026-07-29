@@ -1,0 +1,85 @@
+{
+  "shaggy_man": {
+    "canonical_aliases_book1": [
+      "Shaggy Man",
+      "Shaggy"
+    ],
+    "known_facts_book1": [
+      "An American who came to the Land of Oz with Dorothy and was allowed by Ozma to stay, and who has left Oz on an errand of his own.",
+      "Carries the Love Magnet, a small silver magnet shaped like a horseshoe that wins the heart of everyone who looks upon it; it used to hang over the gateway to the Emerald City and Ozma let him take it with him.",
+      "Learned from Glinda's magic Record Book that his little brother, lost ten years ago from a gold mine in Colorado, is a prisoner of the Nome King.",
+      "Falls into the Rose Kingdom greenhouse through the roof, having climbed an apple tree whose branch gave way, and goes on eating his apple.",
+      "Discovers that the Love Magnet fails on the Roses, because Roses have thorns but no hearts.",
+      "Is bound with ropes by nomes lying in wait in the passage, precisely so that he cannot take the Love Magnet out of his pocket.",
+      "Is transformed by Ruggedo into a dove and restored by touching Quox's pink ribbon.",
+      "Carries a wireless telephone of the Wizard's invention, by which he speaks with Ozma at the end.",
+      "Refuses to return to Oz alone, choosing exile rather than desert Betsy and his newly found brother — which is what finally persuades Ozma to admit all of them.",
+      "Lends his own handkerchief and knife so his brother can cut a mask, since Betsy's handkerchief is too small."
+    ],
+    "known_relations_book1": {
+      "the Ugly One": "His long-lost younger brother, whom he searches for and finds in the Metal Forest.",
+      "Betsy Bobbin": "The little girl he promises never to desert.",
+      "Ruggedo": "The Nome King who imprisoned his brother and who transforms him into a dove.",
+      "Polychrome": "A companion on the journey, whom the Love Magnet makes love him.",
+      "Ozma": "The Ruler of Oz who let him take the Love Magnet and who finally admits his party to Oz.",
+      "Tik-Tok": "His old friend, sent by Ozma to help him, whom he pulls out of the well."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Love Magnet works on the Roses",
+        "the Love Magnet works on Ruggedo",
+        "Shaggy conquers the Nome King",
+        "Shaggy remains in exile at the end"
+      ]
+    },
+    "hallucination_signals": [
+      "the Love Magnet conquers Ruggedo",
+      "the Love Magnet charms the Roses",
+      "Shaggy defeats the Nome King",
+      "Shaggy stays outside Oz"
+    ]
+  },
+  "ugly_one": {
+    "canonical_aliases_book1": [
+      "the Ugly One",
+      "Shaggy's brother"
+    ],
+    "known_facts_book1": [
+      "Shaggy Man's younger brother, a miner who went into his gold mine in Colorado ten years ago and never came out.",
+      "Was captured by Ruggedo, who enchanted him overnight from a handsome man into the homeliest man in all the world, purely to injure him.",
+      "Was displayed to the legion of nomes as 'the Ugly One', and the nomes laughed so much they stopped working, so Ruggedo pushed him into a tunnel and sealed it.",
+      "Has lived two or three years in the Great Domed Cavern of the Metal Forest, in a little hut he built of twigs and golden branches at the edge of the real trees.",
+      "Feeds himself on Three-Course Nuts from the Hotel Trees and on the Breakfast Trees, which grow only in that cavern.",
+      "Refuses at first to come out and face strangers, and only emerges masked in Shaggy's red handkerchief covered with big white polka dots, cut with holes for his eyes and nostrils.",
+      "Refused Kaliko's earlier offer of help to escape, which Shaggy calls conscientiousness.",
+      "Is restored by Polychrome's kiss — not Betsy's, who is a Mortal Maid, nor Ozga's, who is a Mortal Maid who was once a Fairy, but the kiss of one who is still a Fairy.",
+      "Once unmasked, he is described as no more handsome than he ought to be; Kaliko says that compared with what he was, he is beautiful.",
+      "Is admitted to the Land of Oz only because Ozma will not lose Shaggy, having no claim on her of his own."
+    ],
+    "known_relations_book1": {
+      "Shaggy Man": "His elder brother, who searched for him across the world.",
+      "Ruggedo": "The Nome King who imprisoned him and cast the charm of ugliness on him.",
+      "Polychrome": "The sky fairy whose kiss breaks the charm.",
+      "Betsy Bobbin": "Suggests the mask and offers the first kiss.",
+      "Kaliko": "Had begged Ruggedo to send him away and had offered to help him escape."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Betsy's kiss breaks the charm",
+        "Ozga's kiss breaks the charm",
+        "Ruggedo breaks the charm himself",
+        "the Ugly One is handsome once the charm is broken",
+        "the Ugly One is named in this book"
+      ],
+      "relationships": [
+        "the Ugly One is a friend of Ruggedo"
+      ]
+    },
+    "hallucination_signals": [
+      "Betsy's kiss restores him",
+      "Ruggedo undoes his own charm",
+      "the Ugly One becomes handsome",
+      "the Ugly One's name is given"
+    ]
+  }
+}

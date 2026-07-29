@@ -1,0 +1,125 @@
+{
+  "inga": {
+    "canonical_aliases_book1": [
+      "Inga",
+      "Prince Inga"
+    ],
+    "known_facts_book1": [
+      "The son and heir of King Kitticut and Queen Garee, and the only Prince of the pearl kingdom of Pingaree.",
+      "Is grave and thoughtful, cannot bear to be idle, and rakes oysters for pearls as successfully as any man on the island despite being slight and small.",
+      "Has no school; his father teaches him reading, writing and arithmetic from sheepskin manuscripts, which he studies on a platform he built high in a tall tree.",
+      "Is shown the three Magic Pearls by his father and told where they are hidden, so the secret will not die with the King.",
+      "Escapes the invasion of Regos and Coregos by hiding in his tree-top, binding himself to a limb with his sash, and watching his home destroyed and his parents carried away.",
+      "Recovers the pearls from under the tiled floor of the ruined banquet hall and hides the Blue Pearl in the pointed toe of his right shoe and the Pink in his left, wearing the White in a silken bag round his neck.",
+      "Wins his bargain with Rinkitink: the King cannot move the boat an inch, and Inga rows it to Regos as though the oars were feathers.",
+      "Bursts the staples of the iron city gates of Regos with his shoulder and takes the city without striking a blow, King Gos and his whole army fleeing before him.",
+      "Loses both shoes in one night — Rinkitink throws one at a cat and an old sweeping woman throws the other on the dust-heap — and conceals the loss on the White Pearl's advice.",
+      "Recovers both pearls from Zella's feet by trading her his own new red shoes, moments before Queen Cor can whip him.",
+      "Frees every slave in the three mine caverns by breaking their chains with his hands, and forms them into companies to march on Regos.",
+      "Lends the Pink Pearl to Rinkitink and so faces the Three Trick Caverns with strength but no protection: he kills the hairy giant with an iron post, leaps the pit where the floor falls away, and crosses a cavern of glowing coals on stepping-stones he tears from the wall.",
+      "Never rescues his parents by his own power: Dorothy does it, by threatening Kaliko with a basket of eggs.",
+      "Returns the three pearls to the secret cavity beneath the tiled floor of the new palace at the end of the book."
+    ],
+    "known_relations_book1": {
+      "King Kitticut": "His father, whom he searches for through Regos and the Nome Kingdom.",
+      "Queen Garee": "His mother, taken to the royal dairy of Coregos and then dragged away by Queen Cor.",
+      "Rinkitink": "The jolly guest who becomes his companion, and who loses the Pink Pearl shoe.",
+      "Bilbil": "The talking goat who travels with them and is really Prince Bobo.",
+      "Zella": "The charcoal-burner's daughter who unknowingly wears his magic shoes.",
+      "King Gos": "The King of Regos he drives from his own city.",
+      "Queen Cor": "The Queen of Coregos who captures him by an embrace when he is powerless.",
+      "Dorothy": "The Princess of Oz who frees his parents when he cannot."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Inga frees his parents himself",
+        "Inga kills King Gos",
+        "Inga becomes King of Pingaree",
+        "Inga keeps the Pink Pearl through the Three Trick Caverns",
+        "Inga goes to Oz to live"
+      ]
+    },
+    "hallucination_signals": [
+      "Inga rescues his parents",
+      "Inga kills Gos",
+      "Inga becomes King",
+      "Inga keeps all three pearls in the caverns"
+    ]
+  },
+  "kitticut": {
+    "canonical_aliases_book1": [
+      "Kitticut",
+      "King Kitticut"
+    ],
+    "known_facts_book1": [
+      "Lord and ruler of the Island of Pingaree, living in a palace of snow-white marble capped with domes of burnished gold.",
+      "Was only a boy when the first raid of Regos and Coregos was driven back, and has feared a second invasion all his life, keeping a watchman patrolling the beach constantly.",
+      "Sends six boats of pearls to Gilgad once a year, and receives merchandise and food in return.",
+      "Guards the three Magic Pearls, which were given to one of his ancestors by the Mermaid Queen he had rescued from her enemies, in a cavity under a tiled floor of the banquet hall.",
+      "Explains that the pearls' powers are his only while he carries them on his person, and that his danger lies in being seized before he can reach them — which is exactly what happens.",
+      "Is thrown backward and bound by the leader of the warriors just as he stoops to press the secret spring.",
+      "Is chained with the men of Pingaree and sent to work in the gold mines under the mountains of Regos.",
+      "Is carried off by King Gos the night before Inga reaches the mines, and made to carry a bag of gold and jewels all the way to the Nome King's caverns as his own bribe.",
+      "Tells Kaliko to his face that Gos's tale is a lie, and is told by Kaliko that he knows it is — but that powerful Kings must stand together and trample the weaker underfoot.",
+      "Is freed by Dorothy's demand, returns to a rebuilt Pingaree, and makes Nikobob his Lord High Chamberlain."
+    ],
+    "known_relations_book1": {
+      "Inga": "His son and heir, to whom he confides the secret of the pearls.",
+      "Queen Garee": "His wife, captured and imprisoned with him.",
+      "Rinkitink": "His royal guest and brother monarch, who was staying with him when the raid came.",
+      "King Gos": "The King who destroys his palace, enslaves his people and sells him to the nomes.",
+      "Kaliko": "The Nome King who keeps him captive but treats him more considerately than Gos did.",
+      "Nikobob": "The charcoal-burner he makes Lord High Chamberlain of Pingaree."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "King Kitticut uses the Magic Pearls against the invaders",
+        "King Kitticut is killed",
+        "King Kitticut escapes on his own",
+        "King Kitticut abdicates in favor of Inga"
+      ]
+    },
+    "hallucination_signals": [
+      "Kitticut uses the pearls",
+      "Kitticut is killed",
+      "Kitticut escapes alone",
+      "Kitticut abdicates"
+    ]
+  },
+  "garee": {
+    "canonical_aliases_book1": [
+      "Garee",
+      "Queen Garee"
+    ],
+    "known_facts_book1": [
+      "The fair Queen of Pingaree, wife of King Kitticut and mother of Prince Inga.",
+      "Tells her maidens stories of bygone days when the fog makes it too dark to work at her embroidery.",
+      "Is captured with all her maidens and bound with ropes, then tossed into the boats with the other prisoners.",
+      "Is given by King Gos to Queen Cor, who places her in the royal dairy of Coregos to make butter — not in the grain fields with the other women.",
+      "Is dragged out of the butter-house and across the bridge of boats by Queen Cor in her flight, and is the reason Inga finds only her silk scarf.",
+      "Is forced to carry a bag of gold and jewels the whole journey to the Nome King's caverns, as part of her own purchase price.",
+      "Weeps with her husband in Klik's small cavern, the first time since the invasion that the two have been alone together and free of bonds.",
+      "Is freed at Dorothy's demand, blesses Dorothy, and is given a new royal outfit by Ozma so she will not be shamed at the banquet."
+    ],
+    "known_relations_book1": {
+      "King Kitticut": "Her husband, imprisoned with her.",
+      "Inga": "Her son, who searches two kingdoms for her.",
+      "Queen Cor": "The Queen who makes her a dairy slave and drags her away as a hostage.",
+      "Dorothy": "The girl who secures her release and whom she blesses."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Queen Garee works in the grain fields",
+        "Queen Garee escapes on her own",
+        "Queen Garee is killed",
+        "Queen Garee is found by Inga in Coregos"
+      ]
+    },
+    "hallucination_signals": [
+      "Garee works the grain fields",
+      "Inga finds his mother in Coregos",
+      "Garee escapes alone",
+      "Garee is killed"
+    ]
+  }
+}

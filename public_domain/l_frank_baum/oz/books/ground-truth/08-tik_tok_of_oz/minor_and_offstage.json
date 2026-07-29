@@ -1,0 +1,148 @@
+{
+  "the_rak": {
+    "canonical_aliases_book1": [
+      "the Rak"
+    ],
+    "known_facts_book1": [
+      "A terrible beast with a horrible appetite, known to Files only from a blurred picture in an under-ripe story-book from his orchard.",
+      "Can fly in the air, run like a deer and swim like a fish, is bigger than a hundred men, and feeds on any living thing.",
+      "Carries a glowing furnace of fire inside its body, breathes in air and breathes out smoke that darkens the sky for miles.",
+      "Is identified by its breath, which smells of salt and pepper — a fog has no smell at all.",
+      "Is shot by Files in the dark, aiming at its two glowing red eyes; one bullet breaks its jaw, one its left wing, one its right leg.",
+      "Bears a charmed life and cannot die; its jaw will heal in an hour, its wing in a day and its leg in a week.",
+      "Politely lets Files go once it learns he has an engagement with Queen Ann, having first asked him to stay and be eaten."
+    ],
+    "known_relations_book1": {
+      "Files": "The Private Soldier who shoots and wounds it.",
+      "the officers of Oogaboo": "Whom it falls upon and tries to crush, and who flee from it."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Rak is killed",
+        "the Rak eats one of the travelers",
+        "the Rak follows the party"
+      ]
+    },
+    "hallucination_signals": [
+      "the Rak is killed",
+      "the Rak eats an officer",
+      "the Rak pursues the party"
+    ]
+  },
+  "glinda": {
+    "canonical_aliases_book1": [
+      "Glinda",
+      "Glinda the Good"
+    ],
+    "known_facts_book1": [
+      "The Official Sorceress of the Land of Oz, whose magnificent castle stands far north of the Emerald City.",
+      "Owns a magic Record Book in which every event that takes place anywhere is printed the moment it happens, from a child stamping its foot to a city burning down.",
+      "Reads the Record Book every day, and so learns of Queen Ann's plan to invade Oz.",
+      "Goes into the Magic Room of her castle and performs a ceremony that makes the Oogaboo pass turn and twist, so the Army comes out in an adjoining country instead of in Oz.",
+      "Deliberately says nothing about it to Ozma or anyone else, judging it a shame to have the peace of Oz disturbed by quarreling.",
+      "Transported Tik-Tok to the crossroads in the wink of an eye at Ozma's request, and taught the Wizard the incantation he uses at the end.",
+      "It was in her Record Book that Shaggy Man read of his lost brother's captivity.",
+      "Never appears on the page in this book."
+    ],
+    "known_relations_book1": {
+      "Ozma": "The Ruler whose peace she guards without troubling her about it.",
+      "Ann Soforth": "The Queen whose invasion she diverts without either of them meeting.",
+      "the Wizard": "Whom she taught the transporting incantation.",
+      "Shaggy Man": "Whose brother's fate he read in her Record Book."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Glinda appears in this book",
+        "Glinda confronts Queen Ann",
+        "Glinda goes to the Nome Kingdom",
+        "Glinda tells Ozma about the invasion"
+      ]
+    },
+    "hallucination_signals": [
+      "Glinda appears",
+      "Glinda confronts Queen Ann",
+      "Glinda warns Ozma",
+      "Glinda defeats Ruggedo"
+    ]
+  },
+  "billina": {
+    "canonical_aliases_book1": [
+      "Billina",
+      "Yellow Hen"
+    ],
+    "known_facts_book1": [
+      "The Yellow Hen whom Dorothy brought to Oz, remembered by Ruggedo with a shudder because she once laid eggs against him.",
+      "Is named by Ozma as an animal who found she could talk as soon as she came under the spell of the fairyland.",
+      "Is mentioned by Dorothy as living in Oz with chickens that can also talk.",
+      "Never appears on the page in this book; she is recalled by the Nome King and named by Ozma and Dorothy."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "The girl who brought her to Oz.",
+      "Ruggedo": "The Nome King who fears the memory of her eggs."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Billina appears in this book",
+        "Billina's eggs drive out Ruggedo in this book",
+        "Billina travels with Betsy"
+      ]
+    },
+    "hallucination_signals": [
+      "Billina appears",
+      "Billina's eggs defeat Ruggedo",
+      "Billina joins the party"
+    ]
+  },
+  "eureka": {
+    "canonical_aliases_book1": [
+      "the Pink Kitten"
+    ],
+    "known_facts_book1": [
+      "Dorothy's kitten, mentioned once as living upstairs in her room in the palace and talking very nicely.",
+      "Never appears on the page in this book and is not named there."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her mistress."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Pink Kitten appears in this book",
+        "the Pink Kitten is named Eureka in this book",
+        "the Pink Kitten travels with the party"
+      ]
+    },
+    "hallucination_signals": [
+      "the Pink Kitten appears",
+      "Eureka is named in this book",
+      "the kitten joins the journey"
+    ]
+  },
+  "hiergargo": {
+    "canonical_aliases_book1": [
+      "Hiergargo"
+    ],
+    "known_facts_book1": [
+      "The Magician named on the silver plate inside the Tube as having burrowed and built it in the Year of the World 19625478 for his own exclusive uses.",
+      "Was a great traveler who thought the Tube would save him the bother of going around the earth's surface.",
+      "Fell through so fast that he shot out at the other end and hit a star in the sky, which at once exploded; no one knows what became of him.",
+      "Was properly punished for his folly in making the Tube, according to Tititi-Hoochoo.",
+      "Never appears in this book: he is known only from the engraved plate and from Polychrome's account."
+    ],
+    "known_relations_book1": {
+      "Tititi-Hoochoo": "The Jinjin who calls the making of the Tube folly and says its maker was punished.",
+      "Polychrome": "Who tells the story of his fatal trip."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Hiergargo appears in this book",
+        "Hiergargo survives his trip through the Tube",
+        "Hiergargo helps the travelers"
+      ]
+    },
+    "hallucination_signals": [
+      "Hiergargo appears",
+      "Hiergargo survives",
+      "the magician guides the travelers"
+    ]
+  }
+}

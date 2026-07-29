@@ -1,0 +1,138 @@
+{
+  "glinda": {
+    "canonical_aliases_book1": [
+      "Glinda the Good",
+      "Glinda"
+    ],
+    "known_facts_book1": [
+      "The good Sorceress who rules the Quadlings of the red South country and is the most skilled in magic in all Oz.",
+      "Now owns the Golden Cap that commands the Winged Monkeys (recalled as past history by the Scarecrow).",
+      "Reveals to the Scarecrow that the throne rightfully belongs to Pastoria's heir, and reads her book of the Wizard's actions to deduce Mombi hid the child Ozma.",
+      "Marches her trained girl army, armed with swords and spears, on the Emerald City to seize Mombi.",
+      "Sees through Mombi's decoys and disguises: exposes Jellia disguised as Mombi, and detects the rose, shadow, ant, and Griffin transformations.",
+      "Captures Mombi with a golden thread and forces the truth from her with a white pearl that turns black at a lie.",
+      "Makes Mombi confess and undo the enchantment, restoring Ozma, then installs Ozma as Queen and advises her."
+    ],
+    "known_relations_book1": {
+      "Mombi": "Her adversary, whom she pursues, out-magics, captures, and strips of magical power.",
+      "Scarecrow": "Petitions her for help; she guides him to the true heir Ozma.",
+      "Tip": "Takes a great liking to the boy; reveals and restores his identity as Princess Ozma and becomes her adviser.",
+      "Nick Chopper": "The Tin Woodman, whom she knows and likes; he unknowingly carries Mombi to her as a rose."
+    },
+    "forbidden_book1": {
+      "adaptation_or_confusion": [
+        "Glinda the Good Witch of the North",
+        "Glinda gives Dorothy the ruby slippers",
+        "Glinda arrives in a floating bubble"
+      ],
+      "false_facts": [
+        "Glinda transforms Tip into Ozma"
+      ],
+      "cross_tome": [
+        "the Nome King"
+      ]
+    },
+    "hallucination_signals": [
+      "Witch of the North",
+      "ruby slippers",
+      "Glinda transforms Tip",
+      "Glinda arrives in a bubble",
+      "the Nome King"
+    ]
+  },
+  "jellia_jamb": {
+    "canonical_aliases_book1": [
+      "Jellia Jamb",
+      "Jellia"
+    ],
+    "known_facts_book1": [
+      "A green-clad maid of the Emerald City palace, born in the northern Gillikin country, summoned to interpret between the Scarecrow and Jack.",
+      "Mischievously mistranslates, telling Jack the Scarecrow's brains have come loose and telling the Scarecrow that Jack insulted him.",
+      "Reveals that only one language is spoken in all Oz, so no interpreter was ever needed.",
+      "Is magically disguised as Mombi and handed to Glinda as a decoy, then breaks down weeping under questioning.",
+      "Is restored to her true shape by Glinda, confesses Mombi's trick, and is granted the Sorceress's protection."
+    ],
+    "known_relations_book1": {
+      "Scarecrow": "His palace servant and 'interpreter,' whom she teases with false translations.",
+      "Mombi": "Forces her to take Mombi's form as a decoy and threatens her with death if she confesses.",
+      "Jack Pumpkinhead": "The visitor she interprets (and mistranslates) for."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Jellia Jamb is a witch",
+        "Jellia Jamb is the rightful heir Ozma"
+      ],
+      "cross_tome": [
+        "the Nome King"
+      ]
+    },
+    "hallucination_signals": [
+      "Jellia Jamb is a witch",
+      "Jellia is really Ozma",
+      "the Nome King"
+    ]
+  },
+  "soldier_with_the_green_whiskers": {
+    "canonical_aliases_book1": [
+      "Soldier with the Green Whiskers"
+    ],
+    "known_facts_book1": [
+      "The Emerald City's lone soldier and entire Royal Army; wears a green uniform and green whiskers to his knees and carries a green gun that is never loaded.",
+      "Escorts Jack to the Scarecrow and serves as the city's only guard.",
+      "Flees when Jinjur's girls attack, because his gun is unloaded and he is afraid of women.",
+      "Locks the Saw-Horse in the treasury as a 'jewel,' then ties the escaping party together and is left behind.",
+      "Offers to cut off his lovely green whiskers to disguise himself."
+    ],
+    "known_relations_book1": {
+      "Scarecrow": "His sovereign, whom he serves as the whole Royal Army of Oz.",
+      "Guardian of the Gates": "Fellow palace functionary who rings for him to handle newcomers.",
+      "Jinjur": "Routs his one-man army without a fight."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Soldier loads his gun",
+        "the Soldier shoots the invaders"
+      ],
+      "later_tomes": [
+        "Omby Amby",
+        "the Nome King"
+      ]
+    },
+    "hallucination_signals": [
+      "the Soldier loads his gun",
+      "the Soldier shoots the rebels",
+      "Omby Amby",
+      "the Nome King"
+    ]
+  },
+  "guardian_of_the_gates": {
+    "canonical_aliases_book1": [
+      "Guardian of the Gates"
+    ],
+    "known_facts_book1": [
+      "The fat, green-clad, green-spectacled keeper of the Emerald City gates, who fits green spectacles on all who enter to guard against the glare.",
+      "Meets Jack and the Saw-Horse and, puzzled, sends them on to the Scarecrow.",
+      "Refuses Jinjur's demand to surrender ('It's against the law!'), then is mobbed with knitting-needles and has his keys taken.",
+      "A new Guardian, a fussy fat woman appointed by Jinjur, is later bowled over by the escaping Saw-Horse."
+    ],
+    "known_relations_book1": {
+      "Jinjur": "Demands his surrender and seizes his keys when he refuses.",
+      "Soldier with the Green Whiskers": "Rings for the Soldier to deal with strange arrivals.",
+      "Jack Pumpkinhead": "Admits him to the city and puzzles over him."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Guardian of the Gates admits Dorothy",
+        "the Guardian refuses to let the party leave"
+      ],
+      "cross_tome": [
+        "the Nome King"
+      ]
+    },
+    "hallucination_signals": [
+      "the Guardian greets Dorothy",
+      "the Guardian is a witch",
+      "the Nome King"
+    ]
+  }
+}

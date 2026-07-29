@@ -1,0 +1,227 @@
+{
+  "toto": {
+    "canonical_aliases_book1": [
+      "Toto"
+    ],
+    "known_facts_book1": [
+      "Dorothy's fuzzy little black dog, who squats at her feet and looks up with intelligent eyes.",
+      "Tells Dorothy that the best present for Ozma is her **love**, since Ozma wants to be loved more than anything else — and then, pressed, suggests giving away the Pink Kitten, or six kisses.",
+      "Tells the Glass Cat where the Wizard and Dorothy have gone, and that the Wizard carried his Black Bag with him — the pointer that sends the Cat to the Forest of Gugu.",
+      "Says Dorothy is more particular than Ozma will be.",
+      "Stays in the Emerald City for the whole book, and sits at the animals' table at the banquet."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "His mistress.",
+      "the Glass Cat": "Whom he directs toward the Wizard."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Toto joins the journey",
+        "Toto is transformed",
+        "Toto cannot speak"
+      ]
+    },
+    "hallucination_signals": [
+      "Toto travels with Dorothy",
+      "Toto is transformed",
+      "Toto is silent"
+    ]
+  },
+  "eureka": {
+    "canonical_aliases_book1": [
+      "Eureka",
+      "the Pink Kitten"
+    ],
+    "known_facts_book1": [
+      "A Pink Kitten named Eureka who curls up on Dorothy's window-sill and on the lowest step of the palace entrance.",
+      "Advises Dorothy to give Ozma some **milk**, as the nicest thing she knows of.",
+      "Refuses to help the Glass Cat find the Wizard — 'Then find him' — and goes back to sleep.",
+      "Always quarrels with the Glass Cat, insisting flesh is superior to glass, while the Cat jeers at her for having no pink brains.",
+      "Is the one the Wizard names last when listing who will laugh at the mud-covered Glass Cat, and it is that suggestion that stings worst.",
+      "Sits at the animals' table at Ozma's banquet."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Whose window-sill she sleeps on.",
+      "the Glass Cat": "Her standing rival over flesh versus glass."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Eureka joins the journey",
+        "Eureka is given to Ozma",
+        "Eureka is transformed"
+      ],
+      "relationships": [
+        "Eureka is a friend of the Glass Cat"
+      ]
+    },
+    "hallucination_signals": [
+      "Eureka travels",
+      "Eureka is the birthday present",
+      "Eureka befriends the Glass Cat"
+    ]
+  },
+  "sawhorse": {
+    "canonical_aliases_book1": [
+      "the Sawhorse",
+      "the Wooden Sawhorse"
+    ],
+    "known_facts_book1": [
+      "A wooden horse whose body is a small log, legs limbs of trees, eyes knots, mouth sawed in the end of the log, ears two chips and tail a small branch left at the rear.",
+      "Was brought to life by Ozma herself during one of her early adventures, and she had the bottoms of its wooden legs shod with plates of gold so they would not wear out.",
+      "Is a swift and willing traveler, needs no reins — you only tell him where to go — and seldom speaks unless spoken to.",
+      "Carries Dorothy to Glinda's castle and back with marvelous speed, harnessed to the royal Red Wagon.",
+      "Is not told where the Lion and Tiger have been, even after they get home, and sits at the animals' table at the banquet."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Who brought him to life and shod him with gold.",
+      "Dorothy": "Whom he carries to Glinda's castle."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Sawhorse goes to the Forest of Gugu",
+        "the Sawhorse is transformed",
+        "the Red Wagon enters the forest"
+      ]
+    },
+    "hallucination_signals": [
+      "the Sawhorse enters the forest",
+      "the Sawhorse is transformed",
+      "the Red Wagon crosses the jungle"
+    ]
+  },
+  "the_sparrow": {
+    "canonical_aliases_book1": [
+      "the sparrow"
+    ],
+    "known_facts_book1": [
+      "A small bird perched on a branch in the Land of Ev who witnesses Kiki Aru's magpie theft from start to finish.",
+      "Tells him that magic is wicked and unlawful, that stealing money is a still greater crime, and that he will be sorry some day.",
+      "Draws from Kiki the admission that he had always wanted to be wicked but did not know how.",
+      "Gives a frightened squeak and flies away the instant Ruggedo laughs behind them — the only warning voice in the book, and it leaves."
+    ],
+    "known_relations_book1": {
+      "Kiki Aru": "The thief it scolds.",
+      "Ruggedo": "Whose arrival frightens it off."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the sparrow reports Kiki to anyone",
+        "the sparrow follows the conspirators",
+        "the sparrow is transformed"
+      ]
+    },
+    "hallucination_signals": [
+      "the sparrow warns Ozma",
+      "the sparrow follows them",
+      "the sparrow is transformed"
+    ]
+  },
+  "the_black_bag": {
+    "canonical_aliases_book1": [
+      "the Black Bag",
+      "the Bag of Magic Tools"
+    ],
+    "known_facts_book1": [
+      "The Wizard's black bag of magic tools, which he takes with his hat whenever he leaves on business.",
+      "Falls to the ground the instant he is transformed into a Fox, and is snatched up by Kiki Aru.",
+      "Is **useless to anyone who does not know the tools' uses** — Kiki takes every article out, finds them all puzzles, and hangs the bag on a branch.",
+      "Is searched for by the whole party without success, including by Ruggedo, who means to hide it so he is never restored and recognised.",
+      "Is found by the Glass Cat, high in the tall avocado tree at the side of the clearing, and carried down in her glass teeth.",
+      "Holds a queerly shaped dish silver outside and gold inside, a small polished axe, a tiny silver saw, silver tripod and gold basin, powders and a crystal vial, a silver pistol with little black balls, and a pair of silver pincers that grow on command.",
+      "Is what the Wizard means when he says that without it he loses much of his power — but every enchantment in this book is undone by a word, not by the bag."
+    ],
+    "known_relations_book1": {
+      "the Wizard of Oz": "Its owner.",
+      "Kiki Aru": "Who steals it and cannot use it.",
+      "the Glass Cat": "Who recovers it."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Kiki Aru uses the Wizard's tools",
+        "the Black Bag is destroyed",
+        "the Black Bag frees Trot and Cap'n Bill",
+        "Ruggedo hides the Black Bag"
+      ]
+    },
+    "hallucination_signals": [
+      "Kiki uses the magic tools",
+      "the bag is destroyed",
+      "the bag frees the prisoners",
+      "Ruggedo hides the bag"
+    ]
+  },
+  "banquet_guests": {
+    "canonical_aliases_book1": [
+      "Tik-Tok",
+      "the Shaggy Man",
+      "Button-Bright",
+      "Jack Pumpkinhead",
+      "Betsy Bobbin",
+      "Aunt Em",
+      "Uncle Henry",
+      "the Frogman",
+      "Ojo the Lucky",
+      "Dr. Pipt",
+      "Margalot",
+      "the Tin Soldier",
+      "Jinjur"
+    ],
+    "known_facts_book1": [
+      "The invited company at Ozma's birthday banquet, seated at a long table in the royal Banquet Hall with place-cards, at a table of gifts and a lower table for the animals.",
+      "**Tik-Tok the Clockwork Man** is wound as tightly as his clockwork will permit so he will not run down during the festivities.",
+      "**Aunt Em and Uncle Henry** are Dorothy's own relations, two kindly old people with a cozy home in the Emerald City.",
+      "**Jack Pumpkinhead** has grown a splendid new pumpkin head for the occasion with a jollier face than the last, since pumpkins do not keep and the seeds that serve him as brains go soft.",
+      "**Jinjur** is a pretty girl farmer of whom Ozma and Dorothy are quite fond.",
+      "**The Frogman** came from the Yip Country especially for the feast, and **Dr. Pipt** attends with his wife Margalot.",
+      "Several guests — the Scarecrow, the Tin Woodman, the Patchwork Girl, Tik-Tok, Jack Pumpkinhead and the Tin Soldier — never eat anything and sit politely entertaining those who do.",
+      "**Betsy Bobbin** is one of only two people Trot lets into her room to see the Magic Flower before the birthday.",
+      "None of them takes any part in the Forest of Gugu or Magic Isle adventures; the whole company appears in the banquet chapter."
+    ],
+    "known_relations_book1": {
+      "Ozma": "The Ruler whose birthday they attend.",
+      "Dorothy": "Whose Surprise Cake they watch being cut.",
+      "Trot": "Who shows Betsy Bobbin the Magic Flower."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Tik-Tok runs down at the banquet",
+        "Button-Bright is lost in this book",
+        "the Shaggy Man joins the journey",
+        "Dr. Pipt works magic in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "Tik-Tok runs down",
+      "Button-Bright gets lost",
+      "the Shaggy Man travels",
+      "Dr. Pipt works magic"
+    ]
+  },
+  "hank_and_the_yellow_hen": {
+    "canonical_aliases_book1": [
+      "Hank the Mule",
+      "the Yellow Hen"
+    ],
+    "known_facts_book1": [
+      "Two of Ozma's animal friends who live at the palace and are seated at the animals' table at the birthday feast.",
+      "Are among those the Cowardly Lion and the Hungry Tiger refuse to tell where they have been, keeping the birthday secret.",
+      "Take no part in either journey and have no lines in this book."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Who never forgets her animal friends at her feasts.",
+      "the Cowardly Lion": "Who keeps the secret even from them."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Hank the Mule joins the journey",
+        "the Yellow Hen speaks in this book",
+        "the animals are transformed"
+      ]
+    },
+    "hallucination_signals": [
+      "Hank travels with them",
+      "the Yellow Hen has a part",
+      "the palace animals are transformed"
+    ]
+  }
+}

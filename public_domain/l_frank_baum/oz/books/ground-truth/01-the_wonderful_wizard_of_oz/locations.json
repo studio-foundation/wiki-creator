@@ -1,0 +1,156 @@
+{
+  "land_of_oz": {
+    "canonical_aliases_book1": [
+      "Land of Oz"
+    ],
+    "known_facts_book1": [
+      "The marvelous, uncivilized fairy country where Dorothy's cyclone-borne house comes down, cut off from the rest of the world by a great deadly desert on every side.",
+      "Divided into four countries by colour and compass: the blue Munchkin East, the yellow Winkie West, the red Quadling South, and the North, plus the green Emerald City at its centre.",
+      "Held only four witches in all: the Witches of the North and South are good, and the Witches of the East and West are wicked.",
+      "Cannot be left by the Winged Monkeys, who belong only to this land and may not cross the surrounding desert."
+    ],
+    "known_relations_book1": {
+      "Emerald City": "The green city at the centre of the land, ruled by Oz.",
+      "Dorothy": "The Kansas girl set down in it by the cyclone."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Oz is only a dream",
+        "the Land of Oz can be reached by road from Kansas"
+      ]
+    },
+    "hallucination_signals": [
+      "Oz turns out to be a dream Dorothy imagined",
+      "the Land of Oz is connected to Kansas by road"
+    ]
+  },
+  "emerald_city": {
+    "canonical_aliases_book1": [
+      "Emerald City",
+      "City of Emeralds"
+    ],
+    "known_facts_book1": [
+      "The great green city at the centre of the Land of Oz, ruled by the humbug Oz, and the travellers' goal along the road of yellow brick.",
+      "Everyone in it, and every visitor, must wear locked-on green spectacles, so that everything looks emerald green.",
+      "Is not really made of emeralds and is no greener than any other city: the Wizard admits he only put green spectacles on all the people to make the name fit.",
+      "Is guarded at its gate by the Guardian of the Gates, and holds the Wizard's Palace and Throne Room.",
+      "Is left in the rule of the Scarecrow after the Wizard departs by balloon."
+    ],
+    "known_relations_book1": {
+      "Wizard": "Its ruler, who deceives the people with green spectacles.",
+      "Guardian of the Gates": "Keeper of its gate.",
+      "Scarecrow": "Left to rule it when the Wizard leaves."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Emerald City is truly built of solid emeralds",
+        "the Emerald City is the same as Kansas"
+      ]
+    },
+    "hallucination_signals": [
+      "the Emerald City is genuinely built of emeralds",
+      "the horse of a different color"
+    ]
+  },
+  "kansas": {
+    "canonical_aliases_book1": [
+      "Kansas"
+    ],
+    "known_facts_book1": [
+      "Dorothy's home: the great gray prairie where she lives with Uncle Henry and Aunt Em on a small farm.",
+      "So sun-baked and gray that the grass, the house, and even Aunt Em have all turned the same dull gray.",
+      "The house has a single room with a trap-door leading to a cyclone cellar dug in the ground.",
+      "The place Dorothy longs to return to throughout the book and reaches again at the end by the power of the Silver Shoes."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her gray prairie home, which she longs for through all her adventures.",
+      "Aunt Em": "Whom she lives with there.",
+      "Uncle Henry": "The farmer she lives with there."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Kansas is in colour while Oz is gray",
+        "Dorothy's farm is destroyed by a tornado for good"
+      ]
+    },
+    "hallucination_signals": [
+      "Kansas is shown in Technicolor",
+      "the Kansas scenes are in sepia"
+    ]
+  },
+  "land_of_the_south": {
+    "canonical_aliases_book1": [
+      "Land of the South"
+    ],
+    "known_facts_book1": [
+      "The southern country of Oz, the land of the Quadlings, ruled by the Good Witch Glinda, the most powerful of all the witches.",
+      "A rich and happy country whose colour is red.",
+      "Reached only by passing the fighting trees, the Dainty China Country, and the hill of the Hammer-Heads.",
+      "Where Glinda's ruby-throned castle stands and where Dorothy learns how to get home."
+    ],
+    "known_relations_book1": {
+      "Glinda": "Its ruling Good Witch.",
+      "Quadlings": "Its red-clad people.",
+      "Dorothy": "Who journeys there to ask Glinda for help home."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Land of the South is ruled by a Wicked Witch"
+      ]
+    },
+    "hallucination_signals": [
+      "the Wicked Witch of the South",
+      "the southern country is a wasteland"
+    ]
+  },
+  "palace": {
+    "canonical_aliases_book1": [
+      "Palace"
+    ],
+    "known_facts_book1": [
+      "The Wizard's palace at the heart of the Emerald City, where visitors are lodged and prepared before being admitted to Oz.",
+      "Holds the Throne Room where Oz receives each visitor alone in a different terrible shape.",
+      "Behind the throne stands the screen from which the little old humbug works his illusions.",
+      "Provides the silk from which the Wizard builds his escape balloon."
+    ],
+    "known_relations_book1": {
+      "Wizard": "Whose palace it is.",
+      "Throne Room": "The chamber within it where Oz grants audiences.",
+      "Emerald City": "The city it stands at the centre of."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Palace is stormed by an army in battle"
+      ]
+    },
+    "hallucination_signals": [
+      "the Palace is besieged by the Witch's soldiers",
+      "the castle of the Wizard is destroyed"
+    ]
+  },
+  "throne_room": {
+    "canonical_aliases_book1": [
+      "Throne Room"
+    ],
+    "known_facts_book1": [
+      "The great domed hall in the Wizard's Palace where Oz receives visitors, one at a time.",
+      "There the Wizard appears to each traveller in a different form: a great Head, a lovely Lady, a terrible Beast, and a Ball of Fire.",
+      "There the humbug is finally exposed when Toto tips over the corner screen that hides the little old man.",
+      "The soldier says Oz sits there day after day and keeps a great pot of courage in it."
+    ],
+    "known_relations_book1": {
+      "Wizard": "Who holds audience there in shifting shapes.",
+      "Palace": "The building it lies within.",
+      "Dorothy": "Who is received there and to whom Oz appears as a great Head."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Throne Room holds a real enthroned wizard-king"
+      ]
+    },
+    "hallucination_signals": [
+      "the Throne Room reveals the Wizard's true magical power",
+      "a giant floating green head speaks the truth in the Throne Room"
+    ]
+  }
+}

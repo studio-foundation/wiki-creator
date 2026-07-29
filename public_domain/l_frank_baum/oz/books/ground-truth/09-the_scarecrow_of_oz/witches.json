@@ -1,0 +1,76 @@
+{
+  "blinkie": {
+    "canonical_aliases_book1": [
+      "Blinkie"
+    ],
+    "known_facts_book1": [
+      "An old and ugly Wicked Witch who has lost one eye and wears a black patch over it, which is how the people of Jinxland came to name her.",
+      "Is the leader of all the other witches of Jinxland and therefore the most hated and feared, living in an eight-sided house with a door and a window in each side.",
+      "Demands large sums of money or heaps of jewels before she will work any enchantment, which is why King Krewl hates her.",
+      "Transforms the sleeping Cap'n Bill into a gray grasshopper with a wooden leg, using three packets of powder from a black bag.",
+      "Says love is a stubborn thing to conquer — that love and cats have nine lives — and proposes freezing Gloria's heart instead of killing her love.",
+      "Summons three other witches by tossing compounds into her kettle; each flash produces one, and they disguise themselves as beautiful maidens whose only undisguisable feature is their eyes.",
+      "Dashes a ladle of the incantation full on Gloria's breast with the words 'Love no more! Magic art now will freeze your mortal heart!'",
+      "Chases Trot and Pon across Jinxland on foot after they are caught spying, and passes them by because they hide on the side of her blind eye.",
+      "Tears the straw out of the Scarecrow's body, but misses his head, which rolls into a hollow.",
+      "Is found under a bush by the Orks and dragged before the Scarecrow's throne.",
+      "Is shrunk by a white dust from a box Glinda gave the Scarecrow, and forced to restore Cap'n Bill and thaw Gloria before she is given the antidote.",
+      "Stops shrinking at knee height but can never regain her size, and the second powder has secretly destroyed all her magic power — she tries a charm that would have destroyed half of Jinxland and nothing happens."
+    ],
+    "known_relations_book1": {
+      "King Krewl": "The King who pays her and threatens to burn her at the stake.",
+      "Googly-Goo": "The courtier whose money buys her services.",
+      "Cap'n Bill": "The sailor she turns into a grasshopper and is forced to restore.",
+      "Gloria": "The Princess whose heart she freezes and is forced to thaw.",
+      "Scarecrow": "Who shrinks her and strips her of magic with Glinda's two boxes."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Blinkie is killed",
+        "Blinkie regains her size",
+        "Blinkie keeps her magic powers",
+        "Blinkie refuses to undo her spells"
+      ],
+      "relationships": [
+        "Blinkie is a friend of Gloria",
+        "Blinkie is an ally of the Scarecrow"
+      ]
+    },
+    "hallucination_signals": [
+      "Blinkie is killed",
+      "Blinkie keeps her magic",
+      "Blinkie regains her size",
+      "Blinkie melts like a witch"
+    ]
+  },
+  "the_three_witches": {
+    "canonical_aliases_book1": [
+      "the three witches"
+    ],
+    "known_facts_book1": [
+      "Three ugly hags summoned by Blinkie, appearing one at a time as her kettle flashes three times.",
+      "Are transformed by their own castings into the kettle into maidens of exquisite beauty in the daintiest costumes, with only their eyes betraying the evil behind the illusion.",
+      "Dance around Gloria and take turns stirring the kettle and muttering the magic charm that freezes her heart.",
+      "Turn back into ugly crooked hags leaning on broomsticks and canes as soon as the charm succeeds.",
+      "Chase Trot and Pon out of the window, then fly away on their broomsticks and canes against the blue sky, and are never seen again.",
+      "Are never individually named in the book."
+    ],
+    "known_relations_book1": {
+      "Blinkie": "The one-eyed leader who summons and instructs them.",
+      "Gloria": "The Princess whose heart they help freeze."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the three witches are named",
+        "the three witches are captured",
+        "the three witches lose their powers",
+        "the three witches are beautiful without magic"
+      ]
+    },
+    "hallucination_signals": [
+      "the three witches are named",
+      "the three witches are captured",
+      "the witches are truly beautiful"
+    ]
+  }
+}

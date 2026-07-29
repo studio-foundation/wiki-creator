@@ -1,0 +1,101 @@
+{
+  "purple_spiders": {
+    "canonical_aliases_book1": [
+      "the purple spiders",
+      "the Spider King"
+    ],
+    "known_facts_book1": [
+      "Huge purple spiders with big heads, sharp claws, small eyes and fuzzy hair all over their purple bodies, living on a scrubby brush-covered hillside on the way to the Flathead mountain.",
+      "Weave a web of brilliant purple threads in artistic patterns, finer than the finest silken hairs and stronger than they look, reaching from the ground to above the girls' heads.",
+      "**Build the web behind their prey**, closing a full circle after the victim has walked into the trap — Ozma and Dorothy only discover it by returning to a dropped handkerchief.",
+      "Capture strangers because sweeping, dusting, polishing and washing dishes are work the spiders dislike doing themselves, so they wanted a housekeeper.",
+      "Their King calls himself King of all Spiders and therefore Ozma's master, and dives at Dorothy with open claws — the Magic Belt makes him unable even to touch her.",
+      "Recoils as if struck when Ozma holds her wand over his head, admits her magic is greater than his, and refuses on principle to help the girls escape.",
+      "Are afraid of **white crabs**, which is the whole reason the green crab wants its color changed.",
+      "Throw strands of web after the escaping girls, hoping to lasso or entangle them, and fail."
+    ],
+    "known_relations_book1": {
+      "Ozma": "The Ruler whose wand drives their King back.",
+      "Dorothy": "Whom the Magic Belt protects from their claws.",
+      "the white crab": "The creature they fear, which cuts their web."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the spiders are destroyed",
+        "the spiders eat their prisoners",
+        "the spiders obey Ozma",
+        "the girls break the web themselves"
+      ]
+    },
+    "hallucination_signals": [
+      "the spiders are killed",
+      "the spiders eat the girls",
+      "the spiders submit to Ozma",
+      "Dorothy tears the web"
+    ]
+  },
+  "the_white_crab": {
+    "canonical_aliases_book1": [
+      "the white crab",
+      "the green crab"
+    ],
+    "known_facts_book1": [
+      "A crab about as big as Dorothy's hand, found in a shallow pool formed by a bubbling spring among the bushes, with two big sharp claws.",
+      "Answers in a cross voice and bargains before helping: it will cut the web only if it is paid.",
+      "**Asks to be made white instead of green**, because green crabs are very common and white ones are rare — and because the purple spiders are afraid of white crabs.",
+      "Is changed at once by a wave of Ozma's silver wand, snow-white all over except its eyes, which stay black.",
+      "Is so delighted with its reflection that it climbs out and starts toward the web immediately — moving so slowly, and backward, that Dorothy has to pick it up and run with it.",
+      "Severs each filmy strand with a single nip, held up in Dorothy's hands, and is carried back and replaced in its pool before the girls escape."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Who pays it in a change of color.",
+      "Dorothy": "Who spots it, carries it and returns it to the pool.",
+      "the purple spiders": "The web-weavers it cuts free of."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the crab joins the journey",
+        "the crab is left out of water",
+        "the crab helps for nothing",
+        "the crab is transformed into something else"
+      ]
+    },
+    "hallucination_signals": [
+      "the crab travels with them",
+      "the crab is abandoned",
+      "the crab helps freely",
+      "the crab becomes a person"
+    ]
+  },
+  "mist_maids": {
+    "canonical_aliases_book1": [
+      "the Mist Maids",
+      "the Mist Maidens"
+    ],
+    "known_facts_book1": [
+      "Fairies living in a valley filled with rolling mist as dense as smoke, which even the sunshine above does not drive away.",
+      "Rise from the billows in fleecy trailing gray garments scarcely distinguishable from the mist, with mist-colored hair, gleaming arms and sweet pallid faces.",
+      "Answer only a **sister fairy's call** — a clear, thrilling, bird-like cry Ozma makes with her hands cupped before her mouth, answered like a far-off echo.",
+      "Carry Ozma and Dorothy across the valley in their arms, cold and misty and not seeming real at all, so swiftly that the girls are set on the far grass before they realise they have started.",
+      "Make no answer to the thanks given them, but smile and wave in good-bye as they float back into the mist."
+    ],
+    "known_relations_book1": {
+      "Ozma": "The sister fairy whose call they answer.",
+      "Dorothy": "Whom they carry across the valley."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Mist Maids speak",
+        "the Mist Maids are dangerous",
+        "the Mist Maids leave their valley",
+        "the girls walk through the mist"
+      ]
+    },
+    "hallucination_signals": [
+      "the Mist Maids speak",
+      "the Mist Maids attack",
+      "the girls wade the fog",
+      "the mist clears away"
+    ]
+  }
+}

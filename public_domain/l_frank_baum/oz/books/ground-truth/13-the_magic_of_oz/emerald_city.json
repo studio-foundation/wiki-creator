@@ -1,0 +1,228 @@
+{
+  "ozma": {
+    "canonical_aliases_book1": [
+      "Ozma",
+      "Ozma of Oz",
+      "the girl Ruler"
+    ],
+    "known_facts_book1": [
+      "The beautiful fairy girl Ruler of the Land of Oz, whose banner has a green centre quartered blue, purple, yellow and red for the Munchkins, Gillikins, Winkies and Quadlings.",
+      "Decreed that no one may practice magic in her dominions except Glinda the Good and the Wizard of Oz — the law Bini Aru obeyed and Kiki Aru broke.",
+      "Owns the **Magic Picture**, in which she can see whatever she wishes, though she never thinks to look for the conspirators.",
+      "Has a birthday nobody knows the age of, and Glinda advises a row of candles rather than a count.",
+      "Is not told where Dorothy and the Wizard have gone, because the monkeys are meant to be a surprise.",
+      "Rules from a jeweled throne, hears every complaint patiently, and was hearing Professor Wogglebug's case against the Senior Class when the travelers returned.",
+      "Refused to eat the Square-Meal Tablets herself, which is why she is unlikely to have been severe with the rebellious students.",
+      "Receives the Magic Flower and the emerald-thread gown, and places the Flower in her boudoir.",
+      "Rules that it is not right to leave any living creature in a helpless form, and orders the Wizard to restore the nut-magicians over his own objection.",
+      "Approves Dorothy's plan for the **Water of Oblivion**, and summons the Cowardly Lion and the Hungry Tiger with two blasts of a silver whistle in case the restored forms are dangerous.",
+      "Decides to keep both Kiki Aru and Ruggedo in Oz and teach them her people's ways, because sending Ruggedo home once before only let him learn the old evil ways again."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her dearest friend.",
+      "Glinda": "Her faithful subject and friend, seated at the foot of the banquet table in the place of honor.",
+      "the Wizard of Oz": "Her court magician.",
+      "Ruggedo": "The old enemy she finally shelters."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Ozma sees the conspiracy in her Magic Picture",
+        "Ozma banishes Ruggedo",
+        "Ozma travels to the Forest of Gugu",
+        "Ozma knows about the birthday presents in advance"
+      ]
+    },
+    "hallucination_signals": [
+      "Ozma watches the plot unfold",
+      "Ozma banishes the Nome King",
+      "Ozma goes to the forest",
+      "Ozma knows about the cake"
+    ]
+  },
+  "glinda": {
+    "canonical_aliases_book1": [
+      "Glinda",
+      "Glinda the Good",
+      "the Sorceress"
+    ],
+    "known_facts_book1": [
+      "The good Sorceress of Oz, tall and stately with handsome dignified features, whose castle is in the Quadling Country, quite a journey from the Emerald City.",
+      "Owns the **Book of Records**, in which everything people do in Oz is magically written the instant they do it — but which records nothing that birds or beasts do, the loophole the whole conspiracy runs through.",
+      "Sent Ozma's decree against magic to the Hyups of Mount Munch by a strong-winged Eagle.",
+      "Keeps fifty beautiful young handmaids chosen from all parts of Oz for their wit and beauty and sweet dispositions; being one of them is a great honor.",
+      "Has recently discovered how to make threads from emeralds, by softening the stones and spinning them into long silken strands, and her maidens are weaving Ozma a court gown from them.",
+      "Advises Dorothy to make a birthday cake with a surprise in it, and deliberately refuses to say what surprise — otherwise it would be her present and not Dorothy's.",
+      "Taught the Wizard all the magical arts he knows, and her magic is better than his.",
+      "Cannot equal the Word of Transformation: the Wizard says plainly that neither he nor Glinda has magic that simple and that powerful.",
+      "Sits at the foot of the banquet table facing Ozma — really the place of honor — and leads Ozma to the gift table afterward.",
+      "Never travels to the Forest of Gugu or the Magic Isle; her whole part is at her own castle and at the feast."
+    ],
+    "known_relations_book1": {
+      "Ozma": "The Ruler she serves as faithful subject and friend.",
+      "Dorothy": "Whom she advises about the birthday present.",
+      "the Wizard of Oz": "Her pupil in the magic arts."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Glinda breaks the transformations",
+        "Glinda reads the conspiracy in her Book of Records",
+        "Glinda travels to the Magic Isle",
+        "Glinda knows the Magic Word"
+      ]
+    },
+    "hallucination_signals": [
+      "Glinda undoes the enchantments",
+      "the Book of Records shows the plot",
+      "Glinda visits the island",
+      "Glinda knows Pyrzqxgl"
+    ]
+  },
+  "scarecrow": {
+    "canonical_aliases_book1": [
+      "the Scarecrow",
+      "the Scarecrow of Oz"
+    ],
+    "known_facts_book1": [
+      "A straw-stuffed man whose body is not beautiful but whose happy nature and shrewd wit have made him a general favorite; he sits at Ozma's right at the banquet.",
+      "Is found being restuffed with fresh straw by two palace servants when Dorothy comes asking about presents.",
+      "Is having **straw slippers** braided very artistically for Ozma, all straw, because she has always admired his straw filling.",
+      "Advises Dorothy that the only way to get a good idea is to THINK, and credits his own wonderful brains for the slippers.",
+      "Appears only in the Emerald City chapters and takes no part in either journey."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Whose birthday he gives straw slippers to.",
+      "Dorothy": "Whom he advises to think."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Scarecrow joins the journey",
+        "the Scarecrow is transformed",
+        "the Scarecrow is unstuffed by an enemy"
+      ]
+    },
+    "hallucination_signals": [
+      "the Scarecrow travels to Gugu",
+      "the Scarecrow is transformed",
+      "the Scarecrow loses his straw"
+    ]
+  },
+  "tin_woodman": {
+    "canonical_aliases_book1": [
+      "the Tin Woodman"
+    ],
+    "known_facts_book1": [
+      "Emperor of the Winkie Country and one of the most important persons in Oz, whose metal body is brightly polished for the birthday feast; he sits at Ozma's left.",
+      "Is having his people make Ozma a **girdle set with tin nuggets**, each nugget surrounded by a circle of emeralds, with a clasp of pure tin.",
+      "Says it took him three months to think of his own present, and has not the slightest idea what Dorothy should give.",
+      "Never eats, and sits politely at the banquet entertaining those who do.",
+      "Appears only in the Emerald City chapters and takes no part in either journey."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Whose birthday he gives a tin-and-emerald girdle to.",
+      "Dorothy": "Whom he cannot help with her problem."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Tin Woodman joins the journey",
+        "the Tin Woodman is transformed",
+        "the Tin Woodman rusts"
+      ]
+    },
+    "hallucination_signals": [
+      "the Tin Woodman travels",
+      "the Tin Woodman is transformed",
+      "the Tin Woodman rusts"
+    ]
+  },
+  "patchwork_girl": {
+    "canonical_aliases_book1": [
+      "the Patchwork Girl",
+      "Scraps"
+    ],
+    "known_facts_book1": [
+      "A patchwork girl stuffed with cotton who goes by the name of Scraps and has a fair assortment of mixed brains.",
+      "Has written Ozma a **song** for her birthday, whose chorus runs 'I am crazy; You're a daisy, Ozma dear'.",
+      "Gave the song a title far longer than the song, on the grounds that long titles are stylish, and defends it as being as good as any ordinary song.",
+      "Turns a somersault and alights on one stuffed foot mid-conversation.",
+      "Sits at Glinda's left at the banquet, and is a little afraid of the Sorceress, so is likely to behave herself.",
+      "Never eats, and takes no part in either journey."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Whose birthday song she wrote.",
+      "Dorothy": "Who doubts the poetry.",
+      "Glinda": "Whose neighbour at the table keeps her well behaved."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Patchwork Girl joins the journey",
+        "the Patchwork Girl is transformed",
+        "Scraps sings for the beasts"
+      ]
+    },
+    "hallucination_signals": [
+      "Scraps travels with Dorothy",
+      "Scraps is transformed",
+      "Scraps performs in the forest"
+    ]
+  },
+  "wogglebug": {
+    "canonical_aliases_book1": [
+      "Professor H. M. Wogglebug, T.E.",
+      "Professor Wogglebug",
+      "the Wogglebug"
+    ],
+    "known_facts_book1": [
+      "Principal of the Royal Athletic College in the Munchkin Country, not far from the Emerald City.",
+      "Invented **Tablets of Learning** — one after breakfast gives a complete knowledge of mathematics, another of geography, others of spelling, penmanship, history, mechanics, home cooking and agriculture — so students can devote all their time to boating, foot-ball and other sports.",
+      "Carelessly also invented the **Square-Meal Tablet**, no bigger than a finger-nail, containing soup, fried fish, a roast, a salad and a dessert in condensed form.",
+      "Began feeding these to his students in place of food, and was thrown into the river clothes and all by the Senior Class when he insisted.",
+      "Lay helpless on the river bottom for three days — a wogglebug cannot swim — until a fisherman's hook caught one of his legs and dragged him out.",
+      "Brought the entire Senior Class to the Emerald City and appealed to Ozma to punish them for their rebellion.",
+      "Sits next to the Tin Soldier at the birthday banquet."
+    ],
+    "known_relations_book1": {
+      "Ozma": "The Ruler he appeals to against his own students."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the students are severely punished",
+        "the Wogglebug drowns",
+        "the Wogglebug joins the journey",
+        "the Square-Meal Tablets are popular"
+      ]
+    },
+    "hallucination_signals": [
+      "the students are expelled",
+      "the Wogglebug drowns",
+      "the tablets are a success",
+      "the Wogglebug travels"
+    ]
+  },
+  "jellia_jamb": {
+    "canonical_aliases_book1": [
+      "Jellia Jamb"
+    ],
+    "known_facts_book1": [
+      "Ozma's chief Maid of Honor.",
+      "Is the only person who sees Cap'n Bill carry the golden flower-pot up to Trot's room, and promises not to tell.",
+      "Places the animals at their own smaller table at the birthday banquet.",
+      "Brings Ozma the large golden knife with a jeweled handle to cut the Surprise Cake."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Whom she serves as chief Maid of Honor.",
+      "Cap'n Bill": "Whose secret she keeps."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Jellia Jamb tells Ozma about the flower",
+        "Jellia Jamb joins the journey",
+        "Jellia Jamb works magic"
+      ]
+    },
+    "hallucination_signals": [
+      "Jellia Jamb spoils the surprise",
+      "Jellia Jamb travels",
+      "Jellia Jamb works magic"
+    ]
+  }
+}

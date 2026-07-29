@@ -1,0 +1,123 @@
+{
+  "wizard": {
+    "canonical_aliases_book1": [
+      "Wizard",
+      "Oz the Great and Terrible",
+      "the Great Humbug"
+    ],
+    "known_facts_book1": [
+      "The mysterious ruler of the Emerald City, known as Oz the Great and Terrible, whom everyone believes to be a mighty wizard.",
+      "Receives each traveller alone in a different shape: a great Head to Dorothy, a lovely Lady to the Scarecrow, a terrible Beast to the Tin Woodman, and a Ball of Fire to the Cowardly Lion.",
+      "Demands that they first kill the Wicked Witch of the West before he will grant their wishes.",
+      "Is exposed as a little bald old man hiding behind a screen when Toto tips it over, and admits 'I am a humbug'.",
+      "Confesses he was born in Omaha and worked as a ventriloquist and then a circus balloonist before a runaway balloon carried him to Oz.",
+      "Ordered the people to wear locked-on green spectacles so the City would look emerald, though it is really no greener than any other city.",
+      "Satisfies the companions with tricks: bran-and-pin brains for the Scarecrow, a silk-and-sawdust heart for the Tin Woodman, and a drink he calls courage for the Lion.",
+      "Builds a hot-air balloon of silk to carry Dorothy across the desert, but the ropes snap and it rises without her.",
+      "Leaves the Scarecrow to rule the Emerald City and is never seen in Oz again, though he may have reached Omaha."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "The girl he promises to send home; a humbug who fails her and departs by balloon without her.",
+      "Scarecrow": "Gives him bran brains and leaves him to rule the Emerald City.",
+      "Tin Woodman": "Gives him a silk heart.",
+      "Cowardly Lion": "Gives him a drink called courage.",
+      "Wicked Witch": "Of the West, whose death he demands as the price of granting the travellers' wishes."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "the Wizard is Professor Marvel",
+        "pay no attention to the man behind the curtain"
+      ],
+      "not_in_this_book": [
+        "the Wizard is a real magician",
+        "the Wizard has genuine magical power",
+        "the Wizard's true name is Oscar Zoroaster Diggs"
+      ]
+    },
+    "hallucination_signals": [
+      "the man behind the curtain",
+      "the Wizard is a real wizard with true magic",
+      "Oscar Zoroaster Phadrig Isaac Norman Henkle Emmannuel Ambroise Diggs",
+      "the Wizard is Professor Marvel"
+    ]
+  },
+  "wicked_witch": {
+    "canonical_aliases_book1": [
+      "Wicked Witch of the West",
+      "Wicked Witch"
+    ],
+    "known_facts_book1": [
+      "The Wicked Witch of the West, cruel ruler of the yellow Winkies in the western country of Oz.",
+      "Has but one eye, as powerful as a telescope, with which she sees everything across her land.",
+      "Sends wolves, crows, black bees, and her Winkie slaves against the travellers, and each attack is destroyed by the companions.",
+      "Owns the Golden Cap, which lets her command the Winged Monkeys three times, and uses her last summons to capture Dorothy and the Lion.",
+      "Cannot be approached openly by more than three summons of the Monkeys, and cannot harm Dorothy because of the mark of the good Witch's kiss on her forehead.",
+      "Is so afraid of the dark that she never enters Dorothy's room at night, and so dreads water that she never touches it or bathes.",
+      "Tricks Dorothy out of one Silver Shoe with an iron bar, which enrages the girl.",
+      "Melts away to nothing like brown sugar when Dorothy throws a bucket of water over her in anger, ending her life."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her captive kitchen-slave and, unknowingly, the girl who melts her with water; enemy.",
+      "Cowardly Lion": "Whom she also captures and tries to starve into pulling her carriage.",
+      "Winkies": "The yellow people she has enslaved and rules by cruelty.",
+      "Winged Monkeys": "Whom she commands with the Golden Cap to seize the travellers."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "green skin",
+        "green face",
+        "green-skinned witch",
+        "the Wicked Witch flies on a broomstick",
+        "the Witch skywrites Surrender Dorothy",
+        "the Witch is named Elphaba"
+      ],
+      "relationships": [
+        "the Wicked Witch of the West is the sister of the Witch of the East"
+      ]
+    },
+    "hallucination_signals": [
+      "green skin",
+      "green face",
+      "green-skinned witch",
+      "Surrender Dorothy",
+      "the Witch on her broomstick",
+      "the Wicked Witch is named Elphaba",
+      "I'll get you my pretty",
+      "the West Witch is sister to the East Witch"
+    ]
+  },
+  "glinda": {
+    "canonical_aliases_book1": [
+      "Glinda"
+    ],
+    "known_facts_book1": [
+      "The Good Witch who rules over the Quadlings in the country of the South, both beautiful and young to look upon, with rich red hair.",
+      "Lives in a castle of her own, sits on a throne of rubies, and is the most powerful of all the witches.",
+      "Wishes to own the Golden Cap and its three commands over the Winged Monkeys; Dorothy gives it to her.",
+      "Uses her three commands to carry the Scarecrow to the Emerald City, the Tin Woodman to the Winkies, and the Lion to his forest.",
+      "Tells Dorothy that the Silver Shoes she wears can carry her anywhere in the world in three steps.",
+      "Kisses Dorothy goodbye and sends her home to Kansas with the Silver Shoes."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "The girl she helps home, revealing the power of the Silver Shoes.",
+      "Quadlings": "The southern people she rules as their good Witch.",
+      "Winged Monkeys": "Whom she commands with the Golden Cap Dorothy gives her.",
+      "Scarecrow": "Whom she has the Monkeys carry back to rule the Emerald City.",
+      "Tin Woodman": "Whom she has the Monkeys carry to the Winkies.",
+      "Cowardly Lion": "Whom she has the Monkeys carry to his forest."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "Glinda is the Good Witch of the North",
+        "Glinda arrives in a floating bubble",
+        "Glinda gives Dorothy the shoes at the start"
+      ]
+    },
+    "hallucination_signals": [
+      "Glinda the Good Witch of the North",
+      "Glinda arrives in a bubble",
+      "Glinda gives Dorothy the silver shoes at the beginning",
+      "Glinda has always been watching over Dorothy"
+    ]
+  }
+}

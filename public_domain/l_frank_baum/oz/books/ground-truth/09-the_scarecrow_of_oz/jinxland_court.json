@@ -1,0 +1,169 @@
+{
+  "king_krewl": {
+    "canonical_aliases_book1": [
+      "King Krewl",
+      "Krewl",
+      "Grewl"
+    ],
+    "known_facts_book1": [
+      "A lean man with a hard sullen face and eyes glowing like coals through the slits of his half-closed eyelids, who rules Jinxland from a castle near a grove of stately trees.",
+      "Is a usurper with no right to the title: he was Prime Minister to King Phearse and murdered him by tripping him backward into a deep pond and weighting him down with stones.",
+      "Is guardian to his niece, Princess Gloria, and commands her to marry the aged courtier Googly-Goo for the bushel and a half of jewels Googly-Goo has promised.",
+      "Beats Pon with his fists and his golden staff, and has his guards flog the gardener's boy in front of Gloria.",
+      "Favors the Wicked Witches of Jinxland and pays Blinkie large sums to work his cruelties, which makes him hate her almost as much as his subjects do.",
+      "Fears Cap'n Bill is a wizard because he crossed the desert, and has Blinkie transform him rather than risk him.",
+      "Threatens to burn Blinkie at the stake if she fails to freeze Gloria's heart.",
+      "Has the Scarecrow bound with Googly-Goo's rope, thrust into the castle prison, and then tied to a stake on a great bonfire before his assembled people.",
+      "Is blown off his throne by the descending Orks, pinned to the ground by one of them, and bound with ropes by his own soldiers.",
+      "Is spared by Gloria and Pon, who make him the castle's gardener's boy on condition that he reform and change his name from Krewl to Grewl — and he goes out to water the roses in Pon's old brown smock."
+    ],
+    "known_relations_book1": {
+      "Gloria": "His niece and ward, whom he imprisons, drags by the arm and sells to Googly-Goo.",
+      "Googly-Goo": "The rich courtier who pays for the witchcraft and expects Gloria in return.",
+      "Pon": "The gardener's boy he beats, and the son of the King he murdered.",
+      "Blinkie": "The Wicked Witch he pays and threatens.",
+      "Scarecrow": "The stranger who defies him in Ozma's name and takes his crown.",
+      "Cap'n Bill": "The stranger he has turned into a grasshopper."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "King Krewl is the rightful King of Jinxland",
+        "King Krewl marries Gloria",
+        "King Krewl is executed",
+        "King Krewl keeps his throne"
+      ],
+      "relationships": [
+        "King Krewl is a friend of Gloria",
+        "King Krewl is an ally of the Scarecrow",
+        "Krewl is Gloria's father"
+      ]
+    },
+    "hallucination_signals": [
+      "Krewl is the rightful King",
+      "Krewl is executed",
+      "Krewl marries Gloria",
+      "Krewl is Gloria's father"
+    ]
+  },
+  "googly_goo": {
+    "canonical_aliases_book1": [
+      "Googly-Goo"
+    ],
+    "known_facts_book1": [
+      "A skinny old courtier dressed in rich velvets with furbelows and laces, covered with golden chains, rings and jeweled ornaments, who walks with mincing steps.",
+      "Is old enough to be Gloria's father and has asked her to marry him thirty-nine times, being refused every time.",
+      "Has laid aside more than a bushel — later a bushel and a half — of precious gems to present to the King on the day he weds Gloria.",
+      "Smiles as a serpent smiles, for he has no teeth except a couple of fangs.",
+      "Proposes throwing Pon into the Great Gulf, and when the King says that would not help, agrees the thing to kill is Gloria's love.",
+      "Pays the Wicked Witch's whole price for freezing Gloria's heart, and afterward claims he has been robbed when Gloria still refuses him.",
+      "Is knocked into a muddy ditch by Gloria herself when he catches at her arm.",
+      "Suggests to the King that the Scarecrow be burned on a bonfire, and lights the pile with his own match.",
+      "Is shot into a tree by the Orks' wind and left hanging by the middle from a high limb, howling for mercy, and is bound beside Krewl when he slides down."
+    ],
+    "known_relations_book1": {
+      "King Krewl": "His fellow plotter, whom he pays and advises.",
+      "Gloria": "The Princess he tries to buy and who knocks him into a ditch.",
+      "Blinkie": "The witch whose fee he pays in full.",
+      "Scarecrow": "Whom he binds with rope and sets on fire."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Googly-Goo marries Gloria",
+        "Googly-Goo is young",
+        "Googly-Goo works magic himself",
+        "Googly-Goo is forgiven and rewarded"
+      ],
+      "relationships": [
+        "Googly-Goo is a friend of Gloria",
+        "Googly-Goo is Gloria's suitor whom she accepts"
+      ]
+    },
+    "hallucination_signals": [
+      "Googly-Goo marries Gloria",
+      "Gloria accepts Googly-Goo",
+      "Googly-Goo works magic",
+      "Googly-Goo is pardoned"
+    ]
+  },
+  "pon": {
+    "canonical_aliases_book1": [
+      "Pon"
+    ],
+    "known_facts_book1": [
+      "The gardener's boy at King Krewl's castle, in a long brown smock and sandals, with a shock of brown curly hair.",
+      "Is the son of King Phearse, who ruled Jinxland before Krewl and was murdered by him; Pon has served Krewl for years without the King knowing who he is.",
+      "Did not love Gloria first: she looked at him tenderly, spoke to him, and told him he had touched her heart, and he returned her love because it would have been impolite not to.",
+      "Is beaten by the King's fist and boot, and later flogged by two guards in front of the Princess.",
+      "Shelters Trot and Button-Bright in his hut after they are turned out of the castle.",
+      "Watches through Blinkie's window with Trot while Gloria's heart is frozen, and is repelled by the Princess afterwards.",
+      "Is sent by the Scarecrow to summon King Krewl to surrender, and gets a drubbing with the golden staff for it.",
+      "Is told plainly by the Scarecrow that his father had no right to rule either, and that only Gloria is entitled to the throne.",
+      "Is raised to the seat beside Gloria at her coronation and made her Royal Consort, becoming King of Jinxland by her choice.",
+      "Gives his old brown smock to the deposed Krewl, who takes over his gardening duties."
+    ],
+    "known_relations_book1": {
+      "Gloria": "His sweetheart, who is frozen against him and then restored, and who makes him her Royal Consort.",
+      "King Krewl": "The usurper who murdered his father and who beats him twice.",
+      "Trot": "The little girl he searches Jinxland with and shelters in his hut.",
+      "Scarecrow": "Who denies his claim to the throne but makes him the messenger."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Pon becomes King of Jinxland in his own right",
+        "Pon's father was the rightful King",
+        "Pon conquers King Krewl",
+        "Pon melts Gloria's frozen heart with his love"
+      ]
+    },
+    "hallucination_signals": [
+      "Pon claims the throne",
+      "Pon defeats Krewl",
+      "Pon's love thaws Gloria's heart",
+      "Pon is the rightful heir"
+    ]
+  },
+  "gloria": {
+    "canonical_aliases_book1": [
+      "Gloria",
+      "Princess Gloria",
+      "Queen Gloria"
+    ],
+    "known_facts_book1": [
+      "The loveliest and sweetest maiden in Jinxland, niece and ward of King Krewl, who lives in his castle and is fond of flowers.",
+      "Is the daughter of King Kynd, the good ruler of Jinxland, who fell into the bottomless Great Gulf; she is the only person with a right to the throne.",
+      "Refuses Googly-Goo thirty-nine times and assures Pon she will wed only him.",
+      "Is bound hand to hand, dragged to Blinkie's eight-sided house by two soldiers and tied to a post in the center of the room.",
+      "Has her heart frozen, not her love destroyed: her body turns transparent and her heart goes from red to gray to white, frosted over with icicles.",
+      "Says her heart is frozen to all mortal loves and that she does not love even herself; Trot says her voice sounds like a refrigerator.",
+      "Knocks Googly-Goo into a ditch when he catches her arm, and tells him she will wed no one at all.",
+      "Is thawed by Blinkie under the Scarecrow's compulsion, using the last of a purple powder of which there is no more in all the world, burned with a lock of the witch's own hair and a strip of her gown.",
+      "Throws herself into Pon's arms the instant her heart beats warm again.",
+      "Is chosen Queen of Jinxland by the people, crowned by the Scarecrow, and raises Pon to the throne beside her as Royal Consort."
+    ],
+    "known_relations_book1": {
+      "Pon": "Her sweetheart, whom she loves, rejects while frozen, and finally makes her Royal Consort.",
+      "King Krewl": "Her uncle and guardian, who imprisons her and sells her hand.",
+      "Googly-Goo": "The old courtier she refuses thirty-nine times and knocks into a ditch.",
+      "Blinkie": "The witch who freezes her heart and is forced to thaw it.",
+      "Scarecrow": "Who refuses to crown her until her heart is warm, then crowns her Queen."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Gloria marries Googly-Goo",
+        "Gloria's love for Pon is destroyed",
+        "Gloria stays frozen at the end",
+        "Gloria is Krewl's daughter"
+      ],
+      "relationships": [
+        "Gloria is the daughter of King Krewl",
+        "Gloria is a friend of Googly-Goo"
+      ]
+    },
+    "hallucination_signals": [
+      "Gloria marries Googly-Goo",
+      "Gloria remains frozen",
+      "Gloria is Krewl's daughter",
+      "Gloria's love is killed"
+    ]
+  }
+}

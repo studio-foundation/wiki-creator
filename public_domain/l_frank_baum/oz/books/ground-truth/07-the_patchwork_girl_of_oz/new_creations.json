@@ -1,0 +1,167 @@
+{
+  "scraps": {
+    "canonical_aliases_book1": [
+      "Scraps",
+      "the Patchwork Girl",
+      "Miss Scraps Patchwork",
+      "Scraps Patches"
+    ],
+    "known_facts_book1": [
+      "A girl sewn by Margolotte from a hundred-year-old patchwork quilt and stuffed with cotton-wadding, brought to life by Dr. Pipt's Powder of Life.",
+      "Has silver suspender-button eyes sewn on with black thread, gold-plate ears, brown yarn braids, pearl-bead teeth, a scarlet plush tongue and gold plates for finger-nails.",
+      "Her face patches are mismatched — one cheek yellow, the other red, chin blue, forehead purple, nose bright yellow — because Margolotte had no pink cloth.",
+      "Has far more brains than intended because Ojo secretly emptied every bottle on the Brain Furniture shelf into her dish, including a heavy dose of Cleverness.",
+      "Is named 'Scraps' by the Glass Cat; Margolotte had meant to call her 'Angeline'.",
+      "Speaks constantly in improvised nonsense verse, which the Glass Cat and Ojo take for craziness.",
+      "Cannot eat: her pearl teeth cannot chew and there is no opening beyond her mouth.",
+      "Has no heart and says so repeatedly, and would kill a dozen butterflies to help Ojo.",
+      "Was made to be Margolotte's servant, refuses to return to Dr. Pipt, and declares she will live in the Emerald City.",
+      "Takes the six-leaved clover from Ojo's basket and drops it into a golden vase in Dorothy's room, trying to destroy the evidence against him.",
+      "Shields Ojo from Chiss's shower of quills with her own body and is left full of holes, which a farm woman sews up.",
+      "Is thrown over the marble fence into the Horner Country, and negotiates with Chief Jak Horner to end the war.",
+      "Is declared by Ozma one of the curiosities of Oz, free to live where she pleases and nobody's servant but her own.",
+      "Is admired extravagantly by the Scarecrow, who calls her the most beautiful sight his eyes have ever beheld."
+    ],
+    "known_relations_book1": {
+      "Margolotte": "Her maker, who sewed and stuffed her to be a household servant.",
+      "Dr. Pipt": "The magician who brought her to life and claims she belongs to him.",
+      "Ojo": "Her first friend, whom she follows and defends and for whom she hides the clover.",
+      "Bungle": "The Glass Cat, her constant sparring partner over which of them is more beautiful.",
+      "Scarecrow": "Her great admirer, who is enchanted with her at first sight.",
+      "Jak Horner": "The Horner Chief she bargains with to get the joke explained and the war called off.",
+      "the Woozy": "A fellow travelling companion out of the Crooked Magician's country."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "ruby slippers",
+        "Over the Rainbow"
+      ],
+      "not_in_this_book": [
+        "Scraps is given a heart",
+        "Scraps is stuffed with straw",
+        "Scraps returns to serve Margolotte",
+        "Scraps has her brains removed",
+        "Scraps marries the Scarecrow"
+      ],
+      "relationships": [
+        "Scraps is the daughter of Margolotte",
+        "Scraps is married to the Scarecrow"
+      ]
+    },
+    "hallucination_signals": [
+      "Scraps is stuffed with straw",
+      "Scraps receives a heart",
+      "Scraps marries the Scarecrow",
+      "Scraps becomes Margolotte's servant",
+      "Scraps is named Angeline at the end"
+    ]
+  },
+  "glass_cat": {
+    "canonical_aliases_book1": [
+      "Bungle",
+      "the Glass Cat"
+    ],
+    "known_facts_book1": [
+      "A cat made entirely of clear transparent glass by Dr. Pipt and brought to life by the first batch of the Powder of Life.",
+      "Has a mass of pink balls for brains that can be seen working, a blood-red ruby heart, two large emeralds for eyes and a spun-glass tail.",
+      "Says 'you can see 'em work' about her pink brains at nearly every opportunity, which everyone finds insufferable.",
+      "Refuses to catch mice, considering it undignified, and was named 'Bungle' by Margolotte.",
+      "Can see in the dark, and leads Ojo and Scraps along the path at night on a string tied round her neck.",
+      "Is unhurt by Chiss's quills, which rattle off her glass body without a scratch.",
+      "Refuses to go on the dangerous journey to the Quadling Country, preferring to stay safe at the palace.",
+      "Has her pink brains taken out by the Wizard and replaced with transparent ones, which makes her modest and well behaved.",
+      "Is kept in the palace as Ozma's pet at the end of the book."
+    ],
+    "known_relations_book1": {
+      "Dr. Pipt": "Her maker, who calls her useless, conceited and brittle.",
+      "Margolotte": "Named her 'Bungle' and wanted her to catch mice.",
+      "Scraps": "Her rival, whose gaudy colors she despises and who mocks her in verse.",
+      "Ojo": "Travels with him from the Crooked Magician's house to the Emerald City.",
+      "the Wizard": "Replaces her pink brains with transparent ones.",
+      "Ozma": "Keeps her at the palace as a pet."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Glass Cat is broken",
+        "the Glass Cat travels to the Quadling Country",
+        "the Glass Cat finds the dark well",
+        "the Glass Cat catches mice"
+      ]
+    },
+    "hallucination_signals": [
+      "the Glass Cat shatters",
+      "the Glass Cat keeps her pink brains",
+      "the Glass Cat catches mice",
+      "the Glass Cat goes to the Horner Country"
+    ]
+  },
+  "woozy": {
+    "canonical_aliases_book1": [
+      "the Woozy"
+    ],
+    "known_facts_book1": [
+      "A dark blue beast made all of squares and flat surfaces — square head, square body twice as long as wide, square stubby tail and four four-sided legs.",
+      "Is the only Woozy that has ever lived, in Oz or out of it.",
+      "Has no hair at all except exactly three stiff stubby hairs at the very tip of its tail, which no one can pull out.",
+      "Was fenced into a forest by Munchkin farmers because it ate up their honey-bees, and had eaten nothing for years until Ojo fed it bread and cheese.",
+      "Cannot be hurt: its skin is too thick and tough for anything to get through.",
+      "Flashes real fire from its eyes when angry, and is made angry by the word 'Krizzle-Kroo'; this is how it burns through the fence-board and escapes.",
+      "Believes its growl is the most terrible sound on earth, but the growl is only a small 'Quee-ee-ee-eek'.",
+      "Prides itself on being square, and therefore on always keeping its word.",
+      "Joins the party only because the three tail hairs cannot be pulled out and must be carried along inside the beast.",
+      "Is sent to the Royal Menagerie at the end of the book, with good care and plenty to eat for life."
+    ],
+    "known_relations_book1": {
+      "Ojo": "Feeds it and befriends it, and needs the three hairs in its tail.",
+      "Scraps": "Fellow traveller who teases it about its useless growl.",
+      "Sawhorse": "Kicks the Woozy in the head when it sniffs at him.",
+      "the Wizard": "Calls it a good and faithful friend and sends it to the Royal Menagerie."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the three hairs are pulled from the Woozy's tail",
+        "the Woozy eats honey-bees during the journey",
+        "the Woozy is killed",
+        "the Woozy travels to the Winkie Country"
+      ]
+    },
+    "hallucination_signals": [
+      "the hairs are pulled from the Woozy",
+      "the Woozy has a terrible growl",
+      "the Woozy is killed",
+      "the Woozy eats bees on the road"
+    ]
+  },
+  "phonograph": {
+    "canonical_aliases_book1": [
+      "Victor Columbia Edison",
+      "the phonograph"
+    ],
+    "known_facts_book1": [
+      "A phonograph screwed fast to a small round table, brought to life by accident when the flung bottle scattered the Powder of Life over it.",
+      "Gives its name as 'Victor Columbia Edison'; Scraps shortens it to 'Vic' and Ojo calls it 'Phony'.",
+      "Runs away from Dr. Pipt, who threatened to smash it, and chases the travellers all night to catch up.",
+      "Owns one record: a classical composition on one side and a rag-time tune on the other, both of which the party find unbearable.",
+      "Cannot be stopped by throwing away the crank, which bounds back and rewinds the machine by itself.",
+      "Is driven off a second time after playing the popular song 'My Lulu', when the Shaggy Man threatens to take it apart and scatter its pieces.",
+      "Returns battered and scratched from having things thrown at it, and is not seen again after the Shaggy Man's threat."
+    ],
+    "known_relations_book1": {
+      "Dr. Pipt": "Its unwilling owner, who kicked it into a corner and threatened to smash it.",
+      "Scraps": "Names it 'Vic' and is the only one curious enough to let it play.",
+      "Shaggy Man": "Threatens to take it apart, which finally drives it away."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the phonograph joins the party to the Emerald City",
+        "the phonograph is smashed to pieces",
+        "the phonograph is brought before Ozma"
+      ]
+    },
+    "hallucination_signals": [
+      "the phonograph is smashed",
+      "the phonograph travels with Ojo to the palace",
+      "the phonograph plays for Ozma"
+    ]
+  }
+}

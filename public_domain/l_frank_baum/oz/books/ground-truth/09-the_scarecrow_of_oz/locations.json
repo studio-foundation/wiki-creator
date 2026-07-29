@@ -1,0 +1,180 @@
+{
+  "jinxland": {
+    "canonical_aliases_book1": [
+      "Jinxland"
+    ],
+    "known_facts_book1": [
+      "A little slice taken off the Quadling Country and therefore really a part of the Land of Oz, though Oz people know nothing of it except what Glinda's Record Book says.",
+      "Is separated from the rest of the Quadling Country by a row of mountains too steep to climb, at whose foot lies a wide, deep gulf supposed to be impassable.",
+      "Is on the Map of Oz, but is ruled by its own King instead of by Ozma, and the laws of Oz are not obeyed there.",
+      "Most of its people are good but very timid, living in constant fear of their fierce ruler and of several Wicked Witches.",
+      "Its people have never before seen a stranger; Trot, Cap'n Bill and Button-Bright are the first that ever came.",
+      "Ends the book ruled by Queen Gloria with Pon as her Royal Consort, with the deposed Krewl as the castle's gardener's boy."
+    ],
+    "known_relations_book1": {
+      "King Krewl": "Its usurping ruler, deposed by the Orks.",
+      "Gloria": "Its rightful heir and finally its crowned Queen.",
+      "Ozma": "The Ruler of Oz to whom it owes allegiance without knowing it.",
+      "Glinda": "The Sorceress who learns of it only through her Record Book."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Jinxland is outside the Land of Oz",
+        "Jinxland is in the Winkie Country",
+        "Jinxland is ruled by Ozma directly"
+      ]
+    },
+    "hallucination_signals": [
+      "Jinxland is outside Oz",
+      "Jinxland is in the Winkie Country",
+      "Ozma rules Jinxland directly"
+    ]
+  },
+  "land_of_mo": {
+    "canonical_aliases_book1": [
+      "Land of Mo"
+    ],
+    "known_facts_book1": [
+      "A country where the Ork lands the travellers after the flight from Pessim's island, entirely unknown to Trot and Cap'n Bill.",
+      "Has no water at all; it rains lemonade instead, which is caught in jars and considered refreshing and healthful.",
+      "Its snow is popcorn — crisp, slightly warm, nicely salted and buttered — and falls in flakes so large and queer that Trot does not recognize it.",
+      "All its winds and breezes are perfumed: south is violets, north is wild roses, east is lilies-of-the-valley, west is lilac, so no weathervane is needed.",
+      "All the birds of Mo are educated to talk, and they gather in flocks to eat the popcorn snow.",
+      "Is home to the Bumpy Man, the Mountain Ear, who lives on the flat top of a high mountain.",
+      "Is the country the Wise Donkey of the earlier tome came from, though that is not mentioned here."
+    ],
+    "known_relations_book1": {
+      "the Bumpy Man": "Its Mountain Ear, who keeps the mountain steady.",
+      "Button-Bright": "Found buried in its popcorn snow.",
+      "Cap'n Bill": "Who catches and enlarges three of its birds to carry the party away."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Land of Mo is part of Oz",
+        "the snow of Mo is cold",
+        "there is water in the Land of Mo"
+      ]
+    },
+    "hallucination_signals": [
+      "Mo is part of Oz",
+      "the snow of Mo is cold",
+      "there is water in Mo"
+    ]
+  },
+  "pessims_island": {
+    "canonical_aliases_book1": [
+      "Pessim's island"
+    ],
+    "known_facts_book1": [
+      "A small island reached through a shaft the Ork flies up out of, after the tunnel from the cavern under the sea.",
+      "Bears melons, cherries, wild plums, walnuts, filberts, almonds and chestnuts, so no one need starve there.",
+      "Grows a bush of lavender berries about the size of gooseberries which shrink whoever eats one to about two inches high.",
+      "Grows on the east side a small tree of dark purple berries which restore the eater to full size — the antidote, and the trees grow nowhere else in all the world.",
+      "Is inhabited only by Pessim, who was left there alone by his neighbors.",
+      "Is left behind by the Ork carrying Trot and Cap'n Bill, shrunken, in Trot's sunbonnet tied round his neck."
+    ],
+    "known_relations_book1": {
+      "Pessim": "Its only inhabitant, who calls himself its King.",
+      "the Ork": "Who shrinks there by accident and is restored there.",
+      "Trot": "Who shrinks deliberately to be carried away in her own sunbonnet."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the lavender berries make the eater grow",
+        "the purple berries shrink the eater",
+        "the magic berries grow elsewhere",
+        "Pessim's island is in the Land of Oz"
+      ]
+    },
+    "hallucination_signals": [
+      "the lavender berry makes you grow",
+      "the purple berry shrinks you",
+      "the berries grow in Oz"
+    ]
+  },
+  "great_gulf": {
+    "canonical_aliases_book1": [
+      "Great Gulf"
+    ],
+    "known_facts_book1": [
+      "A wide, deep gulf at the foot of the mountains that separate Jinxland from the rest of the Quadling Country, said to have no bottom.",
+      "Is the gulf into which King Kynd, Gloria's father, fell and was never seen again.",
+      "Is what Googly-Goo proposes throwing Pon into.",
+      "Is crossed by the Scarecrow on two strands spun across it by a spider fed two of Glinda's magic pills, one strand walked on and one held for balance."
+    ],
+    "known_relations_book1": {
+      "Scarecrow": "Who crosses it on spider silk.",
+      "Gloria": "Whose father fell into it."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "anyone falls into the Great Gulf in this book",
+        "the Great Gulf is bridged",
+        "King Kynd is found again"
+      ]
+    },
+    "hallucination_signals": [
+      "someone falls into the Gulf",
+      "the Gulf is bridged",
+      "King Kynd is rescued"
+    ]
+  },
+  "ruby_cavern": {
+    "canonical_aliases_book1": [
+      "Ruby Cavern",
+      "the Great Waterfall"
+    ],
+    "known_facts_book1": [
+      "The Great Waterfall is the highest in all the Land of Oz, a sheet of silver dropping into a tiny lake that seems to have no outlet.",
+      "Behind the sheet of water is a cave reached along the wet rocks, and inside it a series of steps cut down into the rock.",
+      "The cavern's walls and domed roof are lined with countless cut rubies that light the whole place with a radiant red glow.",
+      "In its center the river rises again in a bubbling caldron whose spray takes the ruby color and looks like a seething mass of flame.",
+      "A broad ledge covered with rubies runs all around the cavern to where the river plunges finally underground.",
+      "Is where the Scarecrow surfaces twice after falling over the waterfall, and where Cap'n Bill hooks him out with his wooden leg."
+    ],
+    "known_relations_book1": {
+      "Scarecrow": "Who falls over the fall and is fished out of the cavern pool.",
+      "Button-Bright": "Who spots the cave behind the waterfall."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Scarecrow drowns in the Ruby Cavern",
+        "the Ruby Cavern is inhabited",
+        "treasure is taken from the Ruby Cavern"
+      ]
+    },
+    "hallucination_signals": [
+      "the Scarecrow drowns",
+      "the cavern is inhabited",
+      "they take rubies from the cavern"
+    ]
+  },
+  "orkland": {
+    "canonical_aliases_book1": [
+      "Orkland"
+    ],
+    "known_facts_book1": [
+      "The country the Orks come from, where they are the absolute rulers of all living things from ants to elephants.",
+      "Its location is unknown even to the Ork for most of the book; he loses all track of distance and direction searching for it.",
+      "Is found at last not far from Jinxland, on the far side of the great sandy desert.",
+      "Welcomes the Ork's return so royally that a great celebration is held in his honor, delaying his return to his friends.",
+      "Sends fifty Orks to Jinxland at his call, and expects him back for a surprise party on his uncle.",
+      "Is never entered by any of the human characters and is described only in the Ork's own words."
+    ],
+    "known_relations_book1": {
+      "the Ork": "Its native, who leaves it, loses it and finds it again."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Orkland is visited by Trot",
+        "Orkland is in the Land of Oz",
+        "the Ork never finds Orkland"
+      ]
+    },
+    "hallucination_signals": [
+      "Trot visits Orkland",
+      "Orkland is in Oz",
+      "Orkland is never found"
+    ]
+  }
+}

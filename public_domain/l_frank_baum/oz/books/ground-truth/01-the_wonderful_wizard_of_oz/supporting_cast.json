@@ -1,0 +1,191 @@
+{
+  "aunt_em": {
+    "canonical_aliases_book1": [
+      "Aunt Em"
+    ],
+    "known_facts_book1": [
+      "The wife of Uncle Henry, a Kansas farmer's wife, and the aunt who is raising the orphan Dorothy.",
+      "Was once a young, pretty wife, but the sun and wind turned her thin and gray and sober, and she never laughs.",
+      "Screams and runs for the cellar when the cyclone comes, unable to reach Dorothy in time.",
+      "Is the home Dorothy longs to return to throughout the book, and runs out to catch Dorothy in her arms at the very end.",
+      "Does not travel to Oz and never appears in the Land of Oz."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her orphaned niece and ward, whom she loves though gray life has left her grave.",
+      "Uncle Henry": "Her husband, the Kansas farmer."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Aunt Em goes to Oz",
+        "Aunt Em is transported to the Emerald City"
+      ]
+    },
+    "hallucination_signals": [
+      "Aunt Em in Oz",
+      "Aunt Em meets the Wizard",
+      "Aunt Em is carried to the Emerald City"
+    ]
+  },
+  "uncle_henry": {
+    "canonical_aliases_book1": [
+      "Uncle Henry"
+    ],
+    "known_facts_book1": [
+      "A Kansas farmer, Dorothy's uncle and Aunt Em's husband, gray from his long beard to his rough boots, who works hard and never laughs.",
+      "Watches the sky, warns of the coming cyclone, and runs to look after the cattle and the horses before taking shelter.",
+      "Does not travel to Oz; when Dorothy returns he is milking the cows in the barnyard.",
+      "Never appears in the Land of Oz."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "His orphaned niece and ward.",
+      "Aunt Em": "His wife."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Uncle Henry goes to Oz",
+        "Uncle Henry meets the Wizard"
+      ]
+    },
+    "hallucination_signals": [
+      "Uncle Henry in Oz",
+      "Uncle Henry meets the Wizard",
+      "Uncle Henry is carried by the cyclone to Oz"
+    ]
+  },
+  "boq": {
+    "canonical_aliases_book1": [
+      "Boq"
+    ],
+    "known_facts_book1": [
+      "A rich Munchkin, one of the leading men of the eastern country, who hosts Dorothy for her first night in Oz.",
+      "Recognises Dorothy as a great sorceress because she wears the Silver Shoes and white dress and has killed the Wicked Witch of the East.",
+      "Tells her that white is the witches' colour and blue the Munchkins' colour, so her checked blue-and-white dress marks her as a friend.",
+      "Gives her supper, a bed, and a good breakfast before she goes on toward the Emerald City.",
+      "Appears only in the Munchkin country near the start of the journey."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "The Munchkin who houses and feeds her on her first night in Oz.",
+      "Munchkins": "One of their leading and wealthy men."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Boq joins Dorothy's journey",
+        "Boq travels to the Emerald City",
+        "Boq is a suitor of Dorothy"
+      ]
+    },
+    "hallucination_signals": [
+      "Boq travels with Dorothy",
+      "Boq falls in love with Dorothy",
+      "Boq the Munchkin boy in love"
+    ]
+  },
+  "queen": {
+    "canonical_aliases_book1": [
+      "Queen"
+    ],
+    "known_facts_book1": [
+      "The little Queen of the thousands of gray field mice, saved by the Tin Woodman when he kills a wildcat that is chasing her.",
+      "In gratitude she and her mice tie themselves to a truck the Tin Woodman builds and haul the sleeping Cowardly Lion out of the deadly poppy field.",
+      "Gives Dorothy a little whistle to summon her, telling her to blow it whenever she needs the mice.",
+      "Comes when Dorothy later whistles and advises her to use the Golden Cap to call the Winged Monkeys.",
+      "Is fearful of the Lion at first, sure he would eat all the mice, until told he is a coward and a friend."
+    ],
+    "known_relations_book1": {
+      "Tin Woodman": "Her rescuer, who kills the wildcat pursuing her.",
+      "Cowardly Lion": "Whom her mice drag from the poppy field despite their fear of him.",
+      "Dorothy": "Whom she gives a summoning whistle and later guides toward the Emerald City."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Queen of the Field Mice rules a human kingdom",
+        "the Field Mice Queen is a girl"
+      ]
+    },
+    "hallucination_signals": [
+      "the Queen of the Field Mice is a human queen",
+      "the mouse Queen leads an army against the Witch"
+    ]
+  },
+  "king": {
+    "canonical_aliases_book1": [
+      "King"
+    ],
+    "known_facts_book1": [
+      "The King of the Winged Monkeys, who obeys whoever wears the Golden Cap and its charm.",
+      "Tells Dorothy the legend of the Cap: how a monkey band once dropped the dandy Quelala into a river for sport and were bound to serve the Golden Cap's owner three times as punishment by the princess Gayelette.",
+      "Explains that no owner may command the Monkeys more than three times.",
+      "Carries the travellers where they are bidden, once for the Wicked Witch of the West and later for Dorothy and for Glinda.",
+      "Refuses only one request: he cannot carry Dorothy across the desert out of the Land of Oz, saying the Monkeys belong only to this country and may never leave it."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Whom he carries by force of the Golden Cap's charm, first as the Witch's captive and later at Dorothy's own command.",
+      "Wicked Witch": "Of the West, who commanded his band with the Golden Cap to seize the travellers.",
+      "Glinda": "To whom the Golden Cap passes, and whom the Monkeys then obey.",
+      "Gayelette": "The princess who long ago bound his grandfather's band to the Cap.",
+      "Quelala": "The man his grandfather's band once dropped in the river."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Winged Monkeys are evil servants of the Witch by nature",
+        "the Monkey King is destroyed"
+      ]
+    },
+    "hallucination_signals": [
+      "the Winged Monkeys are naturally wicked",
+      "the flying monkeys serve only evil",
+      "the Monkey King is killed by Dorothy"
+    ]
+  },
+  "guardian_of_the_gates": {
+    "canonical_aliases_book1": [
+      "Guardian of the Gates"
+    ],
+    "known_facts_book1": [
+      "The green-clad, greenish-skinned man who keeps the gate of the Emerald City, clothed all in green with a green box at his side.",
+      "Locks a pair of green spectacles onto each visitor before they may enter, keeping the only key on a chain around his neck, because Oz ordered everyone to wear them.",
+      "Leads the travellers through the streets to the Palace when they first arrive.",
+      "Later unlocks their spectacles when they leave, and tells them there is no road across the deadly desert that rings the Land of Oz.",
+      "Is amazed and glad to hear that Dorothy has melted the Wicked Witch of the West."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Whom he admits to the Emerald City and fits with spectacles.",
+      "Wizard": "Whose order to wear locked spectacles he enforces at the gate."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Guardian of the Gates is a soldier who fights",
+        "the Guardian rules the Emerald City"
+      ]
+    },
+    "hallucination_signals": [
+      "the Guardian of the Gates leads the Wizard's army",
+      "the Guardian of the Gates is the true ruler of Oz"
+    ]
+  },
+  "mr_joker": {
+    "canonical_aliases_book1": [
+      "Mr. Joker"
+    ],
+    "known_facts_book1": [
+      "A little china clown in the Dainty China Country, one of its people, dressed in red and yellow and green.",
+      "Is always trying to stand upon his head and has broken and been mended so often that he is covered with cracks.",
+      "Greets Dorothy with a saucy rhyme mocking how stiff and prim she looks, then stands on his head.",
+      "The china Princess tells Dorothy he is cracked in the head and foolish, and to pay him no mind.",
+      "Appears only briefly during Dorothy's passage through the China Country."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "A china figure who teases her when she passes through the China Country."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Mr. Joker joins Dorothy's journey",
+        "Mr. Joker is a human clown"
+      ]
+    },
+    "hallucination_signals": [
+      "Mr. Joker travels with Dorothy",
+      "Mr. Joker the human circus clown"
+    ]
+  }
+}

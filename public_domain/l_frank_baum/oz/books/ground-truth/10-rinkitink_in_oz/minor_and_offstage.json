@@ -1,0 +1,115 @@
+{
+  "choggenmugger": {
+    "canonical_aliases_book1": [
+      "Choggenmugger"
+    ],
+    "known_facts_book1": [
+      "The Great Beast of the Island of Regos, dreaded by every dweller there, so old that everyone thought it had been there since the world was made.",
+      "Each year its scales grew thicker and harder, its jaws wider, its teeth sharper and its appetite keener.",
+      "Ate every dragon in Regos, and every great serpent and crocodile in the forest marshes; the people knew there was no use opposing it.",
+      "Can run like the wind, and has four rows of sharp teeth.",
+      "Is destroyed by Nikobob the charcoal-burner, who cuts off its tongue, severs its jaw, and finally chops it into many small pieces — a task that proved not only easy but very agreeable.",
+      "Nikobob never learns that the Magic Pearls in his coat pocket did it, and believes himself the strongest man in the world."
+    ],
+    "known_relations_book1": {
+      "Nikobob": "The charcoal-burner who destroys it without knowing why he can."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Choggenmugger is a dragon",
+        "Choggenmugger survives",
+        "Inga kills Choggenmugger",
+        "Choggenmugger attacks the travelers"
+      ]
+    },
+    "hallucination_signals": [
+      "Choggenmugger is a dragon",
+      "Inga kills Choggenmugger",
+      "Choggenmugger survives"
+    ]
+  },
+  "pinkerbloo": {
+    "canonical_aliases_book1": [
+      "Pinkerbloo",
+      "Lord Pinkerbloo"
+    ],
+    "known_facts_book1": [
+      "A tall, handsomely dressed lord of Gilgad who leads the fleet of fifty boats searching for the missing King Rinkitink.",
+      "Kneels on the grass of Pingaree before his King and kisses his hand, saying they have searched everywhere and could appoint no new King while Rinkitink might still live.",
+      "Is threatened with hanging for having found his King against his will, and replies that Rinkitink is much too tender-hearted ever to do it.",
+      "Insists respectfully but firmly that Rinkitink must come home and reign, since someone must, and since he was born to be their King.",
+      "Appears only in the final chapter."
+    ],
+    "known_relations_book1": {
+      "Rinkitink": "His King, whom he finds and takes home."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Pinkerbloo is hanged",
+        "Pinkerbloo becomes King of Gilgad",
+        "Pinkerbloo lets Rinkitink stay"
+      ]
+    },
+    "hallucination_signals": [
+      "Pinkerbloo is hanged",
+      "Pinkerbloo is crowned",
+      "Rinkitink stays in Pingaree"
+    ]
+  },
+  "mermaid_queen": {
+    "canonical_aliases_book1": [
+      "Mermaid Queen"
+    ],
+    "known_facts_book1": [
+      "A powerful fairy, Queen of the mermaids, who was once rescued from her enemies by an ancestor of King Kitticut.",
+      "Gave the three Magic Pearls to her rescuer in gratitude, and they have been the rightful heritage of every King of Pingaree since.",
+      "Kitticut has often suspected that the storm which destroyed the first raiders was caused by the fairy mermaids, but says he has no proof of it.",
+      "Never appears in this book; she exists only in Kitticut's account of the pearls' origin."
+    ],
+    "known_relations_book1": {
+      "King Kitticut": "Whose ancestor she rewarded with the pearls."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Mermaid Queen appears in this book",
+        "the Mermaid Queen helps Inga",
+        "the Mermaid Queen sends the storm in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "the Mermaid Queen appears",
+      "the mermaids rescue Inga",
+      "the Mermaid Queen sends the boat"
+    ]
+  },
+  "banquet_guests": {
+    "canonical_aliases_book1": [
+      "banquet guests"
+    ],
+    "known_facts_book1": [
+      "The company at Ozma's banquet in the Emerald City, all of whom appear only in that one chapter.",
+      "Includes the Shaggy Man, Jack Pumpkinhead, the Tin Woodman and Cap'n Bill, with Trot and Betsy Bobbin seated beside Princess Dorothy.",
+      "The animal guests sit at a table of their own: the Hungry Tiger, the Cowardly Lion, the Glass Cat, and Betsy's mule Hank, whose enormous ears move Rinkitink to compose a song about him.",
+      "**The Scarecrow is explicitly absent** — the text says it was unfortunate that the most popular person in all Oz next to Ozma happened just then to be making one of his trips through the country, and that he met the party only later.",
+      "None of the guests takes any part in the adventure; the banquet is a reception for the strangers, not a council."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Their hostess, who always invites the animals and seats them apart.",
+      "Rinkitink": "The visitor who finds Hank so comical that his friends think he will choke."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Scarecrow attends the banquet",
+        "the banquet guests travel to the Nome Kingdom",
+        "the Tin Woodman rescues anyone in this book",
+        "Trot and Betsy join the quest"
+      ]
+    },
+    "hallucination_signals": [
+      "the Scarecrow is at the banquet",
+      "the Tin Woodman goes to Regos",
+      "Trot joins the quest",
+      "Cap'n Bill fights the nomes"
+    ]
+  }
+}

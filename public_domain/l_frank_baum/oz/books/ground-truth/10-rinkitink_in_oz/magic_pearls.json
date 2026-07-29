@@ -1,0 +1,96 @@
+{
+  "blue_pearl": {
+    "canonical_aliases_book1": [
+      "Blue Pearl"
+    ],
+    "known_facts_book1": [
+      "One of the three Magic Pearls of Pingaree, having a blue tint and about as big around as a marble.",
+      "Gives the person who carries it a strength so great that no power can resist him.",
+      "Is carried by Inga in the pointed toe of his right shoe, held in place with a strip torn from his handkerchief.",
+      "Makes the oars of the magic boat as light as feathers, and made Nikobob's axe cut Choggenmugger to pieces while the pearl was in his coat pocket.",
+      "Bursts the staples of the iron gates of Regos, breaks every slave's chains in the mines, and tears an iron post a foot thick out of its socket.",
+      "Was used by Inga's grandfather to drive away the invaders in the Great Fight.",
+      "Gives strength only, and no protection at all — which is why the Three Trick Caverns nearly kill Inga."
+    ],
+    "known_relations_book1": {
+      "Inga": "Its carrier through the whole book.",
+      "Nikobob": "Carries it by accident in his coat pocket and destroys Choggenmugger with it."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Blue Pearl protects its owner from harm",
+        "the Blue Pearl speaks",
+        "the Blue Pearl is lost forever"
+      ]
+    },
+    "hallucination_signals": [
+      "the Blue Pearl protects from harm",
+      "the Blue Pearl gives advice",
+      "the Blue Pearl is lost"
+    ]
+  },
+  "pink_pearl": {
+    "canonical_aliases_book1": [
+      "Pink Pearl"
+    ],
+    "known_facts_book1": [
+      "One of the three Magic Pearls of Pingaree, with a pink glow, which protects its owner from all dangers that may threaten, no matter from what source.",
+      "Protects everyone touching the carrier, which is why Inga insists the three of them always keep hold of one another before the walls of Regos.",
+      "Turns aside every arrow, spear, axe and stone the warriors of Regos throw, and Queen Cor's dagger, and her whip.",
+      "Protected Inga's grandfather from harm during the Great Fight.",
+      "Is carried in the toe of Inga's left shoe, which Rinkitink throws at a cat in the night, sending it into Nikobob's pocket and then onto Zella's foot.",
+      "Made Zella able to snap thick branches, lift a fallen log six men could not move, throw a wild boar by one ear, and stand unstung in a swarm of angry bees — she never learns why.",
+      "Is lent by Inga to Rinkitink, pinned inside his brocaded vest pocket, for the journey to the nomes, and so is not with Inga in the Three Trick Caverns.",
+      "Saves Rinkitink from falling rocks, the golden net, the opened Bottomless Gulf and the cavern of flying knives, without his ever being in any danger at all."
+    ],
+    "known_relations_book1": {
+      "Inga": "Its owner, who lends it away at the worst possible moment.",
+      "Rinkitink": "Its carrier through the whole ordeal in the Nome King's caverns.",
+      "Zella": "Wears it unknowingly in a shoe and becomes briefly invulnerable."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Pink Pearl gives strength",
+        "the Pink Pearl speaks",
+        "Inga carries the Pink Pearl through the Three Trick Caverns"
+      ]
+    },
+    "hallucination_signals": [
+      "the Pink Pearl gives strength",
+      "Inga is protected in the Trick Caverns",
+      "the Pink Pearl gives advice"
+    ]
+  },
+  "white_pearl": {
+    "canonical_aliases_book1": [
+      "White Pearl"
+    ],
+    "known_facts_book1": [
+      "One of the three Magic Pearls of Pingaree, pure white, which can speak, and whose words are always wise and helpful.",
+      "Is heard by holding it to the ear; its first words to Inga are that one should never question the truth of what one fails to understand.",
+      "Is carried in a silken bag fastened around Inga's neck and buttoned under his waist, not in a shoe — which is why it is never lost.",
+      "Foretells the storm and the boat that strands on the beach, and tells Inga to row to Regos and Coregos to free his parents.",
+      "Advises Inga to tell no one of the loss of the shoes, since enemies who do not know he is powerless will fear him as much as ever.",
+      "Tells him to clap his hands three times at the south end of Coregos to summon the boat, and to clap four times and call 'Klik' at the Nome King's entrance.",
+      "Gives only 'Be patient, brave and determined' when asked how to free his parents from the nomes — advice Inga finds unsatisfactory.",
+      "Was given with the other two to an ancestor of Kitticut by the Mermaid Queen, a powerful fairy he had rescued from her enemies."
+    ],
+    "known_relations_book1": {
+      "Inga": "Its owner, whom it guides at every turning point of the book.",
+      "King Kitticut": "Who first holds it to his son's ear to prove that a pearl can speak."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the White Pearl gives strength",
+        "the White Pearl protects from harm",
+        "the White Pearl is lost",
+        "the White Pearl frees Inga's parents"
+      ]
+    },
+    "hallucination_signals": [
+      "the White Pearl protects from harm",
+      "the White Pearl gives strength",
+      "the White Pearl is stolen"
+    ]
+  }
+}

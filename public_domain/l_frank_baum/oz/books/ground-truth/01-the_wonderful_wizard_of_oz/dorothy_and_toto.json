@@ -1,0 +1,104 @@
+{
+  "dorothy": {
+    "canonical_aliases_book1": [
+      "Dorothy"
+    ],
+    "known_facts_book1": [
+      "An orphan girl who lives on the great gray Kansas prairies with her Uncle Henry, a farmer, and his wife Aunt Em.",
+      "A cyclone carries her, her dog Toto, and the whole farmhouse through the air and sets the house down in the Land of Oz.",
+      "Her falling house lands on the Wicked Witch of the East and kills her, freeing the Munchkins.",
+      "Takes the dead Witch of the East's Silver Shoes from the table and wears them for the rest of the book.",
+      "Is greeted as a Sorceress by the Munchkins and kissed on the forehead by the Witch of the North, whose kiss leaves a protecting mark.",
+      "Sets out along the road of yellow brick for the Emerald City to ask the Great Oz to send her back to Kansas.",
+      "Lifts the Scarecrow off his pole, oils the Tin Woodman's rusted joints, and gains the Cowardly Lion as a travelling companion.",
+      "Is carried by the Winged Monkeys and made the Wicked Witch of the West's captive slave in the kitchen of her castle.",
+      "Melts the Wicked Witch of the West by throwing a bucket of water over her in a fit of anger.",
+      "Uses the Golden Cap to summon the Winged Monkeys and be carried back to the Emerald City.",
+      "Discovers that Oz is only a little old humbug hiding behind a screen, not a real wizard.",
+      "Misses the Wizard's balloon home because Toto jumps from her arms to chase a kitten and the ropes break before she can climb in.",
+      "Journeys south to the Quadling country to ask Glinda for help, crossing the hill of the Hammer-Heads.",
+      "Learns from Glinda that the Silver Shoes can carry her anywhere in three steps, and uses them to return to Kansas.",
+      "Loses the Silver Shoes during the flight across the desert, so they are gone forever when she lands.",
+      "Runs across the Kansas prairie into Aunt Em's arms, home again."
+    ],
+    "known_relations_book1": {
+      "Toto": "Her little black dog, her one companion from Kansas, carried through every adventure.",
+      "Scarecrow": "The first companion she rescues; he seeks brains and becomes her devoted friend.",
+      "Tin Woodman": "Companion she frees by oiling his joints; he seeks a heart.",
+      "Cowardly Lion": "Companion who joins after failing to frighten her; he seeks courage.",
+      "Wicked Witch": "The Witch of the West, her captor and enemy, whom she accidentally melts with water.",
+      "Wizard": "The humbug she journeys to see; he cannot magically send her home and departs by balloon without her.",
+      "Glinda": "The Good Witch of the South who finally tells her how the Silver Shoes can carry her home.",
+      "Aunt Em": "Her aunt and guardian in Kansas, whom she longs to return to throughout.",
+      "Uncle Henry": "Her uncle, the Kansas farmer she lives with."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "ruby slippers",
+        "Dorothy Gale",
+        "Dorothy has a surname",
+        "there's no place like home",
+        "clicks her heels three times to say the spell",
+        "Over the Rainbow",
+        "Miss Gulch takes Toto",
+        "Professor Marvel",
+        "Dorothy wears a blue gingham dress",
+        "Oz is only a dream Dorothy wakes from"
+      ],
+      "sequel_only": [
+        "Dorothy meets Ozma",
+        "Dorothy meets the Nome King",
+        "Dorothy meets Tik-Tok",
+        "Dorothy meets the Shaggy Man",
+        "Dorothy owns the hen Billina",
+        "Dorothy becomes a Princess of Oz"
+      ]
+    },
+    "hallucination_signals": [
+      "ruby slippers",
+      "Dorothy Gale",
+      "Over the Rainbow",
+      "Miss Gulch",
+      "Professor Marvel",
+      "Dorothy wakes up in Kansas and it was all a dream",
+      "Dorothy meets Ozma",
+      "the Nome King befriends Dorothy",
+      "Dorothy and the Shaggy Man"
+    ]
+  },
+  "toto": {
+    "canonical_aliases_book1": [
+      "Toto"
+    ],
+    "known_facts_book1": [
+      "Dorothy's little black dog with long silky hair and small black eyes that twinkle merrily.",
+      "The one thing that makes Dorothy laugh and keeps her from growing as gray as the Kansas prairie.",
+      "Falls through the trap-door of the farmhouse during the cyclone but is caught and pulled back by Dorothy.",
+      "Travels the whole journey with Dorothy, usually carried or running at her heels.",
+      "Is snatched up by a Winged Monkey and carried along when the band seizes the travellers for the Wicked Witch.",
+      "Bites the Cowardly Lion's nose in fun when they first meet and is never harmed by him.",
+      "Jumps away in alarm at the Lion's roar and tips over the screen that hides the Wizard, accidentally exposing him.",
+      "Runs into the crowd to bark at a kitten just as the Wizard's balloon is leaving, which is why Dorothy is left behind.",
+      "Does not speak at any point in the book."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "His mistress; the two are inseparable from Kansas to Oz and back.",
+      "Cowardly Lion": "Sleeps beside the Lion and barks at him without ever being eaten."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Toto speaks",
+        "Toto is taken by the sheriff",
+        "Toto is a Cairn terrier",
+        "the man behind the curtain"
+      ]
+    },
+    "hallucination_signals": [
+      "Toto said",
+      "Toto barked a warning in words",
+      "the man behind the curtain",
+      "Toto is taken by the sheriff",
+      "Toto the Cairn terrier"
+    ]
+  }
+}

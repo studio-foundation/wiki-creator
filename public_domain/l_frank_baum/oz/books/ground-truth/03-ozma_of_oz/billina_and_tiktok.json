@@ -1,0 +1,95 @@
+{
+  "billina": {
+    "canonical_aliases_book1": [
+      "Billina",
+      "the yellow hen",
+      "Bill"
+    ],
+    "known_facts_book1": [
+      "A yellow hen who clung to the chicken-coop when it blew off the ship and is castaway with Dorothy in the Land of Ev.",
+      "Was named 'Bill' by the farm boy who raised her; Dorothy adds 'eena' to make it the girl's name 'Billina'.",
+      "Discovers she can talk only after reaching the fairy country, and lays a fresh egg every morning about eight o'clock.",
+      "Eats bugs, ants and sand-crabs, and finds the golden key by striking it with her beak in the sand.",
+      "Spots the crack that is a door in the rock and urges Dorothy to try the golden key on it, revealing Tiktok.",
+      "Is thrown into the chicken-house by Langwidere and beats a speckled rooster in a fight.",
+      "Fights a speckled rooster and loses feathers but wins, declaring she was raised in the United States.",
+      "Hides under the Nome King's throne and overhears that the royal family are purple ornaments and the Oz people green.",
+      "Lays an egg under the throne, terrifying the egg-fearing Nome King, and bargains for her own turn at the guessing game.",
+      "Uses her overheard secret to disenchant all ten Ev royals and all the Oz captives, including Ozma the emerald grasshopper.",
+      "Nearly swallows the grasshopper that is Ozma before finding it hard and lifeless.",
+      "Tells Dorothy to seize the Nome King's belt, and whispers the egg plan to the Scarecrow.",
+      "Is given a pearl-and-sapphire necklace by King Evardo and chooses to stay in Oz rather than return to Kansas."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "The girl she is castaway with, who renames her; her devoted friend and companion.",
+      "Nome King": "Her enemy, whose secret she overhears and whose power she destroys with eggs.",
+      "Ozma": "Restored by Billina from an emerald grasshopper after all others fail.",
+      "Scarecrow": "Carries her on his shoulder and throws her eggs to blind the Nome King.",
+      "Queen of Ev": "The queen she disenchants first from a purple footstool.",
+      "Tiktok": "Fellow rescuer of Dorothy; the copper man she helps wind up and free."
+    },
+    "forbidden_book1": {
+      "later_tome_bleed": [
+        "Billina's chicks Dorothy and Daniel",
+        "Billina rules the chicken kingdom"
+      ],
+      "not_in_this_book": [
+        "Billina is eaten by the Hungry Tiger",
+        "Billina returns to Kansas with Dorothy"
+      ]
+    },
+    "hallucination_signals": [
+      "Billina's chicks",
+      "Billina returns to Kansas",
+      "Billina is eaten",
+      "Billina is a rooster",
+      "Billina cannot talk"
+    ]
+  },
+  "tiktok": {
+    "canonical_aliases_book1": [
+      "Tiktok",
+      "Tik-Tok",
+      "the machine man",
+      "the copper man"
+    ],
+    "known_facts_book1": [
+      "A round copper clockwork man made by Smith & Tinker of Evna, who thinks, speaks and acts but is not alive.",
+      "Is wound with a key in three places: number one for thinking, number two for speaking, number three for walking and action.",
+      "Was bought by the cruel King Evoldo of Ev, who beat him but could not kill him, and was locked in a rock and abandoned.",
+      "Is found and wound up by Dorothy, and declares himself her obedient servant so long as she keeps him wound.",
+      "Runs down at inconvenient moments, including mid-fight with Langwidere's soldiers after knocking down seven of them.",
+      "Uses the tin dinner-pail to beat off the Wheelers and captures their leader to learn who rules Ev.",
+      "Insists the slave should face danger before the mistress, entering the guessing palace before Dorothy.",
+      "Is transformed into a gold ornament by the Nome King and later restored by Billina.",
+      "Fitted with Smith & Tinker's Combination Steel Brains but has no heart and no conscience.",
+      "Is left in Ozma's care in Oz at the end, since his machinery would not work in the civilized world."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "The girl who winds him up and whom he serves as faithful obedient slave.",
+      "Billina": "The hen who helps him be freed and who restores him from a gold ornament.",
+      "Evoldo": "His former cruel master, the King of Ev who beat him and locked him in the rock.",
+      "Scarecrow": "Compares brains with him — steel combination brains against Wizard's brains.",
+      "Nome King": "His captor, whose honesty he mistakenly vouches for before being transformed."
+    },
+    "forbidden_book1": {
+      "later_tome_bleed": [
+        "Tik-Tok of Oz",
+        "the Shaggy Man winds Tiktok",
+        "Tiktok in the Land of Ev army against Ruggedo"
+      ],
+      "not_in_this_book": [
+        "Tiktok is alive",
+        "Tiktok has a heart",
+        "Tiktok returns to Kansas with Dorothy"
+      ]
+    },
+    "hallucination_signals": [
+      "Tiktok is alive",
+      "Tiktok has feelings",
+      "the Shaggy Man winds Tiktok",
+      "Tik-Tok of Oz",
+      "Tiktok goes to Australia"
+    ]
+  }
+}

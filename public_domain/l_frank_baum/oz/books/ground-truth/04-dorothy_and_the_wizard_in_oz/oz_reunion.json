@@ -1,0 +1,274 @@
+{
+  "ozma": {
+    "canonical_aliases_book1": [
+      "Ozma"
+    ],
+    "known_facts_book1": [
+      "The girl Ruler of the Land of Oz, reigning from the Emerald City.",
+      "Was once enchanted into a boy named Tip by the witch Mombi, and freed to become the rightful Princess.",
+      "Keeps the Nome King's Magic Belt that Dorothy left with her.",
+      "Watches Dorothy daily at four o'clock in an enchanted picture and, on Dorothy's signal, uses the Magic Belt to wish her out of the underground cave into Oz.",
+      "Welcomes Dorothy and the Wizard and summons Dorothy's old friends to a reunion.",
+      "Makes the Wizard her Official Wizard, offering him a home for life.",
+      "Once brought the Sawhorse to life with a magic powder while she was the boy Tip.",
+      "Proclaims the Sawhorse 'Prince of Horses' after it wins the race.",
+      "Presides as judge at Eureka's trial for eating her pet piglet.",
+      "Sends Dorothy home to Kansas and Zeb and Jim home to California with the Magic Belt at the end."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her dear friend, whom she rescues, hosts, and finally sends home.",
+      "the Wizard": "The man she makes her Official Wizard.",
+      "Mombi": "The witch who once enchanted her into a boy, spoken of in the past.",
+      "the Sawhorse": "The wooden horse she brought to life and rides.",
+      "Jellia Jamb": "Her palace maid.",
+      "Eureka": "The kitten she puts on trial."
+    },
+    "forbidden_book1": {
+      "relationships": [
+        "the Nome King is Ozma's ally",
+        "the Nome King is Ozma's friend"
+      ],
+      "cross_tome": [
+        "Ozma is captured by the Nome King",
+        "Ozma marches an army against the Nome King",
+        "Ozma meets the Shaggy Man"
+      ],
+      "not_in_this_book": [
+        "Ozma marries",
+        "Ozma is still the boy Tip"
+      ]
+    },
+    "hallucination_signals": [
+      "the Nome King befriends Ozma",
+      "Ozma is captured by the Nome King",
+      "Ozma marches on the Nome Kingdom",
+      "Ozma marries the Scarecrow",
+      "Ozma meets the Shaggy Man"
+    ]
+  },
+  "scarecrow": {
+    "canonical_aliases_book1": [
+      "Scarecrow"
+    ],
+    "known_facts_book1": [
+      "A straw man and one of Dorothy's oldest Oz friends, who rushes in to hug her on her arrival.",
+      "Praises the brains the Wizard gave him, saying he can think day and night.",
+      "Recounts having been conquered by General Jinjur and then going to live with the Tin Woodman.",
+      "Rides the Sawhorse in the grand procession.",
+      "Serves on the jury at Eureka's trial and repeatedly heckles the Woggle-Bug, insisting 'the mind has no eye.'"
+    ],
+    "known_relations_book1": {
+      "Dorothy": "His old friend, joyfully welcomed.",
+      "the Wizard": "The humbug who once gave him his brains.",
+      "the Tin Woodman": "His companion, with whom he went to live.",
+      "the Woggle-Bug": "The pompous accuser he mocks at the trial."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Scarecrow needs a brain",
+        "the Scarecrow is afraid of fire",
+        "the Scarecrow rules the Emerald City in this book"
+      ],
+      "adaptation_inventions": [
+        "the Scarecrow is torn apart by flying monkeys"
+      ]
+    },
+    "hallucination_signals": [
+      "the Scarecrow wants a brain",
+      "the Scarecrow is set on fire",
+      "flying monkeys tear the Scarecrow"
+    ]
+  },
+  "tin_woodman": {
+    "canonical_aliases_book1": [
+      "Tin Woodman",
+      "Nick Chopper"
+    ],
+    "known_facts_book1": [
+      "A nickel-plated tin man, Nick Chopper, another old friend who welcomes Dorothy and the Wizard.",
+      "Thanks the Wizard for the kind heart he was once given.",
+      "Is asked by Ozma to defend Eureka at the trial because of his tender heart.",
+      "Hides a spare piglet in his funnel-shaped hat and produces it to prove Eureka innocent.",
+      "Cuts a new leg and ear for the broken Sawhorse with his axe and smashes the vase to free the real piglet."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "The girl he loves tenderly and greets warmly.",
+      "the Wizard": "The man who gave him his heart and enlists him in the trial trick.",
+      "the Scarecrow": "His companion.",
+      "Eureka": "The kitten he defends at the trial."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Tin Woodman needs a heart",
+        "the Tin Woodman rusts solid in this book",
+        "the Tin Woodman marries"
+      ],
+      "adaptation_inventions": [
+        "the Tin Man cries and rusts his own jaw"
+      ]
+    },
+    "hallucination_signals": [
+      "the Tin Woodman wants a heart",
+      "the Tin Woodman rusts solid",
+      "the Tin Man oils his jaw"
+    ]
+  },
+  "hungry_tiger": {
+    "canonical_aliases_book1": [
+      "Hungry Tiger"
+    ],
+    "known_facts_book1": [
+      "A great tiger with purple stripes who longs to eat fat babies but is held back by his conscience.",
+      "Comes with the Cowardly Lion to welcome Dorothy to the Emerald City.",
+      "Draws Ozma's royal chariot together with the Cowardly Lion.",
+      "Knocks Jim down when the cab-horse kicks the Sawhorse.",
+      "Serves on the jury at Eureka's trial and, as its spokesman, declares her guilty.",
+      "Afterward refuses to associate with the disgraced Eureka."
+    ],
+    "known_relations_book1": {
+      "Cowardly Lion": "His friend and fellow beast, with whom he draws the chariot.",
+      "Dorothy": "The girl he comes to welcome and warmly greets.",
+      "Ozma": "The Princess he serves as a royal beast.",
+      "Jim": "The cab-horse he disciplines for kicking the Sawhorse."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Hungry Tiger eats a baby",
+        "the Hungry Tiger has no conscience"
+      ],
+      "cross_tome": [
+        "the Hungry Tiger appears in book one"
+      ]
+    },
+    "hallucination_signals": [
+      "the Hungry Tiger devours a baby",
+      "the Hungry Tiger in book one",
+      "the Hungry Tiger has no conscience"
+    ]
+  },
+  "sawhorse": {
+    "canonical_aliases_book1": [
+      "Sawhorse",
+      "Saw-Horse"
+    ],
+    "known_facts_book1": [
+      "A wooden horse brought to life by Ozma (as the boy Tip) with a magic powder; the only horse in Oz until Jim arrives.",
+      "Has legs shod with gold and carries Ozma's jeweled red-leather saddle.",
+      "Meets Jim the cab-horse and marvels to meet at last a 'Real Horse.'",
+      "Races Jim and wins easily, being tireless and needing neither food nor breath.",
+      "Is kicked and broken by Jim, losing a leg and an ear, then repaired by the Tin Woodman.",
+      "Is proclaimed 'Prince of Horses' and Champion by Ozma.",
+      "Serves on the jury at Eureka's trial."
+    ],
+    "known_relations_book1": {
+      "Ozma": "The Ruler who brought it to life and rides it.",
+      "Jim": "The flesh-and-blood cab-horse it out-races.",
+      "the Scarecrow": "The friend who rides it in the procession.",
+      "the Tin Woodman": "The friend who repairs its broken leg and ear."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Sawhorse eats and drinks",
+        "the Sawhorse breathes",
+        "the Sawhorse is a real flesh horse"
+      ],
+      "cross_tome": [
+        "the Sawhorse appears in book one"
+      ]
+    },
+    "hallucination_signals": [
+      "the Sawhorse eats grass",
+      "the Sawhorse breathes",
+      "the Sawhorse loses the race"
+    ]
+  },
+  "billina": {
+    "canonical_aliases_book1": [
+      "Billina",
+      "Yellow Hen"
+    ],
+    "known_facts_book1": [
+      "A yellow hen, an old friend of Dorothy's from the Land of Ev, who now lives in Oz wearing pearls and emerald bracelets.",
+      "Struts in to greet Dorothy and is snapped at jealously by the kitten Eureka.",
+      "Serves on the jury at Eureka's trial.",
+      "Relates her past adventures with the Nome King in the Land of Ev at the farewell party."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her great friend, who reunites with her joyfully.",
+      "Eureka": "The kitten she trades scornful words with.",
+      "Ozma": "The Ruler in whose palace she lives.",
+      "Nome King": "Her past adversary in the Land of Ev, spoken of only by reference."
+    },
+    "forbidden_book1": {
+      "relationships": [
+        "the Nome King is Billina's friend",
+        "the Nome King is Billina's ally"
+      ],
+      "cross_tome": [
+        "Billina appears in book one",
+        "Billina appears in book two"
+      ]
+    },
+    "hallucination_signals": [
+      "the Nome King befriends Billina",
+      "Billina in book one",
+      "Billina is a rooster"
+    ]
+  },
+  "jellia_jamb": {
+    "canonical_aliases_book1": [
+      "Jellia Jamb",
+      "Jellia"
+    ],
+    "known_facts_book1": [
+      "A pretty green-gowned palace maid who recognizes the returned Wizard.",
+      "Welcomes Zeb, arranges rooms for the guests, and finds a palace room for Jim.",
+      "Is sent to fetch Ozma's piglet, finds it gone, and reports that Dorothy's kitten ran out of the room."
+    ],
+    "known_relations_book1": {
+      "the Wizard": "The old master she recognizes on his return.",
+      "Ozma": "Her mistress, the Ruler of Oz.",
+      "Eureka": "The kitten who threatens to scratch her eyes out."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Jellia Jamb rules the Emerald City",
+        "Jellia Jamb is a witch"
+      ]
+    },
+    "hallucination_signals": [
+      "Jellia Jamb rules Oz",
+      "Jellia Jamb casts a spell"
+    ]
+  },
+  "woggle_bug": {
+    "canonical_aliases_book1": [
+      "Woggle-Bug"
+    ],
+    "known_facts_book1": [
+      "H. M. Woggle-Bug, T. E. (Highly Magnified, Thoroughly Educated), Dean of the Royal College of Athletic Science.",
+      "A pompous, highly magnified insect who reads a book and boasts of being the most intelligent being in the domain.",
+      "Leads his college students, in striped sweaters, through the grand procession.",
+      "Serves as Public Accuser at Eureka's trial, arguing she should die nine times.",
+      "Is repeatedly deflated by the Scarecrow's interruptions about his 'mind's eye.'"
+    ],
+    "known_relations_book1": {
+      "Ozma": "The Princess he once assisted and now serves.",
+      "the Scarecrow": "The straw man who spars with and mocks him at the trial.",
+      "Eureka": "The kitten he accuses of murder."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Woggle-Bug defends Eureka",
+        "the Woggle-Bug is stupid"
+      ],
+      "cross_tome": [
+        "the Woggle-Bug appears in book one"
+      ]
+    },
+    "hallucination_signals": [
+      "the Woggle-Bug defends the kitten",
+      "the Woggle-Bug in book one"
+    ]
+  }
+}

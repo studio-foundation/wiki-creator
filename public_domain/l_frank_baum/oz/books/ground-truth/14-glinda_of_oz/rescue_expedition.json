@@ -1,0 +1,230 @@
+{
+  "scarecrow": {
+    "canonical_aliases_book1": [
+      "the Scarecrow"
+    ],
+    "known_facts_book1": [
+      "A live Scarecrow of straw with a stuffed sack for a head, once made by a Munchkin farmer and lifted off his pole by Dorothy, who ruled the Land of Oz for a brief period.",
+      "Is asked to take Ozma's place as Ruler while she is away, and **consents at once without asking any questions**.",
+      "Is found playing croquet with Trot and Betsy when Glinda arrives, stumbles over a wicket and falls flat on his painted face mid-sentence, and continues talking as if nothing had happened.",
+      "Says plainly he has never raised a sunken island in all his life, and asks to be told what to do.",
+      "Proposes the one sensible move at the council: go to the Skeezer country and examine it carefully.",
+      "Answers the boasting Diamond Swan with 'Handsome is as handsome does. Are your deeds lovely, Coo-ee-oh?'",
+      "Falls often on the forest march but is easily patted back into shape, and recites poems at Glinda's reception.",
+      "Climbs to the top of the Great Dome with the Patchwork Girl at the end and replaces the pane of glass."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Whose place he takes as Ruler of Oz.",
+      "Glinda": "Who summons the council he presides over.",
+      "the Patchwork Girl": "With whom he replaces the Dome's glass."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Scarecrow refuses to rule",
+        "the Scarecrow solves the puzzle",
+        "the Scarecrow is destroyed",
+        "the Scarecrow stays in the Emerald City"
+      ]
+    },
+    "hallucination_signals": [
+      "the Scarecrow declines the throne",
+      "the Scarecrow solves the riddle",
+      "the Scarecrow stays home"
+    ]
+  },
+  "patchwork_girl": {
+    "canonical_aliases_book1": [
+      "the Patchwork Girl",
+      "Scraps"
+    ],
+    "known_facts_book1": [
+      "A girl made of a gaudy patchwork quilt cut to shape and stuffed with cotton, so full of fun and mad pranks that stupider folks think her crazy — but very intelligent, and much wisdom can be found in her careless remarks.",
+      "Is one of Ozma's counsellors, jolly under all conditions however grave, and her good spirits are valued for cheering others.",
+      "Predicts of Button Bright that some day he won't be found, and that will be the last of him.",
+      "Proposes at the council, laughing, that they pump the water out of the lake, and is told to be sensible.",
+      "**Her joke is the solution.** She says that if the lake were dried up the island would be on dry land, and Glinda takes it seriously: lower the water until the Dome shows above it.",
+      "Follows up by suggesting the fishes be transformed to polliwogs and given a teeny pond, and is severely refused by the Wizard on principle.",
+      "Says 'All right, I don't care' and makes a face at him, and is proved right anyway.",
+      "Is as light as a feather and very spry on the march, is loved by the Adepts for her antics, and helps the Scarecrow replace the Dome's glass at the end."
+    ],
+    "known_relations_book1": {
+      "Glinda": "Who finds real value in her idea.",
+      "Trot": "Who drags her into Glinda's tent to tell it.",
+      "the Wizard of Oz": "Who refuses her polliwog amendment."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Scraps works magic",
+        "the fishes are turned into polliwogs",
+        "the lake is drained",
+        "Scraps stays in the Emerald City"
+      ]
+    },
+    "hallucination_signals": [
+      "Scraps works magic",
+      "the lake is drained dry",
+      "the fish become polliwogs",
+      "Scraps stays home"
+    ]
+  },
+  "cowardly_lion": {
+    "canonical_aliases_book1": [
+      "the Cowardly Lion"
+    ],
+    "known_facts_book1": [
+      "An enormous lion, one of Ozma's regular guardians and the most important and intelligent beast in all Oz.",
+      "Says every little danger scares him so badly that his heart thumps against his ribs, but always summons the courage to meet it — and afterward moans and trembles and weeps because he was so scared.",
+      "Joins the expedition unasked, saying that if Ozma needs help he is going to help her, and that the others may need him — especially Trot and Betsy — in the wild Gillikin country.",
+      "**Leads the party through the Great Gillikin Forest**, the nearest thing to a wilderness in all Oz, following beast-paths only his woodcraft can discern, and keeps the wild denizens off the travelers.",
+      "Admits certain parts of that forest are unknown even to him.",
+      "Sings a song in his deep bass voice at Glinda's reception for the Adepts.",
+      "Never reaches the sunken island: he stays with the camp on shore."
+    ],
+    "known_relations_book1": {
+      "Ozma": "The Ruler he goes to help.",
+      "Glinda": "Who marches next behind him in the forest.",
+      "Trot": "One of those he came along to protect."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Cowardly Lion fights the Flatheads",
+        "the Cowardly Lion enters the Dome",
+        "the Cowardly Lion is harmed in the forest"
+      ]
+    },
+    "hallucination_signals": [
+      "the Lion battles the Flatheads",
+      "the Lion goes under the water",
+      "the Lion is wounded"
+    ]
+  },
+  "glass_cat": {
+    "canonical_aliases_book1": [
+      "the Glass Cat"
+    ],
+    "known_facts_book1": [
+      "A cat of transparent glass, made and brought to life by Dr. Pipt — who is no longer permitted to work magic and is now an ordinary citizen of the Emerald City.",
+      "Has a ruby heart one can watch beating, pink brains that whirl in the top of her head, emerald eyes and a fluffy spun-glass tail.",
+      "Scorns to catch mice, does not eat, and is extremely lazy; her ruby heart is hard and cold and her disposition is not pleasant at all times.",
+      "Loves admiration above everything, and will be very friendly to anyone who compliments her beauty.",
+      "Is seized in an enormous leopard's jaws in the Great Gillikin Forest; the leopard breaks several teeth, howls and drops her, and she is annoyed only by his impudence.",
+      "Is sent by Glinda — whom she genuinely fears, unlike everyone else whose orders she ignores — to fetch Button Bright, and does it at once.",
+      "Is complained of by Button Bright for being impolite, which he says would count as an insult if she had any manners.",
+      "Wants to join the expedition of her own accord, overhearing the conversation, and the Wizard makes no objection."
+    ],
+    "known_relations_book1": {
+      "Glinda": "The one person whose orders she obeys.",
+      "Button Bright": "The boy she is sent to retrieve and offends.",
+      "Trot": "Who worries whether the leopard hurt her."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Glass Cat is broken",
+        "the Glass Cat catches mice",
+        "the Glass Cat finds the Adepts",
+        "the Glass Cat enters the Dome"
+      ]
+    },
+    "hallucination_signals": [
+      "the Glass Cat is shattered",
+      "the Glass Cat catches a mouse",
+      "the Glass Cat finds the fishes"
+    ]
+  },
+  "button_bright": {
+    "canonical_aliases_book1": [
+      "Button Bright"
+    ],
+    "known_facts_book1": [
+      "A fine, manly little boy called Button Bright because no one can remember any other name for him, well mannered and good humored, with one bad fault: he is continually getting lost.",
+      "Gets found as often as he gets lost, which does not stop his friends worrying.",
+      "Wanders off the forest march while trailing at the end throwing twigs at squirrels, and is found asleep under a tree with a tiger crouched on one side and a gray wolf on the other.",
+      "Is saved by Glinda's incantation, which fixes both beasts to the ground where they lie.",
+      "Wakes, is frightened for a moment, sees the beasts cannot reach him, then **deliberately kicks the tiger's head and whacks the wolf with a branch** before wandering carelessly away.",
+      "Is forbidden by Glinda ever to get lost again, and replies that it won't be his fault if he does — and that it wasn't his fault this time.",
+      "Says of the Diamond Swan that the old Swan is too much in love with herself to think of anything else.",
+      "Suggests using the boat to catch the three fishes, and is told it will not be necessary."
+    ],
+    "known_relations_book1": {
+      "Glinda": "Who saves him and forbids him to get lost.",
+      "Ojo": "His close friend, of a very different nature.",
+      "the Glass Cat": "The messenger he complains about."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Button Bright is eaten by beasts",
+        "Button Bright is never found",
+        "Button Bright stays in the Emerald City"
+      ]
+    },
+    "hallucination_signals": [
+      "Button Bright is eaten",
+      "Button Bright is lost for good",
+      "Button Bright stays home"
+    ]
+  },
+  "ojo": {
+    "canonical_aliases_book1": [
+      "Ojo",
+      "Ojo the Lucky"
+    ],
+    "known_facts_book1": [
+      "A Munchkin boy of about Button Bright's age, called Ojo the Lucky because good fortune follows him wherever he goes.",
+      "Is a close friend of Button Bright although of a very different nature, and both are liked by Trot and Betsy.",
+      "**Notices first that Button Bright is missing**, and gives the account of when he last saw him.",
+      "Asks whether the lost boy can be saved when everyone else has given him up.",
+      "Spots the stranded submarine on the far shore of the lake and proposes rowing all over the lake calling to the magic fishes."
+    ],
+    "known_relations_book1": {
+      "Button Bright": "His close friend, whose absence he notices.",
+      "Trot": "One of the girls fond of him."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Ojo works magic",
+        "Ojo is lost in the forest",
+        "Ojo rows the boat"
+      ]
+    },
+    "hallucination_signals": [
+      "Ojo works magic",
+      "Ojo gets lost",
+      "Ojo rows across the lake"
+    ]
+  },
+  "trot_and_betsy": {
+    "canonical_aliases_book1": [
+      "Trot",
+      "Betsy Bobbin"
+    ],
+    "known_facts_book1": [
+      "Two little girls who live at Ozma's palace under her protection, great friends of Dorothy and much loved by all the Oz people.",
+      "Are the two friends Dorothy longs to tell about the journey and does not, having promised Ozma to keep it secret.",
+      "Are playing croquet with the Scarecrow when Glinda's chariot descends, and Trot says at once that Glinda never comes unless something has gone wrong.",
+      "Beg the Wizard to let them join the rescue expedition and are allowed to.",
+      "Take turns winding up Tik-Tok's machinery on the march, since it keeps running down.",
+      "**Trot is the one who brings Scraps's idea to Glinda**, dragging the Patchwork Girl into the tent between them.",
+      "Says of the Diamond Swan that the Su-dic ought to have made her a toad instead, since being beautiful does not seem like much of a punishment.",
+      "Share a tent at the camp and are sent away by Glinda while the grown magic-workers plan."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Their friend, whom they set out to rescue.",
+      "the Patchwork Girl": "Whose idea Trot carries to Glinda.",
+      "Tik-Tok": "Whose machinery they wind."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Trot is told about the journey in advance",
+        "Betsy Bobbin works magic",
+        "Trot enters the Great Dome",
+        "the girls stay in the Emerald City"
+      ]
+    },
+    "hallucination_signals": [
+      "Dorothy tells Trot the secret",
+      "Betsy works magic",
+      "Trot goes under the water",
+      "the girls stay behind"
+    ]
+  }
+}

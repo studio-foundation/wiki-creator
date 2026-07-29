@@ -1,0 +1,178 @@
+{
+  "ozma": {
+    "canonical_aliases_book1": [
+      "Ozma",
+      "Ozma of Oz",
+      "Princess Ozma"
+    ],
+    "known_facts_book1": [
+      "The girl Ruler of the Land of Oz, born of a long line of Fairy Queens and noted for her wisdom as well as her beauty and generosity.",
+      "Never leaves her palace in this book; she watches the whole Jinxland adventure in her Magic Picture, which shows any absent person and their surroundings.",
+      "Recognizes the Ork on sight when the girls do not, and worries that harm to the strangers would reflect on her because Jinxland is a part of her dominions.",
+      "Is relieved when the picture shows the Scarecrow crossing into Jinxland, knowing at once that Glinda has sent him.",
+      "Remarks approvingly that Cap'n Bill has never once grumbled over being a grasshopper, as so many would have done.",
+      "Has the Wizard place a fully furnished magic house, with supper and beds, in the uninhabited part of the Quadling Country where the Orks land the travellers.",
+      "Notices the Scarecrow's accident at the waterfall in the Magic Picture and has the Wizard leave fresh straw beside the house.",
+      "Sends Dorothy and Betsy in the Red Wagon to meet the strangers at Glinda's palace, but cannot go herself because of a conference with Jack Pumpkinhead and Professor Wogglebug.",
+      "Gives a grand banquet and reception for the new arrivals and closes the book by saying that if Button-Bright is not lost occasionally, he is not happy."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her best friend and most constant companion.",
+      "Betsy Bobbin": "The other outside-world girl living in her palace.",
+      "Glinda": "The Sorceress who sends the Scarecrow without waiting to be asked.",
+      "the Wizard": "Her palace magician, who prepares the house and the straw.",
+      "Trot": "The stranger she invites to the Emerald City and lodges next to Dorothy."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Ozma travels to Jinxland",
+        "Ozma deposes King Krewl",
+        "Ozma knows nothing of the strangers"
+      ]
+    },
+    "hallucination_signals": [
+      "Ozma goes to Jinxland",
+      "Ozma deposes Krewl",
+      "Ozma crowns Gloria"
+    ]
+  },
+  "dorothy": {
+    "canonical_aliases_book1": [
+      "Dorothy",
+      "Princess Dorothy"
+    ],
+    "known_facts_book1": [
+      "A little Kansas girl who came to the Land of Oz in a very curious manner and was made a Princess, living in Ozma's palace as her best friend.",
+      "Is loved better than anyone in all Oz next to Ozma, being simple and sweet with a friendly, chummy way.",
+      "Brought the Scarecrow, the Tin Woodman and the Cowardly Lion to the Emerald City, and introduced Ozma to the Shaggy Man, the Hungry Tiger, Billina and Eureka.",
+      "Watches the Jinxland adventures with Ozma and Betsy in the Magic Picture, day after day, treating it like a story.",
+      "Calls Trot a regular trump while watching her, and asks to go and meet her so she will not feel shy.",
+      "Drives to Glinda's palace with Betsy in Ozma's Red Wagon, drawn by the Sawhorse.",
+      "Is no fairy but as mortal as anyone, and is sometimes obstinate and gets herself into trouble."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Her dearest friend, whose palace she lives in.",
+      "Betsy Bobbin": "Her firm friend and fellow outside-world girl.",
+      "Trot": "The new girl she goes to meet and welcomes.",
+      "Scarecrow": "Her old friend, whom she runs out to embrace at Glinda's palace."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "ruby slippers",
+        "Silver Shoes",
+        "there is no place like home",
+        "Miss Gulch",
+        "Over the Rainbow"
+      ],
+      "not_in_this_book": [
+        "Dorothy travels to Jinxland",
+        "Dorothy returns to Kansas",
+        "Dorothy rescues Cap'n Bill"
+      ]
+    },
+    "hallucination_signals": [
+      "Dorothy goes to Jinxland",
+      "Dorothy returns to Kansas",
+      "ruby slippers",
+      "Dorothy rescues Trot"
+    ]
+  },
+  "betsy_bobbin": {
+    "canonical_aliases_book1": [
+      "Betsy Bobbin",
+      "Betsy"
+    ],
+    "known_facts_book1": [
+      "Another little girl from the outside world whose strange adventures brought her to the Emerald City, where Ozma welcomed her.",
+      "Is a shy little thing who can never get used to the marvels that surround her, and is a firm friend of Dorothy.",
+      "Has never met Button-Bright and has to ask who he is when Dorothy spots him in the Magic Picture.",
+      "Corrects Dorothy that Cap'n Bill is not one-legged but has one wooden leg.",
+      "Rides with Dorothy in the Red Wagon to Glinda's palace to meet the strangers.",
+      "Owns a mule named Hank, who is among the animals at Ozma's reception, and tells Trot what the Woozy is.",
+      "Appears only in the last four chapters and takes no part in the Jinxland adventure."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her firm friend, with whom she watches the Magic Picture and drives to Glinda's.",
+      "Ozma": "The Ruler who welcomed her to the Emerald City.",
+      "Hank": "Her mule, who lives in the palace stable.",
+      "Trot": "The new arrival she goes to meet."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Betsy travels to Jinxland",
+        "Betsy is shipwrecked in this book",
+        "Betsy meets Button-Bright before this book"
+      ]
+    },
+    "hallucination_signals": [
+      "Betsy goes to Jinxland",
+      "Betsy is shipwrecked",
+      "Betsy already knows Button-Bright"
+    ]
+  },
+  "the_wizard": {
+    "canonical_aliases_book1": [
+      "the Wizard of Oz",
+      "the Wizard"
+    ],
+    "known_facts_book1": [
+      "A quaint little man who inhabits the royal palace and attends to all the magical things Ozma wants done.",
+      "Is not as powerful as Glinda, who taught him all the real magic he knows, but can do a great many wonderful things.",
+      "Made the Scarecrow's brains, which the Scarecrow calls the Carefully-Assorted, Double-Distilled, High-Efficiency sort and the best the Wizard ever manufactured.",
+      "Places a fully furnished magic house — supper smoking hot, three beds, a gold frame reading WELCOME — in the uninhabited Quadling Country for the travellers, and moves it to a new place the following night.",
+      "Causes a loaded table to rise out of the ground when Trot says she is hungry on the road.",
+      "Leaves a heap of clean crisp straw beside the house so the Scarecrow can be restuffed.",
+      "Owns nine tiny piglets, which are among the animals at Ozma's reception.",
+      "Comes to the reception late and introduces himself to Trot and Cap'n Bill with 'I know you, but you don't know me; so let's get acquainted.'"
+    ],
+    "known_relations_book1": {
+      "Ozma": "The Ruler he serves as palace magician.",
+      "Glinda": "His teacher and superior in sorcery.",
+      "Scarecrow": "Whose brains he manufactured.",
+      "Trot": "The stranger whose welfare he looks after by magic long before they meet."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "the Wizard is a humbug in this book",
+        "the Wizard leaves in a balloon"
+      ],
+      "not_in_this_book": [
+        "the Wizard travels to Jinxland",
+        "the Wizard defeats King Krewl",
+        "the Wizard restores Cap'n Bill"
+      ]
+    },
+    "hallucination_signals": [
+      "the Wizard goes to Jinxland",
+      "the Wizard is a humbug",
+      "the Wizard restores Cap'n Bill"
+    ]
+  },
+  "sawhorse": {
+    "canonical_aliases_book1": [
+      "Sawhorse"
+    ],
+    "known_facts_book1": [
+      "Ozma's favorite steed, a wooden horse that draws the Red Wagon — a chariot inlaid with rubies and pearls.",
+      "Carries Dorothy and Betsy to Glinda's palace and the whole party on to the Emerald City.",
+      "Declines to be unharnessed and visit, preferring to stand and think, saying thinking does not bore him at all.",
+      "When asked what he will think of, answers: of the acorn that grew the tree from which he was made.",
+      "Good-naturedly permits Button-Bright to throw his arms around his neck, recognizing an old friend."
+    ],
+    "known_relations_book1": {
+      "Ozma": "His mistress, whose favorite steed he is.",
+      "Dorothy": "Whom he draws to Glinda's palace.",
+      "Button-Bright": "An old friend who greets him with a hug."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Sawhorse travels to Jinxland",
+        "the Sawhorse carries Trot across the desert"
+      ]
+    },
+    "hallucination_signals": [
+      "the Sawhorse goes to Jinxland",
+      "the Sawhorse crosses the desert"
+    ]
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "emerald_city": {
+    "canonical_aliases_book1": [
+      "Emerald City"
+    ],
+    "known_facts_book1": [
+      "The great town at the exact center of the Land of Oz, where Ozma the supreme Ruler lives.",
+      "Reached by Dorothy's party through Munchkin territory over a road of yellow brick leading to jewel-studded gates.",
+      "Welcomes Ozma home with bands, crowds and a brilliant procession after the rescue.",
+      "Site of the grand reception where Dorothy is made a Princess of Oz and the private Omby Amby is promoted to Captain-General.",
+      "Home to the newly built College of Art and Athletic Perfection, of which the Woggle-Bug is president.",
+      "Where Ozma keeps the magic picture that shows any person or place in the world."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Its ruler, who reigns over the four kingdoms of Oz from here.",
+      "Dorothy": "Guest who is made a Princess of Oz here.",
+      "Land of Ev": "The neighboring kingdom across the deadly desert."
+    },
+    "forbidden_book1": {
+      "later_tome_bleed": [
+        "the Nome King captures the Emerald City",
+        "the Nome King's tunnel reaches the Emerald City",
+        "the Emerald City is emptied by the Water of Oblivion"
+      ],
+      "adaptation_inventions": [
+        "everyone wears green spectacles",
+        "the Horse of a Different Color"
+      ]
+    },
+    "hallucination_signals": [
+      "the Nome King captures the Emerald City",
+      "green spectacles are required",
+      "the Horse of a Different Color",
+      "the Emerald City is under siege"
+    ]
+  },
+  "land_of_ev": {
+    "canonical_aliases_book1": [
+      "Land of Ev",
+      "Kingdom of Ev"
+    ],
+    "known_facts_book1": [
+      "A fairy country on the far side of the deadly desert from Oz, with a sea-coast, forests, farm country and a royal palace.",
+      "Where Dorothy and Billina are washed ashore and where the lunch-box and dinner-pail trees grow.",
+      "Home of the Wheelers, who roll on wheels instead of hands and feet and claim the royal food-trees.",
+      "Ruled by the royal 'E' stamp; its true royal family were sold to the Nome King, leaving no ruler but Princess Langwidere.",
+      "Town of Evna holds the royal palace and the workshop of Smith & Tinker, who built Tiktok.",
+      "Its royal family is restored at the book's end and Evardo Fifteenth is crowned King."
+    ],
+    "known_relations_book1": {
+      "Queen of Ev": "Its enslaved queen, restored to rule at the end.",
+      "Nome King": "The neighboring monarch who holds its royal family captive.",
+      "Emerald City": "The Oz capital across the deadly desert."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Land of Ev is part of Oz",
+        "the Land of Ev is ruled by the Nome King"
+      ]
+    },
+    "hallucination_signals": [
+      "the Land of Ev is a region of Oz",
+      "the Nome King rules the Land of Ev",
+      "the Land of Ev has no sea"
+    ]
+  },
+  "australia": {
+    "canonical_aliases_book1": [
+      "Australia"
+    ],
+    "known_facts_book1": [
+      "The country Uncle Henry is sailing to for his health when Dorothy is blown overboard.",
+      "Uncle Henry reaches it and is seen in a pleasant room in Sydney, white-haired and lonely, in Ozma's magic picture.",
+      "Where Dorothy is wished by the magic belt at the very end, reuniting with Uncle Henry.",
+      "A real country of the ordinary world, not a fairyland, where the magic belt would lose its power and vanish."
+    ],
+    "known_relations_book1": {
+      "Uncle Henry": "Travels there for his health and is reunited with Dorothy there.",
+      "Dorothy": "Wished there by the magic belt at the book's close."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Australia is a fairy country",
+        "Dorothy has adventures in Australia"
+      ]
+    },
+    "hallucination_signals": [
+      "Australia is a magic land",
+      "Dorothy explores Australia",
+      "the Nome King attacks Australia"
+    ]
+  }
+}

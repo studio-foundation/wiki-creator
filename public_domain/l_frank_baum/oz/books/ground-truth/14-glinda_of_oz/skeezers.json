@@ -1,0 +1,163 @@
+{
+  "coo_ee_oh": {
+    "canonical_aliases_book1": [
+      "Coo-ee-oh",
+      "Queen Coo-ee-oh",
+      "the Diamond Swan"
+    ],
+    "known_facts_book1": [
+      "Queen of the one hundred and one Skeezers, a girl of about fifteen or sixteen, too thin and plain of feature to be pretty, with black hair, white skin and black eyes, elaborately dressed and enormously proud.",
+      "Calls herself a **Krumbic Witch**, the only one in the world, and claims to fear the magic of no other creature.",
+      "**Stole all her magic**: she invited the three Adepts at Magic to a banquet, took their charms and instruments, transformed them into a gold, a silver and a bronze fish, and threw them into the lake.",
+      "Was warned by one of the fishes that if any one of them dies or is destroyed she will become shrivelled and helpless and all her stolen magic will depart — which is why she threw them into the water alive.",
+      "Was not a magic-worker at all before that, and knew nothing to be proud of; the Adepts had been kind to her and built the Skeezers their glass Dome and marble houses.",
+      "Can hear **every word spoken on the island**, even the slightest whisper, and has her people lashed at a whipping post with knotted cords for talking about her in their own homes.",
+      "Transformed Rora Flathead into a Golden Pig, in the act of poisoning the lake's fishes, and took away Rora's four cans of brains as well.",
+      "Has a **Magic Oracle**, which tells her who Ozma and Dorothy are before they ever speak.",
+      "Submerges the entire island rather than fight on the surface, and keeps several **submarines** in little rooms in the basement, moved not by machinery but by spoken words she alone knows.",
+      "Is defeated in one instant: raising her silver rope to throw at the Su-dic, she takes a copper vessel of contents full in the face and rises from the lake as a **Diamond Swan** — white feathers thick with tiny diamonds, a golden bill, amethyst eyes.",
+      "**Forgets all her magic with the transformation**, and is glad of it: her past life seems an unpleasant dream she would not go back to.",
+      "Abandons her people completely, ignoring Ervic's pleas, and swims off to admire her own reflection.",
+      "Cannot be bribed with a string of pearls to recall how to raise the island, because nothing can add to her beauty.",
+      "Is never disenchanted: she remains a swan at the end of the book, and Glinda calls that punishment enough, since she has lost her magic, her palace and her power to misrule."
+    ],
+    "known_relations_book1": {
+      "the three Adepts": "The magicians she betrayed and robbed.",
+      "the Su-dic": "The Flathead who transforms her in revenge for his wife.",
+      "Lady Aurex": "Her lady in waiting, who witnessed the betrayal and later replaces her.",
+      "Ervic": "The Skeezer in her boat, who begs her for help in vain."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Coo-ee-oh is restored to her own form",
+        "Coo-ee-oh remembers the magic words",
+        "Coo-ee-oh is destroyed",
+        "Coo-ee-oh helps raise the island",
+        "Coo-ee-oh invented her own magic"
+      ],
+      "relationships": [
+        "Coo-ee-oh is loved by the Skeezers",
+        "Coo-ee-oh is an ally of the three Adepts"
+      ]
+    },
+    "hallucination_signals": [
+      "Coo-ee-oh becomes a girl again",
+      "Coo-ee-oh remembers the words",
+      "Coo-ee-oh is killed",
+      "the Skeezers mourn their Queen"
+    ]
+  },
+  "lady_aurex": {
+    "canonical_aliases_book1": [
+      "Lady Aurex",
+      "Queen Aurex"
+    ],
+    "known_facts_book1": [
+      "A Skeezer lady in waiting on Queen Coo-ee-oh, about twenty in appearance, with a pleasant attractive face that is solemn and sad like every Skeezer's.",
+      "Is ordered to house Ozma and Dorothy and care for them, and does so kindly — they are prisoners, but treated with much consideration.",
+      "Dares not speak freely at first, because the Queen hears everything and punishes remarks she does not like; she speaks only after Ozma enchants the house.",
+      "**Witnessed the betrayal of the three Adepts herself**, along with many other Skeezers, and it is her account that explains the whole quarrel.",
+      "Says the Skeezers are not bad people and do not care to quarrel even with the Flatheads, but are so cowed they obey Coo-ee-oh's slightest word.",
+      "Almost wishes the Flatheads would conquer, to be free of the Queen — but not at the cost of the three fishes, in whom lies the Skeezers' only hope of future happiness.",
+      "Knows how the Dome, the submarines and the doors work, and knows equally that no one but Coo-ee-oh can operate any of them.",
+      "Is **elected Queen** by the Skeezers themselves once Ozma offers them the choice, and is crowned the same day.",
+      "Chooses **Ervic as her Prime Minister**, on the Adepts' testimony of his good judgment, faithfulness and cleverness.",
+      "Fears only one thing at the end — the enmity of the Su-dic — and is reassured by Ozma's promise to stop at the mountain on the way home."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Her prisoner, then her Ruler.",
+      "Dorothy": "Her guest under the Dome.",
+      "Coo-ee-oh": "The Queen she served and feared, and whom she replaces.",
+      "Ervic": "The Skeezer she makes her Prime Minister."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Lady Aurex works magic",
+        "Lady Aurex is appointed Queen by Ozma",
+        "Lady Aurex betrays Ozma",
+        "Lady Aurex escapes the Dome"
+      ]
+    },
+    "hallucination_signals": [
+      "Lady Aurex works magic",
+      "Ozma crowns Aurex",
+      "Aurex betrays them",
+      "Aurex leaves the island"
+    ]
+  },
+  "ervic": {
+    "canonical_aliases_book1": [
+      "Ervic"
+    ],
+    "known_facts_book1": [
+      "A young Skeezer, leader of the four men Coo-ee-oh took with her in the submarine, and the only one of the four who does anything at all in the book.",
+      "Pleads with the Diamond Swan four times for the way back to the island and gets only boasts about her own beauty in reply.",
+      "Volunteers to stay awake and watch while his three comrades sleep, and so is the only one to see the three fishes rise beside the boat.",
+      "Ties Coo-ee-oh's dropped **silver cord** to the bow, and the three small fishes drag the iron boat to the shore.",
+      "Scrubs the Su-dic's forgotten **copper kettle** clean of poison with sand, fills it with fresh water, and carries the three fishes in it a hundred steps east and then miles overland to a purple cottage — warned that spilling the water would destroy them.",
+      "Walks into Reera the Yookoohoo's cottage past a crocodile, giant spiders, horned toads, black rats and a fire-spitting lizard, and refuses to be moved from his bench by any of them.",
+      "**Disarms Reera by wanting nothing**: he asks no favor, expects nothing, and is not afraid — an attitude no visitor of hers had ever taken, and the reason she tolerates him.",
+      "Runs the whole deception in reverse: he loudly objects to the fishes being transformed, suggests only in passing that girls who were *Adepts at Magic* might please him, and lets Reera insist.",
+      "Is stopped by the fishes from stealing the magic powder out of Reera's cupboard drawer — only the Yookoohoo knows how to use it, and his deception was already working.",
+      "Lies twice, plausibly: that the fishes are pets for a friend's three children, and that they were asking for bread.",
+      "Keeps his promise never to tell who restored the Adepts, so Glinda never learns it was Reera.",
+      "Is made **Prime Minister** of the Skeezers by Queen Aurex."
+    ],
+    "known_relations_book1": {
+      "the three Adepts": "The fishes he carries, obeys and frees.",
+      "Reera the Red": "The Yookoohoo he outwits by asking nothing.",
+      "Coo-ee-oh": "The Queen he served out of fear and who abandons him.",
+      "Lady Aurex": "The Queen who makes him her Prime Minister."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Ervic steals Reera's magic powder",
+        "Ervic works magic himself",
+        "Ervic tells Glinda about Reera",
+        "Ervic asks Reera for a favor"
+      ]
+    },
+    "hallucination_signals": [
+      "Ervic steals the powder",
+      "Ervic works magic",
+      "Ervic names Reera",
+      "Ervic begs the Yookoohoo"
+    ]
+  },
+  "the_skeezers": {
+    "canonical_aliases_book1": [
+      "the Skeezers"
+    ],
+    "known_facts_book1": [
+      "A people of exactly one hundred and one, living on a Magic Isle in a lake at the far northern edge of the Gillikin Country, under a great glass Dome.",
+      "Look much like other Oz people, with beautiful homes, splendid clothes and ample food, but wear expressions of solemnity or nervous irritation — Dorothy sees at once that they are not happy.",
+      "Are terrorised by their own Queen, who hears every word spoken on the island and has them lashed at a whipping post for criticising her.",
+      "Cannot drown — they would only get wet and soggy and be very uncomfortable — but are helpless prisoners once the island sinks.",
+      "Own the fish of their lake and forbade the Flatheads to catch them, which is the whole origin of the war.",
+      "Were given their glass Dome and marble houses by the three Adepts, back when the two peoples were friends and visited each other freely.",
+      "Are told by Ozma to go home and do their daily tasks with patience, and are cheered amazingly by it; they get out their brass band and escort her to the palace.",
+      "**Elect their own Queen** at the end, choosing Lady Aurex, who is subject to Ozma in turn.",
+      "Cheer, wave hats and handkerchiefs and play the band as Ozma's party crosses the bridge home."
+    ],
+    "known_relations_book1": {
+      "Coo-ee-oh": "The Queen who terrorised them.",
+      "the Flatheads": "Their enemies over the fish of the lake.",
+      "Ozma": "The Ruler they promise to obey.",
+      "Lady Aurex": "The Queen they elect."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Skeezers fight the Flatheads",
+        "the Skeezers drown",
+        "the Skeezers love Coo-ee-oh",
+        "the Skeezers abandon their island"
+      ]
+    },
+    "hallucination_signals": [
+      "the Skeezers battle the Flatheads",
+      "the Skeezers drown",
+      "the Skeezers mourn Coo-ee-oh",
+      "the island is abandoned"
+    ]
+  }
+}

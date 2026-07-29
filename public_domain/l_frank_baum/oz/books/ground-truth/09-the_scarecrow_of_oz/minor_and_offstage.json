@@ -1,0 +1,120 @@
+{
+  "king_kynd": {
+    "canonical_aliases_book1": [
+      "King Kynd"
+    ],
+    "known_facts_book1": [
+      "The good King of Jinxland before Pon's father, loved by everyone, and the father of Princess Gloria.",
+      "Fell into the Great Gulf that lies this side of the mountains when Gloria was only a baby, and has never been seen again.",
+      "His Prime Minister, Phearse, became King in his place.",
+      "Is the reason Gloria alone has the right to the throne of Jinxland, as the Scarecrow declares at the coronation.",
+      "Never appears in this book; he is known only from Pon's account and the Scarecrow's speech."
+    ],
+    "known_relations_book1": {
+      "Gloria": "His daughter and rightful heir.",
+      "King Phearse": "His Prime Minister, who took the throne after his fall."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "King Kynd appears in this book",
+        "King Kynd is rescued from the Gulf",
+        "King Kynd is murdered by Krewl"
+      ]
+    },
+    "hallucination_signals": [
+      "King Kynd appears",
+      "King Kynd is rescued",
+      "Krewl killed King Kynd"
+    ]
+  },
+  "king_phearse": {
+    "canonical_aliases_book1": [
+      "King Phearse",
+      "Phearce"
+    ],
+    "known_facts_book1": [
+      "Pon's father, Prime Minister to King Kynd, who became King of Jinxland after Kynd fell into the Great Gulf.",
+      "Quarreled while out hunting with his own Prime Minister, Krewl, and tapped him gently on the nose with the knuckles of his closed hand.",
+      "Was tripped backward into a deep pond by Krewl, who then threw in a mass of heavy stones so he could never rise again — not killed, since no one can be killed in that land, but pressed into the mud and of no more use to himself or the world.",
+      "Had no right to rule either, as the Scarecrow tells Pon plainly, since Gloria was the rightful heir.",
+      "Never appears in this book; his story is told only by Pon and repeated by the Scarecrow.",
+      "The book spells his name 'Phearse' in Pon's account and 'Phearce' in the coronation speech."
+    ],
+    "known_relations_book1": {
+      "Pon": "His son, who became a gardener's boy after his fall.",
+      "King Krewl": "His Prime Minister, who destroyed him and took the throne.",
+      "King Kynd": "The King he served and succeeded."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "King Phearse appears in this book",
+        "King Phearse is rescued from the pond",
+        "King Phearse was the rightful King"
+      ]
+    },
+    "hallucination_signals": [
+      "King Phearse appears",
+      "Phearse is rescued",
+      "Phearse was the rightful ruler"
+    ]
+  },
+  "tin_woodman": {
+    "canonical_aliases_book1": [
+      "Tin Woodman"
+    ],
+    "known_facts_book1": [
+      "One of the friends Dorothy first brought to the Emerald City, made all of tin even to his heart.",
+      "Carries a gleaming axe over his shoulder wherever he goes.",
+      "Appears only at Ozma's closing reception and takes no part in the adventure."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "The girl who first brought him to the Emerald City.",
+      "Cap'n Bill": "The stranger who meets him at the reception."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "the Tin Woodman asks for a heart in this book"
+      ],
+      "not_in_this_book": [
+        "the Tin Woodman travels to Jinxland",
+        "the Tin Woodman rescues anyone in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "the Tin Woodman goes to Jinxland",
+      "the Tin Woodman asks for a heart"
+    ]
+  },
+  "reception_guests": {
+    "canonical_aliases_book1": [
+      "reception guests"
+    ],
+    "known_facts_book1": [
+      "The company presented to Trot and Cap'n Bill at Ozma's closing banquet, all of whom appear only in that final chapter.",
+      "Includes Jack Pumpkinhead, whose head is a real pumpkin with a face carved on it, and Professor Wogglebug, shaped like an enormous bug but in neat fitting garments.",
+      "Includes Tik-Tok, a machine man who runs down several times during the evening and has to be wound up again.",
+      "Includes the Shaggy Man and his brother, both very popular in Oz, and Dorothy's Uncle Henry and Aunt Em, who live in a pretty cottage near the palace.",
+      "Includes the animals: the Cowardly Lion with his beautiful mane, the continually smiling Hungry Tiger, Eureka the Pink Kitten with supercilious manners, the wooden Sawhorse, the Wizard's nine tiny piglets, Betsy's mule Hank, Dorothy's terrier Toto, and the Woozy, a square beast with a winning smile of whom there is no other like him in all the world.",
+      "None of them takes any part in the Jinxland adventure, and none of them is mentioned before the final chapter except the Sawhorse."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Their Ruler, whose reception they attend.",
+      "Trot": "The new arrival to whom they are all introduced.",
+      "Cap'n Bill": "The old sailor whose eyes they open wide in astonishment."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the reception guests travel to Jinxland",
+        "the Cowardly Lion fights King Krewl",
+        "Tik-Tok rescues Cap'n Bill",
+        "the Woozy helps conquer the witch"
+      ]
+    },
+    "hallucination_signals": [
+      "the Cowardly Lion goes to Jinxland",
+      "Tik-Tok rescues Cap'n Bill",
+      "the Woozy fights the witch",
+      "Toto follows Trot"
+    ]
+  }
+}

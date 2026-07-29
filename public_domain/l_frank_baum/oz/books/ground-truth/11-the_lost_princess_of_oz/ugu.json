@@ -1,0 +1,53 @@
+{
+  "entity": "Ugu the Shoemaker",
+  "canonical_aliases_book1": [
+    "Ugu",
+    "Ugu the Shoemaker"
+  ],
+  "known_facts_book1": [
+    "A thin, skinny old man with a big fat nose, little eyes set close together, thin white hair and brown skin seared with furrows, who wears spectacles tied on with a ribbon.",
+    "Was a common shoemaker in the City of Herku until he found his great-grandfather's books of magical recipes and instruments hidden in his attic.",
+    "Is descended from the greatest wizard and sorcerer who ever lived; even his father practiced magic before wandering away from Herku and never coming back.",
+    "Once took two teaspoonfuls of zosozo instead of one, and became so strong that leaning against the city wall pushed it over.",
+    "Built himself a wicker castle in the hills west of Herku and practiced his ancestors' magic there for a full year before acting.",
+    "Learned from his ancestors' books of a jeweled gold dishpan in the Yip Country which would grow large enough to sit in and transport its rider instantly anywhere in Oz.",
+    "Stole Cayke's dishpan first, and used it to rob Glinda's castle, the Wizard's rooms and Ozma's apartments all in one night.",
+    "Threw a scarf over Ozma's head when she confronted him, tied her fast, and carried her off in the dishpan with the plunder.",
+    "Enchanted Ozma into a golden peach pit inside a single tempting peach placed at the exact center of the Great Orchard — and then, being occupied, forgot her.",
+    "Does not suspect in the least that he is wicked; his ambition blinds him to the rights of others.",
+    "Defends the castle with three barriers, all of them stolen tricks: Glinda's Barrier of Fire, the Wizard's Wall of Steel, and an optical illusion of hundreds of girl-soldiers.",
+    "Traps the whole party by tipping the great domed hall until it turns upside down, and watches from a golden cage that stays put.",
+    "Is transformed into a dove by Dorothy's Magic Belt, but fights the enchantment hard enough to make the dove enormous — a spiteful Dove of War, not a Dove of Peace.",
+    "Escapes by flying into the stolen dishpan and wishing himself to the northeast corner of the Quadling Country.",
+    "Comes to Dorothy weeks later in the royal gardens to ask forgiveness, and **refuses** her offer to restore his man's shape, preferring to remain a dove."
+  ],
+  "known_relations_book1": {
+    "Ozma": "The Ruler he steals and hides in a peach pit.",
+    "Cayke": "The Cookie Cook whose magic dishpan makes his whole plan possible.",
+    "Dorothy": "The girl who transforms him into a dove and later forgives him.",
+    "the Wizard": "Whose black bag and Wall of Steel trick he stole.",
+    "Glinda": "Whose Great Book of Records and chemicals he stole.",
+    "the Czarover of Herku": "The ruler of the city he abandoned, who warns the party against him."
+  },
+  "forbidden_book1": {
+    "not_in_this_book": [
+      "Ugu is destroyed",
+      "Ugu is restored to a man",
+      "Ugu keeps the stolen magic",
+      "Ugu knows about the Nome King's Magic Belt",
+      "Ugu is a Winkie",
+      "Ugu is defeated by the Wizard"
+    ],
+    "relationships": [
+      "Ugu is a friend of Ozma",
+      "Ugu is an ally of Glinda"
+    ]
+  },
+  "hallucination_signals": [
+    "Ugu is destroyed",
+    "Ugu becomes a man again",
+    "the Wizard defeats Ugu",
+    "Ugu knows about the Magic Belt",
+    "Ugu keeps the magic"
+  ]
+}

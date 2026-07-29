@@ -1,0 +1,155 @@
+{
+  "oogaboo": {
+    "canonical_aliases_book1": [
+      "Oogaboo"
+    ],
+    "known_facts_book1": [
+      "A small valley high in the mountains, in a far corner of the Land of Oz, and part of Ozma's domain though its people never visit her.",
+      "Holds exactly eighteen men, twenty-seven women and forty-four children, and a royal family kept as a matter of pride rather than to rule.",
+      "Every man there is named after the crop of his orchard, which grows buns, ice-cream cones, clocks, banjos, padlocks, sundaes, candy, steel files or books.",
+      "Is reached by a narrow mountain pass which Glinda magically twists so that the Army emerges in an adjoining country instead of in Oz.",
+      "The pass disappears behind the Army as they emerge, so they cannot find their way back.",
+      "Is where Ozma finally returns Queen Ann, her sixteen officers, Files and the Rose Princess by the Wizard's magic."
+    ],
+    "known_relations_book1": {
+      "Ann Soforth": "Its Queen, who leaves it to conquer the world and is glad to be sent back.",
+      "Glinda": "The Sorceress who twists its pass to keep the Army out of Oz.",
+      "Files": "Its eighteenth man and sole Private Soldier."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Oogaboo is outside the Land of Oz",
+        "the Army of Oogaboo reaches Oz through the pass",
+        "Oogaboo is conquered"
+      ]
+    },
+    "hallucination_signals": [
+      "Oogaboo is not part of Oz",
+      "the army marches into Oz",
+      "Oogaboo is conquered"
+    ]
+  },
+  "rose_kingdom": {
+    "canonical_aliases_book1": [
+      "Rose Kingdom",
+      "Roseland"
+    ],
+    "known_facts_book1": [
+      "A country on the sea coast devoted to the culture of the rarest and fairest Roses, where Betsy and Hank are washed ashore.",
+      "Its centre is a splendid great greenhouse of thousands of crystal panes, filled with rosebushes in big pots.",
+      "Behind the greenhouse lies the Royal Garden, hedged all round, where the members of the Royal Family grow on enormous velvet-leaved bushes, green and lifeless until ripe.",
+      "Its Law, printed on page thirteen of the Gardener's book, condemns any stranger who enters to be put to death by the Ruler.",
+      "Has no Ruler at the time of the story, the last one having mildewed and withered before his time.",
+      "Its boundary is a deep gulf crossed by a single drawbridge, over which the outcasts are driven."
+    ],
+    "known_relations_book1": {
+      "Ozga": "The Princess picked from its Royal Bush and then exiled from it.",
+      "Royal Gardener": "Its acting Ruler.",
+      "the Roses": "Its subjects, who will have no girl Ruler."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Rose Kingdom is in the Land of Oz",
+        "the Rose Kingdom gets a King in this book",
+        "the strangers are executed in the Rose Kingdom"
+      ]
+    },
+    "hallucination_signals": [
+      "the Rose Kingdom is part of Oz",
+      "a Rose King is picked",
+      "the strangers are executed"
+    ]
+  },
+  "rubber_country": {
+    "canonical_aliases_book1": [
+      "Rubber Country"
+    ],
+    "known_facts_book1": [
+      "A dull gray country on the way to the Nome King's caverns where the rocks, trees, stepping-stones and even the path are all rubber.",
+      "Is trapped by Kaliko's magnetic rubber wires, which send anyone who steps on the stepping-stones bounding high into the air.",
+      "Bounces Tik-Tok, General Apple and General Cone in turn before the rest of the party notices.",
+      "Its brook runs with dry water: the water falls off a hand and leaves it perfectly dry, and Hank comes out of it unwet.",
+      "Is crossed by Polychrome and Betsy bounding over the stream, and by the others wading through the dry water and avoiding the stones."
+    ],
+    "known_relations_book1": {
+      "Kaliko": "Whose magnetic rubber wires make the trap work.",
+      "Ruggedo": "Who orders the trap sprung on the invaders.",
+      "Polychrome": "Who tests the rubber by dancing and finds the way across."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Rubber Country stops the travelers",
+        "anyone is hurt in the Rubber Country",
+        "the water of the Rubber Country is wet"
+      ]
+    },
+    "hallucination_signals": [
+      "the travelers are stopped by the Rubber Country",
+      "someone is injured bouncing",
+      "they get wet in the brook"
+    ]
+  },
+  "hollow_tube": {
+    "canonical_aliases_book1": [
+      "Hollow Tube",
+      "Forbidden Tube"
+    ],
+    "known_facts_book1": [
+      "A metal-lined cavity running straight through the earth from just outside the Nome King's dominions to the Jinjin's fairyland on the opposite side of the world.",
+      "Its silver plate reads that it was burrowed and built by Hiergargo the Magician in the Year of the World 19625478 for his own exclusive uses.",
+      "The sign at the far end reads: 'IF YOU ARE OUT, STAY THERE. IF YOU ARE IN, DON'T COME OUT.'",
+      "Is not straight down but on a steep slant, so travellers skate along its surface rather than fall freely, and the trip takes over an hour.",
+      "Tititi-Hoochoo has forbidden Ruggedo to throw even rubbish into it, and warned him of vengeance if he used it again.",
+      "Ruggedo has the path turned toward its opening and the opening made invisible, so the whole party falls in without knowing it is there.",
+      "The magician who built it fell through so fast that he shot out the other end and hit a star in the sky, which at once exploded; what became of him no one knows."
+    ],
+    "known_relations_book1": {
+      "Ruggedo": "Who uses it to be rid of the invaders and is condemned for it.",
+      "Tititi-Hoochoo": "Who forbade its use and punishes the offence.",
+      "Quox": "Who carries the party back through it as a carryall."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Tube is straight down",
+        "anyone is killed in the Tube",
+        "the Tube leads to the center of Oz"
+      ]
+    },
+    "hallucination_signals": [
+      "the Tube leads to Oz",
+      "someone dies in the Tube",
+      "Hiergargo appears"
+    ]
+  },
+  "metal_forest": {
+    "canonical_aliases_book1": [
+      "Metal Forest"
+    ],
+    "known_facts_book1": [
+      "A forest built by the nomes over many years of labor inside the Great Domed Cavern, the largest in the Nome King's dominions, its roof higher than a church steeple.",
+      "Its trees — trunks, branches and leaves — are solid gold, its bushes and underbrush filigree silver, and its paths are pebbled with cut diamonds.",
+      "Holds more treasure than all the rest of the world except perhaps the Emerald City, with precious gems of every hue strewn thickly on the ground.",
+      "Was made by Ruggedo both to keep the precious metals out of the reach of mortals and to tire out his hard-working nomes.",
+      "Is reached by three secret passages whose locations Ruggedo changed every week, so that even he could only find it half the time and Kaliko cannot find it at all.",
+      "Beyond the metal trees stand real trees, including the Hotel Trees that bear Three-Course Nuts and the Breakfast Trees, on which the Ugly One has lived for years.",
+      "Is where the tunnel from Ruggedo's pit finally led Queen Ann and her officers."
+    ],
+    "known_relations_book1": {
+      "the Ugly One": "Its lone inhabitant, who built a hut at the edge of the real trees.",
+      "Ruggedo": "Its maker, who returns to fill his pockets from it.",
+      "Ann Soforth": "Whose escape tunnel comes out in it."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Metal Forest is in the Land of Oz",
+        "the trees of the Metal Forest bear fruit",
+        "the Metal Forest is destroyed"
+      ]
+    },
+    "hallucination_signals": [
+      "the Metal Forest is in Oz",
+      "the golden trees bear fruit",
+      "the Metal Forest is destroyed"
+    ]
+  }
+}
