@@ -1,0 +1,78 @@
+{
+  "button_bright": {
+    "canonical_aliases_book1": [
+      "Button-Bright"
+    ],
+    "known_facts_book1": [
+      "A little boy in a brown velvet jacket and knickerbockers, brown stockings, buckled shoes and a frilled blue shirt-waist, half a head shorter than Trot and younger than she is.",
+      "His home used to be in Philadelphia, but he has lost his Magic Umbrella that used to carry him anywhere and considers that he belongs nowhere.",
+      "Has been in the Land of Oz before and once left it in one of the Wizard's big bubbles.",
+      "Is found in the Land of Mo buried in a bank of popcorn snow, eating it, and asks only for his cap when pulled out.",
+      "Is almost destitute of nerves: nothing astonishes him, worries him or makes him unhappy, and he accepts good or bad fortune with a quiet smile.",
+      "Gets lost repeatedly — chasing a butterfly in Jinxland, again before breakfast on coronation day, and again at Ozma's banquet.",
+      "Is rescued in Jinxland by the Ork, who spots him from the air and carries him back to Pon's hut.",
+      "Is the one who spots the cave behind the Great Waterfall where the drowned Scarecrow can be found.",
+      "Is found at the coronation feast beating the bass drum with a turkey-leg bone he had eaten clean.",
+      "Ozma's last words of the book are that if Button-Bright is not lost occasionally, he is not happy."
+    ],
+    "known_relations_book1": {
+      "Trot": "An old friend from their journey to Sky Island; they hold hands walking.",
+      "Cap'n Bill": "Likes the boy for being cheerful, brave and willing.",
+      "the Ork": "The creature who finds him lost in Jinxland and carries him back.",
+      "Scarecrow": "Who already knew him from his earlier visit to Oz."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Button-Bright still has his Magic Umbrella",
+        "Button-Bright returns to Philadelphia",
+        "Button-Bright is never lost in this book",
+        "Button-Bright is older than Trot"
+      ]
+    },
+    "hallucination_signals": [
+      "Button-Bright's Magic Umbrella",
+      "Button-Bright returns to Philadelphia",
+      "Button-Bright is older than Trot"
+    ]
+  },
+  "the_ork": {
+    "canonical_aliases_book1": [
+      "the Ork"
+    ],
+    "known_facts_book1": [
+      "A creature with four stork-like legs, four wings shaped like inverted chopping-bowls and covered with tough skin instead of feathers, a poll-parrot head with a half-bill half-mouth, and a scarlet crest of wavy plumes.",
+      "Its tail is shaped like a boat or airship propeller, pivoted to its body, and it flies by whirling that tail; its wings only support it in the air.",
+      "Weighs about as much as Cap'n Bill and can carry one passenger between its wings, or two for a short distance.",
+      "Comes from Orkland, where the Orks are absolute rulers of all living things from ants to elephants; his father called him 'Flipper'.",
+      "Left home without saying good-bye, lost all track of direction, and was sucked into the same whirlpool as Trot and Cap'n Bill.",
+      "Is burned by a candle he carries in his claw and complains that it bit him.",
+      "Eats a lavender berry on Pessim's island and shrinks to the size of a bumblebee, and is restored by a dark purple berry.",
+      "Finds Orkland at last, is welcomed with a great celebration, and comes back anyway when his friends are in danger.",
+      "Brings fifty Orks whose whirling tails scatter King Krewl's bonfire so that not one burning brand touches the Scarecrow, blow the King against his own castle wall and hang Googly-Goo in a tree.",
+      "Crowns the Scarecrow with Krewl's fallen crown, and has his followers find Blinkie hiding under a bush and drag her to the throne.",
+      "Carries the four travellers over the mountains into the Land of Oz by moonlight, and leaves without waiting to be thanked, being due at a surprise party for his uncle."
+    ],
+    "known_relations_book1": {
+      "Trot": "Carries her out of the caverns, over the desert and finally into Oz.",
+      "Cap'n Bill": "Says he would recognize him anywhere by his wooden leg.",
+      "Button-Bright": "Finds him lost in Jinxland and flies him back to Pon's hut.",
+      "Scarecrow": "Whom his flock saves from the bonfire and crowns King of Jinxland.",
+      "King Krewl": "The King his flock blows off his throne and pins to the ground.",
+      "Pessim": "The little man whose island he escapes from."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Ork is a bird",
+        "the Ork has feathers",
+        "the Ork never finds Orkland",
+        "the Ork stays in the Land of Oz"
+      ]
+    },
+    "hallucination_signals": [
+      "the Ork is a bird",
+      "the Ork has feathers",
+      "the Ork never finds his home",
+      "the Ork settles in Oz"
+    ]
+  }
+}
