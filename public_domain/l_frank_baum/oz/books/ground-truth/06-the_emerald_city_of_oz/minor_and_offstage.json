@@ -1,0 +1,75 @@
+{
+  "uncle_sam": {
+    "canonical_aliases_book1": [
+      "Uncle Sam"
+    ],
+    "known_facts_book1": [
+      "The United States personified, named once only in a passing comparison.",
+      "Mentioned to contrast how Oz sends its long-winded people to Rigmarole Town while Uncle Sam lets his roam free.",
+      "Never appears, never speaks, and is never in the Land of Oz."
+    ],
+    "known_relations_book1": {},
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Uncle Sam appears in Oz",
+        "Uncle Sam speaks",
+        "Uncle Sam meets Dorothy"
+      ]
+    },
+    "hallucination_signals": [
+      "Uncle Sam arrives in Oz",
+      "Uncle Sam meets Ozma",
+      "Uncle Sam said"
+    ]
+  },
+  "royal_family_of_ev": {
+    "canonical_aliases_book1": [
+      "Royal Family of Ev"
+    ],
+    "known_facts_book1": [
+      "The royal house of the Land of Ev, referred to only in backstory.",
+      "General Guph recalls that the Nome King once enslaved the Royal Family of Ev, an event before this book.",
+      "Never appears on the page and takes no part in the events of this book."
+    ],
+    "known_relations_book1": {
+      "Nome King": "Roquat, who is said to have enslaved them in the past, before this book."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Royal Family of Ev appears in this book",
+        "the Royal Family of Ev fights the Nome King in this book",
+        "Princess Langwidere appears"
+      ]
+    },
+    "hallucination_signals": [
+      "the Royal Family of Ev is rescued",
+      "Princess Langwidere",
+      "King Evoldo appears"
+    ]
+  },
+  "jellia_jamb": {
+    "canonical_aliases_book1": [
+      "Jellia Jamb"
+    ],
+    "known_facts_book1": [
+      "The housekeeper of Ozma's palace in the Emerald City.",
+      "Is ordered by Ozma to prepare rooms for Uncle Henry and Aunt Em.",
+      "Shows Dorothy and Aunt Em about the palace, but takes no part in the story's events."
+    ],
+    "known_relations_book1": {
+      "Ozma": "The Ruler whose palace she keeps.",
+      "Aunt Em": "Whom she helps settle into the palace."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Jellia Jamb rules the Emerald City",
+        "Jellia Jamb fights the Nomes",
+        "Jellia Jamb travels on the wagon tour"
+      ]
+    },
+    "hallucination_signals": [
+      "Jellia Jamb leads the defense of Oz",
+      "Jellia Jamb joins the tour of the odd towns"
+    ]
+  }
+}

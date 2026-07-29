@@ -1,0 +1,110 @@
+{
+  "emerald_city": {
+    "canonical_aliases_book1": [
+      "Emerald City"
+    ],
+    "known_facts_book1": [
+      "The capital of Oz, ruled by Ozma, where Dorothy comes to live and her uncle and aunt are brought.",
+      "The target of the Nome King's tunnel and planned invasion.",
+      "Has a Forbidden Fountain in its palace grounds holding the Water of Oblivion.",
+      "Is made invisible to outsiders, along with all of Oz, by Glinda's spell at the end."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Its Ruler.",
+      "Nome King": "Roquat, who tunnels under the desert to reach and destroy it."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "everyone in the Emerald City wears green spectacles in this book",
+        "the Emerald City is destroyed by the Nomes",
+        "the Emerald City is only painted green"
+      ]
+    },
+    "hallucination_signals": [
+      "green spectacles are locked on every visitor",
+      "the Emerald City is burned by the Nomes",
+      "the Emerald City is not really green"
+    ]
+  },
+  "land_of_oz": {
+    "canonical_aliases_book1": [
+      "Land of Oz"
+    ],
+    "known_facts_book1": [
+      "The fairyland ruled by Ozma, surrounded by the Deadly Desert and divided into countries such as the Munchkin and Winkie Countries.",
+      "A place where no one dies or starves and chickens are not eaten.",
+      "Full of odd communities: the Cuttenclips, the Fuddles, Utensia, Bunbury, Bunnybury, the Rigmaroles and the Flutterbudgets.",
+      "Is made entirely invisible to the outside world by Glinda's Magic Spell, cut off forever."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Its Ruler.",
+      "Glinda": "The Sorceress who hides it from the world."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Land of Oz is a dream of Dorothy in this book",
+        "Oz can still be reached by outsiders at the end of this book"
+      ]
+    },
+    "hallucination_signals": [
+      "Oz turns out to be a dream",
+      "Oz remains open to visitors at the end"
+    ]
+  },
+  "kansas": {
+    "canonical_aliases_book1": [
+      "Kansas"
+    ],
+    "known_facts_book1": [
+      "The dull grey state where Dorothy, Uncle Henry and Aunt Em live on a poor mortgaged farm.",
+      "The farm is about to be taken away because Uncle Henry cannot repay his loan.",
+      "Uncle Henry and Aunt Em leave Kansas forever, transported to Oz by the Magic Belt.",
+      "Dorothy proposes selling emeralds in Topeka to pay off the Kansas mortgage, a plan Ozma refuses."
+    ],
+    "known_relations_book1": {
+      "Uncle Henry": "The farmer who loses his Kansas farm and moves to Oz.",
+      "Dorothy": "Who leaves Kansas to live in Oz permanently."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Dorothy returns to live in Kansas at the end",
+        "a cyclone strikes the farm in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "Dorothy goes back to Kansas",
+      "a cyclone lifts the farmhouse",
+      "the family keeps the Kansas farm"
+    ]
+  },
+  "water_of_oblivion": {
+    "canonical_aliases_book1": [
+      "Water of Oblivion",
+      "Forbidden Fountain"
+    ],
+    "known_facts_book1": [
+      "The Water of Oblivion bubbles in a golden basin in the Emerald City palace grounds, marked by a sign forbidding anyone to drink.",
+      "Whoever drinks at it instantly forgets everything he has ever known, becoming as innocent as a baby.",
+      "Was placed there long ago by Glinda to make a wicked King and his people forget their wickedness.",
+      "The invaders drink from it and forget their enmity; the Scarecrow's plan uses it to save Oz.",
+      "The Nome King is thrown into its basin and drinks, forgetting everything."
+    ],
+    "known_relations_book1": {
+      "Glinda": "The Sorceress who long ago placed it in the palace grounds.",
+      "Scarecrow": "Who plans to let the invaders drink of it.",
+      "Nome King": "Roquat, who is thrown into it and made to forget."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Water of Oblivion kills those who drink it",
+        "the Water of Oblivion drives people mad",
+        "drinking it restores lost memories"
+      ]
+    },
+    "hallucination_signals": [
+      "the Water of Oblivion kills the invaders",
+      "the fountain water is poison",
+      "the Water of Oblivion makes one crazy"
+    ]
+  }
+}

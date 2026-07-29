@@ -1,0 +1,105 @@
+{
+  "ozma": {
+    "canonical_aliases_book1": [
+      "Ozma"
+    ],
+    "known_facts_book1": [
+      "The girl Ruler of Oz, who reigns from the Emerald City and is Dorothy's dearest friend.",
+      "Grants Dorothy's request to live in Oz and invites Uncle Henry and Aunt Em to live there too.",
+      "Uses the Magic Belt to transport Dorothy and then her uncle and aunt from Kansas to the Emerald City.",
+      "Watches the Nome King's plot unfold in her Magic Picture and learns of the coming invasion.",
+      "Refuses to arm her people or fight, unwilling to cause bloodshed even to defend her kingdom.",
+      "Refuses to flee to Kansas with the Magic Belt, vowing to share her people's fate.",
+      "Meets the invaders at the Forbidden Fountain and, after they forget, gently sends the Nome King home.",
+      "Has Glinda make the whole Land of Oz invisible to outsiders forever after."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her chosen companion, whom she has made a Princess of Oz.",
+      "Nome King": "Her enemy Roquat, who plots to conquer Oz and enslave her; she once captured his Magic Belt.",
+      "Glinda": "The good Sorceress whose counsel she seeks and who works the spell that hides Oz.",
+      "Scarecrow": "Her adviser, who devises the plan to defeat the invaders at the Fountain.",
+      "the Wizard": "Her court wizard, now learning true magic from Glinda."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Ozma leads an army into battle",
+        "Ozma is a boy named Tip",
+        "Ozma marries the Scarecrow"
+      ],
+      "relationships": [
+        "the Nome King is Ozma's ally",
+        "the Nome King is Ozma's friend",
+        "Roquat befriends Ozma"
+      ]
+    },
+    "hallucination_signals": [
+      "Ozma leads her army",
+      "Ozma was once Tip",
+      "the Nome King befriends Ozma",
+      "Roquat is Ozma's ally",
+      "Ozma declares war"
+    ]
+  },
+  "glinda": {
+    "canonical_aliases_book1": [
+      "Glinda"
+    ],
+    "known_facts_book1": [
+      "The great good Sorceress of Oz, who commands the spirits and lives near the country of the Quadlings.",
+      "Long ago placed the Water of Oblivion in the Forbidden Fountain to make a wicked King forget his wickedness.",
+      "Built and protects the walled rabbit city of Bunnybury and made the paper town of the Cuttenclips.",
+      "Has been teaching the Wizard real magic since he settled in the Emerald City.",
+      "Advises Ozma that no more outsiders should be allowed to find Oz.",
+      "Works a Magic Spell that makes the entire Land of Oz invisible to all eyes but its own, cutting it off from the world.",
+      "Reveals she had already performed the spell before Ozma even arrived, knowing her wishes."
+    ],
+    "known_relations_book1": {
+      "Ozma": "The Ruler she advises and serves; she hides Oz at Ozma's wish.",
+      "the Wizard": "Her pupil, whom she is teaching to be a genuine wizard rather than a humbug.",
+      "Dorothy": "Whom she knows well and who invokes Glinda's name in Bunnybury."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Glinda drinks the Water of Oblivion",
+        "Glinda fights the Nome King in battle",
+        "Glinda is a Wicked Witch"
+      ]
+    },
+    "hallucination_signals": [
+      "Glinda the Wicked",
+      "Glinda drinks the Water of Oblivion",
+      "Glinda battles the Nomes"
+    ]
+  },
+  "the_wizard": {
+    "canonical_aliases_book1": [
+      "the Wizard",
+      "Wizard of Oz"
+    ],
+    "known_facts_book1": [
+      "The little Wizard of Oz, once a humbug from Omaha, now learning true magic from Glinda the Good.",
+      "Asks to join Dorothy's tour and brings his black bag of magic tools in the red wagon.",
+      "Conjures full furnished tents and hot meals from handkerchiefs and an empty kettle by Glinda's trick.",
+      "Notices Dorothy's footprints and Billina's tracks and tracks her to the sign-post, making camp until she returns.",
+      "Guides the wagon party on through Rigmarole Town and the Flutterbudgets toward the Tin Woodman's castle."
+    ],
+    "known_relations_book1": {
+      "Glinda": "His teacher, who is making him a real wizard instead of a humbug.",
+      "Dorothy": "His travelling companion, whom he finds after she is lost.",
+      "Ozma": "The Ruler he serves in the Emerald City.",
+      "Sawhorse": "The wooden steed that draws his red wagon on the tour."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Wizard arrives in Oz by balloon in this book",
+        "the Wizard is exposed as a fraud in this book",
+        "the Wizard gives the Scarecrow brains in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "the Wizard arrives by balloon",
+      "the Wizard is unmasked as a humbug",
+      "the great and powerful Oz"
+    ]
+  }
+}

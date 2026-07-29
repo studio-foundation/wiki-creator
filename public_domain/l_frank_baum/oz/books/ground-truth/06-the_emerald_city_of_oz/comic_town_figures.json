@@ -1,0 +1,191 @@
+{
+  "grandmother_gnit": {
+    "canonical_aliases_book1": [
+      "Grandmother Gnit"
+    ],
+    "known_facts_book1": [
+      "A jigsaw Fuddle of Fuddlecumjig, an easy puzzle to put together, who knits.",
+      "Is reassembled by the visitors and promises to knit new mittens for a kangaroo who lost hers.",
+      "Sits at the foot of the table at the merry Fuddle dinner."
+    ],
+    "known_relations_book1": {
+      "Lord High Chigglewitz": "A fellow Fuddle of Fuddlecumjig."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Grandmother Gnit is a rabbit",
+        "Grandmother Gnit is made of bread"
+      ]
+    },
+    "hallucination_signals": [
+      "Grandmother Gnit the rabbit",
+      "Grandmother Gnit is a bread woman"
+    ]
+  },
+  "lord_high_chigglewitz": {
+    "canonical_aliases_book1": [
+      "Lord High Chigglewitz"
+    ],
+    "known_facts_book1": [
+      "A bald fat jigsaw Fuddle, first name Larry, the chief personage of Fuddlecumjig.",
+      "Is missing a piece of his left knee, lost years ago when he scattered himself carelessly, so he limps.",
+      "Is pieced together by the visitors and sits at the head of the table at the Fuddle dinner."
+    ],
+    "known_relations_book1": {
+      "Grandmother Gnit": "A fellow Fuddle.",
+      "Dorothy": "One of the visitors who reassembles him."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Lord High Chigglewitz is a rabbit",
+        "the Lord High Chigglewitz rules all of Oz"
+      ]
+    },
+    "hallucination_signals": [
+      "Chigglewitz the rabbit",
+      "Chigglewitz rules Oz"
+    ]
+  },
+  "mr_bunn": {
+    "canonical_aliases_book1": [
+      "Mr. Bunn"
+    ],
+    "known_facts_book1": [
+      "A leading bun citizen of Bunbury, made of bread and butter.",
+      "Debates stiffly whether the human strangers should be allowed to remain, fearing they will eat the townsfolk."
+    ],
+    "known_relations_book1": {
+      "Pop Over": "A fellow Bunbury citizen.",
+      "Dorothy": "The human visitor the bun people fear."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Mr. Bunn is a rabbit",
+        "Mr. Bunn is King of Bunbury"
+      ]
+    },
+    "hallucination_signals": [
+      "Mr. Bunn the rabbit",
+      "King Bunn of Bunbury"
+    ]
+  },
+  "pop_over": {
+    "canonical_aliases_book1": [
+      "Pop Over"
+    ],
+    "known_facts_book1": [
+      "A bread citizen of Bunbury who takes Dorothy to get waffles from his back yard.",
+      "His wife is several shades darker than he is."
+    ],
+    "known_relations_book1": {
+      "Mr. Bunn": "A fellow Bunbury citizen.",
+      "Dorothy": "Whom he offers waffles."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Pop Over is a rabbit",
+        "Pop Over rules Bunbury"
+      ]
+    },
+    "hallucination_signals": [
+      "Pop Over the rabbit",
+      "King Pop Over"
+    ]
+  },
+  "judge_sifter": {
+    "canonical_aliases_book1": [
+      "Judge Sifter"
+    ],
+    "known_facts_book1": [
+      "A living flour-sifter of Utensia, considered the holiest thing in the kingdom.",
+      "Serves as judge at King Kleaver's court when Dorothy is brought in as a prisoner."
+    ],
+    "known_relations_book1": {
+      "King Kleaver": "The ruler of Utensia he serves.",
+      "Dorothy": "The prisoner over whose fate the utensils deliberate."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Judge Sifter sentences Dorothy to death",
+        "Judge Sifter is a rabbit"
+      ]
+    },
+    "hallucination_signals": [
+      "Judge Sifter condemns Dorothy",
+      "Judge Sifter the rabbit"
+    ]
+  },
+  "keeper_of_the_wicket": {
+    "canonical_aliases_book1": [
+      "Keeper of the Wicket"
+    ],
+    "known_facts_book1": [
+      "A richly dressed rabbit, named Bristle, who guards the gate of Bunnybury and admits visitors.",
+      "Demands Dorothy's letter of introduction from Ozma before letting her pass through the wicket.",
+      "Leads Dorothy in with pompous cries of 'Make way for Princess Dorothy' and promises to erect a statue of her."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "The visitor he admits and escorts through Bunnybury.",
+      "Rabbit King": "The Bunnybury monarch he serves."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Keeper of the Wicket is King of Bunnybury",
+        "the Keeper of the Wicket bars Dorothy forever"
+      ]
+    },
+    "hallucination_signals": [
+      "the Keeper of the Wicket rules Bunnybury",
+      "the Keeper of the Wicket refuses Dorothy entry"
+    ]
+  },
+  "blinkem": {
+    "canonical_aliases_book1": [
+      "Blinkem"
+    ],
+    "known_facts_book1": [
+      "A rabbit attendant in Bunnybury who serves the Rabbit King.",
+      "Announces the time and serves luncheon for the King and his visitor Dorothy on command."
+    ],
+    "known_relations_book1": {
+      "Rabbit King": "The Bunnybury monarch he waits upon.",
+      "Dorothy": "The visitor for whom he serves luncheon."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Blinkem is King of Bunnybury",
+        "Blinkem is made of bread"
+      ]
+    },
+    "hallucination_signals": [
+      "King Blinkem",
+      "Blinkem the bread man"
+    ]
+  },
+  "king_kleaver": {
+    "canonical_aliases_book1": [
+      "Kleaver"
+    ],
+    "known_facts_book1": [
+      "A living cleaver, the King of Utensia, the kingdom of kitchen utensils.",
+      "His Spoon Brigade brings all prisoners before him, including Dorothy, Toto and Billina.",
+      "Sits up and questions Dorothy sharply when she is brought to his court."
+    ],
+    "known_relations_book1": {
+      "Judge Sifter": "The judge who serves in his court.",
+      "Dorothy": "The prisoner brought before him by the Spoon Brigade."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "King Kleaver rules Bunnybury",
+        "King Kleaver executes Dorothy",
+        "King Kleaver is a rabbit"
+      ]
+    },
+    "hallucination_signals": [
+      "King Kleaver of Bunnybury",
+      "King Kleaver beheads Dorothy",
+      "Kleaver the rabbit king"
+    ]
+  }
+}

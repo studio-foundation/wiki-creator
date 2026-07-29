@@ -1,0 +1,116 @@
+{
+  "nomes": {
+    "canonical_aliases_book1": [
+      "Nomes"
+    ],
+    "known_facts_book1": [
+      "Underground elves ruled by King Roquat the Red, dwelling in jeweled caverns beneath the mountains of Ev.",
+      "Are immortals but not strong on magic.",
+      "Dig the tunnel under the Deadly Desert toward the Emerald City, being used to making tunnels.",
+      "Fifty thousand of them, General Guph's army, wait massed in the caverns to invade Oz.",
+      "Are ordered to wait in the tunnel and, after Roquat forgets everything, are sent marching home."
+    ],
+    "known_relations_book1": {
+      "Nome King": "Their ruler Roquat, who leads them against Oz.",
+      "General Guph": "Their general, who commands the Nome army.",
+      "Ozma": "The Ruler of Oz they are sent to conquer and enslave."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Nomes are allies of Oz",
+        "the Nomes conquer the Emerald City",
+        "the Nomes live above ground"
+      ]
+    },
+    "hallucination_signals": [
+      "the Nomes befriend the Oz people",
+      "the Nomes conquer Oz",
+      "the Nomes are peaceful farmers"
+    ]
+  },
+  "growleywogs": {
+    "canonical_aliases_book1": [
+      "Growleywogs"
+    ],
+    "known_facts_book1": [
+      "Gigantic creatures of bone, skin and muscle, so strong the weakest can toss an elephant seven miles.",
+      "Live in the Ripple Land beyond Ev and are surly, unsociable and hated by everyone.",
+      "Are ruled by the Grand Gallipoot and recruited by General Guph to invade Oz.",
+      "Drink at the Forbidden Fountain and forget their enmity, becoming harmless."
+    ],
+    "known_relations_book1": {
+      "Grand Gallipoot": "Their ruler.",
+      "General Guph": "The Nome general who recruits them.",
+      "Nome King": "Roquat, whose invasion of Oz they join."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Growleywogs are allies of Ozma",
+        "the Growleywogs defend Oz",
+        "the Growleywogs are gentle and kind"
+      ]
+    },
+    "hallucination_signals": [
+      "the Growleywogs help Oz",
+      "the Growleywogs are friendly giants",
+      "the Growleywogs protect Ozma"
+    ]
+  },
+  "phanfasms": {
+    "canonical_aliases_book1": [
+      "Phanfasms"
+    ],
+    "known_facts_book1": [
+      "Erbs who live atop the dread Mountain of Phantastico, the most dangerous of all the invaders.",
+      "Are dreaded by mortals and immortals alike, so that no one had approached their mountain for thousands of years.",
+      "Can take on false hairy skins and beast heads, their true forms unknown.",
+      "Are led by the First and Foremost and recruited by General Guph to invade Oz first, ahead of all others.",
+      "Leap up first at the Forbidden Fountain, drink the Water of Oblivion, and forget everything."
+    ],
+    "known_relations_book1": {
+      "First and Foremost": "Their leader.",
+      "General Guph": "The Nome general who recruits them.",
+      "Nome King": "Roquat, whose invasion they lead."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Phanfasms are allies of Oz",
+        "the Phanfasms defend the Emerald City",
+        "the Phanfasms are killed in battle"
+      ]
+    },
+    "hallucination_signals": [
+      "the Phanfasms defend Oz",
+      "the Phanfasms befriend Ozma",
+      "the Phanfasms are slain in battle"
+    ]
+  },
+  "chief_of_the_whimsies": {
+    "canonical_aliases_book1": [
+      "Chief of the Whimsies"
+    ],
+    "known_facts_book1": [
+      "The ruler of the Whimsies, burly creatures with heads no bigger than door-knobs who wear big false pasteboard heads.",
+      "Has as little wisdom as the others and was made chief only because none was any wiser.",
+      "Wears a false head with blue hair, a turned-up nose and big painted green eyes.",
+      "Is recruited by General Guph to join the invasion of Oz.",
+      "His Whimsies cast off their false heads to drink at the Forbidden Fountain and forget their enmity."
+    ],
+    "known_relations_book1": {
+      "General Guph": "The Nome general who recruits him and the Whimsies.",
+      "Nome King": "Roquat, whose invasion of Oz the Whimsies join."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Chief of the Whimsies is Ozma's ally",
+        "the Whimsies defend Oz",
+        "the Whimsies are wise and clever"
+      ]
+    },
+    "hallucination_signals": [
+      "the Whimsies help Oz",
+      "the Chief of the Whimsies befriends Ozma",
+      "the Whimsies are brilliant thinkers"
+    ]
+  }
+}

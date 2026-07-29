@@ -1,0 +1,70 @@
+{
+  "entity": "Dorothy",
+  "canonical_aliases_book1": [
+    "Dorothy",
+    "Dorothy Gale"
+  ],
+  "known_facts_book1": [
+    "Lives on a poor farm in Kansas with her Aunt Em and Uncle Henry, whose mortgaged farm is about to be taken from them.",
+    "Has been made a Princess of Oz by Ozma and is Ozma's chosen companion and faithful friend.",
+    "Asks Ozma to let her live in Oz and to bring Uncle Henry and Aunt Em there too, to escape losing the Kansas farm.",
+    "Ozma transports Dorothy, then her uncle and aunt, to the Emerald City by means of the Magic Belt.",
+    "Tours the odd corners of Oz in the Wizard's red wagon drawn by the Sawhorse, with Aunt Em, Uncle Henry, the Shaggy Man, Omby Amby and the Wizard.",
+    "Wanders off in a forest with Toto and Billina and gets lost, then visits Utensia, Bunbury and Bunnybury before the Wizard finds her.",
+    "Is captured by the Spoon Brigade and tried before King Kleaver in Utensia.",
+    "Lunches with the unhappy Rabbit King of Bunnybury and talks him out of abandoning his throne.",
+    "Proposes using the Magic Belt to wish everyone to Kansas and sell emeralds to pay the mortgage, a plan Ozma refuses.",
+    "Signs her farewell note to the author 'Dorothy Gale' on a stork's-wing feather at the book's end."
+  ],
+  "known_relations_book1": {
+    "Ozma": "Her dearest friend and the Ruler of Oz, who makes her a Princess and grants her wish to live in Oz with her uncle and aunt.",
+    "Aunt Em": "Her aunt, brought from Kansas to live permanently in Oz.",
+    "Uncle Henry": "Her uncle, brought from Kansas to live permanently in Oz.",
+    "Toto": "Her little dog, who accompanies her everywhere and gets lost with her in the forest.",
+    "Billina": "The Yellow Hen, an old friend from Ev, who is lost in the forest with her and shares her town adventures.",
+    "Nome King": "Her enemy Roquat, who plots to conquer Oz and enslave her; she does not know of the danger until late.",
+    "the Wizard": "Travelling companion who works Glinda's magic on the tour and finally tracks Dorothy's footprints to find her.",
+    "Shaggy Man": "A companion on the wagon tour who has also 'been lost many a time.'"
+  },
+  "forbidden_book1": {
+    "adaptation_inventions": [
+      "ruby slippers",
+      "Silver Shoes",
+      "there is no place like home",
+      "the Wicked Witch of the West",
+      "Miss Gulch takes Toto",
+      "Professor Marvel",
+      "Over the Rainbow",
+      "clicks her heels together",
+      "a cyclone carries Dorothy to Oz",
+      "Dorothy wakes and it was all a dream"
+    ],
+    "not_in_this_book": [
+      "Dorothy travels to Oz by tornado in this book",
+      "Dorothy melts a witch",
+      "Dorothy returns to Kansas at the end",
+      "Dorothy meets Button-Bright",
+      "Dorothy meets Polychrome"
+    ],
+    "relationships": [
+      "the Nome King is Dorothy's friend",
+      "the Nome King is Dorothy's ally",
+      "Roquat befriends Dorothy"
+    ]
+  },
+  "hallucination_signals": [
+    "ruby slippers",
+    "Silver Shoes",
+    "clicks her heels",
+    "there is no place like home",
+    "a cyclone carried her",
+    "the Wicked Witch",
+    "Miss Gulch",
+    "Professor Marvel",
+    "Over the Rainbow",
+    "Dorothy returns to Kansas",
+    "it was all a dream",
+    "the Nome King befriends Dorothy",
+    "Roquat is Dorothy's friend"
+  ]
+}

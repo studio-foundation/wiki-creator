@@ -1,0 +1,65 @@
+{
+  "toto": {
+    "canonical_aliases_book1": [
+      "Toto"
+    ],
+    "known_facts_book1": [
+      "Dorothy's small black curly dog, who comes to Oz with the party.",
+      "Is an especial friend of the Shaggy Man and is petted by everyone in the Emerald City.",
+      "Wanders off with Dorothy and Billina in the forest and gets lost with them.",
+      "Barks at the Spoon Brigade in Utensia, and is left behind by Dorothy at the Cuttenclips' paper town.",
+      "Is named in Dorothy's farewell note as one who will always love the author and the children."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "His mistress, whom he follows everywhere and beside whom he gets lost.",
+      "Shaggy Man": "His especial friend.",
+      "Billina": "Lost in the forest with him and Dorothy."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "Toto is taken by Miss Gulch",
+        "Toto is seized by the sheriff",
+        "Toto exposes the Wizard behind a curtain"
+      ],
+      "not_in_this_book": [
+        "Toto speaks in this book",
+        "Toto is left behind in Kansas"
+      ]
+    },
+    "hallucination_signals": [
+      "Miss Gulch takes Toto",
+      "Toto pulls back the curtain",
+      "Toto speaks",
+      "Toto stays in Kansas"
+    ]
+  },
+  "billina": {
+    "canonical_aliases_book1": [
+      "Billina",
+      "Yellow Hen"
+    ],
+    "known_facts_book1": [
+      "A Yellow Hen, the first hen ever seen in Oz, whom Dorothy brought there from Ev.",
+      "Lives in her own little house and is proud of her large family of chicks and grandchildren.",
+      "Is respected so much that the Oz people will not eat her or her chickens, though they eat surplus eggs.",
+      "Wanders off with Dorothy and Toto in the forest and shares the adventures at Utensia, Bunbury and Bunnybury.",
+      "Warns Dorothy not to provoke the Spoon Brigade, since none of the three of them is a fairy in this fairy country."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her beloved mistress, who brought her to Oz and gets lost with her.",
+      "Toto": "Lost in the forest with her and Dorothy."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Billina lays a magic egg that defeats the Nome King in this book",
+        "Billina is a rooster",
+        "Billina is eaten in Oz"
+      ]
+    },
+    "hallucination_signals": [
+      "Billina's eggs poison the Nomes",
+      "Billina defeats the Nome King with eggs",
+      "Billina is a rooster"
+    ]
+  }
+}
