@@ -176,8 +176,9 @@ def test_bind_injects_relationship_buckets():
         "aliases": [],
         "relationships": [
             {"entity_a": "Alice", "entity_b": "Dinah", "relationship_type": "family",
-             "other_deceased": True},
-            {"entity_a": "Queen", "entity_b": "Alice", "relationship_type": "enemy"},
+             "other_deceased": True, "cooccurrence_count": 3},
+            {"entity_a": "Queen", "entity_b": "Alice", "relationship_type": "enemy",
+             "cooccurrence_count": 5},
         ],
     }
     page = {"infobox_fields": {"family": "wrong"}}  # writer guess is overwritten
