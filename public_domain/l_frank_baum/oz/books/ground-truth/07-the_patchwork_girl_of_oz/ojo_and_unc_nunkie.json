@@ -1,0 +1,96 @@
+{
+  "ojo": {
+    "canonical_aliases_book1": [
+      "Ojo",
+      "Ojo the Unlucky",
+      "Ojo the Lucky"
+    ],
+    "known_facts_book1": [
+      "A little Munchkin boy who has lived all his life alone with his uncle in the Blue Forest of the Munchkin Country.",
+      "Is called 'Ojo the Unlucky' because he was born on a Friday, on the thirteenth of the month, is left-handed and has a wart under his right arm.",
+      "Wears the native Munchkin costume: blue silk stockings, blue knee-pants with gold buckles, and a peaked hat rimmed with tiny golden bells.",
+      "Secretly pours every bottle on the 'Brain Furniture' shelf into the dish of brains Margolotte is preparing, which is why the Patchwork Girl has far more brains than intended.",
+      "Sets out to find the five things Dr. Pipt's recipe requires to undo the Liquid of Petrifaction: a six-leaved clover, the left wing of a yellow butterfly, a gill of water from a dark well, three hairs from a Woozy's tail, and a drop of oil from a live man's body.",
+      "Picks a six-leaved clover beside the road after being warned it is against the Law, hides it in his basket, and hands the basket to Scraps.",
+      "Is arrested at the gate of the Emerald City by the Soldier with the Green Whiskers and jailed in Tollydiggle's house, the only prison in Oz.",
+      "Confesses at his trial before Ozma, is forgiven, and is allowed to keep the already-picked clover.",
+      "Fills Dorothy's gold flask at the dark well in Diksey's radium mine, in the dark, so no light ever reaches the water.",
+      "Catches a drop of oil falling from the Tin Woodman's left knee-joint in a crystal vial, obtaining the fourth item.",
+      "Fails to get the fifth item because the Tin Woodman forbids harming a yellow butterfly; the Wizard restores Unc Nunkie and Margolotte by Glinda's method instead.",
+      "Is given a house just outside the walls of the Emerald City by Ozma, and is renamed Ojo the Lucky by the Tin Woodman."
+    ],
+    "known_relations_book1": {
+      "Unc Nunkie": "His uncle and only guardian, whom he journeys to restore from marble.",
+      "Scraps": "The Patchwork Girl, his first friend, who travels with him and hides his stolen clover.",
+      "Bungle": "The Glass Cat, a travelling companion who guides them in the dark but refuses to risk herself.",
+      "the Woozy": "A square beast he befriends with bread and cheese and takes along because the three tail hairs cannot be pulled out.",
+      "Shaggy Man": "Rescues him from the clutching plants and guides him to the Emerald City.",
+      "Dorothy": "Joins his quest and lends him the gold flask for the dark-well water.",
+      "Ozma": "The Ruler who orders his arrest for breaking the Law, then forgives him and gives him a home.",
+      "Dr. Pipt": "The Crooked Magician who sends him on the quest for the five things.",
+      "Tin Woodman": "Gives him the drop of oil, but refuses him the butterfly wing."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "ruby slippers",
+        "there is no place like home",
+        "Over the Rainbow"
+      ],
+      "not_in_this_book": [
+        "Ojo obtains the left wing of a yellow butterfly",
+        "Ojo is a Winkie",
+        "Ojo is a Gillikin",
+        "Ojo travels to Oz from the outside world",
+        "Ojo has a mother or father in this book"
+      ],
+      "relationships": [
+        "Unc Nunkie is Ojo's father",
+        "Dr. Pipt is Ojo's uncle"
+      ]
+    },
+    "hallucination_signals": [
+      "Ojo pulls the wing from a butterfly",
+      "Ojo tears off a butterfly wing",
+      "Ojo is punished with hard labor",
+      "Ojo is executed",
+      "Ojo comes from Kansas",
+      "Unc Nunkie is Ojo's father"
+    ]
+  },
+  "unc_nunkie": {
+    "canonical_aliases_book1": [
+      "Unc Nunkie",
+      "the Silent One"
+    ],
+    "known_facts_book1": [
+      "An aged white-bearded Munchkin, Ojo's uncle, who speaks in single words and is known as the Silent One.",
+      "Is the descendant of the former kings of the Munchkins, and might have been King himself had the Munchkins not accepted Ozma as sole ruler.",
+      "Has lived alone with his baby nephew in a lonesome round house in the Blue Forest until the food in their garden runs out.",
+      "Is an old friend of Dr. Pipt from many years back, which is why he leads Ojo to the Crooked Magician's house.",
+      "Touches the bottle marked 'Cleverness' and says 'Little', suggesting the Patchwork Girl be given a little cleverness.",
+      "Is turned to solid marble, beard and all, when his head joggles the shelf and upsets the Liquid of Petrifaction over himself and Margolotte.",
+      "Stands as a marble statue for the whole of Ojo's journey, and is brought by Ozma to the palace.",
+      "Is restored to life by the Wizard's magic pass and magic word, and says only 'Thanks'."
+    ],
+    "known_relations_book1": {
+      "Ojo": "His nephew, whom he raised alone in the forest and who journeys to save him.",
+      "Dr. Pipt": "An old friend from many years past, in whose workshop he is petrified.",
+      "Margolotte": "Petrified in the same accident and restored at the same moment.",
+      "the Wizard": "Restores him to life with Glinda's method."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Unc Nunkie rules the Munchkins in this book",
+        "Unc Nunkie dies",
+        "Unc Nunkie travels with Ojo on the quest",
+        "Unc Nunkie is restored by the Powder of Life"
+      ]
+    },
+    "hallucination_signals": [
+      "Unc Nunkie is King of the Munchkins",
+      "Unc Nunkie dies",
+      "Unc Nunkie joins the journey",
+      "Unc Nunkie is a magician"
+    ]
+  }
+}

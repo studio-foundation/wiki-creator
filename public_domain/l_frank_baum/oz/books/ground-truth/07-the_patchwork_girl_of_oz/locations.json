@@ -1,0 +1,201 @@
+{
+  "emerald_city": {
+    "canonical_aliases_book1": [
+      "Emerald City"
+    ],
+    "known_facts_book1": [
+      "The capital of Oz, lying exactly in the center of the four countries, surrounded by a high thick wall of green marble set with emeralds.",
+      "Has four gates with bars of pure gold, one facing each of the Munchkin, Winkie, Quadling and Gillikin Countries, with high towers on either side of each gateway.",
+      "Holds Ozma's royal palace, whose gardens contain trees nearly as tall as the city spires.",
+      "Contains the only prison in the Land of Oz, a pretty house beside the city wall kept by Tollydiggle.",
+      "Green is the popular color there, as blue is in the Munchkin Country.",
+      "Is where Ojo is arrested, tried in the great Throne Room, and finally given a house just outside the walls."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Her seat of rule, where the royal palace stands.",
+      "Ojo": "Where he is arrested, tried and forgiven, and near which he is given a home."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "everyone in the Emerald City must wear green spectacles"
+      ],
+      "not_in_this_book": [
+        "the Emerald City is invaded in this book",
+        "the Emerald City is made invisible in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "green spectacles are required",
+      "the Emerald City is invaded",
+      "the Emerald City is invisible"
+    ]
+  },
+  "munchkin_country": {
+    "canonical_aliases_book1": [
+      "Munchkin Country"
+    ],
+    "known_facts_book1": [
+      "The blue country of Oz, where the houses are round and painted blue and even the vegetables, butter and cabbages are blue.",
+      "Munchkins prefer blue to every other color and think it the only respectable one.",
+      "Holds Dr. Pipt's mountain house, on the range dividing the Munchkin Country from the Gillikin Country.",
+      "Contains the Blue Forest, where Ojo and Unc Nunkie lived alone.",
+      "Is separated from the green country around the Emerald City by an apparent high wall and locked gate that is an optical illusion — it does not exist at all when you are not looking at it.",
+      "Has two roads of yellow bricks running through it; the party takes the better of the two."
+    ],
+    "known_relations_book1": {
+      "Ojo": "His home country.",
+      "Unc Nunkie": "Descendant of its former kings.",
+      "Dr. Pipt": "Lives on its northern mountain."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Munchkin Country is ruled by a Wicked Witch in this book",
+        "the Munchkins are enslaved"
+      ]
+    },
+    "hallucination_signals": [
+      "the Wicked Witch of the East rules the Munchkins",
+      "the Munchkins are enslaved"
+    ]
+  },
+  "winkie_country": {
+    "canonical_aliases_book1": [
+      "Winkie Country"
+    ],
+    "known_facts_book1": [
+      "The yellow country of Oz, west of the Emerald City, ruled by the Tin Woodman as Emperor.",
+      "Is the only place in Oz where a yellow butterfly can be found, which is why Ojo must go there.",
+      "The Winkies are said to be the most skillful tinsmiths in the world and built the Tin Woodman's castle.",
+      "Holds an immense field of yellow lilies before the castle which must be crossed without crushing a blossom.",
+      "The Scarecrow's own castle stands there too, near the Tin Woodman's palace."
+    ],
+    "known_relations_book1": {
+      "Tin Woodman": "Its Emperor, who protects its butterflies.",
+      "Ojo": "Travels there for the yellow butterfly wing and fails to get it."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Winkies are enslaved in this book",
+        "a Wicked Witch rules the Winkie Country in this book",
+        "a yellow butterfly is caught in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "the Wicked Witch of the West rules the Winkies",
+      "the Winkies are enslaved",
+      "a yellow butterfly is captured"
+    ]
+  },
+  "quadling_country": {
+    "canonical_aliases_book1": [
+      "Quadling Country"
+    ],
+    "known_facts_book1": [
+      "The red country south of the Emerald City, where fences, houses and wild-flowers are all red.",
+      "Its wild and secluded parts hold queer peoples who live in their own way without even knowing they have a Ruler in the Emerald City.",
+      "Contains the mountains, rocks and caverns where a dark well may be found.",
+      "Holds Mister Yoop's canyon cave, the cave of the Hoppers and Horners, and the sandy plain of the Tottenhots.",
+      "Is where the Trick River runs, and where the Scarecrow has previously faced the Hammerheads and the Fighting Trees."
+    ],
+    "known_relations_book1": {
+      "Ojo": "Where he finally finds the dark well, in Diksey's radium mine.",
+      "Hoppers": "Live inside its mountain.",
+      "Horners": "Live inside the same mountain, behind a marble fence."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Glinda's palace is visited in this book",
+        "the Quadling Country is ruled by a wicked witch"
+      ]
+    },
+    "hallucination_signals": [
+      "the party visits Glinda's palace",
+      "the Quadlings are ruled by a witch"
+    ]
+  },
+  "trick_river": {
+    "canonical_aliases_book1": [
+      "Trick River"
+    ],
+    "known_facts_book1": [
+      "A broad, swift river in the Quadling Country running toward the Winkie Country, with high banks and no bridge or ferry.",
+      "Reverses its current every little while, carrying anything afloat first one way and then the other.",
+      "Is crossed by the party on a raft of logs bound with the lazy Quadling's clothesline.",
+      "Is beaten three ways: by a hooked fish that tows the raft against the current, by clinging to an overhanging branch and to a rock, and finally by a broken branch used as a pole.",
+      "Carries the raft over a high bank of water stretching across the whole river, drenching everyone with spray; the Patchwork Girl's colors prove fast and do not run."
+    ],
+    "known_relations_book1": {
+      "Ojo": "Hooks the fish that tows the raft forward against the reversed current.",
+      "Scarecrow": "Poles and anchors the raft, and spots the tin castle from it.",
+      "the lazy Quadling": "Lives on its bank and never crosses it."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the party swims the Trick River",
+        "the Trick River is bridged",
+        "the raft is wrecked"
+      ]
+    },
+    "hallucination_signals": [
+      "the party swims across",
+      "the raft is wrecked",
+      "there is a bridge over the river",
+      "Scraps's colors run in the water"
+    ]
+  },
+  "tin_castle": {
+    "canonical_aliases_book1": [
+      "the tin castle"
+    ],
+    "known_facts_book1": [
+      "The Tin Woodman's palace in the southern part of the Winkie Country, built entirely of tin from the ground to the tallest turret and polished so it glitters more gorgeously than silver.",
+      "Is surrounded by a tin wall with tin gates that stand wide open because the Emperor has no enemies.",
+      "Its grounds hold tin fountains, tin flower beds, tin trees, tin bowers with tin benches, and rows of tin statuary.",
+      "The statues are of Dorothy, Toto, the Scarecrow, the Wizard, the Shaggy Man, Jack Pumpkinhead and Ozma, each on a neat tin pedestal.",
+      "Its parlor has tin furniture, tin pictures, tin-panelled walls and tin chandeliers.",
+      "Is where Ojo catches the drop of oil from the Emperor's knee-joint and is refused the butterfly wing."
+    ],
+    "known_relations_book1": {
+      "Tin Woodman": "Its owner and builder, Emperor of the Winkies.",
+      "Ojo": "Obtains the fourth ingredient there and is refused the fifth."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the tin castle is attacked",
+        "the tin castle is made of silver"
+      ]
+    },
+    "hallucination_signals": [
+      "the tin castle is attacked",
+      "the castle is made of silver"
+    ]
+  },
+  "dark_well": {
+    "canonical_aliases_book1": [
+      "the dark well"
+    ],
+    "known_facts_book1": [
+      "A well in which the light of day never penetrates, whose water must never have seen daylight for the charm to work.",
+      "Neither Dorothy, the Shaggy Man, the Wizard, Jack Pumpkinhead nor the Tottenhots has ever heard of such a thing.",
+      "Lies at the bottom of Diksey Horner's radium mine, in a vast cave dimly lit by grains of radium among the loose rocks.",
+      "Is filled from by Ojo kneeling in the dark and feeling for the water with his hand, into Dorothy's gold pint flask, which is then screwed tight.",
+      "Is reached down a tunnel so smooth that the whole party slides to the bottom in a heap."
+    ],
+    "known_relations_book1": {
+      "Ojo": "Fills the flask there, obtaining the third of the five things.",
+      "Diksey Horner": "Owns the mine and leads the party to the well."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the dark well is in the Hopper city",
+        "the dark well is in the Winkie Country",
+        "the water from the dark well is used in a charm"
+      ]
+    },
+    "hallucination_signals": [
+      "the dark well is in the Hopper country",
+      "the dark well water restores Unc Nunkie",
+      "the charm is mixed from the five things"
+    ]
+  }
+}
