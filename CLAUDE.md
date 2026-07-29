@@ -132,14 +132,23 @@ A multi-tome series runs a fifth pipeline **once, after the tome loop** (STU-709
 studio run wiki-series --input-file <any tome.yaml> --live   # = make run-series-wiki
 ```
 
-`wiki-series.pipeline.yaml` has two stages — `series-assemble`
+`wiki-series.pipeline.yaml` is the arc split (STU-720) plus two stages: a
+`series-arc-pre` / `call: series-arc-verdict` pair generating the hub's arc
+paragraph through the `wiki-pages` map, then `series-assemble`
 (`scripts/series_assemble.py`: every tome's `{wiki_pages,entity_status,events}.json`
-from disk, joined on the series registry, plus the hub model and its arc paragraph,
+from disk, joined on the series registry, plus the hub model and the arc,
 into `<series>/series_assembly.json`) and `series-export`
 (`scripts/series_export.py`: one merged page per entity + the hub, into
 `output/_series/`, a stateless full rebuild). The input is any tome's book yaml —
 the series is derived from its path, and language/register/labels come from the
 first tome, as the arc pass already does.
+
+The arc **must** be a native `call`, not a nested `studio run` subprocess issued
+from inside `series-assemble` — that was STU-709's shape, the last LLM call still
+made that way after STU-621, and on a real `wiki series run` it produced no arc at
+all while the run stayed green (`arc: null` passes the contract, the hub renders
+its deterministic frame, exit 0). `series_assemble.py --series/--book` keeps the
+subprocess path as a standalone dev tool.
 
 Important:
 - **Every former run_wiki.py pre-step is a pipeline stage (STU-457).** The
@@ -246,13 +255,13 @@ library/sarah_j_maas/throne-of-glass/output/_series/
 - [scripts/relationship_extraction.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/relationship_extraction.py): co-occurrence graph, optional coref, CLI/live mode
 - [scripts/discover_relationships.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/discover_relationships.py): schema-guided typed relation discovery (STU-556), writes `relationships_discovered.json`; pure logic in `wiki_creator/relationship_discovery.py`. One `studio run discover-relationships` per book — the engine fans out one child run per paragraph-aligned chunk (`map` stage, STU-589), and per-item resume (STU-605) replaces the old script-side votes cache (see "A Long Run Persists")
 - [scripts/build_character_graph.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/build_character_graph.py): series character graph stage of wiki-preparation, runs after typing (STU-575/457), writes `character_graph.json` + `character_graph_delta.json`; pure logic in `wiki_creator/character_graph.py`
-- [scripts/series_assemble.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/series_assemble.py): `wiki-series` stage 1 (STU-709) — every tome's artifacts read from disk, joined on the series registry, plus the hub model and its arc; writes `<series>/series_assembly.json`. Pure logic in `wiki_creator/series.py` + `series_hub.py`
-- [scripts/series_export.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/series_export.py): `wiki-series` stage 2 — renders the assembly into `output/_series/` (one merged page per entity + the hub), stateless full rebuild; pure logic in `wiki_creator/series_pages.py`
+- [scripts/series_assemble.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/series_assemble.py): `wiki-series` assembly stage (STU-709) — every tome's artifacts read from disk, joined on the series registry, plus the hub model and the arc the `series-arc-verdict` call produced (STU-720); writes `<series>/series_assembly.json`. Pure logic in `wiki_creator/series.py` + `series_hub.py`
+- [scripts/series_export.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/series_export.py): `wiki-series` export stage — renders the assembly into `output/_series/` (one merged page per entity + the hub), stateless full rebuild; pure logic in `wiki_creator/series_pages.py`
 - [scripts/chapter_summary.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/chapter_summary.py): chapter summaries used during preparation
 - [scripts/wiki_preparation.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/wiki_preparation.py): batch generation
 - [scripts/generate_wiki_pages.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_wiki_pages.py): standalone generation. One `studio run wiki-pages` per book — the engine fans out one child run per planned item call (`map` stage, STU-612/589) via a plan walk → fan-out → replay (the walk records every `wiki-page-item` the generation would dispatch, the map runs them, the replay serves results back keyed on the item input); per-item resume (STU-605) keyed on the rendered prompt + `prompt_fingerprint` + `attempt` (the retry counter that makes a forbidden-name re-roll a real second call rather than a cache replay)
 - [scripts/generate_book_synopsis.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_book_synopsis.py): book synopsis page from `events.json` (SP4/STU-482), writes `book_synopsis.json`; pure logic in `wiki_creator/synopsis.py`
-- [scripts/generate_series_arc.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_series_arc.py): series hub arc paragraph (STU-708) — one LLM call per series grounded on every tome's synopsis + high-salience events + the assembled series characters, writes `library/<author>/<series>/series_arc.json` (cached on the rendered prompt + agent fingerprint); pure logic in `wiki_creator/series_arc.py`. Standalone `--series` for now; the `wiki-series` pipeline stage is STU-709
+- [scripts/generate_series_arc.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_series_arc.py): series hub arc paragraph (STU-708) — one LLM call per series grounded on every tome's synopsis + high-salience events + the assembled series characters, writes `library/<author>/<series>/series_arc.json` (cached on the rendered prompt + agent fingerprint); pure logic in `wiki_creator/series_arc.py`. Runs as the `series-arc-pre` / `call: series-arc-verdict` split of `wiki-series` (STU-720, `scripts/series_arc_pre.py`); `--series` stays a standalone dev tool
 - [scripts/generate_event_pages.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_event_pages.py): one `EVENT` page per high-salience event from `events.json` (SP3/STU-481), writes `event_pages.json`; pure logic in `wiki_creator/event_pages.py`
 - [scripts/consolidate_editorial_stance.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/consolidate_editorial_stance.py): post-generation editorial-stance consolidation pass (STU-508), writes `editorial_stance_report.json`; pure logic in `wiki_creator/consolidation.py`
 - [scripts/entity_status.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/entity_status.py): per-tome character status stage of wiki-preparation (STU-488; pre/call/post split since STU-457, with `entity_status_pre.py`), writes `entity_status.json`; pure logic in `wiki_creator/entity_status.py`

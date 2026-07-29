@@ -162,3 +162,77 @@ def test_generate_arc_cleans_the_page_content(monkeypatch):
     )
 
     assert gsa.generate_arc("prompt", lang="fr") == "Une saga ''âpre''."
+
+
+# --- the native call split (STU-720) ---
+
+
+def _payload(series_dir, verdict=None):
+    """A wiki-series stage payload: the input is any tome's yaml (the series comes
+    from its path), plus the `series-arc-verdict` call's map output."""
+    payload = {"additional_context": f"file_path: {series_dir}/books/01-heir.epub"}
+    if verdict is not None:
+        payload["all_stage_outputs"] = {gsa.VERDICT_STAGE: verdict}
+    return payload
+
+
+def _map_output(page):
+    return {"results": [{"index": 0, "status": "success", "run_id": "r1", "output": page}]}
+
+
+_ARC_PAGE = {
+    "title": "Arc", "importance": "principal", "entity_type": "SYNOPSIS",
+    "infobox_fields": {}, "content": "## Arc\n\nUne saga *âpre*.",
+}
+
+
+def test_pre_emits_one_map_item_carrying_the_rendered_prompt(tmp_path):
+    out = gsa.run_pre(_payload(_series(tmp_path)))
+
+    assert out["needs_verdict"] is True
+    assert out["prompt_fingerprint"]
+    (item,) = out["items"]
+    assert item["entity_type"] == "SYNOPSIS"
+    assert item["language"] == "fr"
+    assert "Heir of Fire" in item["prompt"] and "Queen of Shadows" in item["prompt"]
+
+
+def test_pre_skips_the_call_when_no_tome_carries_material(tmp_path):
+    out = gsa.run_pre(_payload(_series(tmp_path, with_material=False)))
+
+    assert out == {"items": [], "prompt_fingerprint": "", "needs_verdict": False}
+
+
+def test_pre_skips_the_call_on_a_cache_hit_and_post_replays_it(tmp_path):
+    series_dir = _series(tmp_path)
+    assert gsa.arc_from_payload(_payload(series_dir, _map_output(_ARC_PAGE))) == "Une saga ''âpre''."
+
+    assert gsa.run_pre(_payload(series_dir))["needs_verdict"] is False
+    # No verdict in the payload: the cache is the only source left.
+    assert gsa.arc_from_payload(_payload(series_dir)) == "Une saga ''âpre''."
+
+
+def test_post_caches_the_arc_from_the_map_output(tmp_path):
+    series_dir = _series(tmp_path)
+
+    arc = gsa.arc_from_payload(_payload(series_dir, _map_output(_ARC_PAGE)))
+
+    assert arc == "Une saga ''âpre''."
+    cached = json.loads((series_dir / "series_arc.json").read_text(encoding="utf-8"))
+    assert cached["arc"] == arc
+
+
+def test_post_never_calls_a_subprocess(tmp_path, monkeypatch):
+    """STU-720: inside wiki-series the LLM call is the native `series-arc-verdict`
+    stage. A nested `studio run` from inside the stage is what produced no arc."""
+    monkeypatch.setattr(gsa, "_execute_wiki_page_item", _never_called)
+
+    assert gsa.arc_from_payload(_payload(_series(tmp_path), _map_output(_ARC_PAGE)))
+
+
+def test_post_returns_none_and_caches_nothing_when_the_call_failed(tmp_path):
+    series_dir = _series(tmp_path)
+    failed = {"results": [{"index": 0, "status": "failed", "error": "boom"}]}
+
+    assert gsa.arc_from_payload(_payload(series_dir, failed)) is None
+    assert not (series_dir / "series_arc.json").exists()
