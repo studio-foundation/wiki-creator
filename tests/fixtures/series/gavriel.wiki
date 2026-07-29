@@ -7,26 +7,14 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
-== Book 1 ==
-
-== Biography ==
+== Throne of Glass ==
 
 A warrior of the Cadre.
-
-== Relationships ==
-
-'''[[Aedion]]''' — his son, unknown to him.
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 2 — reveal" data-collapsetext="Hide">
-== Book 2 ==
-
-== Biography ==
+== Crown of Midnight ==
 
 He joins the war.
-
-== Relationships ==
-
-'''[[Aedion]]''' — reunited at last.
 
 === Events ===
 
@@ -37,6 +25,10 @@ He joins the war.
 
 ''Evolution:''
 * [[Aedion]] — family (ch.3→ch.20)
+
+== Personality ==
+
+Weary but resolute.
 
 [[Category:Characters]]
 [[Category:Main characters]]
