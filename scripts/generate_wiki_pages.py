@@ -320,7 +320,13 @@ def _narrative_events(entity: dict, arc: NarrativeArc | None = None) -> list[dic
         rest = sorted((e for e in events if id(e) not in chosen), key=salience)
         picked += rest[: _MAX_PERSON_EVENTS - len(picked)]
 
-    return sorted(picked[:_MAX_PERSON_EVENTS], key=chapter_of)
+    # Chronological between chapters, narrative order within one. chapter_of alone
+    # is stable on the salience-descending pick order, so same-chapter beats came
+    # out shuffled (STU-712); entity_events is already in narrative order.
+    order = {id(e): i for i, e in enumerate(events)}
+    return sorted(
+        picked[:_MAX_PERSON_EVENTS], key=lambda e: (chapter_of(e), order[id(e)])
+    )
 
 
 def _has_backstory(entity: dict) -> bool:
