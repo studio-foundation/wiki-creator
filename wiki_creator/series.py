@@ -64,6 +64,7 @@ class TomeArtifacts:
     """
 
     book_id: str
+    title: str = ""
     pages: list[dict] = field(default_factory=list)
     status_verdicts: dict[str, dict] = field(default_factory=dict)
     events: list[dict] = field(default_factory=list)
@@ -73,6 +74,7 @@ class TomeArtifacts:
 class TomeContribution:
     book_id: str
     tome_number: str
+    title: str = ""
     page: dict | None = None
     status: dict | None = None
     events: list[dict] = field(default_factory=list)
@@ -138,8 +140,10 @@ def load_tome_artifacts(processing_dir: Path | str, book_id: str) -> TomeArtifac
     pages = _read("wiki_pages.json").get("pages")
     verdicts = _read("entity_status.json").get("verdicts")
     events = _read("events.json").get("events")
+    title = str(_read("epub_data.json").get("title") or book_id)
     return TomeArtifacts(
         book_id=book_id,
+        title=title,
         pages=[p for p in pages if isinstance(p, dict)] if isinstance(pages, list) else [],
         status_verdicts=verdicts if isinstance(verdicts, dict) else {},
         events=events if isinstance(events, list) else [],
@@ -199,6 +203,7 @@ def build_series_characters(
                     TomeContribution(
                         book_id=tome.book_id,
                         tome_number=tome_number(tome.book_id),
+                        title=tome.title,
                         page=page,
                         status=status,
                         events=events,

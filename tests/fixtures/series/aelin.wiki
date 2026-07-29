@@ -5,16 +5,12 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
-== Book 1 ==
-
-== Biography ==
+== Throne of Glass ==
 
 An assassin in Rifthold.
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 2 — reveal" data-collapsetext="Hide">
-== Book 2 ==
-
-== Biography ==
+== Crown of Midnight ==
 
 Queen of Terrasen.
 </div>
