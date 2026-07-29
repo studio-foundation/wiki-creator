@@ -1,0 +1,90 @@
+{
+  "witch_of_the_east": {
+    "canonical_aliases_book1": [
+      "Witch of the East"
+    ],
+    "known_facts_book1": [
+      "The Wicked Witch of the East, who had held the Munchkins in bondage for many years before the story opens.",
+      "Is killed offstage at the very start when Dorothy's cyclone-borne house falls on her; she is found already dead, only her feet sticking out from under the house.",
+      "Her body dries up and vanishes in the sun, leaving nothing but the Silver Shoes she was proud of.",
+      "Enchanted the Tin Woodman's axe long ago, at the bribe of a lazy old woman, to stop him marrying a Munchkin girl.",
+      "Never appears alive, never speaks, and meets no one on the page."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "The girl whose falling house kills her; they never meet or speak.",
+      "Munchkins": "The people she held enslaved until her death freed them.",
+      "Tin Woodman": "Whose axe she enchanted, costing him his flesh body."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Witch of the East appears alive",
+        "the Witch of the East speaks",
+        "the Witch of the East fights Dorothy"
+      ],
+      "relationships": [
+        "the Witch of the East is the sister of the Wicked Witch of the West"
+      ]
+    },
+    "hallucination_signals": [
+      "the Witch of the East speaks",
+      "the Witch of the East attacks Dorothy",
+      "the East Witch is sister to the West Witch",
+      "the Witch of the East wears ruby slippers"
+    ]
+  },
+  "gayelette": {
+    "canonical_aliases_book1": [
+      "Gayelette"
+    ],
+    "known_facts_book1": [
+      "A beautiful princess and sorceress of long ago, known only from the legend the King of the Winged Monkeys tells.",
+      "Lived in a ruby palace and was betrothed to the handsome young man Quelala.",
+      "When the Winged Monkeys dropped Quelala into a river in mischief, she nearly had them drowned, then instead bound them to serve the owner of the Golden Cap three times.",
+      "Never appears in the present action of the book; she exists only in the past-tense legend, never speaking to Dorothy or the travellers."
+    ],
+    "known_relations_book1": {
+      "Quelala": "Her betrothed, whose mistreatment by the Monkeys she punished.",
+      "Winged Monkeys": "Whom she bound to the Golden Cap as punishment.",
+      "King of the Winged Monkeys": "Whose grandfather's band she punished, and who tells her story."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Gayelette appears in the present story",
+        "Gayelette meets Dorothy",
+        "Gayelette helps Dorothy on her journey"
+      ]
+    },
+    "hallucination_signals": [
+      "Gayelette meets Dorothy",
+      "Gayelette joins the travellers",
+      "Gayelette rules the Emerald City"
+    ]
+  },
+  "quelala": {
+    "canonical_aliases_book1": [
+      "Quelala"
+    ],
+    "known_facts_book1": [
+      "A handsome and good young man of long ago, betrothed to the princess Gayelette, known only from the Winged Monkey King's legend.",
+      "Was seized in fun by the Winged Monkeys and dropped into a river, ruining his fine silks and velvet.",
+      "Being the Golden Cap's first owner, spoke a kind word for the Monkeys so that Gayelette spared them, on the terms of the three-command binding.",
+      "Never appears in the present action of the book and never meets Dorothy or the travellers."
+    ],
+    "known_relations_book1": {
+      "Gayelette": "The princess he was betrothed to.",
+      "Winged Monkeys": "Who dropped him in the river, for which he later spoke mercy."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Quelala appears in the present story",
+        "Quelala meets Dorothy",
+        "Quelala travels with the companions"
+      ]
+    },
+    "hallucination_signals": [
+      "Quelala meets Dorothy",
+      "Quelala joins the journey",
+      "Quelala is the Wizard"
+    ]
+  }
+}

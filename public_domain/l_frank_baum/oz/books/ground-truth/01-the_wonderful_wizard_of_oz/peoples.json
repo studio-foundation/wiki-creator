@@ -1,0 +1,161 @@
+{
+  "munchkins": {
+    "canonical_aliases_book1": [
+      "Munchkins"
+    ],
+    "known_facts_book1": [
+      "The people of the eastern country of Oz, where Dorothy's house first lands, freed from bondage when it kills the Wicked Witch of the East.",
+      "Small grown people about as tall as Dorothy, dressed all in blue, their favourite colour, with round hats topped by little tinkling bells.",
+      "Greet Dorothy as a noble Sorceress and thank her for killing the Witch who had held them enslaved for years.",
+      "Their country is the land of blue, in the East, home of the wealthy Boq and of the Tin Woodman before his enchantment."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "The girl they hail as their deliverer for killing the Witch of the East.",
+      "Wicked Witch": "Of the East, who had held them in bondage until Dorothy's house killed her."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Munchkins are tiny like insects",
+        "the Munchkins sing the Lollipop Guild song"
+      ]
+    },
+    "hallucination_signals": [
+      "the Lollipop Guild",
+      "the Munchkins are ruled by a mayor and coroner",
+      "the Munchkins are the size of dolls"
+    ]
+  },
+  "quadlings": {
+    "canonical_aliases_book1": [
+      "Quadlings"
+    ],
+    "known_facts_book1": [
+      "The people of the country of the South, a rich and happy land, ruled by the Good Witch Glinda.",
+      "Their colour is red: they dress in red and their farm fences and houses are painted red.",
+      "Are shut off from the Emerald City by the hill of the Hammer-Heads, so none of them ever travel there.",
+      "Dorothy reaches their country only after the Winged Monkeys carry her party over the Hammer-Heads' hill."
+    ],
+    "known_relations_book1": {
+      "Glinda": "The Good Witch who rules over them in the South.",
+      "Dorothy": "Whom they help toward Glinda's castle when she reaches their land."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Quadlings are enslaved by a wicked witch"
+      ]
+    },
+    "hallucination_signals": [
+      "the Quadlings are ruled by a Wicked Witch of the South",
+      "the Quadling country lies in the North"
+    ]
+  },
+  "winkies": {
+    "canonical_aliases_book1": [
+      "Winkies"
+    ],
+    "known_facts_book1": [
+      "The yellow people of the western country of Oz, enslaved and ruled by the Wicked Witch of the West.",
+      "Their colour is yellow; they are described as not a brave people, forced to obey the Witch out of fear.",
+      "Are freed when Dorothy melts the Witch, and rejoice, having been made to slave for her for many years.",
+      "Nurse the battered Tin Woodman and Scarecrow back to shape after the Witch's defeat, and beg the Tin Woodman to stay and rule them.",
+      "The Tin Woodman agrees to return and be their ruler once Dorothy has gone home."
+    ],
+    "known_relations_book1": {
+      "Wicked Witch": "Of the West, who enslaved them and ruled by cruelty.",
+      "Dorothy": "Whose melting of the Witch sets them free.",
+      "Tin Woodman": "Whom they nurse and ask to become their ruler."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Winkies are winged soldiers",
+        "the Winkies chant O-Ee-Yah Eoh-Ah"
+      ]
+    },
+    "hallucination_signals": [
+      "the Winkie guards chant O-Ee-Yah",
+      "the Winkies are the Witch's willing soldiers"
+    ]
+  },
+  "winged_monkeys": {
+    "canonical_aliases_book1": [
+      "Winged Monkeys"
+    ],
+    "known_facts_book1": [
+      "A band of monkeys with great wings who must obey whoever wears the Golden Cap, but only three times for any one owner.",
+      "Were bound to the Cap long ago by the princess Gayelette as punishment for dropping her betrothed Quelala into a river in mischief.",
+      "Are commanded by the Wicked Witch of the West with the Cap to seize the travellers, killing the Tin Woodman's body and unstuffing the Scarecrow but sparing Dorothy because of the good Witch's mark.",
+      "Later obey Dorothy, carrying the party to the Emerald City and over the Hammer-Heads' hill, and finally obey Glinda.",
+      "Cannot leave the Land of Oz: they refuse to carry Dorothy across the desert, saying they belong only to this country.",
+      "Are not wicked by nature; they serve whoever holds the Cap, for good or ill."
+    ],
+    "known_relations_book1": {
+      "Wicked Witch": "Of the West, who commanded them with the Golden Cap against the travellers.",
+      "Dorothy": "Whom they twice carry at her command once she holds the Cap.",
+      "Glinda": "The Cap's final owner, whom they obey last.",
+      "Gayelette": "The princess who bound them to the Golden Cap.",
+      "Quelala": "The man they once dropped in the river, cause of their binding."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Winged Monkeys are the Witch's permanent evil army",
+        "the flying monkeys are naturally cruel creatures"
+      ]
+    },
+    "hallucination_signals": [
+      "the flying monkeys serve only the Wicked Witch",
+      "the Winged Monkeys are evil by nature",
+      "the monkeys carry Dorothy out of Oz across the desert"
+    ]
+  },
+  "kalidahs": {
+    "canonical_aliases_book1": [
+      "Kalidahs"
+    ],
+    "known_facts_book1": [
+      "Monstrous beasts with bodies like bears and heads like tigers, and claws so long and sharp they could tear anyone in two.",
+      "Live in the dark part of the forest and are feared even by the Cowardly Lion.",
+      "Chase the travellers to the edge of a great gulf, but the Tin Woodman chops through the log that bridges it and the two pursuing Kalidahs fall into the gulf and are killed."
+    ],
+    "known_relations_book1": {
+      "Cowardly Lion": "The one danger he most dreads; he prepares to fight them to protect his friends.",
+      "Tin Woodman": "Who saves the party by cutting away their log bridge so they fall into the gulf."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Kalidahs serve the Wicked Witch",
+        "the Kalidahs speak"
+      ]
+    },
+    "hallucination_signals": [
+      "the Kalidahs are the Witch's beasts",
+      "the Kalidahs speak to Dorothy"
+    ]
+  },
+  "hammer_heads": {
+    "canonical_aliases_book1": [
+      "Hammer-Heads"
+    ],
+    "known_facts_book1": [
+      "Short, stout, armless men with big flat-topped heads on thick wrinkled necks that shoot out like lightning to strike.",
+      "Guard a steep hill on the way to the Quadling country and refuse to let anyone cross it.",
+      "Knock the Scarecrow and then the Lion tumbling back down the hill with their shooting heads, laughing harshly.",
+      "Cannot be fought, so Dorothy calls the Winged Monkeys, who carry the party over the hill out of the Hammer-Heads' reach.",
+      "Have no arms at all."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Whose party they block until the Winged Monkeys carry it over their hill.",
+      "Scarecrow": "Whom a shooting head sends tumbling down the hill first."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Hammer-Heads carry actual hammers",
+        "the Hammer-Heads have long arms"
+      ]
+    },
+    "hallucination_signals": [
+      "the Hammer-Heads wield hammers",
+      "the Hammer-Heads have arms",
+      "the Hammer-Heads serve the Witch"
+    ]
+  }
+}
