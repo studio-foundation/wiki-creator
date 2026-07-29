@@ -1,0 +1,195 @@
+{
+  "land_of_oz": {
+    "canonical_aliases_book1": [
+      "Land of Oz"
+    ],
+    "known_facts_book1": [
+      "The fairyland ruled by Princess Ozma, made up of four countries — the Munchkins, Gillikins, Quadlings and Winkies — cornered around the Emerald City.",
+      "The travelers reach it only at the end, brought there by the Magic Belt rather than by the underground journey itself.",
+      "Dorothy has visited before; the Wizard once built it and ruled it.",
+      "A place where animals such as Jim and Eureka can talk and where the Sawhorse lives."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Its rightful Ruler.",
+      "the Wizard": "The man who built the Emerald City and once ruled the land.",
+      "Emerald City": "Its capital."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Land of Oz is reached through the underground tunnel",
+        "the Land of Oz turns out to be a dream"
+      ]
+    },
+    "hallucination_signals": [
+      "Oz was only a dream",
+      "the tunnel leads straight to Oz"
+    ]
+  },
+  "emerald_city": {
+    "canonical_aliases_book1": [
+      "Emerald City"
+    ],
+    "known_facts_book1": [
+      "The green capital of the Land of Oz, built by the Wizard, where Ozma reigns.",
+      "Site of the reunion, the grand procession and the games, and of Eureka's trial in the Throne Room.",
+      "The travelers are wished into its streets by the Magic Belt."
+    ],
+    "known_relations_book1": {
+      "the Wizard": "Its builder.",
+      "Ozma": "Its Ruler.",
+      "Land of Oz": "The fairyland it is capital of."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Emerald City is destroyed",
+        "the Emerald City is captured by the Nome King"
+      ]
+    },
+    "hallucination_signals": [
+      "the Emerald City is captured",
+      "the Emerald City is only green through spectacles"
+    ]
+  },
+  "kansas": {
+    "canonical_aliases_book1": [
+      "Kansas"
+    ],
+    "known_facts_book1": [
+      "Dorothy's home, where Uncle Henry and Aunt Em live on a farm.",
+      "Where Toto stayed behind while Dorothy travelled.",
+      "Where Ozma's Magic Belt sends Dorothy at the end of the book."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her home, to which she returns.",
+      "Uncle Henry": "Lives there with Aunt Em.",
+      "Toto": "Left behind there during the adventure."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Dorothy's farm is in Omaha",
+        "Hugson's Ranch is in Kansas"
+      ]
+    },
+    "hallucination_signals": [
+      "Dorothy's Omaha farm",
+      "the Kansas ranch of Hugson"
+    ]
+  },
+  "omaha": {
+    "canonical_aliases_book1": [
+      "Omaha"
+    ],
+    "known_facts_book1": [
+      "The surface city where the Wizard was born and where his father named him.",
+      "The Wizard returned there after leaving Oz, only to find his old friends dead or moved away."
+    ],
+    "known_relations_book1": {
+      "the Wizard": "His birthplace."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Dorothy is from Omaha",
+        "Omaha is in the Land of Oz"
+      ]
+    },
+    "hallucination_signals": [
+      "Dorothy of Omaha",
+      "Omaha in Oz"
+    ]
+  },
+  "hugsons_ranch": {
+    "canonical_aliases_book1": [
+      "Hugson's Ranch",
+      "Hugson's Siding"
+    ],
+    "known_facts_book1": [
+      "Uncle Bill Hugson's ranch in California, where Zeb works and where Dorothy and Uncle Henry were visiting.",
+      "Dorothy arrives nearby at Hugson's Siding, the train stop, at dawn.",
+      "Zeb and Jim are set down here by the Magic Belt in the closing scene."
+    ],
+    "known_relations_book1": {
+      "Zeb": "The boy who works there.",
+      "Uncle Hugson": "Its owner.",
+      "Jim": "The cab-horse kept there."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Hugson's Ranch is in Kansas",
+        "Hugson's Ranch is in the Land of Oz"
+      ]
+    },
+    "hallucination_signals": [
+      "Hugson's Ranch in Kansas",
+      "Hugson's Ranch in Oz"
+    ]
+  },
+  "valley_of_voe": {
+    "canonical_aliases_book1": [
+      "Valley of Voe",
+      "Valley of Voices"
+    ],
+    "known_facts_book1": [
+      "A beautiful underground valley reached through the glass mountain, lit by no sun or moon from an unseen source.",
+      "Its people are invisible from eating the dama-fruit, and so are the fierce bears that hunt them.",
+      "The travelers refuse the dama-fruit to stay visible; the nine piglets eat it and turn invisible.",
+      "The travelers cross it walking on the water to escape the invisible bears and reach Pyramid Mountain."
+    ],
+    "known_relations_book1": {
+      "Champion": "Overman-Anu, its greatest Champion, spoken of by the invisible people.",
+      "Pyramid Mountain": "The mountain the travelers cross the valley to reach."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Valley of Voe is in the Land of Oz",
+        "the people of Voe are visible"
+      ]
+    },
+    "hallucination_signals": [
+      "the visible people of Voe",
+      "the Valley of Voe in Oz"
+    ]
+  },
+  "pyramid_mountain": {
+    "canonical_aliases_book1": [
+      "Pyramid Mountain"
+    ],
+    "known_facts_book1": [
+      "A cone-shaped mountain on the far side of the Valley of Voe, its point lost in the clouds.",
+      "A spiral stairway cut inside it leads up to the Land of the Gargoyles.",
+      "Home, halfway up, to the Braided Man's factory of rustles and flutters; Cloud Fairies drift near its heights."
+    ],
+    "known_relations_book1": {
+      "Gargoyles": "The wooden people whose land lies at its top.",
+      "Valley of Voe": "The valley at its foot."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Pyramid Mountain is in the Land of Oz"
+      ]
+    },
+    "hallucination_signals": [
+      "Pyramid Mountain in Oz"
+    ]
+  },
+  "black_pit": {
+    "canonical_aliases_book1": [
+      "Black Pit"
+    ],
+    "known_facts_book1": [
+      "A dark cave in the green glass mountain of the Mangaboo country, into which the animals are driven and walled up.",
+      "A tunnel leading up out of it carries the travelers on toward the Valley of Voe."
+    ],
+    "known_relations_book1": {
+      "Mangaboos": "The vegetable people who drive the animals into it.",
+      "Eureka": "The kitten who escapes it to fetch help."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Black Pit is in the Land of Oz"
+      ]
+    },
+    "hallucination_signals": [
+      "the Black Pit of Oz"
+    ]
+  }
+}
