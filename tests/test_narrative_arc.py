@@ -4,6 +4,7 @@ import pytest
 
 from wiki_creator.narrative_arc import (
     DEFAULT_ACT_WEIGHTS,
+    DEFAULT_MAX_EVENTS,
     NarrativeArc,
     narrative_arc,
 )
@@ -93,6 +94,50 @@ def test_acts_reversed_range_raises():
         )
 
 
+# --- max_events (STU-713) ---------------------------------------------------
+
+
+def test_max_events_defaults_to_18():
+    assert narrative_arc({}).max_events == DEFAULT_MAX_EVENTS == 18
+    arc = narrative_arc({"generation": {"narrative_arc": {"weights": [0.2, 0.6, 0.2]}}})
+    assert arc.max_events == 18
+
+
+def test_max_events_alone_keeps_default_weights():
+    arc = narrative_arc({"generation": {"narrative_arc": {"max_events": 21}}})
+    assert arc.max_events == 21
+    assert arc.weights == DEFAULT_ACT_WEIGHTS
+    assert arc.acts is None
+
+
+def test_max_events_alongside_weights():
+    arc = narrative_arc(
+        {"generation": {"narrative_arc": {"weights": [0.15, 0.70, 0.15], "max_events": 30}}}
+    )
+    assert arc.max_events == 30
+    assert arc.weights == (0.15, 0.70, 0.15)
+
+
+def test_max_events_alongside_acts():
+    arc = narrative_arc(
+        {"generation": {"narrative_arc": {"acts": {"setup": [1, 3], "rising": [4, 22], "resolution": [23, 25]}, "max_events": 40}}}
+    )
+    assert arc.max_events == 40
+    assert arc.acts == ((1, 3), (4, 22), (23, 25))
+
+
+@pytest.mark.parametrize("bad", ["x", 2.5, True, [18], None])
+def test_max_events_non_integer_raises(bad):
+    with pytest.raises(ValueError, match="must be an integer"):
+        narrative_arc({"generation": {"narrative_arc": {"max_events": bad}}})
+
+
+@pytest.mark.parametrize("bad", [0, -3])
+def test_max_events_below_one_raises(bad):
+    with pytest.raises(ValueError, match=">= 1"):
+        narrative_arc({"generation": {"narrative_arc": {"max_events": bad}}})
+
+
 # --- partition --------------------------------------------------------------
 
 
@@ -169,6 +214,49 @@ def test_narrative_events_honors_explicit_ranges():
     # budget than the default position split, which cuts it at ~ch2.
     assert early(picked) > early(default)
     assert [e["chapter"] for e in picked] == sorted(e["chapter"] for e in picked)
+
+
+def test_coverage_floor_recovers_a_salience_starved_chapter():
+    # STU-713: an episodic novel — the protagonist plus one creature per chapter —
+    # under-scores its solo set pieces (ch5) against the crowd scenes (ch9), so the
+    # salience quota dropped whole chapters. The floor keeps one beat of each.
+    import scripts.generate_wiki_pages as gwp
+
+    events = []
+    for ch in range(1, 13):  # 12 chapters
+        sal = 0.53 if ch in {2, 5, 10} else 0.95  # the two-hander episodes score low
+        for i in range(6):
+            events.append({"chapter": ch, "description": f"c{ch}-{i}", "salience": sal})
+    picked = gwp._narrative_events(_person(events))
+    chapters = {e["chapter"] for e in picked}
+    # No chapter falls out of the arc: ch2/ch5/ch10 are present despite scoring low.
+    assert {2, 5, 10} <= chapters
+    assert chapters == set(range(1, 13))
+
+
+def test_max_events_raises_the_budget():
+    import scripts.generate_wiki_pages as gwp
+
+    events = [
+        {"chapter": c, "description": f"c{c}-{i}", "salience": 0.5}
+        for c in range(1, 13)
+        for i in range(6)
+    ]
+    default = gwp._narrative_events(_person(events))
+    wider = gwp._narrative_events(_person(events), NarrativeArc(max_events=30))
+    assert len(default) == 18
+    assert len(wider) == 30
+
+
+def test_budget_smaller_than_chapter_count_keeps_the_earliest():
+    # A floor that cannot cover every chapter keeps the earliest — the opening,
+    # which salience already starves — never the tail.
+    import scripts.generate_wiki_pages as gwp
+
+    events = [{"chapter": c, "description": f"c{c}", "salience": 0.5} for c in range(1, 13)]
+    picked = gwp._narrative_events(_person(events), NarrativeArc(max_events=5))
+    assert len(picked) == 5
+    assert 1 in {e["chapter"] for e in picked}
 
 
 def test_narrative_events_preserves_narrative_order_within_a_chapter():

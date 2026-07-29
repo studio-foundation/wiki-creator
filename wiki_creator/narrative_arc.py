@@ -19,9 +19,17 @@ This declares that shape in the book YAML (``generation.narrative_arc``), per th
           rising: [4, 22]
           resolution: [23, 25]
 
-Absent → the 25/50/25 default (byte-identical to STU-663). A present-but-empty or
-malformed block raises rather than degrading (STU-470: a silently ignored config
-is the bug).
+``max_events`` (STU-713) sets how many beats the arc carries — the budget the
+weights divide — and is orthogonal to the mode above (it may accompany either, or
+stand alone with the default 25/50/25):
+
+    generation:
+      narrative_arc:
+        max_events: 21                   # default 18
+
+Absent → the 25/50/25 default and 18-event budget (byte-identical to STU-663). A
+present-but-empty or malformed block raises rather than degrading (STU-470: a
+silently ignored config is the bug).
 """
 
 from __future__ import annotations
@@ -29,6 +37,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 DEFAULT_ACT_WEIGHTS: tuple[float, float, float] = (0.25, 0.50, 0.25)
+DEFAULT_MAX_EVENTS = 18
 
 _ACT_KEYS = ("setup", "rising", "resolution")
 
@@ -36,10 +45,12 @@ _ACT_KEYS = ("setup", "rising", "resolution")
 @dataclass(frozen=True)
 class NarrativeArc:
     """The declared act structure: either three proportion weights (mode A) or three
-    explicit inclusive chapter ranges (mode B). Exactly one is set."""
+    explicit inclusive chapter ranges (mode B), exactly one set, plus ``max_events``
+    — the number of beats the arc carries (STU-713), which the weights divide."""
 
     weights: tuple[float, float, float] | None = DEFAULT_ACT_WEIGHTS
     acts: tuple[tuple[int, int], tuple[int, int], tuple[int, int]] | None = None
+    max_events: int = DEFAULT_MAX_EVENTS
 
     def partition(
         self, chapters: list[int]
@@ -90,16 +101,33 @@ def narrative_arc(book_cfg: dict) -> NarrativeArc:
         return NarrativeArc()
     if not isinstance(cfg, dict):
         raise ValueError("generation.narrative_arc must be a mapping")
+    max_events = (
+        _parse_max_events(cfg["max_events"])
+        if "max_events" in cfg
+        else DEFAULT_MAX_EVENTS
+    )
     has_weights, has_acts = "weights" in cfg, "acts" in cfg
     if has_weights and has_acts:
         raise ValueError(
             "generation.narrative_arc: 'weights' and 'acts' are mutually exclusive"
         )
     if has_acts:
-        return NarrativeArc(weights=None, acts=_parse_acts(cfg["acts"]))
+        return NarrativeArc(weights=None, acts=_parse_acts(cfg["acts"]), max_events=max_events)
     if has_weights:
-        return NarrativeArc(weights=_parse_weights(cfg["weights"]), acts=None)
-    raise ValueError("generation.narrative_arc must declare 'weights' or 'acts'")
+        return NarrativeArc(weights=_parse_weights(cfg["weights"]), acts=None, max_events=max_events)
+    if "max_events" in cfg:
+        return NarrativeArc(max_events=max_events)
+    raise ValueError(
+        "generation.narrative_arc must declare 'weights', 'acts' or 'max_events'"
+    )
+
+
+def _parse_max_events(raw: object) -> int:
+    if isinstance(raw, bool) or not isinstance(raw, int):
+        raise ValueError("generation.narrative_arc.max_events must be an integer")
+    if raw < 1:
+        raise ValueError("generation.narrative_arc.max_events must be >= 1")
+    return raw
 
 
 def _parse_weights(raw: object) -> tuple[float, float, float]:
