@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 from wiki_creator import book_import, item_stream, library, preview
-from wiki_creator.paths import book_paths_from_yaml
+from wiki_creator.paths import book_paths_from_yaml, series_output_dir
 from wiki_creator.series import discover_series_books
 
 # Short pipeline verb -> Studio pipeline. `run` is the whole build; the rest are
@@ -162,12 +162,16 @@ def _cmd_series(args: argparse.Namespace) -> int:
     if args.max_chapters is not None:
         os.environ["WIKI_MAX_CHAPTERS"] = str(args.max_chapters)
     books = discover_series_books(library._PROJECT_ROOT / series_dir)
-    for book_path in books:
-        rel = Path(book_path).relative_to(library._PROJECT_ROOT)
-        print(f"=== {rel} ===")
-        rc = _exec(_studio_command("wiki-full", rel), dry_run=args.dry_run)
-        if rc != 0:
-            return rc
+    # --wiki-only re-renders just the series wiki (assemble+export) from the
+    # per-tome artifacts already on disk, skipping the expensive tome loop
+    # (STU-721) — the ergonomic counterpart of `make run-series-wiki`.
+    if not args.wiki_only:
+        for book_path in books:
+            rel = Path(book_path).relative_to(library._PROJECT_ROOT)
+            print(f"=== {rel} ===")
+            rc = _exec(_studio_command("wiki-full", rel), dry_run=args.dry_run)
+            if rc != 0:
+                return rc
     # The series wiki is built once, after every tome (STU-709). Any tome's yaml
     # names the series; the first one is where the arc pass reads language and
     # register from anyway.
@@ -209,6 +213,19 @@ def _cmd_preview(args: argparse.Namespace) -> int:
     if args.output:
         output_dir = Path(args.output)
         book = args.book or output_dir.name
+        rerun = f"wiki book run {book}"
+    elif args.series:
+        if not args.book:
+            print("error: give a series (wiki preview --series NAME)", file=sys.stderr)
+            return 2
+        try:
+            series_dir = library.resolve_series(args.book)
+        except library.ResolutionError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        book = series_dir.name
+        output_dir = library._PROJECT_ROOT / series_output_dir(series_dir)
+        rerun = f"wiki series wiki {book}"
     else:
         if not args.book:
             print("error: give a book (or --output DIR)", file=sys.stderr)
@@ -218,11 +235,12 @@ def _cmd_preview(args: argparse.Namespace) -> int:
             return 2
         book = Path(yaml_path).stem
         output_dir = library._PROJECT_ROOT / book_paths_from_yaml(yaml_path).output
+        rerun = f"wiki book run {book}"
 
     if not output_dir.is_dir() or not any(output_dir.rglob("*.wiki")):
         print(
             f"error: no exported wiki at {output_dir}\n"
-            f"run the pipeline first: wiki book run {book}",
+            f"run the pipeline first: {rerun}",
             file=sys.stderr,
         )
         return 2
@@ -341,6 +359,10 @@ def _build_parser() -> argparse.ArgumentParser:
     series.add_argument("verb", choices=["run"], help="only 'run'")
     series.add_argument("series_name", metavar="series", help="series name or substring")
     series.add_argument("--max-chapters", type=int, help="cap extraction (WIKI_MAX_CHAPTERS)")
+    series.add_argument(
+        "--wiki-only", action="store_true",
+        help="re-render just the series wiki (assemble+export) from tome artifacts on disk, skip the tome loop (STU-721)",
+    )
     series.set_defaults(func=_cmd_series)
 
     replay = sub.add_parser("replay", parents=[common], help="replay a run, or restart it from a stage")
@@ -356,8 +378,9 @@ def _build_parser() -> argparse.ArgumentParser:
     logs.add_argument("run_id", help="run id")
     logs.set_defaults(func=_cmd_logs)
 
-    prev = sub.add_parser("preview", parents=[common], help="serve a book's exported wiki in the browser (STU-646)")
-    prev.add_argument("book", nargs="?", help="book slug, alias, series or author")
+    prev = sub.add_parser("preview", parents=[common], help="serve a book's (or series') exported wiki in the browser (STU-646)")
+    prev.add_argument("book", nargs="?", help="book slug, alias, series or author (a series name with --series)")
+    prev.add_argument("--series", action="store_true", help="serve the series wiki (output/_series/) instead of a single book")
     prev.add_argument("--output", help="serve this output/ dir directly, skipping book resolution")
     prev.add_argument("--port", type=int, default=4173, help="port (default: 4173)")
     prev.add_argument("--no-open", action="store_true", help="don't open a browser")
