@@ -1,0 +1,166 @@
+{
+  "dinah": {
+    "canonical_aliases_book1": [
+      "Dinah"
+    ],
+    "known_facts_book1": [
+      "Alice's own pet cat, left behind at home — 'Dinah was the cat.'",
+      "Never appears in Wonderland; she exists only in Alice's talk and in one dream during the fall.",
+      "Alice worries during the fall that nobody will remember Dinah's saucer of milk at tea-time.",
+      "Alice wonders 'Do cats eat bats? Do bats eat cats?' while thinking of her.",
+      "Alice praises her to the Mouse as good at catching mice and birds, which is what causes the offence.",
+      "Talking about Dinah scatters the party on the bank — an old Magpie and a Canary find excuses to go home.",
+      "Alice tells the Cheshire Cat and others how well Dinah catches mice."
+    ],
+    "known_relations_book1": {
+      "Alice": "Her mistress; Dinah is the home Alice keeps returning to in her thoughts.",
+      "the Mouse": "Never meets her; Alice's praise of Dinah is what offends and frightens the Mouse."
+    },
+    "forbidden_book1": {
+      "sequel_only": [
+        "Dinah's kittens",
+        "Kitty",
+        "Snowdrop",
+        "Dinah as a mother cat"
+      ],
+      "not_in_this_book": [
+        "Dinah appears in Wonderland",
+        "Dinah speaks",
+        "Dinah meets any Wonderland creature"
+      ]
+    },
+    "hallucination_signals": [
+      "Dinah in Wonderland",
+      "Dinah said",
+      "Dinah tells",
+      "Dinah's kittens",
+      "Kitty and Snowdrop",
+      "Dinah meets",
+      "Dinah is the Cheshire Cat",
+      "Dinah is a mother"
+    ]
+  },
+  "bill": {
+    "canonical_aliases_book1": [
+      "Bill"
+    ],
+    "known_facts_book1": [
+      "A Lizard, and one of the White Rabbit's servants.",
+      "Is volunteered by the others to go down the chimney of the Rabbit's house while Alice fills it.",
+      "Is kicked back up the chimney by Alice's foot; his own account is 'something comes at me like a Jack-in-the-box, and up I goes like a sky-rocket!'",
+      "Is afterwards held up outside by two guinea-pigs, being given something out of a bottle.",
+      "Serves as a juror at the Knave's trial, and his squeaking slate-pencil is one of the sounds Alice remembers at the end.",
+      "Is put back into the jury-box head downwards by Alice after she knocks it over, and waves his tail about helplessly.",
+      "Writes on his slate with one finger after Alice takes his pencil, then, when the Queen throws an inkstand at him, writes with the ink trickling down his face."
+    ],
+    "known_relations_book1": {
+      "White Rabbit": "One of his servants, sent down his own chimney.",
+      "Alice": "Kicks him up the chimney without ever seeing him, and later replaces him in the jury-box upside down. Never an adversary — the two exchange no words."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Bill is an enemy of Alice",
+        "Bill attacks Alice",
+        "Bill speaks to Alice"
+      ]
+    },
+    "hallucination_signals": [
+      "Bill is Alice's enemy",
+      "Bill attacks Alice",
+      "Bill said to Alice",
+      "Bill and Alice argue",
+      "an enemy of Alice"
+    ]
+  },
+  "mary_ann": {
+    "canonical_aliases_book1": [
+      "Mary Ann"
+    ],
+    "known_facts_book1": [
+      "The White Rabbit's housemaid, named but never seen — she never appears on the page.",
+      "The Rabbit mistakes Alice for her and sends her home to fetch a pair of gloves and a fan.",
+      "Alice hurries through the Rabbit's house 'in great fear lest she should meet the real Mary Ann'."
+    ],
+    "known_relations_book1": {
+      "White Rabbit": "His housemaid.",
+      "Alice": "Is mistaken for her; they never meet."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Mary Ann appears",
+        "Mary Ann speaks",
+        "Mary Ann meets Alice"
+      ]
+    },
+    "hallucination_signals": [
+      "Mary Ann said",
+      "Mary Ann tells",
+      "Mary Ann appears",
+      "Mary Ann meets Alice",
+      "Mary Ann arrives",
+      "Mary Ann greets"
+    ]
+  },
+  "mabel": {
+    "canonical_aliases_book1": [
+      "Mabel"
+    ],
+    "known_facts_book1": [
+      "A girl Alice knows outside Wonderland, mentioned only in Alice's own reasoning about who she might have been changed into.",
+      "Alice decides she cannot be Mabel because 'I know all sorts of things, and she, oh! she knows such a very little!'",
+      "Alice then gets her lessons wrong and concludes 'I must have been changed for Mabel!'",
+      "Dreads having to live in Mabel's poky little house with no toys and ever so many lessons to learn.",
+      "Never appears, never speaks, and is never in Wonderland."
+    ],
+    "known_relations_book1": {
+      "Alice": "An acquaintance from Alice's own world, invoked only as a comparison while Alice doubts her own identity."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Mabel appears",
+        "Mabel speaks",
+        "Mabel is in Wonderland"
+      ],
+      "attribute_confusion": [
+        "Mabel has long ringlets (the ringlets belong to Ada, the other girl in the same passage)"
+      ]
+    },
+    "hallucination_signals": [
+      "Mabel said",
+      "Mabel tells",
+      "Mabel appears",
+      "Mabel meets Alice",
+      "Mabel in Wonderland",
+      "Mabel's long ringlets",
+      "Mabel has long ringlets"
+    ]
+  },
+  "ada": {
+    "canonical_aliases_book1": [
+      "Ada"
+    ],
+    "known_facts_book1": [
+      "A girl Alice knows outside Wonderland, named once in the same passage as Mabel.",
+      "Alice rules her out with 'I'm sure I'm not Ada, for her hair goes in such long ringlets, and mine doesn't go in ringlets at all.'",
+      "Never appears, never speaks, and is never in Wonderland."
+    ],
+    "known_relations_book1": {
+      "Alice": "An acquaintance from Alice's own world, named once as a comparison.",
+      "Mabel": "The other girl in the same passage; the two are alternatives Alice considers and rejects, and they never meet."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Ada appears",
+        "Ada speaks",
+        "Ada is in Wonderland"
+      ]
+    },
+    "hallucination_signals": [
+      "Ada said",
+      "Ada tells",
+      "Ada appears",
+      "Ada meets Alice",
+      "Ada in Wonderland"
+    ]
+  }
+}

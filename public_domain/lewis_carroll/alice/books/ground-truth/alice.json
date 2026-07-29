@@ -1,0 +1,111 @@
+{
+  "entity": "Alice",
+  "canonical_aliases_book1": [
+    "Alice"
+  ],
+  "known_facts_book1": [
+    "Opens the book sitting on a bank beside her sister, bored by her sister's book because it has no pictures or conversations.",
+    "Follows the White Rabbit down the rabbit-hole after seeing it take a watch out of its waistcoat-pocket.",
+    "Falls past cupboards, bookshelves, maps and pictures, and takes an empty marmalade jar off a shelf as she falls.",
+    "Finds a tiny golden key on a three-legged glass table that opens a small door onto a garden she is too large to enter.",
+    "Drinks from a bottle labelled 'DRINK ME' and shrinks to ten inches high, then eats a cake marked 'EAT ME'.",
+    "Says 'Curiouser and curiouser!' when she grows.",
+    "Swims in a pool of her own tears and offends the Mouse by talking about Dinah and about a terrier that catches mice.",
+    "Is mistaken by the White Rabbit for his housemaid Mary Ann and sent to fetch his gloves and fan.",
+    "Grows too big for the White Rabbit's house, filling it with one arm out of the window and one foot up the chimney.",
+    "Recites 'You are old, Father William' to the Caterpillar and gets the words wrong.",
+    "Uses the two sides of the Caterpillar's mushroom to change size, at one point stretching her neck above the treetops.",
+    "Is accused by the Pigeon of being a serpent after eggs.",
+    "Nurses the Duchess's baby out of the kitchen and it turns into a pig, which she sets down and lets run into the wood.",
+    "Sits down uninvited in a large arm-chair at the tea party after the March Hare and the Hatter cry 'No room!'",
+    "Leaves the tea party in disgust; the last she sees of them, they are trying to put the Dormouse into the teapot.",
+    "Finds three gardeners painting white roses red and asks them, a little timidly, why they are doing it.",
+    "Hides the three gardeners in a large flower-pot to save them from the Queen's soldiers.",
+    "Refuses to lie down on her face when the royal procession arrives.",
+    "Introduces the Cheshire Cat to the King as 'a friend of mine'.",
+    "Plays croquet with a flamingo for a mallet and a hedgehog for a ball.",
+    "Wonders whether the pepper in the kitchen was what made the Duchess so savage.",
+    "Tells the Mock Turtle she has never lived under the sea, never been introduced to a lobster, and never tasted one.",
+    "Has read about courts of justice in books and is pleased to know the name of nearly everything in the courtroom.",
+    "Is proud of knowing the word 'jurors', reflecting that very few girls of her age would know its meaning.",
+    "Grows during the trial until she upsets the jury-box with her skirt and tips the jurymen into the crowd.",
+    "Declares the court 'nothing but a pack of cards' and wakes on the bank with her head in her sister's lap.",
+    "The whole of Wonderland turns out to have been her dream; her sister sits on afterwards thinking of it."
+  ],
+  "known_relations_book1": {
+    "White Rabbit": "The creature she follows into Wonderland; it mistakes her for its housemaid Mary Ann and later acts as herald at the trial. No friendship — it is frightened of her and scurries away.",
+    "Dinah": "Her own pet cat, left at home and repeatedly missed; mentioning Dinah is what offends the Mouse and scatters the birds.",
+    "Cheshire Cat": "The one creature she calls a friend; she introduces it to the King and values it as 'somebody to talk to'.",
+    "Queen": "Adversary. The Queen orders her execution for insolence and Alice contradicts her loudly and decidedly.",
+    "King": "Presides over the trial as judge and questions her; he is mild where the Queen is violent, and reminds the Queen that Alice is only a child.",
+    "Caterpillar": "Interrogates her with 'Who are you?', makes her recite a poem, and finally tells her which side of the mushroom does what.",
+    "Duchess": "Meets her twice — savage in the kitchen, affectionate on the croquet-ground, and relentlessly moralising the second time.",
+    "the Mouse": "The first creature she speaks to in Wonderland; she offends it twice by talking about cats and dogs.",
+    "Gryphon": "Takes her to the Mock Turtle by the Queen's order and tells her the Queen's executions never happen.",
+    "Mock Turtle": "Tells her his history and the Lobster Quadrille; she listens and admits she knows nothing of the sea.",
+    "Hatter": "Meets him at the mad tea party, is offended by his personal remarks and his unanswerable riddle."
+  },
+  "forbidden_book1": {
+    "sequel_only": [
+      "Through the Looking-Glass",
+      "the Red Queen",
+      "the White Queen",
+      "Tweedledee and Tweedledum",
+      "Humpty Dumpty",
+      "the White Knight",
+      "the Jabberwock",
+      "the Jubjub Bird",
+      "the Bandersnatch",
+      "the Walrus and the Carpenter",
+      "the garden of live flowers",
+      "Alice becomes a Queen",
+      "Alice as a White Pawn",
+      "the living chess game",
+      "Dinah's kittens Kitty and Snowdrop"
+    ],
+    "biography_not_in_the_book": [
+      "Alice Liddell",
+      "Alice is seven years old",
+      "seven and a half",
+      "Alice lives in London",
+      "Alice is homeschooled by her sister",
+      "Alice belongs to the Victorian upper class",
+      "Alice's parents"
+    ],
+    "adaptation_inventions": [
+      "the Mad Hatter",
+      "Alice wears a blue dress",
+      "Alice wears a pinafore",
+      "the Alice band",
+      "an unbirthday party",
+      "the Queen of Hearts is a sociopath"
+    ],
+    "relationships": [
+      "Alice's Sister (named — the book calls her only 'her sister')",
+      "the Hatter as a friend or ally of Alice",
+      "the White Rabbit as a friend of Alice"
+    ]
+  },
+  "hallucination_signals": [
+    "Through the Looking-Glass",
+    "Alice Liddell",
+    "seven and a half",
+    "seven years old",
+    "years of age",
+    "becomes a Queen",
+    "the White Pawn",
+    "the Red Queen",
+    "blue dress",
+    "pinafore",
+    "Alice band",
+    "the Mad Hatter",
+    "returns to Wonderland",
+    "her second visit",
+    "Alice is beheaded",
+    "Dinah's kittens",
+    "Tweedledee",
+    "Humpty Dumpty",
+    "the White Knight",
+    "the Jabberwock"
+  ]
+}

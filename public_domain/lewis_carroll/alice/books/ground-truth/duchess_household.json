@@ -1,0 +1,143 @@
+{
+  "duchess": {
+    "canonical_aliases_book1": [
+      "Duchess"
+    ],
+    "known_facts_book1": [
+      "Sits on a three-legged stool in a smoke-filled kitchen nursing a baby, sneezing from the pepper.",
+      "Sings a lullaby beginning 'Speak roughly to your little boy, and beat him when he sneezes', shaking the baby at the end of every line.",
+      "Says 'Chop off her head!' about Alice in the kitchen, and the cook does not take the hint.",
+      "Explains the grinning cat with 'It's a Cheshire cat, and that's why. Pig!'",
+      "Flings the baby at Alice and leaves to get ready for croquet with the Queen.",
+      "Is under sentence of execution for boxing the Queen's ears, as the White Rabbit tells Alice in a whisper.",
+      "Reappears on the croquet-ground in a pleasant temper, tucks her arm into Alice's, and walks off with her.",
+      "Has an uncomfortably sharp chin, which she digs into Alice's shoulder.",
+      "Finds a moral in everything: 'Everything's got a moral, if only you can find it.'",
+      "Turns pale and leaves the instant the Queen appears and says 'Now, I give you fair warning... either you or your head must be off.'",
+      "Her cook appears at the trial as a witness, still carrying the pepper-box."
+    ],
+    "known_relations_book1": {
+      "Alice": "Savage toward her in the kitchen, then relentlessly affectionate and moralising on the croquet-ground; Alice suspects the pepper explains the first.",
+      "Cheshire Cat": "It is her cat, sitting on the hearth and grinning from ear to ear.",
+      "the Cook": "Her cook, who over-peppers the soup, throws fire-irons and saucepans about, and testifies at the trial.",
+      "Queen": "Sentenced her to execution for boxing the royal ears; she flees the croquet-ground at the Queen's warning.",
+      "White Rabbit": "Fears her savage temper and dreads keeping her waiting."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Duchess is executed",
+        "the Duchess is the Queen's sister",
+        "the Duchess appears in the Looking-Glass world"
+      ]
+    },
+    "hallucination_signals": [
+      "the Duchess is executed",
+      "the Duchess's sentence is carried out",
+      "the Queen's sister",
+      "the Duchess is the Queen's"
+    ]
+  },
+  "cheshire_cat": {
+    "canonical_aliases_book1": [
+      "Cheshire Cat",
+      "Cheshire Puss"
+    ],
+    "known_facts_book1": [
+      "First seen sitting on the hearth in the Duchess's kitchen, grinning from ear to ear.",
+      "Is the Duchess's cat — Alice asks her 'why your cat grins like that?'",
+      "Reappears sitting on the bough of a tree, and Alice addresses it as 'Cheshire Puss'.",
+      "Tells Alice which way the Hatter and the March Hare live, and that they are both mad.",
+      "Says 'we're all mad here. I'm mad. You're mad.'",
+      "Vanishes and reappears at will, sometimes very slowly, ending with the grin, which remains some time after the rest of it has gone.",
+      "Appears as a head only above the croquet-ground and asks Alice how she is getting on.",
+      "Is introduced by Alice to the King as 'a friend of mine'.",
+      "The King orders it beheaded, and the executioner argues that you cannot cut off a head where there is no body.",
+      "Fades away entirely while the King, the Queen and the executioner are still arguing about it."
+    ],
+    "known_relations_book1": {
+      "Alice": "The only creature Alice calls a friend; she introduces it to the King and values it as somebody to talk to.",
+      "Duchess": "Its owner — it sits on her kitchen hearth and she explains its grin.",
+      "King": "Objects to the way it looks at him and orders it beheaded.",
+      "Queen": "Wants it executed; the argument over how ends when the head fades away."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Cheshire Cat guides Alice to the Queen's garden",
+        "the Cheshire Cat is beheaded",
+        "the Cheshire Cat is named"
+      ],
+      "adaptation_inventions": [
+        "the Cheshire Cat sings",
+        "the Cheshire Cat is purple and pink striped"
+      ]
+    },
+    "hallucination_signals": [
+      "the Cheshire Cat is beheaded",
+      "Dinah is the Cheshire Cat",
+      "the Cheshire Cat is Alice's cat",
+      "the Cheshire Cat sings",
+      "purple and pink",
+      "striped fur",
+      "the Cheshire Cat guides Alice"
+    ]
+  },
+  "cook": {
+    "canonical_aliases_book1": [
+      "the Cook"
+    ],
+    "known_facts_book1": [
+      "Leans over the fire stirring a large cauldron of soup in the Duchess's kitchen.",
+      "Has put far too much pepper in the soup, which is why everyone in the kitchen sneezes.",
+      "Throws the fire-irons, then the saucepans, plates and dishes, at the Duchess and the baby.",
+      "Does not take the Duchess's hint to chop off Alice's head, and goes on stirring the soup.",
+      "Appears at the trial as the second witness, carrying the pepper-box, and says the tarts are made mostly of pepper.",
+      "Disappears from the court during the confusion of turning the Dormouse out, before she can be examined further."
+    ],
+    "known_relations_book1": {
+      "Duchess": "Her cook; pelts her and the baby with kitchenware and testifies at the trial.",
+      "Alice": "No direct exchange; Alice watches her and worries she will act on the Duchess's hint.",
+      "King": "Questions her at the trial and gets 'Pepper, mostly' for an answer."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Cook is named",
+        "the Cook is a pig or an animal — the text never says what she is"
+      ]
+    },
+    "hallucination_signals": [
+      "the cook is named",
+      "the cook is a pig",
+      "the cook's name"
+    ]
+  },
+  "footman": {
+    "canonical_aliases_book1": [
+      "Footman",
+      "Fish-Footman",
+      "Frog-Footman"
+    ],
+    "known_facts_book1": [
+      "There are two of them: a Fish-Footman who delivers the letter, and a Frog-Footman who receives it.",
+      "The Fish-Footman produces from under his arm a great letter, nearly as large as himself.",
+      "The message is 'For the Duchess. An invitation from the Queen to play croquet', repeated back with the words reordered.",
+      "They both bow low and their curls get entangled together.",
+      "The Frog-Footman sits on the ground by the door staring stupidly up into the sky and refuses to answer Alice sensibly.",
+      "Tells Alice he will sit there 'till tomorrow' and possibly for days."
+    ],
+    "known_relations_book1": {
+      "Duchess": "Delivers the Queen's croquet invitation to her door.",
+      "Queen": "The invitation the Fish-Footman carries comes from her.",
+      "Alice": "The Frog-Footman answers her questions with maddening literalism and she goes into the house herself."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "a single Footman — the book has two, a Fish-Footman and a Frog-Footman"
+      ]
+    },
+    "hallucination_signals": [
+      "the Footman inside the house",
+      "the Footman lets Alice in",
+      "the Footman opens the door for Alice"
+    ]
+  }
+}
