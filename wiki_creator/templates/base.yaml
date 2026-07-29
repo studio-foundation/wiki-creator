@@ -23,42 +23,8 @@ entity_types:
       category_default: {fr: Personnages, en: Characters}
       importance_categories: true
       tome_label_key: persons_by_tome
-      infobox_source: |-
-        <includeonly>
-        {| class="infobox"
-        |-
-        ! colspan="2" | {{{name}}}
-        |-
-        | '''Aussi connu comme''' || {{{aliases|}}}
-        |-
-        | '''Titre(s)''' || {{{titles|}}}
-        |-
-        | '''Statut''' || {{{status|}}}
-        |-
-        | '''Décès''' || {{{death|}}}
-        |-
-        | '''Espèce/Race''' || {{{species|}}}
-        |-
-        | '''Occupation''' || {{{occupation|}}}
-        |-
-        | '''Résidence''' || {{{residence|}}}
-        |-
-        | '''Affiliation''' || {{{affiliation|}}}
-        |-
-        | '''Première apparition''' || {{{first_seen|}}}
-        |-
-        | '''Famille''' || {{{family|}}}
-        |-
-        | '''Amours''' || {{{romance|}}}
-        |-
-        | '''Amis et alliés''' || {{{friends_allies|}}}
-        |-
-        | '''Ennemis''' || {{{enemies|}}}
-        |}
-        </includeonly>
     infobox:
       - {token: nom,         group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
-      - {token: type,        group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: alias,       group: infobox, provenance: batch-bound,    obligation: OPT, tiers: [figurant, secondary, principal]}
       - {token: apparition,  group: infobox, provenance: batch-bound,    obligation: OPT, tiers: [figurant, secondary, principal]}
       - {token: status,      group: infobox, provenance: extracted-fact, obligation: MIN, fallback: unknown, tiers: [figurant, secondary, principal]}
@@ -92,24 +58,8 @@ entity_types:
       category_key: locations
       category_default: {fr: Lieux, en: Locations}
       tome_label_key: locations_by_tome
-      infobox_source: |-
-        <includeonly>
-        {| class="infobox"
-        |-
-        ! colspan="2" | {{{name}}}
-        |-
-        | '''Type''' || {{{type|}}}
-        |-
-        | '''Localisation''' || {{{location|}}}
-        |-
-        | '''Première mention''' || {{{first_seen|}}}
-        |-
-        | '''Résidents notables''' || {{{residents|}}}
-        |}
-        </includeonly>
     infobox:
       - {token: nom,         group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
-      - {token: type,        group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: apparition,  group: infobox, provenance: batch-bound,    obligation: OPT, tiers: [figurant, secondary, principal]}
       - {token: location,    group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
     sections:
@@ -129,26 +79,8 @@ entity_types:
       category_key: organizations
       category_default: {fr: Organisations, en: Organizations}
       tome_label_key: organizations_by_tome
-      infobox_source: |-
-        <includeonly>
-        {| class="infobox"
-        |-
-        ! colspan="2" | {{{name}}}
-        |-
-        | '''Type''' || {{{type|}}}
-        |-
-        | '''Leader(s)''' || {{{leaders|}}}
-        |-
-        | '''Membres notables''' || {{{members|}}}
-        |-
-        | '''Siège''' || {{{headquarters|}}}
-        |-
-        | '''Première mention''' || {{{first_seen|}}}
-        |}
-        </includeonly>
     infobox:
       - {token: nom,     group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
-      - {token: type,    group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: apparition, group: infobox, provenance: batch-bound, obligation: OPT, tiers: [figurant, secondary, principal]}
       - {token: leaders, group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
     sections:
@@ -164,25 +96,17 @@ entity_types:
       infobox_template: Infobox event
       category_key: events
       category_default: {fr: Événements, en: Events}
-      infobox_source: |-
-        <includeonly>
-        {| class="infobox"
-        |-
-        ! colspan="2" | {{{name}}}
-        |-
-        | '''Participants''' || {{{participants|}}}
-        |-
-        | '''Lieu''' || {{{lieu|}}}
-        |-
-        | '''Chapitre''' || {{{chapitre|}}}
-        |-
-        | '''Issue''' || {{{issue|}}}
-        |}
-        </includeonly>
+    # STU-729: `participants`/`lieu`/`chapitre`/`issue` are the deterministic event
+    # facts `generate_event_pages.py` fills (extracted-fact; a plain EVENT entity
+    # from extraction leaves them empty). Declared here so the generated template
+    # carries their rows and the emit vocabulary stays a subset of it.
     infobox:
-      - {token: nom,  group: infobox, provenance: batch-bound, obligation: MIN, tiers: [figurant, secondary, principal]}
-      - {token: type, group: infobox, provenance: batch-bound, obligation: MIN, tiers: [figurant, secondary, principal]}
-      - {token: apparition, group: infobox, provenance: batch-bound, obligation: OPT, tiers: [figurant, secondary, principal]}
+      - {token: nom,          group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
+      - {token: apparition,   group: infobox, provenance: batch-bound,    obligation: OPT, tiers: [figurant, secondary, principal]}
+      - {token: participants, group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [figurant, secondary, principal]}
+      - {token: lieu,         group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [figurant, secondary, principal]}
+      - {token: chapitre,     group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [figurant, secondary, principal]}
+      - {token: issue,        group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [figurant, secondary, principal]}
     sections:
       - {token: biography,     group: section, provenance: llm-prose,      obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: relationships, group: section, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
@@ -199,24 +123,8 @@ entity_types:
       infobox_template: Infobox faction
       category_key: factions
       category_default: {fr: Factions, en: Factions}
-      infobox_source: |-
-        <includeonly>
-        {| class="infobox"
-        |-
-        ! colspan="2" | {{{name}}}
-        |-
-        | '''Type''' || {{{type|}}}
-        |-
-        | '''Chef(s)''' || {{{leaders|}}}
-        |-
-        | '''Membres notables''' || {{{members|}}}
-        |-
-        | '''Première mention''' || {{{first_seen|}}}
-        |}
-        </includeonly>
     infobox:
       - {token: nom,     group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
-      - {token: type,    group: infobox, provenance: batch-bound,    obligation: MIN, tiers: [figurant, secondary, principal]}
       - {token: apparition, group: infobox, provenance: batch-bound, obligation: OPT, tiers: [figurant, secondary, principal]}
       - {token: leaders, group: infobox, provenance: extracted-fact, obligation: OPT, tiers: [secondary, principal]}
     sections:
@@ -425,6 +333,10 @@ labels:
   enemies:        {en: Enemies,          fr: Ennemis}
   location:      {en: Location,    fr: Localisation}
   leaders:       {en: Leaders,     fr: Leaders}
+  participants:  {en: Participants, fr: Participants}
+  lieu:          {en: Location,    fr: Lieu}
+  chapitre:      {en: Chapter,     fr: Chapitre}
+  issue:         {en: Outcome,     fr: Issue}
   infobox:       {en: Infobox,     fr: Infobox}
   biography:     {en: Biography,   fr: Biographie}
   backstory:     {en: "Before the events of the book", fr: "Avant les événements du livre"}

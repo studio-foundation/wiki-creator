@@ -64,16 +64,10 @@ def _pages() -> list[dict]:
         "importance": "principal",
         "books": [BOOK],
         "infobox_fields": {
-            "name": "Alice",
-            "aliases": "",
-            "titles": "",
+            "nom": "Alice",
             "status": "Alive",
-            "death": "",
             "species": "Human",
-            "occupation": "",
-            "residence": "Victorian England",
-            "affiliation": "",
-            "first_seen": "Chapter 1",
+            "apparition": "Chapter 1",
         },
         "content": (
             "== Biography ==\n"
@@ -101,12 +95,11 @@ def _pages() -> list[dict]:
         "importance": "principal",
         "books": [BOOK],
         "infobox_fields": {
-            "name": "White Rabbit",
+            "nom": "White Rabbit",
             "species": "Rabbit",
             "status": "Alive",
-            "occupation": "Herald",
             "affiliation": "[[Court of Hearts]]",
-            "first_seen": "Chapter 1",
+            "apparition": "Chapter 1",
         },
         "content": (
             "== Biography ==\n"
@@ -122,10 +115,10 @@ def _pages() -> list[dict]:
         "importance": "secondary",
         "books": [BOOK],
         "infobox_fields": {
-            "name": "Cheshire Cat",
+            "nom": "Cheshire Cat",
             "species": "Cat",
             "status": "Alive",
-            "first_seen": "Chapter 6",
+            "apparition": "Chapter 6",
         },
         "content": (
             "== Biography ==\n"
@@ -141,13 +134,13 @@ def _pages() -> list[dict]:
         "importance": "principal",
         "books": [BOOK],
         "infobox_fields": {
-            "name": "Queen of Hearts",
+            "nom": "Queen of Hearts",
             "titles": "Queen",
             "status": "Deceased",
             "death": "Dissolved when Alice wakes",
             "species": "Playing card",
             "affiliation": "[[Court of Hearts]]",
-            "first_seen": "Chapter 8",
+            "apparition": "Chapter 8",
         },
         "content": (
             "== Biography ==\n"
@@ -169,8 +162,7 @@ def _pages() -> list[dict]:
         "importance": "principal",
         "books": [BOOK],
         "infobox_fields": {
-            "name": "Wonderland",
-            "type": "Dream world",
+            "nom": "Wonderland",
             "location": "Below the [[Rabbit Hole]]",
         },
         "content": (
@@ -185,7 +177,7 @@ def _pages() -> list[dict]:
         "entity_type": "PLACE",
         "importance": "secondary",
         "books": [BOOK],
-        "infobox_fields": {"name": "Rabbit Hole", "type": "Passage"},
+        "infobox_fields": {"nom": "Rabbit Hole"},
         "content": (
             "== Overview ==\n"
             "The '''Rabbit Hole''' is the tunnel Alice tumbles down after the "
@@ -199,9 +191,8 @@ def _pages() -> list[dict]:
         "importance": "principal",
         "books": [BOOK],
         "infobox_fields": {
-            "name": "Court of Hearts",
-            "type": "Royal court",
-            "leader": "[[Queen of Hearts]]",
+            "nom": "Court of Hearts",
+            "leaders": "[[Queen of Hearts]]",
         },
         "content": (
             "== Overview ==\n"
@@ -216,10 +207,10 @@ def _pages() -> list[dict]:
         "importance": "principal",
         "books": [BOOK],
         "infobox_fields": {
-            "name": "A Mad Tea-Party",
+            "nom": "A Mad Tea-Party",
             "participants": "[[Alice]], [[Cheshire Cat]]",
-            "location": "[[Wonderland]]",
-            "chapter": "Chapter 7",
+            "lieu": "[[Wonderland]]",
+            "chapitre": "Chapter 7",
         },
         "content": (
             "== Overview ==\n"
@@ -275,7 +266,7 @@ def build() -> dict[str, str]:
     files: dict[str, str] = {}
 
     for etype in entity_taxonomy.declared_types():
-        source = entity_taxonomy.infobox_source(etype)
+        source = entity_taxonomy.infobox_source(etype, LANG)
         template_name = entity_taxonomy.infobox_template_name(etype)
         if not source or not template_name:
             continue

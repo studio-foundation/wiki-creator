@@ -6,7 +6,7 @@ is a `base.yaml` edit — nothing here enumerates the types.
 """
 from __future__ import annotations
 
-from wiki_creator.page_templates import load_base_template
+from wiki_creator.page_templates import load_base_template, render_infobox_source
 
 
 def _types(base: dict | None = None) -> dict:
@@ -97,8 +97,12 @@ def infobox_template_name(etype: str, base: dict | None = None) -> str | None:
     return _export(etype, base).get("infobox_template")
 
 
-def infobox_source(etype: str, base: dict | None = None) -> str | None:
-    return _export(etype, base).get("infobox_source")
+def infobox_source(etype: str, lang: str, base: dict | None = None) -> str | None:
+    """The MediaWiki infobox template source for a type, generated from its declared
+    infobox tokens and localized by ``lang`` (STU-729). No longer a hand-kept string
+    in base.yaml — the parameter names are derived from the renderer's own vocabulary
+    so the two cannot drift."""
+    return render_infobox_source(etype, lang, base if base is not None else load_base_template())
 
 
 def category_key(etype: str, base: dict | None = None) -> str | None:

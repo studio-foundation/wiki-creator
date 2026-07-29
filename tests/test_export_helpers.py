@@ -1,11 +1,9 @@
 # tests/test_export_helpers.py
-import pytest
 from wiki_creator.export_helpers import (
     index_limits,
     page_filename,
     category_labels,
     category_tags,
-    infobox_template_content,
     main_page_content,
 )
 
@@ -169,17 +167,6 @@ def test_french_book_renders_french_by_tome_category():
     assert "[[Category:Personnages du Tome 1]]" in tags
 
 
-def test_infobox_template_person_contains_name_field():
-    content = infobox_template_content("PERSON")
-    assert "{{{name}}}" in content
-    assert "{{{status|}}}" in content
-
-
-def test_infobox_template_place():
-    content = infobox_template_content("PLACE")
-    assert "{{{name}}}" in content
-
-
 def test_main_page_content_contains_title():
     pages = [
         {"title": "David Martín", "importance": "principal", "entity_type": "PERSON"},
@@ -222,18 +209,6 @@ def test_main_page_content_localizes_chrome_by_lang():
     # French default preserved when lang is unset
     fr = main_page_content("x", "y", pages, labels)
     assert "== Personnages principaux ==" in fr
-
-
-def test_infobox_template_event():
-    content = infobox_template_content("EVENT")
-    assert "{{{name}}}" in content
-    assert "{{{participants|}}}" in content
-    assert "{{{chapitre|}}}" in content
-
-
-def test_infobox_template_unsupported_type_raises():
-    with pytest.raises(ValueError, match="No infobox template"):
-        infobox_template_content("OTHER")
 
 
 def test_category_tags_event():

@@ -1,16 +1,10 @@
 <includeonly>
 {| class="infobox"
 |-
-! colspan="2" | {{{name}}}
+! colspan="2" | {{{nom}}}
 |-
-| '''Type''' || {{{type|}}}
+| '''Appearance''' || {{{apparition|}}}
 |-
-| '''Leader(s)''' || {{{leaders|}}}
-|-
-| '''Membres notables''' || {{{members|}}}
-|-
-| '''Siège''' || {{{headquarters|}}}
-|-
-| '''Première mention''' || {{{first_seen|}}}
+| '''Leaders''' || {{{leaders|}}}
 |}
 </includeonly>

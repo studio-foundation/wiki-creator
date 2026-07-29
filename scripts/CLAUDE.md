@@ -1100,7 +1100,7 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
 - Unified entity taxonomy (STU-505): `base.yaml#entity_types` is the single
   authority for the type vocabulary AND its routing. Each type declares
   `ner_labels` (the stock+custom NER labels it absorbs) and an `export` block
-  (`subdir`, `full_key`, `infobox_template`, `infobox_source`, `category_key`,
+  (`subdir`, `full_key`, `infobox_template`, `category_key`,
   `category_default`, `importance_categories`, `tome_label_key`) — the data the
   five old Python tables (`types.py` Literal, `entity_extraction.LABEL_TO_TYPE`,
   `export_helpers._INFOBOX_TEMPLATES`, `wiki_export._SUBDIR`,
@@ -1119,3 +1119,22 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   `entity_classification.get_total_mentions` still threads only PERSON/PLACE/ORG/
   EVENT full-registries; a FACTION entity's counts come from the surface index,
   not its `*_full.json` — a possible fast-follow.
+
+- The infobox template is generated, not hand-kept (STU-729): `infobox_source` is
+  gone from `base.yaml#entity_types.export`; `page_templates.render_infobox_source`
+  builds the `<includeonly>` table from the type's `infobox` slot tokens (header =
+  first token, one labelled row per remaining token, localized by `lang`). The bug
+  it closes: the hand-kept template declared `{{{name}}}`/`{{{first_seen}}}` while
+  the renderer emitted `nom=`/`apparition=`, so every infobox row — the character
+  name included — rendered empty on the whole Oz run. Because the template's
+  parameters ARE the slot tokens, the two vocabularies cannot drift. Two rules
+  travel with it. (1) **Every infobox slot is pipeline-owned** (batch-bound or
+  extracted-fact — none is `llm-prose`), so `_bind_batch_fields` drops any
+  `infobox_fields` key the writer emitted that is not a declared token (`region`,
+  `place_type`, the English `name`): it matches no template parameter and would
+  render nowhere. (2) The deterministic builders emit only declared tokens —
+  `event_pages` uses `nom` (not `name`) and its `participants`/`lieu`/`chapitre`/
+  `issue` are EVENT slots; `infobox_relationships` emits the four PERSON buckets.
+  `test_infobox_vocabulary.py` pins `render → tokens` equality and the subset. The
+  inert `type` infobox token (never filled for any type) was removed rather than
+  rendered as a permanently-empty row.

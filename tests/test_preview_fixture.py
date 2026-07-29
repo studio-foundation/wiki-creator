@@ -55,7 +55,7 @@ def test_fixture_covers_every_construct():
     assert "'''Alice'''" in corpus and "''enormous''" in corpus
     # infobox template call + local template source with {{{param}}}
     assert "{{Infobox character" in corpus
-    assert "{{{name}}}" in files["templates/Infobox_character.wiki"]
+    assert "{{{nom}}}" in files["templates/Infobox_character.wiki"]
     # infobox wikitable
     assert '{| class="infobox"' in files["templates/Infobox_character.wiki"]
     # category tags

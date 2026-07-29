@@ -24,7 +24,6 @@ PERSON:
     subdir: characters
     infobox_template: Infobox character
     category_default: Personnages
-    infobox_source: |- ...         # the MediaWiki infobox template body
   infobox:                         # infobox slots (list of tokens)
     - {token: nom, group: infobox, provenance: batch-bound, obligation: MIN, tiers: [...]}
   sections:                        # prose/fact sections (list of tokens)
@@ -100,10 +99,12 @@ introduces a new token needing a label.
 
 ### Adapt the rendered infobox
 
-The MediaWiki template body is `export.infobox_source` (a `<includeonly>` wikitext
-table). Its `{{{field|}}}` placeholders are populated from the slots; change the
-table to change how the infobox renders in the exported wiki. Keep the field names
-in step with the slot tokens they display.
+The MediaWiki template body is **generated** from the type's `infobox` slot tokens
+(STU-729): the first token is the header (the name), each remaining token a row
+labelled from `labels:`. There is no hand-kept `infobox_source` to edit — the
+template's `{{{token|}}}` parameters ARE the slot tokens, so the template and the
+values the renderer emits cannot drift. To change what the infobox shows, add or
+remove a slot in `infobox:` (and its label); the row follows.
 
 ### Add a relationship type
 

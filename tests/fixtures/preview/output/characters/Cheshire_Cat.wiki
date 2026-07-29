@@ -1,8 +1,8 @@
 {{Infobox character
-|name=Cheshire Cat
+|nom=Cheshire Cat
 |species=Cat
 |status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
-|first_seen=Chapter 6
+|apparition=Chapter 6
 }}
 
 == Biography ==
