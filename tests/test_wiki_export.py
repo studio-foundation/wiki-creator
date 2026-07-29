@@ -101,7 +101,7 @@ _LABELS = {
 def test_render_page_person_keeps_infobox_subdir_and_categories():
     page = {"title": "Celaena Sardothien", "entity_type": "PERSON", "importance": "principal",
             "infobox_fields": {"nom": "Celaena"}, "content": "## Biographie\n\nHéroïne."}
-    rel_path, content = render_page(page, _LABELS)
+    rel_path, content = render_page(page, _LABELS, lang="fr")
     assert rel_path == "characters/Celaena_Sardothien.wiki"
     assert "{{Infobox character" in content
     assert "[[Category:Personnages]]" in content
@@ -110,7 +110,7 @@ def test_render_page_person_keeps_infobox_subdir_and_categories():
 def test_render_page_synopsis_goes_to_wiki_root_without_infobox():
     page = {"title": "Synopsis", "entity_type": "SYNOPSIS", "importance": "principal",
             "infobox_fields": {}, "content": "## Synopsis\n\nL'intrigue du livre."}
-    rel_path, content = render_page(page, _LABELS)
+    rel_path, content = render_page(page, _LABELS, lang="fr")
     assert rel_path == "Synopsis.wiki"
     assert "{{Infobox" not in content
 
@@ -129,7 +129,7 @@ def test_render_page_person_present_in_two_tomes_gets_both_categories():
     page = {"title": "Chaol Westfall", "entity_type": "PERSON", "importance": "secondary",
             "infobox_fields": {}, "content": "## Biographie\n\nGarde du corps.",
             "books": ["01-throne-of-glass", "02-crown-of-midnight"]}
-    _, content = render_page(page, _LABELS_WITH_TOMES)
+    _, content = render_page(page, _LABELS_WITH_TOMES, lang="fr")
     assert "[[Category:Personnages du Tome 1]]" in content
     assert "[[Category:Personnages du Tome 2]]" in content
 
@@ -138,7 +138,7 @@ def test_render_page_tome_two_only_entity_lacks_tome_one_category():
     page = {"title": "Dorian Havilliard", "entity_type": "PERSON", "importance": "secondary",
             "infobox_fields": {}, "content": "## Biographie\n\nPrince.",
             "books": ["02-crown-of-midnight"]}
-    _, content = render_page(page, _LABELS_WITH_TOMES)
+    _, content = render_page(page, _LABELS_WITH_TOMES, lang="fr")
     assert "[[Category:Personnages du Tome 2]]" in content
     assert "[[Category:Personnages du Tome 1]]" not in content
 
@@ -167,14 +167,14 @@ LABELS = {"persons": "Personnages", "principal": "Personnages principaux",
 
 
 def test_render_page_off_by_default_no_collapsible_but_index_present():
-    _, content = render_page(_page(), LABELS)
+    _, content = render_page(_page(), LABELS, lang="fr")
     assert "mw-collapsible" not in content              # feature off
     assert "''Évolution :''" in content                # index always injected
     assert "* [[Chaol]] — amoureux (ch.1→ch.55)" in content
 
 
 def test_render_page_collapses_late_sections_when_configured():
-    _, content = render_page(_page(), LABELS, collapse_after=5)
+    _, content = render_page(_page(), LABELS, collapse_after=5, lang="fr")
     # Relations revealed ch.20 > 5 → wrapped; index rides inside it
     assert 'data-expandtext="Chapitre 20 — révéler"' in content
     assert content.index("mw-collapsible") < content.index("Évolution")
@@ -193,7 +193,7 @@ def _person_with_status():
 
 
 def test_render_page_gates_infobox_status_when_spoiler_on():
-    _, content = render_page(_person_with_status(), LABELS, collapse_after=5)
+    _, content = render_page(_person_with_status(), LABELS, collapse_after=5, lang="fr")
     assert '|status=<span class="mw-collapsible mw-collapsed"' in content
     assert '|death=<span class="mw-collapsible mw-collapsed"' in content
     assert "Décédé</span>" in content
@@ -201,7 +201,7 @@ def test_render_page_gates_infobox_status_when_spoiler_on():
 
 
 def test_render_page_infobox_status_open_when_spoiler_off():
-    _, content = render_page(_person_with_status(), LABELS)
+    _, content = render_page(_person_with_status(), LABELS, lang="fr")
     assert "|status=Décédé" in content
     assert "|death=Tué par Durza à Farthen Dûr" in content
     assert "mw-collapsible" not in content
@@ -224,7 +224,7 @@ def test_render_page_per_relation_collapsibles():
         "relationship_index": [],
     }
     from scripts.wiki_export import render_page
-    _, out = render_page(page, LABELS, collapse_after=3)
+    _, out = render_page(page, LABELS, collapse_after=3, lang="fr")
     assert 'data-expandtext="Chapitre 55 — révéler"' in out  # Celaena gated
     assert out.count("mw-collapsible") == 1                   # Cain (2<=3) not gated
     assert "''Évolution :''" not in out                       # dated index dropped
@@ -239,7 +239,7 @@ def test_render_page_per_relation_no_collapse_config():
         "relationship_index": [],
     }
     from scripts.wiki_export import render_page
-    _, out = render_page(page, LABELS, collapse_after=None)
+    _, out = render_page(page, LABELS, collapse_after=None, lang="fr")
     assert "=== [[Celaena]] ===" in out
     assert "mw-collapsible" not in out
 
@@ -257,7 +257,7 @@ def test_render_page_per_relation_still_gates_non_relationship_sections():
         "relationship_index": [],
     }
     from scripts.wiki_export import render_page
-    _, out = render_page(page, LABELS, collapse_after=3)
+    _, out = render_page(page, LABELS, collapse_after=3, lang="fr")
     assert 'data-expandtext="Chapitre 40 — révéler"' in out  # Biographie gated
     assert "Chapitre 55" in out                              # Celaena gated
     assert out.count("mw-collapsible") == 2
@@ -269,7 +269,7 @@ def test_render_page_per_relation_still_gates_non_relationship_sections():
 def test_render_page_collation_goes_to_wiki_root_without_infobox_or_categories():
     page = {"title": "Personnages mineurs", "entity_type": "COLLATION", "importance": "figurant",
             "infobox_fields": {}, "content": "## Cain\n\nMentionné 3 fois dans 1 chapitre(s)."}
-    rel_path, content = render_page(page, _LABELS)
+    rel_path, content = render_page(page, _LABELS, lang="fr")
     assert rel_path == "Personnages_mineurs.wiki"
     assert "{{Infobox" not in content
     assert "[[Category:" not in content

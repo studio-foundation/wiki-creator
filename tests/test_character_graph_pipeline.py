@@ -125,6 +125,11 @@ def test_indirect_block_injected_for_major_character():
         "first_seen": None,
         "chapter_summary_context": [],
     }
-    prompt = gwp.build_prompt(entity_bundle, book_title="Throne of Glass", sections=["infobox", "biography", "relationships"])
+    prompt = gwp.build_prompt(
+        entity_bundle,
+        book_title="Throne of Glass",
+        sections=["infobox", "biography", "relationships"],
+        lang="fr",
+    )
     assert "inferred: true" in prompt
     assert "Cain" in prompt

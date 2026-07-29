@@ -81,12 +81,13 @@ def export_series(series_dir: Path | str) -> dict:
 
     for character in characters:
         rel_path, content = render_series_character_page(
-            character, labels, lang, stance.expose_importance_tier
+            character, labels, lang=lang,
+            expose_importance_tier=stance.expose_importance_tier,
         )
         (wiki_dir / rel_path).write_text(content, encoding="utf-8")
         files_written += 1
 
-    rel_path, content = render_series_hub(hub, labels, lang, arc)
+    rel_path, content = render_series_hub(hub, labels, lang=lang, arc=arc)
     (wiki_dir / rel_path).write_text(content, encoding="utf-8")
     files_written += 1
 

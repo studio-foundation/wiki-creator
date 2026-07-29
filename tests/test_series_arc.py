@@ -68,6 +68,7 @@ def test_grounding_lists_every_tome_even_without_material():
 
 
 def _prompt(**kwargs):
+    kwargs.setdefault("lang", "fr")
     tomes = [
         TomeGrounding("1", "Heir of Fire", synopsis="She trains in Wendlyn.",
                       events=[_event(4, "she reaches Wendlyn", 0.9)]),

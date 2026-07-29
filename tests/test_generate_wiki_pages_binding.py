@@ -5,43 +5,43 @@ import scripts.generate_wiki_pages as gwp
 
 def test_batch_bound_value_nom():
     entity = {"canonical_name": "Celaena Sardothien", "aliases": ["Celaena"]}
-    assert gwp._batch_bound_value(entity, "nom") == "Celaena Sardothien"
+    assert gwp._batch_bound_value(entity, "nom", lang="fr") == "Celaena Sardothien"
 
 
 def test_batch_bound_value_alias_joins():
     entity = {"canonical_name": "Chaol Westfall", "aliases": ["Chaol", "Captain Westfall"]}
-    assert gwp._batch_bound_value(entity, "alias") == "Chaol, Captain Westfall"
+    assert gwp._batch_bound_value(entity, "alias", lang="fr") == "Chaol, Captain Westfall"
 
 
 def test_batch_bound_value_alias_empty_is_none():
-    assert gwp._batch_bound_value({"canonical_name": "X", "aliases": []}, "alias") is None
-    assert gwp._batch_bound_value({"canonical_name": "X"}, "alias") is None
+    assert gwp._batch_bound_value({"canonical_name": "X", "aliases": []}, "alias", lang="fr") is None
+    assert gwp._batch_bound_value({"canonical_name": "X"}, "alias", lang="fr") is None
 
 
 def test_batch_bound_value_type_and_unknown_are_none():
     entity = {"canonical_name": "X", "type": "PLACE", "aliases": []}
-    assert gwp._batch_bound_value(entity, "type") is None
-    assert gwp._batch_bound_value(entity, "affiliation") is None
+    assert gwp._batch_bound_value(entity, "type", lang="fr") is None
+    assert gwp._batch_bound_value(entity, "affiliation", lang="fr") is None
 
 
 def test_batch_bound_value_apparition_single_book():
     entity = {"canonical_name": "X", "books": ["01-throne-of-glass"]}
-    assert gwp._batch_bound_value(entity, "apparition") == "Apparaît au tome 1"
+    assert gwp._batch_bound_value(entity, "apparition", lang="fr") == "Apparaît au tome 1"
 
 
 def test_batch_bound_value_apparition_multi_book_and_lang():
     entity = {"canonical_name": "X", "books": ["01-throne-of-glass", "02-crown-of-midnight"]}
-    assert gwp._batch_bound_value(entity, "apparition") == (
+    assert gwp._batch_bound_value(entity, "apparition", lang="fr") == (
         "Apparaît au tome 1, dernière apparition tome 2"
     )
-    assert gwp._batch_bound_value(entity, "apparition", "en") == (
+    assert gwp._batch_bound_value(entity, "apparition", lang="en") == (
         "First appears in book 1, last appears in book 2"
     )
 
 
 def test_batch_bound_value_apparition_no_books_is_none():
-    assert gwp._batch_bound_value({"canonical_name": "X"}, "apparition") is None
-    assert gwp._batch_bound_value({"canonical_name": "X", "books": []}, "apparition") is None
+    assert gwp._batch_bound_value({"canonical_name": "X"}, "apparition", lang="fr") is None
+    assert gwp._batch_bound_value({"canonical_name": "X", "books": []}, "apparition", lang="fr") is None
 
 
 def test_bind_batch_fields_sets_apparition_infobox_field():
@@ -84,13 +84,13 @@ def test_bind_batch_fields_omits_apparition_when_no_books():
 def test_make_stub_page_carries_books():
     entity = {"canonical_name": "X", "importance": "figurant", "type": "PERSON",
               "books": ["01-a", "02-b"]}
-    page = gwp.make_stub_page(entity)
+    page = gwp.make_stub_page(entity, lang="fr")
     assert page["books"] == ["01-a", "02-b"]
 
 
 def test_make_stub_page_defaults_books_to_empty_list():
     entity = {"canonical_name": "X", "importance": "figurant", "type": "PERSON"}
-    page = gwp.make_stub_page(entity)
+    page = gwp.make_stub_page(entity, lang="fr")
     assert page["books"] == []
 
 
@@ -98,7 +98,7 @@ def test_parse_response_forces_books_from_entity():
     entity = {"canonical_name": "X", "importance": "figurant", "type": "PERSON",
               "books": ["01-a"]}
     raw = '{"content": "## Biographie\\n\\nSome content long enough to pass.", "books": ["stale"]}'
-    page = gwp.parse_response(raw, entity)
+    page = gwp.parse_response(raw, entity, lang="fr")
     assert page["books"] == ["01-a"]
 
 
@@ -264,10 +264,10 @@ def test_bind_omits_titles_when_absent():
 
 
 def test_extracted_fact_value_titles_and_unknown():
-    assert gwp._extracted_fact_value({"titles": ["Captain", "Duke"]}, "titles", "fr") == "Captain, Duke"
-    assert gwp._extracted_fact_value({"titles": []}, "titles", "fr") is None
-    assert gwp._extracted_fact_value({"affiliation": "Varden"}, "affiliation", "fr") == "Varden"
-    assert gwp._extracted_fact_value({}, "affiliation", "fr") is None
+    assert gwp._extracted_fact_value({"titles": ["Captain", "Duke"]}, "titles", lang="fr") == "Captain, Duke"
+    assert gwp._extracted_fact_value({"titles": []}, "titles", lang="fr") is None
+    assert gwp._extracted_fact_value({"affiliation": "Varden"}, "affiliation", lang="fr") == "Varden"
+    assert gwp._extracted_fact_value({}, "affiliation", lang="fr") is None
 
 
 def test_generation_profile_in_universe_drops_out_of_universe_sections():

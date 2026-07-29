@@ -93,13 +93,13 @@ def test_series_character_pages_match_golden():
 
     assert set(by_name) == {"Gavriel", "Aelin Galathynius", "Glass Castle"}  # all types (STU-706)
 
-    _, gavriel = render_series_character_page(by_name["Gavriel"], labels, "en")
+    _, gavriel = render_series_character_page(by_name["Gavriel"], labels, lang="en")
     _assert_golden("gavriel.wiki", gavriel)
 
-    _, aelin = render_series_character_page(by_name["Aelin Galathynius"], labels, "en")
+    _, aelin = render_series_character_page(by_name["Aelin Galathynius"], labels, lang="en")
     _assert_golden("aelin.wiki", aelin)
 
-    _, castle = render_series_character_page(by_name["Glass Castle"], labels, "en")
+    _, castle = render_series_character_page(by_name["Glass Castle"], labels, lang="en")
     _assert_golden("glass_castle.wiki", castle)
 
 
@@ -108,7 +108,7 @@ def test_non_person_page_has_no_status_row():
     # even when a status verdict collides with its name.
     chars = _fixture()
     castle = next(c for c in chars if c.canonical_name == "Glass Castle")
-    relpath, wiki = render_series_character_page(castle, category_labels({}, "en"), "en")
+    relpath, wiki = render_series_character_page(castle, category_labels({}, "en"), lang="en")
 
     assert relpath == "locations/Glass_Castle.wiki"
     assert castle.status is None
@@ -120,7 +120,7 @@ def test_non_person_page_has_no_status_row():
 def test_gavriel_page_key_properties():
     chars = _fixture()
     gavriel = next(c for c in chars if c.canonical_name == "Gavriel")
-    relpath, wiki = render_series_character_page(gavriel, category_labels({}, "en"), "en")
+    relpath, wiki = render_series_character_page(gavriel, category_labels({}, "en"), lang="en")
 
     assert relpath == "characters/Gavriel.wiki"
     assert gavriel.importance == "principal"          # latest-wins (secondary -> principal)

@@ -9,6 +9,11 @@ from pathlib import Path
 
 from wiki_creator.wikitext_cleaner import clean_wikitext, normalize_infobox_fields
 
+# The scraped fandom corpus this dataset is built from is French; build_prompt
+# takes the output language explicitly (STU-734), so state it rather than
+# inheriting a default.
+CORPUS_LANGUAGE = "fr"
+
 VALID_ENTITY_TYPES = {"PERSON", "PLACE", "ORG", "OTHER"}
 VALID_IMPORTANCES = {"principal", "secondary", "figurant"}
 MIN_CONTENT_LENGTH = 50
@@ -144,7 +149,7 @@ def load_pipeline_outputs(wiki_pages_path: Path, batch_dir: Path) -> list[dict]:
 
         sections = resolve_template(entity_type, importance).section_tokens() or ["infobox", "biography"]
 
-        instruction = build_prompt(entity, "Unknown", sections)
+        instruction = build_prompt(entity, "Unknown", sections, lang=CORPUS_LANGUAGE)
 
         results.append({
             "instruction": instruction,

@@ -74,7 +74,7 @@ class EditorialStance:
             return False
         return key in self.hybrid_exceptions
 
-    def prompt_block(self, sections: list[str] | None = None, lang: str = "fr") -> str:
+    def prompt_block(self, sections: list[str] | None = None, *, lang: str) -> str:
         """``sections`` = what this call actually writes; the hybrid exception line
         names only the exceptions among them, so a section-scoped prompt never
         advertises a section it is not generating."""

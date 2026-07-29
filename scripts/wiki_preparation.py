@@ -588,7 +588,7 @@ def write_collation_pages(entities: list[dict], book_cfg: dict, paths: "BookPath
     """
     path = paths.processing / "collation_pages.json"
     lang = output_language(book_cfg)
-    pages = collective_pages(entities, collation_labels(book_cfg.get("export", {}), lang), lang)
+    pages = collective_pages(entities, collation_labels(book_cfg.get("export", {}), lang=lang), lang=lang)
     if not pages:
         path.unlink(missing_ok=True)
         return []

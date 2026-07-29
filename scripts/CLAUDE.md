@@ -827,6 +827,33 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
 
 - English is the default and the only language allowed in code. Nothing user-visible may be hardcoded in another language — no French (or any non-English) string literals in `.py`. Anything that needs translation is data, not code: it lives in YAML (`wiki_creator/templates/base.yaml` for template/output strings — `labels`, `briefs`, `few_shot`, `length_by_tier`, `chrome`, `language_names`; cue_words for detection vocabulary) keyed by language, and is read via helpers (`slot_label`, `section_brief`, `chrome_label`, …). Prompt *scaffolding* (instructions, grounding labels) stays English regardless of output language; only output-anchoring content (section titles, briefs, few-shot, the write-in-`<language>` directive) and reader-facing chrome follow `output_language(book_config)` (STU-510).
 
+- **`lang` is a required keyword argument, never a defaulted one (STU-734).** Every
+  render/prompt helper that takes the output language declares `*, lang: str` (or
+  `language: str`), so a call that forgets to thread it is a `TypeError` at the call
+  site instead of a French page in an English wiki. `lang: str = "fr"` sat on ~35
+  signatures across `spoiler_blocks`, `series_pages`/`series_hub`/`series_arc`,
+  `collation`, `event_pages`, `export_helpers`, `editorial_stance`, `wiki_export`,
+  `wiki_page_validator` and `generate_wiki_pages` (plus `GenerationConfig.language`),
+  and the sweep is what found the callers that never passed it — the synopsis stage
+  appended a French `## Références` to an English page, and `main_page_content` fell
+  back to `"Personnages"`. Two "fr" defaults survive on purpose: `book_language()`
+  (the documented historical default of this corpus) and the *input*-side
+  `language` of `parse_epub`/`grounding`, which selects detection cue-words, not
+  output strings.
+  **The contamination check follows the output language too**: `check_language_fr`
+  is `check_language_contamination`, and its markers come from every lang pack *but*
+  `lang` (`lang.contamination_markers`). Hardcoding `en` as the contaminant meant an
+  English book tripped `language_contamination` on the very markers its pages are
+  made of — the check fired on exactly the pages it should pass. Only `en.json`
+  declares `language_id_markers`, so an English wiki is a no-op and a French one is
+  still compared against English.
+  The gate is `tests/test_output_localization.py`: every reader-facing surface is
+  rendered with `lang="en"` and searched for the *French* side of base.yaml itself,
+  so a new localized key is covered the day it lands and a string built in Python
+  rather than read from the template is caught the day someone writes it.
+  Still open (STU-733): `synopsis.build_synopsis_prompt` and the `.studio/agents`
+  prompts order French prose regardless of `output_language`.
+
 - `tests/test_e2e_golden.py` chains all deterministic resolution stages on the fixture novella and compares every stage output to goldens in `tests/fixtures/e2e/golden/stages/`. Any intentional behavior change in those stages requires `make golden-update` and a review of the golden diff in the same PR. The extraction seed is committed (`golden/seed/`, regenerate with `gen_seed.py`); a `@requires_en_sm` test keeps it shape-compatible with real extraction in CI.
 
 - Spoiler blocks (STU-492): `wiki_export.render_page` wraps chapter-gated sections

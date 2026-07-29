@@ -78,7 +78,7 @@ def _hub():
 
 
 def test_hub_frame_matches_golden():
-    path, wiki = render_series_hub(_hub(), category_labels({}, "en"), "en")
+    path, wiki = render_series_hub(_hub(), category_labels({}, "en"), lang="en")
 
     assert path == HUB_FILENAME
     golden = GOLDEN_DIR / "hub.wiki"
@@ -105,7 +105,7 @@ def test_main_characters_are_persons_reaching_the_tier():
 
 
 def test_tome_entries_follow_reading_order_and_link_only_when_published():
-    _, wiki = render_series_hub(_hub(), category_labels({}, "en"), "en")
+    _, wiki = render_series_hub(_hub(), category_labels({}, "en"), lang="en")
 
     assert "* Book 1 — [[Heir of Fire (synopsis)|Heir of Fire]]" in wiki
     assert "* Book 2 — Queen of Shadows" in wiki
@@ -113,9 +113,9 @@ def test_tome_entries_follow_reading_order_and_link_only_when_published():
 
 
 def test_arc_slot_is_injected_above_the_frame():
-    frame = render_series_hub(_hub(), category_labels({}, "en"), "en")[1]
+    frame = render_series_hub(_hub(), category_labels({}, "en"), lang="en")[1]
     with_arc = render_series_hub(
-        _hub(), category_labels({}, "en"), "en", arc="A kingdom of glass, a queen of ash."
+        _hub(), category_labels({}, "en"), lang="en", arc="A kingdom of glass, a queen of ash."
     )[1]
 
     assert "A kingdom of glass, a queen of ash." in with_arc
@@ -124,7 +124,7 @@ def test_arc_slot_is_injected_above_the_frame():
 
 
 def test_hub_localizes_chrome_and_category_targets():
-    _, wiki = render_series_hub(_hub(), category_labels({}, "fr"), "fr")
+    _, wiki = render_series_hub(_hub(), category_labels({}, "fr"), lang="fr")
 
     assert "== Ordre de lecture ==" in wiki
     assert "* Tome 1 — [[Heir of Fire (synopsis)|Heir of Fire]]" in wiki

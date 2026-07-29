@@ -88,7 +88,8 @@ def test_collective_pages_group_by_title_and_sort_entries():
             _entity("Cain", total_mentions=3, chapters_present=1, aliases=["The Champion"]),
             _entity("Endovier", entity_type="PLACE", total_mentions=5, chapters_present=3),
         ],
-        collation_labels({}),
+        collation_labels({}, lang="fr"),
+        lang="fr",
     )
     assert [p["title"] for p in pages] == ["Personnages mineurs", "Lieux mineurs"]
     persons = pages[0]
@@ -104,7 +105,8 @@ def test_collective_pages_never_emit_two_pages_with_the_same_title():
     title would collide in the flat wiki namespace (validate_unique_page_title)."""
     pages = collective_pages(
         [_entity("Le duel", entity_type="EVENT"), _entity("Wyrdmarks", entity_type="OTHER")],
-        collation_labels({}),
+        collation_labels({}, lang="fr"),
+        lang="fr",
     )
     assert [p["title"] for p in pages] == ["Autres entités mineures"]
     assert "## Le duel" in pages[0]["content"]
@@ -114,24 +116,27 @@ def test_collective_pages_never_emit_two_pages_with_the_same_title():
 def test_collective_pages_titles_come_from_export_labels():
     pages = collective_pages(
         [_entity("Verin")],
-        collation_labels({"categories": {"labels": {"minor_persons": "Minor Characters"}}}),
+        collation_labels({"categories": {"labels": {"minor_persons": "Minor Characters"}}}, lang="fr"),
+        lang="fr",
     )
     assert [p["title"] for p in pages] == ["Minor Characters"]
 
 
 def test_collective_pages_empty_input_yields_nothing():
-    assert collective_pages([], collation_labels({})) == []
+    assert collective_pages([], collation_labels({}, lang="fr"), lang="fr") == []
 
 
 def test_collective_pages_localize_titles_and_entries_by_lang():
     entities = [_entity("Cain", total_mentions=4, chapters_present=2, aliases=["The Champion"])]
-    pages = collective_pages(entities, collation_labels({}, "en"), "en")
+    pages = collective_pages(entities, collation_labels({}, lang="en"), lang="en")
     assert [p["title"] for p in pages] == ["Minor characters"]
     content = pages[0]["content"]
     assert "*Aliases: The Champion*" in content
     assert "Mentioned 4 times in 2 chapter(s)." in content
     # export.categories.labels override still wins over the localized default
     over = collective_pages(
-        entities, collation_labels({"categories": {"labels": {"minor_persons": "Extras"}}}, "en"), "en"
+        entities,
+        collation_labels({"categories": {"labels": {"minor_persons": "Extras"}}}, lang="en"),
+        lang="en",
     )
     assert over[0]["title"] == "Extras"

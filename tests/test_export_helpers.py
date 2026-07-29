@@ -224,6 +224,7 @@ def test_main_page_content_contains_title():
         author="Carlos Ruiz Zafón",
         pages=pages,
         labels=labels,
+        lang="fr",
     )
     assert "Le Jeu de l'Ange" in content
     assert "David Martín" in content
@@ -247,8 +248,7 @@ def test_main_page_content_localizes_chrome_by_lang():
     assert "wiki pages" in en
     # category targets stay on the export.categories axis (labels), not localized here
     assert "Category:Characters" in en
-    # French default preserved when lang is unset
-    fr = main_page_content("x", "y", pages, labels)
+    fr = main_page_content("x", "y", pages, labels, lang="fr")
     assert "== Personnages principaux ==" in fr
 
 
@@ -275,7 +275,7 @@ def test_main_page_lists_events_when_present():
         {"title": "Celaena", "importance": "principal", "entity_type": "PERSON"},
         {"title": "Le duel final", "importance": "principal", "entity_type": "EVENT"},
     ]
-    content = main_page_content("Throne of Glass", "Sarah J. Maas", pages, labels)
+    content = main_page_content("Throne of Glass", "Sarah J. Maas", pages, labels, lang="fr")
     assert "== Événements ==" in content
     assert "[[Le duel final]]" in content
 
@@ -286,14 +286,14 @@ def test_main_page_links_synopsis_when_present():
         {"title": "Synopsis", "importance": "principal", "entity_type": "SYNOPSIS"},
         {"title": "Celaena", "importance": "principal", "entity_type": "PERSON"},
     ]
-    content = main_page_content("Throne of Glass", "Sarah J. Maas", pages, labels)
+    content = main_page_content("Throne of Glass", "Sarah J. Maas", pages, labels, lang="fr")
     assert "[[Synopsis|Synopsis du livre]]" in content
 
 
 def test_main_page_omits_synopsis_section_when_absent():
     labels = {"persons": "Personnages", "locations": "Lieux", "organizations": "Organisations"}
     pages = [{"title": "Celaena", "importance": "principal", "entity_type": "PERSON"}]
-    content = main_page_content("Throne of Glass", "Sarah J. Maas", pages, labels)
+    content = main_page_content("Throne of Glass", "Sarah J. Maas", pages, labels, lang="fr")
     assert "== Synopsis ==" not in content
 
 
@@ -317,7 +317,7 @@ def test_main_page_honours_index_limits():
         for i in range(10)
     ]
     content = main_page_content(
-        "Throne of Glass", "Sarah J. Maas", pages, labels, principals_shown=2
+        "Throne of Glass", "Sarah J. Maas", pages, labels, principals_shown=2, lang="fr"
     )
     assert "[[Perso 1]]" in content
     assert "[[Perso 2]]" not in content
@@ -329,7 +329,7 @@ def test_main_page_links_collective_pages_under_navigation():
         {"title": "Celaena", "importance": "principal", "entity_type": "PERSON"},
         {"title": "Personnages mineurs", "importance": "figurant", "entity_type": "COLLATION"},
     ]
-    content = main_page_content("Throne of Glass", "Sarah J. Maas", pages, labels)
+    content = main_page_content("Throne of Glass", "Sarah J. Maas", pages, labels, lang="fr")
     navigation = content.split("== Navigation ==")[1]
     assert "[[Personnages mineurs]]" in navigation.split("== Statistiques ==")[0]
 def test_category_tags_omit_importance_tier_when_stance_hides_it():
@@ -350,7 +350,8 @@ def test_main_page_omits_run_stats_when_stance_hides_pipeline_metadata():
     labels = {"persons": "Personnages", "locations": "Lieux", "organizations": "Organisations"}
     pages = [{"title": "Celaena", "importance": "principal", "entity_type": "PERSON"}]
     content = main_page_content(
-        "Throne of Glass", "Sarah J. Maas", pages, labels, expose_pipeline_metadata=False
+        "Throne of Glass", "Sarah J. Maas", pages, labels,
+        expose_pipeline_metadata=False, lang="fr",
     )
     assert "== Statistiques ==" not in content
     assert "pages wiki" not in content

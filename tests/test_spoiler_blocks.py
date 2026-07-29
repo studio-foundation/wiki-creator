@@ -49,7 +49,7 @@ def test_wrap_gates_block_above_threshold():
         {"section": "biography", "revealed_at_chapter": 1},
         {"section": "powers", "revealed_at_chapter": 20},
     ]
-    out = wrap_collapsible(BODY, units, collapse_after=5)
+    out = wrap_collapsible(BODY, units, collapse_after=5, lang="fr")
     # biography (ch.1 <= 5) stays open
     assert '== Biographie ==\n\nNé au chapitre 1.' in out
     assert 'Biographie ==\n\nNé' in out and 'mw-collapsible' in out
@@ -61,14 +61,14 @@ def test_wrap_gates_block_above_threshold():
 
 def test_wrap_none_and_unmatched_left_open():
     units = [{"section": "biography", "revealed_at_chapter": None}]
-    out = wrap_collapsible(BODY, units, collapse_after=5)
+    out = wrap_collapsible(BODY, units, collapse_after=5, lang="fr")
     assert "mw-collapsible" not in out  # None chapter + unmatched Pouvoirs → untouched
     assert out == BODY
 
 
 def test_wrap_threshold_boundary_is_strict():
     units = [{"section": "biography", "revealed_at_chapter": 5}]
-    out = wrap_collapsible(BODY, units, collapse_after=5)
+    out = wrap_collapsible(BODY, units, collapse_after=5, lang="fr")
     assert "mw-collapsible" not in out  # exactly == threshold stays open
 
 
@@ -92,7 +92,7 @@ def _entity():
 def test_relationship_index_lines_content_and_order():
     # The fixture carries pre-STU-477 French strings: they resolve through the enum's
     # `legacy` map and render as the localized label, so old artifacts stay readable.
-    lines = relationship_index_lines(_entity())
+    lines = relationship_index_lines(_entity(), lang="fr")
     # untyped (Ghost) and chapter-less (NoChap) excluded
     assert lines == [
         "* [[Cain]] — Ennemi (ch.7)",               # legacy "antagoniste" renders in the new word
@@ -108,19 +108,19 @@ def test_relationship_index_lines_localizes_canonical_token():
              "relationship_type": "strained_friendship", "chapters": [1]},
         ],
     }
-    assert relationship_index_lines(entity, "fr") == ["* [[Chaol]] — Amitié tendue (ch.1)"]
-    assert relationship_index_lines(entity, "en") == ["* [[Chaol]] — Strained friendship (ch.1)"]
+    assert relationship_index_lines(entity, lang="fr") == ["* [[Chaol]] — Amitié tendue (ch.1)"]
+    assert relationship_index_lines(entity, lang="en") == ["* [[Chaol]] — Strained friendship (ch.1)"]
 
 
 def test_citation_ref_grounds_book_and_chapter():
-    assert citation_ref("The Hobbit", 3, "en") == "<ref>The Hobbit, chapter 3</ref>"
-    assert citation_ref("Le Hobbit", 3, "fr") == "<ref>Le Hobbit, chapitre 3</ref>"
+    assert citation_ref("The Hobbit", 3, lang="en") == "<ref>The Hobbit, chapter 3</ref>"
+    assert citation_ref("Le Hobbit", 3, lang="fr") == "<ref>Le Hobbit, chapitre 3</ref>"
 
 
 def test_relationship_index_lines_cite_first_reveal_chapter_when_book_title_given():
     # STU-656: a book_title attaches a <ref> per line, grounded in the relation's
     # first-reveal chapter (the span's low end), not the last.
-    lines = relationship_index_lines(_entity(), "fr", book_title="Throne of Glass")
+    lines = relationship_index_lines(_entity(), lang="fr", book_title="Throne of Glass")
     assert lines == [
         "* [[Cain]] — Ennemi (ch.7)<ref>Throne of Glass, chapitre 7</ref>",
         "* [[Chaol]] — Amoureux (ch.1→ch.55)<ref>Throne of Glass, chapitre 1</ref>",
@@ -128,7 +128,7 @@ def test_relationship_index_lines_cite_first_reveal_chapter_when_book_title_give
 
 
 def test_relationship_index_lines_no_ref_without_book_title():
-    assert all("<ref>" not in line for line in relationship_index_lines(_entity(), "fr"))
+    assert all("<ref>" not in line for line in relationship_index_lines(_entity(), lang="fr"))
 
 
 def test_relationship_index_lines_drops_unbucketed_types():
@@ -145,11 +145,11 @@ def test_relationship_index_lines_drops_unbucketed_types():
              "relationship_type": "friend", "chapters": [3]},
         ],
     }
-    assert relationship_index_lines(entity, "en") == ["* [[Nehemia]] — Friend (ch.3)"]
+    assert relationship_index_lines(entity, lang="en") == ["* [[Nehemia]] — Friend (ch.3)"]
 
 
 def test_relationship_index_lines_empty_when_no_typed():
-    assert relationship_index_lines({"canonical_name": "X", "relationships": []}) == []
+    assert relationship_index_lines({"canonical_name": "X", "relationships": []}, lang="fr") == []
 
 
 def test_relationship_index_lines_excludes_null_sentinel():
@@ -161,14 +161,14 @@ def test_relationship_index_lines_excludes_null_sentinel():
              "relationship_type": "null", "chapters": [10, 52]},
         ],
     }
-    assert relationship_index_lines(entity) == []
+    assert relationship_index_lines(entity, lang="fr") == []
 
 
 REL_BODY = "== Biographie ==\n\nBio.\n\n== Relations ==\n\nProse FR.\n"
 
 
 def test_inject_appends_index_under_relations():
-    out = inject_relationship_index(REL_BODY, ["* [[Chaol]] — amoureux (ch.1→ch.55)"])
+    out = inject_relationship_index(REL_BODY, ["* [[Chaol]] — amoureux (ch.1→ch.55)"], lang="fr")
     assert "Prose FR." in out
     assert "''Évolution :''" in out
     assert "* [[Chaol]] — amoureux (ch.1→ch.55)" in out
@@ -178,8 +178,8 @@ def test_inject_appends_index_under_relations():
 
 
 def test_inject_noop_without_relations_or_lines():
-    assert inject_relationship_index("== Biographie ==\n\nBio.", ["* x"]) == "== Biographie ==\n\nBio."
-    assert inject_relationship_index(REL_BODY, []) == REL_BODY
+    assert inject_relationship_index("== Biographie ==\n\nBio.", ["* x"], lang="fr") == "== Biographie ==\n\nBio."
+    assert inject_relationship_index(REL_BODY, [], lang="fr") == REL_BODY
 
 
 def test_spoiler_collapse_after_reads_config():
@@ -199,7 +199,7 @@ _REL_BODY = (
 def test_wrap_relation_gates_subsection_above_threshold():
     units = [{"name": "Celaena", "revealed_at_chapter": 55},
              {"name": "Cain", "revealed_at_chapter": 2}]
-    out = wrap_relation_collapsibles(_REL_BODY, units, collapse_after=3)
+    out = wrap_relation_collapsibles(_REL_BODY, units, collapse_after=3, lang="fr")
     # Celaena (55 > 3) wrapped; Cain (2 <= 3) not
     assert 'data-expandtext="Chapitre 55 — révéler"' in out
     assert out.count("mw-collapsible") == 1
@@ -211,14 +211,14 @@ def test_wrap_relation_gates_subsection_above_threshold():
 
 def test_wrap_relation_boundary_is_strict():
     units = [{"name": "Celaena", "revealed_at_chapter": 3}]
-    out = wrap_relation_collapsibles(_REL_BODY, units, collapse_after=3)
+    out = wrap_relation_collapsibles(_REL_BODY, units, collapse_after=3, lang="fr")
     assert "mw-collapsible" not in out
 
 
 def test_wrap_relation_unmatched_and_none_left_open():
     units = [{"name": "Celaena", "revealed_at_chapter": None},
              {"name": "Ghost", "revealed_at_chapter": 99}]
-    out = wrap_relation_collapsibles(_REL_BODY, units, collapse_after=3)
+    out = wrap_relation_collapsibles(_REL_BODY, units, collapse_after=3, lang="fr")
     assert "mw-collapsible" not in out
 
 

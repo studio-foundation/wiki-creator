@@ -171,7 +171,8 @@ def build_event_prompt(
     forbidden_names: list[str] | None = None,
     events: list[dict] | None = None,
     context_window: int = DEFAULT_CONTEXT_WINDOW,
-    lang: str = "fr",
+    *,
+    lang: str,
     register: str = DEFAULT_REGISTER,
 ) -> str:
     """Anchored writer prompt for one event page.

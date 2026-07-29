@@ -75,7 +75,7 @@ def build_series_hub(
 
 
 def render_series_hub(
-    hub: SeriesHub, labels: dict, lang: str = "fr", arc: str | None = None
+    hub: SeriesHub, labels: dict, *, lang: str, arc: str | None = None
 ) -> tuple[str, str]:
     """``(path relative to the series wiki dir, wikitext)`` for the hub page.
 
