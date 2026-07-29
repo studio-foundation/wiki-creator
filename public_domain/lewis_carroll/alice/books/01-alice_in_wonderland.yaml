@@ -14,7 +14,12 @@ ner:
   # STU-630: Wonderland's cast is named by common nouns (the Hatter, the Dormouse),
   # which GLiNER's `person name` label under-detects. Listed here, matched verbatim
   # and typed PERSON. "Cat" is the Cheshire Cat, called "the Cat" 43 times.
+  # STU-714: same shape for the rabbit that opens the book — "White Rabbit" 22
+  # times, "the Rabbit" 24, and GLiNER found it only in the two chapters where
+  # the full form is dense.
   character_names:
+    - White Rabbit
+    - Rabbit
     - Hatter
     - Dormouse
     - Caterpillar
