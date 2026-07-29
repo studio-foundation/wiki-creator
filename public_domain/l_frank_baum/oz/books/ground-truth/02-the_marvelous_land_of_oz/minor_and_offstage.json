@@ -1,0 +1,160 @@
+{
+  "dorothy": {
+    "canonical_aliases_book1": [
+      "Dorothy"
+    ],
+    "known_facts_book1": [
+      "Never appears in this book; she is only spoken of as a girl who came to Oz from Kansas by cyclone in the past and was sent home again by Glinda.",
+      "The Scarecrow and Tin Woodman recall past adventures with her (the Stinging Bees, the Grey Wolves, the Winged Monkeys) from before this story.",
+      "Her name is engraved among past adventurers on the Tin Woodman's silver oil-can.",
+      "Baum's Author's Note calls the real little girl who begged for the book 'a Dorothy' — not the character."
+    ],
+    "known_relations_book1": {
+      "Scarecrow": "Their former companion from an earlier adventure; she is gone home to Kansas and never appears here.",
+      "Nick Chopper": "The Tin Woodman's former travelling companion, absent throughout this book."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Dorothy appears in this book",
+        "Dorothy speaks in this book",
+        "Dorothy meets Tip",
+        "Dorothy helps recapture the Emerald City"
+      ],
+      "adaptation_inventions": [
+        "ruby slippers",
+        "Dorothy Gale",
+        "there's no place like home",
+        "Over the Rainbow"
+      ],
+      "relationships": [
+        "Ozma befriends Dorothy in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "Dorothy said",
+      "Dorothy meets Tip",
+      "Dorothy and Ozma are reunited",
+      "ruby slippers",
+      "Dorothy Gale",
+      "Dorothy returns to Oz",
+      "Dorothy helps Ozma"
+    ]
+  },
+  "wizard_of_oz": {
+    "canonical_aliases_book1": [
+      "Wizard of Oz"
+    ],
+    "known_facts_book1": [
+      "Does not appear; he had already fled Oz in a balloon before this story and no one has seen him since.",
+      "Spoken of throughout as a humbug who nonetheless gave the Scarecrow his brains and the Tin Woodman his heart.",
+      "Usurped the throne of the Emerald City from King Pastoria, then stole Pastoria's infant heir Ozma and gave her to Mombi to hide, paying her with magic lessons.",
+      "Made three secret visits to Mombi, and is said (jokingly) to have come originally 'from Omaha.'",
+      "Passed the crown of the Emerald City to the Scarecrow before he left."
+    ],
+    "known_relations_book1": {
+      "Mombi": "Paid her with magic lessons and three secret visits to hide the transformed infant Ozma.",
+      "Scarecrow": "Gave him his brains and passed him the crown before fleeing.",
+      "Pastoria": "The King whose throne he usurped and whose infant daughter Ozma he hid."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Wizard appears in this book",
+        "the Wizard speaks in this book",
+        "the Wizard returns to help recapture the city"
+      ],
+      "adaptation_inventions": [
+        "Professor Marvel",
+        "the man behind the curtain confronts Dorothy"
+      ],
+      "later_tomes": [
+        "the Wizard returns to Oz with Dorothy",
+        "the Wizard studies magic under Glinda"
+      ]
+    },
+    "hallucination_signals": [
+      "the Wizard said",
+      "the Wizard appears",
+      "the Wizard returns",
+      "Professor Marvel",
+      "the man behind the curtain",
+      "the Wizard helps Ozma"
+    ]
+  },
+  "pastoria": {
+    "canonical_aliases_book1": [
+      "Pastoria"
+    ],
+    "known_facts_book1": [
+      "Named but long dead; the former King of the Emerald City from whom the Wizard usurped the throne.",
+      "Father of Princess Ozma, the rightful heir; he never appears and has no lines."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Her father; the rightful line of the Emerald City throne passes from him to Ozma.",
+      "Wizard of Oz": "The usurper who took his throne and hid his infant daughter."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Pastoria appears in this book",
+        "Pastoria speaks in this book",
+        "Pastoria is alive during this story"
+      ],
+      "later_tomes": [
+        "Pastoria the tailor"
+      ]
+    },
+    "hallucination_signals": [
+      "Pastoria said",
+      "Pastoria appears",
+      "Pastoria the tailor",
+      "King Pastoria fights"
+    ]
+  },
+  "professor_nowitall": {
+    "canonical_aliases_book1": [
+      "Nowitall",
+      "Professor Nowitall"
+    ],
+    "known_facts_book1": [
+      "The famous schoolmaster in whose country schoolhouse the Woggle-Bug was educated; he appears only inside the Woggle-Bug's recited history, never in the story's present.",
+      "Caught the Woggle-Bug and threw it 'highly magnified' upon a screen, allowing it to escape enlarged."
+    ],
+    "known_relations_book1": {
+      "Woggle-Bug": "His unnoticed pupil for years; he magnified the Woggle-Bug on a screen."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Professor Nowitall appears in the present story",
+        "Professor Nowitall joins the party"
+      ]
+    },
+    "hallucination_signals": [
+      "Professor Nowitall said to Tip",
+      "Professor Nowitall joins the journey",
+      "Professor Nowitall meets Ozma"
+    ]
+  },
+  "nikidik": {
+    "canonical_aliases_book1": [
+      "Nikidik"
+    ],
+    "known_facts_book1": [
+      "A crooked wizard living in a lonely mountain cave; never appears in person.",
+      "The maker of the Powder of Life and of Dr. Nikidik's Celebrated Wishing Pills; Mombi traded magic secrets with him for the Powder."
+    ],
+    "known_relations_book1": {
+      "Mombi": "Traded magical secrets to her and is the source of the Powder of Life she uses."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Nikidik appears in this book",
+        "Nikidik joins the party",
+        "Nikidik speaks to Tip"
+      ]
+    },
+    "hallucination_signals": [
+      "Nikidik said",
+      "Nikidik appears",
+      "Nikidik joins the journey"
+    ]
+  }
+}

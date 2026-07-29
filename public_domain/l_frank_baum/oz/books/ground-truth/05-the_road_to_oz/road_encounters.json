@@ -1,0 +1,96 @@
+{
+  "king_dox": {
+    "canonical_aliases_book1": [
+      "King Dox",
+      "King Renard"
+    ],
+    "known_facts_book1": [
+      "The fox king who rules Foxville, a city of civilized foxes reached through a carved arch on the road.",
+      "His private name is Dox but his official name is King Renard the Fourth.",
+      "Confers a fox's head upon Button-Bright, believing it will make the boy look as clever as he really is.",
+      "Cannot undo his own magic, so Button-Bright must keep the fox head until it is washed off elsewhere.",
+      "Hates the name of Aesop for writing of foxes as cruel and wicked.",
+      "Begs Dorothy to get him an invitation to Ozma's birthday celebration on the twenty-first.",
+      "Later attends the party in a new feather costume and white kid mittens, and kneels at Dorothy's feet on learning she is a Princess.",
+      "Becomes good friends with King Kik-a-bray of Dunkiton by the day of the celebration."
+    ],
+    "known_relations_book1": {
+      "Button-Bright": "The boy on whom he bestows an unwanted fox head.",
+      "Dorothy": "The Princess who gets him his coveted invitation to Ozma's party.",
+      "Ozma": "The Ruler whose birthday celebration he longs to attend."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "King Dox gives Button-Bright a donkey head",
+        "King Dox can undo his transformations",
+        "King Dox rules the Emerald City"
+      ]
+    },
+    "hallucination_signals": [
+      "King Dox gives a donkey head",
+      "King Dox reverses the spell",
+      "King Renard the First",
+      "Foxville is in Kansas"
+    ]
+  },
+  "musicker": {
+    "canonical_aliases_book1": [
+      "Musicker",
+      "Allegro da Capo"
+    ],
+    "known_facts_book1": [
+      "A little fat man who lives alone in a small house by the road and makes constant organ-like music simply by breathing.",
+      "His lungs are full of reeds like an organ's, so every breath in or out squeezes out music he cannot stop.",
+      "Sings his answers in verse and calls himself 'Allegro da Capo, a very famous man'.",
+      "Begs to be taken along to play the loveliest song on Ozma's birthday.",
+      "Is not invited to the party by Ozma, who fears his ceaseless noise would disturb the other guests.",
+      "Button-Bright likes his music, though Dorothy and the shaggy man do not."
+    ],
+    "known_relations_book1": {
+      "Button-Bright": "The one traveler who genuinely likes his music.",
+      "Shaggy Man": "Repeatedly begs him to stop the dreadful noise.",
+      "Ozma": "The Ruler who declines to invite him to her celebration."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Musicker attends Ozma's party",
+        "the Musicker can stop his music",
+        "the Musicker travels to Oz with Dorothy"
+      ]
+    },
+    "hallucination_signals": [
+      "the Musicker plays at Ozma's birthday",
+      "the Musicker stops breathing music",
+      "the Musicker joins the journey to Oz"
+    ]
+  },
+  "johnny_dooit": {
+    "canonical_aliases_book1": [
+      "Johnny Dooit"
+    ],
+    "known_facts_book1": [
+      "A funny little man with a long grey beard and a worn leather apron who sits on a big copper chest full of magic tools.",
+      "Is summoned by the shaggy man through the Love Magnet with a two-line rhyme, and never wastes time.",
+      "Builds a sand-boat with runners and a sail in minutes so the party can cross the Deadly Desert without touching the deadly sands.",
+      "Sings a song while he works: 'The only way to do a thing / Is do it when you can.'",
+      "Vanishes with his tools the instant the boat is finished, too busy to hear thanks.",
+      "Attends the birthday celebration, eats heartily, and builds a great flying machine on the platform in which he flies away."
+    ],
+    "known_relations_book1": {
+      "Shaggy Man": "His friend, who summons him by the Love Magnet in the party's hour of need.",
+      "Dorothy": "One of the travelers he helps across the desert."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Johnny Dooit lives in the Emerald City",
+        "Johnny Dooit carries the party across the desert himself",
+        "Johnny Dooit uses magic words"
+      ]
+    },
+    "hallucination_signals": [
+      "Johnny Dooit is a wizard",
+      "Johnny Dooit lives in Oz",
+      "Johnny Dooit flies Dorothy across the desert"
+    ]
+  }
+}

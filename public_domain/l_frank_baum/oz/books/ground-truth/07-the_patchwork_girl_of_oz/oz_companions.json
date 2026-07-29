@@ -1,0 +1,219 @@
+{
+  "scarecrow": {
+    "canonical_aliases_book1": [
+      "Scarecrow",
+      "the Right Royal Scarecrow of Oz"
+    ],
+    "known_facts_book1": [
+      "A man of straw in Munchkin blue, with a painted cloth-bag face, one eye larger than the other and ears that are not mates.",
+      "Is met on the road of yellow bricks riding the Sawhorse, on his way to have Jinjur repaint his faded left ear, which had affected his hearing.",
+      "Falls into extravagant admiration of the Patchwork Girl at first sight and hurries back to the Emerald City to see more of her.",
+      "Has no heart and gets along perfectly well without one, unlike his friend the Tin Woodman.",
+      "Volunteers to be grabbed first when the party dashes past Mister Yoop's cave, knowing he is not fit to eat.",
+      "Is thrown at the marble picket fence by Hip Hopper, lands on top of a picket which catches him in the middle of the back, and hangs there kicking until a ladder is fetched.",
+      "Has the hole in his back and a ripped leg sewn up by Dorothy with the needle and thread from her knapsack.",
+      "Steers the raft on the Trick River with a broken branch and anchors it against a rock when the current reverses.",
+      "Lives in a castle in the Winkie Country near the Tin Woodman's palace, and often visits Dorothy at the royal palace."
+    ],
+    "known_relations_book1": {
+      "Scraps": "The Patchwork Girl he admires above every sight he has ever seen.",
+      "Shaggy Man": "An old friend who introduces him to Scraps.",
+      "Dorothy": "Accompanies her on the quest and is sewn up by her.",
+      "Tin Woodman": "His dearest friend, whose castle the party travels to.",
+      "Sawhorse": "Ozma's steed, which he is sometimes allowed to ride.",
+      "Ojo": "Travels with him to the Quadling Country to find the dark well."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "the Scarecrow wants brains in this book",
+        "the Wizard gives the Scarecrow brains in this book"
+      ],
+      "not_in_this_book": [
+        "the Scarecrow rules the Emerald City in this book",
+        "the Scarecrow is burned",
+        "the Scarecrow marries Scraps"
+      ]
+    },
+    "hallucination_signals": [
+      "the Scarecrow asks for brains",
+      "the Scarecrow is set on fire",
+      "the Scarecrow rules Oz",
+      "the Scarecrow marries the Patchwork Girl"
+    ]
+  },
+  "tin_woodman": {
+    "canonical_aliases_book1": [
+      "Tin Woodman",
+      "Nick Chopper",
+      "Emperor of the Winkies",
+      "Tin Emperor"
+    ],
+    "known_facts_book1": [
+      "Emperor of the Winkies, ruling the yellow country of Oz from a castle built entirely of tin by the Winkie tinsmiths.",
+      "Was once a flesh woodchopper who kept chopping himself with his axe and had each lost limb replaced with tin until he was all tin.",
+      "Keeps his tin body brilliantly polished and his joints well oiled, and has a valet who oils him.",
+      "His castle grounds hold tin fountains, tin flowers, tin trees and tin statues of Dorothy, Toto, the Scarecrow, the Wizard, the Shaggy Man, Jack Pumpkinhead and Ozma.",
+      "Owns a field of yellow lilies which the party must cross without treading on a single blossom.",
+      "Absolutely refuses to let anyone take the left wing of a yellow butterfly, calling it one of the most cruel and heartless deeds he ever heard of, and refuses even to lend a live butterfly.",
+      "Says he will protect his butterflies because he rules the Winkie Country, the only place in Oz where yellow butterflies are found.",
+      "Unknowingly supplies the drop of oil from a live man's body, which falls from his left knee-joint and is caught by Ojo in a crystal vial.",
+      "Argues Ojo out of his bad luck, declaring Friday is just one of seven days and thirteen is a lucky number, and renames him Ojo the Lucky.",
+      "Proposes that the whole party return to the Emerald City and ask Ozma's advice."
+    ],
+    "known_relations_book1": {
+      "Scarecrow": "His dearest friend, whose castle stands near his own.",
+      "Ojo": "Refuses him the butterfly wing but gives him the drop of oil and a new name.",
+      "Dorothy": "An old friend whom he embraces on her arrival.",
+      "Ozma": "The Ruler to whom he owes allegiance and whose advice he seeks.",
+      "Scraps": "The Patchwork Girl whose heartless offer to kill butterflies he forgives, since she has no heart."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "the Tin Woodman asks the Wizard for a heart in this book"
+      ],
+      "not_in_this_book": [
+        "the Tin Woodman allows a butterfly wing to be taken",
+        "the Tin Woodman searches for his lost love in this book",
+        "the Tin Woodman rusts solid in this book",
+        "the Tin Woodman is made of tin from birth"
+      ]
+    },
+    "hallucination_signals": [
+      "the Tin Woodman gives up a butterfly",
+      "the Tin Woodman asks for a heart",
+      "the Tin Woodman rusts in the rain",
+      "the Tin Woodman seeks Nimmie Amee"
+    ]
+  },
+  "shaggy_man": {
+    "canonical_aliases_book1": [
+      "Shaggy Man"
+    ],
+    "known_facts_book1": [
+      "A big man shaggy in whiskers, eyebrows, hair, hat, laces, coat and breeches, with kindly blue eyes and a medallion of Princess Dorothy on his breast.",
+      "Came to Oz from the outside world with Dorothy and was allowed by Ozma to stay; he has a suite of rooms in the royal palace.",
+      "Rescues Ojo, Scraps, the Glass Cat and the Woozy from the great clutching leaves by whistling, which charms the plants, and by cutting the leaves with a dagger-shaped knife.",
+      "Carries condensed 'square meals' in tablet form, the invention of Professor Wogglebug of the Royal College of Athletics.",
+      "Knows the trick of the sliding road — walk backward — and the trick of the illusory wall between the Munchkin and green countries, which is passed with eyes shut.",
+      "Pins Chiss the giant porcupine under his foot after being struck by a quill, and has the quills gathered up and sunk in a pond.",
+      "Sings a song of his own composition naming Ozma, Dorothy, the Scarecrow, Nick Chopper, Professor Wogglebug, Jack Pumpkinhead, the Sawhorse, the Cowardly Lion, Tik-tok, the Hungry Tiger, Billina and the Nine Tiny Piglets.",
+      "Drives the live phonograph away by threatening to take it apart and scatter its pieces."
+    ],
+    "known_relations_book1": {
+      "Ojo": "Rescues him from the plant and guides him to the Emerald City.",
+      "Dorothy": "Knew her in Kansas; she brought him to the Land of Oz.",
+      "Scarecrow": "An old friend whom he introduces to Scraps.",
+      "Scraps": "Calls her a regular comforter and delights in her company.",
+      "Chiss": "The giant porcupine he pins down and disarms."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Shaggy Man carries the Love Magnet in this book",
+        "the Shaggy Man travels to the Quadling Country with Ojo",
+        "the Shaggy Man is a beggar in Oz"
+      ]
+    },
+    "hallucination_signals": [
+      "the Shaggy Man uses the Love Magnet",
+      "the Shaggy Man goes to the dark well",
+      "the Shaggy Man kills Chiss"
+    ]
+  },
+  "jack_pumpkinhead": {
+    "canonical_aliases_book1": [
+      "Jack Pumpkinhead"
+    ],
+    "known_facts_book1": [
+      "A man whose body is a framework of hickory branches dressed in a red spotted shirt, blue trousers, yellow vest and green-and-gold jacket, with a carved pumpkin set on a sharpened stick for a head.",
+      "Lives a day's journey from the Emerald City in a house made from the shell of an immense pumpkin, standing in the center of a vast pumpkin-field.",
+      "Was made by Tip and brought to life by Mombi with Dr. Pipt's Powder of Life, and is Ozma's earliest companion.",
+      "Uses pumpkin-seeds for brains and says he is intellectual only while they are fresh; he grows a whole field so he can select a new head when the old one spoils.",
+      "Carves the faces on his new heads himself, using the old face as a pattern.",
+      "Advises the party that a dark well must lie in the mountains of the Quadling Country, and tells the Scarecrow and Scraps about the Hoppers and the Horners.",
+      "Feeds the travellers vegetable soup, pumpkin pie and green cheese, and beds them on dried grasses."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Her earliest companion, made by her when she was Tip; she loves the stupid fellow.",
+      "Dr. Pipt": "Indirectly his maker, since the Powder of Life that animated him came from the Crooked Magician.",
+      "Scarecrow": "An old friend who consults him about the dark well.",
+      "Scraps": "Compares him unfavourably with the Scarecrow to his face."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Jack Pumpkinhead travels to the Quadling Country",
+        "Jack Pumpkinhead's head spoils in this book",
+        "Jack Pumpkinhead is made by Ojo"
+      ]
+    },
+    "hallucination_signals": [
+      "Jack Pumpkinhead joins the quest",
+      "Jack Pumpkinhead is made by Ojo",
+      "Jack Pumpkinhead's head rots away"
+    ]
+  },
+  "sawhorse": {
+    "canonical_aliases_book1": [
+      "Sawhorse"
+    ],
+    "known_facts_book1": [
+      "A wooden horse whose body is a short length of log, its legs stout branches, its tail a small branch and its head a gnarled bump, with knots of wood for eyes.",
+      "Was brought to life by Tip with the Powder of Life and has been Ozma's favorite steed ever since.",
+      "Had no ears until the boy who owned him whittled two out of bark and stuck them in his head.",
+      "Has the bottoms of its legs shod with plates of gold by Ozma so the wood will not wear away, and a saddle of cloth-of-gold set with gems.",
+      "Has never worn a bridle, lives in a stable decorated with pearls and emeralds behind the royal palace, and is swift as the wind and untiring.",
+      "Kicks the Woozy squarely on the head with a gold-shod foot for sniffing at him."
+    ],
+    "known_relations_book1": {
+      "Ozma": "His mistress, whose favorite steed he is.",
+      "Scarecrow": "Rides him on the road of yellow bricks and back to the Emerald City.",
+      "the Woozy": "Kicks the square beast that sniffs at him."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Sawhorse pulls the red wagon in this book",
+        "the Sawhorse is chopped up",
+        "the Sawhorse travels to the Quadling Country"
+      ]
+    },
+    "hallucination_signals": [
+      "the Sawhorse is chopped for kindling",
+      "the Sawhorse draws the red wagon",
+      "the Sawhorse carries Ojo"
+    ]
+  },
+  "toto": {
+    "canonical_aliases_book1": [
+      "Toto"
+    ],
+    "known_facts_book1": [
+      "Dorothy's little black shaggy dog with very bright eyes, her constant companion at the royal palace.",
+      "Cannot talk, being a common United States dog and not a fairy dog, but is understood by Dorothy.",
+      "Sniffs the Patchwork Girl once and lies down again, showing no interest in such an irregular creation.",
+      "Captures Hip Hopper the Champion by snapping at his single ankle until the wrestler loses his balance and falls.",
+      "Helps Dorothy rout the Tottenhots by barking and snapping at their bare legs.",
+      "Is held in Dorothy's arms during Ojo's trial in the Throne Room, where he is friends with the Cowardly Lion and the Hungry Tiger.",
+      "Spots the Quadling's house on the river bank that the others had missed."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "His mistress, whom he follows on the whole journey.",
+      "Hip Hopper": "The Hopper Champion he captures, the first living thing ever to conquer him.",
+      "Bungle": "The Glass Cat, who will not come near Dorothy while the dog is present."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "Miss Gulch takes Toto",
+        "Toto pulls back the curtain to expose the Wizard"
+      ],
+      "not_in_this_book": [
+        "Toto speaks in this book",
+        "Toto is left behind in Kansas"
+      ]
+    },
+    "hallucination_signals": [
+      "Miss Gulch takes Toto",
+      "Toto pulls back the curtain",
+      "Toto speaks",
+      "Toto stays in Kansas"
+    ]
+  }
+}

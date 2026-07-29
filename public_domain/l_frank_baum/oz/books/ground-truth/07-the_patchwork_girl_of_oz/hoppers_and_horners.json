@@ -1,0 +1,167 @@
+{
+  "hoppers": {
+    "canonical_aliases_book1": [
+      "Hoppers"
+    ],
+    "known_facts_book1": [
+      "A people living in a village of some fifty marble houses under a vast dome inside the mountain, in the half of the great cave nearest the Hopper entrance.",
+      "Each has a single stout leg with a broad flat foot, set just below the middle of a round fat body, and they hop instead of walking; even the children never lose their balance.",
+      "Have no weapons at all; their whole plan of battle is to push the Horners back, since their arms are longer.",
+      "Declared war on the Horners over a remark that they have less understanding because they have only one leg.",
+      "Their city is grand on the outside — marble houses, marble streets — but bare and uncomfortable within, which the Horner Chief calls all outside show.",
+      "Are told by Dorothy to laugh at the Horners' joke so as to seem to understand it, and so peace is declared without a battle."
+    ],
+    "known_relations_book1": {
+      "Horners": "Their neighbours across the marble picket fence, with whom they are briefly at war.",
+      "Dorothy": "Ends their war by teaching them how to answer the joke.",
+      "Hip Hopper": "Their Champion wrestler."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Hoppers fight a battle with the Horners",
+        "the Hoppers are conquered",
+        "the Hoppers have two legs",
+        "the Hoppers know where the dark well is"
+      ],
+      "relationships": [
+        "the Hoppers are allies of the Horners at the start of this book"
+      ]
+    },
+    "hallucination_signals": [
+      "the Hoppers fight the Horners",
+      "the Hoppers are conquered",
+      "the Hoppers mine radium",
+      "the Hoppers have two legs"
+    ]
+  },
+  "hip_hopper": {
+    "canonical_aliases_book1": [
+      "Hip Hopper",
+      "the Champion"
+    ],
+    "known_facts_book1": [
+      "The Champion wrestler of the Hoppers, a very strong man found asleep in the mountain passage.",
+      "Is captured by Toto, the first living thing that has ever conquered him, and surrenders at once because surrendering is the proper thing to do.",
+      "Refuses to let his own people rescue him, saying it is not polite to capture those you have surrendered to.",
+      "Argues that two legs are one leg too many and that walking is a terribly awkward way to travel.",
+      "Cannot see that legs have anything to do with understanding things, which is the whole cause of the war.",
+      "Throws the Scarecrow at the marble fence, where he lands on a picket, and then throws Scraps clear over into the Horner Country.",
+      "Says there may be a very dark well in the Horner Country, which is a black spot on the face of the earth."
+    ],
+    "known_relations_book1": {
+      "Toto": "The dog who captures him by snapping at his single ankle.",
+      "Dorothy": "Sets him free and is guided by him into the Hopper city.",
+      "Scarecrow": "Throws him at the fence and cannot get him down again.",
+      "Scraps": "Throws her over the fence into the Horner Country."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Hip Hopper wins a wrestling match in this book",
+        "Hip Hopper conquers the Horners",
+        "Hip Hopper is killed"
+      ]
+    },
+    "hallucination_signals": [
+      "Hip Hopper defeats the Horners",
+      "Hip Hopper wrestles the Scarecrow",
+      "Hip Hopper is killed"
+    ]
+  },
+  "horners": {
+    "canonical_aliases_book1": [
+      "Horners"
+    ],
+    "known_facts_book1": [
+      "A people occupying the larger half of the great cave, in a city of dull gray rock houses on unpaved streets, behind a marble picket fence.",
+      "Are little folks with bodies round as balls, short arms and legs, long pointed ears, and one ivory-white horn about six inches long set in the center of the forehead.",
+      "Have light brown skins, wear snow-white robes, go bare-footed, and have hair in three distinct colored bands on every head — red at the bottom, yellow in the middle, green in a brush-shaped top-knot.",
+      "Spend all their time digging radium from the mines under the mountain, and line the insides of their houses with it, which gives them light and keeps them from ever being sick.",
+      "Deliberately neglect the outsides of their homes, holding that the rooms they live in are their chief delight and that only foolish people make an outside show.",
+      "Laugh uproariously at every feeble pun, and take the Scarecrow's ordinary remarks for jokes.",
+      "Never intended an insult; the whole war springs from one pun about 'under-standing' that the Hoppers could not see."
+    ],
+    "known_relations_book1": {
+      "Hoppers": "Their neighbours across the fence, whom they briefly go to war with over a joke.",
+      "Scraps": "The stranger thrown into their country who negotiates the peace.",
+      "Jak Horner": "Their Chief.",
+      "Diksey Horner": "The Horner who made the joke and who explains it at the fence."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Horners are unicorns",
+        "the Horners attack the Hoppers",
+        "the Horners are conquered",
+        "the Horners mine gold"
+      ]
+    },
+    "hallucination_signals": [
+      "the Horners are unicorns",
+      "the Horners attack the Hoppers",
+      "the Horners mine gold",
+      "the Horners have two horns"
+    ]
+  },
+  "jak_horner": {
+    "canonical_aliases_book1": [
+      "Jak Horner",
+      "Chief of the Horners"
+    ],
+    "known_facts_book1": [
+      "Chief of the Horners, wearing a jewelled star in his hair just above his horn.",
+      "Lives in a house grimy and dingy outside and dazzling within, lined and furnished throughout in ornamented radium that gives off its own soft light.",
+      "Has nineteen daughters, all in spotless white robes, seated in a row of radium chairs and never allowed to run, play or make a joke themselves.",
+      "Brings up his daughters by a book of rules written by one of the Horners' leading old bachelors, whose great hobby is politeness.",
+      "Refuses at first to apologize, insisting the Horners did not insult anyone and that one of them merely made a joke the stupid Hoppers could not see.",
+      "Declares the war over and peace declared once the Hoppers laugh at the joke, and has the gate unlocked and thrown wide open."
+    ],
+    "known_relations_book1": {
+      "Scraps": "The stranger he receives, introduces to his daughters, and bargains with over the war.",
+      "Diksey Horner": "The subject of his complaint and the maker of the joke.",
+      "Hoppers": "The neighbours he refuses to apologize to but agrees to have the joke explained to."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Jak Horner apologizes to the Hoppers",
+        "Jak Horner leads the Horners into battle",
+        "Jak Horner has nineteen sons"
+      ]
+    },
+    "hallucination_signals": [
+      "Jak Horner apologizes",
+      "Jak Horner leads an attack",
+      "Jak Horner has sons"
+    ]
+  },
+  "diksey_horner": {
+    "canonical_aliases_book1": [
+      "Diksey Horner",
+      "Diksey"
+    ],
+    "known_facts_book1": [
+      "A little good-natured Horner man who works in the radium mines and made the joke that started the war.",
+      "The joke is a pun: since your legs are under you, your legs are your under-standing, so people with one leg have less under-standing.",
+      "Goes willingly to the fence to explain the joke, saying he does not want a war because wars between nations always cause hard feelings.",
+      "Fetches the mining ladder that gets the Scarecrow down off the picket.",
+      "Makes a second pun about mending one's ways by mending one's legs, and credits his wit either to the radium or to his own splendid intellect.",
+      "Knows of a very dark well down in his radium mine and leads the party to it — the only person in the book who can point Ojo to what he seeks."
+    ],
+    "known_relations_book1": {
+      "Jak Horner": "His Chief, who calls him in to explain the joke.",
+      "Hoppers": "The neighbours he explains the joke to at the fence.",
+      "Ojo": "Leads him down the mine to the dark well.",
+      "Scarecrow": "Fetches the ladder that gets him off the picket, then jokes about mending his ways."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Diksey apologizes for the joke",
+        "Diksey is punished for starting the war",
+        "Diksey is the Chief of the Horners"
+      ]
+    },
+    "hallucination_signals": [
+      "Diksey is punished",
+      "Diksey apologizes",
+      "Diksey is Chief of the Horners"
+    ]
+  }
+}

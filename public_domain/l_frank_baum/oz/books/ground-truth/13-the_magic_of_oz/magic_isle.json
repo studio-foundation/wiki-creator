@@ -1,0 +1,223 @@
+{
+  "trot": {
+    "canonical_aliases_book1": [
+      "Trot"
+    ],
+    "known_facts_book1": [
+      "A little girl living as a guest and friend of Ozma in the Royal Palace, who came to the Land of Oz with Cap'n Bill.",
+      "Sets out with Cap'n Bill and the Glass Cat to fetch the Magic Flower as her birthday present for Ozma, carrying food in a basket and expecting to be gone about a week.",
+      "Is ordered into the river up to her knees while Cap'n Bill pins the Kalidah to the ground, and comes out to dry her shoes and stockings on a log.",
+      "Takes root on the Magic Isle the moment she runs up the bank to the golden flower-pot, and cannot move either foot a hair's breadth.",
+      "**Discovers by accident that the Magic Plant obeys a spoken wish**: she says she wishes it would grow fruit for a while, and it bears peaches, bananas, lemons, cocoanuts, apples, limes, plums, cherries and more, one after another.",
+      "Learns that picked fruit keeps but unpicked fruit vanishes, and that the wishes work only on the Plant — wishing the roots away has no effect at all.",
+      "Is given a toadstool to sit on by the Lonesome Duck, after telling the bird it would be happier if it did something for others.",
+      "Shrinks steadily while rooted — down to about half her natural size by the time the Wizard arrives — and would eventually have disappeared entirely.",
+      "Is freed by being transformed into a **bumblebee**, roots and all, and flying to the far bank.",
+      "Waters the Magic Flower every day in her own room afterward, showing it to no one but Dorothy and Betsy Bobbin, and tells Ozma the whole story including the Glass Cat's part."
+    ],
+    "known_relations_book1": {
+      "Cap'n Bill": "Her oldest and most faithful comrade.",
+      "the Glass Cat": "Their guide, who both traps them and fetches help.",
+      "Dorothy": "Her friend, whose plan frees her.",
+      "Ozma": "The Ruler the whole errand is for."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Trot picks the Magic Flower herself",
+        "Trot wishes herself free of the roots",
+        "Trot is eaten by the Hungry Tiger",
+        "Trot goes to the Forest of Gugu"
+      ]
+    },
+    "hallucination_signals": [
+      "Trot frees herself by wishing",
+      "Trot carries off the flower-pot",
+      "Trot is eaten",
+      "Trot enters the Forest of Gugu"
+    ]
+  },
+  "capn_bill": {
+    "canonical_aliases_book1": [
+      "Cap'n Bill"
+    ],
+    "known_facts_book1": [
+      "An old sailor-man with one wooden leg and one meat leg, a round whiskered face and big light-blue eyes, who smokes a corn-cob pipe and accompanied Trot to the Land of Oz.",
+      "Is the one who knows about the Enchanted Flower in the first place — the Glass Cat told him of it the day before.",
+      "Builds a raft with an axe-blade carried wrapped in cloth in his coat pocket and a handle whittled from a tree limb.",
+      "**Defeats the Kalidah with his wooden leg**: he strikes it between the eyes, pushes a sharpened stake through its body and hammers the stake into the ground, knowing full well he cannot kill it.",
+      "Takes root on the Magic Isle by his meat foot only — the wooden leg stays free, which is the clue that saves him later.",
+      "Reasons out the rule himself: only meat can be caught, and leather shoes and woolen stockings come from beasts and sheep, so they root too.",
+      "Refuses the Wizard's axe and the growing pincers, because the roots are flesh roots fed by their own bodies and cutting them would be like cutting off fingers and toes.",
+      "Is freed as a **bumblebee** with Trot, and the ugly roots vanish with the transformation.",
+      "Goes straight back to the island afterward, having bound a broad piece of thick tree bark under his good foot over the leather sole, and lifts the golden flower-pot away untouched.",
+      "Carries the flower-pot up to Trot's room unseen by anyone but Jellia Jamb, who promises not to tell."
+    ],
+    "known_relations_book1": {
+      "Trot": "The girl he came to Oz with and would not leave.",
+      "the Glass Cat": "The guide who led them to the Isle.",
+      "the Kalidah": "The beast he pins to the ground and does not kill.",
+      "Ozma": "Whose birthday present he finally delivers."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Cap'n Bill kills the Kalidah",
+        "Cap'n Bill is freed by the Wizard's tools",
+        "Cap'n Bill loses his wooden leg",
+        "Cap'n Bill leaves the Magic Flower on the island"
+      ]
+    },
+    "hallucination_signals": [
+      "Cap'n Bill kills the Kalidah",
+      "the pincers pull them free",
+      "the flower stays on the island",
+      "the axe cuts the roots"
+    ]
+  },
+  "glass_cat": {
+    "canonical_aliases_book1": [
+      "the Glass Cat"
+    ],
+    "known_facts_book1": [
+      "A cat made all of clear transparent glass, with a mass of delicate pink balls for brains, a heart of blood-red ruby, two large emeralds for eyes and a beautiful spun-glass tail.",
+      "Was made by Dr. Pipt to catch mice, refused to catch mice, and is considered more curious than useful; it has no stomach and never eats, drinks, hungers or thirsts.",
+      "Is intensely vain — it loves being praised, says it has never seen any living thing as beautiful as itself, and can always be managed by flattery.",
+      "Walks along the bottom of rivers rather than swimming, being unafraid of water and unable to float.",
+      "Found the Magic Flower on its travels and leads Trot and Cap'n Bill to the island, then admits it is sorry for the fix it got them into but will not let them see it.",
+      "Runs to the Emerald City for the Wizard, learns from Toto that he has gone to the Great Forest, and heads there instead — a shorter way to help than going home.",
+      "**Finds the Black Bag when everyone else has failed**: while climbing the tall avocado tree to look at the giants' heads, it spots the bag on a limb and carries it down in its glass teeth.",
+      "Hides the bag under leaves first, then makes the Wizard admit its pink brains are better hunters than human brains before uncovering it.",
+      "Forgets to mention Trot and Cap'n Bill for a while, because there was so much excitement in the forest.",
+      "Torments the caged monkeys by pulling their tails through the bars, is smeared head to foot with dark blue mud in revenge, and is deliberately left dirty by the Wizard as punishment.",
+      "Slips away at noon to a tiny lake, cleans itself, and is found curled on a bench at the palace as bright and transparent as ever, pretending not to notice the travelers."
+    ],
+    "known_relations_book1": {
+      "Trot": "Whom it guides, traps and then saves.",
+      "Cap'n Bill": "Who first heard of the Magic Flower from it.",
+      "the Wizard of Oz": "Whose Black Bag it recovers.",
+      "the twelve monkeys": "Whose tails it pulls and who cover it in mud.",
+      "Eureka": "The Pink Kitten it jeers at for having no pink brains."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Glass Cat catches mice",
+        "the Glass Cat is broken",
+        "the Glass Cat is transformed by the Wizard",
+        "the Glass Cat swims across the river"
+      ]
+    },
+    "hallucination_signals": [
+      "the Glass Cat catches a mouse",
+      "the Glass Cat is shattered",
+      "the Glass Cat is transformed",
+      "the Glass Cat swims"
+    ]
+  },
+  "lonesome_duck": {
+    "canonical_aliases_book1": [
+      "the Lonesome Duck"
+    ],
+    "known_facts_book1": [
+      "A duck with gorgeously colored plumage — glistening greens, blues and purples, a yellow head with a red plume, and pink, white and violet in its tail.",
+      "Is the only Duck in the Land of Oz, has no family, no relations and not one friend, and must live forever because nothing in Oz dies.",
+      "Says it cannot make friends because every bird, beast or person it meets is disagreeable to it, and that it has decided doing anything at all is common and uninteresting.",
+      "Has forgotten why a single solitary Duck came to be in Oz, and holds that the reason for a thing is never so important as the thing itself.",
+      "Lives in a **Diamond Palace** — a glistening dome of clearest diamonds cemented together, with a doorway just big enough for a duck — built from stones it carried one by one in its bill and polished in the river.",
+      "Is magically supplied with food there, and seldom eats because eating is common.",
+      "Grows the two **toadstools** for Trot and Cap'n Bill to sit on, by an incantation of circling right three times, left three times, hopping backward and forward three times, and a long string of soft quacks.",
+      "Leaves without a word of good-bye and takes no thanks.",
+      "Calls itself the great Forest Magician, but says plainly it has no power to break the charm of the Magic Isle and that no power can save the prisoners.",
+      "Is proud of being lonesome rather than happy about it, and asks the rescue party not to offer to be friendly."
+    ],
+    "known_relations_book1": {
+      "Trot": "The girl it gives a toadstool and calls disagreeable.",
+      "Cap'n Bill": "Who guesses it must be a Magician Duck.",
+      "Dorothy": "Who admires the Diamond Palace and is told not to."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Lonesome Duck frees the prisoners",
+        "the Lonesome Duck makes a friend",
+        "the Lonesome Duck joins the party",
+        "the Lonesome Duck leaves its palace for good"
+      ]
+    },
+    "hallucination_signals": [
+      "the Duck breaks the enchantment",
+      "the Duck makes friends",
+      "the Duck joins the journey",
+      "the Duck is grateful"
+    ]
+  },
+  "the_kalidah": {
+    "canonical_aliases_book1": [
+      "the Kalidah",
+      "Kalidahs"
+    ],
+    "known_facts_book1": [
+      "The most powerful and ferocious beasts in all Oz, whose especial home is the forest around the Magic Isle, so that few other beasts live there except monkeys.",
+      "Can swim like ducks, which is why wading into the river would not have saved Trot.",
+      "Once sprang on the Glass Cat and nearly broke their teeth on her hard glass, and gave up when she jeered at them.",
+      "**Will not go to the Magic Isle**, because Kalidahs do not care much for magic — and the one Cap'n Bill catches knows exactly what will happen and does not warn them.",
+      "Is staked to the ground through the body by Cap'n Bill and cannot be killed, since no living thing in Oz can be killed.",
+      "Frees itself by swelling its chest with deep breaths until the stake works loose, then drives the stake out against a rock and pulls it free on thorny bushes.",
+      "Has a certain amount of good mingled with the evil in its nature: its anger fades once its late foes are in danger, and it simply goes off to ask the Kalidah King to fill in its two holes.",
+      "Laughs at the plan to take the Magic Flower to Ozma — a laugh a good deal like a roar, cruel and derisive."
+    ],
+    "known_relations_book1": {
+      "Cap'n Bill": "Who pins it down with a stake and a wooden leg.",
+      "the Glass Cat": "Whom Kalidahs once attacked without effect.",
+      "the Cowardly Lion": "Who is said by the forest lions to have conquered Kalidahs long ago."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Kalidah is killed",
+        "the Kalidah warns Trot about the island",
+        "the Kalidah reaches the Magic Isle",
+        "other Kalidahs come to the rescue"
+      ]
+    },
+    "hallucination_signals": [
+      "the Kalidah is killed",
+      "the Kalidah warns them",
+      "Kalidahs land on the island",
+      "a pack of Kalidahs attacks"
+    ]
+  },
+  "magic_flower": {
+    "canonical_aliases_book1": [
+      "the Magic Flower",
+      "the Enchanted Flower",
+      "the Magic Plant"
+    ],
+    "known_facts_book1": [
+      "A plant standing in a golden flower-pot in the middle of a tiny island, which grows every sort of flower in quick succession — rose, tulip, chrysanthemum, dahlia, daffodil and on through the range of posies, night and day, year in and year out.",
+      "Blooms are perfect and perfumed; a picked flower stays perfect a long time, but an unpicked one soon vanishes and is replaced.",
+      "Is the only thing that grows on the Isle — no tree, no shrub, not even a blade of grass, only bare ground.",
+      "Obeys any wish spoken by someone on the island **about the plant itself**, and nothing else: it will bear fruit on request, but no wish can lift the roots from a prisoner's feet.",
+      "Was placed there by some magician as a **lure**, so that any man or beast who came for it would take root and shrink away to nothing.",
+      "Loses none of its magic when removed from the island, and grows daffodils, tulips and gladioli in Cap'n Bill's arms on the way to the raft.",
+      "Is Ozma's birthday present from Trot and Cap'n Bill, fills the Banquet Hall with fragrance during the feast, and is placed in Ozma's boudoir afterward.",
+      "Ends the trap for good: with the plant gone, no one will care to go on the island any more."
+    ],
+    "known_relations_book1": {
+      "Trot": "Whose wish makes it bear fruit.",
+      "Cap'n Bill": "Who carries it off the island.",
+      "the Glass Cat": "Who discovered it and told Cap'n Bill.",
+      "Ozma": "Its recipient."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Magic Flower grants any wish",
+        "the Magic Flower withers off the island",
+        "the Magic Flower is left on the island",
+        "the Magic Flower causes the enchantment"
+      ]
+    },
+    "hallucination_signals": [
+      "the flower grants wishes",
+      "the flower withers",
+      "the flower stays on the isle",
+      "the flower roots them"
+    ]
+  }
+}

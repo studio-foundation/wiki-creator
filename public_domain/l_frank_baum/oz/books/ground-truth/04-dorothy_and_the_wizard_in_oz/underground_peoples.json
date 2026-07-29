@@ -1,0 +1,172 @@
+{
+  "mangaboos": {
+    "canonical_aliases_book1": [
+      "Mangaboos",
+      "Mangaboo"
+    ],
+    "known_facts_book1": [
+      "A race of beautiful but heartless vegetable people who grow on bushes in the Land of the Mangaboos, deep inside the earth.",
+      "Live in a glass city lit by six colored suns and can walk on the air.",
+      "Have no blood and no hearts, cannot love, and live only about five years after being picked from their bushes.",
+      "Blame the fallen strangers for the 'Rain of Stones' and resolve to destroy them.",
+      "Are cold, cruel and expressionless, showing neither smile nor frown.",
+      "Drive Jim, Eureka and the piglets toward the Black Pit with sharp thorns.",
+      "Are ruled first by the Prince and then by the picked Royal Princess."
+    ],
+    "known_relations_book1": {
+      "the Prince": "Their ruler until the Princess is picked.",
+      "the Princess": "The Royal Princess who becomes their new ruler.",
+      "Gwig": "Their thorn-covered Sorcerer.",
+      "the Wizard": "The stranger who kills their Sorcerer and cows their advisors."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Mangaboos are kind and friendly",
+        "the Mangaboos have warm hearts",
+        "the Mangaboos live on the surface of the earth"
+      ],
+      "cross_tome": [
+        "the Mangaboos appear in a later Oz book"
+      ]
+    },
+    "hallucination_signals": [
+      "the friendly Mangaboos",
+      "the Mangaboos welcome the strangers",
+      "the Mangaboos of Kansas"
+    ]
+  },
+  "the_prince": {
+    "canonical_aliases_book1": [
+      "the Prince"
+    ],
+    "known_facts_book1": [
+      "The ruler of the Mangaboos, 'the man with the star,' who wears the Star of Royalty in his hair.",
+      "Accuses the strangers of causing the Rain of Stones and sends them to the House of the Sorcerer.",
+      "Selfishly delays picking the ripe Royal Princess so that he may keep ruling.",
+      "Yields the Star of Royalty when Dorothy and the Wizard pick the Princess, then walks away alone and is never seen again.",
+      "Intends to keep the Wizard as a Sorcerer but to destroy the other strangers and their animals."
+    ],
+    "known_relations_book1": {
+      "the Princess": "His destined successor, whom he wronged by leaving her unpicked.",
+      "Mangaboos": "The vegetable people he rules.",
+      "Gwig": "His Sorcerer, whom he admits is often wrong.",
+      "the Wizard": "The stranger he tests and threatens."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Prince befriends Dorothy",
+        "the Prince helps the strangers escape",
+        "the Prince keeps his throne"
+      ],
+      "cross_tome": [
+        "the Mangaboo Prince appears in a later Oz book"
+      ]
+    },
+    "hallucination_signals": [
+      "the Prince befriends the strangers",
+      "the Prince helps Dorothy",
+      "the Prince keeps the Star of Royalty"
+    ]
+  },
+  "the_princess": {
+    "canonical_aliases_book1": [
+      "the Princess"
+    ],
+    "known_facts_book1": [
+      "The Royal Princess of the Mangaboos, grown upon the Royal Bush and picked from it by Dorothy and the Wizard.",
+      "Becomes Ruler when the Prince hands her the Star of Royalty.",
+      "Rebukes the Prince for selfishly leaving her unpicked all the past week.",
+      "Despite being rescued, condemns the strangers as not belonging in her land and orders them destroyed.",
+      "Sentences the animals to the Black Pit and later leads the Mangaboos in walling them in.",
+      "Is a distinct character from Princess Ozma of Oz."
+    ],
+    "known_relations_book1": {
+      "the Prince": "Her predecessor, who wronged her and whom she supplants.",
+      "Mangaboos": "The vegetable people she comes to rule.",
+      "the Wizard": "One of the strangers who picked her, on whom she then turns.",
+      "Dorothy": "The girl who helped pick her, later ordered destroyed by her."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Mangaboo Princess is Ozma",
+        "the Princess is grateful and sends the travelers home",
+        "the Princess has a warm heart"
+      ],
+      "cross_tome": [
+        "the Mangaboo Princess appears in a later Oz book"
+      ]
+    },
+    "hallucination_signals": [
+      "the Mangaboo Princess is Ozma",
+      "Princess Ozma of the Mangaboos",
+      "the grateful Mangaboo Princess"
+    ]
+  },
+  "gwig": {
+    "canonical_aliases_book1": [
+      "Gwig",
+      "the Sorcerer"
+    ],
+    "known_facts_book1": [
+      "Gwig, the thorn-covered vegetable Sorcerer of the Mangaboos, seated on a glass throne in the House of the Sorcerer.",
+      "Is covered head to hand in rose-bush thorns, wears bright yellow, and has cold, cruel eyes.",
+      "Wrongly predicted there would be no second Rain of Stones.",
+      "Challenges the Wizard and tries to stop his breath with sorcery.",
+      "Is cut exactly in two by the Wizard's sword, revealing he is vegetable inside like a sliced turnip.",
+      "Dies and is planted so that new sorcerers may grow from his bush."
+    ],
+    "known_relations_book1": {
+      "the Prince": "The ruler he serves as Sorcerer.",
+      "the Wizard": "The rival who cuts him in two.",
+      "Mangaboos": "The vegetable people among whom he grew."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Gwig defeats the Wizard",
+        "Gwig survives",
+        "the Sorcerer stops the Wizard's breath"
+      ],
+      "cross_tome": [
+        "Gwig appears in a later Oz book"
+      ]
+    },
+    "hallucination_signals": [
+      "Gwig kills the Wizard",
+      "Gwig survives the duel",
+      "the Sorcerer defeats Oz"
+    ]
+  },
+  "gargoyles": {
+    "canonical_aliases_book1": [
+      "Gargoyles",
+      "Gargoyle"
+    ],
+    "known_facts_book1": [
+      "Small wooden people of the Land of the Gargoyles at the top of Pyramid Mountain, less than three feet tall, with big heads and long arms.",
+      "Have detachable wooden wings hinged to their bodies; they fly silently and make no sound, conversing by signals of their fingers and lips.",
+      "Attack the travelers, using their long wooden arms as clubs; their bodies cannot be hurt by sword or bullet.",
+      "Most dread noise, and above all fear fire, which is unknown in their wooden land.",
+      "Imprison the travelers in a high wooden tower.",
+      "Are escaped when the party steals their unhooked wings and flies away, and the Wizard burns a pile of wings and doors to block pursuit."
+    ],
+    "known_relations_book1": {
+      "the travelers": "The strangers they capture and try to keep for execution.",
+      "Champion": "Overman-Anu of Voe, who once fought them for nine days, spoken of offstage."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Gargoyles are made of stone",
+        "the Gargoyles befriend the travelers",
+        "the Gargoyles can speak aloud"
+      ],
+      "cross_tome": [
+        "the Gargoyles appear in a later Oz book"
+      ]
+    },
+    "hallucination_signals": [
+      "the stone Gargoyles",
+      "the Gargoyles help Dorothy",
+      "the Gargoyles roar"
+    ]
+  }
+}

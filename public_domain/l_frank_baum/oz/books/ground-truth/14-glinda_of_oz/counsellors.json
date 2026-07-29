@@ -1,0 +1,236 @@
+{
+  "tin_woodman": {
+    "canonical_aliases_book1": [
+      "the Tin Woodman",
+      "Nick Chopper"
+    ],
+    "known_facts_book1": [
+      "Emperor of all the Winkies, living in a magnificent tin castle, every bit of him tin and all his joints kept well oiled.",
+      "Carries a gleaming axe to prove he is a woodman, but seldom has cause to use it.",
+      "Has a very good mind but a heart he says is not of much account, so he is careful to do nothing unkind or to hurt anyone's feelings.",
+      "Says at the council that it is his duty to Ozma to go.",
+      "**Chops the passage through the palm barrier** with his axe, in a surprisingly short time, when the party reaches the Skeezers' lake.",
+      "Covers the ground on the march as easily as Uncle Henry and the Wizard, and shares a tent with the Scarecrow at the camp."
+    ],
+    "known_relations_book1": {
+      "Ozma": "The Ruler he owes a duty to.",
+      "the Scarecrow": "His tent-mate on the expedition."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Tin Woodman rusts",
+        "the Tin Woodman fights the Flatheads",
+        "the Tin Woodman enters the Dome"
+      ]
+    },
+    "hallucination_signals": [
+      "the Tin Woodman rusts",
+      "the Tin Woodman fights",
+      "the Tin Woodman goes under water"
+    ]
+  },
+  "tik_tok": {
+    "canonical_aliases_book1": [
+      "Tik-Tok"
+    ],
+    "known_facts_book1": [
+      "A copper man with machinery inside him, so cleverly constructed that he moves, speaks and thinks by **three separate clockworks**.",
+      "Is very reliable because he always does exactly what he is wound up to do, but is quite helpless whenever his machinery runs down.",
+      "Speaks in a jerky machine voice: 'We-will-have-to-go-there-any-how.'",
+      "Moves slowly on the march and the slightest obstruction in the road halts him until the others clear it away.",
+      "Has his machinery kept wound by Betsy and Trot in turns, and shares a tent with Professor Wogglebug.",
+      "Is one of the counsellors the three Adepts marvel at, for living and thinking and talking like other people."
+    ],
+    "known_relations_book1": {
+      "Betsy Bobbin": "One of the two girls who wind him.",
+      "Trot": "The other."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Tik-Tok runs down and is abandoned",
+        "Tik-Tok works magic",
+        "Tik-Tok enters the sunken island"
+      ]
+    },
+    "hallucination_signals": [
+      "Tik-Tok is left behind",
+      "Tik-Tok works magic",
+      "Tik-Tok goes under water"
+    ]
+  },
+  "jack_pumpkinhead": {
+    "canonical_aliases_book1": [
+      "Jack Pumpkinhead"
+    ],
+    "known_facts_book1": [
+      "One of Ozma's oldest friends and her companion on many adventures, with a crude body of tree limbs jointed with wooden pegs and a ripe pumpkin for a head.",
+      "Grows a field of fine pumpkins each year and carves a fresh head ready before the old one spoils, never carving it quite the same way twice.",
+      "Is the only pumpkin-headed man alive in the Land of Oz.",
+      "Is wearing a newly made head when the expedition sets out.",
+      "Suggests at the council that they throw a rope around the sunken island and pull it ashore.",
+      "Walks awkwardly because walking jars his head around on his neck and sends him off in the wrong direction, until the Frogman takes his arm."
+    ],
+    "known_relations_book1": {
+      "Ozma": "His oldest friend, whom he goes to rescue.",
+      "the Frogman": "Who takes his arm so he can follow the path."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Jack Pumpkinhead's head spoils on the journey",
+        "Jack Pumpkinhead solves the problem",
+        "Jack Pumpkinhead enters the Dome"
+      ]
+    },
+    "hallucination_signals": [
+      "Jack's head spoils",
+      "Jack solves the puzzle",
+      "Jack goes under the water"
+    ]
+  },
+  "shaggy_man": {
+    "canonical_aliases_book1": [
+      "the Shaggy Man"
+    ],
+    "known_facts_book1": [
+      "Shaggy from head to foot — hair and whiskers, clothes and shoes — but very kind and gentle and one of Ozma's most loyal supporters.",
+      "Says at the council that the easiest way is simply to raise the sunken island, and when Glinda asks how, admits he does not know, having never raised one.",
+      "Approves the Wizard's plan of going to the lake before the mountain.",
+      "Shares a tent with Jack Pumpkinhead, and watches the magic mirror over the Wizard's shoulder during the Button Bright rescue."
+    ],
+    "known_relations_book1": {
+      "Ozma": "The Ruler he loyally supports.",
+      "Jack Pumpkinhead": "His tent-mate."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Shaggy Man works magic",
+        "the Shaggy Man enters the Dome",
+        "the Shaggy Man raises the island"
+      ]
+    },
+    "hallucination_signals": [
+      "the Shaggy Man works magic",
+      "the Shaggy Man goes under water",
+      "the Shaggy Man raises the isle"
+    ]
+  },
+  "frogman": {
+    "canonical_aliases_book1": [
+      "the Frogman"
+    ],
+    "known_facts_book1": [
+      "A great frog as large as a man, noted for his wise sayings, who came to the Emerald City from the **Yip Country** and is a guest of honor.",
+      "Is perhaps the most splendidly dressed of Ozma's counsellors: velvet long-tailed coat, satin vest, finest silk trousers, diamond shoe buckles, gold-headed cane and a high silk hat, in every bright color at once.",
+      "Asks the one practical question at the council — how big is the lake, and how big is the island — and is told nobody knows.",
+      "Proposes sending the Glass Cat after Button Bright, since the beasts can do her no harm.",
+      "Wipes his eyes on a purple silk handkerchief when he thinks the boy is a goner.",
+      "Takes Jack Pumpkinhead's arm on the forest march so his head does not steer him wrong."
+    ],
+    "known_relations_book1": {
+      "Jack Pumpkinhead": "Whom he steers along the path.",
+      "the Glass Cat": "Whom he proposes as the search party."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Frogman works magic",
+        "the Frogman finds Button Bright himself",
+        "the Frogman enters the Dome"
+      ]
+    },
+    "hallucination_signals": [
+      "the Frogman works magic",
+      "the Frogman finds the boy",
+      "the Frogman goes under water"
+    ]
+  },
+  "uncle_henry": {
+    "canonical_aliases_book1": [
+      "Uncle Henry"
+    ],
+    "known_facts_book1": [
+      "Dorothy's own uncle and the best farmer in all Oz, living near the Emerald City with his wife Aunt Em.",
+      "Teaches the Oz people to grow the finest vegetables, fruits and grains, and keeps the Royal Storehouses well filled — which is why he is a counsellor.",
+      "Says simply, at the council, 'We all feel like that' about not staying away while Ozma is in danger.",
+      "Carries Glinda's wicker box of sorcery on the march and brings it to her for the magic mirror.",
+      "Cannot bear to think of his dear niece Dorothy being out there under water, and asks in a grave voice how it shall be done.",
+      "Helps Cap'n Bill push the stranded submarine back into the lake once the water level drops."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "His niece, whom he goes to rescue.",
+      "Glinda": "Whose wicker box he carries.",
+      "Cap'n Bill": "His tent-mate, who helps him launch the boat."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Aunt Em joins the expedition",
+        "Uncle Henry works magic",
+        "Uncle Henry enters the Dome"
+      ]
+    },
+    "hallucination_signals": [
+      "Aunt Em comes along",
+      "Uncle Henry works magic",
+      "Uncle Henry goes under water"
+    ]
+  },
+  "capn_bill": {
+    "canonical_aliases_book1": [
+      "Cap'n Bill"
+    ],
+    "known_facts_book1": [
+      "A one-legged sailor-man who came to the Land of Oz with Trot and was made welcome for his cleverness, honesty and good nature.",
+      "Wears a wooden leg to replace the one he lost, and is a great friend of all the children in Oz because he can whittle any sort of toy out of wood with his big jack-knife.",
+      "Is a member of Ozma's council and joins the rescue expedition.",
+      "Keeps up with the others on the march despite the wooden leg, and can walk as far as any of them.",
+      "Says only 'Comes of getting lost!' with a sigh when Button Bright appears in the magic mirror between a tiger and a wolf.",
+      "Shares a tent with Uncle Henry, and helps him push the submarine back into the lowered lake."
+    ],
+    "known_relations_book1": {
+      "Trot": "The girl he came to Oz with.",
+      "Uncle Henry": "His tent-mate on the expedition."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Cap'n Bill builds a raft",
+        "Cap'n Bill enters the Dome",
+        "Cap'n Bill fights the Flatheads"
+      ]
+    },
+    "hallucination_signals": [
+      "Cap'n Bill builds a raft",
+      "Cap'n Bill goes under water",
+      "Cap'n Bill fights"
+    ]
+  },
+  "wogglebug": {
+    "canonical_aliases_book1": [
+      "Professor H. M. Wogglebug, T. E.",
+      "Professor Wogglebug"
+    ],
+    "known_facts_book1": [
+      "Head of Princess Ozma's Royal Athletic College; the 'H. M.' means Highly Magnified — he was once a little bug magnified to the size of a man and always remained so — and 'T. E.' means Thoroughly Educated.",
+      "Invented the **Educational Pills**: a Geography Pill after breakfast teaches the whole geography lesson in an instant, a Spelling Pill the spelling lesson, an Arithmetic Pill any kind of sum without thinking about it.",
+      "Made the college very popular with these pills, which save the students from studying and leave all their time for football, baseball and the like.",
+      "Is **not a favorite outside his own college**: he is so conceited and displays his cleverness and learning so constantly that no one cares to associate with him.",
+      "Is nonetheless of value in Ozma's councils, where he proposes that they all get under the sunken island and lift it — and is asked how they would get under it.",
+      "Shares a tent with Tik-Tok at the camp."
+    ],
+    "known_relations_book1": {
+      "Ozma": "The Ruler whose Athletic College he heads.",
+      "Tik-Tok": "His tent-mate."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Wogglebug's plan is used",
+        "the Wogglebug works magic",
+        "the Wogglebug is popular",
+        "the Square-Meal Tablets appear"
+      ]
+    },
+    "hallucination_signals": [
+      "the Wogglebug's plan works",
+      "the Wogglebug works magic",
+      "everyone likes the Wogglebug"
+    ]
+  }
+}

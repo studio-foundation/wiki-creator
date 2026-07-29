@@ -1,0 +1,184 @@
+{
+  "gugu": {
+    "canonical_aliases_book1": [
+      "Gugu",
+      "Gugu the King",
+      "the Leopard King"
+    ],
+    "known_facts_book1": [
+      "An enormous yellow Leopard, King of the Forest of Gugu, after whom the biggest forest in all Oz is named.",
+      "Rules with three Counselors — Bru the Bear, Loo the Unicorn and Rango the Gray Ape — who hold office because they are more intelligent and more feared than their fellows.",
+      "Punishes those who start fights, and had called a council that very morning over the Wild Boar, the Giraffe and the Kangaroo.",
+      "Is the first to call the strangers liars: he says the Oz people have neither been friends nor enemies, have no slaves and could not use any, so there is no reason for war.",
+      "Silences even Ruggedo with a growl, and demands proof — 'transform the Unicorn into a man' — before believing anything.",
+      "Refuses to decide for his subjects: he calls every beast to the Great Clearing at sunrise and tells them to answer for themselves, and will only lead them if they choose war.",
+      "Tells the Cowardly Lion plainly that no beast who is a coward can be King over him, and is answered that the Lion is cowardly but not a coward.",
+      "Is transformed into a **fat Gillikin woman** and is indignant about it above every other victim — 'I don't see how we could be any WORSE off'.",
+      "Guesses correctly that the Goose was the stranger who proposed the war, and that his transformation was a trick.",
+      "Is restored by the Wizard along with the others, and at parting declares that the Wizard and Princess Dorothy will be as welcome and as safe in his forest hereafter as ever they are in the Emerald City."
+    ],
+    "known_relations_book1": {
+      "Rango": "His Counselor and Chief of all the monkey tribes.",
+      "Bru": "His Counselor, the great Bear.",
+      "Loo": "His Counselor, the Unicorn.",
+      "the Cowardly Lion": "The King of all Beasts whom he first challenges and then welcomes.",
+      "Kiki Aru": "The magician who makes him a fat woman."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Gugu leads the beasts against the Oz people",
+        "Gugu believes the strangers at once",
+        "Gugu is killed",
+        "Gugu becomes King of all Beasts"
+      ],
+      "relationships": [
+        "Gugu is an enemy of Dorothy",
+        "Gugu is an ally of Ruggedo"
+      ]
+    },
+    "hallucination_signals": [
+      "Gugu attacks the Emerald City",
+      "Gugu believes the Li-Mon-Eags",
+      "Gugu is killed",
+      "Gugu joins the conspiracy"
+    ]
+  },
+  "rango": {
+    "canonical_aliases_book1": [
+      "Rango",
+      "Rango the Gray Ape"
+    ],
+    "known_facts_book1": [
+      "The Gray Ape, one of Gugu's three Counselors, and Chief of all the monkey tribes of the forest.",
+      "Stands with his muscular arms folded and greets the strangers with 'We are not brothers.'",
+      "Advises the King at once to send the mixed beasts away as mischief-makers — the only Counselor who is right from the start.",
+      "Carries the King's order to assemble every beast in the Great Clearing at sunrise, and calls in even his own monkey sentinels from the forest edge to do it.",
+      "Is the one who realises the six giants are his own helpless people and goes for the Wizard despite his fear of the magician.",
+      "**Refuses the Wizard's first bargain** — twelve monkeys for the Emerald City — saying his people would be lonesome and teased and stoned; he changes his mind only when the Wizard calmly starts to leave.",
+      "Sets the terms he does agree to: the monkeys must be treated nicely and brought safely back to the forest.",
+      "Calls the Wizard the most wonderful magician in all the Land of Oz after seeing the twelve monkeys shrunk into their golden cage."
+    ],
+    "known_relations_book1": {
+      "Gugu": "His King.",
+      "the twelve monkeys": "His subjects, lent to the Wizard.",
+      "the Wizard of Oz": "The magician he bargains with for his six enchanted people."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Rango believes the Li-Mon-Eags",
+        "Rango refuses to lend the monkeys",
+        "Rango is transformed",
+        "Rango travels to the Emerald City"
+      ]
+    },
+    "hallucination_signals": [
+      "Rango trusts the strangers",
+      "Rango is transformed",
+      "Rango goes to the Emerald City",
+      "Rango keeps his monkeys home"
+    ]
+  },
+  "bru": {
+    "canonical_aliases_book1": [
+      "Bru",
+      "Bru the Bear",
+      "Big Bru"
+    ],
+    "known_facts_book1": [
+      "The great Bear, one of Gugu's three Counselors, who sits on his haunches before the King.",
+      "Says nothing until asked, and then asks the one hard question: 'How does the Mixed Beast know that what he says is true?'",
+      "Asks what good conquering the Oz people would actually do the beasts.",
+      "Refuses the offer of a human shape outright: 'I was born a Bear, and I know a Bear's ways. So I am satisfied to live as a Bear lives.'",
+      "Grunts and walks away when the council breaks up, and flees with the rest when the transformations begin."
+    ],
+    "known_relations_book1": {
+      "Gugu": "His King.",
+      "Loo": "His fellow-Counselor, whose enthusiasm he does not share."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Bru is transformed into a man",
+        "Bru supports the conspiracy",
+        "Bru fights the Oz people"
+      ]
+    },
+    "hallucination_signals": [
+      "Bru becomes a man",
+      "Bru supports the plan",
+      "Bru attacks the travelers"
+    ]
+  },
+  "loo": {
+    "canonical_aliases_book1": [
+      "Loo",
+      "Loo the Unicorn"
+    ],
+    "known_facts_book1": [
+      "The Unicorn, one of Gugu's three Counselors, who reclines much as a horse does and speaks in a high, squeaky voice.",
+      "Is the first and loudest to want war — 'We'll smash 'em; we'll trample 'em; we'll gore 'em' — and is silenced by the King.",
+      "Begs the King not to send the strangers away, arguing they would be fools not to heed a warning.",
+      "**Is the proof**: he is transformed into a fat, chubby little man in purple Gillikin costume, and it is his delight that convinces the Council.",
+      "Prances and cuts capers like a clown as a man, is told by the Gray Ape that he looks like a fool, and answers that he feels fine.",
+      "Asks to be changed back before morning, in case the forest beasts fail to recognise their friend Loo and tear him to pieces.",
+      "Vouches loudly for the magician at the great assembly — 'He transformed ME, only last evening' — and flees with the others when the panic starts."
+    ],
+    "known_relations_book1": {
+      "Gugu": "His King, who silences him twice.",
+      "Kiki Aru": "The magician who makes him a man and then a Unicorn again.",
+      "Rango": "Who tells him he looks like a fool."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Loo remains a man",
+        "Loo leads the beasts to war",
+        "Loo is killed"
+      ]
+    },
+    "hallucination_signals": [
+      "Loo stays a man",
+      "Loo leads the army",
+      "Loo is killed"
+    ]
+  },
+  "the_twelve_monkeys": {
+    "canonical_aliases_book1": [
+      "the twelve monkeys",
+      "Ebu",
+      "Uncle Peeker"
+    ],
+    "known_facts_book1": [
+      "The monkey tribes of Gugu Forest, commanded by Rango the Gray Ape, who serve as sentinels at the forest edge and are hard to keep in order because they tease the other animals.",
+      "Six of them are transformed by Kiki Aru into **Giant Soldiers fifty feet tall** in uniform with sharp swords — and are made so big they are wedged among the trees and cannot stir a step or raise their arms.",
+      "Are recognised by their families only when they call out: 'I'm Ebu, your father' and 'I'm your Uncle Peeker'.",
+      "Are restored by the Wizard, one after another, in front of hundreds of monkeys, apes, baboons and orangoutangs.",
+      "**Twelve volunteers** are chosen from nearly a hundred, and shrunk to about three inches high inside a golden cage with silver bars, made from a dish that was silver outside and gold inside.",
+      "Are trained in the Wizard's tower to do tricks, treated with kindness and fed the food monkeys love best.",
+      "Retaliate against the Glass Cat for pulling their tails: after the Hungry Tiger bends two bars of their cage, they slip out, drag her to the stream and smear her all over with thick blue mud until she can neither see nor hear.",
+      "Break out of Dorothy's Surprise Cake on Ozma's birthday, bow, dance, perform acrobatic feats, and march up and down the table playing golden band instruments.",
+      "Are promised a return to the forest, big as ever, with exciting stories to tell their friends."
+    ],
+    "known_relations_book1": {
+      "Rango": "Their Chief, who lends them.",
+      "the Wizard of Oz": "Who shrinks, trains and finally restores them.",
+      "the Glass Cat": "Whose tail-pulling they avenge with blue mud.",
+      "Dorothy": "Whose birthday-cake idea they carry out."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the monkeys fight the Oz people",
+        "the monkeys remain giants",
+        "the monkeys stay in the Emerald City",
+        "the monkeys are winged"
+      ],
+      "relationships": [
+        "the monkeys are enemies of the Wizard"
+      ]
+    },
+    "hallucination_signals": [
+      "winged monkeys",
+      "the monkeys stay giants",
+      "the monkeys attack Oz",
+      "the monkeys never go home"
+    ]
+  }
+}

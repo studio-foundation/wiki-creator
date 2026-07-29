@@ -1,0 +1,135 @@
+{
+  "high_coco_lorum": {
+    "canonical_aliases_book1": [
+      "High Coco-Lorum"
+    ],
+    "known_facts_book1": [
+      "The judge who enforces the laws of the City of Thi, and whom the Thists consider a public servant rather than a ruler.",
+      "Admits privately that he is in reality the King, but that the people do not know it: no one else knows anything about the laws, so he makes them to suit himself.",
+      "Says that if he called himself King and wore a crown the people would not like him, whereas as High Coco-Lorum he is considered a very agreeable person.",
+      "Gives his orders to servants in music rather than in cold, stern words, touching a button to summon an unseen band.",
+      "Denies that his city moves, explaining that the land surrounding it turns instead, so anyone facing north may suddenly find himself facing west.",
+      "Takes the party for a ride in a jeweled auto-dragon manufactured at the famous dragon factory of Thi — a machine, harmless unless its steering gear breaks.",
+      "Repeats the rumour about the Herkus and admits he has never seen one, arguing that what everyone says must be true, otherwise what would be the use of their saying it.",
+      "Has never heard of the Royal Ozma and says any Ruler who rules from a distance unknown to them is welcome to the job."
+    ],
+    "known_relations_book1": {
+      "the Thists": "His people, who believe they rule themselves.",
+      "the Wizard": "Who calls his arrangement very clever.",
+      "Scraps": "Whose acrobatics he watches admiringly."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the High Coco-Lorum wears a crown",
+        "the High Coco-Lorum knows where Ozma is",
+        "the dragons of Thi are alive",
+        "the Thists have a King"
+      ]
+    },
+    "hallucination_signals": [
+      "the High Coco-Lorum is crowned King",
+      "the dragons of Thi are alive",
+      "the Thists know about Ozma"
+    ]
+  },
+  "the_thists": {
+    "canonical_aliases_book1": [
+      "Thists"
+    ],
+    "known_facts_book1": [
+      "The people of the City of Thi, with heads shaped like diamonds and bodies shaped like hearts, all their hair a little bunch at the tip top of the head.",
+      "Have very large round eyes and very small noses and mouths, wear tight-fitting embroidered clothing, and go in sandals without stockings.",
+      "Are called Thists because they eat thistles, which is all there is in their country fit for food and all they need to gather rather than grow.",
+      "Their throats and stomachs are lined with solid gold, so the sharp points of the thistles cannot hurt them.",
+      "Detest work above all things, which is why they eat only what grows without planting.",
+      "Are protected by a Wall of Illusion which is not there at all — Scraps walks straight through it — and by turning-lands that make the city seem to hop about the compass.",
+      "Have never heard of Ozma and do not study geography, and have never had a captive or a stranger before."
+    ],
+    "known_relations_book1": {
+      "High Coco-Lorum": "Their judge, and secretly their King.",
+      "Scraps": "The stranger who proves their wall is not there."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Thists hitch living dragons to their chariots",
+        "the wall of Thi is real",
+        "the Thists are dangerous",
+        "the city of Thi moves"
+      ]
+    },
+    "hallucination_signals": [
+      "living dragons draw the chariots",
+      "the wall of Thi is real stone",
+      "the city of Thi moves",
+      "the Thists attack"
+    ]
+  },
+  "czarover_of_herku": {
+    "canonical_aliases_book1": [
+      "Vig",
+      "the Czarover"
+    ],
+    "known_facts_book1": [
+      "The skinny ruler of the City of Herku, styled the World's Most Mighty Ruler, found combing his eyebrows when the party arrives.",
+      "Is so strong he crumbles solid marble in his fingers, breaking a piece a foot thick off the back of his own throne to prove it.",
+      "Throws a giant servant headfirst out of an open window by one leg for interrupting him.",
+      "Owes his strength to **zosozo**, an invention of his own which is pure energy — one cannot have strength and flesh at the same time, which is why all Herkus are dreadfully lean.",
+      "Feeds every Herku man, woman and child one teaspoonful of zosozo a year, and keeps the compound locked in his private laboratory so the giants never get any.",
+      "Keeps giants as slaves, each wearing a riveted gold collar, and had them escort the visitors through the city so that no Herku could shake hands with them and crush their fingers to a jelly.",
+      "Gives the Wizard a golden vial of zosozo containing six doses, warning him never to take more than a teaspoonful at a time.",
+      "Is the source of the party's knowledge of Ugu: that he was once a common shoemaker of Herku, found his great-grandfather's magic in the attic, and built a wicker castle in the western hills.",
+      "Advises them to go home and find a new Ruler rather than face Ugu, and warns them not to blame him if they are all transformed into hummingbirds or caterpillars."
+    ],
+    "known_relations_book1": {
+      "the Herkus": "His people, whom he finds hard to manage because they are so strong.",
+      "the giants": "His slaves, kept powerless by being denied zosozo.",
+      "Ugu the Shoemaker": "His former subject, whose whole history he supplies.",
+      "the Wizard": "To whom he gives the zosozo that later lets the Frogman fight the Dove."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Czarover is large and muscular",
+        "the giants of Herku rebel",
+        "the Czarover joins the search",
+        "the Herkus are giants"
+      ]
+    },
+    "hallucination_signals": [
+      "the Czarover is a giant",
+      "the giants rebel",
+      "the Herkus are enormous",
+      "the Czarover fights Ugu"
+    ]
+  },
+  "the_herkus": {
+    "canonical_aliases_book1": [
+      "Herkus"
+    ],
+    "known_facts_book1": [
+      "The people of the square City of Herku, of ordinary size but dreadfully lean and thin, stoop-shouldered and weary looking even to the little children.",
+      "Are the strongest people in the world because of the zosozo they are fed once a year, and are dangerous to strangers only because they are so friendly — a handshake would break your arm.",
+      "Keep giants as slaves, each collared with riveted gold; the giants' faces express patience rather than ferocity, being long subdued.",
+      "Their city has a square four-sided wall with a square gate of burnished copper on each side, and no banners or ornament anywhere.",
+      "Were rumoured before the party arrived to be twice the size of giants; the truth is the opposite of the rumour."
+    ],
+    "known_relations_book1": {
+      "the Czarover": "Their ruler and the inventor of zosozo.",
+      "the giants": "Their slaves, whom they overpower by strength and not size.",
+      "Ugu the Shoemaker": "Their former neighbour, who left the city for the hills."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Herkus are giants",
+        "the Herkus attack the travelers",
+        "the giants of Herku are the masters",
+        "the Herkus know where Ozma is"
+      ]
+    },
+    "hallucination_signals": [
+      "the Herkus are giants",
+      "the giants rule Herku",
+      "the Herkus attack",
+      "the Herkus have Ozma"
+    ]
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "cayke": {
+    "canonical_aliases_book1": [
+      "Cayke",
+      "Cayke the Cookie Cook"
+    ],
+    "known_facts_book1": [
+      "A small, dried-up woman of the Yip Country whose diamond-studded gold dishpan is stolen on the very morning Ozma disappears.",
+      "The dishpan belonged to her mother and all her grandmothers since the beginning of time, and is the oldest thing in the Yip Country.",
+      "It has magic powers: whoever owns it is a good cook, and without it her cookies burn, come out too tough to eat, or are no better than any other woman's.",
+      "Raises such a hue and cry over the theft that the Yips force her to take the matter to the Frogman.",
+      "Sets out alone rather than give up, and nine young Yips come partway down the mountain with her before the great gulf turns them back.",
+      "Is carried over the gulf on the Frogman's back, clinging where his neck ought to be, since he has no neck at all.",
+      "Refuses flatly to bathe in the Truth Pond, saying that if she told the truth the Frogman would not like her.",
+      "Sees an image of her dishpan conjured by the Bear King and throws her arms around it, finding nothing there at all.",
+      "Never recovers the dishpan herself: Ugu flees with it, and the Scarecrow and the Tin Woodman find it lying under a tree in the Quadling Country and bring it to Ozma, who gives it back to her.",
+      "Stays on at the Emerald City afterward, in no hurry to return to the Yip Country."
+    ],
+    "known_relations_book1": {
+      "the Frogman": "Her companion and adviser, whose boasted wisdom she believed in.",
+      "Ugu the Shoemaker": "The magician who stole her dishpan and used it to steal everything else.",
+      "the Lavender Bear": "The King whose magic shows her both her dishpan and the thief.",
+      "Ozma": "Who promises the dishpan's return and keeps the promise."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Cayke bathes in the Truth Pond",
+        "Cayke recovers her dishpan from Ugu",
+        "Cayke returns to the Yip Country at the end",
+        "Cayke is a Winkie"
+      ]
+    },
+    "hallucination_signals": [
+      "Cayke bathes in the Truth Pond",
+      "Cayke takes back her dishpan from Ugu",
+      "Cayke goes home",
+      "Cayke is a Winkie"
+    ]
+  },
+  "the_frogman": {
+    "canonical_aliases_book1": [
+      "the Frogman"
+    ],
+    "known_facts_book1": [
+      "Descended from the common frogs of Oz; he was carried off by a bird as a small frog, wriggled free, and fell into a hidden enchanted pool on the Yip tableland.",
+      "Grew huge and unusually intelligent by feeding on the magic **skosh** found nowhere else on earth except that one pool.",
+      "Stands upright on his hind legs, dresses in yellow satin plush breeches, a bright yellow swallow-tailed coat, green stockings and red shoes with diamond buckles, and carries a gold-headed cane.",
+      "Wears great gold-rimmed spectacles not because his eyes are bad but because they make him look wise.",
+      "Is the Yips' adviser and leader; when he does not know a thing he pretends to, which the Yips find answers just as well, and he knows in his heart he is a humbug.",
+      "Joins Cayke's quest out of ambition to be admired beyond the Yip Country, not out of kindness.",
+      "Bathes by accident in the **Truth Pond**, whose golden plate reads that whoever bathes in the water must always afterward tell the truth — and can no longer claim to be wise.",
+      "Confesses to Cayke that he is not the Wisest Creature in the World and is not wise at all, which shatters one of her most pleasing illusions.",
+      "Is fed a dose of zosozo by the Wizard and leaps the Wall of Steel in three bounds, sticking in the pin that destroys it.",
+      "Fights the giant Dove of War bare-handed to protect Dorothy, bearing it to the floor at the first leap, and has his fine clothes torn by its talons.",
+      "Becomes a favorite at the Emerald City at the end."
+    ],
+    "known_relations_book1": {
+      "Cayke": "The Cookie Cook he accompanies and whose illusions about him he destroys.",
+      "the Truth Pond": "The enchanted water that ends his career as a humbug.",
+      "the Wizard": "Who gives him zosozo and sends him over the Wall of Steel.",
+      "Dorothy": "Whom he protects from the Dove of War, not knowing the Magic Belt already shields her.",
+      "Scraps": "The first of the Emerald City party he meets, on the hilltop."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Frogman is genuinely wise",
+        "the Frogman defeats Ugu",
+        "the Frogman is a Yip",
+        "the Frogman refuses to admit he is not wise"
+      ]
+    },
+    "hallucination_signals": [
+      "the Frogman is truly wise",
+      "the Frogman defeats Ugu",
+      "the Frogman keeps his secret",
+      "the Frogman is a Yip"
+    ]
+  }
+}

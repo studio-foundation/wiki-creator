@@ -334,7 +334,7 @@ labels:
   location:      {en: Location,    fr: Localisation}
   leaders:       {en: Leaders,     fr: Leaders}
   participants:  {en: Participants, fr: Participants}
-  lieu:          {en: Location,    fr: Lieu}
+  lieu:          {en: Place,       fr: Lieu}
   chapitre:      {en: Chapter,     fr: Chapitre}
   issue:         {en: Outcome,     fr: Issue}
   infobox:       {en: Infobox,     fr: Infobox}

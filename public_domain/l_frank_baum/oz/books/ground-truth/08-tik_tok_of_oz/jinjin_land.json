@@ -1,0 +1,177 @@
+{
+  "tititi_hoochoo": {
+    "canonical_aliases_book1": [
+      "Tititi-Hoochoo",
+      "the Great Jinjin",
+      "the Private Citizen"
+    ],
+    "known_facts_book1": [
+      "The supreme Ruler of the fairyland on the opposite side of the world from the Nome Kingdom, elected because he is the only important personage there with no duties to mankind — hence a Private Citizen.",
+      "Looks like the other royalties of his land except that his eyes are black with red sparks like coals of fire in the irises, and his robe is white instead of scarlet.",
+      "Has no heart at all, but possesses a high degree of Reason and Justice; he shows no mercy but never punishes unjustly or without reason.",
+      "Had warned Ruggedo many times that any use of the Forbidden Tube would be punished, and finds in the Fairy Records that Kaliko begged his master not to do it.",
+      "Rules that the strangers are innocent because they were thrust in against their will, and that Ruggedo alone must be punished.",
+      "Bows respectfully to Tik-Tok and seats him on the throne beside him, on discovering he is the Private Soldier and cannot lie.",
+      "Sentences Ruggedo to be driven from his caverns, stripped of magic and made a homeless wanderer, allowed only what treasure he can carry in his pockets.",
+      "Chooses Quox as his Instrument of Vengeance because Quox is the only being in the land guilty of any wrong — disrespect to the Original Dragon.",
+      "Never leaves his own country; he acts on the Nome King entirely through Quox, the pink ribbon and the six eggs."
+    ],
+    "known_relations_book1": {
+      "Quox": "The young dragon he selects as his Instrument of Vengeance.",
+      "Ruggedo": "The Nome King he condemns for defying his orders about the Tube.",
+      "Tik-Tok": "The Clockwork Man he honors as the Private Soldier of the party.",
+      "Tubekins": "The King of the Tube who brings the strangers before him.",
+      "Erma": "One of the Kings and Queens of his land who pay him reverence."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Tititi-Hoochoo travels to the Nome Kingdom",
+        "Tititi-Hoochoo tortures the strangers",
+        "Tititi-Hoochoo has a heart",
+        "Tititi-Hoochoo shows mercy"
+      ],
+      "relationships": [
+        "Tititi-Hoochoo is an enemy of the travelers",
+        "Tititi-Hoochoo is an ally of Ruggedo"
+      ]
+    },
+    "hallucination_signals": [
+      "Tititi-Hoochoo tortures the travelers",
+      "Tititi-Hoochoo travels to Ruggedo's cavern",
+      "the Jinjin shows mercy",
+      "the Jinjin has a heart"
+    ]
+  },
+  "tubekins": {
+    "canonical_aliases_book1": [
+      "Tubekins"
+    ],
+    "known_facts_book1": [
+      "The King of the Tube, discovered hoeing pink violets in a garden when Queen Ann lands on his head and smashes his jewelled crown over his eyes.",
+      "Is a type of all the inhabitants of that land: a beautiful but expressionless face, large blue eyes, black bushy hair, a scarlet robe embroidered with a horrible dragon's head, one yellow arm and one green, one blue leg and one pink, and jet black feet.",
+      "Calls off the fire and pincers his invisible brothers had prepared, and takes the strangers to the Private Citizen instead.",
+      "Objects to the phrase 'Hollow Tube' on the grounds that all tubes are hollow, and insists the Tube is private property that everyone is forbidden to fall into.",
+      "Can become invisible at will, as can all the Kings and Queens of that land.",
+      "Escorts the party back to the mouth of the Tube on the Jinjin's command and sees them all enter.",
+      "Says he prefers Quox's room to his company, because the dragon tires him dreadfully."
+    ],
+    "known_relations_book1": {
+      "Tititi-Hoochoo": "His Ruler, before whom he brings the strangers.",
+      "Ann Soforth": "The Queen who lands on his head and wrestles him on the ground.",
+      "Quox": "The dragon he finds tiresome."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Tubekins tortures the strangers",
+        "Tubekins is the Ruler of his land",
+        "Tubekins travels through the Tube"
+      ]
+    },
+    "hallucination_signals": [
+      "Tubekins rules the land",
+      "Tubekins tortures the strangers",
+      "Tubekins goes through the Tube"
+    ]
+  },
+  "quox": {
+    "canonical_aliases_book1": [
+      "Quox"
+    ],
+    "known_facts_book1": [
+      "A young dragon of the Dragon Family, sky-blue in color and thickly set with glittering silver scales each as big as a serving-tray, with an electric light on the end of his tail.",
+      "Would have celebrated his three thousand and fifty-sixth birthday next Thursday, and calls himself a mere child.",
+      "Is chosen as Instrument of Vengeance because he alone in that land has done wrong: he told his most ancient ancestor to mind his own business and said the Ancient One had grown foolish with age.",
+      "Wears a pink ribbon with a bow under his left ear and a pearl chain carrying a great jeweled locket, and is transformed into a carryall with twelve double seats strapped along his back.",
+      "Carries the whole party back through the Tube, lighting the way with his eyes and tail, and lands on the mountainside above the Nome King's entrance.",
+      "Shields everyone including Hank from the nomes' magic spears with his own body.",
+      "Sleeps through the entire capture of the party, and cannot be woken by pounding on his eyelids — only by jerking his pearl necklace.",
+      "Lets himself be chained deliberately, and bursts the chains later as easily as threads, but cannot push in the heavy gold door.",
+      "Defeats Ruggedo with two objects and no violence at all: the pink ribbon that strips his magic the instant he plainly looks at it, and six hen's eggs from the locket.",
+      "Restores Ozga and Shaggy by having them touch the pink ribbon, and names Kaliko King of the Nomes on the Jinjin's authority.",
+      "Goes back through the Tube alone at the end, intending to sleep the whole way."
+    ],
+    "known_relations_book1": {
+      "Tititi-Hoochoo": "The Great Jinjin, his master, whose orders he obeys to redeem his name.",
+      "Original Dragon": "His most ancient ancestor, whom he insulted, and whom he calls a stupid old humbug.",
+      "Ruggedo": "The Nome King he deposes without ever using tooth or claw.",
+      "Polychrome": "The only one who can wake him.",
+      "Kaliko": "The nome he raises to King."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Quox fights the nomes with tooth and claw",
+        "Quox burns Ruggedo",
+        "Quox is killed",
+        "Quox stays in the Nome Kingdom"
+      ]
+    },
+    "hallucination_signals": [
+      "Quox burns the nomes",
+      "Quox tears Ruggedo apart",
+      "Quox is slain",
+      "Quox remains in Oz"
+    ]
+  },
+  "original_dragon": {
+    "canonical_aliases_book1": [
+      "Original Dragon"
+    ],
+    "known_facts_book1": [
+      "The first living creature ever made, and therefore the oldest and wisest of living things, still alive and resident in the Jinjin's land.",
+      "Is as old as the world and remembers everything that has happened since the world was created, supplying the fairies with wisdom when they need it.",
+      "Is the reason every inhabitant of that land wears a dragon's head embroidered on the bosom of the robe, as the emblem of the favored people.",
+      "Had many children; some wandered into other lands where men made war on them, but many still reside in that country, and none is as wise as he.",
+      "Never appears on the page: he is described by Queen Erma and complained about by Quox, and takes no part in the action."
+    ],
+    "known_relations_book1": {
+      "Quox": "His disrespectful young descendant, whose insult to him is the crime the Jinjin punishes.",
+      "Erma": "Explains his significance to Betsy and Polychrome."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Original Dragon appears in this book",
+        "the Original Dragon travels through the Tube",
+        "the Original Dragon punishes Quox himself"
+      ]
+    },
+    "hallucination_signals": [
+      "the Original Dragon appears",
+      "the Original Dragon goes through the Tube",
+      "the Ancient Dragon fights Ruggedo"
+    ]
+  },
+  "erma": {
+    "canonical_aliases_book1": [
+      "Erma",
+      "Queen of Light"
+    ],
+    "known_facts_book1": [
+      "One of the many Kings and Queens of the Jinjin's land, who takes Betsy and Polychrome as her guests.",
+      "Her palace stands on a little eminence and is a mass of crystal windows surmounted by a vast crystal dome.",
+      "Is attended by six maidens of high degree, each bearing a wand tipped with an emblem of her light: Sunlight, Moonlight, Starlight, Daylight, Firelight and Electra.",
+      "The maiden seated at her side changes through the evening — Daylight, then Moonlight, then Starlight, then Firelight, then Electra at the feast.",
+      "Explains the dragon's-head emblem, the Original Dragon, and the reason the fairies of that land elected a Private Citizen as Ruler.",
+      "Insists that electricity was part of the world from its creation, so Electra is as old as Daylight or Moonlight, whatever mortals think of Mr. Edison.",
+      "Serves each guest exactly the food she likes best — dewdrops for Polychrome, the best dinner of her life for Betsy."
+    ],
+    "known_relations_book1": {
+      "Betsy Bobbin": "Her mortal guest for the night.",
+      "Polychrome": "Her fairy guest, whose many questions she answers.",
+      "Tititi-Hoochoo": "The Ruler she and all the Kings and Queens pay reverence to.",
+      "Electra": "The youngest-seeming and most beautiful of her six light maidens."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Erma travels through the Tube",
+        "Erma rules the Jinjin's land",
+        "Erma goes to the Nome Kingdom",
+        "Electra is the youngest of the light maidens"
+      ]
+    },
+    "hallucination_signals": [
+      "Erma rules the fairyland",
+      "Erma travels with the party",
+      "Electra is the newest light"
+    ]
+  }
+}

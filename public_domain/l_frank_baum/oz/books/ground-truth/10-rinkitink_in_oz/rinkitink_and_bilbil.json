@@ -1,0 +1,88 @@
+{
+  "rinkitink": {
+    "canonical_aliases_book1": [
+      "Rinkitink",
+      "King Rinkitink"
+    ],
+    "known_facts_book1": [
+      "King of the Kingdom of Rinkitink, whose palace stands on a rocky headland in the City of Gilgad and serves with its high towers as a lighthouse.",
+      "A little fat man nearly as broad as he is high, with a face round as an apple and nearly as rosy, in a loose purple silk robe and a white velvet cap banded with diamonds.",
+      "Laughs in a way spelled 'Heh, heh, ho, ho — keek-eek-eek-eek — hoo, hoo!' and laughs until he cries at his own jokes.",
+      "Ran away from his own subjects because they would never let him go anywhere, escaping by the back door after decreeing that no one might enter his room.",
+      "Carries a scroll of parchment titled 'How to be Good', written with a goosequill by the man he calls the wisest in his kingdom, whose maxims are all comic tautologies.",
+      "Rides Bilbil everywhere because he is too stout to climb on a horse and too stout to walk far.",
+      "Falls into the well of Pingaree while running from the warriors and stands all night with his chin just above the water, and is hauled out only when Inga and Bilbil pull together on a rope.",
+      "Throws Inga's left shoe at a mewing cat in the night — the single act that costs the party the Pink Pearl and nearly costs Inga his life.",
+      "Is given the Pink Pearl to carry in his pinned vest pocket, and so walks unharmed through falling rocks, a golden net, the opened Bottomless Gulf and a cavern full of flying knives.",
+      "Wins the Nome King's crown in a wager that Inga has survived the Three Trick Caverns.",
+      "Is found at last by fifty boats from Gilgad under Lord Pinkerbloo, and must go home to reign, which he calls a horrid fate.",
+      "Says the beauty of life is its sudden changes, and sings his grandfather's song about kings baking pies and paupers ruling."
+    ],
+    "known_relations_book1": {
+      "Bilbil": "His talking goat and mount, whose grumbling he enjoys, and who is really Prince Bobo.",
+      "Inga": "The boy Prince he first tries to talk out of the quest and then follows loyally.",
+      "King Kitticut": "His host and brother monarch, whose island he was visiting when the raid came.",
+      "Kaliko": "The Nome King who tries every sorcery on him and fails.",
+      "Pinkerbloo": "The Lord of Gilgad who finds him and takes him home."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Rinkitink fights the warriors",
+        "Rinkitink has magic powers of his own",
+        "Rinkitink stays in Pingaree forever",
+        "Rinkitink is a sorcerer"
+      ],
+      "relationships": [
+        "Rinkitink is an ally of King Gos"
+      ]
+    },
+    "hallucination_signals": [
+      "Rinkitink works magic",
+      "Rinkitink is a sorcerer",
+      "Rinkitink fights in battle",
+      "Rinkitink refuses to go home"
+    ]
+  },
+  "bilbil": {
+    "canonical_aliases_book1": [
+      "Bilbil",
+      "Prince Bobo"
+    ],
+    "known_facts_book1": [
+      "A lean, scraggly talking goat who carries King Rinkitink on a red velvet saddle embroidered with silver thistles.",
+      "Is never contented, scolds everyone including his master, and claims superiority lies in intelligence rather than rank.",
+      "Escapes the invasion of Pingaree by keeping his mouth shut and staying away from the warriors, who saw nothing worth taking in a skinny old beast.",
+      "Butts Captain Buzzub and a dozen warriors over on the beach of Regos, and claims to have conquered them unaided.",
+      "Bursts out of his locked room in the palace of Regos and butts King Gos and his whole line of captains down the staircase, twice.",
+      "Collides with Queen Cor in the courtyard gate of Coregos, sending her flying over his head, and then knocks over Rinkitink who was chasing her.",
+      "Throws King Kaliko over his head against a jeweled wall, mashing the points of the Nome King's second-best crown.",
+      "Is discovered by the Wizard of Oz to be under an enchantment, and identified as Prince Bobo of Boboland, transformed years ago by a cruel magician who is now dead.",
+      "Had never told Rinkitink, asking only 'What would be the use?', and at first refuses to be restored, being ashamed of his condition.",
+      "Is restored by Glinda through a chain of transformations — goat to lamb to ostrich, then tottenhot, then mifket, then at last a handsome young man.",
+      "Blames his surly disposition on the nature of a goat, which Rinkitink says he had really enjoyed.",
+      "Chooses to leave with Rinkitink for Gilgad at the end rather than return to Boboland."
+    ],
+    "known_relations_book1": {
+      "Rinkitink": "His master and, once disenchanted, his friend, whom he refuses to desert.",
+      "Inga": "The boy Prince he travels with and helps pull out of trouble.",
+      "the Wizard": "Who recognizes the enchantment and names him Prince Bobo.",
+      "Glinda": "The Sorceress who breaks the enchantment through five transformations.",
+      "Kaliko": "The Nome King he throws against the wall."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Bilbil is restored by the Wizard",
+        "Bilbil returns to Boboland",
+        "Bilbil remains a goat at the end",
+        "Bilbil was born a goat",
+        "the magician who enchanted Bilbil is still alive"
+      ]
+    },
+    "hallucination_signals": [
+      "the Wizard restores Bilbil",
+      "Bilbil returns to Boboland",
+      "Bilbil stays a goat",
+      "Bilbil was always a goat"
+    ]
+  }
+}

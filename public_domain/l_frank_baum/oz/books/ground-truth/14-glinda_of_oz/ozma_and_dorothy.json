@@ -1,0 +1,92 @@
+{
+  "ozma": {
+    "canonical_aliases_book1": [
+      "Ozma",
+      "Princess Ozma",
+      "Ozma of Oz",
+      "the girl Ruler"
+    ],
+    "known_facts_book1": [
+      "The fairy Ruler of all the Land of Oz, whose authority comes from the Fairy Queen **Lurline**, of whose band she was a member when Lurline made Oz a Fairyland and left her behind to rule it.",
+      "Goes to the Skeezer Country out of **duty**: having learned of the war from Glinda's Book of Records, she says she would not be doing her duty if she kept away and let her subjects fight.",
+      "Refuses to send the Wizard with threats, and refuses an escort, because Glinda argues her one unequalled art is winning hearts, which she can use better alone than with a train of followers.",
+      "Carries only a small **silver wand** tipped with a great sparkling emerald — fairies use no chemicals, herbs or wizards' tools — and it is her one weapon of offence and defence.",
+      "Says plainly she is not all-powerful: her magic is fairy magic, not sorcery or wizardry; Glinda knows arts she does not, and even the little Wizard can do things she cannot.",
+      "Argues to Dorothy that a world where every wish could be waved into being would bring weariness, not happiness, because nothing would be difficult and nothing worth earning.",
+      "Escapes the Su-dic by making herself and Dorothy **invisible** with her wand and simply walking out — the Su-dic realises too late that he knew how to undo invisibility.",
+      "Enchants Lady Aurex's house with a circle drawn by her wand so that Coo-ee-oh, who can hear every whisper on the island, cannot hear a word spoken inside it.",
+      "Is imprisoned under the lake for the whole middle of the book and cannot raise the island: Coo-ee-oh's magic is witchcraft, not fairy magic, and requires spoken words known only to her.",
+      "Takes possession of Coo-ee-oh's palace, promises the Skeezers she will try to save them, and tells them to go home and do their daily tasks with patience.",
+      "Speaks the syllable **'Oh-h-h!'** over the burning Gaulau powder, and it is her voice that raises the island.",
+      "Lets the Skeezers **elect** their own Queen, who is subject to her in turn, and they choose Lady Aurex.",
+      "Judges the Flathead people less to blame than their Dictator, and ends the book saying it is always wise to do one's duty, however unpleasant the duty may seem."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her dearest friend and companion on the journey.",
+      "Glinda": "The Sorceress who gives Dorothy the alarm ring and leads the rescue.",
+      "the Su-dic": "The Flathead Dictator who defies her and tries to imprison her.",
+      "Coo-ee-oh": "The Skeezer Queen who denies her authority and makes her a prisoner.",
+      "Lady Aurex": "The Skeezer she frees and who is then elected Queen."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Ozma raises the sunken island by fairy magic",
+        "Ozma prevents the war",
+        "Ozma appoints the new Queen of the Skeezers",
+        "Ozma destroys Queen Coo-ee-oh",
+        "Ozma takes an army to the Skeezer Country"
+      ]
+    },
+    "hallucination_signals": [
+      "Ozma raises the island herself",
+      "Ozma stops the battle",
+      "Ozma appoints Aurex Queen",
+      "Ozma brings an army"
+    ]
+  },
+  "dorothy": {
+    "canonical_aliases_book1": [
+      "Dorothy",
+      "Princess Dorothy"
+    ],
+    "known_facts_book1": [
+      "A little girl from Kansas, made a Princess of Oz by Ozma, who cannot grow big, grow old, or suffer great bodily pain while she lives in the fairyland — but who is still a mortal and could be destroyed or hidden away.",
+      "**Starts the whole book by accident**: she is bored by Ozma and Glinda's conversation, wanders to the Great Book of Records, and reads the war notice as the letters are still printing.",
+      "Says afterward that she is sorry she noticed the Record — the one line in the book that admits how much trouble one glance cost.",
+      "Wears two protections: the Nome King's **Magic Belt** around her waist, and the **Magic Ring** Glinda gives her, to be turned once right and once left only if she is in danger of destruction.",
+      "Is attacked by the Spider King and untouched, because of the Belt.",
+      "Thinks of the **white crab**: she spots a green crab in a spring pool, and it agrees to cut the purple web in exchange for being made white — the color that purple spiders fear.",
+      "Tells Queen Coo-ee-oh she has a pink kitten that talks the same way until it gets a good whipping.",
+      "Spends days at a pane of the Dome trying to pick the gold, silver and bronze fishes out of a whole lake of them, and never finds them — the plan is right and the method is hopeless.",
+      "**Rings the alarm bell** with Glinda's ring, which is the only reason the Rescue Expedition is ever launched.",
+      "Finds the hidden drawer of Gaulau powder by pushing her thumb into a slight hollow in the wall of the Room of Magic.",
+      "**Solves the puzzle of the magic words**: Coo-ee-oh used three magic words, and her name is made of three syllables — Coo, ee, oh.",
+      "Is the one who sees from the window that 'Coo' has sent all the submarines loose under water."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Her dearest friend, whom she insists on accompanying.",
+      "Glinda": "Who gives her the alarm ring and takes her guess seriously.",
+      "Lady Aurex": "Their hostess and keeper under the Dome.",
+      "Uncle Henry": "Her uncle, who joins the Rescue Expedition for her sake."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "ruby slippers",
+        "there is no place like home",
+        "Miss Gulch"
+      ],
+      "not_in_this_book": [
+        "Dorothy catches the three fishes",
+        "Dorothy uses the Magic Belt to raise the island",
+        "Dorothy returns to Kansas",
+        "Dorothy stays behind in the Emerald City"
+      ]
+    },
+    "hallucination_signals": [
+      "Dorothy catches the enchanted fishes",
+      "the Magic Belt raises the island",
+      "Dorothy goes home to Kansas",
+      "Dorothy is left behind"
+    ]
+  }
+}

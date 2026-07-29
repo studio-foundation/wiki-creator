@@ -1,0 +1,204 @@
+{
+  "mombi": {
+    "canonical_aliases_book1": [
+      "Mombi"
+    ],
+    "known_facts_book1": [
+      "An old Witch who used to live in the Gillikin Country, north of Dr. Pipt's mountain.",
+      "Was given all of Dr. Pipt's first Powder of Life and cheated him wickedly in return, paying with a Powder of Perpetual Youth that was no good and could work no magic at all.",
+      "Used that Powder of Life to bring Jack Pumpkinhead to life, to test it.",
+      "Stole Ozma as a baby and transformed her into a boy, and made her carry wood and hoe the garden.",
+      "Appears nowhere in this book: she exists only in Margolotte's and Ozma's accounts of things long past."
+    ],
+    "known_relations_book1": {
+      "Dr. Pipt": "Cheated him out of his first Powder of Life.",
+      "Ozma": "Stole and transformed her as a baby, and was fled from.",
+      "Jack Pumpkinhead": "Brought him to life with the stolen powder."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Mombi appears in this book",
+        "Mombi is defeated in this book",
+        "Mombi still holds the Powder of Life"
+      ],
+      "relationships": [
+        "Mombi is an ally of Dr. Pipt",
+        "Mombi is a friend of Ozma"
+      ]
+    },
+    "hallucination_signals": [
+      "Mombi appears",
+      "Mombi is defeated",
+      "Mombi is Dr. Pipt's ally",
+      "Mombi enchants Ojo"
+    ]
+  },
+  "jinjur": {
+    "canonical_aliases_book1": [
+      "Jinjur"
+    ],
+    "known_facts_book1": [
+      "Described in this book only as 'an ordinary young lady named Jinjur', an old friend of the Scarecrow.",
+      "Repaints the Scarecrow's faded left ear for him, which restores his hearing on that side.",
+      "Always fixes the Scarecrow up when he gets weather-worn.",
+      "Never appears on the page: the Scarecrow rides off to visit her and comes back with the ear freshly painted."
+    ],
+    "known_relations_book1": {
+      "Scarecrow": "An old friend whose paint she keeps in repair."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Jinjur leads an army in this book",
+        "Jinjur conquers the Emerald City in this book",
+        "Jinjur appears in person in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "Jinjur leads an army of girls",
+      "Jinjur conquers the Emerald City",
+      "General Jinjur revolts"
+    ]
+  },
+  "billina": {
+    "canonical_aliases_book1": [
+      "Billina",
+      "Yellow Hen"
+    ],
+    "known_facts_book1": [
+      "The Yellow Hen, spoken of at the city gate as having just hatched out thirteen new fluffy chicks.",
+      "Has hatched about seven thousand chicks in all, by the Soldier's reckoning.",
+      "Is named in the Shaggy Man's song as 'one wise Yellow Hen'.",
+      "Never appears on the page in this book; she is only reported and sung about."
+    ],
+    "known_relations_book1": {
+      "Soldier with the Green Whiskers": "Reports her new brood to the Shaggy Man.",
+      "Shaggy Man": "Means to visit and congratulate her."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Billina appears in this book",
+        "Billina travels with the party",
+        "Billina defeats the Nome King in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "Billina appears",
+      "Billina joins the journey",
+      "Billina's eggs defeat the Nomes"
+    ]
+  },
+  "eureka": {
+    "canonical_aliases_book1": [
+      "Eureka",
+      "the Pink Kitten"
+    ],
+    "known_facts_book1": [
+      "Dorothy's kitten, all pink — brains and all — except for blue eyes, and a great favorite at the royal palace.",
+      "Is an ordinary kitten, not made of glass, which the Glass Cat finds hard to credit.",
+      "Is the subject of the Shaggy Man's advice to Bungle: make friends with the Pink Kitten and you will be solid at the palace.",
+      "Never appears on the page in this book; she is only talked about."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her mistress.",
+      "Bungle": "The Glass Cat who resents being compared with a common meat kitten."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Eureka appears in this book",
+        "Eureka is tried for eating a piglet in this book",
+        "Eureka is made of glass"
+      ]
+    },
+    "hallucination_signals": [
+      "Eureka appears",
+      "Eureka is put on trial",
+      "Eureka is a glass kitten"
+    ]
+  },
+  "professor_wogglebug": {
+    "canonical_aliases_book1": [
+      "Professor Wogglebug"
+    ],
+    "known_facts_book1": [
+      "The Highly Magnified professor of the Royal College of Athletics.",
+      "Invented the Square Meal Tablets that the Shaggy Man carries, each containing soup, fish, roast meat, salad, apple-dumplings, ice cream and chocolate-drops boiled down to a fingernail-sized tablet.",
+      "Is named in the Shaggy Man's song as one who looks so big to everyone that he is filled with pride.",
+      "Never appears on the page in this book."
+    ],
+    "known_relations_book1": {
+      "Shaggy Man": "Carries and shares the professor's invention.",
+      "Scarecrow": "Trades six of the tablets to the lazy Quadling for help building the raft."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Professor Wogglebug appears in this book",
+        "Professor Wogglebug teaches Ojo",
+        "Professor Wogglebug joins the journey"
+      ]
+    },
+    "hallucination_signals": [
+      "Professor Wogglebug appears",
+      "Professor Wogglebug joins the party",
+      "Wogglebug teaches at the palace"
+    ]
+  },
+  "cowardly_lion": {
+    "canonical_aliases_book1": [
+      "Cowardly Lion"
+    ],
+    "known_facts_book1": [
+      "One of the two enormous beasts that crouch at Ozma's feet and guard her when she holds high court in the Throne Room.",
+      "Is well known and respected in the Emerald City, and is a friend and playmate of Toto.",
+      "Is named in the Shaggy Man's song as the beast who shakes with fear almost every time he roars, and yet does the bravest things.",
+      "Stands behind Ozma with the Hungry Tiger at the final scene when the statues are restored.",
+      "Speaks no line in this book and takes no part in the plot."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Guards her in the Throne Room.",
+      "Hungry Tiger": "The other guardian beast, always named beside him.",
+      "Toto": "A friend he plays and romps with."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "the Cowardly Lion asks the Wizard for courage in this book"
+      ],
+      "not_in_this_book": [
+        "the Cowardly Lion travels with Ojo",
+        "the Cowardly Lion fights in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "the Cowardly Lion asks for courage",
+      "the Cowardly Lion joins the quest",
+      "the Cowardly Lion fights a monster"
+    ]
+  },
+  "hungry_tiger": {
+    "canonical_aliases_book1": [
+      "Hungry Tiger"
+    ],
+    "known_facts_book1": [
+      "The second of the two enormous beasts that guard Ozma at high court, free but alarming no one present.",
+      "Is named in the Shaggy Man's song as the tiger who would love to eat babies but never does, because he is fed other kinds of meat.",
+      "Is a friend and playmate of Toto.",
+      "Speaks no line in this book and takes no part in the plot."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Guards her in the Throne Room.",
+      "Cowardly Lion": "The other guardian beast, always named beside him.",
+      "Toto": "A friend he plays and romps with."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Hungry Tiger eats a baby",
+        "the Hungry Tiger travels with Ojo",
+        "the Hungry Tiger is starving in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "the Hungry Tiger eats a baby",
+      "the Hungry Tiger joins the quest",
+      "the Hungry Tiger is starved"
+    ]
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "uncle_henry": {
+    "canonical_aliases_book1": [
+      "Uncle Henry"
+    ],
+    "known_facts_book1": [
+      "Dorothy's uncle, weak and nervous from overwork on his Kansas farm, sailing to Australia to rest and visit cousins.",
+      "Takes Dorothy along for company; she goes on deck in the storm looking for him and is blown overboard.",
+      "Had actually gone to lie down in his berth, so Dorothy never finds him before the coop carries her off.",
+      "Is seen in Ozma's magic picture in a room in Sydney, white-haired, thin and lonely, missing Dorothy.",
+      "Is reunited with Dorothy at the book's very end when the magic belt wishes her to Australia; he says 'I'm better already, my darling.'",
+      "Present only at the ship's departure and the Australian reunion; absent through the whole Ev and Oz adventure."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "His niece, whom he sails with and is reunited with in Australia.",
+      "Aunt Em": "His wife, left at home in Kansas to mind the farm."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Uncle Henry goes to Oz",
+        "Uncle Henry meets the Nome King",
+        "Uncle Henry crosses the desert"
+      ]
+    },
+    "hallucination_signals": [
+      "Uncle Henry travels to Oz",
+      "Uncle Henry meets Ozma",
+      "Uncle Henry is on the rescue expedition"
+    ]
+  },
+  "aunt_em": {
+    "canonical_aliases_book1": [
+      "Aunt Em"
+    ],
+    "known_facts_book1": [
+      "Dorothy's aunt, left at home on the Kansas farm to watch the hired men while Uncle Henry travels.",
+      "Cautioned Dorothy to take good care of her uncle, which is why Dorothy goes on deck in the storm.",
+      "Never appears on the page in person; she is seen only in Ozma's magic picture, washing dishes by the kitchen window, well and contented.",
+      "Never speaks and never meets Dorothy during this book."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her niece, whom she stays behind from and sees only through the magic picture.",
+      "Uncle Henry": "Her husband, away in Australia."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Aunt Em appears in person",
+        "Aunt Em speaks",
+        "Aunt Em goes to Oz"
+      ]
+    },
+    "hallucination_signals": [
+      "Aunt Em said",
+      "Aunt Em travels with Dorothy",
+      "Aunt Em goes to Oz",
+      "Aunt Em meets the Nome King",
+      "Aunt Em is on the ship"
+    ]
+  },
+  "toto": {
+    "canonical_aliases_book1": [
+      "Toto"
+    ],
+    "known_facts_book1": [
+      "Dorothy's pet dog, left behind in Kansas.",
+      "Appears only in Ozma's magic picture, lying fast asleep in the sun on the side porch of the Kansas farm.",
+      "Never travels with Dorothy, never reaches Ev or Oz, never present in the adventure."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "His mistress, who sees him asleep in the magic picture but is far away from him."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Toto follows Dorothy overboard",
+        "Toto is in Ev",
+        "Toto is in Oz",
+        "Toto is taken by the sheriff"
+      ]
+    },
+    "hallucination_signals": [
+      "Toto follows Dorothy",
+      "Toto in Ev",
+      "Toto in Oz",
+      "Toto barks at the Nome King",
+      "Toto is taken by Miss Gulch"
+    ]
+  },
+  "evoldo": {
+    "canonical_aliases_book1": [
+      "Evoldo",
+      "King Evoldo"
+    ],
+    "known_facts_book1": [
+      "The cruel former King of Ev who beat his servants until they died and bought Tiktok from Smith & Tinker.",
+      "In a fit of anger sold his wife and ten children to the Nome King in exchange for a long life.",
+      "Regretting the deed, he locked Tiktok in the rock, threw the key into the ocean, then jumped in after it and drowned.",
+      "Is dead before the story begins; he never appears, never speaks, and meets none of the characters.",
+      "Uncle of Princess Langwidere and father of the ten royal children."
+    ],
+    "known_relations_book1": {
+      "Nome King": "The monarch he sold his family to for a long life.",
+      "Queen of Ev": "His wife, whom he sold into slavery.",
+      "Tiktok": "The clockwork man he owned, beat, and locked in the rock.",
+      "Langwidere": "His niece."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Evoldo appears",
+        "Evoldo speaks",
+        "Evoldo is rescued",
+        "Evoldo fights the Nome King"
+      ]
+    },
+    "hallucination_signals": [
+      "Evoldo appears",
+      "Evoldo said",
+      "Evoldo is restored",
+      "King Evoldo leads the rescue",
+      "Evoldo is alive"
+    ]
+  }
+}

@@ -69,7 +69,7 @@ def test_assemble_reads_tome_artifacts_from_disk_not_from_stage_context(monkeypa
     pages can only come from disk. Feed a contradictory payload and the disk wins
     — otherwise a loader stage could come back unnoticed."""
     series_dir = _series(tmp_path)
-    monkeypatch.setattr(sa, "run_for_series", lambda *_a, **_k: None)
+    monkeypatch.setattr(sa, "arc_from_payload", lambda *_a, **_k: None)
 
     out = _run_main(sa, {
         "additional_context": f"file_path: {series_dir}/books/01-tome.epub",
@@ -85,7 +85,7 @@ def test_assemble_reads_tome_artifacts_from_disk_not_from_stage_context(monkeypa
 def test_assemble_writes_hub_and_merged_characters(tmp_path):
     series_dir = _series(tmp_path)
 
-    assembly = sa.build_assembly(series_dir, skip_arc=True)
+    assembly = sa.build_assembly(series_dir)
 
     assert assembly["series_title"] == "Throne Of Glass"
     assert assembly["hub"]["author"] == "A. Author"
@@ -100,7 +100,7 @@ def test_assemble_writes_hub_and_merged_characters(tmp_path):
 def test_assemble_drops_failed_pages(tmp_path):
     series_dir = _series(tmp_path, pages=[_page("Celaena", _failed=True)])
 
-    assembly = sa.build_assembly(series_dir, skip_arc=True)
+    assembly = sa.build_assembly(series_dir)
 
     assert assembly["characters"] == []
 
@@ -110,7 +110,7 @@ def test_assemble_requires_the_series_registry(tmp_path):
     (series_dir / "registry.json").unlink()
 
     with pytest.raises(SystemExit):
-        sa.build_assembly(series_dir, skip_arc=True)
+        sa.build_assembly(series_dir)
 
 
 # --- export ----------------------------------------------------------------
@@ -120,7 +120,7 @@ def test_export_writes_the_hub_and_one_page_per_entity(tmp_path):
         {"entity_id": "c", "canonical_name": "Celaena", "entity_type": "PERSON", "aliases": ["Celaena"]},
         {"entity_id": "r", "canonical_name": "Rifthold", "entity_type": "PLACE", "aliases": ["Rifthold"]},
     ], pages=[_page("Celaena"), _page("Rifthold", entity_type="PLACE")])
-    sa.write_assembly(series_dir, sa.build_assembly(series_dir, skip_arc=True))
+    sa.write_assembly(series_dir, sa.build_assembly(series_dir))
 
     result = se.export_series(series_dir)
 
@@ -135,9 +135,9 @@ def test_export_writes_the_hub_and_one_page_per_entity(tmp_path):
 
 def test_export_renders_the_arc_into_the_hub(tmp_path):
     series_dir = _series(tmp_path)
-    assembly = sa.build_assembly(series_dir, skip_arc=True)
-    assembly["arc"] = "An assassin becomes a queen."
-    sa.write_assembly(series_dir, assembly)
+    sa.write_assembly(
+        series_dir, sa.build_assembly(series_dir, arc="An assassin becomes a queen.")
+    )
 
     se.export_series(series_dir)
 
@@ -147,7 +147,7 @@ def test_export_renders_the_arc_into_the_hub(tmp_path):
 
 def test_export_is_a_full_rebuild(tmp_path):
     series_dir = _series(tmp_path)
-    sa.write_assembly(series_dir, sa.build_assembly(series_dir, skip_arc=True))
+    sa.write_assembly(series_dir, sa.build_assembly(series_dir))
     se.export_series(series_dir)
     stale = series_output_dir(series_dir) / "characters" / "Gone.wiki"
     stale.write_text("stale", encoding="utf-8")
@@ -161,7 +161,7 @@ def test_export_reads_the_assembly_from_disk_not_from_stage_context(tmp_path):
     """The assemble stage output carries counts, never the pages — the export
     reads the artifact (STU-455)."""
     series_dir = _series(tmp_path)
-    sa.write_assembly(series_dir, sa.build_assembly(series_dir, skip_arc=True))
+    sa.write_assembly(series_dir, sa.build_assembly(series_dir))
 
     out = _run_main(se, {
         "additional_context": f"file_path: {series_dir}/books/01-tome.epub",

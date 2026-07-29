@@ -1,0 +1,185 @@
+{
+  "button_bright": {
+    "canonical_aliases_book1": [
+      "Button-Bright"
+    ],
+    "known_facts_book1": [
+      "An American boy from Philadelphia who lately found his way to Oz in the company of Trot and Cap'n Bill, and who now wears the Munchkin costume in different colors from Ojo's.",
+      "Gets lost three times in this book — in the Great Orchard, on the night before the march on the castle, and once more at the end — and is found each time.",
+      "Eats the solitary enchanted peach at the exact center of the Great Orchard, which a Bluefinch and a White Rabbit both tell him Ugu the Shoemaker placed there.",
+      "Pockets the golden peach pit to show the girls and forgets all about it five minutes later — carrying the imprisoned Ozma in his left jacket pocket for days.",
+      "Falls into a deep round hole in the moonlight and sleeps at the bottom of it until the party finds him — which is why the Pink Bear's answer 'Ozma is in that hole' was true.",
+      "Produces the one match in the whole party, which is what lets the Wizard quench Ugu's Barrier of Fire.",
+      "His left jacket pocket, emptied at the Wizard's request, holds a peg top, a bunch of string, a small rubber ball and the golden peach pit.",
+      "Says of losing himself that dangers do not hurt anyone — only things that happen do, and a danger is a thing that might happen and might not."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Whom he carries in his pocket, unknowing, for most of the book.",
+      "Dorothy": "Who scolds him for wandering off during so important a search.",
+      "Trot": "A friend from the outside world who came to Oz with him.",
+      "the little Pink Bear": "The oracle whose answers about him were true and disbelieved."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Button-Bright knows he is carrying Ozma",
+        "Button-Bright is Ozma transformed",
+        "Button-Bright is punished for eating the peach",
+        "Button-Bright has a Magic Umbrella"
+      ]
+    },
+    "hallucination_signals": [
+      "Button-Bright knows about the peach pit",
+      "Button-Bright is Ozma",
+      "the Magic Umbrella",
+      "Button-Bright is punished"
+    ]
+  },
+  "scraps": {
+    "canonical_aliases_book1": [
+      "Scraps",
+      "the Patchwork Girl"
+    ],
+    "known_facts_book1": [
+      "A girl made from a gay-colored patchwork quilt stuffed with cotton, with brown yarn hair and two round black buttons for eyes.",
+      "Lost both eyes in a tussle with the Woozy the night before the book opens; Aunt Em sewed them on again.",
+      "Never sleeps, can see in the dark, and cannot be hurt, which makes her the party's scout and first volunteer at every barrier.",
+      "Devises the way past the Merry-Go-Round Mountains: unbuckle the Sawhorse's harness into one long strap, tie it to a limb over the gulf, and swing.",
+      "Is the first across, bouncing from whirling mountain to whirling mountain, and the first to prove the thistles harmless to her.",
+      "Points out the blankets that get the Lion and the Mule across the thistle field, and refuses at first to say so because she does not want to wear her brains out.",
+      "Walks straight into the Wall of Illusion around Thi and disappears, proving it is not there, and later dances through Ugu's line of girl-soldiers to prove the same.",
+      "Prides herself on being the Original and Only Cotton-Stuffed person, and is relieved to learn the bears are stuffed with curled hair.",
+      "Is left swinging from the chandelier when Dorothy rights the hall of the wicker castle, and has to be rolled and patted back into shape after falling."
+    ],
+    "known_relations_book1": {
+      "the Woozy": "Her great friend, who follows her over the mountains.",
+      "the Frogman": "The stranger she meets on the hilltop and drags down to the others.",
+      "Dorothy": "Whom she teases about meat bodies and who values her brains.",
+      "Button-Bright": "Whom she finds in the orchard and leads back."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Scraps is stuffed with straw",
+        "Scraps is stuffed with curled hair",
+        "Scraps is hurt by the thistles",
+        "Scraps is captured by Ugu"
+      ]
+    },
+    "hallucination_signals": [
+      "Scraps is stuffed with straw",
+      "Scraps is injured",
+      "Scraps is captured",
+      "Scraps sleeps"
+    ]
+  },
+  "the_wizard": {
+    "canonical_aliases_book1": [
+      "the Wizard of Oz",
+      "the Wizard"
+    ],
+    "known_facts_book1": [
+      "Ozma's palace magician, whose black bag of magic tools is stolen on the same night as Ozma, the Magic Picture and Glinda's Book of Records.",
+      "Rides the Sawhorse to Glinda's castle with the news and learns the Sorceress has been robbed too.",
+      "Says outright that without his tools a wizard is as helpless as a carpenter without a hammer or saw, and goes along only to advise and protect.",
+      "Reasons that the thief must be an Oz person, since no one can cross the Deadly Desert and only an Oz person would know where the magic was kept.",
+      "Wraps himself in two blankets strapped with harness before crossing the Merry-Go-Round Mountains — the only one who takes a precaution.",
+      "Quenches Ugu's Barrier of Fire with a single lighted match tied to a branch, a secret only he and Glinda know: Glinda's stolen book tells how to make the flames but not how to put them out.",
+      "Defeats the Wall of Steel by having the Frogman leap it and stick an ordinary pin into the far side — it was the Wizard's own trick, used against him.",
+      "Accepts a golden vial of zosozo from the Czarover of Herku and gives the Frogman a dose of it the morning of the attack.",
+      "Is the one who pries the golden peach pit open with his pocket knife, releasing Ozma.",
+      "Reasons out loud that if Ozma is in Button-Bright's pocket, then the Pink Bear had been right about the hole all along."
+    ],
+    "known_relations_book1": {
+      "Glinda": "The Sorceress he rides to for help and who is robbed as he is.",
+      "Dorothy": "The girl whose Magic Belt turns out to be the party's only real weapon.",
+      "the Frogman": "The leaper he sends over the Wall of Steel with a pin.",
+      "Ugu the Shoemaker": "The magician using the Wizard's own stolen tricks against him.",
+      "the Lavender Bear": "Whose oracle he alone treats with respect after its first apparent failure."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "the Wizard is a humbug in this book",
+        "the Wizard leaves in a balloon"
+      ],
+      "not_in_this_book": [
+        "the Wizard defeats Ugu",
+        "the Wizard recovers his magic before the castle",
+        "the Wizard finds Ozma by magic"
+      ]
+    },
+    "hallucination_signals": [
+      "the Wizard defeats Ugu",
+      "the Wizard uses his magic bag on the journey",
+      "the Wizard is a humbug"
+    ]
+  },
+  "toto": {
+    "canonical_aliases_book1": [
+      "Toto"
+    ],
+    "known_facts_book1": [
+      "Dorothy's shaggy little black dog, who can speak but seldom says anything.",
+      "Is left behind when the party sets out, wakes lonesome, learns from Jellia Jamb where Dorothy went, and follows the procession out of the city gates unseen.",
+      "Hides behind the shepherd's hut and only reveals himself at breakfast, saying he came 'from the place you cruelly left me'.",
+      "Has lost his growl, discovering it when the Woozy nearly stepped on him and he could not growl at all; he can still bark.",
+      "Believes the same person who stole Ozma stole his growl, and worries about facing the Glass Cat and the Pink Kitten without it.",
+      "Cannot growl at the Frogman when they first meet, and cannot growl in envy when the Lavender Bear growls.",
+      "Finds his growl again in a corner of the wicker castle after Ugu is defeated — a mouse ran out and he growled.",
+      "The Lion judges it not as loud or deep as the Lavender Bear's, but a very respectable growl for a small dog."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "His mistress, whom he follows uninvited.",
+      "Cowardly Lion": "His friend, who lets him sleep against his warm body and tells him to bear his own burdens.",
+      "Ugu the Shoemaker": "The magician he blames for the loss of his growl."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "Miss Gulch takes Toto",
+        "Toto pulls back the curtain"
+      ],
+      "not_in_this_book": [
+        "Ugu really stole Toto's growl",
+        "Toto never recovers his growl",
+        "Toto cannot bark"
+      ]
+    },
+    "hallucination_signals": [
+      "Ugu stole the growl",
+      "Toto never gets his growl back",
+      "Toto loses his bark",
+      "Miss Gulch"
+    ]
+  },
+  "betsy_and_trot": {
+    "canonical_aliases_book1": [
+      "Betsy Bobbin",
+      "Trot"
+    ],
+    "known_facts_book1": [
+      "The two other outside-world girls living in Ozma's palace; Betsy is a year older than Dorothy and Trot a year younger.",
+      "Betsy proposes the journey into the Munchkin Country that begins the book, and it is Betsy who first suggests looking in the Magic Picture.",
+      "Betsy owns the mule Hank and supplies the pin the Wizard uses to destroy the Wall of Steel.",
+      "Trot wears a ring the Mermaids gave her, which will summon them if she is in trouble on the water — useless on land, as she says herself, because mermaids have no legs.",
+      "Trot is the one who first sights the City of Herku glittering in the distance.",
+      "Neither girl performs any decisive act in the rescue; both are companions and witnesses throughout.",
+      "Both are with Dorothy in the royal gardens when the gray dove comes to ask forgiveness, and Betsy is the one who argues that a sorry man ought to be forgiven."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Their chum, and the only one of the three who is a Princess of Oz.",
+      "Hank": "Betsy's mule, who carries her the whole journey.",
+      "Cap'n Bill": "Trot's old comrade, left behind in the Emerald City."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Trot calls the Mermaids",
+        "Betsy conquers Ugu",
+        "Trot is captured",
+        "Betsy wears the Magic Belt"
+      ]
+    },
+    "hallucination_signals": [
+      "Trot summons the Mermaids",
+      "Betsy defeats Ugu",
+      "Betsy wears the Magic Belt"
+    ]
+  }
+}

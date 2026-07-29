@@ -37,6 +37,36 @@ def test_generated_template_declares_exactly_the_declared_tokens(etype, lang):
     assert source.startswith('<includeonly>\n{| class="infobox"\n|-\n! colspan="2" | {{{' + tokens[0] + "}}}")
 
 
+# STU-730: an English wiki must not ship French infobox row labels. Kept from the
+# hand-kept-rows implementation STU-729 replaced — the localization it asserts is
+# now a property of the generated template, and must stay one.
+_FRENCH_LABELS = [
+    "Aussi connu comme", "Titre(s)", "Statut", "Décès", "Espèce/Race", "Espèce",
+    "Résidence", "Première apparition", "Première mention", "Amours",
+    "Amis et alliés", "Ennemis", "Localisation", "Membres notables", "Siège",
+    "Chapitre", "Événement", "Alias", "Titres", "Apparition", "Famille",
+]
+
+
+def test_infobox_labels_localized_to_english():
+    for etype in ("PERSON", "PLACE", "ORG", "EVENT", "FACTION"):
+        content = render_infobox_source(etype, "en")
+        for french in _FRENCH_LABELS:
+            assert f"'''{french}'''" not in content, f"{etype}: French label {french!r} in en template"
+    person = render_infobox_source("PERSON", "en")
+    assert "'''Aliases'''" in person
+    assert "'''Species'''" in person
+    assert "'''Appearance'''" in person
+
+
+def test_infobox_labels_follow_output_language():
+    fr = render_infobox_source("PERSON", "fr")
+    en = render_infobox_source("PERSON", "en")
+    assert "'''Décès'''" in fr and "'''Death'''" in en
+    # Parameter names are language-independent — only the labels move.
+    assert "{{{death|}}}" in fr and "{{{death|}}}" in en
+
+
 def test_relationship_buckets_are_person_tokens():
     # The Family/Romance/Friends/Enemies infobox rows are built independently of the
     # template — they must stay a subset of what PERSON declares.

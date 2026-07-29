@@ -1,0 +1,163 @@
+{
+  "tin_woodman": {
+    "canonical_aliases_book1": [
+      "Tin Woodman",
+      "Nick Chopper",
+      "Emperor of the Winkies"
+    ],
+    "known_facts_book1": [
+      "Emperor of the Winkies, living in a tin castle where even the birds in the garden are tin and are wound up every morning by the Winkie tinsmiths.",
+      "Was born a Munchkin woodchopper named Nick Chopper and fell in love with Nimmie Amee, the slave of the Wicked Witch of the East, who wore the Silver Shoes.",
+      "Lost his body by degrees to his own enchanted axe — right leg, left leg, one arm, the other arm, then his body chopped small, and finally his head — and Ku-Klip replaced each part with tin.",
+      "Kept the tin head as superior to his meat one, and Nimmie Amee agreed a man all of tin was more perfect than one of different materials.",
+      "Did not marry her: his tin body contained no heart, and without a heart no one can love, so the Witch conquered in the end.",
+      "Was given by the Wizard a **Kind Heart, not a Loving Heart** — the Wizard's stock was low and there was only one in it, so he could take that or none.",
+      "Sets out to marry Nimmie Amee purely from duty, after Woot points out that deserting her was unkind, and says duty is a bugle call to action whether one is inclined to act or not.",
+      "Is transformed by Mrs. Yoop into a **Tin Owl** — still tin, because the Giantess forgot to wish him meat — with eyes as big as saucers and feathers that rattle when he flies.",
+      "Is restored by Ozma, whose reasoning is that no yookoohoo power could make him anything but tin, so restoring the tin man is possible.",
+      "Meets and does not recognize his own **old meat Head** in Ku-Klip's cupboard, which denies all relationship with a common manufactured article and asks him to close the door.",
+      "Finds Nimmie Amee already married and content, and offers to chop up her husband so he and Captain Fyter can take back their parts; she declines.",
+      "Says at the end he is glad to have found her married and happy, since it relieves him of further anxiety."
+    ],
+    "known_relations_book1": {
+      "Nimmie Amee": "His former sweetheart, whom he seeks out of duty and finds married to someone else.",
+      "Scarecrow": "His best friend and constant comrade.",
+      "Woot the Wanderer": "The boy who tells him it was unkind to desert Nimmie Amee, and so starts the whole journey.",
+      "Captain Fyter": "His tin double, made by the same tinsmith and in love with the same girl.",
+      "Ku-Klip": "The tinsmith who made his body and, later, Chopfyt.",
+      "Mrs. Yoop": "The Giantess who turns him into a Tin Owl."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "the Tin Woodman asks the Wizard for a heart in this book",
+        "the Tin Woodman rusts in the rain in this book"
+      ],
+      "not_in_this_book": [
+        "the Tin Woodman marries Nimmie Amee",
+        "the Tin Woodman has a Loving Heart",
+        "the Tin Woodman recovers his old head",
+        "the Tin Woodman is made of meat again"
+      ]
+    },
+    "hallucination_signals": [
+      "the Tin Woodman marries Nimmie Amee",
+      "the Tin Woodman has a loving heart",
+      "the Tin Woodman becomes flesh again",
+      "the Tin Woodman reclaims his old head"
+    ]
+  },
+  "captain_fyter": {
+    "canonical_aliases_book1": [
+      "Captain Fyter",
+      "the Tin Soldier"
+    ],
+    "known_facts_book1": [
+      "The exact tin duplicate of the Tin Woodman, distinguished from him only by carrying a **sword** instead of an axe.",
+      "Was a soldier who fell in love with Nimmie Amee after Nick Chopper had disappeared, and was found by her weeping over her lost tin sweetheart.",
+      "Nimmie Amee liked him better with every tin part he gained, and agreed to marry him when he was all tin, saying he looked like her dear Nick Chopper.",
+      "Was cut to pieces by the same Wicked Witch, who enchanted his sword, and rebuilt by the same tinsmith, Ku-Klip.",
+      "Rusted solid in the forest on his own wedding day, in the rain, on his way to elope with Nimmie Amee, and stood there so long he lost all track of time.",
+      "Is freed when Polychrome oils his jaws with the Tin Woodman's own oil-can, and immediately struts up and down reciting a soldier's rhyme.",
+      "Has a **tin heart** that Ku-Klip gave him, which does not love anything and merely rattles against his tin ribs.",
+      "Has a hollow head filled with scraps and clippings of tin for brains, which rattle and get mixed when he tries to think.",
+      "Agrees at once that Nimmie Amee should choose between the two of them, and that he will not interfere.",
+      "Discovers his own old meat head on Chopfyt's shoulders and calls the man a vile impostor and a thief.",
+      "Is taken into Ozma's service at the end and sent into the Gillikin Country to keep order among the wild people there — not back to the tin castle, since two identical tin men could not live together in harmony."
+    ],
+    "known_relations_book1": {
+      "Tin Woodman": "His tin double and rival for the same girl, who becomes his friend.",
+      "Nimmie Amee": "The girl he was to elope with on the day he rusted.",
+      "Ku-Klip": "The tinsmith who made him, having had experience making one tin man before.",
+      "Chopfyt": "The man wearing his old head.",
+      "Ozma": "Who takes him into her service and sends him to the Gillikin Country."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Captain Fyter marries Nimmie Amee",
+        "Captain Fyter fights the Tin Woodman",
+        "Captain Fyter's old head is found in the cupboard",
+        "Captain Fyter returns to the tin castle"
+      ]
+    },
+    "hallucination_signals": [
+      "Captain Fyter marries Nimmie Amee",
+      "the tin men duel",
+      "Fyter's old head is in the cupboard",
+      "Fyter lives at the tin castle"
+    ]
+  },
+  "chopfyt": {
+    "canonical_aliases_book1": [
+      "Chopfyt"
+    ],
+    "known_facts_book1": [
+      "A man glued together by Ku-Klip from the cast-off meat parts of Nick Chopper and Captain Fyter, using the Wicked Witch's bottle of Magic Glue.",
+      "His name is a part of Nick Chopper's name and a part of Captain Fyter's name, because he is a mixture of both their discarded parts.",
+      "Wears **Captain Fyter's old head** — chosen by Ku-Klip with his eyes shut, reaching for the first head he touched — and the Tin Woodman's right arm, identifiable by two warts on the little finger.",
+      "Ku-Klip could find only one arm in the barrel and had to trim one leg to match the other, so Chopfyt was finished one-armed until the tinsmith made him a **tin arm**.",
+      "Whose heart is in him cannot be told: the parts had no tags and one heart looks much like another.",
+      "Was a poor assistant — awkward with tools, hungry six or eight times a day, and forever complaining about his one arm and his ill-fitting clothes.",
+      "Left Ku-Klip's shop by his own choice, going east into the plains of the Munchkin Country.",
+      "Is found reclining in an easy chair in Nimmie Amee's house, refusing to rise for the visitors and staring at them with cold, almost insolent indifference.",
+      "Is **Nimmie Amee's husband**, and does not know who he is made of, since Ku-Klip never told him the secret of his manufacture.",
+      "Is described by his own wife as having a mixed nature and not always being an agreeable companion, needing to be chided with tongue and broomstick.",
+      "Draws water, carries in wood, hoes the cabbages, weeds the flower-beds and dusts the furniture for her."
+    ],
+    "known_relations_book1": {
+      "Nimmie Amee": "His wife, who married him because he reminded her of both her tin sweethearts.",
+      "Ku-Klip": "His maker, who glued him from odds and ends and named him.",
+      "Tin Woodman": "The source of his right arm and part of his body.",
+      "Captain Fyter": "The source of his head."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Chopfyt is chopped up",
+        "Chopfyt knows what he is made of",
+        "Chopfyt wears Nick Chopper's head",
+        "Chopfyt is kind to the visitors",
+        "Chopfyt leaves Nimmie Amee"
+      ]
+    },
+    "hallucination_signals": [
+      "Chopfyt is destroyed",
+      "Chopfyt wears Nick Chopper's head",
+      "Chopfyt learns his origin",
+      "Chopfyt greets them warmly"
+    ]
+  },
+  "the_old_head": {
+    "canonical_aliases_book1": [
+      "Nick Chopper's Head"
+    ],
+    "known_facts_book1": [
+      "The Tin Woodman's original meat head, kept for years on a shelf in a cupboard in Ku-Klip's workshop.",
+      "Opens its eyes when the cupboard door swings back and greets the Tin Woodman as a complete stranger.",
+      "Says it used to be called Nick Chopper, when it was a woodman and cut down trees for a living.",
+      "Denies all relationship with the Tin Woodman: 'I'm not anxious to claim relationship with any common, manufactured article, like you… You're tin.'",
+      "Still possesses its brains and intellect, but its memory of former events is hazy since the separation.",
+      "Has thought about nothing for all those years except the boards on the inside of the cupboard door, and having thought everything about them, quit thinking.",
+      "Does not know what happiness is and does not care, and asks to be left alone.",
+      "Says a head is not made to love; it is made to think — so it does not remember loving Nimmie Amee.",
+      "Complains that its hair got mussed after the separation and that Ku-Klip never combs it.",
+      "Is **not** the head used to make Chopfyt: Ku-Klip reached blindly and took Captain Fyter's instead."
+    ],
+    "known_relations_book1": {
+      "Tin Woodman": "The tin man it refuses to recognize as itself.",
+      "Ku-Klip": "The tinsmith who has kept it in a cupboard and never combs its hair."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the old Head is glad to see the Tin Woodman",
+        "the old Head is used to make Chopfyt",
+        "the old Head is reattached",
+        "the old Head remembers Nimmie Amee"
+      ]
+    },
+    "hallucination_signals": [
+      "the old Head is friendly",
+      "the Head is put back on",
+      "the Head becomes Chopfyt",
+      "the Head remembers loving Nimmie Amee"
+    ]
+  }
+}

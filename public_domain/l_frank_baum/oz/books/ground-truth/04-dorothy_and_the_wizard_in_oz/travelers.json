@@ -1,0 +1,239 @@
+{
+  "dorothy": {
+    "canonical_aliases_book1": [
+      "Dorothy",
+      "Dorothy Gale"
+    ],
+    "known_facts_book1": [
+      "Arrives by train at Hugson's Siding in California to be met by Zeb, carrying a wicker suit-case and her kitten Eureka in a covered bird-cage.",
+      "Is greeted by Zeb with the question 'are you Dorothy Gale?'",
+      "Had travelled to Australia with Uncle Henry and is on her way home to Kansas.",
+      "Falls into a crack in the earth during an earthquake, together with Zeb, Jim the cab-horse and the buggy.",
+      "Recognizes the Wizard when his balloon descends into the Land of the Mangaboos, crying 'it's Oz!'",
+      "Helps the Wizard pick the Royal Princess from the Royal Bush, making her the new Ruler of the Mangaboos.",
+      "Journeys up through the Black Pit, the Valley of Voe and the Land of the Gargoyles toward the earth's surface.",
+      "Carries the Nome King's Magic Belt, which she left with Ozma; signals Ozma at four o'clock through the enchanted picture and is wished into the Emerald City.",
+      "Once in Oz she uses the Magic Belt to wish her stranded companions safe into the royal palace.",
+      "Reunites with her old Oz friends the Scarecrow, the Tin Woodman, Billina, the Cowardly Lion and the Hungry Tiger.",
+      "Defends her kitten Eureka at the trial for eating Ozma's piglet, and is proved right when Eureka is found innocent.",
+      "Is sent home to Kansas by Ozma's Magic Belt at the end, holding Eureka."
+    ],
+    "known_relations_book1": {
+      "Zeb": "Her second cousin and travelling companion; the boy sent to fetch her from Hugson's Siding.",
+      "Eureka": "Her white kitten, carried down into the earth and defended by her at the trial.",
+      "Jim": "The old cab-horse that falls with her and draws the buggy through the underground lands.",
+      "the Wizard": "An old friend from her first visit to Oz; they fall into the earth separately and travel back to Oz together.",
+      "Ozma": "The girl Ruler of Oz and her dear friend, who watches her in the enchanted picture and rescues her with the Magic Belt.",
+      "Uncle Henry": "Her uncle, with whom she travelled and who waits offstage in Kansas.",
+      "Billina": "Her old friend the yellow hen, whom she reunites with in Oz."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "ruby slippers",
+        "clicks her heels",
+        "there's no place like home",
+        "Professor Marvel",
+        "Miss Gulch takes the dog",
+        "Over the Rainbow",
+        "the Horse of a Different Color"
+      ],
+      "not_in_this_book": [
+        "the silver shoes carry Dorothy home",
+        "Dorothy goes home in the Wizard's balloon",
+        "Toto travels with Dorothy",
+        "Dorothy melts a witch with water"
+      ],
+      "cross_tome": [
+        "Dorothy meets the Shaggy Man",
+        "Dorothy meets Button-Bright",
+        "Dorothy meets Polychrome",
+        "Dorothy is made a Princess of Oz",
+        "Dorothy moves to Oz to stay"
+      ]
+    },
+    "hallucination_signals": [
+      "ruby slippers",
+      "clicks her heels",
+      "there's no place like home",
+      "Toto barked",
+      "Dorothy and Toto",
+      "the silver shoes carried her home",
+      "Professor Marvel",
+      "Over the Rainbow",
+      "Dorothy melts the witch",
+      "the Shaggy Man"
+    ]
+  },
+  "the_wizard": {
+    "canonical_aliases_book1": [
+      "the Wizard",
+      "Wizard of Oz"
+    ],
+    "known_facts_book1": [
+      "Descends into the Land of the Mangaboos in a balloon after falling into an earthquake crack during a circus ascension.",
+      "Is recognized by Dorothy as the Wizard of Oz she knew on her first visit.",
+      "Performs the trick of the nine tiny piglets, pulling one apart into many, to outdo the Mangaboo Sorcerer.",
+      "Kills the thorn-covered Sorcerer Gwig by cutting him in two with a sword made of jointed knives.",
+      "Admits to his companions that he is only a humbug, not a real wizard.",
+      "Routs the Mangaboo advisors with two lantern 'suns' and a pool of burning kerosene.",
+      "Fights the invisible bears of Voe with his sword and the wooden Gargoyles with his revolvers.",
+      "Reveals his real name is Oscar Zoroaster Phadrig Isaac Norman Henkle Emmannuel Ambroise Diggs, and that he was born in Omaha and took the initials O.Z.",
+      "Recounts building the Emerald City and uniting the four countries of Oz before leaving in a balloon.",
+      "Is welcomed back and made Ozma's Official Wizard, given his old room behind the Throne Room.",
+      "Gives the Tin Woodman a spare piglet to produce at the trial to save Eureka's life.",
+      "Keeps nine tiny piglets from the Island of Teenty-Weent in his inside pocket."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "His old friend from her first Oz visit; they journey back to Oz together.",
+      "Ozma": "The Ruler of Oz who welcomes him back and makes him her Official Wizard.",
+      "Gwig": "The Mangaboo Sorcerer he mocks and then cuts in two.",
+      "the Tin Woodman": "His co-conspirator in the trick that saves Eureka at the trial.",
+      "the Scarecrow": "The straw man to whom he once gave brains, welcomed warmly on his return."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Wizard leaves Oz in a balloon at the end",
+        "the Wizard first meets Dorothy in this book",
+        "the Wizard is exposed and banished",
+        "the Wizard is a green-faced giant"
+      ],
+      "cross_tome": [
+        "the Wizard meets the Shaggy Man",
+        "the Wizard shrinks the enemies to eggs"
+      ]
+    },
+    "hallucination_signals": [
+      "the Wizard is banished",
+      "the Wizard escapes in a balloon",
+      "the Wizard is truly magical",
+      "the Wizard first arrives in Oz",
+      "the great and terrible green head"
+    ]
+  },
+  "zeb": {
+    "canonical_aliases_book1": [
+      "Zeb",
+      "Zebediah"
+    ],
+    "known_facts_book1": [
+      "A boy who works for Uncle Bill Hugson on his California ranch and meets Dorothy at Hugson's Siding with the horse and buggy.",
+      "Is Dorothy's second cousin, Uncle Hugson having married Uncle Henry's wife's sister.",
+      "His full name is Zebediah, shortened to Zeb.",
+      "Falls into the earthquake crack with Dorothy, Jim and the buggy.",
+      "Captures a crowned Gargoyle, binds its wings, and later swings it as a club he calls 'the king'.",
+      "Climbs down the tower on a strap of harness to steal the Gargoyles' unhooked wings for the escape.",
+      "Wrestles a little Munchkin champion at the Oz games and is thrown three times.",
+      "Serves on the jury at Eureka's trial.",
+      "Returns to Hugson's Ranch with Jim at the end, sent by Ozma's Magic Belt."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "His second cousin and companion through the underground journey.",
+      "Jim": "The cab-horse he drives; the two go home together.",
+      "the Wizard": "A fellow traveler he comes to admire.",
+      "Uncle Hugson": "His uncle and employer on the California ranch.",
+      "Ozma": "The Ruler who sends him safely home."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Zeb stays in Oz",
+        "Zeb marries Dorothy",
+        "Zeb is Dorothy's brother"
+      ],
+      "cross_tome": [
+        "Zeb returns to Oz in a later book"
+      ]
+    },
+    "hallucination_signals": [
+      "Zeb stays in the Land of Oz",
+      "Zeb marries Dorothy",
+      "Zeb and Toto",
+      "Zeb returns to Oz"
+    ]
+  },
+  "jim": {
+    "canonical_aliases_book1": [
+      "Jim",
+      "the cab-horse"
+    ],
+    "known_facts_book1": [
+      "An old, bony horse that once drew a public cab in Chicago, now driven by Zeb in California.",
+      "Falls into the earthquake crack drawing the buggy with Dorothy and Zeb.",
+      "Begins to talk for the first time during the fall, saying 'Well, that's better!'",
+      "Kicks and fights the Mangaboos and the wooden Gargoyles.",
+      "Is fitted with wooden Gargoyle wings and flies clumsily to escape the wooden city.",
+      "Is wished into Oz with the others and given a palace room and oatmeal to eat.",
+      "Meets the Sawhorse, boasts of being a Real Horse, and races it, losing badly.",
+      "Kicks the Sawhorse in anger after the race and is knocked flat by the Hungry Tiger.",
+      "Serves on the jury at Eureka's trial.",
+      "Claims to have been born in Kentucky and once a race horse.",
+      "Returns to Hugson's Ranch with Zeb at the end."
+    ],
+    "known_relations_book1": {
+      "Zeb": "The boy who drives him and takes him home.",
+      "Dorothy": "The girl who falls with him and coaxes him onward.",
+      "the Sawhorse": "The wooden horse of Oz, his rival, who beats him in the race.",
+      "the Hungry Tiger": "The beast that disciplines him for kicking the Sawhorse."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Jim stays in Oz",
+        "Jim is a young horse",
+        "Jim refuses to talk"
+      ],
+      "cross_tome": [
+        "Jim appears in a later Oz book"
+      ]
+    },
+    "hallucination_signals": [
+      "Jim stays in the Land of Oz",
+      "Jim is the Sawhorse",
+      "Jim wins the race"
+    ]
+  },
+  "eureka": {
+    "canonical_aliases_book1": [
+      "Eureka"
+    ],
+    "known_facts_book1": [
+      "Dorothy's white kitten, carried down into the earth in a covered bird-cage; she looks pink under the six colored suns of the Mangaboo country.",
+      "Named 'Eureka' because Dorothy found her ('Eureka' means 'I have found it').",
+      "Is constantly hungry and repeatedly begs to eat the Wizard's nine tiny piglets.",
+      "Can walk on the air in the Mangaboo country.",
+      "Escapes the Black Pit to fetch Dorothy and the Wizard to rescue Jim and the piglets.",
+      "Fights the Mangaboos and the Gargoyles with claws and teeth.",
+      "Scouts the Gargoyle city and reports that they unhook their wings to sleep, which enables the escape.",
+      "Is wished into Oz with Dorothy by the Magic Belt.",
+      "Snaps jealously at Billina the yellow hen.",
+      "Is arrested and put on trial for murder for allegedly eating Ozma's piglet.",
+      "Is proven innocent when the piglet is found alive in a vase, though she confesses she had intended to eat it.",
+      "Falls into disgrace afterward and returns to Kansas with Dorothy."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her mistress, who carries and defends her.",
+      "the Wizard": "Owner of the piglets she longs to eat.",
+      "Jim": "The cab-horse who threatens to chew her up if she harms the piglets.",
+      "Billina": "The yellow hen she quarrels with jealously.",
+      "Ozma": "The Princess who tries her for the piglet's supposed murder.",
+      "the Tin Woodman": "Her appointed defender at the trial.",
+      "the Woggle-Bug": "Her accuser at the trial."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Eureka ate the piglet",
+        "Eureka is found guilty",
+        "Eureka is put to death",
+        "Eureka is executed nine times"
+      ],
+      "cross_tome": [
+        "Eureka appears in a later Oz book"
+      ]
+    },
+    "hallucination_signals": [
+      "Eureka is found guilty",
+      "Eureka is executed",
+      "Eureka ate Ozma's piglet",
+      "Eureka is a green kitten",
+      "Toto and Eureka"
+    ]
+  }
+}

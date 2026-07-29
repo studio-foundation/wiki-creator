@@ -1,0 +1,118 @@
+{
+  "soldier_with_the_green_whiskers": {
+    "canonical_aliases_book1": [
+      "Soldier with the Green Whiskers"
+    ],
+    "known_facts_book1": [
+      "A very tall soldier in green and gold with a jewelled belt and a long green beard falling far below his waist.",
+      "Is at once the Body-Guard of Ozma, the whole Royal Army of Oz and the Police Force of the Emerald City, and is addressed indifferently as Colonel and General.",
+      "Had nothing to do in his official positions for so many years that he began to fear he was useless, until Ojo's arrest.",
+      "Arrests Ojo at the city gate on Ozma's orders and snaps golden handcuffs set with rubies and diamonds over his wrists.",
+      "Delivers Ojo to Tollydiggle the jailer and takes a receipt for him.",
+      "Reports that Billina has hatched out thirteen new chickens, about seven thousand chicks in all."
+    ],
+    "known_relations_book1": {
+      "Ojo": "The first prisoner he has ever arrested, whom he treats courteously throughout.",
+      "Ozma": "The Ruler whose orders he obeys and whose body-guard he is.",
+      "Tollydiggle": "The jailer to whom he hands the prisoner over.",
+      "Shaggy Man": "Greets him familiarly at the gate as an old acquaintance."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Soldier with the Green Whiskers leads an army into battle",
+        "the Soldier with the Green Whiskers is named Omby Amby in this book",
+        "the Soldier with the Green Whiskers harms Ojo"
+      ]
+    },
+    "hallucination_signals": [
+      "the Soldier leads an army",
+      "the Soldier mistreats Ojo",
+      "the Soldier refuses to arrest Ojo"
+    ]
+  },
+  "tollydiggle": {
+    "canonical_aliases_book1": [
+      "Tollydiggle"
+    ],
+    "known_facts_book1": [
+      "The jailer of the only prison in the Land of Oz, a pretty house beside the city wall with a flower garden in front.",
+      "Had never had anything to do in her official capacity until Ojo was brought to her.",
+      "Keeps a prison whose windows have no locks and whose three doors are never bolted, with a domed roof of colored glass, gold-panelled walls, books and a cupboard of games.",
+      "Cooks Ojo mutton-chops with gravy for supper, sits sewing beside him while he eats, and reads him a story.",
+      "Explains Ozma's theory of punishment: a prisoner is unfortunate twice over, so kindness is what makes him strong and brave enough not to do wrong again."
+    ],
+    "known_relations_book1": {
+      "Ojo": "Her first and only prisoner, whom she treats as a guest.",
+      "Soldier with the Green Whiskers": "Delivers the prisoner to her and takes her receipt.",
+      "Ozma": "The Ruler whose philosophy of kindness to prisoners she explains."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Tollydiggle punishes Ojo",
+        "Tollydiggle locks Ojo in a cell",
+        "Tollydiggle is a witch"
+      ]
+    },
+    "hallucination_signals": [
+      "Tollydiggle locks Ojo in a cell",
+      "Tollydiggle punishes the prisoner",
+      "the prison of Oz is harsh"
+    ]
+  },
+  "guardian_of_the_gate": {
+    "canonical_aliases_book1": [
+      "Guardian of the Gate"
+    ],
+    "known_facts_book1": [
+      "A jolly little man richly dressed in green, wearing a heavy gold chain hung with great golden keys, who keeps the room inside the city gate.",
+      "Composes a mouth-organ tune called 'The Speckled Alligator', in patch-time, in honour of the Patchwork Girl's arrival.",
+      "Says it is his business to know who is coming, since he is the Guardian of the Gate.",
+      "Fetches the white prisoner's robe from the Official Wardrobe for Ojo — a robe covering him head to foot with two holes for the eyes.",
+      "Is astonished at the very idea of a prisoner, saying no one ever breaks the Law."
+    ],
+    "known_relations_book1": {
+      "Scraps": "Composes a tune in her honour before she has even reached his room.",
+      "Ojo": "Supplies the prisoner's robe he must wear.",
+      "Soldier with the Green Whiskers": "Works with him at the gate."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Guardian of the Gate hands out green spectacles in this book",
+        "the Guardian of the Gate refuses the travelers entry"
+      ]
+    },
+    "hallucination_signals": [
+      "green spectacles are locked on every visitor",
+      "the Guardian refuses them entry"
+    ]
+  },
+  "jellia_jamb": {
+    "canonical_aliases_book1": [
+      "Jellia Jamb"
+    ],
+    "known_facts_book1": [
+      "The favorite servant-maid of the royal palace.",
+      "Announces the Shaggy Man to Dorothy and reports that he has some of the queerest creatures she has ever laid eyes on with him.",
+      "Is proposed by Dorothy as the one to keep the Glass Cat until Ojo returns.",
+      "Wheels forward the chair Ozma sits in for the final scene in which the statues are restored.",
+      "Takes no part in the plot beyond these palace duties."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Serves her at the palace and announces her visitors.",
+      "Ozma": "Serves her at the palace.",
+      "Bungle": "Is to keep the Glass Cat while Ojo is away."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Jellia Jamb travels with the party",
+        "Jellia Jamb rules the Emerald City",
+        "Jellia Jamb works magic"
+      ]
+    },
+    "hallucination_signals": [
+      "Jellia Jamb joins the journey",
+      "Jellia Jamb works magic",
+      "Jellia Jamb rules in Ozma's absence"
+    ]
+  }
+}

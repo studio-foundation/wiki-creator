@@ -1,0 +1,164 @@
+{
+  "scarecrow": {
+    "canonical_aliases_book1": [
+      "Scarecrow"
+    ],
+    "known_facts_book1": [
+      "Acknowledged to be the most popular and most beloved man in all the Land of Oz.",
+      "Goes into the Munchkin Country to get fresh oat-straw to stuff himself with in honor of Ozma's celebration.",
+      "Returns riding proudly on the wooden Saw-Horse at the head of a band, and waves his peaked hat to Dorothy.",
+      "Had his faded face newly painted by the Munchkin farmer who first made him, because the paint had peeled off one end of his mouth.",
+      "His hands are white gloves filled with straw; he invites Dorothy to hear him 'crunkle'.",
+      "Puzzles over Button-Bright's name, deciding he must be a dull cloth-covered button.",
+      "Walks arm in arm with Dorothy in the birthday procession and performs a sword-swallowing act at the celebration."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "An old friend he embraces warmly and walks beside in the procession.",
+      "Tin Woodman": "His old comrade; the two stand on either side of the throne.",
+      "Saw-Horse": "The wooden steed he rides into the city.",
+      "Ozma": "The Ruler whose birthday he honors with fresh straw."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Scarecrow is King of the Emerald City in this book",
+        "the Scarecrow receives brains from the Wizard in this book",
+        "the Scarecrow is married to Ozma"
+      ]
+    },
+    "hallucination_signals": [
+      "the Scarecrow rules the Emerald City",
+      "the Scarecrow gets his brains",
+      "the Scarecrow marries",
+      "the Scarecrow is frightened of crows"
+    ]
+  },
+  "tin_woodman": {
+    "canonical_aliases_book1": [
+      "Tin Woodman",
+      "Nick Chopper"
+    ],
+    "known_facts_book1": [
+      "Nick Chopper, the Emperor of the Winkies, known throughout Oz as the Tin Woodman, made all of tin nicely soldered at the joints.",
+      "Was once made of flesh, but chopping wood the axe cut off his parts one by one until all were replaced with tin.",
+      "Was given an excellent heart by the wonderful Wizard and says it grows softer and kindlier every day.",
+      "Has built a splendid new tin castle to replace his old damp one, with tin furniture, floors and walls.",
+      "Keeps in his gardens tin statues of his personal friends, including a life-size tin Dorothy and Toto.",
+      "Declares that money is unknown in Oz and that his people live by love and kindness instead.",
+      "Carries a tin-plated axe and travels with the party from his castle toward the Emerald City.",
+      "Tells the shaggy man the history of the Powder of Life, Mombi, the Saw-Horse, the Gump, and old Dyna's blue bear rug.",
+      "Performs Swinging the Axe and sings a love song at the birthday celebration."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "An old friend he runs out to embrace at his tin castle.",
+      "Scarecrow": "His old comrade at the court.",
+      "Winkies": "His yellow-country subjects, who love their Emperor dearly.",
+      "Wizard": "The magician who gave him his heart."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Tin Woodman marries Nimmie Amee in this book",
+        "the Tin Woodman receives his heart in this book",
+        "the Tin Woodman rusts and is left helpless"
+      ]
+    },
+    "hallucination_signals": [
+      "the Tin Woodman marries",
+      "the Tin Woodman gets his heart in this book",
+      "the Tin Woodman rusts solid",
+      "Nimmie Amee"
+    ]
+  },
+  "jack_pumpkinhead": {
+    "canonical_aliases_book1": [
+      "Jack Pumpkinhead",
+      "Pumpkinhead"
+    ],
+    "known_facts_book1": [
+      "A man whose body is clumsily jointed sticks of wood topped by a carved pumpkin head, now a farmer living in a hollow pumpkin in the Winkie country.",
+      "Keeps a private graveyard of three little graves for his former heads, which spoiled on April 9th, October 2nd, and January 24th.",
+      "Is now wearing his fourth head, each carved by Ozma to replace a spoiled one.",
+      "Raises his own field of pumpkins so as never to be caught without a spare head.",
+      "Was first made and brought to life by Ozma with the Magic Powder of Life, and calls Ozma his 'parent'.",
+      "Brings Ozma a necklace of pumpkin-seeds set with carolites as a birthday present."
+    ],
+    "known_relations_book1": {
+      "Ozma": "His maker and 'parent', who carves each of his pumpkin heads.",
+      "Tin Woodman": "Who guides Dorothy to his pumpkin field and teases him about his stupid last head.",
+      "Dorothy": "The old friend who is glad to find him still alive."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Jack Pumpkinhead really dies in this book",
+        "Jack Pumpkinhead rides the Saw-Horse in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "Jack Pumpkinhead dies",
+      "Jack Pumpkinhead's head never spoils",
+      "Jack Pumpkinhead is made by the Wizard"
+    ]
+  },
+  "tik_tok": {
+    "canonical_aliases_book1": [
+      "Tik-tok",
+      "Tik-Tok"
+    ],
+    "known_facts_book1": [
+      "A round copper man who works entirely by machinery: his thought, his speech, and his action each wind up separately with a key.",
+      "Speaks in a jerky monotone and runs down mid-sentence into meaningless babble until he is wound again.",
+      "Was sent by Ozma with Billina to welcome Dorothy in the Winkie country, because Ozma was too busy to come herself.",
+      "Is not alive, but his machinery makes him as good as alive; he is trustworthy and reliable because he does exactly what he is wound to do.",
+      "Lives at the Royal Palace in the Emerald City.",
+      "Lets Button-Bright wind up his clockwork on the road."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "An old friend who once saved her life and Billina's; she winds him up when he runs down.",
+      "Billina": "His companion, the Yellow Hen who rides on his copper shoulder.",
+      "Ozma": "The Ruler who sends him to welcome Dorothy and whom he serves at the palace."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Tik-tok is alive and breathing",
+        "Tik-tok fights the Nome King in this book",
+        "Tik-tok leads the army to Ruggedo"
+      ]
+    },
+    "hallucination_signals": [
+      "Tik-tok is alive",
+      "Tik-tok's army",
+      "Tik-tok battles the Nome King",
+      "Tik-tok feels emotions"
+    ]
+  },
+  "billina": {
+    "canonical_aliases_book1": [
+      "Billina"
+    ],
+    "known_facts_book1": [
+      "A yellow hen who wears a pearl necklace and rides on Tik-tok's copper shoulder.",
+      "Was sent by Ozma with Tik-tok to welcome Dorothy in the Winkie country.",
+      "Has hatched ten lovely chicks, all of whom she has named Dorothy because it is easier when she calls them.",
+      "Dresses each chick in a gold chain and locket holding a picture of Dorothy.",
+      "Snaps at Toto and calls him a brute when he tries to attack her.",
+      "Sits with her brood at the animals' table at the banquet on a railed stand."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her dear old friend, after whom she names all ten chicks.",
+      "Tik-tok": "Her companion, on whose shoulder she perches.",
+      "Toto": "The dog who tries to attack her and is scolded by Dorothy.",
+      "Ozma": "The Ruler who sends her to welcome Dorothy."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Billina defeats the Nome King in this book",
+        "Billina lays magic eggs against the Nomes in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "Billina defeats the Nome King",
+      "Billina's eggs poison the Nomes",
+      "Billina is a rooster",
+      "Billina cannot talk"
+    ]
+  }
+}

@@ -97,11 +97,12 @@ def infobox_template_name(etype: str, base: dict | None = None) -> str | None:
     return _export(etype, base).get("infobox_template")
 
 
-def infobox_source(etype: str, lang: str, base: dict | None = None) -> str | None:
+def infobox_source(etype: str, lang: str = "en", base: dict | None = None) -> str | None:
     """The MediaWiki infobox template source for a type, generated from its declared
-    infobox tokens and localized by ``lang`` (STU-729). No longer a hand-kept string
-    in base.yaml — the parameter names are derived from the renderer's own vocabulary
-    so the two cannot drift."""
+    infobox slot tokens and localized by ``lang`` (STU-729/730). Neither a hand-kept
+    wikitext string nor a hand-kept row list: the template's parameters ARE the slot
+    tokens the page renderer emits, so the two vocabularies cannot drift. None when
+    the type declares no infobox."""
     return render_infobox_source(etype, lang, base if base is not None else load_base_template())
 
 

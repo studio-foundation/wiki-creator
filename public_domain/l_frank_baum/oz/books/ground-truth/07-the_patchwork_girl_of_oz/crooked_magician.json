@@ -1,0 +1,85 @@
+{
+  "dr_pipt": {
+    "canonical_aliases_book1": [
+      "Dr. Pipt",
+      "the Crooked Magician",
+      "Doc Pipt"
+    ],
+    "known_facts_book1": [
+      "A Munchkin magician so crooked in body that his legs are as handy as his arms, living high on the mountain between the Munchkin and Gillikin Countries with his wife Margolotte.",
+      "Is the only person in the world who knows how to make the Powder of Life, which takes six years of stirring four kettles with both hands and both feet.",
+      "Gave his first batch of the Powder of Life to old Mombi the Witch, receiving in exchange a worthless Powder of Perpetual Youth.",
+      "Invented the Liquid of Petrifaction, which turns whatever it touches to solid marble, and used it on two Kalidahs he keeps as garden statuary.",
+      "Made the Glass Cat with pink brains and a ruby heart, and admits she was a bungle.",
+      "Is forbidden by Ozma's Law to practice magic, and claims the right to work it only for his own family.",
+      "Sprinkles the Powder of Life on the Patchwork Girl; her flung arm knocks the bottle away and the spilled Liquid of Petrifaction turns his wife and Unc Nunkie to marble.",
+      "Names the five ingredients of the compound that would undo the Liquid of Petrifaction, reading them from a small blue-leather Book of Recipes.",
+      "Is brought to the palace by Ozma, who destroys his four kettles and burns his book of recipes.",
+      "Is stripped of all magic power by the Wizard, who at the same stroke straightens every crooked limb, leaving him a simple Munchkin and no longer crooked."
+    ],
+    "known_relations_book1": {
+      "Margolotte": "His wife, whom he petrifies by accident and mourns as lost forever.",
+      "Unc Nunkie": "An old friend of many years, petrified in the same accident.",
+      "Ojo": "The boy he sends out to find the five things for the magic charm.",
+      "Scraps": "The Patchwork Girl he brings to life with the Powder of Life.",
+      "Bungle": "The Glass Cat he made and regrets making.",
+      "the Wizard": "Deprives him of his magic power by royal edict, and straightens his body.",
+      "Ozma": "The Ruler whose Law forbids his magic and who orders his powers taken away."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Dr. Pipt restores Unc Nunkie himself",
+        "Dr. Pipt makes a second batch of the Powder of Life",
+        "Dr. Pipt is imprisoned",
+        "Dr. Pipt is a wicked witch"
+      ],
+      "relationships": [
+        "Dr. Pipt is an enemy of Ozma",
+        "Dr. Pipt is Ojo's uncle"
+      ]
+    },
+    "hallucination_signals": [
+      "Dr. Pipt restores the statues",
+      "Dr. Pipt is punished with prison",
+      "Dr. Pipt remains crooked at the end",
+      "Dr. Pipt is an enemy of Ozma"
+    ]
+  },
+  "margolotte": {
+    "canonical_aliases_book1": [
+      "Margolotte",
+      "Dame Margolotte"
+    ],
+    "known_facts_book1": [
+      "The chubby, pleasant-faced wife of Dr. Pipt, dressed all in blue, an excellent cook who welcomes strangers to her lonely mountain house.",
+      "Names her visitors on sight: Unc Nunkie the Silent One, and Ojo the Unlucky.",
+      "Sewed the Patchwork Girl out of her grandmother's hundred-year-old patchwork quilt, to have a servant for the housework.",
+      "Deliberately gave the girl a face of mismatched patches and a body of unpopular colors so she could never be proud or rebellious.",
+      "Chose only 'Obedience', 'Amiability' and 'Truth' from the Brain Furniture shelf, plus a little 'Cleverness' at Unc Nunkie's suggestion, meaning the servant's brains not to be very good.",
+      "Had intended to name the Patchwork Girl 'Angeline'.",
+      "Is turned to marble by the spilled Liquid of Petrifaction, standing beside Unc Nunkie in the workshop.",
+      "Is restored to life by the Wizard and runs at once into her husband's arms."
+    ],
+    "known_relations_book1": {
+      "Dr. Pipt": "Her husband, who makes the Powder of Life for her and mourns her petrification.",
+      "Scraps": "The Patchwork Girl she made and stuffed and meant to keep as a servant.",
+      "Bungle": "The Glass Cat she named 'Bungle' and who refuses to catch mice for her.",
+      "Ojo": "The boy she feeds and nicknames, and who journeys to restore her.",
+      "the Wizard": "Restores her to life with Glinda's method."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Margolotte is a witch",
+        "Margolotte practices magic",
+        "Margolotte dies",
+        "Margolotte travels with Ojo"
+      ]
+    },
+    "hallucination_signals": [
+      "Margolotte works magic",
+      "Margolotte is a witch",
+      "Margolotte dies",
+      "Margolotte names the girl Scraps"
+    ]
+  }
+}

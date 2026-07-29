@@ -1,0 +1,89 @@
+{
+  "ozma": {
+    "canonical_aliases_book1": [
+      "Ozma",
+      "Ozma of Oz",
+      "Princess Ozma"
+    ],
+    "known_facts_book1": [
+      "The fairy girl Ruler of the Land of Oz, who disappears from her royal palace in the night at the very start of the book.",
+      "Was warned by her own fairy instinct that danger threatened, rose from her couch and confronted Ugu in the act of stealing her magic.",
+      "Was silenced with a scarf thrown over her head, tied fast, pushed into the Magic Dishpan and carried to the wicker castle.",
+      "Was locked in a room, wept and scolded and threatened the Shoemaker, and so frightened him that he enchanted her out of his sight and hearing.",
+      "Is imprisoned inside a **golden peach pit**, at the heart of a solitary enchanted peach in the exact center of the Great Orchard — which Button-Bright eats.",
+      "Cannot be destroyed by any magic ever devised, which Ugu had learned from his ancestors' books, and cannot be made invisible against her will.",
+      "Is released when the Wizard pries the golden peach pit open with his pocket knife and a pink cloud-like haze pours out and takes her form.",
+      "Puts an emerald chain around the little Pink Bear's neck in thanks for the answers that led to her rescue.",
+      "Forbids all her subjects except Glinda and the Wizard to practice magic, and has everything of Ugu's — stolen and inherited alike — packed and carried away.",
+      "Was absent so long that Jellia Jamb's questions spread the news through the whole Emerald City, and her return is met by the entire city turned out to welcome her."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her dearest friend, who leads the search and finally conquers Ugu.",
+      "Ugu the Shoemaker": "The magician who stole her and hid her in a peach pit.",
+      "Button-Bright": "The boy who carried her in his jacket pocket for days without knowing it.",
+      "the little Pink Bear": "The oracle whose disbelieved answers were true all along.",
+      "Glinda": "Her Sorceress, robbed on the same night.",
+      "Cayke": "The Cookie Cook whose dishpan she promises to restore."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Ozma is imprisoned in a dungeon cell",
+        "Ozma is transformed into a dove",
+        "Ozma is made invisible",
+        "Ozma frees herself",
+        "Ozma is transformed into Button-Bright"
+      ]
+    },
+    "hallucination_signals": [
+      "Ozma is in a dungeon",
+      "Ozma frees herself",
+      "Ozma is invisible",
+      "Ozma is turned into a bird"
+    ]
+  },
+  "dorothy": {
+    "canonical_aliases_book1": [
+      "Dorothy",
+      "Princess Dorothy"
+    ],
+    "known_facts_book1": [
+      "A little Kansas girl living in Ozma's palace, a Princess of Oz and the only one who dares seek Ozma in her royal apartments at any hour.",
+      "Is the first to discover that Ozma is missing, and the first to find the Magic Picture gone from behind its satin curtains.",
+      "Wears the Magic Belt she once captured from the Nome King, which protects her from all harm.",
+      "Secretly experiments with the Belt all through the journey and discovers two things her friends do not know: that it can perform transformations, and that it grants its wearer **one wish a day**.",
+      "The daily wish requires closing the right eye, wiggling the left big toe, drawing a long breath and wishing; she had spent one on a box of caramels the day before.",
+      "Uses the saved wish to right the upside-down hall of the wicker castle, freeing the whole party from Ugu's trap.",
+      "Transforms Ugu into a dove by pressing both hands to the Magic Belt and commanding it — but she had meant to say 'Dove of Peace' and in her excitement said only 'dove', so the bird is a spiteful Dove of War.",
+      "Shrinks the attacking dove to the size of a canary with a second use of the Belt, which is what drives Ugu to flee in the dishpan.",
+      "Had tested the transformation power in secret at night, turning the Sawhorse into a potato masher and the Cowardly Lion into a pussycat and back again.",
+      "Forgives Ugu at the very end and offers to restore his man's shape, which he refuses."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Her dearest friend, whom she leads the search for.",
+      "Toto": "Her little dog, who follows the party uninvited.",
+      "the Wizard": "Her fellow leader, who has lost all his magic.",
+      "Ugu the Shoemaker": "The magician she transforms into a dove and later forgives.",
+      "the Lavender Bear": "The Bear King whose oracle she doubts and then apologizes to."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "ruby slippers",
+        "Silver Shoes",
+        "there is no place like home",
+        "Miss Gulch"
+      ],
+      "not_in_this_book": [
+        "Dorothy destroys Ugu",
+        "Dorothy transforms Ugu into a Dove of Peace",
+        "Dorothy restores Ugu to a man",
+        "Dorothy knows how to use the Magic Belt from the start"
+      ]
+    },
+    "hallucination_signals": [
+      "Dorothy destroys Ugu",
+      "Dorothy restores Ugu to human form",
+      "the Dove of Peace",
+      "ruby slippers"
+    ]
+  }
+}

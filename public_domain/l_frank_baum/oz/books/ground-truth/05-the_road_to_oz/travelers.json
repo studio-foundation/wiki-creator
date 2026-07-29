@@ -1,0 +1,224 @@
+{
+  "dorothy": {
+    "canonical_aliases_book1": [
+      "Dorothy"
+    ],
+    "known_facts_book1": [
+      "Lives on Uncle Henry and Aunt Em's farm in Kansas; the story opens near her farm-house.",
+      "Meets the shaggy man when he asks her the road to Butterfield, and while showing him the way the roads mysteriously multiply and the two become lost.",
+      "Her little dog Toto has been hidden in the shaggy man's coat pocket along with his stolen apples.",
+      "Gets lost 'in fifteen minutes, so near to her home and in the unromantic State of Kansas.'",
+      "Takes the seventh road at the shaggy man's suggestion and so begins the journey toward Oz.",
+      "Finds Button-Bright digging a hole in the road, and later meets Polychrome dancing in the road.",
+      "Is already a Princess of Oz and a friend of Ozma; kings and beasts recognize her by name.",
+      "Rides across the Deadly Desert in Johnny Dooit's sand-boat with her companions.",
+      "Is reunited in the Winkie country with Tik-tok and Billina, whom Ozma sent to welcome her.",
+      "Rides into the Emerald City in Ozma's golden chariot drawn by the Cowardly Lion and Hungry Tiger.",
+      "Sits in Ozma's throne and receives the birthday guests in the Throne-Room as the only other Princess in the city.",
+      "Learns from Ozma that it was Ozma who mixed up the roads to start her wandering toward Oz.",
+      "At the end is transported home to her Kansas bed by Ozma's Magic Belt while she sleeps, rather than riding a bubble."
+    ],
+    "known_relations_book1": {
+      "Shaggy Man": "Her fellow traveler from the first page; she shows him the road, is lost with him, and brings him to Oz as her friend.",
+      "Toto": "Her own dog, who travels the whole road with her.",
+      "Button-Bright": "A lost little boy she adopts into the party and mothers along the road.",
+      "Polychrome": "The Rainbow's Daughter she befriends on the road and calls 'Polly'.",
+      "Ozma": "Her dear friend and the Ruler of Oz, who made her a Princess and watches her journey in the Magic Picture.",
+      "Billina": "An old friend, the Yellow Hen, who names all ten of her new chicks Dorothy.",
+      "Tik-tok": "An old friend, the copper clockwork man, sent by Ozma to welcome her.",
+      "Scarecrow": "An old friend; she walks arm in arm with him in the birthday procession.",
+      "Tin Woodman": "An old friend, Nick Chopper, who welcomes her to his tin castle."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "ruby slippers",
+        "Dorothy Gale",
+        "there's no place like home",
+        "Over the Rainbow",
+        "Miss Gulch takes Toto",
+        "Professor Marvel"
+      ],
+      "not_in_this_book": [
+        "Dorothy returns to Kansas by the Silver Shoes",
+        "Dorothy melts the Wicked Witch",
+        "Dorothy arrives in Oz by cyclone",
+        "Dorothy loses her way home forever"
+      ]
+    },
+    "hallucination_signals": [
+      "ruby slippers",
+      "Dorothy Gale",
+      "clicks her heels",
+      "there's no place like home",
+      "Over the Rainbow",
+      "green-skinned witch",
+      "Dorothy melts the witch in this book",
+      "Silver Shoes carry her home"
+    ]
+  },
+  "shaggy_man": {
+    "canonical_aliases_book1": [
+      "Shaggy Man",
+      "shaggy man"
+    ],
+    "known_facts_book1": [
+      "Makes his very first appearance in the series here, opening the book by asking Dorothy the road to Butterfield.",
+      "Owns the Love Magnet, a dull brown horseshoe-shaped bit of metal that makes every living thing he meets love him.",
+      "Confesses at the end that he stole the Love Magnet from a girl in Butterfield who was loved too much, though he had first told Dorothy an Eskimo gave it to him.",
+      "Everything about him is shaggy: his clothes, boots, hair, and whiskers.",
+      "Puts Toto and stolen apples in his big coat pocket at the start.",
+      "Avoids Butterfield because a man there owes him fifteen cents and he does not want the money.",
+      "Is given a donkey head by King Kik-a-bray of Dunkiton, which he later washes off in the Truth Pond.",
+      "Summons his friend Johnny Dooit by means of the Love Magnet to build a sand-boat across the Deadly Desert.",
+      "Defeats the Scoodlers by catching their thrown heads and hurling them into the black gulf.",
+      "Is given fine new clothes at Ozma's palace that are still shaggy, so he remains the Shaggy Man.",
+      "Gives up the Love Magnet to be hung over the gates of the Emerald City so all who pass may love and be loved.",
+      "Is allowed by Ozma to remain and live in Oz if he proves honest and true."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "The little girl he asks for directions and then travels the whole road to Oz beside.",
+      "Love Magnet": "The charm he owns and carries, which makes everyone love him.",
+      "Johnny Dooit": "His powerful friend, summoned by the Love Magnet, who builds the sand-boat.",
+      "Button-Bright": "The lost boy he takes charge of and carries when danger comes.",
+      "Ozma": "The Ruler who grants him leave to live in Oz on probation."
+    },
+    "forbidden_book1": {
+      "later_tome_roles": [
+        "the Shaggy Man has a brother",
+        "the Shaggy Man rescues the brother from the Nome King",
+        "the Shaggy Man leads an expedition to Ruggedo",
+        "the Shaggy Man was always a resident of Oz"
+      ],
+      "not_in_this_book": [
+        "the shaggy man gets a fox head",
+        "the shaggy man was given the Love Magnet honestly"
+      ]
+    },
+    "hallucination_signals": [
+      "the Shaggy Man's brother",
+      "the shaggy man gets a fox head",
+      "the shaggy man from Colorado",
+      "the shaggy man is the Wizard in disguise",
+      "the shaggy man rescues his brother"
+    ]
+  },
+  "button_bright": {
+    "canonical_aliases_book1": [
+      "Button-Bright"
+    ],
+    "known_facts_book1": [
+      "Makes his very first appearance in the series here, found digging a hole in the road in sailor clothes.",
+      "Answers almost every question with 'Don't know.'",
+      "Is called Button-Bright because his papa said he was 'bright as a button'; his real name and home are unknown.",
+      "Seems two or three years younger than Dorothy and does not know where he came from.",
+      "Loves the shaggy man at once because of the Love Magnet.",
+      "Is given a fox head by King Dox of Foxville, who thinks it makes him look clever.",
+      "Has his own head restored by falling into the Truth Pond in the Winkie country.",
+      "Weeps and protests 'Don't want to be soup!' when the Scoodlers capture the party.",
+      "Santa Claus knows him and has visited his home several Christmas Eves.",
+      "Is sent home to his father and mother at the end inside one of the Wizard's soap-bubbles."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "The girl who adopts him into the traveling party and looks after him.",
+      "Shaggy Man": "His protector, whom he loves because of the Love Magnet.",
+      "King Dox": "The Fox-King who gives him a fox head.",
+      "Santa Claus": "Recognizes him and privately tells the Wizard where his home is.",
+      "King Bud": "A boy king he takes to as a chum at the party."
+    },
+    "forbidden_book1": {
+      "later_tome_roles": [
+        "Button-Bright is lost in Sky Island",
+        "Button-Bright owns a Magic Umbrella",
+        "Button-Bright travels with Trot and Cap'n Bill"
+      ],
+      "not_in_this_book": [
+        "Button-Bright gets a donkey head",
+        "Button-Bright's father is named in the book",
+        "Button-Bright stays in Oz at the end"
+      ]
+    },
+    "hallucination_signals": [
+      "Button-Bright's Magic Umbrella",
+      "Button-Bright meets Trot",
+      "Button-Bright gets a donkey head",
+      "Button-Bright's real name is revealed",
+      "Button-Bright stays in the Emerald City"
+    ]
+  },
+  "polychrome": {
+    "canonical_aliases_book1": [
+      "Polychrome",
+      "Polly",
+      "Rainbow's Daughter"
+    ],
+    "known_facts_book1": [
+      "Makes her very first appearance in the series here, found dancing and weeping in the lonely road.",
+      "Is the Daughter of the Rainbow, clad in flowing gauzy robes of soft rainbow tints, with hair like spun gold.",
+      "Slid off the end of her father's rainbow when it touched the road and was left behind when he lifted it again.",
+      "Dances to keep warm because she is used to living nearer the sun and finds the earth cold.",
+      "Eats almost nothing, preferring dewdrops and mist-cakes to solid food, and lets Dorothy call her 'Polly'.",
+      "Slaps the Scoodler guard's face as part of the shaggy man's escape plan.",
+      "Performs her Rainbow Dance at Ozma's banquet.",
+      "Goes home at the end by dancing up the curve of a rainbow that settles onto the platform, after Santa Claus promises to tell her father where she is."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her first earthly friend, who names her 'Polly' and invites her to travel to Oz.",
+      "the Rainbow": "Her father, from whose bow she fell and to whom she finally returns.",
+      "Shaggy Man": "A travelling companion she scolds for braying 'hee-haw' with his donkey head.",
+      "Ozma": "The Ruler who welcomes her warmly and whose beauty she admits surpasses her own."
+    },
+    "forbidden_book1": {
+      "later_tome_roles": [
+        "Polychrome joins the quest to free the Shaggy Man's brother",
+        "Polychrome meets Tik-Tok in the Nome King's country",
+        "Polychrome and Files"
+      ],
+      "not_in_this_book": [
+        "Polychrome can do magic",
+        "Polychrome stays in Oz permanently"
+      ]
+    },
+    "hallucination_signals": [
+      "Polychrome frees the Shaggy Man's brother",
+      "Polychrome marries",
+      "Polychrome casts a spell",
+      "Polychrome stays in the Emerald City forever"
+    ]
+  },
+  "toto": {
+    "canonical_aliases_book1": [
+      "Toto"
+    ],
+    "known_facts_book1": [
+      "Dorothy's little black dog with bright brown eyes, who begins the book stuffed into the shaggy man's pocket with the apples.",
+      "Barks at and tries to bite the fox-soldiers, the Musicker, and Billina, and is repeatedly quieted by Dorothy.",
+      "Grabs a Scoodler's thrown head by the ear and runs off with it during the fight.",
+      "Turns 'invisible' among the grey rocks near the Scoodler country only because he cannot be seen, and is found by his barking.",
+      "Sits at the animals' table at the banquet with a bib and a silver platter.",
+      "Is carried home to Kansas with Dorothy by the Magic Belt, having declined to ride in a bubble."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "His mistress, whom he follows everywhere 'like Mary's little lamb'.",
+      "Shaggy Man": "Carries Toto in his pocket at the start and is bitten by the dog for it.",
+      "Billina": "The Yellow Hen he tries to attack until Dorothy commands him to treat her as a friend.",
+      "Cowardly Lion": "An old friend he greets joyfully in Oz."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "Toto is taken by Miss Gulch",
+        "Toto is seized by the sheriff",
+        "Toto exposes the Wizard behind a curtain"
+      ],
+      "not_in_this_book": [
+        "Toto speaks in words",
+        "Toto is left behind in Kansas"
+      ]
+    },
+    "hallucination_signals": [
+      "Miss Gulch",
+      "Toto is taken from Dorothy",
+      "Toto talks",
+      "Toto pulls back the curtain"
+    ]
+  }
+}

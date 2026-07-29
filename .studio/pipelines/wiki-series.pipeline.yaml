@@ -7,6 +7,30 @@ version: 1
 # tome artifacts are read from disk (STU-455: each tome ran as its own `studio run`,
 # so nothing about them reaches this pipeline through Studio context).
 stages:
+  # arc split (STU-720): the hub's one generative paragraph runs through a native
+  # `call`, like every other LLM stage since STU-621. series-assemble used to issue
+  # a nested `studio run` subprocess from inside its own stage — the last call still
+  # shaped that way, and on a real run it produced no arc at all. on_failure:
+  # continue keeps the STU-707 bias: a missing arc costs the hub a paragraph, never
+  # the series export.
+  - name: series-arc-pre
+    kind: analysis
+    executor: script
+    runtime: python
+    script: scripts/series_arc_pre.py
+    timeout_ms: 300000
+    context:
+      include:
+        - input
+
+  - call: series-arc-verdict
+    pipeline: wiki-pages
+    condition: stages.series-arc-pre.output.needs_verdict == true
+    on_failure: continue
+    input:
+      items: "{{stages.series-arc-pre.output.items}}"
+      prompt_fingerprint: "{{stages.series-arc-pre.output.prompt_fingerprint}}"
+
   - name: series-assemble
     kind: extraction
     executor: script
@@ -17,6 +41,7 @@ stages:
     context:
       include:
         - input
+        - all_stage_outputs
 
   - name: series-export
     kind: extraction

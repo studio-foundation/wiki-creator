@@ -1,0 +1,70 @@
+{
+  "entity": "Tip",
+  "canonical_aliases_book1": [
+    "Tip",
+    "Tippetarius",
+    "Ozma",
+    "Princess Ozma"
+  ],
+  "known_facts_book1": [
+    "A boy of the Country of the Gillikins in the north of Oz, reared from infancy by the witch Mombi, whom he frankly hates.",
+    "His full name is Tippetarius, shortened to Tip; he remembers nothing of his parents.",
+    "Carves a pumpkin head and builds a wooden man to frighten Mombi, then names it Jack Pumpkinhead.",
+    "Watches Mombi bring Jack to life with the Powder of Life she got from a crooked wizard.",
+    "Learns Mombi means to transform him into a marble statue, so he steals the Powder of Life and runs away with Jack that night.",
+    "Brings the Saw-Horse to life with the Powder of Life to carry Jack, imitating Mombi's words and gestures.",
+    "Heads south toward the Emerald City; is separated from Jack when the Saw-Horse bolts, and reunites at the city gates.",
+    "Falls in with General Jinjur on the road, carries her army's baskets, and witnesses the girls' conquest of the Emerald City.",
+    "Escapes the captured city on the Saw-Horse, tied to the Scarecrow and Jack, and journeys to the Tin Woodman.",
+    "Brings the Gump, a patchwork flying Thing, to life with the last of the Powder of Life to escape Jinjur's palace by air.",
+    "Swallows a Wishing Pill and, in pain, wishes he had never swallowed it, which undoes the wish and refills the box.",
+    "Is the only human of the party and the only one who tires, sleeps, and grows hungry.",
+    "Is revealed at the very end to be Princess Ozma: as an infant, Ozma was transformed into the boy Tip by Mombi at the Wizard's bidding.",
+    "At first refuses the reveal, wanting to stay a boy and keep travelling with his friends, then consents to have the enchantment undone.",
+    "Is restored by Mombi's incantation into a young girl, Princess Ozma, and crowned rightful Queen of the Emerald City."
+  ],
+  "known_relations_book1": {
+    "Mombi": "The witch who reared him and whom he hates; she meant to make him a marble statue, and years earlier she transformed the infant Ozma into Tip. His enchanter and guardian, not his mother.",
+    "Jack Pumpkinhead": "His own creation, who calls Tip 'father'; Tip made and repeatedly repairs him. When Tip becomes a girl the father-son relationship ends.",
+    "Saw-Horse": "Brought to life by Tip and his loyal steed; on the reveal it becomes Ozma's personal property.",
+    "Scarecrow": "Befriends Tip on the journey and remains his faithful friend after the reveal.",
+    "Nick Chopper": "The Tin Woodman, who befriends Tip and reassures him that being a girl is no misfortune.",
+    "Woggle-Bug": "Travelling companion who offers to become Tip's tutor once he is a girl again.",
+    "Glinda": "Takes a great liking to Tip; forces Mombi to reveal his identity and oversees his restoration as Princess Ozma.",
+    "Pastoria": "Tip is Pastoria's daughter Ozma, the lost heir to the Emerald City throne."
+  },
+  "forbidden_book1": {
+    "transformation_facts": [
+      "Glinda transforms Tip into a girl (it is Mombi, not Glinda, who works the transformation)",
+      "Tip and Ozma are two separate people",
+      "Tip is the Wizard's son",
+      "Ozma is Mombi's daughter",
+      "Dorothy transforms Tip into Ozma"
+    ],
+    "later_tomes": [
+      "the Nome King",
+      "the Magic Belt",
+      "Tik-Tok",
+      "the Shaggy Man",
+      "the Royal Family of Ev",
+      "Ozma rescues Dorothy"
+    ],
+    "relationships": [
+      "Ozma is married to the Scarecrow",
+      "Ozma befriends Dorothy in this book"
+    ]
+  },
+  "hallucination_signals": [
+    "the Nome King",
+    "Tik-Tok",
+    "the Magic Belt",
+    "the Shaggy Man",
+    "ruby slippers",
+    "Glinda transforms Tip into a girl",
+    "Tip is the Wizard's son",
+    "Ozma marries the Scarecrow",
+    "Ozma and Dorothy are reunited",
+    "Tip returns to Kansas",
+    "Dorothy transforms Tip"
+  ]
+}

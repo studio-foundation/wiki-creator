@@ -1,0 +1,58 @@
+{
+  "entity": "Ozma",
+  "canonical_aliases_book1": [
+    "Ozma",
+    "Ozma of Oz"
+  ],
+  "known_facts_book1": [
+    "The girlish Ruler of the Land of Oz, no older or larger than Dorothy, clothed in silver gauze and wearing a jeweled diadem.",
+    "Drives a golden chariot drawn by the Cowardly Lion and the Hungry Tiger, and carries an ivory wand tipped with diamond letters 'O' and 'Z'.",
+    "Was, as a baby, stolen by a wicked old witch and transformed into a boy, and did not know she was a girl until restored by a kind sorceress; she is the only child of the former Ruler of Oz.",
+    "Learns from Glinda the Good, who gives her a magic carpet that unrolls itself, allowing her army to cross the deadly desert.",
+    "Crosses the desert with an army of twenty-seven soldiers to free Dorothy and to rescue the royal family of Ev.",
+    "Compels Princess Langwidere to release Dorothy from the tower.",
+    "Leads the expedition to the Nome King's palace and demands he free the Queen of Ev and her children.",
+    "Takes the guessing challenge first, makes eleven wrong guesses, and is transformed into an emerald grasshopper.",
+    "Is restored by Billina, who nearly ate the grasshopper before realizing it was a transformation.",
+    "Returns to the Emerald City in triumph, makes Dorothy a Princess of Oz, and promotes the private Omby Amby to Captain-General.",
+    "Rules the kings of the Munchkins, Winkies, Quadlings and Gillikins and lives in the Emerald City at the center of Oz.",
+    "Receives the Nome King's magic belt from Dorothy and agrees to watch her weekly in the magic picture and wish her back to Oz when signalled."
+  ],
+  "known_relations_book1": {
+    "Dorothy": "The Kansas girl she rescues and befriends; the two become devoted to each other.",
+    "Nome King": "Her adversary — she demands the prisoners and is entrapped by him into a grasshopper.",
+    "Scarecrow": "Her trusted adviser, who rides behind her chariot on the Sawhorse.",
+    "Tin Woodman": "Her follower and commander of her army, transformed by the Nome King and later recovered.",
+    "Glinda": "The friendly sorceress who gives her the magic carpet and later advises about the belt.",
+    "Billina": "The yellow hen who breaks the Nome King's enchantment and restores her from a grasshopper.",
+    "Queen of Ev": "The queen she crosses the desert to liberate, greeted as one princess greets another."
+  },
+  "forbidden_book1": {
+    "relationships": [
+      "Ozma is the Nome King's ally",
+      "Ozma is the Nome King's friend",
+      "Ozma is married to the Scarecrow",
+      "Ozma is Dorothy's enemy"
+    ],
+    "not_named_in_this_book": [
+      "Ozma was named Tip",
+      "the boy Tip",
+      "the witch Mombi"
+    ],
+    "later_tome_bleed": [
+      "Ozma's birthday celebration",
+      "the Shaggy Man visits Ozma",
+      "Ozma is captured by the Nome King's tunnel",
+      "Ozma and the Wizard of Oz rule together"
+    ]
+  },
+  "hallucination_signals": [
+    "Ozma befriends the Nome King",
+    "Ozma is the Nome King's ally",
+    "Ozma marries",
+    "the boy Tip",
+    "Mombi transforms Ozma",
+    "the Shaggy Man",
+    "Ozma is captured by the Nome King"
+  ]
+}

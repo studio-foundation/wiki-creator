@@ -1138,3 +1138,15 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   `test_infobox_vocabulary.py` pins `render → tokens` equality and the subset. The
   inert `type` infobox token (never filled for any type) was removed rather than
   rendered as a permanently-empty row.
+  **This absorbs STU-730's `infobox_rows`.** That ticket landed first and fixed the
+  *labels* (the template stored one hardcoded French literal per type, so an English
+  wiki read `Décès`) by replacing the wikitext string with a hand-kept ordered row
+  list built against the localized `labels` map. It deliberately left the parameter
+  names alone ("rendered pages are byte-identical"), which is the half STU-729 is
+  about — so `infobox_rows` arrived carrying `{header: name}`, `param: first_seen`,
+  `occupation`, `residents`, and a second hand-kept vocabulary that can drift from
+  the `infobox:` slots exactly as the string did. Deriving the rows from the slot
+  tokens keeps STU-730's localization (each row label is `slot_label(token, lang)`)
+  and deletes the drift surface, so `infobox_rows` is gone with `infobox_source`.
+  STU-730's "an `en` template ships no French label" tests moved to
+  `test_infobox_vocabulary.py` — the property is now the generator's and must stay.

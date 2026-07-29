@@ -1,0 +1,186 @@
+{
+  "knooks": {
+    "canonical_aliases_book1": [
+      "Knooks"
+    ],
+    "known_facts_book1": [
+      "Crooked little sprites who come to Ozma's party from the great Forest of Burzee, brought by Santa Claus.",
+      "Have long whiskers, pointed caps, and curling toes, and are no taller than Button-Bright's shoulder.",
+      "Their duty is to water and care for the young trees of the forest, which hard work makes them crooked and gnarled like the trees.",
+      "Dance the Fairy Circle at the banquet and float home in small bubbles with Santa Claus."
+    ],
+    "known_relations_book1": {
+      "Santa Claus": "Their beloved master, who brings them to Oz to see the city.",
+      "Ryls": "Their fellow sprites who also come with Santa Claus."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Knooks fight the Nome King",
+        "the Knooks live in the Emerald City"
+      ]
+    },
+    "hallucination_signals": [
+      "the Knooks battle the Nomes",
+      "the Knooks paint flowers",
+      "the Knooks rule Burzee"
+    ]
+  },
+  "ryls": {
+    "canonical_aliases_book1": [
+      "Ryls"
+    ],
+    "known_facts_book1": [
+      "Merry little sprites like fairy elves who come to Ozma's party from the Happy Valley, brought by Santa Claus.",
+      "Their business is to paint the colors of the flowers when they bud and bloom, but they left their paint-pots behind for the visit.",
+      "Dance the Fairy Circle at the banquet and float home in small bubbles with Santa Claus."
+    ],
+    "known_relations_book1": {
+      "Santa Claus": "Their master, who brings them along to see Oz.",
+      "Knooks": "Their fellow sprites who also come with Santa Claus."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Ryls tend the forest trees",
+        "the Ryls live in the Emerald City"
+      ]
+    },
+    "hallucination_signals": [
+      "the Ryls water the trees",
+      "the Ryls fight the Nomes",
+      "the Ryls rule the Happy Valley"
+    ]
+  },
+  "winkies": {
+    "canonical_aliases_book1": [
+      "Winkies"
+    ],
+    "known_facts_book1": [
+      "The people of the yellow western Country of Oz, ruled by the Tin Woodman as their Emperor.",
+      "Their color is yellow and almost everything in their country that has any color is yellow.",
+      "Are the cleverest tinsmiths in the world and built the Tin Woodman's tin castle.",
+      "Once were made slaves by a wicked witch until Dorothy melted her; then they made Nick Chopper their Emperor.",
+      "Provide a tin orchestra at the castle and a Tin Band that plays 'There's No Plate like Tin' in the procession."
+    ],
+    "known_relations_book1": {
+      "Tin Woodman": "Their Emperor, Nick Chopper, whom they love dearly.",
+      "Dorothy": "The girl who freed them by melting the wicked witch."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Winkies are still enslaved in this book",
+        "the Winkies live in the blue country"
+      ]
+    },
+    "hallucination_signals": [
+      "the Winkies are slaves of the witch",
+      "the Winkies are blue",
+      "the Winkie Country is ruled by the Nome King"
+    ]
+  },
+  "deadly_desert": {
+    "canonical_aliases_book1": [
+      "Deadly Desert",
+      "Deadly Sands",
+      "Dreadful Desert"
+    ],
+    "known_facts_book1": [
+      "A vast waste of grey sand that surrounds the Land of Oz and turns any living flesh that touches it to dust in an instant.",
+      "A large white warning sign at its edge forbids anyone to venture upon it.",
+      "Is crossed by the party in Johnny Dooit's wind-driven sand-boat, whose runners keep them off the sand.",
+      "The sand-boat smashes on the rocks at the Oz side of the desert, but everyone lands safely on the grass."
+    ],
+    "known_relations_book1": {
+      "Johnny Dooit": "Builds the sand-boat that lets the party cross the desert.",
+      "Dorothy": "Has crossed it before by cyclone, Silver Shoes, Magic Carpet, and Magic Belt."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the party walks across the Deadly Desert on foot",
+        "the Deadly Desert is a sea of water"
+      ]
+    },
+    "hallucination_signals": [
+      "they walk across the deadly sands",
+      "the desert is made of water",
+      "the sands are harmless"
+    ]
+  },
+  "emerald_city": {
+    "canonical_aliases_book1": [
+      "Emerald City"
+    ],
+    "known_facts_book1": [
+      "The magnificent capital in the center of Oz, where the corners of the four countries meet, ruled by Princess Ozma.",
+      "Its buildings are plated with gold and set with emeralds, and it is entered through jeweled gates kept by the Guardian of the Gates.",
+      "Ozma's birthday celebration is held on the broad green just outside its gates.",
+      "At the end the Love Magnet is hung over its gates so that whoever enters or leaves may be loved and loving."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Its ruler, who holds her birthday celebration there.",
+      "Love Magnet": "Hung over the city gates at the story's close.",
+      "Guardian of the Gates": "The little green-spectacled man who opens the gates."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Emerald City is conquered by the Nome King in this book",
+        "everyone must wear green spectacles in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "the Nome King conquers the Emerald City",
+      "green spectacles are locked on every visitor",
+      "the Emerald City is only green glass"
+    ]
+  },
+  "kansas": {
+    "canonical_aliases_book1": [
+      "Kansas"
+    ],
+    "known_facts_book1": [
+      "Dorothy's home, on Uncle Henry and Aunt Em's farm, where the book opens.",
+      "Called by Dorothy 'the unromantic State of Kansas', where she gets lost within fifteen minutes near her own farm-house.",
+      "Butterfield, the town the shaggy man is avoiding, lies near Dorothy's farm.",
+      "Dorothy notes that magic will not work in Kansas, only in fairy countries."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her home state, to which she is returned by the Magic Belt at the end.",
+      "Shaggy Man": "First meets Dorothy on a Kansas road while asking the way to Butterfield."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "a cyclone carries Dorothy from Kansas in this book",
+        "Kansas is part of Oz"
+      ]
+    },
+    "hallucination_signals": [
+      "a cyclone strikes Kansas in this book",
+      "Kansas is a fairy country",
+      "magic works in Kansas"
+    ]
+  },
+  "royal_palace": {
+    "canonical_aliases_book1": [
+      "Royal Palace"
+    ],
+    "known_facts_book1": [
+      "Ozma's palace in the Emerald City, set in walled green-marble gardens, where the guests are lodged and the banquet is held.",
+      "Contains Ozma's malachite throne, the great Throne-Room where guests are received, and Dorothy's own suite of rooms.",
+      "The shaggy man is given one of its handsomest apartments, with a marble bath and a chest of jeweled ornaments.",
+      "Tik-tok lives at the palace, and the Tin Woodman always has the same room there when he visits."
+    ],
+    "known_relations_book1": {
+      "Ozma": "The Ruler whose palace it is.",
+      "Jellia Jamb": "Ozma's attendant who welcomes guests at its door.",
+      "Shaggy Man": "Lodged in one of its finest apartments and given shaggy new clothes."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Royal Palace is seized by the Nome King in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "the Nome King takes the palace",
+      "the palace is made of gingerbread"
+    ]
+  }
+}

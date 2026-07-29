@@ -1,0 +1,49 @@
+{
+  "munchkins": {
+    "canonical_aliases_book1": [
+      "Munchkins"
+    ],
+    "known_facts_book1": [
+      "The people of the Munchkin Country, one of the four countries of the Land of Oz.",
+      "Uncle Henry is given nine suits of clothes cut in the popular Munchkin fashion.",
+      "Ozma offers to give Uncle Henry and Aunt Em a farm in the Munchkin Country or the Winkie Country."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Their Ruler, among whose lands a home for Dorothy's uncle and aunt is offered."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Munchkins are enslaved by the Nome King",
+        "the Munchkins wear only blue and are tiny"
+      ]
+    },
+    "hallucination_signals": [
+      "the Munchkins greet Dorothy in Munchkinland",
+      "the Munchkins are conquered by the Nomes"
+    ]
+  },
+  "winkies": {
+    "canonical_aliases_book1": [
+      "Winkies"
+    ],
+    "known_facts_book1": [
+      "The people of the Winkie Country, ruled by the Tin Woodman as their Emperor.",
+      "Love their tin Emperor and keep him polished so there is no rust on him.",
+      "The Tin Woodman wishes he had been allowed to arm and drill his Winkies to fight the invaders."
+    ],
+    "known_relations_book1": {
+      "Tin Woodman": "Their beloved Emperor, Nick Chopper.",
+      "Ozma": "The Ruler of Oz they serve."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Winkies are enslaved by a Wicked Witch in this book",
+        "the Winkies fight the Nome King in battle"
+      ]
+    },
+    "hallucination_signals": [
+      "the Winkies are slaves of the Wicked Witch",
+      "the Winkies battle the Nomes"
+    ]
+  }
+}

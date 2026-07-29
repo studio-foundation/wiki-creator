@@ -1,0 +1,214 @@
+{
+  "woodchopper": {
+    "canonical_aliases_book1": [
+      "the woodchopper"
+    ],
+    "known_facts_book1": [
+      "A Munchkin man with bushy blue whiskers and merry blue eyes, living alone in a leaf-covered hut at the edge of the Blue Forest.",
+      "Laughs until he cannot speak at the sight of the Patchwork Girl and calls her 'Crazy-quilt'.",
+      "Warns the travellers that it is against the Law for anyone but Glinda the Good and the royal Wizard to work magic, and that they will be arrested near the Emerald City.",
+      "Tells Ojo about his old friend the tin woodchopper who replaced each chopped-off limb with tin, met Dorothy, and became Emperor of the Winkies.",
+      "Invites them to stay the night, but they go on."
+    ],
+    "known_relations_book1": {
+      "Scraps": "Mistakes her for a crazy-quilt and mocks her, to her indignation.",
+      "Tin Woodman": "An old friend of his, whose story he tells to Ojo.",
+      "Ojo": "Gives him his first news of Dorothy and the Tin Woodman."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the woodchopper joins the party",
+        "the woodchopper is the Tin Woodman"
+      ]
+    },
+    "hallucination_signals": [
+      "the woodchopper is Nick Chopper",
+      "the woodchopper travels with Ojo"
+    ]
+  },
+  "wise_donkey": {
+    "canonical_aliases_book1": [
+      "the Wise Donkey"
+    ],
+    "known_facts_book1": [
+      "A little light-brown donkey in a blue apron and blue cap, keeping shop with the Foolish Owl under a sign reading 'Miss Foolish Owl and Mr. Wise Donkey: Public Advisers'.",
+      "Was born in the Land of Mo and came to visit the Land of Oz on the very day it was shut off from the rest of the world, so he is obliged to stay.",
+      "Gives advice free — unless you follow it.",
+      "Tells Ojo the way to the Emerald City is the road of yellow bricks, the only yellow things in the blue country.",
+      "Admires the Foolish Owl precisely because owls are supposed to be wise, so a foolish one is unusual and therefore interesting to the wise."
+    ],
+    "known_relations_book1": {
+      "the Foolish Owl": "His business partner in the advice shop.",
+      "Ojo": "Directs him to the road of yellow bricks."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Wise Donkey is a Munchkin",
+        "the Wise Donkey joins the party",
+        "the Wise Donkey is foolish"
+      ]
+    },
+    "hallucination_signals": [
+      "the Wise Donkey is a Munchkin",
+      "the Wise Donkey joins the journey",
+      "the Wise Donkey was born in Oz"
+    ]
+  },
+  "foolish_owl": {
+    "canonical_aliases_book1": [
+      "the Foolish Owl"
+    ],
+    "known_facts_book1": [
+      "A great blue owl in a blue sunbonnet who sits on a shelf over the window in the advice shop, blinking her big round eyes.",
+      "Answers every question in nonsense rhyme, which the Wise Donkey insists is excellent advice for the foolish.",
+      "Predicts in verse that the Patchwork Girl will be nobody's sweetheart and nobody's wife and will be snubbed by everyone.",
+      "Cannot see very well by day.",
+      "Sends the travellers off with a rhyme admitting that neither they nor she knows where they are going."
+    ],
+    "known_relations_book1": {
+      "the Wise Donkey": "Her business partner, who admires her foolishness.",
+      "Scraps": "Rhymes an unflattering prophecy about her."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Foolish Owl gives true prophecies",
+        "the Foolish Owl is wise",
+        "the Foolish Owl joins the party"
+      ]
+    },
+    "hallucination_signals": [
+      "the Foolish Owl is wise",
+      "the Foolish Owl's prophecy comes true",
+      "the Foolish Owl joins the journey"
+    ]
+  },
+  "chiss": {
+    "canonical_aliases_book1": [
+      "Chiss"
+    ],
+    "known_facts_book1": [
+      "A giant porcupine as big as a ten-bushel basket, bristling all over with sharp quills, considered an evil spirit in Oz.",
+      "Can throw his quills in any direction, which an ordinary porcupine cannot do, and this is what makes him dangerous to travellers.",
+      "Fires every quill he has in a single shower; Scraps takes most of them in her body shielding Ojo, one strikes the Shaggy Man's leg, and they rattle harmlessly off the Glass Cat and the Woozy.",
+      "Cannot be killed, as he himself points out when the Shaggy Man puts a foot on his neck.",
+      "Refuses to promise to stop throwing quills, arguing that every animal must do what Nature intends and that people should keep out of his way.",
+      "Is disarmed instead: Scraps and Ojo gather up all his quills, which are bundled, weighted with a stone and sunk in a muddy pond."
+    ],
+    "known_relations_book1": {
+      "Shaggy Man": "Pins him down after being wounded by a quill and takes all his quills away.",
+      "Scraps": "Takes the shower of quills in her own body to shield Ojo.",
+      "Ojo": "Helps gather up the quills; heals the Shaggy Man's wound with a charm."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Chiss is killed",
+        "Chiss promises to stop throwing quills",
+        "Chiss follows the party"
+      ]
+    },
+    "hallucination_signals": [
+      "Chiss is killed",
+      "Chiss promises to reform",
+      "Chiss is an ordinary porcupine"
+    ]
+  },
+  "mister_yoop": {
+    "canonical_aliases_book1": [
+      "Mister Yoop"
+    ],
+    "known_facts_book1": [
+      "A giant twenty-one feet high, caged behind thick iron bars in a cavern in a rocky canyon of the Quadling Country.",
+      "The sign over his cave advertises him as 'The Largest Untamed Giant in Captivity', weight 1640 pounds, age 400 years and up, temper fierce and ferocious, appetite ravenous.",
+      "Prefers meat people and orange marmalade, and has eaten nothing in years except six ants and a monkey.",
+      "Is dressed all in pink velvet with silver buttons and braid, pink leather boots with tassels, and a hat with an enormous curled pink ostrich feather.",
+      "His arms are long enough to reach the opposite wall of the rock passage when thrust between the bars.",
+      "Grabs the Scarecrow and then Scraps as the party dashes past, finds neither is eatable, and throws each of them after the others.",
+      "Stays a captive throughout; the party escapes past him with nobody hurt."
+    ],
+    "known_relations_book1": {
+      "Scarecrow": "Grabs him first and throws him away on discovering he is straw.",
+      "Scraps": "Grabs her second and flings her at the others.",
+      "Dorothy": "Threatens to eat her, calling her plump and tender."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Mister Yoop escapes his cage",
+        "Mister Yoop eats one of the travelers",
+        "Mister Yoop is killed",
+        "Mister Yoop has a wife in this book"
+      ],
+      "relationships": [
+        "Mister Yoop is a friend of Dorothy",
+        "Mister Yoop is an ally of the travelers"
+      ]
+    },
+    "hallucination_signals": [
+      "Mister Yoop escapes",
+      "Mister Yoop eats Dorothy",
+      "Mister Yoop is killed",
+      "Mister Yoop helps the travelers"
+    ]
+  },
+  "tottenhots": {
+    "canonical_aliases_book1": [
+      "Tottenhots"
+    ],
+    "known_facts_book1": [
+      "A tribe of about a hundred tiny people living in black pot-like dwellings scattered under palm trees on a sandy plain at the edge of the Quadling Country.",
+      "Have brilliant scarlet hair standing straight up like wires, bare bodies but for skins at the waist, and wear ankle and wrist bracelets, necklaces and great pendant earrings.",
+      "Sleep by day and hate the sun, popping out of the tops of their houses at nightfall to gambol, skip and play.",
+      "Toss the Scarecrow and then Scraps about like a basket-ball and a sofa-cushion, and sit on Ojo to hold him down.",
+      "Are routed by Dorothy slapping and pushing them and by Toto snapping at their bare legs.",
+      "Strike a bargain: the travellers may sleep in one of their houses until daylight if the Tottenhots are left to play outside.",
+      "Have never seen or heard of a dark well, and have been told to keep away from the mountain paths."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Fights them off to rescue her friends, then bargains with them for shelter.",
+      "Scarecrow": "Is tossed about by them, and says the shaking took all the lumps out of his straw.",
+      "Toto": "Drives them off by snapping at their legs."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Tottenhots know where the dark well is",
+        "the Tottenhots capture the travelers",
+        "the Tottenhots are ruled by a king"
+      ]
+    },
+    "hallucination_signals": [
+      "the Tottenhots know of the dark well",
+      "the Tottenhots imprison the travelers",
+      "the Tottenhots have a king"
+    ]
+  },
+  "lazy_quadling": {
+    "canonical_aliases_book1": [
+      "the lazy Quadling"
+    ],
+    "known_facts_book1": [
+      "A chubby little man dressed all in red, living with his wife and two children in a small round red house on the bank of the Trick River.",
+      "Says his wife calls him the laziest man in all Oz, and that she is a truthful woman.",
+      "Has never crossed the river and knows a man on the opposite bank he has never spoken to.",
+      "Refuses Dorothy's emerald ring — he only cares for rubies — but agrees to help build a raft for six of the Scarecrow's Square Meal Tablets, because chewing is such hard work.",
+      "Chops the logs with his axe and binds them with his wife's clothesline, and complains of having overworked himself.",
+      "Neglected to tell the travellers that the river changes its direction every little while, and greets the raft cheerfully each time it floats back past his house.",
+      "His wife returns cross from fishing with only one red eel, and is angry about the clothesline, the firewood logs, the shed boards and the gold nails, until Dorothy promises to send them goods from the Emerald City."
+    ],
+    "known_relations_book1": {
+      "Scarecrow": "Buys his labour with Square Meal Tablets.",
+      "Dorothy": "Placates his angry wife with a promise of goods and a new clothesline.",
+      "Scraps": "Minds his two children while the raft is built."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the lazy Quadling owns a boat",
+        "the lazy Quadling ferries the travelers across",
+        "the lazy Quadling joins the party"
+      ]
+    },
+    "hallucination_signals": [
+      "the Quadling ferries them across",
+      "the Quadling owns a boat",
+      "the Quadling warns them about the Trick River"
+    ]
+  }
+}

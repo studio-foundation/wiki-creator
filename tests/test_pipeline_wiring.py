@@ -202,7 +202,27 @@ def test_wiki_series_assembles_before_exporting() -> None:
     assemble gathers every tome's artifacts from disk, export renders them into
     the series-scoped output dir (STU-705)."""
     pipeline = _pipeline("wiki-series")
-    assert _stage_names(pipeline) == ["series-assemble", "series-export"]
-    assert _scripts(pipeline) == ["scripts/series_assemble.py", "scripts/series_export.py"]
+    assert _stage_names(pipeline) == [
+        "series-arc-pre", "series-arc-verdict", "series-assemble", "series-export",
+    ]
+    assert [s for s in _scripts(pipeline) if s] == [
+        "scripts/series_arc_pre.py",
+        "scripts/series_assemble.py",
+        "scripts/series_export.py",
+    ]
     assert any("series_assembly.json" in f for f in _expected_output_files("series-assemble"))
     assert any("output/_series/" in f for f in _expected_output_files("series-export"))
+
+
+def test_wiki_series_wires_the_arc_as_a_native_call() -> None:
+    """STU-720: the hub's arc paragraph goes through the `wiki-pages` map, not a
+    nested `studio run` subprocess issued from inside series-assemble — the shape
+    every other LLM stage took in STU-621, and the one that produces an arc."""
+    stages = _pipeline("wiki-series")["stages"]
+    call = next(s for s in stages if s.get("call") == "series-arc-verdict")
+    assert call["pipeline"] == "wiki-pages"
+    assert call["on_failure"] == "continue"
+    assert "needs_verdict" in call["condition"]
+    # series-assemble reads the call's map output, so it must see stage context.
+    assemble = next(s for s in stages if s.get("name") == "series-assemble")
+    assert "all_stage_outputs" in assemble["context"]["include"]

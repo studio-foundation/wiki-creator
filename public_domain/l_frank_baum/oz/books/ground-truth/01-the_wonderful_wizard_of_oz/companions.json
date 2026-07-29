@@ -1,0 +1,113 @@
+{
+  "scarecrow": {
+    "canonical_aliases_book1": [
+      "Scarecrow"
+    ],
+    "known_facts_book1": [
+      "A man of straw with a painted face, stuffed and dressed in a Munchkin's old blue clothes, made to scare crows from a cornfield.",
+      "Dorothy lifts him off his pole and he walks with her, wanting the Great Oz to give him brains.",
+      "Cannot be hurt by falling or bruising, but is deathly afraid of a lighted match because he might burn.",
+      "Solves problems by thinking cleverly despite claiming to have no brains, proving wiser than he believes.",
+      "Is carried across a wide ditch and a river by the others, and is left stranded on a pole in the river until a Stork lifts him off.",
+      "Receives from the humbug Oz a head stuffed with bran mixed with pins and needles, which Oz calls 'bran-new brains'.",
+      "Is left by the departed Wizard to rule over the Emerald City in his place."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "The girl who frees him from his pole; his closest friend.",
+      "Tin Woodman": "Fellow traveller; the two look after each other, the Woodman chopping and building where the Scarecrow plans.",
+      "Cowardly Lion": "Travelling companion.",
+      "Wizard": "Gives him bran-and-pin brains and leaves him to rule the Emerald City."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Scarecrow marries",
+        "the Scarecrow is burned to death by the Witch",
+        "the Scarecrow was once a man transformed"
+      ],
+      "sequel_only": [
+        "the Scarecrow rules over the Winkies",
+        "the Scarecrow and Ozma"
+      ]
+    },
+    "hallucination_signals": [
+      "the Scarecrow is set on fire by the Witch and destroyed",
+      "the Scarecrow was once a human",
+      "the Scarecrow marries",
+      "Ozma makes the Scarecrow"
+    ]
+  },
+  "tin_woodman": {
+    "canonical_aliases_book1": [
+      "Tin Woodman"
+    ],
+    "known_facts_book1": [
+      "A woodman made entirely of tin, found rusted motionless in the forest with his axe raised, freed when Dorothy oils his joints.",
+      "Was once a flesh-and-blood Munchkin wood-chopper in love with a Munchkin girl.",
+      "The girl's lazy old-woman guardian bribed the Wicked Witch of the East to enchant his axe, which cut off his limbs, head, and body one by one.",
+      "A tinsmith replaced each severed part with tin, but the new tin body had no heart, so he lost his love for the girl.",
+      "Wants the Great Oz to give him a heart so he can love again.",
+      "Weeps easily and must be careful, because his tears rust his jaw and joints.",
+      "Kills a wildcat that is chasing the Queen of the Field Mice, and beheads the pack of wolves the Wicked Witch of the West sends against the travellers.",
+      "Receives from Oz a heart of silk stuffed with sawdust, placed in his tin chest.",
+      "Is later asked by the Winkies to become their ruler, and agrees to return after Dorothy goes home."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "The girl who oils him free; his devoted friend.",
+      "Scarecrow": "Closest travelling companion.",
+      "Cowardly Lion": "Travelling companion he defends and is defended by.",
+      "Wicked Witch": "Of the East, who enchanted his axe and cost him his flesh body; of the West, his captor whom the group destroys.",
+      "Wizard": "Gives him a silk-and-sawdust heart."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Tin Woodman rules the Winkies during this book",
+        "the Tin Woodman's severed head can still talk",
+        "the girl he loved is named",
+        "Nick Chopper"
+      ],
+      "adaptation_inventions": [
+        "the Tinman",
+        "the Tin Man"
+      ]
+    },
+    "hallucination_signals": [
+      "the Tin Man",
+      "the Tin Woodman is crowned Emperor of the Winkies in this book",
+      "the Tin Woodman's old head speaks",
+      "the Munchkin girl named Nimmie Amee"
+    ]
+  },
+  "cowardly_lion": {
+    "canonical_aliases_book1": [
+      "Cowardly Lion"
+    ],
+    "known_facts_book1": [
+      "A great Lion who bounds out of the forest roaring but is really a coward, ashamed that he trembles whenever there is danger.",
+      "Joins the travellers to ask the Great Oz for courage.",
+      "Knocks the Scarecrow and Tin Woodman about, then feels sorry for striking Toto, whom Dorothy defends.",
+      "Leaps the party across a wide ditch, carrying them one at a time on his back.",
+      "Falls asleep helplessly in the deadly field of scarlet poppies and is too heavy to be carried until the Field Mice haul him out on a truck.",
+      "Frightens the Wizard with a great roar the day the humbug is exposed.",
+      "Receives from Oz a dish of liquid that Oz calls courage, and drinks it down.",
+      "On the journey south is hailed by the animals of a forest as their King after he kills a giant spider that had been devouring them, and agrees to return and reign as King of Beasts."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "The girl he cannot bring himself to harm; his friend and the one who scolds him for striking Toto.",
+      "Scarecrow": "Travelling companion.",
+      "Tin Woodman": "Travelling companion.",
+      "Toto": "The little dog he swats and then apologises for; they end up sleeping side by side.",
+      "Wizard": "Gives him a drink he calls courage."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Lion sings about being the King of the Forest",
+        "the Lion's courage is a medal"
+      ]
+    },
+    "hallucination_signals": [
+      "if I were King of the Forest",
+      "the Wizard gives the Lion a medal for courage",
+      "the Lion is granted a Triple Cross"
+    ]
+  }
+}

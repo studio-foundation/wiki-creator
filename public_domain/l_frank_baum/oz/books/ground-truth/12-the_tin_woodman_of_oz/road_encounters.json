@@ -1,0 +1,201 @@
+{
+  "the_loons": {
+    "canonical_aliases_book1": [
+      "Loons",
+      "Bal Loon",
+      "Panta Loon",
+      "Til Loon"
+    ],
+    "known_facts_book1": [
+      "A tribe of inflated creatures living in a domed clearing in the Gillikin forest, behind a sign warning all strangers not to follow the path to Loonville.",
+      "Are round in body, legs, arms, hands, feet and head, hairless and clothesless, light gray in skin with purple spots for eyes, and covered with warts.",
+      "The warts are mended punctures: **Til Loon** patches every hole with a strand of dried vine from her sash, and each knot becomes a wart.",
+      "**Bal Loon** is their King, chosen — as Panta Loon says — because he has less common sense than the rest of them; he is tied into his throne by a string so he will not float up to the leafy dome.",
+      "**Panta Loon**, the biggest of them, explodes with a sharp report from puffing himself up too far, and is re-inflated deliberately smaller than the rest so he will last longer and be more humble.",
+      "Knock the three travellers flat with soft, boxing-glove hands and bind them with vine tendrils, meaning to have them condemned and perforated.",
+      "Are routed by Woot with a single thorn, popping one after another until the survivors climb into the trees out of reach.",
+      "Cannot leave their clearing, and the Tin Woodman insists they were quite right to capture intruders who had been warned to keep away."
+    ],
+    "known_relations_book1": {
+      "Woot": "The boy whose thorn punctures them.",
+      "Tin Woodman": "Who argues that the Loons were within their rights.",
+      "Bal Loon": "Their King, tied into his throne."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Loons are killed",
+        "the Loons leave Loonville",
+        "King Bal is punctured",
+        "the Loons are made of rubber"
+      ]
+    },
+    "hallucination_signals": [
+      "the Loons are killed",
+      "King Bal is punctured",
+      "the Loons leave their clearing"
+    ]
+  },
+  "tommy_kwikstep": {
+    "canonical_aliases_book1": [
+      "Tommy Kwikstep"
+    ],
+    "known_facts_book1": [
+      "A young Munchkin man with the head and shoulders of a boy and a long horizontal body carried on **twenty legs**, ten on each side.",
+      "Got his name by being able to run an errand more quickly than any other boy, and was proud of it.",
+      "Was granted one Wish by an old lady who was a fairy, or a witch, or something of the sort, in return for carrying magic medicine to another old woman.",
+      "Wasted the Wish by saying aloud, without thinking, 'Dear me; I wish I had twenty legs!' while his legs were weary going uphill.",
+      "Has searched ever since for the fairy, or witch, or whatever she was, and can no longer run because of corns on most of his hundred toes.",
+      "Lives in a hollow tree that fell with age, polished inside, with a door at each end, because it just fits his shape.",
+      "Is restored by Polychrome, who removes ten of his legs — and, when he panics that she will take them all, explains she is only removing the corns from his last ten toes.",
+      "Resolves afterward never to speak again without taking time to think, having learned that speech without thought is dangerous.",
+      "Still has an undelivered note in his pocket, carried since the day the wish was granted."
+    ],
+    "known_relations_book1": {
+      "Polychrome": "The fairy who undoes his wish.",
+      "Scarecrow": "Who tells him that being unlike others is a mark of distinction, and is contradicted."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Tommy Kwikstep finds the fairy who granted his wish",
+        "Tommy Kwikstep joins the party",
+        "Tommy Kwikstep keeps his twenty legs"
+      ]
+    },
+    "hallucination_signals": [
+      "Tommy finds the fairy",
+      "Tommy keeps twenty legs",
+      "Tommy joins the journey"
+    ]
+  },
+  "hip_po_gy_raf": {
+    "canonical_aliases_book1": [
+      "Hip-po-gy-raf"
+    ],
+    "known_facts_book1": [
+      "A huge beast with thick leathery skin and a surprisingly long neck that can shoot up very high or wrinkle down to its shoulders, with a broad flat head, big eyes and mouth and tiny nose and ears.",
+      "Lives in the Invisible Country and hunts by smell, since nothing there can be seen.",
+      "Loves straw above all food and eats all he can find, and refuses hay as inferior — though he nibbles the hay across the ditch because one must eat.",
+      "Is too heavy and clumsy to jump the ditch himself, but can stretch his neck across it.",
+      "Refuses to lift the party over unless he is first given the Scarecrow's straw, and will not be talked out of it.",
+      "Is given the straw by the Scarecrow's own free offer, keeps his word exactly, and ferries every one of them across on his flat head.",
+      "Wanted the straw precisely because it was fresh; musty old straw would not have tempted him.",
+      "Is denied the Scarecrow's head, which is stuffed with brains rather than straw."
+    ],
+    "known_relations_book1": {
+      "Scarecrow": "Whose stuffing he eats and who calls him a philosopher.",
+      "Polychrome": "Who tries and fails to talk him into lifting them for nothing.",
+      "Tin Woodman": "Who threatens him with the axe in defence of his friend's stuffing."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Hip-po-gy-raf eats the Scarecrow's head",
+        "the Hip-po-gy-raf is killed",
+        "the Hip-po-gy-raf breaks his word",
+        "the Hip-po-gy-raf can jump the ditch"
+      ]
+    },
+    "hallucination_signals": [
+      "the Hip-po-gy-raf eats the head",
+      "the beast is killed",
+      "the beast breaks his promise"
+    ]
+  },
+  "the_dragons": {
+    "canonical_aliases_book1": [
+      "the Dragons"
+    ],
+    "known_facts_book1": [
+      "A tribe of a dozen or more enormous Dragons living in an underground cavern, driven from the surface of the earth and allowed out only once in a hundred years to search for food.",
+      "Each is bigger than an elephant and three times as long, scaled in green, purple and orange, with jewelled tail-clusters and moon-like eyes ringed with diamonds that light the cave.",
+      "Eat very rarely: the littlest one has not eaten in eleven years and is scolded for it, another has not feasted in eighty-seven years and dares not get hungry for a dozen more.",
+      "The child Dragon is about six hundred and thirty years old, and his mother has been asleep for over sixty years and meant to sleep forty more.",
+      "Consider thinking very bad for Dragons, and the father refuses to keep track of his children's ages.",
+      "Breathe sheets of flame when they yawn or growl — bright, but not very hot.",
+      "Mean to punish Woot for waking the whole tribe, but cannot decide how; the littlest one asks to eat him and is told he is too small.",
+      "Are escaped, not fought: Woot opens a hole in the cavern roof with the Magic Apron and climbs out into the sunlight."
+    ],
+    "known_relations_book1": {
+      "Woot": "The Green Monkey who falls into their cavern and wakes them."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Dragons eat Woot",
+        "the Dragons are killed",
+        "the Dragons leave their cavern",
+        "the Dragons' flames burn Woot"
+      ]
+    },
+    "hallucination_signals": [
+      "the Dragons eat the monkey",
+      "the Dragons are slain",
+      "the Dragons burn Woot"
+    ]
+  },
+  "the_jaguar": {
+    "canonical_aliases_book1": [
+      "the Jaguar"
+    ],
+    "known_facts_book1": [
+      "An enormous forest beast who leaps on the little Brown Bear from a limb and sends him tumbling, hoping for breakfast.",
+      "Rejects the Bear as straw, the Tin Owl as tin and the Canary as an unreachable fairy, and settles on the Green Monkey as the only edible member of the party.",
+      "Chases Woot from branch to branch and pins him under one paw, only to have the boy vanish into the earth.",
+      "Is fed by Polychrome with **scrambled eggs on toast**, conjured on a green leaf on a stump, after refusing rabbits, squirrels, a meat owl and a fish.",
+      "Admits he prefers rabbits but that the magic breakfast filled him and brought him comfort, and leaves in peace.",
+      "Meets Woot again afterward and tells him he is safe, since jaguars must be careful of their digestions and a green monkey is probably not ripe."
+    ],
+    "known_relations_book1": {
+      "Polychrome": "The fairy who feeds him rather than let him eat anything living.",
+      "Woot": "The monkey he nearly eats and later spares.",
+      "Scarecrow": "The straw-stuffed bear he knocks over first."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Jaguar eats one of the party",
+        "the Jaguar is killed",
+        "the Jaguar eats rabbits in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "the Jaguar eats someone",
+      "the Jaguar is killed",
+      "the Jaguar catches Woot"
+    ]
+  },
+  "the_swynes_and_blue_rabbit": {
+    "canonical_aliases_book1": [
+      "Professor Grunter Swyne",
+      "Mrs. Squealina Swyne",
+      "the Blue Rabbit"
+    ],
+    "known_facts_book1": [
+      "**Professor Grunter Swyne** and **Mrs. Squealina Swyne** are two pigs living in a tiny blue Munchkin house in a hollow on the plain, too small for the travellers to enter.",
+      "The Professor is Professor of Cabbage Culture and Corn Perfection, very famous in his own family, and files his teeth every morning until they are sharp as needles — a warning aimed at butchers.",
+      "They give Woot the run of their garden and the Scarecrow their straw-stack, but do not invite anyone in, being quiet people who do not care for company.",
+      "Are the parents of the **Nine Tiny Piglets** whom the Wizard of Oz took to care for and educate, and who still live in the Emerald City and will always remain children.",
+      "The **Blue Rabbit** is a sky-blue rabbit with deeper blue eyes whose burrow runs under Nimmie Amee's Wall of Solid Air.",
+      "He explains the Wall — solid air, six feet thick, perhaps a mile high, a circle with the house at its centre — and who built it.",
+      "Offers his burrow freely, being no especial friend of Nimmie Amee, who once threw stones at him and yelled 'Shoo!' at him only yesterday.",
+      "Notes that a rabbit may come and go as he pleases, but nothing bigger than he is could get through — which is why Polychrome must shrink the party."
+    ],
+    "known_relations_book1": {
+      "Woot": "Whom the Swynes feed from their garden.",
+      "Scarecrow": "Who gets fresh straw from their stack.",
+      "Nimmie Amee": "Whose wall the Blue Rabbit's burrow undermines and whose cabbages he eats.",
+      "Polychrome": "Who shrinks the party to use the burrow."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Swynes invite the party inside",
+        "the Swynes' piglets live with them",
+        "the Blue Rabbit is a friend of Nimmie Amee",
+        "the Wall of Solid Air is broken"
+      ]
+    },
+    "hallucination_signals": [
+      "the Swynes host the travelers indoors",
+      "the piglets live at home",
+      "the air wall is destroyed",
+      "the rabbit serves Nimmie Amee"
+    ]
+  }
+}

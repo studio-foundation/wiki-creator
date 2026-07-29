@@ -1,0 +1,143 @@
+{
+  "bunbury": {
+    "canonical_aliases_book1": [
+      "Bunbury"
+    ],
+    "known_facts_book1": [
+      "A town where the houses are made of bread and crackers and every man, woman and child is made of buns and bread.",
+      "Its people, alarmed at ravenous human visitors, debate whether to admit Dorothy for fear of being eaten.",
+      "Dorothy visits it while lost, with Toto and Billina.",
+      "Mr. Bunn and Mrs. Over (President of the Bunbury Breakfast) are among its leading citizens.",
+      "Dorothy breakfasts on a bread wheelbarrow and a bread piano, and Billina eats the crumbs, before being driven out."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "The lost visitor whom the bread people fear as an eater.",
+      "Mr. Bunn": "A leading bun citizen of the town."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Bunbury is a rabbit city",
+        "Bunbury is ruled by a King",
+        "Dorothy is imprisoned in Bunbury"
+      ]
+    },
+    "hallucination_signals": [
+      "the rabbits of Bunbury",
+      "the King of Bunbury",
+      "Dorothy is jailed in Bunbury"
+    ]
+  },
+  "bunnybury": {
+    "canonical_aliases_book1": [
+      "Bunnybury"
+    ],
+    "known_facts_book1": [
+      "A city of dressed-up rabbits enclosed by a high marble wall, built and protected by Glinda the Good.",
+      "No one may enter without a letter of introduction from Ozma or Glinda, checked by the Keeper of the Wicket.",
+      "Dorothy grows smaller and smaller to pass through its tiny door, ending up no taller than a rabbit.",
+      "Is ruled by a Rabbit King who whines and weeps and wants to leave his throne for a wild life.",
+      "Dorothy lunches with the King and persuades him to be content and stay, threatening to tell Glinda."
+    ],
+    "known_relations_book1": {
+      "Glinda": "The Sorceress who built and protects the city.",
+      "Keeper of the Wicket": "The gate-rabbit who admits Dorothy.",
+      "Dorothy": "The visitor who cheers up its unhappy Rabbit King."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Bunnybury is a town of bread people",
+        "Bunnybury is a kitchen kingdom",
+        "the rabbits eat Dorothy"
+      ]
+    },
+    "hallucination_signals": [
+      "the bread people of Bunnybury",
+      "Bunnybury is ruled by King Kleaver",
+      "the rabbits attack Dorothy"
+    ]
+  },
+  "fuddles": {
+    "canonical_aliases_book1": [
+      "Fuddles",
+      "Fuddlecumjig"
+    ],
+    "known_facts_book1": [
+      "The people of the town of Fuddlecumjig, made of many small jigsaw-puzzle pieces.",
+      "They scatter themselves into heaps of pieces when strangers approach and must be put back together like a picture puzzle.",
+      "The wagon party matches together the cook, the Lord High Chigglewitz and Grandmother Gnit, who then host a dinner.",
+      "The Lord High Chigglewitz, first name Larry, is the chief personage of the town."
+    ],
+    "known_relations_book1": {
+      "Grandmother Gnit": "A Fuddle whom the visitors piece together.",
+      "Lord High Chigglewitz": "The chief personage of Fuddlecumjig.",
+      "Dorothy": "One of the visitors who reassembles the scattered Fuddles."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Fuddles are made of bread",
+        "the Fuddles are rabbits",
+        "the Fuddles attack the travelers"
+      ]
+    },
+    "hallucination_signals": [
+      "the Fuddles are bread people",
+      "the Fuddles are kitchen utensils",
+      "the Fuddles wage war"
+    ]
+  },
+  "utensia": {
+    "canonical_aliases_book1": [
+      "Utensia"
+    ],
+    "known_facts_book1": [
+      "A kingdom of living kitchen utensils, ruled by King Kleaver, hidden off any path in the forest.",
+      "Its Spoon Brigade, spoons carrying swords and muskets, capture Dorothy, Toto and Billina.",
+      "Dorothy is brought before King Kleaver and the utensils debate what to do with the prisoners.",
+      "Dorothy laughs off the danger and leaves without harm, finding no food she can eat there."
+    ],
+    "known_relations_book1": {
+      "King Kleaver": "The ruler of Utensia.",
+      "Dorothy": "The prisoner captured by the Spoon Brigade."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Utensia is a rabbit city",
+        "Utensia is made of bread",
+        "Dorothy is executed in Utensia"
+      ]
+    },
+    "hallucination_signals": [
+      "the rabbits of Utensia",
+      "Utensia is a bread town",
+      "Dorothy is beheaded in Utensia"
+    ]
+  },
+  "rigmarole_town": {
+    "canonical_aliases_book1": [
+      "Rigmarole Town",
+      "Rigmaroles"
+    ],
+    "known_facts_book1": [
+      "A town whose people, the Rigmaroles, speak in endless long-winded speeches using many words but saying little.",
+      "A boy and a woman there answer simple questions with streams of words that never seem to end.",
+      "The wagon party gives up and moves on rather than wait for the Rigmaroles to finish.",
+      "People who become too long-winded elsewhere in Oz are sent to live in Rigmarole Town."
+    ],
+    "known_relations_book1": {
+      "the Wizard": "Who guides the party there and laughs at the endless talk.",
+      "Dorothy": "A visitor who loses track of what the Rigmaroles are saying."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Rigmaroles are made of bread",
+        "the Rigmaroles are rabbits",
+        "the Rigmaroles imprison Dorothy"
+      ]
+    },
+    "hallucination_signals": [
+      "the bread people of Rigmarole Town",
+      "the Rigmaroles are kitchen utensils",
+      "the Rigmaroles capture the travelers"
+    ]
+  }
+}

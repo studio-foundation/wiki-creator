@@ -1,0 +1,81 @@
+{
+  "polychrome": {
+    "canonical_aliases_book1": [
+      "Polychrome",
+      "the Rainbow's Daughter"
+    ],
+    "known_facts_book1": [
+      "A sky fairy, the sweetest, merriest and most reckless of the dancing Daughters of the Rainbow, whose home is the Cloud Palaces in the sky.",
+      "Is stranded on earth for the second time after dancing down the arch of the bow and lingering on the ground until it lifted without her.",
+      "Cannot be injured by a nome, cannot be caught by Guph or Ruggedo, and flits from place to place faster than they can grab.",
+      "Sips a few dewdrops by moonlight for refreshment, and is served a dish of fresh sparkling dewdrops at Queen Erma's feast.",
+      "Refuses Ruggedo's offer to make her Queen of all his nomes and live in his jeweled cavern.",
+      "Is the one who wakes Quox — not by pounding on his eyelids, which fails, but by jerking the pearl necklace and the great locket around his neck.",
+      "Names the rule that every charm has its antidote, which is what forces Ruggedo to try to remember how to undo the ugliness.",
+      "Breaks the charm of ugliness with her kiss, having never kissed a mortal man in all the thousands of years she has existed.",
+      "The Rain King is her uncle; when the rain comes and the clouds break, the Rainbow descends to her feet and her sisters take her home.",
+      "Leaves before the end of the book and does not go to the Land of Oz."
+    ],
+    "known_relations_book1": {
+      "Betsy Bobbin": "Her friend and fellow guest of the Queen of Light.",
+      "Shaggy Man": "Whom the Love Magnet makes her love, and whose brother she restores with a kiss.",
+      "Quox": "The dragon she alone manages to wake.",
+      "the Ugly One": "The man whose enchantment her fairy kiss breaks.",
+      "Ruggedo": "The Nome King who covets her and cannot touch her."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Polychrome goes to the Land of Oz in this book",
+        "Polychrome is captured by Ruggedo",
+        "Polychrome loses her fairy powers",
+        "Polychrome stays with Shaggy at the end"
+      ]
+    },
+    "hallucination_signals": [
+      "Polychrome is captured",
+      "Polychrome goes to the Emerald City",
+      "Polychrome becomes mortal",
+      "Polychrome marries Shaggy"
+    ]
+  },
+  "tik_tok": {
+    "canonical_aliases_book1": [
+      "Tik-Tok",
+      "the Clockwork Man"
+    ],
+    "known_facts_book1": [
+      "A copper mechanical man engraved 'SMITH & TINKER'S Patent Double-Action, Extra-Responsive, Thought-Creating, Perfect-Talking MECHANICAL MAN', guaranteed to work perfectly for a thousand years.",
+      "Is wound in three places by three separate keys: thinking under the left arm (No. 1), speaking under the right arm (No. 2), walking and action in the middle of the back (No. 3).",
+      "Was sent by Ozma to find the Shaggy Man and tell him where his brother was, and was transported to the spot by Glinda in the wink of an eye.",
+      "Was met on arrival by Ruggedo, who threw him down an old dry well at a crossroads, where he lay run-down until Shaggy hauled him up with the windlass hook.",
+      "His machinery will not allow him to lie, nor allow his thoughts to think falsely — which is why Tititi-Hoochoo accepts his account and seats him on the throne.",
+      "Is made the Private Soldier of the Army of Oogaboo after Files resigns, carrying Files's gun, and is honored above all the officers by the Great Jinjin.",
+      "Marches alone into Ruggedo's cavern, avoids the covered pit that swallows all the officers and the Queen, and declares the King conquered.",
+      "Is tripped by Kaliko kicking his knee-joints, then pinned to the floor under a heavy diamond, and is nearly melted in a white-hot gold crucible.",
+      "Opens the barred door at last by pounding the King's gong, which brings Kaliko running.",
+      "Is transported back to Ozma's palace in Oz by the Wizard's magic before the others, and praises Betsy as almost as nice as Dorothy herself."
+    ],
+    "known_relations_book1": {
+      "Shaggy Man": "His old friend, whom Ozma sent him to assist and who pulls him from the well.",
+      "Betsy Bobbin": "Winds him up and promises to keep him wound.",
+      "Ruggedo": "The Nome King who threw him down the well and wanted to melt him into copper pennies.",
+      "Ann Soforth": "The Queen whose entire Army he becomes.",
+      "Quox": "The dragon who scorns him as a dummy that runs down.",
+      "Tititi-Hoochoo": "The Jinjin who honors him with a seat on the throne."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Tik-Tok conquers Ruggedo",
+        "Tik-Tok is melted down",
+        "Tik-Tok fires his gun",
+        "Tik-Tok can lie"
+      ]
+    },
+    "hallucination_signals": [
+      "Tik-Tok conquers the Nome King",
+      "Tik-Tok is melted into pennies",
+      "Tik-Tok shoots the nomes",
+      "Tik-Tok tells a lie"
+    ]
+  }
+}

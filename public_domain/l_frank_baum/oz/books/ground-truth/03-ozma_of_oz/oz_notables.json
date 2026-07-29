@@ -1,0 +1,60 @@
+{
+  "glinda": {
+    "canonical_aliases_book1": [
+      "Glinda",
+      "Glinda the Good"
+    ],
+    "known_facts_book1": [
+      "A friendly sorceress of the Land of Oz, called Glinda the Good and Glinda the Sorceress.",
+      "Gives Ozma the magic carpet that unrolls itself, making it possible to cross the deadly desert to Ev.",
+      "Once fought a battle against Jinjur's army of women.",
+      "Receives Dorothy and Ozma graciously and advises Dorothy about the magic belt.",
+      "Explains that the belt keeps its magic only in a fairy country, so a wish to Australia would fulfil itself but lose the belt.",
+      "Approves Dorothy's plan to give the belt to Ozma and be wished home without destroying it."
+    ],
+    "known_relations_book1": {
+      "Ozma": "The Ruler she equips with the magic carpet and advises.",
+      "Dorothy": "The girl she counsels about safely using the magic belt.",
+      "Jinjur": "Whose army of women she once fought."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Glinda joins the expedition to the Nome King",
+        "Glinda's Great Book of Records"
+      ]
+    },
+    "hallucination_signals": [
+      "Glinda travels to the Nome King's palace",
+      "Glinda's Book of Records",
+      "Glinda is the Wicked Witch",
+      "Glinda gives Dorothy the silver shoes"
+    ]
+  },
+  "jinjur": {
+    "canonical_aliases_book1": [
+      "Jinjur"
+    ],
+    "known_facts_book1": [
+      "A lively young woman who once assembled an army of girls, drove the Scarecrow from the Emerald City throne, and fought Glinda's army.",
+      "Now met as a pretty dairy-maid who gives Ozma a bowl of milk on the road to the Emerald City.",
+      "Has married a man who owns nine cows and says she is content to lead a quiet life.",
+      "Reports her husband is indoors nursing a black eye for insisting on milking the wrong cow."
+    ],
+    "known_relations_book1": {
+      "Ozma": "The Ruler she serves milk to and curtsies before, her rebellion long past.",
+      "Scarecrow": "Whom she once drove from the Emerald City throne.",
+      "Glinda": "Whose army she once fought."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Jinjur leads an army in this book",
+        "Jinjur conquers the Emerald City"
+      ]
+    },
+    "hallucination_signals": [
+      "Jinjur leads an army of girls",
+      "Jinjur seizes the throne",
+      "Jinjur is a soldier in Ozma's army"
+    ]
+  }
+}

@@ -1,0 +1,166 @@
+{
+  "dorothy": {
+    "canonical_aliases_book1": [
+      "Dorothy",
+      "Princess Dorothy"
+    ],
+    "known_facts_book1": [
+      "A little Kansas girl who lives in luxurious rooms in Ozma's Royal Palace, is a Princess of Oz but dislikes being called one, and is the most popular person in Oz next to Ozma.",
+      "Spends the first half of the book hunting for a birthday present for Ozma, asking Trot, Cap'n Bill, the Patchwork Girl, the Tin Woodman, the Scarecrow, the Pink Kitten, Toto and finally Glinda.",
+      "Is told by Toto that the best present is her love, and by the Pink Kitten that it is milk, and rejects both.",
+      "Takes the Sawhorse and the Red Wagon to Glinda's castle, and is advised there to make a **surprise cake**.",
+      "Invents the Surprise Cake herself: a hollow under the frosting holding monkeys three inches high who break out, dance, and hand each guest a piece of cake.",
+      "Makes the Wizard her partner in the present, since he must shrink and train the monkeys.",
+      "Rides the Cowardly Lion into the Forest of Gugu, introduces herself to the Leopard King as 'just Dorothy', and explains that the Lion is cowardly but not a coward.",
+      "Is transformed into a **woolly Lamb**, and says she would rather be the way she was born than anything else in the whole world.",
+      "**Thinks of the solution that frees Trot and Cap'n Bill**: transform them into bumblebees so the roots go with the transformation, let them fly across, and change them back on the far bank.",
+      "Believes for a moment that the Lion and Tiger have eaten her friends, and nearly faints with relief when the two bees speak in her ear.",
+      "Proposes the second use of the **Fountain of the Water of Oblivion** — restore the two magicians thirsty, with a cup set ready — so they forget all the magic they ever knew.",
+      "Sits beside the restored Kiki Aru on the bench and finds he is only a boy."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Her dearest friend, whose birthday the whole book turns on.",
+      "the Wizard of Oz": "Her firm friend and partner in the Surprise Cake.",
+      "the Cowardly Lion": "Her mount into the Forest of Gugu.",
+      "Trot": "Her friend, whom she helps rescue.",
+      "Toto": "Her little black dog, left at home."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "ruby slippers",
+        "there is no place like home",
+        "Miss Gulch"
+      ],
+      "not_in_this_book": [
+        "Dorothy goes to the Magic Isle",
+        "Dorothy works magic herself",
+        "Dorothy meets Kiki Aru on Mount Munch",
+        "Dorothy returns to Kansas"
+      ]
+    },
+    "hallucination_signals": [
+      "Dorothy steps on the Magic Isle",
+      "Dorothy works magic",
+      "ruby slippers",
+      "Dorothy returns to Kansas"
+    ]
+  },
+  "the_wizard": {
+    "canonical_aliases_book1": [
+      "the Wizard",
+      "the Wizard of Oz",
+      "the Little Wizard of Oz"
+    ],
+    "known_facts_book1": [
+      "A little man with a bald head, sharp eyes and a round jolly face, who studies magic in a high tower of Ozma's palace and is a great favorite because he is neither haughty nor proud.",
+      "Owes all his magical arts to Glinda, and says plainly that Glinda's magic is better than his.",
+      "Becomes Dorothy's partner in the birthday present, agreeing to shrink and train the monkeys.",
+      "Chooses the Cowardly Lion and the Hungry Tiger over the Red Wagon for the journey, since the Red Wagon could not get through the thick forests.",
+      "Is transformed into a **Fox** and loses his Black Bag of Magic Tools in the same instant, and says that without it he loses much of his power.",
+      "Follows the two conspirators through the forest as a fox, hides inside a hollow tree, and by pure chance it is the same hollow Kiki whispers the Magic Word into.",
+      "Waits deliberately to hear the word several times so it will be fixed in his mind, then turns Kiki into a **hickory-nut** and, after one failed attempt with the wrong accent, Ruggedo into a **walnut**.",
+      "Restores himself and then every other victim, and carries both nuts in his pocket.",
+      "Bargains with Rango: the six giant soldiers restored in exchange for twelve monkeys borrowed until after Ozma's birthday.",
+      "Carries a magic **little axe** that hews a path through tangled jungle to an order in verse, and a magic **little saw** that shapes a board fitted to the Lion's back.",
+      "Fails for almost an hour to free Trot and Cap'n Bill — powders, a violet smoke, a black ball fired from a silver pistol, the growing pincers — and refuses the axe when told the roots are flesh.",
+      "Says breaking an enchantment is like unlocking a door: all you need is to find the right key, and if you have not got the right key you must make it.",
+      "Punishes the Glass Cat by refusing to wash the blue mud off her, calling it tit-for-tat for the tail-pulling.",
+      "Doubts freeing the two magicians at all, warning Ozma that the one bit of magic he took from them is so simple and so powerful that neither he nor Glinda can equal it."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "His partner in the Surprise Cake.",
+      "Kiki Aru": "The boy whose secret he overhears and whose magic he turns against him.",
+      "Ruggedo": "The old enemy he turns into a walnut.",
+      "Glinda": "The Sorceress he owes all his arts to.",
+      "Rango": "The Gray Ape he bargains with for monkeys."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "the man behind the curtain",
+        "a humbug balloon ride home"
+      ],
+      "not_in_this_book": [
+        "the Wizard frees Trot and Cap'n Bill with his own magic",
+        "the Wizard invents the Magic Word",
+        "the Wizard keeps the Magic Word secret from Ozma",
+        "Glinda breaks the enchantments"
+      ]
+    },
+    "hallucination_signals": [
+      "the Wizard's own magic frees Trot",
+      "the Wizard invents Pyrzqxgl",
+      "Glinda breaks the spells",
+      "the Wizard fails to be restored"
+    ]
+  },
+  "cowardly_lion": {
+    "canonical_aliases_book1": [
+      "the Cowardly Lion"
+    ],
+    "known_facts_book1": [
+      "A great Lion, bigger and more powerful than any lion in the Forest of Gugu, who lives in the marble stables behind the Royal Palace and calls himself King of all Beasts the world over.",
+      "Carries Dorothy into the forest and states that he has not come to rule there — Gugu is King and he comes as a guest.",
+      "Is vouched for by the forest's own lions, who bow low and say they saw him fight the terrible Kalidahs and conquer them.",
+      "Is defended by Dorothy with the book's neatest distinction: he is always afraid, and that is why he is cowardly, but he is a terrible fighter, and that is why he is not a coward.",
+      "Is transformed into a **little Munchkin boy** in Munchkin costume — angry, small and helpless.",
+      "Volunteers, frightened, to swim to the Magic Isle for the raft, and drags it back with three legs while holding it with one paw.",
+      "Eats one of two bumblebees for lunch, and is horrified with everyone else to learn who two bumblebees on that river were — though the ones he ate were not Trot and Cap'n Bill.",
+      "Carries the golden flower-pot home on a board sawn to fit his back, with Cap'n Bill walking beside to steady it.",
+      "Is called 'Good doggie!' by the memory-less Ruggedo at the fountain and growls indignantly."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Whom he carries and defends.",
+      "the Hungry Tiger": "His companion, who lives with him in the Emerald City.",
+      "Gugu": "The Leopard King whose forest he enters as a guest.",
+      "Kiki Aru": "The magician who makes him a Munchkin boy."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Cowardly Lion fights Gugu",
+        "the Cowardly Lion eats Trot",
+        "the Cowardly Lion becomes King of the forest",
+        "the Cowardly Lion steps on the Magic Isle"
+      ]
+    },
+    "hallucination_signals": [
+      "the Lion fights Gugu",
+      "the Lion eats Trot",
+      "the Lion rules the forest",
+      "the Lion is rooted to the island"
+    ]
+  },
+  "hungry_tiger": {
+    "canonical_aliases_book1": [
+      "the Hungry Tiger"
+    ],
+    "known_facts_book1": [
+      "A monstrous Tiger who lives with the Cowardly Lion in the marble stables of the Royal Palace and carries the Wizard into the Forest of Gugu.",
+      "Says of himself that he is always hungry for fat babies, that there are plenty of them in Oz, and that his tender conscience will never let him eat one.",
+      "**Works out who the magician is** before anyone else: he watches the transformations, hears Ruggedo shout 'Stop, Kiki—stop!' and springs on the Li-Mon-Eag crouching against the rock.",
+      "Bears Kiki to the earth just as the word is spoken for the fifth time, and is himself changed to a **rabbit** in mid-spring, which is what lets the boy escape.",
+      "Bends two bars of the monkeys' cage swiping at the Glass Cat in the night, which is how the monkeys get out to take their revenge.",
+      "Eats one of the two bumblebees found near the river bank, remarking it was little enough for lunch.",
+      "Carries Trot and Dorothy and the cage of monkeys home from the river."
+    ],
+    "known_relations_book1": {
+      "the Cowardly Lion": "His true and tried friend.",
+      "the Wizard of Oz": "Whom he carries into the forest.",
+      "Kiki Aru": "The magician he alone identifies and attacks.",
+      "the Glass Cat": "Whose racket he tries to stop."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Hungry Tiger eats a baby",
+        "the Hungry Tiger eats Trot",
+        "the Hungry Tiger catches Kiki Aru",
+        "the Hungry Tiger stays a rabbit"
+      ]
+    },
+    "hallucination_signals": [
+      "the Tiger eats a baby",
+      "the Tiger eats Trot",
+      "the Tiger captures Kiki",
+      "the Tiger remains a rabbit"
+    ]
+  }
+}

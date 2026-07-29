@@ -1,0 +1,151 @@
+{
+  "pingaree": {
+    "canonical_aliases_book1": [
+      "Pingaree"
+    ],
+    "known_facts_book1": [
+      "An island four miles long and at most a mile wide in the Nonestic Ocean, four days' journey by boat north of the Kingdom of Rinkitink.",
+      "Looks to the gulls like a huge green wedge lying on the water; its trees form one continuous grove under whose canopy all the cosy houses stand, so it has no town or city.",
+      "Along its whole coast are found the largest and finest pearls in the world, grown in the shells of big oysters and raked up by the people and carried to their King.",
+      "Sends six boats of pearls each year to Gilgad and receives merchandise and food back.",
+      "Drove back an earlier raid of ten boatloads from Regos and Coregos when Kitticut was a boy, its people armed only with oyster rakes; a great storm afterwards destroyed the raiders.",
+      "Is destroyed utterly in this book — every house torn down or burned, every boat taken, every inhabitant enslaved, the marble palace pulled down with ropes until nothing remains but scattered blocks.",
+      "Is rebuilt by its own people under Nikobob's direction, with prettier houses, green lawns and flower gardens, and a palace more magnificent than before.",
+      "Is where the three Magic Pearls end the book, back in the secret cavity under the tiled floor of the new banquet hall."
+    ],
+    "known_relations_book1": {
+      "King Kitticut": "Its lord and ruler.",
+      "Inga": "Its Prince and heir.",
+      "Nikobob": "The charcoal-burner who rebuilds it and becomes its Lord High Chamberlain."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Pingaree is in the Land of Oz",
+        "Pingaree is never rebuilt",
+        "Pingaree has a city"
+      ]
+    },
+    "hallucination_signals": [
+      "Pingaree is part of Oz",
+      "Pingaree remains in ruins",
+      "the city of Pingaree"
+    ]
+  },
+  "regos": {
+    "canonical_aliases_book1": [
+      "Regos"
+    ],
+    "known_facts_book1": [
+      "An island ten miles wide and forty long, ruled by King Gos, with green fertile fields near the shore and rugged mountains behind where nothing will grow.",
+      "Its mountains hold gold and silver mines worked by slaves captured in many countries, who live and sleep in huge hollowed caverns and never see the light of day.",
+      "Its City of Regos stands on the level green meadows and swarms with thousands of fierce warriors, making it dangerous for any peaceful person to live in.",
+      "Its forests are crossed by narrow paths to the mines, and were the haunt of Choggenmugger until Nikobob destroyed the beast.",
+      "Is joined to Coregos by a bridge of boats set close together with planks laid across, which can be quickly removed in danger — and is, three times in this book.",
+      "Is conquered by Inga without a single blow, and later left in the charge of Captain Buzzub after its King and Queen have fled and drowned."
+    ],
+    "known_relations_book1": {
+      "King Gos": "Its ruler, who abandons it.",
+      "Inga": "The boy who bursts its gates and takes the city.",
+      "Nikobob": "Its charcoal-burner, who leaves it for Pingaree."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Regos is in the Land of Oz",
+        "Nikobob becomes King of Regos",
+        "Inga rules Regos at the end"
+      ]
+    },
+    "hallucination_signals": [
+      "Regos is part of Oz",
+      "Nikobob rules Regos",
+      "Inga keeps Regos"
+    ]
+  },
+  "coregos": {
+    "canonical_aliases_book1": [
+      "Coregos"
+    ],
+    "known_facts_book1": [
+      "The twin island beside Regos, so close that one might throw a stone from one shore to the other, but only half the size.",
+      "Is not mountainous but a rich and pleasant country covered with fields of grain, whose harvest feeds the warriors and citizens of both islands.",
+      "Is ruled by Queen Cor, wedded to King Gos, and worked by slaves who are mostly women.",
+      "Holds Queen Cor's City of Coregos on the side facing Regos, and the royal dairy where Queen Garee is set to make butter.",
+      "Is where Inga is captured by Queen Cor's own arms, and where his mother is taken from just before he can find her."
+    ],
+    "known_relations_book1": {
+      "Queen Cor": "Its ruler.",
+      "Queen Garee": "Its dairy slave.",
+      "Zella": "Who crosses the bridge of boats to sell honey there."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Coregos is mountainous",
+        "Coregos holds the mines",
+        "Coregos is in the Land of Oz"
+      ]
+    },
+    "hallucination_signals": [
+      "the mines of Coregos",
+      "Coregos is mountainous",
+      "Coregos is part of Oz"
+    ]
+  },
+  "gilgad": {
+    "canonical_aliases_book1": [
+      "Gilgad"
+    ],
+    "known_facts_book1": [
+      "The city of the Kingdom of Rinkitink, close to the Nonestic Ocean, where King Rinkitink's palace stands on a rocky headland and serves as a lighthouse.",
+      "Is where the pearls of Pingaree are bought by the King's treasurer, and the source of Rinkitink's kingdom's wealth and glory.",
+      "Is separated from the Nome Country by a row of high, steep mountains beneath which a powerful river runs, so that Kaliko and Rinkitink are neighbours who have never met.",
+      "Sends fifty decorated boats under Lord Pinkerbloo to search every island of the Nonestic Ocean for its missing King.",
+      "Is the place Rinkitink most dreads returning to, because reigning means three hours a day on a throne, corns on his heels at receptions, and endless petitions."
+    ],
+    "known_relations_book1": {
+      "Rinkitink": "Its King, who runs away from it and is finally dragged back.",
+      "Pinkerbloo": "The Lord who leads the search fleet.",
+      "Kaliko": "The neighbouring King who has never met its King."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Gilgad is visited in this book",
+        "Gilgad is in the Land of Oz",
+        "Gilgad crowns a new King"
+      ]
+    },
+    "hallucination_signals": [
+      "the party visits Gilgad",
+      "Gilgad is part of Oz",
+      "Gilgad crowns a new King"
+    ]
+  },
+  "three_trick_caverns": {
+    "canonical_aliases_book1": [
+      "Three Trick Caverns"
+    ],
+    "known_facts_book1": [
+      "Three roughly hewn caverns of the Nome King from which, Kaliko says, no one has escaped alive in hundreds of years.",
+      "Are reached by pivoting Inga's whole bedroom on its axis in the night, so the door that led to Rinkitink's room now opens on a dim corridor instead.",
+      "The last cavern holds a chained iron post and a hairy red giant with eyes like disks of flame, who challenges Inga to wrestle and is killed by an iron post hurled at his forehead.",
+      "The middle cavern's entire floor falls away into an abyss with a rushing torrent far below, and must be crossed in one leap.",
+      "The first cavern becomes one monster furnace, its whole floor a bed of glowing coals, crossed on stepping-stones Inga tears from the corridor walls.",
+      "Inga survives all three with the Blue Pearl alone, having lent the Pink Pearl to Rinkitink — the strength saves him, the protection is elsewhere."
+    ],
+    "known_relations_book1": {
+      "Kaliko": "Their owner, who feeds Inga into them.",
+      "Inga": "The only person in hundreds of years to come out alive."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Rinkitink enters the Three Trick Caverns",
+        "Inga is protected in the Three Trick Caverns",
+        "Inga is rescued from the caverns"
+      ]
+    },
+    "hallucination_signals": [
+      "Rinkitink enters the caverns",
+      "Inga is rescued from the caverns",
+      "the Pink Pearl saves Inga there"
+    ]
+  }
+}

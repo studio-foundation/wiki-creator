@@ -29,10 +29,15 @@ Séries couvertes à ce jour :
 | Narnia | `library/c_w_lewis/narnia/books/ground-truth/` | `aslan`, `the_four_children`, `white_witch`, `tumnus`, `the_beavers`, `maugrim`, `narnia_and_cair_paravel`, `professor_and_macready` |
 | Inheritance (Eragon) | `library/christopher_paolini/inheritance/books/ground-truth/` | `eragon`, `saphira`, `brom`, `murtagh`, `arya`, `antagonists`, `varden`, `angela_and_solembum`, `carvahall` |
 | Alice (public domain) | `public_domain/lewis_carroll/alice/books/ground-truth/` | `alice`, `white_rabbit`, `mad_tea_party`, `mice`, `court_of_hearts`, `duchess_household`, `caterpillar_and_pigeon`, `mock_turtle_and_gryphon`, `pool_of_tears`, `minor_and_offstage` |
+| Oz (public domain, 14 tomes) | `public_domain/l_frank_baum/oz/books/ground-truth/<NN-tome>/` | un sous-répertoire par tome (`01-the_wonderful_wizard_of_oz/` … `14-glinda_of_oz/`), chacun avec ses propres fichiers ; les tomes 7–14 portent en plus un `README.md` qui documente ce que le corpus est fait pour attraper |
 
 Le chemin est `<book_dir>/books/ground-truth/` — pour un livre du domaine public, `book_dir` est sous `public_domain/`, pas sous `library/`.
 
-Si le répertoire n'existe pas pour la série auditée, l'étape 1b est **n/a** — le noter explicitement dans l'audit plutôt que de la sauter en silence.
+**Série mono-tome** (Alice, Narnia, TOG, Eragon dans le set démo) : les fichiers GT vivent à plat dans `books/ground-truth/`, et le corpus décrit le tome 1. **Série multi-tome** (Oz) : chaque tome a un sous-répertoire `books/ground-truth/<NN-tome>/`, car le cast et surtout l'ensemble `forbidden` sont propres au tome (le Nome King est absent des tomes 1–2, ennemi juré aux tomes 3 et 6 — STU-719). Pour auditer un tome donné, pointer `GT_DIR` sur son sous-répertoire ; les champs restent nommés `_book1` (le loader les code en dur — c'est le répertoire qui désambiguïse le tome, pas le suffixe).
+
+Les corpus Oz 1–6 ont été écrits contre un roster généré ; **les tomes 7–14 n'ont jamais été exécutés**, donc leurs corpus sont dérivés du seul texte du tome. Concrètement : ils couvrent ce qu'un lecteur attendrait comme pages, pas ce qu'un run a effectivement produit — un `entity_key` sans page correspondante y est une lacune de couverture à signaler, pas un défaut du corpus.
+
+Si le répertoire n'existe pas pour la série/tome audité, l'étape 1b est **n/a** — le noter explicitement dans l'audit plutôt que de la sauter en silence.
 
 Chaque fichier contient :
 - `canonical_aliases_book1` — noms valides pour ce livre

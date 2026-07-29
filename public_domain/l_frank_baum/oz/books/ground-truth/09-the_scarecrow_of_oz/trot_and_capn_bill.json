@@ -1,0 +1,86 @@
+{
+  "trot": {
+    "canonical_aliases_book1": [
+      "Trot"
+    ],
+    "known_facts_book1": [
+      "A very little girl from California with big solemn eyes and an earnest, simple manner, whose faithful companion for years has been Cap'n Bill.",
+      "It is said the fairies were present at her birth and marked her forehead with invisible mystic signs, so that she is able to see and do many wonderful things.",
+      "Is drawn into a great whirlpool while rowing with Cap'n Bill to visit the sea caves, and is carried by unseen arms through the ocean into a domed cavern.",
+      "Eats a lavender berry on Pessim's island and shrinks small enough to ride in her own sunbonnet, tied round the Ork's neck, and regains her size by eating a dark purple berry.",
+      "Watches through the window of Blinkie's house while Gloria's heart is frozen, and is chased across Jinxland by the Wicked Witch.",
+      "Unlocks the door of the room where King Krewl has imprisoned Gloria and tries to comfort her.",
+      "Restuffs the Scarecrow with his own straw after Blinkie pulls him apart, and later pins his head firmly back on when it works loose.",
+      "Recognizes Cap'n Bill in the gray grasshopper by its wooden leg, and weeps over him.",
+      "Is turned out of King Krewl's castle by his order and takes refuge in Pon's hut.",
+      "Is invited by Ozma to the Emerald City at the end and given a room next to Dorothy's, hoping to be allowed to live always in the Land of Oz."
+    ],
+    "known_relations_book1": {
+      "Cap'n Bill": "Her faithful comrade and guardian, who taught her almost everything she knows.",
+      "Button-Bright": "An old friend from their journey to Sky Island, who never plagues her.",
+      "the Ork": "The creature who carries them out of the caverns and across the desert.",
+      "Scarecrow": "Sent by Glinda to protect her; she restuffs him twice.",
+      "Gloria": "The Princess she pities and tries to comfort, before and after the heart-freezing.",
+      "Pon": "The gardener's boy she searches Jinxland with.",
+      "Dorothy": "The Oz girl who comes to meet her at Glinda's palace.",
+      "Blinkie": "The Wicked Witch who chases her for spying on the incantation."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "ruby slippers",
+        "Over the Rainbow"
+      ],
+      "not_in_this_book": [
+        "Trot comes from Kansas",
+        "Trot breaks the enchantment on Cap'n Bill",
+        "Trot returns to California at the end",
+        "Trot arrives in Oz by cyclone"
+      ]
+    },
+    "hallucination_signals": [
+      "Trot is from Kansas",
+      "Trot breaks the grasshopper spell",
+      "Trot returns home to California",
+      "Trot is Dorothy's sister"
+    ]
+  },
+  "capn_bill": {
+    "canonical_aliases_book1": [
+      "Cap'n Bill"
+    ],
+    "known_facts_book1": [
+      "An old sailor-man, bald and bronzed with pale blue eyes and big ears, whose left leg is missing from the knee down and replaced with a wooden one.",
+      "Lost his leg at about the time Trot was born and has lived with her mother as a star boarder ever since, devoting himself to the girl's education and companionship.",
+      "Carries in the pockets of his oilskin sou'wester an assortment of jackknives, cord, fishhooks, nails, candles, matches in a tin box, a small metal flask and a wooden box with a sliding cover.",
+      "Breaks an oar trying to pull the boat clear of the whirlpool, and is dragged down with Trot into the cavern under the sea.",
+      "Ties strings to twenty of the Mo birds while they eat popcorn, then feeds three of them the purple berries so they grow to the size of ostriches and can carry the party.",
+      "Makes swings for the three birds out of the Bumpy Man's old gray suit, cut into strips and twisted into rope.",
+      "Is transformed into a gray grasshopper with a wooden left leg by Blinkie while asleep in King Krewl's castle, and escapes out the window.",
+      "Never once grumbles about being a grasshopper, which Ozma remarks on approvingly while watching in the Magic Picture.",
+      "Is restored to his own form by Blinkie, on the Scarecrow's command, and falls on the Scarecrow because of his sudden weight.",
+      "Hooks the drowning Scarecrow out of the Ruby Cavern pool with his wooden leg.",
+      "Is given a room next to Trot's in Ozma's palace, overlooking the gardens."
+    ],
+    "known_relations_book1": {
+      "Trot": "The little girl he has raised and guarded since she was a baby.",
+      "the Ork": "The creature that flies them out of the caverns and over the desert.",
+      "Blinkie": "The Wicked Witch who turns him into a grasshopper and is forced to undo it.",
+      "King Krewl": "The King who suspects him of being a powerful wizard and has him enchanted.",
+      "Scarecrow": "Whose straw he empties and whose head he carries after the waterfall."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Cap'n Bill is a wizard",
+        "Cap'n Bill has magic powers",
+        "Cap'n Bill remains a grasshopper",
+        "Cap'n Bill returns to California"
+      ]
+    },
+    "hallucination_signals": [
+      "Cap'n Bill works magic",
+      "Cap'n Bill stays a grasshopper",
+      "Cap'n Bill is a wizard",
+      "Cap'n Bill goes home"
+    ]
+  }
+}

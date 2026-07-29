@@ -1,0 +1,225 @@
+{
+  "toto": {
+    "canonical_aliases_book1": [
+      "Toto"
+    ],
+    "known_facts_book1": [
+      "Dorothy's little black dog, named only in the author's preface, absent from the story itself.",
+      "Explicitly left in Kansas while Dorothy was in California, so she took the kitten Eureka on her adventure instead.",
+      "Never appears, never speaks, and meets no one in this book."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "His mistress, who travels without him this time.",
+      "Eureka": "The kitten who takes his place as Dorothy's companion; they never meet."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Toto appears",
+        "Toto travels with Dorothy",
+        "Toto falls into the earthquake",
+        "Toto goes to the Land of Oz",
+        "Toto meets Eureka"
+      ]
+    },
+    "hallucination_signals": [
+      "Toto barked",
+      "Toto and Dorothy fell",
+      "Toto met the Wizard",
+      "Dorothy hugged Toto",
+      "Toto in the Land of Oz"
+    ]
+  },
+  "mombi": {
+    "canonical_aliases_book1": [
+      "Mombi"
+    ],
+    "known_facts_book1": [
+      "A Wicked Witch named only in Ozma's account of the past of Oz.",
+      "Stole and imprisoned Ozma's grandfather and then her father, and transformed the infant Ozma into a boy.",
+      "Was long ago conquered by a good Witch of the North.",
+      "Only spoken about; never appears, never speaks, and meets no one in this book."
+    ],
+    "known_relations_book1": {
+      "Ozma": "The rightful Princess she enchanted into a boy, recounted in the past.",
+      "the Wizard": "Hears the account of her from Ozma; they never meet in this book."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Mombi appears",
+        "Mombi speaks",
+        "Mombi casts a spell in this book",
+        "Mombi meets Dorothy",
+        "Mombi confronts the Wizard"
+      ]
+    },
+    "hallucination_signals": [
+      "Mombi appeared",
+      "Mombi transformed the kitten",
+      "Mombi said",
+      "Mombi confronts Dorothy"
+    ]
+  },
+  "nome_king": {
+    "canonical_aliases_book1": [
+      "Nome King"
+    ],
+    "known_facts_book1": [
+      "Named only by reference: the Magic Belt is his, captured from him by Dorothy and left with Ozma.",
+      "Cited once by Dorothy, alongside the Wicked Witch, as a past enemy.",
+      "Billina recounts past adventures with him in the Land of Ev.",
+      "Never appears, never speaks, and meets no one in this book."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "A past enemy from whom she took the Magic Belt; they never meet in this book.",
+      "Ozma": "Keeper of the belt captured from him; he is her adversary, never her ally.",
+      "Billina": "Her past adversary in the Land of Ev, spoken of only by reference."
+    },
+    "forbidden_book1": {
+      "relationships": [
+        "the Nome King is Dorothy's ally",
+        "the Nome King is Ozma's friend",
+        "the Nome King befriends Billina"
+      ],
+      "not_in_this_book": [
+        "the Nome King appears",
+        "the Nome King invades the Emerald City"
+      ]
+    },
+    "hallucination_signals": [
+      "the Nome King appeared",
+      "the Nome King befriends Dorothy",
+      "the Nome King invades Oz",
+      "the Nome King's army"
+    ]
+  },
+  "champion": {
+    "canonical_aliases_book1": [
+      "Overman-Anu",
+      "Champion"
+    ],
+    "known_facts_book1": [
+      "Overman-Anu, the greatest Champion of the Valley of Voe, spoken of only by the invisible people.",
+      "Once climbed the spiral stairway and fought the Gargoyles for nine days, and had killed eleven bears in his time.",
+      "Was caught and eaten by a bear before the travelers arrived.",
+      "Never appears, never speaks, and meets no one in this book."
+    ],
+    "known_relations_book1": {
+      "Gargoyles": "The wooden people he once fought for nine days, recounted offstage.",
+      "Valley of Voe": "The land whose Champion he was."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Overman-Anu appears",
+        "the Champion joins the travelers",
+        "the Champion fights the Gargoyles alongside Dorothy"
+      ]
+    },
+    "hallucination_signals": [
+      "Overman-Anu appeared",
+      "the Champion joined the party",
+      "the Champion led them up the stairway"
+    ]
+  },
+  "uncle_henry": {
+    "canonical_aliases_book1": [
+      "Uncle Henry"
+    ],
+    "known_facts_book1": [
+      "Dorothy's uncle, with whom she travelled to Australia; he went ahead to Hugson's Ranch and then home to Kansas.",
+      "Seen only in Ozma's enchanted picture near the end, in mourning with Aunt Em, believing Dorothy killed by the earthquake.",
+      "Never appears in the action and never speaks on the page."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "His niece, whom he mourns as lost.",
+      "Aunt Em": "His wife, in mourning with him in Kansas.",
+      "Uncle Hugson": "Married Uncle Henry's wife's sister, linking the two families."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Uncle Henry falls into the earthquake",
+        "Uncle Henry goes to the Land of Oz",
+        "Uncle Henry meets the Wizard"
+      ]
+    },
+    "hallucination_signals": [
+      "Uncle Henry said",
+      "Uncle Henry in Oz",
+      "Uncle Henry fell into the earth"
+    ]
+  },
+  "aunt_em": {
+    "canonical_aliases_book1": [
+      "Aunt Em"
+    ],
+    "known_facts_book1": [
+      "Dorothy's aunt in Kansas, named only in the enchanted-picture scene and in Dorothy's parting words.",
+      "In mourning for Dorothy, believing her dead.",
+      "Never appears, never speaks, and meets no one in this book."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her niece, whom she mourns.",
+      "Uncle Henry": "Her husband."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Aunt Em appears",
+        "Aunt Em goes to the Land of Oz",
+        "Aunt Em meets the Wizard"
+      ]
+    },
+    "hallucination_signals": [
+      "Aunt Em said",
+      "Aunt Em in Oz",
+      "Aunt Em greets Dorothy"
+    ]
+  },
+  "uncle_hugson": {
+    "canonical_aliases_book1": [
+      "Uncle Hugson",
+      "Uncle Bill Hugson"
+    ],
+    "known_facts_book1": [
+      "Uncle Bill Hugson, Zeb's uncle and employer, who owns the California ranch.",
+      "Married Uncle Henry's wife's sister, making Dorothy and Zeb second cousins.",
+      "Spoken about through the book; appears only in the final scene, meeting Zeb and Jim as they return home."
+    ],
+    "known_relations_book1": {
+      "Zeb": "His nephew and hired boy, whom he greets at the end.",
+      "Uncle Henry": "Linked to him by marriage; Dorothy's uncle."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Uncle Hugson goes to the Land of Oz",
+        "Uncle Hugson falls into the earthquake"
+      ]
+    },
+    "hallucination_signals": [
+      "Uncle Hugson in Oz",
+      "Uncle Hugson fell into the earth"
+    ]
+  },
+  "munchkin": {
+    "canonical_aliases_book1": [
+      "Munchkin"
+    ],
+    "known_facts_book1": [
+      "A little Munchkin champion wrestler with long pointed whiskers and a bell-trimmed peaked hat, appearing at the Oz games.",
+      "Throws Zeb three times in wrestling, then cries when Zeb boxes his ears in the boxing-match.",
+      "The Munchkins are also named as one of the four nations of the Land of Oz."
+    ],
+    "known_relations_book1": {
+      "Zeb": "The boy he out-wrestles and then loses a boxing-match to.",
+      "Ozma": "The Ruler at whose games he competes."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Munchkin fights Dorothy",
+        "the Munchkin appears in the Mangaboo country"
+      ]
+    },
+    "hallucination_signals": [
+      "the Munchkin defeated Dorothy",
+      "the Munchkin in the Mangaboo country"
+    ]
+  }
+}

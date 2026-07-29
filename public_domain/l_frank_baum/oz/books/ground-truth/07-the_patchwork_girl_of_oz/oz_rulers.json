@@ -1,0 +1,180 @@
+{
+  "ozma": {
+    "canonical_aliases_book1": [
+      "Ozma",
+      "Ozma of Oz",
+      "Princess Ozma"
+    ],
+    "known_facts_book1": [
+      "The girl Ruler of the whole Land of Oz, dignified on her emerald throne and a joyous ordinary girl in her private apartments.",
+      "Was stolen as a baby by the Witch Mombi and transformed into a boy, and was restored to her proper person by Glinda; she tells this story herself at dinner.",
+      "Made the Law forbidding anyone but Glinda the Good and her assistant the Wizard to practice magic, because the Witches and Magicians used their powers for evil.",
+      "Made a second Law forbidding anyone to pick a six-leaved clover or gather the herbs Witches boil, because those were used in unlawful charms.",
+      "Owns a Magic Picture in her room that shows any scene in the Land of Oz where strangers or travelers happen to be.",
+      "Orders the arrest of Ojo the Unlucky before he reaches the city gate, having seen the offense.",
+      "Forgives Ojo at his trial, saying he is penitent and has been punished enough, and lets him keep the picked clover.",
+      "Has Dr. Pipt brought to the palace, his four kettles destroyed and his book of recipes burned, and has the two marble statues brought there too.",
+      "Is guarded in the Throne Room by the Cowardly Lion and the Hungry Tiger, who crouch at her feet.",
+      "Gives Ojo and Unc Nunkie a house just outside the walls of the Emerald City and takes them under her protection.",
+      "Decrees that Scraps shall be preserved as one of the curiosities of Oz, free to live where she pleases."
+    ],
+    "known_relations_book1": {
+      "Dorothy": "Her dearest friend, whom she keeps in her own palace.",
+      "Ojo": "Orders his arrest, then forgives him and gives him a home.",
+      "Dr. Pipt": "The magician whose unlawful magic she ends and whose powers she takes away.",
+      "Glinda": "The Sorceress who restored her to her proper person and whose method saves the statues.",
+      "the Wizard": "Glinda's assistant, who carries out her edict against Dr. Pipt.",
+      "Jack Pumpkinhead": "Her earliest companion, whom she made when she was Tip.",
+      "Sawhorse": "Her favorite steed, which she had shod with gold."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Ozma is a boy in this book",
+        "Ozma is enchanted by Mombi in this book",
+        "Ozma is kidnapped in this book",
+        "Ozma condemns Ojo to punishment"
+      ],
+      "relationships": [
+        "Ozma is an enemy of Dorothy",
+        "Ozma is the sister of Dorothy"
+      ]
+    },
+    "hallucination_signals": [
+      "Ozma is transformed into Tip",
+      "Ozma is kidnapped",
+      "Ozma punishes Ojo",
+      "Ozma is Dorothy's sister"
+    ]
+  },
+  "dorothy": {
+    "canonical_aliases_book1": [
+      "Dorothy",
+      "Dorothy Gale",
+      "Princess Dorothy"
+    ],
+    "known_facts_book1": [
+      "Once a girl of the Kansas prairies, now a Princess of Oz living in the royal palace as Ozma's best friend, and still a simple little girl in a plain white frock.",
+      "Her Uncle Henry and Aunt Em, her only relatives, have also been brought to Oz by Ozma and given a pleasant home.",
+      "Discovered the Scarecrow, the Tin Woodman, the Cowardly Lion and Tik-tok the Clockwork Man on her earlier journeys.",
+      "Asks Ozma's leave to go with Ojo because she knows Oz and he does not, and brings a gold flask holding a pint for the dark-well water.",
+      "Travels in a plain gingham dress and a checked sunbonnet as best fitted for travel.",
+      "Slaps and pushes the Tottenhots to rescue the Scarecrow and the Patchwork Girl from being tossed about, and bargains with them for a night's shelter.",
+      "Sews up the hole in the Scarecrow's back and the rip in his leg after the picket fence.",
+      "Explains the Horners' joke to the Hoppers by telling them to laugh at it, and so ends the war.",
+      "Calms the Quadling's angry wife by promising to send them goods from the Emerald City, including a new clothesline."
+    ],
+    "known_relations_book1": {
+      "Ozma": "Her very best friend, who keeps her in the palace.",
+      "Toto": "Her little black dog and constant companion.",
+      "Ojo": "The Munchkin boy she takes pity on and travels with.",
+      "Scarecrow": "Her old friend, who comes on the journey to take care of her.",
+      "Shaggy Man": "Knew her in Kansas; she brought him to Oz.",
+      "Tin Woodman": "An old friend whose castle they reach at the end of the quest."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "ruby slippers",
+        "Silver Shoes",
+        "clicks her heels together",
+        "there is no place like home",
+        "a cyclone carries Dorothy to Oz",
+        "the Wicked Witch of the West",
+        "Miss Gulch",
+        "Professor Marvel",
+        "Over the Rainbow",
+        "Dorothy wakes and it was all a dream"
+      ],
+      "not_in_this_book": [
+        "Dorothy returns to Kansas at the end",
+        "Dorothy melts a witch",
+        "Dorothy meets Button-Bright",
+        "Dorothy meets Polychrome",
+        "Dorothy travels to Oz by tornado in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "ruby slippers",
+      "Silver Shoes",
+      "clicks her heels",
+      "there is no place like home",
+      "a cyclone carried her",
+      "Miss Gulch",
+      "Professor Marvel",
+      "Dorothy returns to Kansas",
+      "it was all a dream"
+    ]
+  },
+  "the_wizard": {
+    "canonical_aliases_book1": [
+      "the Wizard of Oz",
+      "the Wizard"
+    ],
+    "known_facts_book1": [
+      "A little old man, once a humbug who knew no magic at all, now reformed and taking lessons from Glinda the Good as her humble Assistant.",
+      "Is with Glinda the only person licensed by Ozma's Law to practice magic in the Land of Oz.",
+      "Exposes Scraps's trick at Ojo's trial, making the clover sprout from the golden vase into a bush before the whole court.",
+      "By royal edict deprives Dr. Pipt of all power to work magic, and with the same gesture straightens every crooked limb of the man's body.",
+      "Removes the Glass Cat's pink brains and replaces them with transparent ones, curing her conceit.",
+      "Sends the Woozy to the Royal Menagerie and announces Ozma's decisions for Scraps and for Ojo.",
+      "Restores Margolotte and then Unc Nunkie to life with a magic pass and a magic word, using a method Glinda taught him — not Dr. Pipt's recipe."
+    ],
+    "known_relations_book1": {
+      "Glinda": "The peerless Sorceress whose assistant he is and who instructs him how to save the statues.",
+      "Ozma": "The Ruler whose edicts he carries out.",
+      "Dr. Pipt": "The Crooked Magician he strips of magic and straightens.",
+      "Bungle": "The Glass Cat whose pink brains he replaces.",
+      "Unc Nunkie": "Restores him from marble to life.",
+      "Margolotte": "Restores her from marble to life."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "the Wizard arrives by balloon in this book",
+        "the Wizard is exposed as a humbug in this book",
+        "the Wizard gives out brains, a heart and courage in this book"
+      ],
+      "not_in_this_book": [
+        "the Wizard uses the five ingredients of Dr. Pipt's recipe",
+        "the Wizard leaves Oz"
+      ]
+    },
+    "hallucination_signals": [
+      "the Wizard is a humbug",
+      "the Wizard leaves in a balloon",
+      "the Wizard mixes the magic compound",
+      "the Wizard uses the butterfly wing"
+    ]
+  },
+  "glinda": {
+    "canonical_aliases_book1": [
+      "Glinda",
+      "Glinda the Good"
+    ],
+    "known_facts_book1": [
+      "The great Sorceress of Oz, the Royal Sorceress and the only one besides her assistant the Wizard permitted to practice magic.",
+      "Owns a big book in which every event that takes place anywhere in the world is recorded the moment it happens.",
+      "Taught the reformed Wizard his magic, so that he is no longer a humbug.",
+      "Restored Ozma to her proper person when Ozma arrived at the Emerald City as Tip.",
+      "Knew all about Dr. Pipt's magic-making, the accident, and Ojo's quest, and knew in advance that Ojo would fail to find all five things.",
+      "Sent for the Wizard and instructed him in the one other way to destroy the charm of the Liquid of Petrifaction.",
+      "Does not appear in person anywhere in this book; she acts only through the Wizard and is spoken of by others."
+    ],
+    "known_relations_book1": {
+      "the Wizard": "Her assistant, whom she taught and whom she instructs to save the statues.",
+      "Ozma": "The Ruler she restored to her proper person and whose Law names her the one lawful sorceress.",
+      "Dr. Pipt": "The unlawful magician whose doings her book recorded."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Glinda appears in person in this book",
+        "Glinda travels with the party",
+        "Glinda sends Dorothy home to Kansas in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "Glinda arrives at the palace",
+      "Glinda travels with Ojo",
+      "Glinda restores Unc Nunkie herself",
+      "Glinda sends Dorothy home"
+    ]
+  }
+}

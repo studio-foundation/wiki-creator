@@ -7,7 +7,7 @@
 |-
 | '''Participants''' || {{{participants|}}}
 |-
-| '''Location''' || {{{lieu|}}}
+| '''Place''' || {{{lieu|}}}
 |-
 | '''Chapter''' || {{{chapitre|}}}
 |-

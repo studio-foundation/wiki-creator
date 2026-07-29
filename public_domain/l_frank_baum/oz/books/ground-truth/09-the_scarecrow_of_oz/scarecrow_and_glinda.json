@@ -1,0 +1,86 @@
+{
+  "scarecrow": {
+    "canonical_aliases_book1": [
+      "Scarecrow",
+      "the Scarecrow of Oz"
+    ],
+    "known_facts_book1": [
+      "A suit of Munchkin clothes stuffed with straw, with a round sack for a head filled with bran into which the Wizard mixed magic brains of a very superior sort, and a face painted on the front of the sack.",
+      "Lives part of the time in Ozma's palace, part in his own corncob castle in the Winkie Country, and part travelling over Oz visiting the people and playing with the children.",
+      "Is sent to Jinxland by Glinda to protect Trot, Button-Bright and Cap'n Bill, and is given magical things to carry in his pockets.",
+      "Crosses the mountains on a magic rope that unwinds itself hundreds of feet and catches on a peak, and crosses the Great Gulf on two strands spun by a spider he feeds two tiny pills.",
+      "Is torn apart by Blinkie, who pulls out all his straw and leaves only an empty suit and a heap of straw — but misses his head, which rolls into a hollow and goes on talking.",
+      "Declares in Ozma's name that King Krewl is no longer ruler of Jinxland, and switches him with Pon's borrowed riding-whip.",
+      "The one thing in all the world he really fears is fire, and it is the one thing his enemies think of: he is bound to a stake on a bonfire and saved only by the descending Orks.",
+      "Is crowned King of Jinxland by the Ork and acclaimed by the people, and refuses the crown because he belongs in Oz as Ozma's humble servant.",
+      "Refuses to crown Gloria until her heart is thawed, saying no Queen with a frozen heart is fit to rule any country.",
+      "Shrinks Blinkie with the white dust from one of Glinda's boxes and gives her the antidote from the second only after she has restored Cap'n Bill and Gloria.",
+      "Falls over the Great Waterfall while leaning over the brink, is swept into the Ruby Cavern, and comes out soaked with his straw ruined and full of polliwogs and fish eggs.",
+      "Travels with his head carried on Cap'n Bill's shoulder, eyes front, giving directions, until fresh straw is provided by the Wizard at Ozma's order."
+    ],
+    "known_relations_book1": {
+      "Glinda": "The Sorceress who sends him to Jinxland and gives him the two boxes and the magic rope.",
+      "Trot": "The little girl who restuffs him twice and pins his head on.",
+      "the Ork": "The creature whose flock saves him from the bonfire and crowns him.",
+      "King Krewl": "The usurper he defies, switches and deposes.",
+      "Blinkie": "The witch he shrinks and strips of power.",
+      "Gloria": "The Princess he crowns Queen once her heart is warm.",
+      "Ozma": "The Ruler whose humble servant he calls himself."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "the Scarecrow asks the Wizard for brains in this book",
+        "the Scarecrow has no brains"
+      ],
+      "not_in_this_book": [
+        "the Scarecrow rules Jinxland at the end",
+        "the Scarecrow is burned up",
+        "the Scarecrow drowns",
+        "the Scarecrow carries weapons"
+      ]
+    },
+    "hallucination_signals": [
+      "the Scarecrow asks for brains",
+      "the Scarecrow burns to ashes",
+      "the Scarecrow keeps the crown of Jinxland",
+      "the Scarecrow drowns"
+    ]
+  },
+  "glinda": {
+    "canonical_aliases_book1": [
+      "Glinda",
+      "Glinda the Good"
+    ],
+    "known_facts_book1": [
+      "The Royal Sorceress of Oz, living in a splendid palace in the very southernmost part of the Quadling Country.",
+      "Taught the Wizard of Oz all the real magic he knows and is his superior in all sorts of sorcery.",
+      "Has hair like red gold and blue eyes, is tall and wears splendid trailing gowns, and wears no jewels because her beauty would shame them; no one knows her age.",
+      "Has half a hundred of the loveliest girls in Oz for attendants, gathered from the Winkies, Munchkins, Gillikins, Quadlings and the Emerald City.",
+      "Owns the Great Book of Records, in which everything that takes place in all the world is inscribed the instant it happens.",
+      "Learns from the Record Book that three people from the outside world have arrived in Jinxland, that Blinkie has turned a sailor into a grasshopper, and that she plans to freeze Gloria's heart.",
+      "Sends the Scarecrow to Jinxland with instructions, a magic rope, magic pills for a spider, and two boxes he is not to open except in an emergency.",
+      "Never enters Jinxland herself; she acts on it entirely through the Scarecrow.",
+      "Receives the whole party at her palace at the end, along with Dorothy and Betsy, before they go on to the Emerald City."
+    ],
+    "known_relations_book1": {
+      "Scarecrow": "Her messenger to Jinxland, whom she equips with everything he uses there.",
+      "Ozma": "The Ruler whose subjects she protects, and whose anxiety is relieved when she sees the Scarecrow sent.",
+      "the Wizard": "Her pupil, who is less powerful than she is.",
+      "Trot": "The stranger she judges likely to enjoy and appreciate the fairyland, with no way to return home."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Glinda travels to Jinxland",
+        "Glinda confronts Blinkie",
+        "Glinda thaws Gloria's heart",
+        "Glinda restores Cap'n Bill"
+      ]
+    },
+    "hallucination_signals": [
+      "Glinda goes to Jinxland",
+      "Glinda defeats Blinkie",
+      "Glinda restores Cap'n Bill",
+      "Glinda crowns Gloria"
+    ]
+  }
+}

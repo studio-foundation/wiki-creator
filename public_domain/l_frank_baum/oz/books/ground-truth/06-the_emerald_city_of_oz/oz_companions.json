@@ -1,0 +1,166 @@
+{
+  "scarecrow": {
+    "canonical_aliases_book1": [
+      "Scarecrow"
+    ],
+    "known_facts_book1": [
+      "A man stuffed with straw and given brains by the Wizard, and one of Ozma's trusted friends.",
+      "Is away visiting the Tin Woodman when Dorothy first arrives, and joins the council later.",
+      "Boasts of his excellent brains and uses them to devise the plan that saves Oz.",
+      "Proposes letting the invaders drink at the Forbidden Fountain so they forget their purpose, telling the plan to Ozma alone.",
+      "With the Tin Woodman, seizes Roquat and tosses him into the fountain's basin so he too forgets everything."
+    ],
+    "known_relations_book1": {
+      "Tin Woodman": "His old comrade, whom he is visiting and who helps him throw the Nome King into the fountain.",
+      "Ozma": "The Ruler he advises; he alone hears his own rescue plan first.",
+      "the Wizard": "Who takes pride in having mixed the Scarecrow's brains."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Scarecrow becomes King of the Emerald City in this book",
+        "the Scarecrow is burned by a witch",
+        "the Scarecrow marries Ozma"
+      ]
+    },
+    "hallucination_signals": [
+      "the Scarecrow becomes ruler",
+      "the Scarecrow is set on fire",
+      "the Scarecrow marries"
+    ]
+  },
+  "tin_woodman": {
+    "canonical_aliases_book1": [
+      "Tin Woodman",
+      "Nick Chopper"
+    ],
+    "known_facts_book1": [
+      "A man made all of tin, named Nick Chopper, who is Emperor of the Winkie Country.",
+      "Is the kindest-hearted man in Oz and is kept polished and free of rust by his beloved Winkies.",
+      "Hosts the wagon party at his tin castle in the Winkie Country near the end of the tour.",
+      "At the council, regrets Ozma would not let him arm and drill his Winkies to fight the invaders.",
+      "With the Scarecrow, grabs Roquat and throws him into the Forbidden Fountain so he forgets everything."
+    ],
+    "known_relations_book1": {
+      "Scarecrow": "His old comrade, whom he hosts and who joins him in throwing the Nome King into the fountain.",
+      "Winkies": "His subjects, who adore their tin Emperor and keep him polished.",
+      "Ozma": "The Ruler he serves and offers to defend with his Winkies."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Tin Woodman searches for a heart in this book",
+        "the Tin Woodman marries Nimmie Amee in this book",
+        "the Tin Woodman rusts and cannot move in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "the Tin Woodman wants a heart",
+      "Nimmie Amee",
+      "the Tin Woodman rusts solid"
+    ]
+  },
+  "shaggy_man": {
+    "canonical_aliases_book1": [
+      "Shaggy Man"
+    ],
+    "known_facts_book1": [
+      "A shaggy but well-dressed man whom Ozma has made Governor of the Royal Storehouses of Oz.",
+      "Is an especial friend of Toto and knows everyone in the Emerald City.",
+      "Rides on the wagon tour, seated with Omby Amby, and helps gather firewood and make camp.",
+      "Reassures the party when they are lost, saying he and Dorothy have been lost many times and always found again.",
+      "Kindly pulls the forgetful Nome King out of the fountain and sets him on his feet."
+    ],
+    "known_relations_book1": {
+      "Toto": "His especial little friend.",
+      "Dorothy": "A fellow traveller with whom he has often been lost.",
+      "Ozma": "The Ruler who made him Governor of the Royal Storehouses."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Shaggy Man owns the Love Magnet in this book",
+        "the Shaggy Man finds his brother in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "the Love Magnet",
+      "the Shaggy Man's lost brother",
+      "the Shaggy Man is a tramp who kidnaps Dorothy"
+    ]
+  },
+  "tiktok": {
+    "canonical_aliases_book1": [
+      "Tiktok"
+    ],
+    "known_facts_book1": [
+      "A round copper machine man who thinks, speaks and moves by clockwork and must be wound up.",
+      "Lives in the Emerald City among Ozma's notable people and speaks in a halting, mechanical way.",
+      "Declares he will stand by Ozma rather than be sent to Kansas, where he would be of no use.",
+      "Remarks at the end that other enemies may yet come to Oz some day."
+    ],
+    "known_relations_book1": {
+      "Ozma": "The Ruler he chooses to stand by when Oz is threatened.",
+      "Dorothy": "His friend from the Emerald City."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Tiktok is the Royal Army of Oz in this book",
+        "Tiktok rescues Dorothy from the sea in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "Tiktok is made of flesh",
+      "Tiktok breathes",
+      "Tiktok never runs down"
+    ]
+  },
+  "jack_pumpkinhead": {
+    "canonical_aliases_book1": [
+      "Jack Pumpkinhead"
+    ],
+    "known_facts_book1": [
+      "A man with a body of wooden sticks and a carved pumpkin for a head, which spoils and must be replaced.",
+      "Is a farmer who grows pumpkins so he can carve himself a fresh head when the old one rots.",
+      "Hosts the wagon party at his pumpkin-field house, where Uncle Henry and Aunt Em are amazed by him.",
+      "Pledges to stand by Ozma when Oz is threatened."
+    ],
+    "known_relations_book1": {
+      "Uncle Henry": "A fellow farmer who admires his pumpkin-growing.",
+      "Ozma": "The Ruler he pledges to stand by."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Jack Pumpkinhead is brought to life by the Powder of Life in this book",
+        "Jack Pumpkinhead is the son of Tip in this book"
+      ]
+    },
+    "hallucination_signals": [
+      "Powder of Life brings Jack to life",
+      "Jack Pumpkinhead is Tip's creation",
+      "Jack Pumpkinhead has a flesh head"
+    ]
+  },
+  "omby_amby": {
+    "canonical_aliases_book1": [
+      "Omby Amby"
+    ],
+    "known_facts_book1": [
+      "The Captain General of Ozma's army, tall and slim with a fierce mustache but a gentle nature.",
+      "Was once the only private soldier in Oz, and Ozma made him the highest officer of all.",
+      "Rides on the wagon tour and helps gather firewood and build the camp fire.",
+      "Helps the party match the scattered pieces of the Fuddles back together."
+    ],
+    "known_relations_book1": {
+      "Ozma": "The Ruler whose army he commands as Captain General.",
+      "Shaggy Man": "His seat-mate and fellow camp-helper on the tour."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Omby Amby leads an army into battle in this book",
+        "Omby Amby is Ozma's enemy"
+      ]
+    },
+    "hallucination_signals": [
+      "Omby Amby leads the troops to war",
+      "the Soldier with the Green Whiskers fights the Nomes"
+    ]
+  }
+}

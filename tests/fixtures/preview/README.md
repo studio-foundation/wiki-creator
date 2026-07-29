@@ -6,9 +6,10 @@ parser, shell, skin, wikilinks) can be built and tested in the web sandbox with
 no EPUB, GPU, LLM, or full pipeline run.
 
 The book is `01-alice-in-wonderland` (Alice's Adventures in Wonderland), an
-English novel — `output_language: en`, so the Main_Page chrome is English while
-the infobox row labels stay French (they are hard-coded in `base.yaml`'s
-`infobox_source`; the parser must not assume one language per file).
+English novel — `output_language: en`, so both the Main_Page chrome and the
+infobox row labels render in English (the labels are built from `base.yaml`'s
+localized `labels` map by `entity_taxonomy.infobox_source`, keyed on
+`output_language` — STU-730).
 
 ## Not hand-typed — generated from the real exporter
 
