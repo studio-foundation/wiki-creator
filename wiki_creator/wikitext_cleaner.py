@@ -35,21 +35,15 @@ def clean_wikitext(text: str) -> str:
     return text
 
 
+# Synonym folding only (STU-734). This used to map every scraped fandom key onto a
+# French target (`nom`, `statut`, `couleur des yeux`, …) — a hardcoded French
+# vocabulary in code, which scripts/CLAUDE.md forbids. The consumer is the LoRA
+# dataset export, i.e. training-data prep and not the wiki, so the keys stay in the
+# source's own words and only genuine synonyms collapse onto one key.
 _INFOBOX_KEY_MAP: dict[str, str] = {
-    "name": "nom",
-    "full name": "nom complet",
     "AKA": "alias",
-    "alias": "alias",
     "allegiance": "affiliation",
-    "status": "statut",
-    "gender": "genre",
-    "title": "titre",
-    "role": "rôle",
-    "occupation": "rôle",
-    "location": "lieu",
-    "eye color": "couleur des yeux",
-    "hair color": "couleur des cheveux",
-    "skin color": "couleur de peau",
+    "occupation": "role",
 }
 
 _INFOBOX_DROP_KEYS: set[str] = {

@@ -474,17 +474,17 @@ def test_an_absent_status_renders_the_declared_fallback():
 
 def test_the_binder_renders_status_from_the_batch_entity():
     entity = {"status": "deceased"}
-    assert _extracted_fact_value(entity, "status", "fr") == "Décédé"
+    assert _extracted_fact_value(entity, "status", lang="fr") == "Décédé"
 
 
 def test_the_binder_renders_unknown_for_an_unstamped_entity():
     # A book that never ran the stage, and a verdict that was rejected, render
     # the same thing.
-    assert _extracted_fact_value({}, "status", "en") == status_label("unknown", "en")
+    assert _extracted_fact_value({}, "status", lang="en") == status_label("unknown", "en")
 
 
 def test_titles_still_binds():
-    assert _extracted_fact_value({"titles": ["Roi"]}, "titles", "fr") == "Roi"
+    assert _extracted_fact_value({"titles": ["Roi"]}, "titles", lang="fr") == "Roi"
 
 
 def test_person_declares_the_status_slot():
@@ -753,14 +753,14 @@ def test_a_saved_cache_round_trips(tmp_path):
 
 def test_the_binder_renders_the_circumstance():
     entity = {"death_agent": "Durza", "death_place": "Farthen Dûr"}
-    assert _extracted_fact_value(entity, "death", "fr") == "Tué par Durza à Farthen Dûr"
+    assert _extracted_fact_value(entity, "death", lang="fr") == "Tué par Durza à Farthen Dûr"
 
 
 def test_the_binder_omits_the_slot_without_a_circumstance():
     # OPT: `_bind_batch_fields`'s `if value:` drops the token entirely, so a
     # living character gets no Décès row.
-    assert _extracted_fact_value({}, "death", "fr") is None
-    assert _extracted_fact_value({"status": "alive"}, "death", "fr") is None
+    assert _extracted_fact_value({}, "death", lang="fr") is None
+    assert _extracted_fact_value({"status": "alive"}, "death", lang="fr") is None
 
 
 def test_wiki_preparation_stamps_the_circumstance_onto_the_batch_entity():

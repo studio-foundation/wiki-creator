@@ -112,6 +112,24 @@ def book_language(ctx: dict) -> str:
     return inferred
 
 
+def contamination_markers(output_language: str) -> list[str]:
+    """Language-identifying markers of every shipped pack *other than*
+    ``output_language`` — the vocabulary that says a page drifted out of the
+    language it must be written in (STU-734).
+
+    Empty when no other pack declares `language_id_markers`, which makes the
+    contamination check a no-op rather than a check against the wrong language:
+    only `en.json` carries the key today, so an English wiki has nothing to
+    compare against and a French one is compared against English, as before.
+    """
+    markers: list[str] = []
+    for path in sorted(_CUE_WORDS_DIR.glob("*.json")):
+        if path.stem == output_language:
+            continue
+        markers += load_lang_config(path.stem).get("language_id_markers", [])
+    return markers
+
+
 def load_lang_config(language: str, *, allow_en_fallback: bool = False) -> dict:
     """Load and validate wiki_creator/cue_words/<language>.json as a plain dict.
 

@@ -541,6 +541,23 @@ def _split_item_chapters(soup, item, sections: list[tuple[str, str]]) -> list:
     return chapters
 
 
+def _continues_previous(chapters: list, lead: dict) -> bool:
+    """Is a packed item's anchorless lead the tail of the previous item's chapter?
+
+    A Project Gutenberg converter that cuts a packed spine item into several files
+    cuts **mid-chapter** (STU-735): the next file opens on the tail of the previous
+    chapter, with no anchor in front of it, so `_split_item_chapters` emitted it as
+    a section of its own titled by the filename — 26 chapters where The Road to Oz
+    has 24, and its chapter 11 split across two entries.
+
+    A lead is that tail only when the previous item ended *inside* a chapter, i.e.
+    its last emitted segment opened at an anchor. The anchorless lead of the first
+    content item (no previous chapter) and one following a whole-file chapter are
+    genuine front matter, so the rule can never be "always append".
+    """
+    return "#" not in lead["id"] and bool(chapters) and "#" in chapters[-1]["id"]
+
+
 def _extract_chapter_title(soup, item, toc_titles: dict) -> str:
     """Find the best human-readable title for a chapter item."""
     name = item.get_name()
@@ -645,6 +662,8 @@ def parse_epub(
         if sections:
             split = _split_item_chapters(soup, item, sections)
             if split:
+                if _continues_previous(chapters, split[0]):
+                    chapters[-1]["content"] += "\n\n" + split.pop(0)["content"]
                 chapters.extend(split)
                 continue
         chapter_title = _extract_chapter_title(soup, item, toc_titles)

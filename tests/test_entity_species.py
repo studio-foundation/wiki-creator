@@ -253,12 +253,12 @@ from scripts.wiki_preparation import build_entity_bundle, load_species_verdicts
 
 
 def test_the_binder_renders_species_from_the_batch_entity():
-    assert _extracted_fact_value({"species": "elf"}, "species", "fr") == "elf"
+    assert _extracted_fact_value({"species": "elf"}, "species", lang="fr") == "elf"
 
 
 def test_an_unstamped_entity_renders_no_species():
-    assert _extracted_fact_value({}, "species", "fr") is None
-    assert _extracted_fact_value({"species": ""}, "species", "fr") is None
+    assert _extracted_fact_value({}, "species", lang="fr") is None
+    assert _extracted_fact_value({"species": ""}, "species", lang="fr") is None
 
 
 def test_preparation_stamps_species_onto_the_batch_entity():

@@ -43,7 +43,7 @@ def test_parse_response_extracts_json_wrapped_in_text():
         '"infobox_fields":{},"content":"## Biographie\\n\\nTexte."}\n'
         "Fin."
     )
-    page = parse_response(raw, _entity())
+    page = parse_response(raw, _entity(), lang="fr")
     assert page["title"] == "Victor Grandes"
     assert page["entity_type"] == "PERSON"
     assert page["content"] == "## Biographie\n\nTexte."
@@ -56,7 +56,7 @@ def test_parse_response_extracts_json_from_fenced_block():
         '"infobox_fields":{},"content":"## Biographie\\n\\nTexte."}\n'
         "```\n"
     )
-    page = parse_response(raw, _entity())
+    page = parse_response(raw, _entity(), lang="fr")
     assert page["title"] == "Victor Grandes"
     assert page["importance"] == "secondary"
     assert page["content"] == "## Biographie\n\nTexte."
@@ -70,7 +70,7 @@ def test_parse_response_ignores_trailing_text_after_fenced_json():
         "```\n"
         "Note: generation complete.\n"
     )
-    page = parse_response(raw, _entity())
+    page = parse_response(raw, _entity(), lang="fr")
     assert page["title"] == "Victor Grandes"
     assert page["entity_type"] == "PERSON"
     assert page["content"] == "## Biographie\n\nTexte."
@@ -81,7 +81,7 @@ def test_parse_response_populates_infobox_fields_from_infobox_section_bullets():
         '{"title":"Victor Grandes","importance":"secondary","entity_type":"PERSON",'
         '"infobox_fields":{},"content":"## Infobox\\n\\n- Nom: Victor Grandes\\n- Statut: Vivant\\n\\n## Biographie\\n\\nTexte."}'
     )
-    page = parse_response(raw, _entity())
+    page = parse_response(raw, _entity(), lang="fr")
     assert page["infobox_fields"] == {
         "nom": "Victor Grandes",
         "statut": "Vivant",
@@ -93,7 +93,7 @@ def test_parse_response_populates_infobox_fields_from_infobox_section_plain_line
         '{"title":"Victor Grandes","importance":"secondary","entity_type":"PERSON",'
         '"infobox_fields":{},"content":"## Infobox\\n\\nNom: Victor Grandes\\nStatut: Vivant\\n\\n## Biographie\\n\\nTexte."}'
     )
-    page = parse_response(raw, _entity())
+    page = parse_response(raw, _entity(), lang="fr")
     assert page["infobox_fields"] == {
         "nom": "Victor Grandes",
         "statut": "Vivant",
@@ -105,7 +105,7 @@ def test_parse_response_keeps_existing_infobox_fields_when_already_present():
         '{"title":"Victor Grandes","importance":"secondary","entity_type":"PERSON",'
         '"infobox_fields":{"nom":"Existant"},"content":"## Infobox\\n\\n- Nom: Victor Grandes\\n\\n## Biographie\\n\\nTexte."}'
     )
-    page = parse_response(raw, _entity())
+    page = parse_response(raw, _entity(), lang="fr")
     assert page["infobox_fields"] == {"nom": "Existant"}
 
 
@@ -123,7 +123,7 @@ def test_parse_response_forces_identity_fields_from_batch_entity():
         '{"title":"Philippe","importance":"principal","entity_type":"ORGANIZATION",'
         '"infobox_fields":{},"content":"## Biographie\\n\\nTexte."}'
     )
-    page = parse_response(raw, entity)
+    page = parse_response(raw, entity, lang="fr")
     assert page["title"] == "Philippa"
     assert page["importance"] == "secondary"
     assert page["entity_type"] == "PERSON"
@@ -141,7 +141,7 @@ def test_build_prompt_includes_requested_sections_in_order():
         entity,
         "Mon Livre",
         sections=["infobox", "biography", "relationships", "references"],
-    )
+     lang="fr",)
     assert "Use exactly these sections in this order: infobox, biography, relationships, references." in prompt
     assert '"title": "John Doe"' in prompt
     assert '"content": "## Infobox\\n\\n' in prompt
@@ -176,7 +176,7 @@ def test_build_prompt_includes_related_context_block_and_strict_rules():
         entity,
         "Mon Livre",
         sections=["infobox", "biography", "relationships", "references"],
-    )
+     lang="fr",)
 
     assert "Related entities (disambiguation only — do not derive narrative from cooccurrence):" in prompt
     assert "Name: Celaena" in prompt
@@ -214,7 +214,7 @@ def test_build_prompt_never_leaks_high_cooccurrence_count_into_related_block():
             },
         ],
     }
-    prompt = build_prompt(entity, "Mon Livre", sections=["infobox", "biography", "relationships"])
+    prompt = build_prompt(entity, "Mon Livre", sections=["infobox", "biography", "relationships"], lang="fr")
 
     related_block = prompt.split("Related entities", 1)[1].split("Typed relationships", 1)[0]
     assert "Celaena" in related_block and "Chaol" in related_block
@@ -256,7 +256,7 @@ def test_build_prompt_labels_chapters_by_position_not_id_digits():
         "context_by_chapter": {"bookcontent2_0": ["Lucy stepped through the wardrobe."]},
         "context_chapter_numbers": {"bookcontent2_0": 1},
     }
-    prompt = build_prompt(entity, "The Lion, the Witch and the Wardrobe", sections=["biography"])
+    prompt = build_prompt(entity, "The Lion, the Witch and the Wardrobe", sections=["biography"], lang="fr")
     assert "[Chapter 1] Lucy stepped through the wardrobe." in prompt
     assert "Chapter 2" not in prompt  # the id's digit-derived (wrong) number never appears
 
@@ -284,7 +284,7 @@ def test_build_prompt_includes_chapter_summary_context_block_and_rules():
         entity,
         "Mon Livre",
         sections=["infobox", "biography", "relationships", "references"],
-    )
+     lang="fr",)
 
     assert "Chapter summaries (orientation context — lower priority than excerpts):" in prompt
     assert "Chapter: Chapter 1" in prompt
@@ -316,7 +316,7 @@ def test_build_prompt_includes_place_events_block_and_rule():
         entity,
         "Mon Livre",
         sections=["infobox", "biography", "events", "references"],
-    )
+     lang="fr",)
 
     assert "## Events at this place" in prompt
     assert "épreuve finale du tournoi" in prompt
@@ -337,7 +337,7 @@ def test_build_prompt_place_without_events_omits_block_and_forbids_section():
         entity,
         "Mon Livre",
         sections=["infobox", "biography", "events", "references"],
-    )
+     lang="fr",)
 
     assert "## Events at this place" not in prompt
     assert 'Do NOT include a "## Événements" section: no narrative events are available for this place.' in prompt
@@ -360,7 +360,7 @@ def test_build_prompt_ignores_entity_events_for_non_place_types():
         entity,
         "Mon Livre",
         sections=["infobox", "biography", "references"],
-    )
+     lang="fr",)
 
     assert "## Events at this place" not in prompt
     assert "Événements" not in prompt
@@ -388,7 +388,7 @@ def test_build_prompt_includes_narrative_role_block_and_rule_for_person():
         _celaena_with_arc(),
         "Throne of Glass",
         sections=["narrative_role"],
-    )
+     lang="fr",)
 
     assert "## Events in which Celaena Sardothien participates (chronological order)" in prompt
     assert "épreuve finale" in prompt
@@ -400,7 +400,7 @@ def test_build_prompt_includes_narrative_role_block_and_rule_for_person():
 def test_build_prompt_narrative_role_events_ordered_chronologically():
     """Salience selects which beats survive the cap; the prompt lists them by
     chapter so the arc reads in order (climax kept even though it sits late)."""
-    prompt = build_prompt(_celaena_with_arc(), "Throne of Glass", sections=["narrative_role"])
+    prompt = build_prompt(_celaena_with_arc(), "Throne of Glass", sections=["narrative_role"], lang="fr")
     arrive = prompt.index("arrive au château")
     duel = prompt.index("épreuve finale")
     crown = prompt.index("couronnée Champion")
@@ -409,7 +409,7 @@ def test_build_prompt_narrative_role_events_ordered_chronologically():
 
 def test_build_prompt_narrative_role_gated_to_its_own_section():
     """The arc block never leaks into other PERSON section prompts (biography)."""
-    prompt = build_prompt(_celaena_with_arc(), "Throne of Glass", sections=["biography"])
+    prompt = build_prompt(_celaena_with_arc(), "Throne of Glass", sections=["biography"], lang="fr")
     assert "## Events in which Celaena Sardothien participates" not in prompt
     assert "Rôle dans le récit" not in prompt
 
@@ -423,7 +423,7 @@ def test_build_prompt_person_without_events_omits_narrative_block():
         "context_by_chapter": {},
         "entity_events": [],
     }
-    prompt = build_prompt(entity, "Throne of Glass", sections=["narrative_role"])
+    prompt = build_prompt(entity, "Throne of Glass", sections=["narrative_role"], lang="fr")
     assert "## Events in which" not in prompt
     assert 'Do NOT include a "## Rôle dans le récit" section' in prompt
 
@@ -538,7 +538,7 @@ def test_parse_response_marks_empty_content_as_failed_stub():
         "type": "EVENT",
     }
 
-    page = parse_response(raw, entity)
+    page = parse_response(raw, entity, lang="fr")
 
     assert page["_failed"] is True
     assert page["title"] == "Yulemas"
@@ -556,13 +556,13 @@ def test_parse_response_rejects_template_placeholder_leak():
         '{"title":"Assassin","importance":"secondary","entity_type":"PERSON",'
         '"infobox_fields":{"nom":"<si connu>"},"content":"## Infobox\\n\\n- Nom: <si connu>\\n\\n## Biographie\\n\\nTexte."}'
     )
-    page = parse_response(raw, _entity())
+    page = parse_response(raw, _entity(), lang="fr")
     assert page["_failed"] is True
 
 
 def test_contains_template_placeholder_detects_marker_in_infobox():
     page = {"content": "## Biographie\n\nTexte.", "infobox_fields": {"nom": "<si connu>"}}
-    assert _contains_template_placeholder(page) is True
+    assert _contains_template_placeholder(page, lang="fr") is True
 
 
 # STU-699: `references_rule` orders the model to emit `<references/>`, so the
@@ -579,7 +579,7 @@ def test_contains_template_placeholder_detects_marker_in_infobox():
 )
 def test_contains_template_placeholder_accepts_wikitext_ref_markup(markup):
     page = {"content": f"## Biographie\n\nTexte.\n\n## Références\n\n{markup}", "infobox_fields": {}}
-    assert _contains_template_placeholder(page) is False
+    assert _contains_template_placeholder(page, lang="fr") is False
 
 
 def test_parse_response_keeps_page_with_references_backmatter():
@@ -592,7 +592,7 @@ def test_parse_response_keeps_page_with_references_backmatter():
             "content": "## Biographie\n\nUne ville verte.\n\n## Références\n\n<references/>",
         }
     )
-    page = parse_response(raw, _entity())
+    page = parse_response(raw, _entity(), lang="fr")
     assert page.get("_failed") is not True
     assert "<references/>" in page["content"]
 
@@ -661,7 +661,7 @@ def test_run_generation_for_entity_uses_item_runner_when_not_dry(monkeypatch, tm
         max_tokens=800,
         dry_run=False,
         debug_dir=debug_dir,
-    )
+     language="fr",)
 
     assert calls == [("Victor Grandes", "Mon Livre", "qwen2.5", 120, ["infobox", "biography"], 800)]
     assert page["title"] == "Victor Grandes"
@@ -694,7 +694,7 @@ def test_run_generation_for_entity_returns_retryable_failed_stub_and_logs_on_run
         max_tokens=800,
         dry_run=False,
         debug_dir=debug_dir,
-    )
+     language="fr",)
 
     assert page["_failed"] is True
     assert page["title"] == "Victor Grandes"
@@ -723,7 +723,7 @@ def test_parse_response_strips_dash_prefix_from_infobox_keys():
         "canonical_name": "Celaena Sardothien",
         "importance": "principal",
         "type": "PERSON",
-    })
+    }, lang="fr")
     assert "- nom" not in page["infobox_fields"]
     assert "- occupation" not in page["infobox_fields"]
     assert page["infobox_fields"]["nom"] == "Celaena Sardothien"
@@ -747,7 +747,7 @@ def test_parse_response_removes_internal_artifact_keys_from_infobox():
         "canonical_name": "Hollin",
         "importance": "secondary",
         "type": "PERSON",
-    })
+    }, lang="fr")
     assert "cooccurrence_count" not in page["infobox_fields"]
     assert "entity_type" not in page["infobox_fields"]
     assert page["infobox_fields"]["nom"] == "Hollin"
@@ -762,7 +762,7 @@ def test_build_prompt_instructs_plain_infobox_keys():
         "aliases": [],
         "context_by_chapter": {},
     }
-    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography"])
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography"], lang="fr")
     assert '"- nom"' in prompt or "no leading" in prompt or 'without "- "' in prompt or "plain string" in prompt
 
 
@@ -793,7 +793,7 @@ def test_build_prompt_includes_typed_relationships_block():
             },
         ],
     }
-    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"])
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"], lang="fr")
     assert "related_entity: Elena" in prompt
     assert "relationship_type: allié" in prompt
     assert "related_entity: Dorian Havilliard" in prompt
@@ -821,7 +821,7 @@ def test_build_prompt_relationships_normalizes_subject_as_entity_b():
             },
         ],
     }
-    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"])
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"], lang="fr")
     assert "related_entity: Celaena Sardothien" in prompt
     assert "related_entity: Chaol Westfall" not in prompt
 
@@ -836,7 +836,7 @@ def test_build_prompt_no_relationships_omits_section_rule():
         "context_by_chapter": {},
         "relationships": [],
     }
-    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"])
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"], lang="fr")
     assert "no typed relationships available" in prompt
 
 
@@ -872,7 +872,7 @@ def test_build_prompt_includes_relationship_evidence_and_key_moments():
             key_moments=["ch05: Elena sauve Celaena", "ch09: Elena révèle son passé", "ch12: adieux"],
         ),
     ])
-    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"])
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"], lang="fr")
     assert 'evidence: "Elena tendit la main à Celaena au bord du gouffre."' in prompt
     assert "key_moment: ch05: Elena sauve Celaena" in prompt
     assert "key_moment: ch09: Elena révèle son passé" in prompt
@@ -891,7 +891,7 @@ def test_build_prompt_filters_sentinel_key_moment():
             key_moments=["no specific moment identifiable in provided excerpts"],
         ),
     ])
-    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"])
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"], lang="fr")
     assert "no specific moment identifiable" not in prompt
     assert "key_moment:" not in prompt
 
@@ -910,7 +910,7 @@ def test_build_prompt_sample_context_is_fallback_only():
             sample_contexts=[long_context],
         ),
     ])
-    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"])
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"], lang="fr")
     # relation with evidence: its raw sample context must NOT be duplicated
     assert "discutèrent longuement dans la crypte" not in prompt
     # relation without evidence: gets the fallback context, truncated
@@ -925,7 +925,7 @@ def test_build_prompt_omits_untyped_relations():
         _relationship("Xavier", 80, relationship_type=None),
         _relationship("Brullo", 70, relationship_type="null"),
     ])
-    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"])
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"], lang="fr")
     assert "co-occurrence" not in prompt
     assert "related_entity: Xavier" not in prompt
     assert "related_entity: Brullo" not in prompt
@@ -942,21 +942,21 @@ def test_build_prompt_relationship_enrichment_budget_by_importance():
     prompt = build_prompt(
         _entity_with_relationships("principal", rels),
         "Throne of Glass", ["infobox", "biography", "relationships"],
-    )
+     lang="fr",)
     assert 'evidence: "Preuve numéro 4."' in prompt
     assert 'evidence: "Preuve numéro 5."' not in prompt
 
     prompt = build_prompt(
         _entity_with_relationships("secondary", rels),
         "Throne of Glass", ["infobox", "biography", "relationships"],
-    )
+     lang="fr",)
     assert 'evidence: "Preuve numéro 2."' in prompt
     assert 'evidence: "Preuve numéro 3."' not in prompt
 
     prompt = build_prompt(
         _entity_with_relationships("figurant", rels),
         "Throne of Glass", ["infobox", "biography", "relationships"],
-    )
+     lang="fr",)
     assert "evidence:" not in prompt
     assert "Anchor each" not in prompt
 
@@ -966,7 +966,7 @@ def test_build_prompt_without_evidence_fields_is_unchanged():
     entity = _entity_with_relationships("principal", [
         _relationship("Elena", 61),
     ])
-    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"])
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"], lang="fr")
     assert "related_entity: Elena" in prompt
     assert "evidence:" not in prompt
     assert "key_moment:" not in prompt
@@ -983,7 +983,7 @@ def test_build_prompt_instructs_no_training_knowledge():
         "aliases": [],
         "context_by_chapter": {},
     }
-    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography"])
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography"], lang="fr")
     lower = prompt.lower()
     assert "prior knowledge" in lower or "training knowledge" in lower or "do not use" in lower
 
@@ -997,7 +997,7 @@ def test_build_prompt_opens_with_fictional_world_framing():
         "aliases": [],
         "context_by_chapter": {},
     }
-    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography"])
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography"], lang="fr")
     # The fictional world framing must appear early (before the entity block)
     framing_pos = prompt.lower().find("fictional world")
     entity_pos = prompt.find("Entity to write:")
@@ -1015,7 +1015,7 @@ def test_build_prompt_uses_positive_grounding_constraint():
         "aliases": [],
         "context_by_chapter": {},
     }
-    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography"])
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography"], lang="fr")
     lower = prompt.lower()
     assert "every factual claim" in lower, "Prompt must contain 'every factual claim' positive grounding"
     assert "grounding excerpts" in lower, "Positive grounding constraint must reference 'GROUNDING EXCERPTS'"
@@ -1030,7 +1030,7 @@ def test_build_prompt_grounding_excerpts_header_is_prominent():
         "aliases": [],
         "context_by_chapter": {"C01.xhtml": ["She crossed the hall."]},
     }
-    prompt = build_prompt(entity, "Throne of Glass", ["biography"])
+    prompt = build_prompt(entity, "Throne of Glass", ["biography"], lang="fr")
     assert "GROUNDING EXCERPTS" in prompt
 
 
@@ -1053,7 +1053,7 @@ def test_build_prompt_labels_xhtml_chapter_keys_by_position():
         "related_context": [],
         "relationships": [],
     }
-    prompt = build_prompt(entity, "Throne of Glass", ["biography"])
+    prompt = build_prompt(entity, "Throne of Glass", ["biography"], lang="fr")
     assert "C25.xhtml" not in prompt
     assert "C03.xhtml" not in prompt
     assert "[Chapter 2] She crossed the hall." in prompt
@@ -1075,7 +1075,7 @@ def test_build_prompt_keeps_non_xhtml_chapter_keys_unchanged():
         "related_context": [],
         "relationships": [],
     }
-    prompt = build_prompt(entity, "Throne of Glass", ["biography"])
+    prompt = build_prompt(entity, "Throne of Glass", ["biography"], lang="fr")
     assert "Chapter 5" in prompt
 
 
@@ -1090,7 +1090,7 @@ def test_build_prompt_warns_against_citing_chapter_labels():
         "related_context": [],
         "relationships": [],
     }
-    prompt = build_prompt(entity, "Throne of Glass", ["biography"])
+    prompt = build_prompt(entity, "Throne of Glass", ["biography"], lang="fr")
     assert "never mention" in prompt.lower() and "internal reference" in prompt.lower()
 
 
@@ -1139,7 +1139,7 @@ def _celaena_with_flashback() -> dict:
 def test_build_prompt_backstory_block_and_rule_when_backstory_section():
     """STU-493: generating the backstory section surfaces the flashback context
     block plus a writing rule for the "Avant les événements du livre" section."""
-    prompt = build_prompt(_celaena_with_flashback(), "Throne of Glass", ["backstory"])
+    prompt = build_prompt(_celaena_with_flashback(), "Throne of Glass", ["backstory"], lang="fr")
     assert "## Backstory context" in prompt
     assert "Five years earlier" in prompt
     assert 'Write a "## Avant les événements du livre" section grounded ONLY in the' in prompt
@@ -1149,7 +1149,7 @@ def test_build_prompt_backstory_block_and_rule_when_backstory_section():
 def test_build_prompt_backstory_gated_to_its_own_section():
     """STU-493: flashback content never leaks into other PERSON section prompts —
     present and flashback bullets are not mixed in the biography prompt."""
-    prompt = build_prompt(_celaena_with_flashback(), "Throne of Glass", ["biography"])
+    prompt = build_prompt(_celaena_with_flashback(), "Throne of Glass", ["biography"], lang="fr")
     assert "## Chapter summary context" in prompt
     assert "She arrived at the castle." in prompt
     assert "## Backstory context" not in prompt
@@ -1174,7 +1174,7 @@ def test_build_prompt_backstory_section_omitted_when_no_flashbacks():
             },
         ],
     }
-    prompt = build_prompt(entity, "Throne of Glass", ["backstory"])
+    prompt = build_prompt(entity, "Throne of Glass", ["backstory"], lang="fr")
     assert "## Backstory context" not in prompt
     assert 'Do NOT include a "## Avant les événements du livre" section' in prompt
 
@@ -1201,7 +1201,7 @@ def test_build_prompt_references_constraint_present():
         "relationships": [],
         "chapter_summary_context": [],
     }
-    prompt = build_prompt(entity, book_title="Throne of Glass", sections=["infobox", "biography", "references"])
+    prompt = build_prompt(entity, book_title="Throne of Glass", sections=["infobox", "biography", "references"], lang="fr")
     assert "Throne of Glass" in prompt
     assert '"<references/>"' in prompt
 
@@ -1227,7 +1227,7 @@ def test_build_prompt_localizes_titles_briefs_and_directive_in_english():
     assert "français" not in en.lower()
 
     fr = build_prompt(entity, "Throne of Glass",
-                      sections=["infobox", "biography", "personality", "references"])
+                      sections=["infobox", "biography", "personality", "references"], lang="fr")
     assert "Write ALL content in French" in fr
     assert "## Biographie" in fr                      # French default preserved
     assert "Qui est ce personnage" in fr
@@ -1297,7 +1297,7 @@ def test_build_prompt_forbids_relations_when_not_in_sections():
             {"entity_a": "Hollin", "entity_b": "Dorian", "relationship_type": "frères", "cooccurrence_count": 5}
         ],
     }
-    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography"])
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography"], lang="fr")
     assert "Do NOT include" in prompt or "do not include" in prompt.lower() or "## Relations" in prompt and "DO NOT" in prompt
     # Must not instruct LLM to produce ## Relations
     assert "ALWAYS include" not in prompt
@@ -1313,7 +1313,7 @@ def test_build_prompt_forbids_relations_when_no_typed_rels():
         "context_by_chapter": {},
         "relationships": [],
     }
-    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"])
+    prompt = build_prompt(entity, "Throne of Glass", ["infobox", "biography", "relationships"], lang="fr")
     # The strong negative rule must appear, not just the soft omit hint
     assert "Do NOT include a ## Relations" in prompt or "do not include a ## Relations" in prompt.lower()
 
@@ -1417,7 +1417,7 @@ def test_strip_relations_section_strips_localized_english_heading():
 def test_make_stub_page_sets_insufficient_data_flag():
     """make_stub_page with insufficient_data=True must set _insufficient_data, not _failed."""
     entity = {"canonical_name": "Brullo", "importance": "secondary", "type": "PERSON"}
-    page = make_stub_page(entity, insufficient_data=True)
+    page = make_stub_page(entity, insufficient_data=True, lang="fr")
     assert page.get("_insufficient_data") is True
     assert "_failed" not in page
 
@@ -1425,7 +1425,7 @@ def test_make_stub_page_sets_insufficient_data_flag():
 def test_make_stub_page_default_sets_no_flags():
     """make_stub_page() with no flags must set neither _failed nor _insufficient_data."""
     entity = {"canonical_name": "Brullo", "importance": "secondary", "type": "PERSON"}
-    page = make_stub_page(entity)
+    page = make_stub_page(entity, lang="fr")
     assert "_failed" not in page
     assert "_insufficient_data" not in page
 
@@ -1438,7 +1438,7 @@ def test_make_stub_page_content_follows_lang():
     assert en_failed["content"] == "## Biography\n\n*Technical failure while generating this entity.*"
     en_insufficient = make_stub_page(entity, insufficient_data=True, lang="en")
     assert en_insufficient["content"] == "## Biography\n\n*Insufficient information available for this entity.*"
-    fr_failed = make_stub_page(entity, failed=True)
+    fr_failed = make_stub_page(entity, failed=True, lang="fr")
     assert fr_failed["content"] == "## Biographie\n\n*Échec technique de la génération pour cette entité.*"
 
 
@@ -1459,7 +1459,7 @@ def test_run_generation_for_entity_sets_insufficient_data_when_no_context(tmp_pa
         max_tokens=800,
         dry_run=False,
         debug_dir=tmp_path / "debug",
-    )
+     language="fr",)
     assert page.get("_insufficient_data") is True
     assert "_failed" not in page
 
@@ -1474,7 +1474,7 @@ def test_parse_response_warns_on_suspiciously_short_content(capsys):
         "content": "## Biographie\n\nPersonnage mineur.",
     })
     entity = {"canonical_name": "Brullo", "importance": "secondary", "type": "PERSON"}
-    page = parse_response(raw, entity)
+    page = parse_response(raw, entity, lang="fr")
     assert not page.get("_failed"), "Short but non-empty content must not be marked failed"
     captured = capsys.readouterr()
     assert "brullo" in captured.err.lower() or "court" in captured.err.lower() or "short" in captured.err.lower()
@@ -1545,7 +1545,7 @@ def test_build_prompt_includes_forbidden_names_block():
         "context_by_chapter": {"ch01": ["Celaena entre dans la salle."]},
     }
     prompt = build_prompt(entity, "Throne of Glass", sections=["infobox", "biography"],
-                          forbidden_names=["Aelin Galathynius", "Aelin"])
+                          forbidden_names=["Aelin Galathynius", "Aelin"], lang="fr")
     assert "FORBIDDEN NAMES" in prompt
     assert "Aelin Galathynius" in prompt
     assert "Aelin" in prompt
@@ -1559,7 +1559,7 @@ def test_build_prompt_no_forbidden_names_block_when_empty():
         "context_by_chapter": {"ch01": ["Celaena entre dans la salle."]},
     }
     prompt = build_prompt(entity, "Throne of Glass", sections=["infobox", "biography"],
-                          forbidden_names=[])
+                          forbidden_names=[], lang="fr")
     assert "FORBIDDEN NAMES" not in prompt
 
 
@@ -1570,7 +1570,7 @@ def test_build_prompt_no_forbidden_names_block_when_omitted():
         "type": "PERSON",
         "context_by_chapter": {"ch01": ["Celaena entre dans la salle."]},
     }
-    prompt = build_prompt(entity, "Throne of Glass", sections=["infobox", "biography"])
+    prompt = build_prompt(entity, "Throne of Glass", sections=["infobox", "biography"], lang="fr")
     assert "FORBIDDEN NAMES" not in prompt
 
 
@@ -1614,7 +1614,7 @@ def test_run_generation_retries_on_forbidden_name(monkeypatch, tmp_path):
         dry_run=False,
         debug_dir=debug_dir,
         forbidden_names=["Aelin Galathynius", "Aelin"],
-    )
+     language="fr",)
 
     assert len(calls) == 2
     assert "Aelin" not in page.get("content", "")
@@ -1651,7 +1651,7 @@ def test_run_generation_returns_stub_after_failed_retry(monkeypatch, tmp_path):
         dry_run=False,
         debug_dir=debug_dir,
         forbidden_names=["Aelin Galathynius"],
-    )
+     language="fr",)
 
     assert page.get("_failed") is True
     assert page.get("_spoiler_rejected") is True
@@ -1689,7 +1689,7 @@ def test_run_generation_no_retry_when_clean(monkeypatch, tmp_path):
         dry_run=False,
         debug_dir=debug_dir,
         forbidden_names=["Aelin Galathynius"],
-    )
+     language="fr",)
 
     assert len(calls) == 1
     assert page["title"] == "Celaena Sardothien"
@@ -1727,7 +1727,7 @@ def test_run_generation_no_retry_when_no_forbidden_names(monkeypatch, tmp_path):
         max_tokens=800,
         dry_run=False,
         debug_dir=debug_dir,
-    )
+     language="fr",)
 
     assert len(calls) == 1
     assert not page.get("_failed")
@@ -1764,7 +1764,7 @@ def test_wiki_page_item_input_defaults():
         book_title="B",
         sections=["infobox"],
         max_tokens=200,
-    )
+     language="fr",)
     assert item["language"] == "fr"
     assert item["forbidden_names"] == []
     assert item["file_path"] == ""
@@ -1778,7 +1778,7 @@ def test_wiki_page_item_input_grounding_config():
     item = _wiki_page_item_input(
         entity=entity, book_title="B", sections=["infobox"], max_tokens=200,
         grounding={"llm": True, "llm_model": "qwen2.5", "llm_timeout": 60},
-    )
+     language="fr",)
     assert item["grounding_llm"] is True
     assert item["grounding_llm_model"] == "qwen2.5"
     assert item["grounding_llm_timeout"] == 60
@@ -1790,7 +1790,7 @@ def test_wiki_page_item_input_grounding_off_by_default():
     item = _wiki_page_item_input(
         entity={"canonical_name": "X", "importance": "figurant", "type": "PERSON"},
         book_title="B", sections=["infobox"], max_tokens=200,
-    )
+     language="fr",)
     assert "grounding_llm" not in item
 
 
@@ -1808,12 +1808,12 @@ def _entity_with_chapter(pov, pov_character):
 
 
 def test_prompt_includes_pov_note_for_limited_pov():
-    prompt = build_prompt(_entity_with_chapter("third_limited", "Chaol"), "Book", ["main"])
+    prompt = build_prompt(_entity_with_chapter("third_limited", "Chaol"), "Book", ["main"], lang="fr")
     assert "Chaol's perspective" in prompt
 
 
 def test_prompt_no_pov_note_for_omniscient():
-    prompt = build_prompt(_entity_with_chapter("omniscient", None), "Book", ["main"])
+    prompt = build_prompt(_entity_with_chapter("omniscient", None), "Book", ["main"], lang="fr")
     assert "perspective —" not in prompt  # no per-chapter POV note emitted
 
 
@@ -1915,7 +1915,7 @@ def test_force_correct_on_success_path_keeps_page(monkeypatch, tmp_path):
         dry_run=False,
         debug_dir=tmp_path / "debug",
         sibling_canonicals={"Kaltain Rompier"},
-    )
+     language="fr",)
 
     assert page.get("_failed") is not True
     assert page["infobox_fields"]["nom"] == "Verin"
@@ -1953,7 +1953,7 @@ def test_recovers_and_corrects_on_identity_only_rejection(monkeypatch, tmp_path)
         dry_run=False,
         debug_dir=tmp_path / "debug",
         sibling_canonicals={"Kaltain Rompier"},
-    )
+     language="fr",)
 
     assert page.get("_failed") is not True
     assert page["infobox_fields"]["nom"] == "Verin"
@@ -1985,7 +1985,7 @@ def test_does_not_recover_on_non_identity_rejection(monkeypatch, tmp_path):
         dry_run=False,
         debug_dir=tmp_path / "debug",
         sibling_canonicals={"Kaltain Rompier"},
-    )
+     language="fr",)
 
     assert page.get("_failed") is True
 
@@ -2004,7 +2004,7 @@ def test_does_not_recover_when_no_run_id(monkeypatch, tmp_path):
         max_tokens=800,
         dry_run=False,
         debug_dir=tmp_path / "debug",
-    )
+     language="fr",)
     assert page.get("_failed") is True
 
 
@@ -2028,7 +2028,7 @@ def test_non_person_success_page_not_touched(monkeypatch, tmp_path):
         dry_run=False,
         debug_dir=tmp_path / "debug",
         sibling_canonicals={"Adarlan"},
-    )
+     language="fr",)
 
     assert page["infobox_fields"]["nom"] == "Adarlan"
     assert "_identity_corrected" not in page
@@ -2068,7 +2068,7 @@ def test_force_identity_trigger_is_counted(monkeypatch, tmp_path):
         entity=_verin_entity_ctx(), book_title="TOG", model="q", timeout=1,
         sections=["infobox", "biography"], max_tokens=800, dry_run=False,
         debug_dir=tmp_path / "d", sibling_canonicals={"Kaltain Rompier"},
-    )
+     language="fr",)
     assert _gwp._SAFETY_NET_TRIGGERS["force_identity"] == 1
     assert _gwp._SAFETY_NET_TRIGGERS["identity_recovery"] == 0
 
@@ -2085,7 +2085,7 @@ def test_clean_page_records_no_trigger(monkeypatch, tmp_path):
         entity=_verin_entity_ctx(), book_title="TOG", model="q", timeout=1,
         sections=["infobox", "biography"], max_tokens=800, dry_run=False,
         debug_dir=tmp_path / "d",
-    )
+     language="fr",)
     assert _gwp._SAFETY_NET_TRIGGERS == {"force_identity": 0, "identity_recovery": 0}
 
 
@@ -2109,7 +2109,7 @@ def test_identity_recovery_trigger_is_counted(monkeypatch, tmp_path):
         entity=_verin_entity_ctx(), book_title="TOG", model="q", timeout=1,
         sections=["infobox", "biography"], max_tokens=800, dry_run=False,
         debug_dir=tmp_path / "d", sibling_canonicals={"Kaltain Rompier"},
-    )
+     language="fr",)
     assert _gwp._SAFETY_NET_TRIGGERS["identity_recovery"] == 1
 
 
@@ -2176,7 +2176,7 @@ def test_stray_llm_key_is_dropped_and_does_not_crash_save(tmp_path):
         "infobox_fields": {}, "content": "## Biographie\n\nTexte.",
         "reasoning": "chain-of-thought the model leaked", "sources": ["ch1"],
     })
-    page = parse_response(raw, _entity())
+    page = parse_response(raw, _entity(), lang="fr")
     assert "reasoning" not in page and "sources" not in page
 
     output_file = str(tmp_path / "wiki_pages.json")
@@ -2228,7 +2228,7 @@ def _config(tmp_path) -> GenerationConfig:
         generation_cfg={},
         output_file=str(tmp_path / "wiki_pages.json"),
         debug_dir=tmp_path / "debug",
-    )
+     language="fr",)
 
 
 def test_generate_pages_uses_runner_and_saves(tmp_path):

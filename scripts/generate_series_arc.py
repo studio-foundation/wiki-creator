@@ -271,7 +271,7 @@ def arc_from_payload(payload: dict) -> str | None:
         return cached
 
     arc = _arc_from_result(
-        page_from_map_result(_arc_map_result(payload), arc_entity(), inputs.lang)
+        page_from_map_result(_arc_map_result(payload), arc_entity(), language=inputs.lang)
     )
     if arc:
         save_arc_cache(inputs.cache_path, key, arc)

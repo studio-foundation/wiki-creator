@@ -49,7 +49,7 @@ def _infobox_fields(character: SeriesCharacter, lang: str) -> dict:
         death = death_label(character.status.get("agent"), character.status.get("place"), lang)
         if death:
             fields["death"] = death
-    return gate_infobox_spoilers(fields, lang)
+    return gate_infobox_spoilers(fields, lang=lang)
 
 
 _HEADING_LINE_RE = re.compile(r"(?m)^(=+) (.+?) (=+)$")
@@ -120,7 +120,8 @@ def _merged_relationship_index(character: SeriesCharacter) -> list[str]:
 def render_series_character_page(
     character: SeriesCharacter,
     labels: dict,
-    lang: str = "fr",
+    *,
+    lang: str,
     expose_importance_tier: bool = True,
 ) -> tuple[str, str]:
     """``(path relative to the series wiki dir, wikitext)`` for one merged character.

@@ -67,6 +67,10 @@ chrome:
   # chapter axis; these gate one section per tome on a merged character page.
   reveal_tome:    "Book {tome} — reveal"
   tome_heading:   "Book {tome}"
+  # STU-734: the `apparition` infobox slot — an entity's tome provenance. `{first}`
+  # and `{last}` are tome numbers; `appearance_range` renders when they differ.
+  appearance_one:   "Appears in book {first}"
+  appearance_range: "First appears in book {first}, last appears in book {last}"
   # STU-488: the `status` infobox slot. The enum itself lives in
   # wiki_creator/entity_status.py; its labels are data.
   status_alive:    Alive
@@ -102,6 +106,10 @@ chrome:
   collation_mentions:  "Mentioned {mentions} times in {chapters} chapter(s)."
   # STU-514: event-page title disambiguation suffix (chapter tag on colliding titles).
   chapter_tag:         "chapter {chapter}"
+  # STU-734: categories.wiki heading + blurb — the last two literals of the page
+  # (every category name below them already comes from export.categories.labels).
+  categories_heading:  Categories
+  categories_blurb:    "This page documents the category hierarchy used in this wiki."
   # STU-651: export category / showcase label defaults. `{n}` is the tome number.
   # Overridable per book via export.categories.labels.
   principal:             "Main characters"
@@ -118,12 +126,16 @@ stubs:
   # STU-514: event-page stubs (dry-run / generation failure).
   event_failed:  "Technical failure while generating this page."
   event_dry_run: "Event page not generated (dry run)."
+  # STU-734: book-synopsis stubs (dry-run / generation failure), rendered under the
+  # `synopsis` heading — were hardcoded French in the stage script.
+  synopsis_failed:  "Technical failure while generating the synopsis."
+  synopsis_dry_run: "Synopsis not generated (dry run)."
 
 # STU-517: wiki-page-validator error messages, keyed by the stable neutral `code`
 # scripts/wiki_page_validator.py declares — generate_wiki_pages matches on the
 # code for identity-only recovery, so the prose here is free to be reworded.
 validator_errors:
-  language_contamination:       "English content detected (markers: {markers})"
+  language_contamination:       "Content in another language detected (markers: {markers})"
   epub_id:                      "EPUB ID in the content (e.g. C07.xhtml)"
   infobox_key_prefix:           "Infobox key prefixed with '- ': {key}"
   series_anchor_missing:        "The series title '{series}' is missing from the first paragraph"

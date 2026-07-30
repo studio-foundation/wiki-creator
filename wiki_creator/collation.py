@@ -63,7 +63,7 @@ def collation_config(book_cfg: dict) -> dict[str, TierCollation]:
     return config
 
 
-def collation_labels(export_cfg: dict, lang: str = "fr") -> dict[str, str]:
+def collation_labels(export_cfg: dict, *, lang: str) -> dict[str, str]:
     """Collective page titles: ``export.categories.labels`` override the
     ``lang``-localized base.yaml defaults (STU-514)."""
     labels = ((export_cfg or {}).get("categories") or {}).get("labels") or {}
@@ -102,7 +102,7 @@ def partition_by_collation(
     return dedicated, collective, dropped
 
 
-def _entry(entity: dict, lang: str = "fr") -> str:
+def _entry(entity: dict, *, lang: str) -> str:
     """One collective-page entry. Every line is a fact the classification
     artifact already carries; no LLM."""
     lines = [f"## {entity.get('canonical_name', '')}"]
@@ -115,7 +115,7 @@ def _entry(entity: dict, lang: str = "fr") -> str:
     return "\n\n".join(lines)
 
 
-def collective_pages(entities: list[dict], labels: dict[str, str], lang: str = "fr") -> list[dict]:
+def collective_pages(entities: list[dict], labels: dict[str, str], *, lang: str) -> list[dict]:
     """One page per title key, entries ordered by canonical name.
 
     Grouped by title, not by entity type: EVENT and OTHER share ``minor_other``,
@@ -138,7 +138,7 @@ def collective_pages(entities: list[dict], labels: dict[str, str], lang: str = "
                 "importance": COLLATION_IMPORTANCE,
                 "entity_type": COLLATION_ENTITY_TYPE,
                 "infobox_fields": {},
-                "content": "\n\n".join(_entry(e, lang) for e in group),
+                "content": "\n\n".join(_entry(e, lang=lang) for e in group),
             }
         )
     return pages

@@ -45,6 +45,8 @@ chrome:
   evolution:      "Évolution :"
   reveal_tome:    "Tome {tome} — révéler"
   tome_heading:   "Tome {tome}"
+  appearance_one:   "Apparaît au tome {first}"
+  appearance_range: "Apparaît au tome {first}, dernière apparition tome {last}"
   status_alive:    Vivant
   status_deceased: Décédé
   status_missing:  Disparu
@@ -74,6 +76,8 @@ chrome:
   collation_aliases:   "Alias : {aliases}"
   collation_mentions:  "Mentionné {mentions} fois dans {chapters} chapitre(s)."
   chapter_tag:         "chapitre {chapter}"
+  categories_heading:  "Catégories"
+  categories_blurb:    "Cette page documente la hiérarchie de catégories utilisée dans ce wiki."
   principal:             "Personnages principaux"
   secondary:             "Personnages secondaires"
   persons_by_tome:       "Personnages du Tome {n}"
@@ -85,9 +89,11 @@ stubs:
   insufficient:  "Informations insuffisantes disponibles pour cette entité."
   event_failed:  "Échec technique de la génération."
   event_dry_run: "Page d'événement non générée (dry-run)."
+  synopsis_failed:  "Échec technique de la génération du synopsis."
+  synopsis_dry_run: "Synopsis non généré (dry-run)."
 
 validator_errors:
-  language_contamination:       "Contenu en anglais détecté (marqueurs : {markers})"
+  language_contamination:       "Contenu dans une autre langue détecté (marqueurs : {markers})"
   epub_id:                      "ID EPUB dans le contenu (ex: C07.xhtml)"
   infobox_key_prefix:           "Clé infobox préfixée par '- ' : {key}"
   series_anchor_missing:        "Le titre de série '{series}' est absent du premier paragraphe"

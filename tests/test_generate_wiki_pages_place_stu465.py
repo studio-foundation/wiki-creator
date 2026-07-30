@@ -46,7 +46,7 @@ def _fake_place_item(content):
 def test_isolate_section_drops_multi_block_place_content():
     """Documents the root cause: sectioned isolation returns None for a valid
     multi-section PLACE article because no block is titled 'Biographie'."""
-    assert gwp._isolate_section(EYLLWE_CONTENT, "biography") is None
+    assert gwp._isolate_section(EYLLWE_CONTENT, "biography", lang="fr") is None
 
 
 def test_place_entity_routes_to_single_shot(monkeypatch):
@@ -58,7 +58,7 @@ def test_place_entity_routes_to_single_shot(monkeypatch):
     page = gwp._run_generation(
         entity=_place_entity(), book_title="ToG", model="m", timeout=10,
         sections=["infobox", "biography", "references"], max_tokens=800,
-        dry_run=False, debug_dir=Path("/tmp"))
+        dry_run=False, debug_dir=Path("/tmp"), language="fr")
     assert page["_which"] == "single_shot"
 
 
@@ -73,7 +73,7 @@ def test_person_entity_routes_to_sectioned(monkeypatch):
     page = gwp._run_generation(
         entity=entity, book_title="ToG", model="m", timeout=10,
         sections=["infobox", "biography"], max_tokens=800,
-        dry_run=False, debug_dir=Path("/tmp"))
+        dry_run=False, debug_dir=Path("/tmp"), language="fr")
     assert page["_which"] == "sectioned"
 
 
@@ -85,7 +85,7 @@ def test_rich_place_produces_non_empty_page(monkeypatch, tmp_path):
     page = gwp._run_generation(
         entity=_place_entity(), book_title="Throne of Glass", model="m", timeout=10,
         sections=["infobox", "biography", "physical", "references"], max_tokens=800,
-        dry_run=False, debug_dir=tmp_path / "debug")
+        dry_run=False, debug_dir=tmp_path / "debug", language="fr")
     assert not page.get("_failed")
     assert page["content"].strip()
     assert "Géographie" in page["content"]
@@ -99,8 +99,8 @@ def test_failed_stub_message_distinct_from_insufficient():
     """Issue target #2: a technical failure must not be labelled with the
     data-insufficiency message that masked it."""
     entity = {"canonical_name": "Eyllwe", "importance": "principal", "type": "PLACE"}
-    failed = gwp.make_stub_page(entity, failed=True)
-    insufficient = gwp.make_stub_page(entity, insufficient_data=True)
+    failed = gwp.make_stub_page(entity, failed=True, lang="fr")
+    insufficient = gwp.make_stub_page(entity, insufficient_data=True, lang="fr")
     assert failed["content"] != insufficient["content"]
     assert "insuffisantes" not in failed["content"].lower()
     assert "insuffisantes" in insufficient["content"].lower()

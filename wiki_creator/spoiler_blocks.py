@@ -60,7 +60,9 @@ def tome_collapsible_section(heading: str, body: str, expandtext: str, collapset
     return _collapsible(f"== {heading} ==\n\n{body.strip()}", expandtext, collapsetext)
 
 
-def wrap_collapsible(body: str, content_units: list[dict], collapse_after: int, lang: str = "fr") -> str:
+def wrap_collapsible(
+    body: str, content_units: list[dict], collapse_after: int, *, lang: str
+) -> str:
     """Wrap each section revealed after ``collapse_after`` in an mw-collapsible div.
 
     Matching is by normalized heading title (via ``slot_label``), so it is robust
@@ -87,7 +89,7 @@ def wrap_collapsible(body: str, content_units: list[dict], collapse_after: int, 
 _SPOILER_INFOBOX_TOKENS = ("status", "death")
 
 
-def gate_infobox_spoilers(fields: dict, lang: str = "fr") -> dict:
+def gate_infobox_spoilers(fields: dict, *, lang: str) -> dict:
     """Collapse the spoiler-bearing infobox values behind an inline mw-collapsible.
 
     ``status`` and ``death`` (STU-488/STU-552) are the only infobox rows that leak
@@ -115,7 +117,7 @@ def gate_infobox_spoilers(fields: dict, lang: str = "fr") -> dict:
     return gated
 
 
-def citation_ref(book_title: str, chapter: int, lang: str = "fr") -> str:
+def citation_ref(book_title: str, chapter: int, *, lang: str) -> str:
     """MediaWiki footnote (STU-656) citing the book and the chapter a fact is
     grounded in — ``<ref>{book_title}, {chapter}</ref>``. The chapter comes from
     the unit's own provenance, so it invents no page/line number; the localized
@@ -126,7 +128,8 @@ def citation_ref(book_title: str, chapter: int, lang: str = "fr") -> str:
 
 def relationship_index_lines(
     entity: dict,
-    lang: str = "fr",
+    *,
+    lang: str,
     book_config: dict | None = None,
     book_title: str | None = None,
 ) -> list[str]:
@@ -166,7 +169,7 @@ def relationship_index_lines(
         span = f"ch.{lo}" if lo == hi else f"ch.{lo}→ch.{hi}"
         line = f"* [[{other}]] — {rtype} ({span})"
         if book_title:
-            line += citation_ref(book_title, lo, lang)
+            line += citation_ref(book_title, lo, lang=lang)
         rows.append((lo, line))
     rows.sort(key=lambda r: r[0], reverse=True)
     return [line for _, line in rows]
@@ -176,7 +179,7 @@ def _relations_title(lang: str) -> str:
     return _norm(slot_label("relationships", lang))
 
 
-def inject_relationship_index(body: str, lines: list[str], lang: str = "fr") -> str:
+def inject_relationship_index(body: str, lines: list[str], *, lang: str) -> str:
     """Append a localized ''Evolution'' index sub-block at the end of the Relations section."""
     if not lines:
         return body
@@ -222,7 +225,9 @@ def _subheading_name(block: str) -> str | None:
     return n.group(1).strip() if n else None
 
 
-def wrap_relation_collapsibles(body: str, relation_units: list[dict], collapse_after: int, lang: str = "fr") -> str:
+def wrap_relation_collapsibles(
+    body: str, relation_units: list[dict], collapse_after: int, *, lang: str
+) -> str:
     """Wrap each ``=== [[Name]] ===`` subsection of the Relations section whose
     relation is revealed after ``collapse_after`` in an mw-collapsible div.
 

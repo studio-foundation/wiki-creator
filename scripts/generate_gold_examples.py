@@ -25,6 +25,9 @@ from scripts.generate_wiki_pages import (
 from wiki_creator.page_templates import slot_label
 
 BOOK_TITLE = "Throne of Glass"
+# The gold pages are French; build_prompt takes the output language
+# explicitly (STU-734).
+BOOK_LANGUAGE = "fr"
 
 # Batch files may live in the main repo if the worktree wiki_inputs is empty
 BATCH_DIR_CANDIDATES = [
@@ -402,7 +405,7 @@ def main():
         importance = entity["importance"]
         section_keys = _DEFAULT_SECTIONS_BY_IMPORTANCE.get(importance, ["infobox", "biography"])
 
-        instruction = build_prompt(entity, BOOK_TITLE, section_keys)
+        instruction = build_prompt(entity, BOOK_TITLE, section_keys, lang=BOOK_LANGUAGE)
         gold = GOLD_OUTPUTS[name]
         output_json = json.dumps(gold, ensure_ascii=False)
 

@@ -100,7 +100,8 @@ def test_run_live_writes_page_with_references(tmp_path, monkeypatch):
     page = gbs.run_for_processing(tmp_path, book_cfg={}, language="en")
 
     assert page["title"] == SYNOPSIS_TITLE
-    assert "## Références" in page["content"]
+    # STU-734: the appended References heading follows the output language
+    assert "## References" in page["content"]
     assert "- Throne of Glass" in page["content"]
     assert page["infobox_fields"] == {}
     assert "run_metadata" not in page
@@ -115,7 +116,7 @@ def test_finalize_strips_authored_references_before_appending():
     result = _page_result(
         "## Synopsis\n\nDu texte.\n\n## Références\n\n- Un autre livre\n"
     )
-    page = gbs._finalize_page(result, "Throne of Glass")
+    page = gbs._finalize_page(result, "Throne of Glass", "fr")
     assert "Un autre livre" not in page["content"]
     assert page["content"].count("## Références") == 1
     assert "- Throne of Glass" in page["content"]

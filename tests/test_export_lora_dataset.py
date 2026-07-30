@@ -91,7 +91,7 @@ class TestProcessFandomEntry:
         assert result["input"] == ""
         out = json.loads(result["output"])
         assert out["title"] == "Celaena"
-        assert out["infobox_fields"]["nom"] == "Celaena"  # normalized
+        assert out["infobox_fields"]["name"] == "Celaena"  # source key kept (STU-734)
 
     def test_rejected_short(self):
         entry = {

@@ -38,7 +38,7 @@ def _run(entity, book_config, monkeypatch):
     gwp._run_generation(
         entity=entity, book_title="ToG", model="m", timeout=10,
         sections=["infobox", "biography"], max_tokens=500, dry_run=False,
-        debug_dir=Path("/tmp"), book_config=book_config)
+        debug_dir=Path("/tmp"), book_config=book_config, language="fr")
     return seen["path"]
 
 

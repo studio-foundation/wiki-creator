@@ -844,6 +844,97 @@ def test_packed_item_keeps_substantial_front_matter_before_first_anchor(tmp_path
     assert [c["id"] for c in chapters[1:]] == ["packed#ch1", "packed#ch2", "packed#ch3"]
 
 
+def _cut_packed_epub(tmp_path, items):
+    """A packed book a converter cut into several files — the STU-735 shape.
+
+    `items` is one `(lead_paragraphs, [chapter_number, ...])` per spine item. The
+    lead is the anchorless text opening a file: genuine front matter on the first
+    content item, the tail of the previous chapter on a file the converter cut
+    mid-chapter. An item declaring no chapters gets no TOC fragment, so it stays a
+    whole-file chapter.
+    """
+    from ebooklib import epub
+
+    book = epub.EpubBook()
+    book.set_identifier("cut")
+    book.set_title("Cut Book")
+    book.set_language("en")
+
+    spine, links = [], []
+    for index, (lead_paragraphs, chapter_numbers) in enumerate(items):
+        body = "<html><body>"
+        body += "".join(
+            f"<p>Lead paragraph {j} of item {index}, long enough to clear the length bar.</p>"
+            for j in range(lead_paragraphs)
+        )
+        for n in chapter_numbers:
+            body += f'<h2 id="ch{n}">Chapter {n}</h2>'
+            body += "".join(
+                f"<p>Chapter {n} paragraph {j}, with plenty of words to clear the length bar.</p>"
+                for j in range(4)
+            )
+        body += "</body></html>"
+        name = f"part{index}.xhtml"
+        item = epub.EpubHtml(uid=f"part{index}", title=f"Part {index}", file_name=name, lang="en")
+        item.set_content(body.encode())
+        book.add_item(item)
+        spine.append(item)
+        links += [epub.Link(f"{name}#ch{n}", f"Chapter {n}", f"ch{n}") for n in chapter_numbers]
+
+    book.spine = spine
+    book.toc = links
+    book.add_item(epub.EpubNcx())
+    book.add_item(epub.EpubNav())
+    path = str(tmp_path / "cut.epub")
+    epub.write_epub(path, book)
+    return path
+
+
+def test_cut_item_appends_its_lead_to_the_chapter_it_continues(tmp_path):
+    """A file cut mid-chapter opens on that chapter's tail, not on a new chapter."""
+    from scripts.parse_epub import parse_epub
+
+    chapters = parse_epub(_cut_packed_epub(tmp_path, [(0, [1, 2]), (2, [3, 4])]), language="en")["chapters"]
+    assert [c["id"] for c in chapters] == ["part0#ch1", "part0#ch2", "part1#ch3", "part1#ch4"]
+    tail = next(c for c in chapters if c["id"] == "part0#ch2")
+    assert "Lead paragraph 0 of item 1" in tail["content"]
+    assert "Lead paragraph 1 of item 1" in tail["content"]
+    # The tail is welded to its own chapter only, never to the next one.
+    assert "Lead paragraph" not in chapters[2]["content"]
+
+
+def test_cut_item_lead_is_absorbed_as_a_paragraph_not_a_run_on(tmp_path):
+    """The weld restores exactly the block boundary the split marker consumed."""
+    from scripts.parse_epub import parse_epub
+
+    chapters = parse_epub(_cut_packed_epub(tmp_path, [(0, [1, 2]), (2, [3, 4])]), language="en")["chapters"]
+    blocks = chapters[1]["content"].split("\n\n")
+    assert blocks[0] == "Chapter 2"
+    assert blocks[5].startswith("Lead paragraph 0 of item 1")
+    assert len(blocks) == 7  # heading + 4 paragraphs + the 2 tail paragraphs
+
+
+def test_cut_item_keeps_the_first_items_front_matter_while_absorbing_a_tail(tmp_path):
+    """Both shapes at once: front matter stands, a later item's lead is absorbed."""
+    from scripts.parse_epub import parse_epub
+
+    chapters = parse_epub(_cut_packed_epub(tmp_path, [(3, [1, 2]), (2, [3, 4])]), language="en")["chapters"]
+    assert [c["id"] for c in chapters] == ["part0", "part0#ch1", "part0#ch2", "part1#ch3", "part1#ch4"]
+    assert "Lead paragraph 0 of item 0" in chapters[0]["content"]
+    assert "Lead paragraph 0 of item 1" in chapters[2]["content"]
+
+
+def test_lead_after_a_whole_file_chapter_stays_its_own_section(tmp_path):
+    """The rule is never 'always append': a previous item that ended at a file
+    boundary declared no anchor, so nothing there is mid-chapter to continue."""
+    from scripts.parse_epub import parse_epub
+
+    chapters = parse_epub(_cut_packed_epub(tmp_path, [(4, []), (3, [1, 2])]), language="en")["chapters"]
+    assert [c["id"] for c in chapters] == ["part0", "part1", "part1#ch1", "part1#ch2"]
+    assert "Lead paragraph 0 of item 1" in chapters[1]["content"]
+    assert "Lead paragraph" not in chapters[2]["content"]
+
+
 def test_fragment_free_toc_is_left_untouched(tmp_path):
     """A TOC pointing at whole files (every library EPUB) never splits — one
     chapter per spine item, the pre-STU-727 path, byte-for-byte."""

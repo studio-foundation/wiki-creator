@@ -479,6 +479,47 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   recovered books; `public_domain/l_frank_baum/oz/output/05-the_road_to_oz/` is a
   rendering of the 4-chapter parse and is stale until a re-run.
 
+- A cut file opens mid-chapter (STU-735): the converter that packs a dozen chapters
+  into one spine item also **cuts that item into several files, mid-chapter**, so the
+  second file opens on the tail of the previous chapter with no anchor in front of it.
+  `_split_item_chapters` emitted that lead as a section of its own, titled by the raw
+  filename (`_extract_chapter_title`'s last fallback) — 26 chapters where The Road to
+  Oz has 24, and its chapter 11 split across two entries, so nothing downstream read
+  it whole. `_continues_previous` appends it instead.
+  **The discriminator is the previous item's last segment, not the lead's size or
+  title.** A lead is a tail only when the previous item ended *inside* a chapter, i.e.
+  its last emitted segment opened at an anchor (`"#" in chapters[-1]["id"]`). The rule
+  can never be "always append": the anchorless lead of the **first** content item is
+  genuine front matter on every book (`test_packed_item_keeps_substantial_front_matter
+  _before_first_anchor`), and a lead following a **whole-file** chapter follows a file
+  boundary that was already a chapter boundary.
+  **The defect was never the two books the ticket named — it is 8 of the 21, and the
+  EPUB-TOC path (STU-727) has it as badly as the printed-contents path.** Every one of
+  the 13 leads was read at its boundary and every one is a mid-sentence continuation:
+  dracula's `item4` is 26860 chars of chapter VII (whose own segment was 3070) titled
+  `CHAPTER VIII.`, because the item's first heading belongs to the *next* chapter.
+  Measured over all 21 `public_domain` books, chapter counts go dracula 32→30,
+  journey_to_the_centre 48→46, ozma_of_oz 34→32, dorothy_and_the_wizard 26→24,
+  road_to_oz 26→25, patchwork_girl 31→28, rinkitink 28→27, tin_woodman 29→28; the
+  other **13 are byte-identical**, and no chapter but the 13 welds moved a byte.
+  `make golden`/`make smoke` are untouched by construction (a library TOC yields no
+  fragments at all).
+  Two things are load-bearing. (1) **`pg-footer` is absorbed and then cut back to
+  nothing**, which is why 13 books survive: its anchorless lead follows an
+  anchor-terminated item on nearly every book, so the rule welds it onto the last real
+  chapter — and it *opens on the `*** END OF THE PROJECT GUTENBERG EBOOK ***` marker*,
+  so `strip_gutenberg_boilerplate` truncates the merged chapter at `m.start()` and
+  returns it byte-identical. (2) **The `_clears_min_chars` gate stays where it was**,
+  deciding whether the lead is material at all before the tail question is asked. It
+  keeps the odyssey byte-identical — its `item4` lead is a 74-char Italian dedication
+  that would otherwise weld onto the `Contents` section — at the price of one measured
+  leftover, journey's 89-char `item7` tail, which is genuine prose still dropped as it
+  was before. Below the bar the lead is dropped exactly as pre-STU-735.
+  Merging moves the STU-489 mention offsets on all 8 books, so their cached extraction
+  must be re-run (STU-737). Four have committed rendered output that is now stale:
+  `oz/output/{03-ozma_of_oz,04-dorothy_and_the_wizard_in_oz,05-the_road_to_oz}` and
+  `oz/output/_series`. No `library/` book is affected.
+
 - The chapter mark a book prints is declared by its reader (STU-736): the book YAML
   `parsing.chapter_marks` holds, verbatim, the lines this edition prints to open
   each section, and `parse_epub` splits at the leaf block printing each one — a
@@ -889,6 +930,41 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
 - Never add hardcoded word lists to scripts. All vocabulary belongs in `wiki_creator/cue_words/<lang>.json` (language-wide) or the book YAML `classification` section (book-specific). No script may define a fallback vocabulary constant — if a key is absent from cue_words, degrade gracefully to an empty collection.
 
 - English is the default and the only language allowed in code. Nothing user-visible may be hardcoded in another language — no French (or any non-English) string literals in `.py`. Anything that needs translation is data, not code, and it lives in **one file per language**: `wiki_creator/templates/lang/<code>.yaml` for output strings (`labels`, `chrome`, `stubs`, `validator_errors`, `briefs`, `few_shot`, `category_defaults`, `relationship_labels`, `sub_role_labels`, `language_name`), `wiki_creator/cue_words/<code>.json` for detection vocabulary. It is read via helpers (`slot_label`, `section_brief`, `chrome_label`, `stub_message`, `validator_message`, `few_shot_example`, `language_name`, `entity_taxonomy.category_default`), all resolving through one chain — **requested language → `en` → raise** (STU-732). `en.yaml` is the reference pack and must hold every key; `tests/test_template_packs.py` fails on a gap in any shipped pack. `base.yaml` keeps structure only: prompt *scaffolding* (instructions, grounding labels, the classifier `description` criteria, `length_by_tier`) stays English regardless of output language, and only output-anchoring content (section titles, briefs, few-shot, the write-in-`<language>` directive) and reader-facing chrome follow `output_language(book_config)` (STU-510).
+
+- **`lang` is a required keyword argument, never a defaulted one (STU-734).** Every
+  render/prompt helper that takes the output language declares `*, lang: str` (or
+  `language: str`), so a call that forgets to thread it is a `TypeError` at the call
+  site instead of a French page in an English wiki. `lang: str = "fr"` sat on ~35
+  signatures across `spoiler_blocks`, `series_pages`/`series_hub`/`series_arc`,
+  `collation`, `event_pages`, `export_helpers`, `editorial_stance`, `wiki_export`,
+  `wiki_page_validator` and `generate_wiki_pages` (plus `GenerationConfig.language`),
+  and the sweep is what found the callers that never passed it — the synopsis stage
+  appended a French `## Références` to an English page, and `main_page_content` fell
+  back to `"Personnages"`. Two "fr" defaults survive on purpose: `book_language()`
+  (the documented historical default of this corpus) and the *input*-side
+  `language` of `parse_epub`/`grounding`, which selects detection cue-words, not
+  output strings.
+  **The contamination check follows the output language too**: `check_language_fr`
+  is `check_language_contamination`, and its markers come from every lang pack *but*
+  `lang` (`lang.contamination_markers`). Hardcoding `en` as the contaminant meant an
+  English book tripped `language_contamination` on the very markers its pages are
+  made of — the check fired on exactly the pages it should pass. Only `en.json`
+  declares `language_id_markers`, so an English wiki is a no-op and a French one is
+  still compared against English.
+  The gate is `tests/test_output_localization.py`: every reader-facing surface is
+  rendered with `lang="en"` and searched for the strings `templates/lang/fr.yaml`
+  declares (`chrome`/`labels`/`stubs`/`validator_errors`/`category_defaults`), so a
+  new localized key is covered the day it lands and a string built in Python rather
+  than read from its pack is caught the day someone writes it. It **asserts the
+  harvest is non-empty** — the STU-732 pack split moved those groups out of
+  `base.yaml` and a gate reading the old location passes vacuously, green and blind.
+  `synopsis.build_synopsis_prompt` is the same defect one layer over, and it fell
+  between two tickets: STU-733 de-Frenchified the `.studio/agents` prompts, this one
+  is a Python prompt builder, so it kept ordering "encyclopedic French" and a
+  `## Références` section while every sibling builder (`event_pages`, `series_arc`,
+  `generate_wiki_pages`) already read `language_name(lang)`. It takes `lang` like the
+  rest now, which busts the synopsis map-resume key by construction — the rendered
+  prompt *is* the key.
 
 - `tests/test_e2e_golden.py` chains all deterministic resolution stages on the fixture novella and compares every stage output to goldens in `tests/fixtures/e2e/golden/stages/`. Any intentional behavior change in those stages requires `make golden-update` and a review of the golden diff in the same PR. The extraction seed is committed (`golden/seed/`, regenerate with `gen_seed.py`); a `@requires_en_sm` test keeps it shape-compatible with real extraction in CI.
 

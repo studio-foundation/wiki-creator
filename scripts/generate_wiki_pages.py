@@ -136,7 +136,7 @@ def _looks_like_relationship_index(body: str) -> bool:
     return hits >= 2 and hits * 2 >= len(lines)
 
 
-def _references_block(book_title: str, lang: str = "fr") -> str:
+def _references_block(book_title: str, *, lang: str) -> str:
     """Deterministic References section — lists only the book title (no LLM).
 
     Used by the synopsis and event pages, which carry no per-fact ``<ref>``
@@ -146,7 +146,7 @@ def _references_block(book_title: str, lang: str = "fr") -> str:
     return f"## {slot_label('references', lang)}\n\n- {book_title}"
 
 
-def _references_backmatter(lang: str = "fr") -> str:
+def _references_backmatter(*, lang: str) -> str:
     """Deterministic References back-matter (STU-656) for entity pages: a
     ``<references/>`` list that renders the per-fact ``<ref>`` footnotes emitted
     from provenance (the dated relationship index). The book title is cited
@@ -154,7 +154,7 @@ def _references_backmatter(lang: str = "fr") -> str:
     return f"## {slot_label('references', lang)}\n\n<references/>"
 
 
-def _isolate_section(content: str, section: str, lang: str = "fr") -> str | None:
+def _isolate_section(content: str, section: str, *, lang: str) -> str | None:
     """Return only the requested section's markdown block from a single-section
     generation, dropping any leaked foreign blocks (e.g. a ## Infobox echoed from
     the few-shot). If the model returned just the body with no heading, wrap it
@@ -412,7 +412,8 @@ def build_relation_prompt(
     rel: dict,
     book_title: str,
     forbidden_names: list[str] | None = None,
-    lang: str = "fr",
+    *,
+    lang: str,
 ) -> str:
     """Prompt for a single ``### [[other]]`` progression subsection, in the wiki's
     output language.
@@ -455,7 +456,8 @@ def build_prompt(
     sections: list[str],
     forbidden_names: list[str] | None = None,
     stance: EditorialStance | None = None,
-    lang: str = "fr",
+    *,
+    lang: str,
     covered_prose: str = "",
     page_sections: list[str] | None = None,
     register: str = DEFAULT_REGISTER,
@@ -808,7 +810,7 @@ def build_prompt(
 
     return f"""{GROUNDING_BLOCK}
 
-{stance.prompt_block(sections, lang)}
+{stance.prompt_block(sections, lang=lang)}
 
 You are writing a wiki page for a fictional novel called "{book_title}".
 Output ONLY a valid JSON object. No markdown fences. No explanation. No preamble.
@@ -979,7 +981,7 @@ def _force_correct_identity(
     return changed
 
 
-def _batch_bound_value(entity: dict, token: str, lang: str = "fr") -> str | None:
+def _batch_bound_value(entity: dict, token: str, *, lang: str) -> str | None:
     """Value for a batch-bound infobox token, sourced from the batch entity.
     Returns None for tokens the batch cannot sensibly supply (skipped by the
     binder). `type` is intentionally unsupported: the coarse batch type is
@@ -996,7 +998,7 @@ def _batch_bound_value(entity: dict, token: str, lang: str = "fr") -> str | None
     return None
 
 
-def _extracted_fact_value(entity: dict, token: str, lang: str) -> str | None:
+def _extracted_fact_value(entity: dict, token: str, *, lang: str) -> str | None:
     """Value for an extracted-fact infobox token, sourced from facts the pipeline
     produced into the batch entity. None when the fact is absent (slot omitted).
     The specific `type` is a future slice."""
@@ -1040,7 +1042,7 @@ def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> No
     rel_fields = relationship_infobox_fields(entity, book_config)
     for slot in resolved.infobox():
         if slot.provenance == "batch-bound":
-            value = _batch_bound_value(entity, slot.token, lang)
+            value = _batch_bound_value(entity, slot.token, lang=lang)
             if value:
                 page["infobox_fields"][slot.token] = value
         elif slot.provenance == "extracted-fact":
@@ -1050,7 +1052,7 @@ def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> No
             # fact under a provenance that promises a grounded one (STU-572).
             # A slot the pipeline never computes (species, location, leaders)
             # is therefore always empty until it is computed.
-            value = _extracted_fact_value(entity, slot.token, lang) or rel_fields.get(slot.token)
+            value = _extracted_fact_value(entity, slot.token, lang=lang) or rel_fields.get(slot.token)
             if value:
                 page["infobox_fields"][slot.token] = value
             else:
@@ -1082,7 +1084,7 @@ def _rejection_is_identity_only(run_id: str, runner: StudioRunner | None = None)
 
 def _recover_identity_rejected_page(
     *, entity: dict, item_result: dict, sibling_canonicals: set[str] | None = None,
-    runner: StudioRunner | None = None, lang: str = "fr",
+    runner: StudioRunner | None = None, lang: str,
 ) -> dict | None:
     """Recover a PERSON page from an identity-only rejected run and force-correct
     its identity fields. Returns the kept page, or None if not recoverable."""
@@ -1107,7 +1109,7 @@ def _recover_identity_rejected_page(
 # distinct conditions. Keep their stub content distinct so `_failed` pages are
 # not mislabelled with an "insufficient data" message that masks a real failure.
 def make_stub_page(
-    entity: dict, failed: bool = False, insufficient_data: bool = False, lang: str = "fr"
+    entity: dict, failed: bool = False, insufficient_data: bool = False, *, lang: str
 ) -> dict:
     page = {
         "title": entity["canonical_name"],
@@ -1144,7 +1146,7 @@ def _wiki_page_item_input(
     sections: list[str],
     max_tokens: int,
     forbidden_names: list[str] | None = None,
-    language: str = "fr",
+    language: str,
     file_path: str = "",
     grounding: dict | None = None,
     prompt_override: str | None = None,
@@ -1192,7 +1194,7 @@ def _run_wiki_page_item(
     sections: list[str],
     max_tokens: int,
     forbidden_names: list[str] | None = None,
-    language: str = "fr",
+    language: str,
     file_path: str = "",
     grounding: dict | None = None,
     runner: StudioRunner | None = None,
@@ -1297,7 +1299,7 @@ def _execute_wiki_page_item(item_input: dict, entity: dict, timeout: int) -> dic
             "run_metadata": run_metadata,
         }
 
-    page = parse_response(json.dumps(payload, ensure_ascii=False), entity, lang=item_input.get("language", "fr"))
+    page = parse_response(json.dumps(payload, ensure_ascii=False), entity, lang=item_input["language"])
     if page.get("_failed"):
         return {
             "error": "studio_invalid_output",
@@ -1402,10 +1404,10 @@ class ReplayRunner:
 
     @staticmethod
     def _to_item_result(map_result: dict | None, entity: dict, item_input: dict) -> dict:
-        return page_from_map_result(map_result, entity, item_input.get("language", "fr"))
+        return page_from_map_result(map_result, entity, language=item_input["language"])
 
 
-def page_from_map_result(map_result: dict | None, entity: dict, language: str = "fr") -> dict:
+def page_from_map_result(map_result: dict | None, entity: dict, *, language: str) -> dict:
     """Reconstruct `_execute_wiki_page_item`'s return contract from one engine map
     result. Shared by the replay walk (entity pages) and the synopsis/event post
     stages, so all three parse a map result the same way (STU-621)."""
@@ -1686,7 +1688,7 @@ def _generate_one_section(
     timeout: int,
     max_tokens: int,
     forbidden_names: list[str] | None = None,
-    language: str = "fr",
+    language: str,
     file_path: str = "",
     grounding: dict | None = None,
     runner: StudioRunner | None = None,
@@ -1725,14 +1727,14 @@ def _generate_one_section(
     result = _once()
     if not isinstance(result, dict) or result.get("error"):
         return None, _as_failure(result)
-    content = _isolate_section(result.get("content") or "", section, language) or ""
+    content = _isolate_section(result.get("content") or "", section, lang=language) or ""
     if section == "relationships" and not entity.get("relationships"):
         content = _strip_relations_section(content, slot_label("relationships", language))
     if forbidden_names and _check_forbidden_names({"content": content, "infobox_fields": {}}, forbidden_names):
         result = _once()
         if not isinstance(result, dict) or result.get("error"):
             return None, _as_failure(result)
-        content = _isolate_section(result.get("content") or "", section, language) or ""
+        content = _isolate_section(result.get("content") or "", section, lang=language) or ""
         if section == "relationships" and not entity.get("relationships"):
             content = _strip_relations_section(content, slot_label("relationships", language))
         if _check_forbidden_names({"content": content, "infobox_fields": {}}, forbidden_names):
@@ -1751,7 +1753,7 @@ def _generate_one_relation(
     timeout: int,
     max_tokens: int,
     forbidden_names: list[str] | None = None,
-    language: str = "fr",
+    language: str,
     file_path: str = "",
     grounding: dict | None = None,
     runner: StudioRunner | None = None,
@@ -1790,7 +1792,7 @@ def _generate_relationships_subsections(
     timeout: int,
     max_tokens: int,
     forbidden_names: list[str] | None = None,
-    language: str = "fr",
+    language: str,
     file_path: str = "",
     grounding: dict | None = None,
     runner: StudioRunner | None = None,
@@ -1831,7 +1833,7 @@ def _run_generation_for_entity(
     dry_run: bool,
     debug_dir: Path,
     forbidden_names: list[str] | None = None,
-    language: str = "fr",
+    language: str,
     file_path: str = "",
     grounding: dict | None = None,
     sibling_canonicals: set[str] | None = None,
@@ -1874,7 +1876,7 @@ def _run_generation_for_entity(
         if recovered is not None:
             _record_safety_net("identity_recovery")
             recovered["content_units"] = content_units(sections, entity)
-            recovered["relationship_index"] = relationship_index_lines(entity, language, book_config, book_title)
+            recovered["relationship_index"] = relationship_index_lines(entity, lang=language, book_config=book_config, book_title=book_title)
             _bind_batch_fields(recovered, entity, book_config)
             print(" ⚠ identity-corrected from rejected run", file=sys.stderr, end="", flush=True)
             return recovered
@@ -1929,7 +1931,7 @@ def _run_generation_for_entity(
 
     if isinstance(item_result, dict) and "content" in item_result:
         item_result["content_units"] = content_units(sections, entity)
-        item_result["relationship_index"] = relationship_index_lines(entity, language, book_config, book_title)
+        item_result["relationship_index"] = relationship_index_lines(entity, lang=language, book_config=book_config, book_title=book_title)
         _bind_batch_fields(item_result, entity, book_config)
 
     return item_result
@@ -1946,7 +1948,7 @@ def _run_generation_sectioned(
     dry_run: bool,
     debug_dir: Path,
     forbidden_names: list[str] | None = None,
-    language: str = "fr",
+    language: str,
     file_path: str = "",
     grounding: dict | None = None,
     sibling_canonicals: set[str] | None = None,
@@ -2009,7 +2011,7 @@ def _run_generation_sectioned(
         return make_stub_page(entity, failed=True, lang=language)
 
     if "references" in sections:
-        blocks.append(_references_backmatter(language))
+        blocks.append(_references_backmatter(lang=language))
 
     page = {
         "title": entity["canonical_name"],
@@ -2019,7 +2021,7 @@ def _run_generation_sectioned(
         "infobox_fields": {},
         "content": _assemble_section_blocks(blocks),
         "content_units": content_units(emitted, entity),
-        "relationship_index": relationship_index_lines(entity, language, book_config, book_title),
+        "relationship_index": relationship_index_lines(entity, lang=language, book_config=book_config, book_title=book_title),
     }
     if per_relation:
         page["relation_units"] = relation_units(entity)
@@ -2064,7 +2066,7 @@ def _run_generation(
     dry_run: bool,
     debug_dir: Path,
     forbidden_names: list[str] | None = None,
-    language: str = "fr",
+    language: str,
     file_path: str = "",
     grounding: dict | None = None,
     sibling_canonicals: set[str] | None = None,
@@ -2159,7 +2161,7 @@ def _extract_infobox_fields_from_content(content: str) -> dict[str, str]:
     return fields
 
 
-def parse_response(raw: str, entity: dict, lang: str = "fr") -> dict:
+def parse_response(raw: str, entity: dict, *, lang: str) -> dict:
     raw = raw.strip()
     decoder = json.JSONDecoder()
     page = None
@@ -2192,7 +2194,7 @@ def parse_response(raw: str, entity: dict, lang: str = "fr") -> dict:
         if not page["infobox_fields"] and page["content"]:
             page["infobox_fields"] = _extract_infobox_fields_from_content(page["content"])
         page["infobox_fields"] = _clean_infobox_fields(page["infobox_fields"])
-        if _contains_template_placeholder(page, lang):
+        if _contains_template_placeholder(page, lang=lang):
             print(
                 f"    [WARN] Placeholder/template leak for {entity['canonical_name']}, using failed stub",
                 file=sys.stderr,
@@ -2313,7 +2315,8 @@ class GenerationConfig:
     timeout: int = 120
     dry_run: bool = False
     forbidden_names: list[str] = field(default_factory=list)
-    language: str = "fr"
+    # STU-734: no default — an unthreaded language is a TypeError, not a French page.
+    language: str = field(kw_only=True)
     file_path: str = ""
     grounding: dict = field(default_factory=dict)
     book_config: dict | None = None
@@ -2688,7 +2691,7 @@ def _is_page_complete(page: dict) -> bool:
     return isinstance(content, str) and bool(content.strip())
 
 
-def _contains_template_placeholder(page: dict, lang: str = "fr") -> bool:
+def _contains_template_placeholder(page: dict, *, lang: str) -> bool:
     """Reject responses that leak prompt placeholders into final content."""
     patterns = _placeholder_patterns(lang)
     content = str(page.get("content", "") or "")

@@ -35,7 +35,7 @@ from pathlib import Path
 import yaml
 
 from wiki_creator.grounding import find_ungrounded_names
-from wiki_creator.lang import load_lang_config
+from wiki_creator.lang import contamination_markers
 from wiki_creator.llm import ollama
 from wiki_creator.page_templates import language_name, slot_label, validator_message
 from wiki_creator.registry import normalize_name as _normalize_name
@@ -53,13 +53,15 @@ def _err(code: str, lang: str, **params) -> ValidationError:
     return ValidationError(code, f"❌ {validator_message(code, lang, **params)}")
 
 
-def check_language_fr(page: dict, lang: str = "fr") -> list[ValidationError]:
-    """Detect English contamination in a page that must be French.
+def check_language_contamination(page: dict, *, lang: str) -> list[ValidationError]:
+    """Detect another language's prose in a page that must be written in ``lang``.
 
-    Marker vocabulary comes from cue_words/en.json (language_id_markers) —
-    never hardcoded here. Degrades to no-op if the key is absent.
+    Marker vocabulary comes from every lang pack *but* ``lang``
+    (``language_id_markers``) — never hardcoded here, and never the pack of the
+    output language itself: keying the contaminant to ``en`` fired on every page
+    of an English wiki (STU-734). No other pack declaring markers ⇒ no-op.
     """
-    markers = load_lang_config("en").get("language_id_markers", [])
+    markers = contamination_markers(lang)
     content = page.get("content", "").lower()
     hits = [m for m in markers if m in content]
     if hits:
@@ -67,14 +69,14 @@ def check_language_fr(page: dict, lang: str = "fr") -> list[ValidationError]:
     return []
 
 
-def check_epub_ids(page: dict, lang: str = "fr") -> list[ValidationError]:
+def check_epub_ids(page: dict, *, lang: str) -> list[ValidationError]:
     content = page.get("content", "")
     if ".xhtml" in content:
         return [_err("epub_id", lang)]
     return []
 
 
-def check_infobox_keys(page: dict, lang: str = "fr") -> list[ValidationError]:
+def check_infobox_keys(page: dict, *, lang: str) -> list[ValidationError]:
     ib = page.get("infobox_fields", {})
     bad = [k for k in ib if k.startswith("- ")]
     if bad:
@@ -82,7 +84,7 @@ def check_infobox_keys(page: dict, lang: str = "fr") -> list[ValidationError]:
     return []
 
 
-def check_series_anchor(page: dict, meta: dict, lang: str = "fr") -> list[ValidationError]:
+def check_series_anchor(page: dict, meta: dict, *, lang: str) -> list[ValidationError]:
     series = meta.get("series", "")
     if not series:
         return []
@@ -92,7 +94,7 @@ def check_series_anchor(page: dict, meta: dict, lang: str = "fr") -> list[Valida
     return []
 
 
-def check_forbidden_series(page: dict, meta: dict, lang: str = "fr") -> list[ValidationError]:
+def check_forbidden_series(page: dict, meta: dict, *, lang: str) -> list[ValidationError]:
     forbidden = meta.get("forbidden_series", [])
     if not forbidden:
         return []
@@ -103,7 +105,7 @@ def check_forbidden_series(page: dict, meta: dict, lang: str = "fr") -> list[Val
     return []
 
 
-def check_forbidden_names(page: dict, meta: dict, lang: str = "fr") -> list[ValidationError]:
+def check_forbidden_names(page: dict, meta: dict, *, lang: str) -> list[ValidationError]:
     forbidden = meta.get("forbidden_names", [])
     if not forbidden:
         return []
@@ -117,7 +119,7 @@ def check_forbidden_names(page: dict, meta: dict, lang: str = "fr") -> list[Vali
 _IDENTITY_INFOBOX_KEYS = {"nom", "name", "titre", "title", "nom complet", "full name"}
 
 
-def check_identity_match(page: dict, meta: dict, lang: str = "fr") -> list[ValidationError]:
+def check_identity_match(page: dict, meta: dict, *, lang: str) -> list[ValidationError]:
     """Grounding v1 — the page must describe the entity it was asked for.
 
     Catches identity confusions observed in real runs (page 'Verin' with
@@ -147,7 +149,7 @@ def check_identity_match(page: dict, meta: dict, lang: str = "fr") -> list[Valid
     return errors
 
 
-def check_ungrounded_names(page: dict, meta: dict, lang: str = "fr") -> list[ValidationError]:
+def check_ungrounded_names(page: dict, meta: dict, *, lang: str) -> list[ValidationError]:
     """Deterministic grounding — invented proper nouns.
 
     The generation prompt (meta['prompt']) contains everything the writer was
@@ -219,7 +221,7 @@ def _parse_grounding_response(raw: str) -> list[str]:
     return [str(c) for c in claims[:_MAX_REPORTED_CLAIMS] if str(c).strip()]
 
 
-def check_grounding_llm(page: dict, meta: dict, lang: str = "fr") -> list[ValidationError]:
+def check_grounding_llm(page: dict, meta: dict, *, lang: str) -> list[ValidationError]:
     """LLM grounding — claim-by-claim verification via Ollama (opt-in).
 
     Catches invented facts about legitimate names (e.g. the death of a
@@ -267,7 +269,7 @@ def check_grounding_llm(page: dict, meta: dict, lang: str = "fr") -> list[Valida
 
 
 def check_references_book_title(
-    page: dict, allowed_book_titles: list[str], lang: str = "fr"
+    page: dict, allowed_book_titles: list[str], *, lang: str
 ) -> list[ValidationError]:
     content = page.get("content", "")
     heading = re.escape(slot_label("references", lang))
@@ -305,31 +307,28 @@ def _load_allowed_book_titles(meta: dict) -> list[str]:
 def validate_page(page: dict, meta: dict) -> dict:
     lang = meta.get("language", "fr")
     errors: list[ValidationError] = []
-    # The FR-contamination check only applies to French books; the book
-    # language comes from the item input (default 'fr', historical corpus).
-    if lang == "fr":
-        errors += check_language_fr(page, lang)
-    errors += check_epub_ids(page, lang)
-    errors += check_identity_match(page, meta, lang)
-    errors += check_infobox_keys(page, lang)
-    errors += check_series_anchor(page, meta, lang)
-    errors += check_forbidden_series(page, meta, lang)
-    errors += check_forbidden_names(page, meta, lang)
-    errors += check_ungrounded_names(page, meta, lang)
-    errors += check_grounding_llm(page, meta, lang)
+    errors += check_language_contamination(page, lang=lang)
+    errors += check_epub_ids(page, lang=lang)
+    errors += check_identity_match(page, meta, lang=lang)
+    errors += check_infobox_keys(page, lang=lang)
+    errors += check_series_anchor(page, meta, lang=lang)
+    errors += check_forbidden_series(page, meta, lang=lang)
+    errors += check_forbidden_names(page, meta, lang=lang)
+    errors += check_ungrounded_names(page, meta, lang=lang)
+    errors += check_grounding_llm(page, meta, lang=lang)
     allowed_book_titles = _load_allowed_book_titles(meta)
     if allowed_book_titles:
-        errors += check_references_book_title(page, allowed_book_titles, lang)
+        errors += check_references_book_title(page, allowed_book_titles, lang=lang)
     messages = [e.message for e in errors]
     return {
         "valid": len(errors) == 0,
         "errors": messages,
         "error_codes": [e.code for e in errors],
-        "feedback": build_feedback(messages, lang) if errors else "",
+        "feedback": build_feedback(messages, lang=lang) if errors else "",
     }
 
 
-def build_feedback(errors: list[str], lang: str = "fr") -> str:
+def build_feedback(errors: list[str], *, lang: str) -> str:
     """Retry feedback for the writer. Scaffolding stays English (STU-510); only
     the write-in-language directive follows ``lang`` (STU-514). The error lines it
     interpolates are already localized to ``lang`` (STU-517)."""
