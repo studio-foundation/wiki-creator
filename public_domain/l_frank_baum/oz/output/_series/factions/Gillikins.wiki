@@ -4,9 +4,7 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 2 — reveal" data-collapsetext="Hide">
-== Book 2 ==
-
-== Biography ==
+== The Marvelous Land of Oz ==
 
 ''Insufficient information available for this entity.''
 </div>

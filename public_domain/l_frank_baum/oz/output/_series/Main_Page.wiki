@@ -1,6 +1,12 @@
 = Oz =
 ''L. Frank Baum''
 
+The series follows Dorothy's repeated crossings between Kansas and the Land of Oz, and the widening circle of companions she draws into Oz's defense along the way. The Scarecrow, the Tin Woodman, and the Cowardly Lion, whose quests for a brain, a heart, and courage are resolved in the first tome, remain bound to Oz afterward — the Scarecrow left to rule the Emerald City in the Wizard's place, the Tin Woodman established as Emperor of the Winkies — and are joined across later tomes by other travelers such as Tip, Jack Pumpkinhead, Zeb, Jim, and Eureka, who are likewise drawn into Oz's affairs and, in several cases, into Ozma's court.
+
+Running through the tomes is the question of who rightfully governs Oz. The Wizard, revealed to be a humbug, departs by balloon and leaves the Scarecrow to rule; that rule is contested when General Jinjur leads an army of girls to seize the Emerald City, and the crisis is only resolved when Old Mombi is forced to confess that the boy Tip is in fact the transformed Princess Ozma, the true heir hidden since infancy, who is then crowned. Ozma's reign is subsequently defended both from within, against Jinjur's revolt, and from without, against the Nome King, who threatens the Queen of Ev's family in one tome and later invades the Emerald City itself in another, each time repelled through the Scarecrow's and Ozma's stratagems and through the power of magical instruments — the Golden Cap, and above all the Magic Belt taken from the Nome King — that pass between rulers and protectors of Oz.
+
+Dorothy's own place in this world is never settled for good: she is carried home to Kansas at the end of her first adventure, sent instead to convalesce with Uncle Henry in Australia after a later one, returned to Kansas again following an earthquake that drops her into Oz's underground, and brought home once more from Ozma's birthday celebrations, always by way of the Magic Belt or its like. Each return underscores travel between Kansas and Oz, and the assembling of new friends into Ozma's circle, as the rhythm that carries the series from its first tome to its last.
+
 == Reading order ==
 * Book 1 — The Wonderful Wizard of Oz
 * Book 2 — The Marvelous Land of Oz
@@ -8,14 +14,28 @@
 * Book 4 — Dorothy and the Wizard in Oz
 * Book 5 — The Road to Oz
 * Book 6 — The Emerald City of Oz
+* Book 7 — 07-the_patchwork_girl_of_oz
+* Book 8 — 08-tik_tok_of_oz
+* Book 9 — 09-the_scarecrow_of_oz
+* Book 10 — 10-rinkitink_in_oz
+* Book 11 — 11-the_lost_princess_of_oz
+* Book 12 — 12-the_tin_woodman_of_oz
+* Book 13 — 13-the_magic_of_oz
+* Book 14 — 14-glinda_of_oz
 
 == Main characters ==
 * [[Dorothy]]
+* [[Toto]]
 * [[Glinda]]
-* [[Queen]]
+* [[Wizard]]
+* [[Scarecrow]]
+* [[Tin Woodman]]
 * [[Tip]]
+* [[Jack Pumpkinhead]]
 * [[General Jinjur]]
+* [[Ozma]]
 * [[Nome King]]
+* [[Evring]]
 * [[Jim]]
 * [[Zeb]]
 * [[Eureka]]

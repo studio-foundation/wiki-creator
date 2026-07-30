@@ -4,16 +4,12 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 3 — reveal" data-collapsetext="Hide">
-== Book 3 ==
-
-== Biography ==
+== Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein ==
 
 ''Insufficient information available for this entity.''
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
-== Book 6 ==
-
-== Biography ==
+== The Emerald City of Oz ==
 
 ''Insufficient information available for this entity.''
 </div>

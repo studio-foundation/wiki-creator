@@ -4,25 +4,24 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 5 — reveal" data-collapsetext="Hide">
-== Book 5 ==
+== The Road to Oz ==
 
-== Infobox ==
+=== Infobox ===
 
 * Name: Deadly Desert
 * Type: Desert
 * Location: Separates the Land of Oz from the Kingdom of Ev, lying to the north of Oz
 
-== Biography ==
-
 The Deadly Desert is a vast expanse of sand that separates the Land of Oz from the Kingdom of Ev, which lies just across it to the north. Crossing it is perilous: a sand-boat carrying the shaggy man and his companions was pushed to great speed by a raised sail, moving so fast that everyone aboard had to hold fast to the sides and scarcely dared breathe. Ozma, watching the travelers' progress the whole way in her Magic Picture, stated that she twice considered using the Magic Belt to save them and transport them to the Emerald City — once when the Scoodlers caught them, and again when they reached the Deadly Desert itself. On both occasions the shaggy man was able to help the group out without her intervention.
+
+=== Physical ===
+
+The sand of the desert lies in billows and is very uneven in places, causing a boat crossing it to rock dangerously from side to side. Despite the unevenness of the terrain, a sand-boat driven by a raised sail could cross it without tipping over, reaching a speed great enough to frighten even the shaggy man, who wondered how to make the craft go slower.
+</div>
 
 == Events ==
 
 Dorothy, the shaggy man, Button-Bright, Toto, and Polychrome became stranded at the edge of the Deadly Desert, with no way to reach the Land of Oz.
-
-== Physical ==
-
-The sand of the desert lies in billows and is very uneven in places, causing a boat crossing it to rock dangerously from side to side. Despite the unevenness of the terrain, a sand-boat driven by a raised sail could cross it without tipping over, reaching a speed great enough to frighten even the shaggy man, who wondered how to make the craft go slower.
 
 == Trivia ==
 
@@ -32,7 +31,6 @@ The sand of the desert lies in billows and is very uneven in places, causing a b
 == References ==
 
 <references/>
-</div>
 
 [[Category:Locations]]
 [[Category:Locations of Book 5]]

@@ -4,16 +4,15 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
-== Book 1 ==
+== The Wonderful Wizard of Oz ==
 
-== Infobox ==
+=== Infobox ===
 
 * Name: Throne Room
 * Place type: Audience chamber
 
-== Biography ==
-
 The Throne Room is the chamber where Oz receives those who seek audience with him. Ladies and gentlemen of the court gather each morning in a great hall outside it, though they are never permitted to see Oz themselves. Access is tightly controlled: visitors are summoned at precise times and must knock and wait to be called in. When the Lion first entered, he found before the throne a Ball of Fire, so fierce and glowing he could scarcely bear to look at it; on another occasion, those who entered found no one in the room at all. Oz himself later admitted it was a great mistake ever letting his visitors into the Throne Room, since he otherwise refuses to see even his own subjects so that they continue to believe him something terrible.
+</div>
 
 == Events ==
 
@@ -22,7 +21,6 @@ In the Throne Room, Oz's disembodied Voice questions the visitors about the deat
 == References ==
 
 <references/>
-</div>
 
 [[Category:Locations]]
 [[Category:Locations of Book 1]]

@@ -5,21 +5,9 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
-== Book 6 ==
-
-== Biography ==
+== The Emerald City of Oz ==
 
 Mr. Bunn is a resident of Bunbury, a town built entirely of bread and baked goods. He speaks stiffly in defense of his town's identity, telling visitors, "I admit you are all desirable citizens, but the fact remains that our town is called Bunbury." When asked by Dorothy about the ground of the town, he explains, "We dig it out of the ground, which, as you may have observed, is all flour and meal," adding that there is a butter mine on the opposite side of the village. He also converses with another townsman, Mr. Over, asking him directly what he suggests be done.
-
-== Relationships ==
-
-'''[[Dorothy]]''' — acquaintance. Their limited exchange over the town's food supply suggests no more than a passing acquaintance.
-
-'''[[Billina]]''' — enemy. Scant overlap between the two in the record could hint at friction, though nothing in the excerpts confirms this directly.
-
-'''[[Pop Over]]''' — acquaintance. Appearing together while discussing the town's affairs suggests a working acquaintance among the citizens of Bunbury.
-
-'''[[Toto]]''' — enemy. The sparse contact between them may indicate tension, though this remains only a suggestion from the available material.
 </div>
 
 == Relationships ==

@@ -4,9 +4,7 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
-== Book 4 ==
-
-== Biography ==
+== Dorothy and the Wizard in Oz ==
 
 ''Insufficient information available for this entity.''
 </div>

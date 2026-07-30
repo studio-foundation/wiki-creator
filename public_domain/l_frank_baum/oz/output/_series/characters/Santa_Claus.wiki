@@ -6,27 +6,9 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 5 — reveal" data-collapsetext="Hide">
-== Book 5 ==
-
-== Biography ==
+== The Road to Oz ==
 
 Santa Claus is a rotund, rosy-faced figure with laughing eyes and a bushy beard as white as snow. He greets a gathered group warmly, crying out his delight at seeing them and trotting briskly up a long room toward them. He recognizes Button-Bright at once, holding the boy up to kiss him and remarking on how far he is from home. He also leans over to whisper something to the Wizard, who smiles and nods as though he understands. Turning his attention to Polychrome, the Rainbow's Daughter, Santa Claus approaches her and observes, admiringly, that she seems even farther from home than any of the others present.
-
-== Relationships ==
-
-'''[[Ozma]]''' — friend. Ozma's invitation seems to be what brought Santa Claus to the gathering, suggesting a friendly bond between them, though the excerpts do not detail its origin further.
-
-'''[[Button-Bright]]''' — friend. Santa Claus greets him warmly, exclaiming "And here's Button-Bright, I declare!" and holding him up to kiss him, indicating an established, affectionate familiarity.
-
-'''[[Dorothy]]''' — friend. Dorothy recognizes Santa Claus at once and eagerly asks whether he also knows Button-Bright, suggesting a friendly rapport between them, though its nature is not elaborated on.
-
-'''[[Polychrome]]''' — friend. Santa Claus notices her among those present and trots over to her, observing admiringly that "the Rainbow's Daughter is farther from home than any of you," which suggests a warm, attentive regard.
-
-'''[[Wizard]]''' — friend. He leans over to whisper something in the Wizard's ear, and the Wizard smiles and nods as if understanding him, suggesting an easy familiarity between the two.
-
-== References ==
-
-<references/>
 </div>
 
 == Relationships ==
@@ -37,6 +19,10 @@ Santa Claus is a rotund, rosy-faced figure with laughing eyes and a bushy beard 
 * [[Dorothy]] — Friend (ch.1)<ref>The Road to Oz, chapter 1</ref>
 * [[Polychrome]] — Friend (ch.1)<ref>The Road to Oz, chapter 1</ref>
 * [[Wizard]] — Friend (ch.1)<ref>The Road to Oz, chapter 1</ref>
+
+== References ==
+
+<references/>
 
 [[Category:Characters]]
 [[Category:Secondary Characters]]

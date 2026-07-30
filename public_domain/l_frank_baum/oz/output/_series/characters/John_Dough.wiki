@@ -6,21 +6,14 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 5 — reveal" data-collapsetext="Hide">
-== Book 5 ==
-
-== Biography ==
+== The Road to Oz ==
 
 John Dough is a figure of rank who attends a great banquet hosted by Princess Ozma, where he is given a golden throne to sit in alongside Queen Zixi, King Bud, the Queen of Ev and her son Evardo, and the Queen of Merryland — a mark of his standing among the assembled dignitaries. He is accompanied by his own retinue: a Head Booleywag, who quickly becomes a favorite among the other guests, and a group of Hilanders and Lolanders, who are seated together at a table reserved for the visiting attendants and soldiers of the various guests.
-
-== Relationships ==
-
-'''[[Dorothy]]''' — acquaintance
-'''[[Scarecrow]]''' — acquaintance
+</div>
 
 == References ==
 
 <references/>
-</div>
 
 [[Category:Characters]]
 [[Category:Secondary Characters]]

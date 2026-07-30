@@ -1,27 +1,14 @@
 {{Infobox character
 |nom=Saw-Horse
-|apparition=Appears in book 2
+|alias=Sawhorse
+|apparition=First appears in book 2, last appears in book 4
 |status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 2 — reveal" data-collapsetext="Hide">
-== Book 2 ==
-
-== Biography ==
+== The Marvelous Land of Oz ==
 
 Saw-Horse est un cheval de bois animé, capable de galoper et de parler. Sur la route menant à la Cité d'Émeraude, il file comme un cheval de course tandis que Jack Pumpkinhead se cramponne à un poteau, et les tours et dômes verts de la cité finissent par apparaître à l'horizon. Craignant le feu en raison de la sécheresse de son bois, qui selon lui s'enflammerait comme du petit bois, il manifeste une vive agitation face à ce danger. Il propose également de « secouer » une jeune fille, suggestion à laquelle le Bûcheron de Fer-Blanc répond qu'il convient au contraire de la traiter avec douceur et de la renvoyer comblée de bijoux.
-
-== Relationships ==
-
-'''[[Tip]]''' — other. The Saw-Horse carried Tip on its rides toward the Emerald City, though at one point it raced ahead without realizing Tip had been left behind, which could suggest their bond was more practical than deeply attentive.
-
-'''[[Jack Pumpkinhead]]''' — friendly_rivalry. The two traveled together, with the Saw-Horse once turning and prancing in agitation at the mention of fire, warning that its own dry wood would burn like kindling — an exchange that suggests an easy, if occasionally tense, companionship with Jack.
-
-'''[[General Jinjur]]''' — enemy. When Jinjur was found seated on the throne, the Saw-Horse suggested giving her "a good shaking," a remark the Tin Woodman rebuffed in favor of gentler treatment, hinting at an adversarial attitude toward her.
-
-'''[[Jackdaws]]''' — enemy. Their shared presence in the same events could suggest a wary footing between them, though the excerpts record no direct exchange.
-
-'''[[Nick Chopper]]''' — ally. Their travels together seem to place them on the same side of events, though the excerpts do not detail direct interaction between them.
 
 === Events ===
 
@@ -55,15 +42,30 @@ Saw-Horse est un cheval de bois animé, capable de galoper et de parler. Sur la 
 * Glinda pursues the Griffin on the tireless Saw-Horse while Tip and the others follow by air aboard the Gump.
 * The Griffin tires crossing the desert sands while the untiring Saw-Horse closes the distance.
 </div>
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
+== Dorothy and the Wizard in Oz ==
+
+The Sawhorse is a creature encountered in the company of the Cowardly Lion, the King of the Forest and vassal of Princess Ozma, and the Hungry Tiger, the terror of the jungle. It introduces the newcomer known as the Real Horse to these two in a calm tone and with as much dignity as it can muster, bowing its head toward them. The Sawhorse openly admires the Real Horse, calling it a beautiful animal. When the Scarecrow proposes a race between the Sawhorse and the Cab-horse, the Sawhorse draws back, protesting that such a contest would not be fair.
+
+=== Events ===
+
+* In Oz they reunite with the Scarecrow, Tin Woodman, Billina, the Cowardly Lion, the Hungry Tiger, and the Woggle-Bug, ending with a race between Jim and the Sawhorse.
+* Jim loses race against Sawhorse and kicks it in anger, breaking its leg and ear; Hungry Tiger tackles Jim in response.
+* Ozma crowns Sawhorse "Prince of Horses" and Tin Woodman repairs its leg and ear.
+</div>
 
 == Relationships ==
 
 ''Evolution:''
+* [[Tin Woodman]] — Friend (ch.3)<ref>Dorothy and the Wizard in Oz, chapter 3</ref>
+* [[Jim]] — Friendly rivalry (ch.2→ch.3)<ref>Dorothy and the Wizard in Oz, chapter 2</ref>
+* [[Ozma|Princess Ozma]] — Friend (ch.2→ch.3)<ref>Dorothy and the Wizard in Oz, chapter 2</ref>
+* [[Hungry Tiger]] — Friend (ch.2)<ref>Dorothy and the Wizard in Oz, chapter 2</ref>
 * [[Jackdaws]] — Enemy (ch.19)<ref>The Marvelous Land of Oz, chapter 19</ref>
-* [[The Scarecrow]] — Friend (ch.19)<ref>The Marvelous Land of Oz, chapter 19</ref>
+* [[Scarecrow|The Scarecrow]] — Friend (ch.19)<ref>The Marvelous Land of Oz, chapter 19</ref>
 * [[General Jinjur]] — Enemy (ch.15)<ref>The Marvelous Land of Oz, chapter 15</ref>
-* [[Nick Chopper]] — Ally (ch.11)<ref>The Marvelous Land of Oz, chapter 11</ref>
 * [[Jack Pumpkinhead]] — Friendly rivalry (ch.6→ch.13)<ref>The Marvelous Land of Oz, chapter 6</ref>
 
 [[Category:Characters]]
 [[Category:Characters of Book 2]]
+[[Category:Characters of Book 4]]

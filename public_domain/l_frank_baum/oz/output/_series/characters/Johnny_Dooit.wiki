@@ -5,23 +5,9 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 5 — reveal" data-collapsetext="Hide">
-== Book 5 ==
-
-== Biography ==
+== The Road to Oz ==
 
 Johnny Dooit is a small man summoned by the shaggy man through the power of the Love Magnet, called with the words "Dear Johnny Dooit, come to me. I need you bad as bad can be." When Dorothy asks what he can do, the shaggy man answers "Anything," with confidence. Johnny Dooit has a broad nose that sticks up a little and eyes that are twinkling and merry; his hands and arms are as hard and tough as the leather of the apron he wears, giving Dorothy the impression that he has done a great deal of hard work in his lifetime. According to the account of that day, once summoned he quickly builds a sand-boat to carry the shaggy man, Dorothy, and their companions across the Deadly Desert; the boat crashes into rocks at the desert's far edge, though the travelers land unharmed in the Country of the Winkies.
-
-== Relationships ==
-
-'''[[Dorothy]]''' — acquaintance. Johnny Dooit seems to have been introduced to Dorothy by the shaggy man.
-
-'''[[THE shaggy man]]''' — friend. Their bond appears tied to the Love Magnet, which the shaggy man describes as drawing to him "a powerful friend."
-
-'''[[Princess]]''' — acquaintance. Johnny Dooit appears to have thanked the Princess for her hospitality.
-
-== References ==
-
-<references/>
 
 === Events ===
 
@@ -31,7 +17,11 @@ Johnny Dooit is a small man summoned by the shaggy man through the power of the 
 == Relationships ==
 
 ''Evolution:''
-* [[THE shaggy man]] — Friend (ch.1)<ref>The Road to Oz, chapter 1</ref>
+* [[Shaggy Man|THE shaggy man]] — Friend (ch.1)<ref>The Road to Oz, chapter 1</ref>
+
+== References ==
+
+<references/>
 
 [[Category:Characters]]
 [[Category:Secondary Characters]]

@@ -6,25 +6,24 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 5 — reveal" data-collapsetext="Hide">
-== Book 5 ==
-
-== Biography ==
+== The Road to Oz ==
 
 King Bud of Noland, also known as King Bud, rules the kingdom of Noland, whose borders adjoin those of Ix. He travels with his sister, the Princess Fluff, described as dainty and fair-haired, to attend the birthday celebration of Ozma of Oz, a journey undertaken because he and Queen Zixi of Ix are friends and their neighboring kingdoms allowed them to travel together from their distant domains.
 
 At the birthday gathering, King Bud is announced with full royal honors, styled "His Serene and Tremendous Majesty," alongside Queen Zixi of Ix and the Princess Fluff. He and his sister bring splendid gifts for Ozma, adding to a table already heavy with presents from other visiting dignitaries.
 
 During the grand procession honoring Ozma, King Bud of Noland and the Princess Fluff march together, positioned among a long line of notable figures that includes Queen Zixi of Ix, John Dough, the Cherub, the Queen of Merryland, the Queen of Ev and her royal children, the Braided Man, the Candy Man, King Dox of Foxville, King Kik-a-bray of Dunkiton, and Johnny Dooit. The crowd cheers this procession as heartily as those who came before.
+</div>
+
+== Relationships ==
+
+''Evolution:''
+* Princess — Family (ch.1)<ref>The Road to Oz, chapter 1</ref>
+* [[Button-Bright]] — Friend (ch.1)<ref>The Road to Oz, chapter 1</ref>
 
 == Personality ==
 
 King Bud of Noland is sparsely characterized within these excerpts, but two details suggest his disposition. He travels from his own domain together with Queen Zixi of Ix specifically to honor Ozma of Oz on her birthday, an action that points to a courteous and respectful nature toward fellow rulers. He and his sister, the Princess Fluff, also bring "many splendid gifts" to the celebration, a generosity that reinforces the impression of a considerate, sociable monarch who values maintaining friendly ties with allied kingdoms.
-
-== Relationships ==
-
-'''[[Princess]]''' — family. Text names him traveling with "his sister, the Princess Fluff," suggesting close kinship tied to their joint journey honoring Ozma.
-
-'''[[Button-Bright]]''' — friend. Bond seems warm and quick — Button-Bright reportedly "accepted him as a chum at once and did not want him to go away."
 
 == Trivia ==
 
@@ -36,13 +35,6 @@ King Bud of Noland is sparsely characterized within these excerpts, but two deta
 == References ==
 
 <references/>
-</div>
-
-== Relationships ==
-
-''Evolution:''
-* [[Princess]] — Family (ch.1)<ref>The Road to Oz, chapter 1</ref>
-* [[Button-Bright]] — Friend (ch.1)<ref>The Road to Oz, chapter 1</ref>
 
 [[Category:Characters]]
 [[Category:Main Characters]]

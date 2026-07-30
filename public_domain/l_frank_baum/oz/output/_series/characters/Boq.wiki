@@ -5,9 +5,7 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
-== Book 1 ==
-
-== Biography ==
+== The Wonderful Wizard of Oz ==
 
 Boq is a Munchkin encountered at a gathering where people dance. Upon seeing Dorothy's silver shoes, he tells her she must be a great sorceress, and remarks that her blue and white checked dress is kind to wear, noting that blue is the color of the Munchkins and white is the witch color. After Dorothy tires of watching the dancing, Boq leads her into his house and gives her a room with a pretty bed, its sheets made of blue cloth, where she sleeps soundly until morning with Toto curled on the blue rug beside her.
 

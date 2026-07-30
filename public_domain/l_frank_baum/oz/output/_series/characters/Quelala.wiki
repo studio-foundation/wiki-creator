@@ -4,9 +4,7 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
-== Book 1 ==
-
-== Biography ==
+== The Wonderful Wizard of Oz ==
 
 Quelala is a young man raised in the ruby palace of Gayelette, who used her magic to shape him into someone strong, good, and lovely, intending to take him as her husband. By the time he reached manhood, he was said to be the wisest and best man in the land, admired for his great beauty. Shortly before his wedding to Gayelette, he was walking beside a river dressed in a costume of pink silk and purple velvet when the King of the Winged Monkeys and his band seized him as a prank, carried him over the water, and dropped him in, mockingly asking whether the water had spotted his clothes.
 

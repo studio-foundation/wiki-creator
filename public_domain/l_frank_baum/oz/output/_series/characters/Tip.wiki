@@ -5,9 +5,7 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 2 — reveal" data-collapsetext="Hide">
-== Book 2 ==
-
-== Biography ==
+== The Marvelous Land of Oz ==
 
 Tip is a youth of the Country of the Gillikins, in the North of the Land of Oz. Old Mombi, his guardian, sometimes calls him by his longer name, Tippetarius, though he is known simply as Tip. He is also known as Ozma, or Princess Ozma. Tip remembers nothing of his own parents; he was brought to Mombi while still quite young and raised by her, though her reputation was far from good.
 
@@ -16,57 +14,6 @@ Restless and fond of mischief, Tip built a figure from a carved pumpkin and wood
 On the road, Tip cared for his companions: he repaired Jack's wooden joints whenever they gave way, and after bringing an old sawhorse to life as the Saw-Horse, he whittled it a pair of ears from bark so it could hear his commands. When a ferryman refused to carry the travelers across a river without payment, the group crossed on their own and continued on toward the Emerald City, the grass and trees turning from lavender to green as they neared it.
 
 Upon reaching the Emerald City, Tip presented Jack Pumpkinhead to His Majesty the Scarecrow, and it was there confirmed, in answer to Jellia's question, that Tip was the one who had made Jack.
-
-== Narrative role ==
-
-Tip is a Gillikin youth living in the North of Oz as ward of old Mombi, an old woman suspected of practicing magic. He remembers nothing of his parents, having been raised by Mombi since early childhood, and is set to daily chores — cutting wood, tending the corn-fields, keeping pigs, and milking — from which he regularly slacks off to play whenever Mombi's attention is elsewhere. Using branches and clothing found in Mombi's chest, he builds and dresses a figure he names Jack Pumpkinhead.
-
-Later, Tip runs behind the galloping Saw-Horse while holding onto its tail, but the branch he grips breaks and he is left behind on the road. Afterward, when Jack's pumpkin head is swept downstream, Tip retrieves it with a long pole and reattaches it to Jack's neck.
-
-When Jinjur threatens to destroy each of the companions in gruesome fashion, she orders that Tip be returned to old Mombi. Around this time, Tip's Powder of Life falls from his pocket, and he explains that it can bring anything to life but that only one dose remains.
-
-Tip speaks the magic words he learned from Mombi, and the Thing comes to life, screeching and flapping its wings violently. Worried that the powder is running low, he must decide whether to animate the head or the legs of the sofas; he then commands the Gump to return, and because its head has been brought to life, it obeys and lands safely back on the roof.
-
-Tip explains to the newly animated Gump-headed Thing that it exists to carry the group through the air. He also discovers a false bottom in the discarded pepper-box, holding three of Dr. Nikidik's silver wishing pills — useless, since the instructions require counting seventeen by twos. When Jackdaws' stolen money is found in their nest, Tip suggests restuffing the Scarecrow with it, and the group refills him with bills of various denominations.
-
-Old Mombi eventually admits that the Wizard gave her a baby named Ozma in exchange for teaching her magic tricks — an admission that reveals Tip to be that child, also known as Princess Ozma. When Jinjur refuses to give up her throne and declares war on Glinda the Good and Ozma, the Army of Revolt ultimately surrenders and the stolen jewels are returned; Ozma is crowned queen of the Emerald City, and Jinjur despairs on learning that Mombi has confessed and that Tip is truly Princess Ozma.
-
-== Personality ==
-
-Tip is mischievous and inventive, drawn to testing "the cleverness of his workmanship" rather than to strict practicality; he builds Jack Pumpkinhead expressly to frighten old Mombi and takes evident satisfaction in seeing the trick succeed. This same restless curiosity shows in his willingness to experiment — first with the Powder of Life, later by whittling a pair of ears for the newly awakened Saw-Horse when the creature fails to heed a shouted "Whoa!"
-
-He also shows a rebellious streak toward authority: faced with the prospect of "being a marble statue," he resolves, rebelliously, that "I'm not going to stand it," and admits in private that he "never did like that old woman," Mombi, wondering "how I ever came to live with her." Yet Tip is not merely defiant — he is attentive and conscientious toward what he creates. When Jack's joints give way and he crashes to the ground, Tip rushes to him, straightens his limbs, and checks his head for cracks, and he later regrets not having "constructed the wooden limbs more carefully and substantially." He also proves patient with Jack's oddities, choosing to let the Pumpkinhead call him "father" rather than undertake "another long and tedious explanation." Confronted with sudden mishap, such as the Saw-Horse's wild circling that leaves him "dancing away in pain," Tip reacts with alarm but responds practically, seeking a workable fix rather than giving in to panic.
-
-== Appearance ==
-
-Tip is described as a boy of small and delicate build, a detail noted when Jack Pumpkinhead addresses him as "father."
-
-== Powers ==
-
-Tip has no innate magical ability, but shows real skill as a craftsman: he assembles a pumpkin-headed man whose jointed limbs are sturdy enough to walk, working the leg joints by hand until they hold together, and takes visible pride in testing "the cleverness of his workmanship." His capacity to bring a creation to life depends on the Powder of Life, a substance he takes rather than one he possesses by nature — his gift lies in construction and resourceful use of found materials, not in sorcery of his own.
-
-== Relationships ==
-
-'''[[The Scarecrow]]''' — friend. Tip's road led toward the Emerald City ruled by the Scarecrow, and Jack Pumpkinhead's introduction of himself as the work of "a boy named Tip" suggests an emerging friendly connection forming between Tip and the Scarecrow.
-
-'''[[Jack Pumpkinhead]]''' — family. Tip carved and animated Jack with the Powder of Life; Jack repeatedly calls him "father," a title Tip found embarrassing yet never denied, suggesting a father-son-like bond between them.
-
-'''[[Nick Chopper]]''' — friend. Tip's tie to Nick Chopper seems to come from the same circle gathered around the Scarecrow and the Emerald City, though the bond is only suggested, not shown directly.
-
-'''[[Woggle-Bug]]''' — acquaintance. Tip questioned the Woggle-Bug directly — "But where were you going, when you met us?" — pointing to at least a passing acquaintance between them.
-
-'''[[Saw-Horse]]''' — other. Tip whittled ears for the newly animated Saw-Horse so it could hear his commands, and later instructed it to "wiggle your legs" while crossing the river, suggesting a caretaker-like bond with the creature he helped bring to life.
-
-== Trivia ==
-
-* Old Mombi addressed Tip by his full name, Tippetarius, though the shorter name was used by everyone else.
-* When the newly animated Saw-Horse ignored Tip's shouted commands to stop, Jack Pumpkinhead pointed out that the creature had no ears; Tip then whittled a pair from tree bark and fastened them to its head.
-* A ferryman refused to row Tip and his companions across the river on the road to the Emerald City because Tip carried no money.
-* Tip built Jack Pumpkinhead's wooden joints himself; by the time they reached the Emerald City, the purple trousers, pink waistcoat, and red shirt still hung loosely over the joints he had constructed.
-
-== References ==
-
-<references/>
 
 === Events ===
 
@@ -150,16 +97,55 @@ Tip has no innate magical ability, but shows real skill as a craftsman: he assem
 * The Gump asks to be dismantled back into its original parts, and Ozma grants its wish.
 </div>
 
+== Narrative role ==
+
+Tip is a Gillikin youth living in the North of Oz as ward of old Mombi, an old woman suspected of practicing magic. He remembers nothing of his parents, having been raised by Mombi since early childhood, and is set to daily chores — cutting wood, tending the corn-fields, keeping pigs, and milking — from which he regularly slacks off to play whenever Mombi's attention is elsewhere. Using branches and clothing found in Mombi's chest, he builds and dresses a figure he names Jack Pumpkinhead.
+
+Later, Tip runs behind the galloping Saw-Horse while holding onto its tail, but the branch he grips breaks and he is left behind on the road. Afterward, when Jack's pumpkin head is swept downstream, Tip retrieves it with a long pole and reattaches it to Jack's neck.
+
+When Jinjur threatens to destroy each of the companions in gruesome fashion, she orders that Tip be returned to old Mombi. Around this time, Tip's Powder of Life falls from his pocket, and he explains that it can bring anything to life but that only one dose remains.
+
+Tip speaks the magic words he learned from Mombi, and the Thing comes to life, screeching and flapping its wings violently. Worried that the powder is running low, he must decide whether to animate the head or the legs of the sofas; he then commands the Gump to return, and because its head has been brought to life, it obeys and lands safely back on the roof.
+
+Tip explains to the newly animated Gump-headed Thing that it exists to carry the group through the air. He also discovers a false bottom in the discarded pepper-box, holding three of Dr. Nikidik's silver wishing pills — useless, since the instructions require counting seventeen by twos. When Jackdaws' stolen money is found in their nest, Tip suggests restuffing the Scarecrow with it, and the group refills him with bills of various denominations.
+
+Old Mombi eventually admits that the Wizard gave her a baby named Ozma in exchange for teaching her magic tricks — an admission that reveals Tip to be that child, also known as Princess Ozma. When Jinjur refuses to give up her throne and declares war on Glinda the Good and Ozma, the Army of Revolt ultimately surrenders and the stolen jewels are returned; Ozma is crowned queen of the Emerald City, and Jinjur despairs on learning that Mombi has confessed and that Tip is truly Princess Ozma.
+
 == Relationships ==
 
 ''Evolution:''
-* [[Glinda the Good]] — Friend (ch.21→ch.23)<ref>The Marvelous Land of Oz, chapter 21</ref>
-* [[Wizard of Oz]] — Enemy (ch.20→ch.23)<ref>The Marvelous Land of Oz, chapter 20</ref>
+* [[Glinda|Glinda the Good]] — Friend (ch.21→ch.23)<ref>The Marvelous Land of Oz, chapter 21</ref>
+* [[Wizard|Wizard of Oz]] — Enemy (ch.20→ch.23)<ref>The Marvelous Land of Oz, chapter 20</ref>
 * [[Pastoria]] — Family (ch.20)<ref>The Marvelous Land of Oz, chapter 20</ref>
 * [[Old Mombi]] — Enemy (ch.12→ch.23)<ref>The Marvelous Land of Oz, chapter 12</ref>
-* [[Nick Chopper]] — Friend (ch.11→ch.24)<ref>The Marvelous Land of Oz, chapter 11</ref>
-* [[The Scarecrow]] — Friend (ch.9→ch.24)<ref>The Marvelous Land of Oz, chapter 9</ref>
+* [[Tin Woodman|Nick Chopper]] — Friend (ch.11→ch.24)<ref>The Marvelous Land of Oz, chapter 11</ref>
+* [[Scarecrow|The Scarecrow]] — Friend (ch.9→ch.24)<ref>The Marvelous Land of Oz, chapter 9</ref>
 * [[Jack Pumpkinhead]] — Family (ch.3→ch.24)<ref>The Marvelous Land of Oz, chapter 3</ref>
+
+== Personality ==
+
+Tip is mischievous and inventive, drawn to testing "the cleverness of his workmanship" rather than to strict practicality; he builds Jack Pumpkinhead expressly to frighten old Mombi and takes evident satisfaction in seeing the trick succeed. This same restless curiosity shows in his willingness to experiment — first with the Powder of Life, later by whittling a pair of ears for the newly awakened Saw-Horse when the creature fails to heed a shouted "Whoa!"
+
+He also shows a rebellious streak toward authority: faced with the prospect of "being a marble statue," he resolves, rebelliously, that "I'm not going to stand it," and admits in private that he "never did like that old woman," Mombi, wondering "how I ever came to live with her." Yet Tip is not merely defiant — he is attentive and conscientious toward what he creates. When Jack's joints give way and he crashes to the ground, Tip rushes to him, straightens his limbs, and checks his head for cracks, and he later regrets not having "constructed the wooden limbs more carefully and substantially." He also proves patient with Jack's oddities, choosing to let the Pumpkinhead call him "father" rather than undertake "another long and tedious explanation." Confronted with sudden mishap, such as the Saw-Horse's wild circling that leaves him "dancing away in pain," Tip reacts with alarm but responds practically, seeking a workable fix rather than giving in to panic.
+
+== Appearance ==
+
+Tip is described as a boy of small and delicate build, a detail noted when Jack Pumpkinhead addresses him as "father."
+
+== Powers ==
+
+Tip has no innate magical ability, but shows real skill as a craftsman: he assembles a pumpkin-headed man whose jointed limbs are sturdy enough to walk, working the leg joints by hand until they hold together, and takes visible pride in testing "the cleverness of his workmanship." His capacity to bring a creation to life depends on the Powder of Life, a substance he takes rather than one he possesses by nature — his gift lies in construction and resourceful use of found materials, not in sorcery of his own.
+
+== Trivia ==
+
+* Old Mombi addressed Tip by his full name, Tippetarius, though the shorter name was used by everyone else.
+* When the newly animated Saw-Horse ignored Tip's shouted commands to stop, Jack Pumpkinhead pointed out that the creature had no ears; Tip then whittled a pair from tree bark and fastened them to its head.
+* A ferryman refused to row Tip and his companions across the river on the road to the Emerald City because Tip carried no money.
+* Tip built Jack Pumpkinhead's wooden joints himself; by the time they reached the Emerald City, the purple trousers, pink waistcoat, and red shirt still hung loosely over the joints he had constructed.
+
+== References ==
+
+<references/>
 
 [[Category:Characters]]
 [[Category:Main Characters]]

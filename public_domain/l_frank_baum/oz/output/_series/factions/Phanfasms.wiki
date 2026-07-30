@@ -4,9 +4,7 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
-== Book 6 ==
-
-== Biography ==
+== The Emerald City of Oz ==
 
 ''Insufficient information available for this entity.''
 </div>

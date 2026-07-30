@@ -5,9 +5,7 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
-== Book 6 ==
-
-== Biography ==
+== The Emerald City of Oz ==
 
 Grandmother Gnit is one of the Fuddles, a people living about two miles beyond Fuddlecumjig who must be pieced together like a puzzle to take physical shape. She once made a pair of mittens, and one of the Fuddles claims to know her well enough to identify every piece belonging to her. When Omby Amby found a hand holding a knitting needle, the travelers decided to put Grandmother Gnit together; she proved an easier puzzle than old Larry, and once assembled she turned out to be a pleasant old lady who welcomed them cordially.
 </div>

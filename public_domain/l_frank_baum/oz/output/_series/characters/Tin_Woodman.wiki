@@ -6,29 +6,11 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
-== Book 1 ==
-
-== Biography ==
+== The Wonderful Wizard of Oz ==
 
 The Tin Woodman, also known simply as the Woodman, is a companion of Dorothy on her journey along the road of yellow brick toward the Emerald City, traveling alongside the Scarecrow and, later, the Cowardly Lion and the dog Toto. He admits to never having been to the Emerald City himself, though his father made the journey once when he was a boy and reported it as long and passing through dangerous country, growing more beautiful nearer the city where Oz dwells. The Woodman knows that he has no heart, and for that reason takes great care never to be cruel or unkind to anything, walking carefully so as not to even harm a passing ant; as he puts it, those with hearts have something to guide them, but having none, he must be especially careful.
 
 His care extends to protecting his companions and the creatures around him: he holds Toto back from chasing the field mice, refuses to kill a deer for food for fear that weeping over it would rust his jaws, and carries an oil-can to keep his joints moving. He performs much of the group's practical labor, chopping wood for their camp with his axe and building the raft of logs and wooden pins used to cross a wide river that blocked their path, standing at one end with the Scarecrow to steady it with long poles. When a great Wildcat comes bounding after a small mouse who turns out to be the Queen of the Field Mice, he kills the beast with his axe, and afterward helps push the mice's truck to safety. His head, which turns on hinges, and his tin body serve him well: when the Scarecrow later scatters his own straw over Dorothy, Toto, and the Lion to shield them from the Wicked Witch's bees, the bees find only the Woodman to sting and break all their stingers against his tin without harming him at all.
-
-== Relationships ==
-
-'''[[Scarecrow]]''' — friend. Their bond seems to run through repeated support on the road, suggested by the Scarecrow greeting him "heartily" with "Come along."
-
-'''[[Dorothy]]''' — friend. The tie between them could indicate mutual gratitude, hinted at by her remark that he "certainly saved" her life.
-
-'''[[Cowardly Lion]]''' — friend. Despite the Lion striking at him with his "sharp claws" during an early encounter in the forest, the blow left him unharmed, which suggests the friendship endured past this clash.
-
-'''[[Wizard]]''' — employment. Their connection appears tied to the shared purpose of the journey toward the Emerald City to seek an audience with Oz, though the excerpts offer only limited grounding for the nature of this bond.
-
-'''[[Wicked Witch]]''' — enemy. Their opposition seems evident when she sends a pack of wolves against the travelers, which he destroys with his axe.
-
-== References ==
-
-<references/>
 
 === Events ===
 
@@ -76,9 +58,7 @@ His care extends to protecting his companions and the creatures around him: he h
 * Glinda uses the Golden Cap's three remaining commands to send the Winged Monkeys to carry the Scarecrow to the Emerald City, the Tin Woodman to the Winkies, and the Lion to his forest.
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 2 — reveal" data-collapsetext="Hide">
-== Book 2 ==
-
-== Biography ==
+== The Marvelous Land of Oz ==
 
 Nick Chopper, generally known as the Tin Woodman and called Nick by his companions, rules the West Country of the Winkies, a land where everything is yellow. He was invited to become the Winkies' ruler after he helped Dorothy destroy the Wicked Witch of the West, an act for which the grateful Winkies offered him the throne; he styles himself their Emperor.
 
@@ -87,48 +67,6 @@ Before assuming this rule, Nick Chopper accompanied Dorothy, a girl carried to t
 When General Jinjur's Army of Revolt drove the Scarecrow from the Emerald City, the Tin Woodman reacted to the news with alarm, calling it a calamity, and resolved to march at once to recapture the city and restore the Scarecrow to his throne. He undertook this journey together with Tip, Jack Pumpkinhead, and the Saw-Horse, a company later joined along the road by the Woggle-Bug. The march toward the Emerald City was thrown off course when the witch Mombi, summoned by Jinjur to stop the group, worked magic from a tower room that left the Tin Woodman certain they had lost their way despite his knowing every step of the route.
 
 During the journey, the Tin Woodman performed the operation of amputating Jack Pumpkinhead's wooden leg and fitting it, cut down to size, onto the Saw-Horse.
-
-== Narrative role ==
-
-Nick Chopper, known as the Tin Woodman, enters the narrative as Emperor of the Winkies, ruling the western country and named as the destination the Scarecrow turns to for protection when driven from the [[Emerald City]]. Retracing the road together, the Scarecrow recalls an earlier adventure in which Nick Chopper destroyed the Wicked Witch's Grey Wolves alongside Dorothy, a deed remembered as one of the notable feats of their shared travels. Once reunited with the Scarecrow's party, the Tin Woodman resolves to help retake the Emerald City without raising a large army. The group's journey is soon disrupted: the Tin Woodman notices that something has gone wrong with their route, and the travelers find themselves surrounded by a field of giant sunflowers bearing girls' faces, a sight they suspect is the work of Mombi's magic. When Jack Pumpkinhead's leg is damaged, Nick Chopper amputates it and refits it to the Saw-Horse, prompting a round of bickering between Jack and the Saw-Horse before the group resumes its travel. Further along, the Tin Woodman blows a silver whistle to summon the Queen of the Field Mice, an old friend whose life he once saved.
-
-Leading the march on the Emerald City, the Tin Woodman wields his axe to frighten off the guards of the Army of Revolt, and the travelers enter the city unopposed — only for General Jinjur to signal her Army of Revolt to surround and disarm them, seizing the Tin Woodman's axe and taking the group prisoner. Held captive, the party regroups around a plan: the Scarecrow proposes building a flying machine on the palace roof and animating it with the Powder of Life, naming the Tin Woodman as its builder, and Nick Chopper also repairs Jack Pumpkinhead's broken leg with a table leg before the group disperses to gather materials. Assembling on the roof, the travelers collect a Gump's head with antlers, two sofas, a broom, ropes, and four palm-tree leaves cut by the Tin Woodman, who then designs the machine itself, binding the two sofas together as its body and attaching the Gump's head to the front. Before the machine departs, the travelers fall unharmed into a hidden Jackdaw's nest full of stolen treasures, where the Woggle-Bug gives a found diamond necklace to the Tin Woodman; the Gump then flies south carrying Tip, the Scarecrow, the Tin Woodman, Jack Pumpkinhead, the Woggle-Bug, and the Saw-Horse.
-
-Later, unaware of its true identity, the Tin Woodman plucks a rose and pins it to his chest as a search party withdraws in defeat — the rose being Mombi in disguise, who believes herself safe hidden in the Tin Woodman's button-hole since no one suspects the two are the same. As the Scarecrow and the Tin Woodman each propose alternate plans, Glinda the Good notices the rose trembling and comes to suspect it is Mombi in disguise. Afterward, the Tin Woodman prepares to return to the Winkie Country, taking the Scarecrow with him to serve as his Royal Treasurer.
-
-== Personality ==
-
-Nick Chopper shows a protective, take-charge instinct toward his friends. On learning that the Scarecrow had been driven from the Emerald City, he reacts with alarm — "Great Goodness! What a calamity!" — and immediately moves to action, declaring "we must not give them time to do that... we will go at once and recapture the Emerald City." The Scarecrow's own confidence that "he will protect me" if danger comes reflects this same protective reputation.
-
-He is also inclined to speak generously of others: describing a tailor who made Jack Pumpkinhead's clothes, he calls him "a good-hearted tailor, at any rate," giving credit even where the Scarecrow voices mere envy. This generosity extends to practical helpfulness — he agrees to amputate and refit Jack Pumpkinhead's leg onto the Saw-Horse when asked, undertaking the unpleasant task without protest even as the Saw-Horse complains of being "butchered."
-
-According to the traveling party's own account of events, the Tin Woodman also shows a degree of vanity about his appearance, having recently had himself nickel-plated — though this detail rests on the party's subjective retelling rather than direct testimony from Nick Chopper himself.
-
-== Powers ==
-
-Nick Chopper's combat capability is considerable: the Scarecrow recalls the spot where Nick Chopper destroyed the Wicked Witch's Grey Wolves, a feat tied directly to his standing among the Winkies before he became their ruler. He also possesses a craftsman's precision consistent with his identity as the Tin Woodman: he amputated Jack Pumpkinhead's wooden leg and whittled it down to fit the Saw-Horse, an operation exact enough that the new leg held in place despite the Saw-Horse's complaints about the fit.
-
-== Relationships ==
-
-'''[[The Scarecrow]]''' — friend. Nick Chopper is remembered alongside the Scarecrow as one of those who "helped Dorothy to destroy the Wicked Witch of the West," and the Scarecrow later turns to him for protection when driven from the Emerald City, calling him "my friend the Tin Woodman" — a pattern that suggests a lasting friendship between them.
-
-'''[[Woggle-Bug]]''' — friend. When the Woggle-Bug is met on the road, Nick Chopper welcomes him with "We are bound for the Emerald City now... you are welcome to travel in our company," an invitation that suggests a friendly rapport growing between them.
-
-'''[[Tip]]''' — friend. Tip travels in Nick Chopper's company and hears him addressed familiarly as "my dear Nick" while he works on Jack Pumpkinhead's leg, which suggests an easy, friendly footing between them.
-
-'''[[Jack Pumpkinhead]]''' — acquaintance. At Jack's urging — "Get to work, my dear Nick, and fit the Pumpkinhead's leg to the Saw-Horse" — Nick Chopper amputates and refits Jack's leg onto the Saw-Horse, an exchange that suggests a working acquaintance between them rather than a deeper bond.
-
-'''[[Glinda the Good]]''' — friend. A remark that "I know Glinda the Good, and believe she will prove a friend indeed" could indicate a friendly connection between Nick Chopper and Glinda the Good, though the excerpts do not show them interacting directly.
-
-== Trivia ==
-
-* Nick Chopper destroyed the Wicked Witch of the West's Grey Wolves, a feat the Scarecrow recalls when Tip asks who Nick Chopper is.
-* The Scarecrow addresses him familiarly as "Nick," as when he asks him to fit Jack Pumpkinhead's leg to the Saw-Horse.
-* Nick Chopper performed the operation himself, amputating Jack Pumpkinhead's wooden leg and whittling it down to fit the Saw-Horse — an operation the Saw-Horse later complained of as having been "butchered."
-
-== References ==
-
-<references/>
 
 === Events ===
 
@@ -160,23 +98,9 @@ Nick Chopper's combat capability is considerable: the Scarecrow recalls the spot
 * The Tin Woodman prepares to return to the Winkie Country, taking the Scarecrow with him as his Royal Treasurer.
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 3 — reveal" data-collapsetext="Hide">
-== Book 3 ==
-
-== Biography ==
+== Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein ==
 
 The Tin Woodman is a companion of Ozma of Oz, seated among her court alongside the Scarecrow and Tiktok during palace audiences. He commands the Army of Oz, describing it as composed of eight Generals, six Colonels, seven Majors, five Captains, and a small handful of privates. He takes part in Ozma's processions, marching side by side with Tiktok just behind the Scarecrow. According to Billina, the Tin Woodman was at one point trapped after Prince Evring accidentally pocketed his enchanted whistle, and was restored the instant it was blown.
-
-== Relationships ==
-
-'''[[Ozma]]''' — employment. The Tin Woodman speaks of Ozma as ruler and addresses an assembly on her behalf, which suggests he serves under her.
-
-'''[[DOROTHY]]''' — friend. His frequent presence alongside Dorothy in the palace and on the march could suggest a close acquaintance.
-
-'''[[Scarecrow]]''' — friend. He is seated and marches beside the Scarecrow, and the two are described as joyfully reunited after a separation, suggesting a close companionship.
-
-'''[[Nome King]]''' — enemy. He addresses the assembly on the matter of captives held by the Nome King, which suggests an adversarial standing between them.
-
-'''[[BILLINA]]''' — acquaintance. Their shared presence among the same company suggests only a slight acquaintance.
 
 === Events ===
 
@@ -188,23 +112,9 @@ The Tin Woodman is a companion of Ozma of Oz, seated among her court alongside t
 * The Tin Woodman is joyfully reunited with the Scarecrow and Tiktok, and the group returns to the royal palace of Ev.
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
-== Book 4 ==
-
-== Biography ==
+== Dorothy and the Wizard in Oz ==
 
 The Tin Woodman is remembered fondly as one of the friends of Oz's former Wizard. Skilled with an axe, he once cut a straight, strong limb from a tree and used it to fashion a new leg and ear for the Sawhorse after the Sawhorse was injured. The Wizard treats him as a trusted friend, privately asking him to defend Dorothy's kitten Eureka when she stands accused of eating Princess Ozma's missing piglet. The Tin Woodman also speaks directly to Eureka, warning her that she may be sorry if she continues to act foolishly.
-
-== Relationships ==
-
-'''[[WIZARD]]''' — friend. The Wizard's confiding in him to defend Eureka suggests a bond of trust between them.
-
-'''[[DOROTHY]]''' — ally. His recurring presence alongside Dorothy during the group's travels could indicate an allied relationship.
-
-'''[[Eureka]]''' — ally. His warning to Eureka to behave suggests a watchful, allied stance toward her.
-
-'''[[Princess Ozma]]''' — employment. His repair of the Sawhorse's leg and ear at her court could indicate a relationship of service to her.
-
-'''[[Sawhorse]]''' — friend. His mending of the Sawhorse's broken leg and ear with his axe suggests a friendly bond between them.
 
 === Events ===
 
@@ -214,15 +124,60 @@ The Tin Woodman is remembered fondly as one of the friends of Oz's former Wizard
 * Jury finds Eureka guilty, but Tin Woodman produces the duplicate piglet, seemingly proving innocence.
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 5 — reveal" data-collapsetext="Hide">
-== Book 5 ==
-
-== Biography ==
+== The Road to Oz ==
 
 Nick Chopper, known as the Tin Woodman, is a tin man who possesses a heart given to him by the Wizard. After a witch who had enslaved the Winkies was destroyed with a bucket of water, the freed people made Nick Chopper their Emperor. According to Billina, the Tin Woodman's heart grows softer and kindlier every day.
+
+=== Events ===
+
+* The group meets Tik-tok and Billina, who guide them toward the Emerald City and stop overnight at Nick Chopper's tin castle.
+* Along the road they visit Jack Pumpkinhead at his pumpkin farm and hear the Tin Woodman's account of the Powder of Life.
+</div>
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
+== The Emerald City of Oz ==
+
+Nick Chopper, also known as the Tin Woodman, is a companion of Dorothy and resides in a tin castle in Winkie Country. According to Dorothy, she and the Scarecrow once found him rusted stiff in the woods; after oiling his joints until they were slippery again, he accompanied them to visit the Wizard at the Emerald City. He is counted among the friends the Wizard's party plans to call upon on their travels, alongside Jack Pumpkinhead and the Scarecrow — of whom the Tin Woodman remarks that their dear Scarecrow cannot be contented with city life however beautiful his surroundings, noting that the Scarecrow originally passed his early life as a farmer in a cornfield, set there to frighten away crows.
+
+During a visit to his tin castle, where his guests toured his tin gardens and fish pond, the Tin Woodman reported that Ozma had seen in her Magic Picture that the Nome King had dug a tunnel under the desert to invade Oz together with the Whimsies, the Growleywogs, and the Phanfasms.
+
+=== Events ===
+
+* The group decides to rest, eat supper, and continue their journey the next day, planning to visit the Rigmaroles and Flutterbudgets before calling on the Tin Woodman, Jack Pumpkinhead, and the Scarecrow.
+* The travelers reach Winkie Country and lunch with the Tin Woodman at his tin castle, touring his tin gardens and fish pond.
+* The Tin Woodman reveals Ozma saw in her Magic Picture that the Nome King dug a tunnel under the desert to invade Oz alongside the Whimsies, Growleywogs, and Phanfasms.
+</div>
 
 == Narrative role ==
 
 Nick Chopper, known as the Tin Woodman, is met when Tik-tok and Billina guide the travelers toward the Emerald City; the party stops overnight at Nick Chopper's tin castle along the way. The journey later brings them to Jack Pumpkinhead's pumpkin farm, where Nick Chopper recounts his own account of the Powder of Life.
+
+== Relationships ==
+
+''Evolution:''
+* [[Scarecrow]] — Friend (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
+* [[Dorothy]] — Friend (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
+* [[Ozma]] — Friend (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
+* [[Jack Pumpkinhead]] — Friend (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
+* [[Nome King|Roquat]] — Enemy (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
+* [[Tiktok]] — Friend (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
+* [[Uncle Henry]] — Friend (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
+* [[Shaggy Man|THE shaggy man]] — Friend (ch.1)<ref>The Road to Oz, chapter 1</ref>
+* [[Button-Bright]] — Friend (ch.1)<ref>The Road to Oz, chapter 1</ref>
+* [[Polly]] — Friend (ch.1)<ref>The Road to Oz, chapter 1</ref>
+* [[Toto]] — Friend (ch.1)<ref>The Road to Oz, chapter 1</ref>
+* [[Eureka]] — Ally (ch.3)<ref>Dorothy and the Wizard in Oz, chapter 3</ref>
+* [[Saw-Horse|Sawhorse]] — Friend (ch.3)<ref>Dorothy and the Wizard in Oz, chapter 3</ref>
+* [[Wizard|WIZARD]] — Friend (ch.2→ch.3)<ref>Dorothy and the Wizard in Oz, chapter 2</ref>
+* King — Enemy (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
+* [[Jackdaws]] — Enemy (ch.19)<ref>The Marvelous Land of Oz, chapter 19</ref>
+* [[Glinda|Glinda the Good]] — Friend (ch.18→ch.22)<ref>The Marvelous Land of Oz, chapter 18</ref>
+* Queen — Friend (ch.14)<ref>The Marvelous Land of Oz, chapter 14</ref>
+* [[Woggle-Bug]] — Friend (ch.12→ch.20)<ref>The Marvelous Land of Oz, chapter 12</ref>
+* [[General Jinjur]] — Enemy (ch.12→ch.15)<ref>The Marvelous Land of Oz, chapter 12</ref>
+* [[Old Mombi]] — Enemy (ch.12)<ref>The Marvelous Land of Oz, chapter 12</ref>
+* [[Tip]] — Friend (ch.11→ch.24)<ref>The Marvelous Land of Oz, chapter 11</ref>
+* [[Cowardly Lion]] — Friend (ch.6→ch.21)<ref>The Wonderful Wizard of Oz, chapter 6</ref>
+* [[Wicked Witch]] — Enemy (ch.5→ch.12)<ref>The Wonderful Wizard of Oz, chapter 5</ref>
 
 == Personality ==
 
@@ -236,18 +191,6 @@ Nick Chopper, also known as the Tin Woodman, is made of tin, a fact reflected in
 
 Nick Chopper possesses a heart given to him by the Wizard, described as growing "softer and kindlier every day." This heart sets him apart from ordinary beings, marking him as a figure whose inner nature is not fixed at creation but continues to develop over time.
 
-== Relationships ==
-
-'''[[Dorothy]]''' — friend. Dorothy counts Nick Chopper among her old companions, recalling that she "came here once with my friends the Scarecrow, and the Tin Woodman," and later asks after him with warmth, wishing "to see dear Nick Chopper again."
-
-'''[[THE shaggy man]]''' — friend. The bond seems to form quickly, as he "loved the shaggy man" even before knowing of the Love Magnet, suggesting an easy, immediate friendship.
-
-'''[[Jack Pumpkinhead]]''' — friend. Nick Chopper appears protective toward Jack Pumpkinhead, declaring "So you shall, since he is still alive. Come with me to his house," which points to a caring, friendly regard.
-
-'''[[Tik-tok]]''' — friend. The copper man and the tin man are described as "good friends," indicating an easy companionship between the two mechanical figures.
-
-'''[[Wizard]]''' — other. Nick Chopper's defining feature, his heart, was "given him by the wonderful Wizard," tying the two together, though the excerpts say little of their relationship beyond this gift.
-
 == Trivia ==
 
 * After Dorothy melted the witch who held them captive, the freed people made Nick Chopper their Emp'ror.
@@ -257,79 +200,8 @@ Nick Chopper possesses a heart given to him by the Wizard, described as growing 
 
 <references/>
 
-=== Events ===
-
-* The group meets Tik-tok and Billina, who guide them toward the Emerald City and stop overnight at Nick Chopper's tin castle.
-* Along the road they visit Jack Pumpkinhead at his pumpkin farm and hear the Tin Woodman's account of the Powder of Life.
-</div>
-<div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
-== Book 6 ==
-
-== Biography ==
-
-Nick Chopper, also known as the Tin Woodman, is a companion of Dorothy and resides in a tin castle in Winkie Country. According to Dorothy, she and the Scarecrow once found him rusted stiff in the woods; after oiling his joints until they were slippery again, he accompanied them to visit the Wizard at the Emerald City. He is counted among the friends the Wizard's party plans to call upon on their travels, alongside Jack Pumpkinhead and the Scarecrow — of whom the Tin Woodman remarks that their dear Scarecrow cannot be contented with city life however beautiful his surroundings, noting that the Scarecrow originally passed his early life as a farmer in a cornfield, set there to frighten away crows.
-
-During a visit to his tin castle, where his guests toured his tin gardens and fish pond, the Tin Woodman reported that Ozma had seen in her Magic Picture that the Nome King had dug a tunnel under the desert to invade Oz together with the Whimsies, the Growleywogs, and the Phanfasms.
-
-== Relationships ==
-
-'''[[Scarecrow]]''' — friend. Referred to by Nick Chopper as "our dear Scarecrow," the bond seems close, having been forged when Dorothy and the Scarecrow found him rusted still in the woods, oiled his joints, and afterward traveled with him to the Emerald City.
-
-'''[[Dorothy]]''' — friend. According to Dorothy, she and the Scarecrow found the Tin Woodman rusted still in the woods and got his joints slippery again, after which he went with them to visit the Wizard — suggesting a friendship formed through that rescue.
-
-'''[[Ozma]]''' — friend. The bond seems to carry some trust, as the Tin Woodman is the one who conveys to the group what Ozma saw in her Magic Picture regarding the Nome King's tunnel under the desert.
-
-'''[[Aunt Em]]''' — acquaintance. Their connection appears slight, limited to Aunt Em's passing question about lunching "on tin" when the Wizard announces a visit to the Tin Woodman.
-
-'''[[General Guph]]''' — acquaintance. Their association seems limited, with no direct interaction recorded beyond both figuring in the same traveling party's plans.
-
-== References ==
-
-<references/>
-
-=== Events ===
-
-* The group decides to rest, eat supper, and continue their journey the next day, planning to visit the Rigmaroles and Flutterbudgets before calling on the Tin Woodman, Jack Pumpkinhead, and the Scarecrow.
-* The travelers reach Winkie Country and lunch with the Tin Woodman at his tin castle, touring his tin gardens and fish pond.
-* The Tin Woodman reveals Ozma saw in her Magic Picture that the Nome King dug a tunnel under the desert to invade Oz alongside the Whimsies, Growleywogs, and Phanfasms.
-</div>
-
-== Relationships ==
-
-''Evolution:''
-* [[Scarecrow]] — Friend (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
-* [[Dorothy]] — Friend (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
-* [[Ozma]] — Friend (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
-* [[Jack Pumpkinhead]] — Friend (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
-* [[Roquat]] — Enemy (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
-* [[Tiktok]] — Friend (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
-* [[Uncle Henry]] — Friend (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
-* [[THE shaggy man]] — Friend (ch.1)<ref>The Road to Oz, chapter 1</ref>
-* [[Tik-tok]] — Friend (ch.1)<ref>The Road to Oz, chapter 1</ref>
-* [[Button-Bright]] — Friend (ch.1)<ref>The Road to Oz, chapter 1</ref>
-* [[Polly]] — Friend (ch.1)<ref>The Road to Oz, chapter 1</ref>
-* [[Toto]] — Friend (ch.1)<ref>The Road to Oz, chapter 1</ref>
-* [[Eureka]] — Ally (ch.3)<ref>Dorothy and the Wizard in Oz, chapter 3</ref>
-* [[Sawhorse]] — Friend (ch.3)<ref>Dorothy and the Wizard in Oz, chapter 3</ref>
-* [[WIZARD]] — Friend (ch.2→ch.3)<ref>Dorothy and the Wizard in Oz, chapter 2</ref>
-* [[DOROTHY]] — Ally (ch.1→ch.2)<ref>Dorothy and the Wizard in Oz, chapter 1</ref>
-* [[Nome King]] — Enemy (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
-* [[King]] — Enemy (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
-* [[Jackdaws]] — Enemy (ch.19)<ref>The Marvelous Land of Oz, chapter 19</ref>
-* [[Glinda the Good]] — Friend (ch.18→ch.22)<ref>The Marvelous Land of Oz, chapter 18</ref>
-* [[Queen]] — Friend (ch.14)<ref>The Marvelous Land of Oz, chapter 14</ref>
-* [[Woggle-Bug]] — Friend (ch.12→ch.20)<ref>The Marvelous Land of Oz, chapter 12</ref>
-* [[General Jinjur]] — Enemy (ch.12→ch.15)<ref>The Marvelous Land of Oz, chapter 12</ref>
-* [[Old Mombi]] — Enemy (ch.12)<ref>The Marvelous Land of Oz, chapter 12</ref>
-* [[Tip]] — Friend (ch.11→ch.24)<ref>The Marvelous Land of Oz, chapter 11</ref>
-* [[Saw-Horse]] — Ally (ch.11)<ref>The Marvelous Land of Oz, chapter 11</ref>
-* [[The Scarecrow]] — Friend (ch.3→ch.24)<ref>The Marvelous Land of Oz, chapter 3</ref>
-* [[Wizard of Oz]] — Enemy (ch.3→ch.11)<ref>The Marvelous Land of Oz, chapter 3</ref>
-* [[Cowardly Lion]] — Friend (ch.6→ch.21)<ref>The Wonderful Wizard of Oz, chapter 6</ref>
-* [[Wicked Witch]] — Enemy (ch.5→ch.12)<ref>The Wonderful Wizard of Oz, chapter 5</ref>
-
 [[Category:Characters]]
-[[Category:Secondary Characters]]
+[[Category:Main Characters]]
 [[Category:Characters of Book 1]]
 [[Category:Characters of Book 2]]
 [[Category:Characters of Book 3]]

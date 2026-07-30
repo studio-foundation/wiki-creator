@@ -4,19 +4,18 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
-== Book 6 ==
+== The Emerald City of Oz ==
 
-== Infobox ==
+=== Infobox ===
 
 * Name: Utensia
 * Place type: Kingdom
 * Ruler: King Kleaver
 
-== Biography ==
-
 Utensia is a kingdom ruled by King Kleaver, inhabited by sentient household utensils; a spoon among its subjects addressed Dorothy directly, retorting that the inhabitants have never heard of Ozma of Oz and are not her subjects. Dorothy had never heard of Utensia before her visit, and she supposed that Ozma likewise had no knowledge of it.
 
 Some manner of threat was made toward Dorothy during her time there, though it did not trouble her — she did not believe herself to be in any danger, and treated the encounter as a new and interesting adventure, agreeing to be taken into Utensia to see what King Kleaver's kingdom was like.
+</div>
 
 == Events ==
 
@@ -25,7 +24,6 @@ Dorothy later recounts her visit to Utensia — along with her visits to Bunbury
 == References ==
 
 <references/>
-</div>
 
 [[Category:Locations]]
 [[Category:Locations of Book 6]]

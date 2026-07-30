@@ -4,49 +4,45 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
-== Book 1 ==
+== The Wonderful Wizard of Oz ==
 
-== Infobox ==
+=== Infobox ===
 
-== Biography ==
+
 
 After passing safely through rest of forest, four travelers face steep hill covered top to bottom with great rock pieces, marking hard climb ahead as they continue toward Country of Quadlings.
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
-== Book 4 ==
-
-== Biography ==
+== Dorothy and the Wizard in Oz ==
 
 ''Insufficient information available for this entity.''
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 5 — reveal" data-collapsetext="Hide">
-== Book 5 ==
+== The Road to Oz ==
 
-== Infobox ==
+=== Infobox ===
 
 * Place type: Boundary region / meadow
 * Region: Between the Country of the Winkies and the territory of the Emerald City
 
-== Biography ==
-
 This place marks the boundary between the Country of the Winkies and the territory of the Emerald City, the crossing point being a river spanned by a high bridge. Around it lies a wide green meadow, "as pretty as a well-kept lawn," free of houses or farms. From the top of the bridge, travelers can see far off the spires and domes of the Emerald City rising above its emerald walls, "sparkling like brilliant jewels." The same name also attaches to a great hall within a royal residence, where the shaggy man was received by one of Princess Ozma's servants and offered passage to "your apartments," an offer he accepted.
 
-== Events ==
+=== Events ===
 
 Dorothy, the shaggy man, Button-Bright, Toto, and Polychrome, stranded at the edge of the Deadly Desert, are carried across it after the shaggy man summons Johnny Dooit with the Love Magnet to build a sand-boat. The boat crashes into rocks at the desert's far edge, and the travelers land unharmed in the yellow Country of the Winkies. At the Truth Pond, Button-Bright's fox head and the shaggy man's donkey head wash away, restoring their true faces. The group then meets Tik-tok and Billina, who guide them toward the Emerald City, stopping overnight at Nick Chopper's tin castle. Along the road they visit Jack Pumpkinhead at his pumpkin farm and hear the Tin Woodman's account of the Powder of Life. The Cowardly Lion and Hungry Tiger meet the party with Ozma's golden chariot and escort them into the Emerald City and the royal palace, where Ozma's birthday celebration draws many guests. Afterward the Wizard sends several visitors home in magic bubbles, while Dorothy returns to Kansas by the Magic Belt.
 
-== Physical ==
+=== Physical ===
 
 The meadow surrounding the bridge is described as a green expanse "as pretty as a well-kept lawn," with no houses or farms to break the scene. Feathery trees line both sides of the road near the bridge, into which Polly danced upon crossing. From the bridge, the distant Emerald City appears with magnificent spires and splendid domes towering above emerald walls.
 
-== Trivia ==
+=== Trivia ===
 
 * The shaggy man, on first seeing the distant city from the bridge, "drew a deep breath of awe and amazement," having never dreamed such a place could exist.
 * Polly's violet eyes were said to sparkle "like amethysts" when she was pleased by the sight.
+</div>
 
 == References ==
 
 <references/>
-</div>
 
 [[Category:Events]]

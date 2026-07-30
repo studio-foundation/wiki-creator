@@ -5,9 +5,7 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
-== Book 6 ==
-
-== Biography ==
+== The Emerald City of Oz ==
 
 The Grand Gallipoot rules the Growleywogs and stands beside the Chief of the Whimsies before the Nome King, flanked by skillful generals as part of an allied force. Fierce and powerful in bearing, the Grand Gallipoot's presence unsettles even the Nome King and General Guph. Eager to move against the Emerald City, the Grand Gallipoot asks the Nome King how long the march will take and is told that starting at midnight would bring them there by daybreak. When a captive is discussed, the Grand Gallipoot angrily insists on claiming her as a personal slave, prompting King Roquat to hastily put off the matter.
 </div>
@@ -15,7 +13,7 @@ The Grand Gallipoot rules the Growleywogs and stands beside the Chief of the Whi
 == Relationships ==
 
 ''Evolution:''
-* [[Roquat]] — Wary alliance (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
+* [[Nome King|Roquat]] — Wary alliance (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
 * [[Ozma]] — Enemy (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
 
 [[Category:Characters]]

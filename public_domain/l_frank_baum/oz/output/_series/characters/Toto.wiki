@@ -5,9 +5,7 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
-== Book 1 ==
-
-== Biography ==
+== The Wonderful Wizard of Oz ==
 
 Toto is a small dog and constant companion of Dorothy on her journey through the forest toward the Emerald City. He walks close to her side through the woods, sensing threats — a deep growl from a hidden animal — before the rest of the group does. Those around him call him a "poor little dog" and a "brave little dog," descriptions borne out when he faces creatures far larger than himself.
 
@@ -16,58 +14,6 @@ When a Lion bounds into the road, Toto runs barking toward it despite the danger
 Toto shares in the group's hardships and small comforts alike — eating what food is available, falling asleep among the poppies, and sleeping beside Dorothy at night while the Lion guards her door. In the Emerald City he is dressed for the occasion, a green ribbon and a small bell fastened around his neck to match Dorothy's green attire; when the travelers later leave the city, the ribbon loses its green color and turns white along with Dorothy's dress.
 
 Toto retains habits from his life in Kansas, where he had always loved to chase mice, and does so again upon waking among a group of field mice during the journey. Among the gifts the Winkies give the travelers before their departure, Toto and the Lion each receive a golden collar.
-
-== Narrative role ==
-
-Toto is Dorothy's small black dog, described as the one lively, cheerful presence in her life. When Aunt Em orders Dorothy to the storm cellar, Aunt Em climbs down first while Dorothy searches for Toto. Dorothy and Toto then ride inside the swirling house for hours as it is carried far away; during the flight Toto nearly falls through the trap door but is pulled to safety, after which Dorothy eventually falls asleep.
-
-After the Witch of the North and the Munchkins depart, Dorothy begins her journey with Toto. She eats breakfast, gathers fruit, and gives Toto food and water before setting out, and the two travel along the road of yellow brick toward the Emerald City to seek the Great Oz. Joined by the Scarecrow, Dorothy, the Scarecrow, and Toto continue along an increasingly rough and broken stretch of the road.
-
-When the Cowardly Lion confronts the group, Dorothy rushes forward and slaps the Lion's nose to protect Toto, calling him a coward. Later, the scent of poppies overpowers Dorothy, Toto, and the Cowardly Lion, putting them to sleep, while the Scarecrow and Tin Woodman remain unaffected. Afterward, Toto tries to chase a gathered group of mice, but the Tin Woodman restrains him and assures the frightened Queen that Toto will not be allowed to bite.
-
-The Winged Monkeys carry Dorothy, Toto, the Scarecrow, the Tin Woodman, and the Cowardly Lion through the air to the gates of the Emerald City. Once there, Toto knocks over a screen, revealing that Oz is only a little old bald man, not a terrible being.
-
-The group later travels south in good spirits, with the Cowardly Lion relieved to be out of the City and Toto chasing moths and butterflies along the way. As they continue, the Tin Woodman builds a ladder while Dorothy, the Cowardly Lion, and Toto rest after their long walk.
-
-Toto's journey ends alongside Dorothy: he returns together with her, closing the arc that began on the road of yellow brick.
-
-== Personality ==
-
-Toto shows a sharp, instinctive alertness to danger that his human companions lack: he senses a growling predator hidden in the trees before anyone else notices, going quiet and pressing close to Dorothy's side rather than barking. That same alertness turns to open defiance when a threat becomes visible — he barks and rushes at the Lion that bounds into the road, and later flies at the Wicked Witch and bites her leg after she strikes him, undeterred by creatures many times his size.
-
-Outside of danger, Toto is playful and easily delighted: the sight of a group of field mice sends him bounding after them in one bark of joy, a habit Dorothy notes he had already formed chasing mice back in Kansas. He is also thoroughly at ease among his companions, content to be carried, fed, and settled beside Dorothy at night, and quick to fall asleep — a trait that, in the scented field near the Emerald City, leaves him as vulnerable to the flowers' effect as anyone in the group.
-
-== Appearance ==
-
-Toto is consistently described as a little dog, called at different points "the poor little dog" and "the brave little dog." While staying in the Emerald City, a green ribbon fitted with a small bell was tied around his neck; once the travelers left the city, the ribbon lost its green color and turned white along with Dorothy's dress. Later, upon leaving the land of the Winkies, the Winkies gave Toto a golden collar, a gift he received alongside the Cowardly Lion.
-
-== Powers ==
-
-Toto shows a keener instinct for danger than his human companions. Walking through the dark forest, unseen predators growl among the trees; the sound makes Dorothy's heart race because she cannot place its source, but Toto recognizes it at once, staying close at her side rather than reacting with alarm. This instinctive awareness lets him register threats before they are seen, setting him apart from the rest of the group.
-
-== Relationships ==
-
-'''[[Dorothy]]''' — friend. Toto stays constantly at her side through the forest, sleeps beside her at night, and rides in her arms across the ditch, the raft, and the Lion's back; their closeness seems genuine, as it is noted that "Dorothy played with him, and loved him dearly."
-
-'''[[Cowardly Lion]]''' — friend. The bond suggests loyalty rather than lasting rivalry: although "the great beast had opened his mouth to bite the dog," Dorothy's intervention halts the attack, and the two travel and rest together afterward without further conflict, suggesting an uneasy but real companionship.
-
-'''[[Queen]]''' — acquaintance. Their encounter seems limited to a moment of wariness, as the Queen of the Mice asks "Are you sure he will not bite us?" before being reassured that "Toto shall not hurt you."
-
-'''[[Tin Woodman]]''' — other. The Tin Woodman appears protective toward Toto, as suggested by an account in which "the Woodman promptly chopped off the branch and set the little dog free."
-
-'''[[Wicked Witch]]''' — enemy. Open hostility seems evident from a direct clash, in which "the Witch struck Toto a blow with her umbrella and the brave little dog flew at her and bit her leg in return."
-
-== Trivia ==
-
-* Before arriving in this world, Toto lived in Kansas, where he had a habit of chasing mice — a habit that resurfaced when he leapt with delight into a gathering of field mice.
-* Unlike the Scarecrow and the Tin Woodman, who are not made of flesh and so are untroubled by it, Toto can be overcome by sleep in a field of poppies.
-* During the travelers' stay in the Emerald City, Toto wore a green ribbon fastened with a small bell around his neck; once they left the city, the ribbon lost its green color and turned white, matching Dorothy's dress.
-* The Winkies of the Yellow Land of the West gave Toto a golden collar as a parting gift, the same gift given to the Lion.
-* When the Wicked Witch of the West struck him with her umbrella, Toto responded by biting her leg.
-
-== References ==
-
-<references/>
 
 === Events ===
 
@@ -89,56 +35,44 @@ Toto shows a keener instinct for danger than his human companions. Walking throu
 * Toto has returned with Dorothy.
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
-== Book 4 ==
-
-== Biography ==
+== Dorothy and the Wizard in Oz ==
 
 Toto is Dorothy's little black dog, well known among those who follow her adventures. During the events of this story, Toto remained in Kansas while Dorothy traveled to California, and so he was unable to join her when her journey began; she brought her kitten along in his place.
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 5 — reveal" data-collapsetext="Hide">
-== Book 5 ==
-
-== Biography ==
+== The Road to Oz ==
 
 Toto is a small dog who travels as a constant companion to Dorothy, staying close to her throughout the journey toward the Emerald City. When the shaggy man introduces Johnny Dooit to the group, Toto is named alongside Dorothy, Button-Bright, and the Rainbow's Daughter among the travelers stranded at the edge of the Deadly Desert. Toto rides in Dorothy's arms aboard the sand-boat Johnny Dooit builds, seated with her at the bottom of the vessel as it carries the group across the desert sands.
 
 When the sand-boat crashes into the rocks at the desert's far edge, Toto is thrown into the air along with Dorothy, Button-Bright, and Polly, tumbling onto the grass beyond unharmed. Excited by the crash, Toto seizes one of the donkey's ears in his teeth, shaking and worrying it while growling angrily, until the shaggy man lands in a heap beside him.
-
-== Relationships ==
-
-'''[[Dorothy]]''' — friend. Toto stays at Dorothy's side throughout, carried in her arms as she boards the sand-boat, and the detail that "Toto wagged his tail as if he understood" suggests a bond of closeness and mutual understanding between them.
-
-'''[[Billina]]''' — enemy. An episode in which Toto "flew at the yellow hen, who ruffled her feathers and let out such an angry screech" could indicate friction between the two, though the excerpts show only this brief clash rather than a lasting rivalry.
-
-'''[[Nick Chopper]]''' — friend. A remark that the Emperor "was fond of Dorothy's little dog" suggests a measure of goodwill toward Toto, though no direct exchange between them appears in the excerpts.
-
-== References ==
-
-<references/>
 
 === Events ===
 
 * Dorothy, the shaggy man, Button-Bright, Toto, and Polychrome are stranded at the edge of the Deadly Desert with no way to reach the Land of Oz.
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
-== Book 6 ==
-
-== Biography ==
+== The Emerald City of Oz ==
 
 Toto is a small dog who travels at Dorothy's side. While marching through Utensia inside the hollow square formed by the Spoon Brigade, Toto walks with Dorothy and Billina at the center and knocks over one of the spoons by wagging his tail, prompting the Captain of the Spoons to warn the little dog to be more careful. Approaching a village, Toto barks loudly at a large beetle crossing the path, setting off a wild clatter from the houses and yards. On a later, anxious night, Toto walks by Dorothy's side, his spirits subdued. A note signed in Dorothy's voice states that Toto and she will always love the one it is addressed to, suggesting a close bond between the two.
-
-== Relationships ==
-
-'''[[Dorothy]]''' — friend. Toto stays close to her throughout her travels, which seems to reflect a bond of companionship.
-
-'''[[Billina]]''' — friend. Their shared presence in the traveling party suggests a friendly rapport.
-
-'''[[Mr. Bunn]]''' — enemy. Their appearance together could indicate some friction, though the excerpts do not make this explicit.
 
 === Events ===
 
 * Dorothy, Toto, and Billina return to the signpost camp, where the Wizard's party has been anxiously waiting all day, having tracked her footprints there.
 </div>
+
+== Narrative role ==
+
+Toto is Dorothy's small black dog, described as the one lively, cheerful presence in her life. When Aunt Em orders Dorothy to the storm cellar, Aunt Em climbs down first while Dorothy searches for Toto. Dorothy and Toto then ride inside the swirling house for hours as it is carried far away; during the flight Toto nearly falls through the trap door but is pulled to safety, after which Dorothy eventually falls asleep.
+
+After the Witch of the North and the Munchkins depart, Dorothy begins her journey with Toto. She eats breakfast, gathers fruit, and gives Toto food and water before setting out, and the two travel along the road of yellow brick toward the Emerald City to seek the Great Oz. Joined by the Scarecrow, Dorothy, the Scarecrow, and Toto continue along an increasingly rough and broken stretch of the road.
+
+When the Cowardly Lion confronts the group, Dorothy rushes forward and slaps the Lion's nose to protect Toto, calling him a coward. Later, the scent of poppies overpowers Dorothy, Toto, and the Cowardly Lion, putting them to sleep, while the Scarecrow and Tin Woodman remain unaffected. Afterward, Toto tries to chase a gathered group of mice, but the Tin Woodman restrains him and assures the frightened Queen that Toto will not be allowed to bite.
+
+The Winged Monkeys carry Dorothy, Toto, the Scarecrow, the Tin Woodman, and the Cowardly Lion through the air to the gates of the Emerald City. Once there, Toto knocks over a screen, revealing that Oz is only a little old bald man, not a terrible being.
+
+The group later travels south in good spirits, with the Cowardly Lion relieved to be out of the City and Toto chasing moths and butterflies along the way. As they continue, the Tin Woodman builds a ladder while Dorothy, the Cowardly Lion, and Toto rest after their long walk.
+
+Toto's journey ends alongside Dorothy: he returns together with her, closing the arc that began on the road of yellow brick.
 
 == Relationships ==
 
@@ -146,11 +80,38 @@ Toto is a small dog who travels at Dorothy's side. While marching through Utensi
 * [[Dorothy]] — Friend (ch.1→ch.2)<ref>The Emerald City of Oz, chapter 1</ref>
 * [[Billina]] — Friend (ch.1)<ref>The Emerald City of Oz, chapter 1</ref>
 * [[Mr. Bunn]] — Enemy (ch.1)<ref>The Emerald City of Oz, chapter 1</ref>
-* [[Nick Chopper]] — Friend (ch.1)<ref>The Road to Oz, chapter 1</ref>
+* [[Tin Woodman|Nick Chopper]] — Friend (ch.1)<ref>The Road to Oz, chapter 1</ref>
 * [[Wicked Witch]] — Enemy (ch.12)<ref>The Wonderful Wizard of Oz, chapter 12</ref>
 * [[Cowardly Lion]] — Friend (ch.6→ch.21)<ref>The Wonderful Wizard of Oz, chapter 6</ref>
 
+== Personality ==
+
+Toto shows a sharp, instinctive alertness to danger that his human companions lack: he senses a growling predator hidden in the trees before anyone else notices, going quiet and pressing close to Dorothy's side rather than barking. That same alertness turns to open defiance when a threat becomes visible — he barks and rushes at the Lion that bounds into the road, and later flies at the Wicked Witch and bites her leg after she strikes him, undeterred by creatures many times his size.
+
+Outside of danger, Toto is playful and easily delighted: the sight of a group of field mice sends him bounding after them in one bark of joy, a habit Dorothy notes he had already formed chasing mice back in Kansas. He is also thoroughly at ease among his companions, content to be carried, fed, and settled beside Dorothy at night, and quick to fall asleep — a trait that, in the scented field near the Emerald City, leaves him as vulnerable to the flowers' effect as anyone in the group.
+
+== Appearance ==
+
+Toto is consistently described as a little dog, called at different points "the poor little dog" and "the brave little dog." While staying in the Emerald City, a green ribbon fitted with a small bell was tied around his neck; once the travelers left the city, the ribbon lost its green color and turned white along with Dorothy's dress. Later, upon leaving the land of the Winkies, the Winkies gave Toto a golden collar, a gift he received alongside the Cowardly Lion.
+
+== Powers ==
+
+Toto shows a keener instinct for danger than his human companions. Walking through the dark forest, unseen predators growl among the trees; the sound makes Dorothy's heart race because she cannot place its source, but Toto recognizes it at once, staying close at her side rather than reacting with alarm. This instinctive awareness lets him register threats before they are seen, setting him apart from the rest of the group.
+
+== Trivia ==
+
+* Before arriving in this world, Toto lived in Kansas, where he had a habit of chasing mice — a habit that resurfaced when he leapt with delight into a gathering of field mice.
+* Unlike the Scarecrow and the Tin Woodman, who are not made of flesh and so are untroubled by it, Toto can be overcome by sleep in a field of poppies.
+* During the travelers' stay in the Emerald City, Toto wore a green ribbon fastened with a small bell around his neck; once they left the city, the ribbon lost its green color and turned white, matching Dorothy's dress.
+* The Winkies of the Yellow Land of the West gave Toto a golden collar as a parting gift, the same gift given to the Lion.
+* When the Wicked Witch of the West struck him with her umbrella, Toto responded by biting her leg.
+
+== References ==
+
+<references/>
+
 [[Category:Characters]]
+[[Category:Main Characters]]
 [[Category:Characters of Book 1]]
 [[Category:Characters of Book 4]]
 [[Category:Characters of Book 5]]
