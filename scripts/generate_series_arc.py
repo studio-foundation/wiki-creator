@@ -41,6 +41,7 @@ from wiki_creator.series import (
     discover_series_books,
     load_tome_artifacts,
     series_title,
+    series_vocabulary,
 )
 from wiki_creator.series_arc import (
     ARC_ENTITY_TYPE,
@@ -119,7 +120,13 @@ def build_arc_inputs(series_dir: Path | str) -> ArcInputs | None:
         return None
 
     registry = Registry.load_from_processing(series_dir)
-    characters = main_characters(build_series_characters(registry, list(artifacts))) if registry else []
+    characters = (
+        main_characters(
+            build_series_characters(registry, list(artifacts), **series_vocabulary(books[0]))
+        )
+        if registry
+        else []
+    )
 
     first_cfg = yaml.safe_load(books[0].read_text(encoding="utf-8")) or {}
     lang = output_language(first_cfg)

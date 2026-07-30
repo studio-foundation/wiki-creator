@@ -34,7 +34,7 @@ from wiki_creator.series_hub import SeriesHub, render_series_hub
 from wiki_creator.series_pages import render_series_character_page
 
 
-def load_assembly(series_dir: Path | str) -> tuple[SeriesHub, list[SeriesCharacter], str | None]:
+def load_assembly(series_dir: Path | str) -> tuple[SeriesHub, list[SeriesCharacter], str | None, dict]:
     path = Path(series_dir) / ASSEMBLY_FILENAME
     if not path.exists():
         raise SystemExit(f"[series-export] no assembly at {path} — run series-assemble first")
@@ -42,7 +42,7 @@ def load_assembly(series_dir: Path | str) -> tuple[SeriesHub, list[SeriesCharact
     hub = studio_io.from_dict(SeriesHub, data["hub"])
     characters = studio_io.from_dict(list[SeriesCharacter], data["characters"])
     arc = data.get("arc")
-    return hub, characters, arc if isinstance(arc, str) else None
+    return hub, characters, arc if isinstance(arc, str) else None, data
 
 
 def _write_infobox_templates(wiki_dir: Path, lang: str) -> int:
@@ -63,7 +63,9 @@ def export_series(series_dir: Path | str) -> dict:
     from the first tome's config — they are properties of the series' published
     wiki, and every tome of one series declares the same (as the arc pass does)."""
     series_dir = Path(series_dir)
-    hub, characters, arc = load_assembly(series_dir)
+    hub, characters, arc, assembly = load_assembly(series_dir)
+    targets = assembly.get("link_targets") or {}
+    determiners = assembly.get("determiners") or []
 
     first_cfg = yaml.safe_load(discover_series_books(series_dir)[0].read_text(encoding="utf-8")) or {}
     lang = output_language(first_cfg)
@@ -83,6 +85,7 @@ def export_series(series_dir: Path | str) -> dict:
         rel_path, content = render_series_character_page(
             character, labels, lang=lang,
             expose_importance_tier=stance.expose_importance_tier,
+            targets=targets, determiners=determiners,
         )
         (wiki_dir / rel_path).write_text(content, encoding="utf-8")
         files_written += 1

@@ -21,19 +21,18 @@ import json
 import sys
 from pathlib import Path
 
-import yaml
-
 from scripts.generate_series_arc import arc_from_payload, run_for_series
 from wiki_creator import studio_io
-from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.registry import Registry
 from wiki_creator.series import (
     TomeArtifacts,
     build_series_characters,
     discover_series_books,
+    link_targets,
     load_tome_artifacts,
     series_title,
+    series_vocabulary,
 )
 from wiki_creator.series_hub import SeriesTome, build_series_hub
 
@@ -68,19 +67,6 @@ def load_tomes(books: list[Path]) -> tuple[list[TomeArtifacts], list[SeriesTome]
     return artifacts, entries, author
 
 
-def _determiners(books: list[Path]) -> frozenset[str]:
-    """The first tome's language determiners — what the canonical key strips from
-    a page title (STU-724). Language is a property of the series, so the first
-    tome answers for it, as the arc and the labels already assume."""
-    try:
-        cfg = yaml.safe_load(books[0].read_text(encoding="utf-8")) or {}
-        lang_cfg = load_lang_config(book_language(cfg))
-    except (OSError, ValueError, yaml.YAMLError) as exc:
-        print(f"[series-assemble] warning: no determiners ({exc})", file=sys.stderr)
-        return frozenset()
-    return frozenset(lang_cfg.get("determiners") or [])
-
-
 def build_assembly(series_dir: Path | str, *, arc: str | None = None) -> dict:
     series_dir = Path(series_dir)
     books = discover_series_books(series_dir)
@@ -93,7 +79,8 @@ def build_assembly(series_dir: Path | str, *, arc: str | None = None) -> dict:
             "run the tomes first"
         )
 
-    characters = build_series_characters(registry, artifacts, _determiners(books))
+    vocabulary = series_vocabulary(books[0])
+    characters = build_series_characters(registry, artifacts, **vocabulary)
     hub = build_series_hub(series_title(series_dir), author, entries, characters)
     return {
         "series_dir": str(series_dir),
@@ -101,6 +88,8 @@ def build_assembly(series_dir: Path | str, *, arc: str | None = None) -> dict:
         "arc": arc,
         "hub": studio_io.to_dict(hub),
         "characters": [studio_io.to_dict(c) for c in characters],
+        "link_targets": link_targets(registry, characters, **vocabulary),
+        "determiners": vocabulary["determiners"],
     }
 
 

@@ -1,16 +1,18 @@
-"""Registry-owned canonicalization (STU-724): one normalization key for every
-surface that has to decide whether two names are the same name.
+"""Entity-name canonicalization — one normalization key for every surface that
+has to decide whether two names are the same name (STU-719, STU-724).
 
 Pure module, no I/O, beside ``registry.py`` — the registry owns identity, so it
 owns the key identity is decided on.
 
-Before this, casing, spacing, punctuation and leading articles were folded
-independently at every site that needed them — and forgotten at the next one:
-STU-636 folded ``Queen``/``The Queen`` on a roster, STU-719 met the same pair
-again at series scope; STU-541's honorific rule lived in alias-resolution and
-STU-585 found clustering remarrying the Beavers one stage upstream. The rule
-now lives here, and the three sites (``entity_clustering``, ``alias_resolution``,
-``series``) read it instead of restating it.
+``registry.normalize_name`` folds case and accents and stops there, which was
+enough inside one book and not enough anywhere else. Casing, spacing,
+punctuation and leading articles were then folded independently at every site
+that needed them, and forgotten at the next: STU-636 folded ``Queen``/``The
+Queen`` on a roster, STU-719 met the same pair (plus ``BILLINA``, ``Saw-Horse``,
+``THE shaggy man``) at series scope; STU-541's honorific rule lived in
+alias-resolution and STU-585 found clustering remarrying the Beavers one stage
+upstream. The rule lives here now, and the sites read it instead of restating
+it — ``entity_clustering``, ``alias_resolution``, ``series``.
 
 Two keys, because two questions:
 
@@ -24,7 +26,15 @@ Two keys, because two questions:
 
 Both fold case, accents and punctuation, and neither ever strips the last
 token: a name that is nothing but a title is identified by that title, not
-emptied (STU-636).
+emptied (STU-636). The key keeps word boundaries, so it doubles as the form a
+token-run match reads (``alias_resolution``); two surfaces that differ only by a
+word split (``Tinwoodman`` / ``Tin Woodman``) therefore stay distinct, the
+conservative direction on a merge (STU-538/549).
+
+Two role predicates, because two questions again: :func:`is_bare_role` is
+alias-resolution's head-noun rule (``Crown Prince`` is a title), while
+:func:`is_generic_role_name` is the stricter series test — *every* content token
+must be a role, so ``Nome King`` survives the cross-tome drop.
 """
 from __future__ import annotations
 
@@ -33,9 +43,12 @@ import unicodedata
 from collections.abc import Iterable
 from functools import lru_cache
 
+from wiki_creator.registry import normalize_name
+
 # Punctuation is dropped, never replaced by a space: `Saw-Horse` and `Sawhorse`
 # are one entity (STU-719), as are `Tik-tok` and `Tiktok`.
 _PUNCTUATION_RE = re.compile(r"[^\w\s]", re.UNICODE)
+_NON_ALNUM = re.compile(r"[^0-9a-z]+")
 
 
 def fold_tokens(text: object) -> list[str]:
@@ -74,15 +87,54 @@ def canonical_tokens(name: object, strippable: Iterable[str] = ()) -> list[str]:
     return tokens
 
 
-def canonical_key(name: object, articles: Iterable[str] = ()) -> str:
+def canonical_key(name: object, determiners: Iterable[str] = ()) -> str:
     """The identity key of a surface form — equal keys are the same name.
 
-    ``articles`` is the language's determiners (``cue_words/<lang>.json``);
-    without them the key still folds case, accents, punctuation and spacing.
-    An honorific is deliberately *not* strippable here: a role designates one
-    person, an honorific tells two apart (STU-541).
+    ``Saw-Horse`` == ``Sawhorse``, ``Tik-tok`` == ``Tiktok``, ``BILLINA`` ==
+    ``Billina``, and — given the language's ``determiners`` — ``THE shaggy man``
+    == ``Shaggy Man``. An honorific is deliberately *not* strippable here: a role
+    designates one person, an honorific tells two apart (STU-541/585). Empty for
+    a name carrying no alphanumeric character; callers never merge on an empty
+    key.
     """
-    return " ".join(canonical_tokens(name, articles))
+    return " ".join(canonical_tokens(name, determiners))
+
+
+def _normalized_set(words: Iterable[str]) -> set[str]:
+    return {key for key in (normalize_name(w) for w in words) if key}
+
+
+def _strip_leading_determiner(text: str, determiners: Iterable[str]) -> str:
+    """Drop one leading determiner token from an already-normalized ``text``."""
+    for determiner in sorted(_normalized_set(determiners), key=len, reverse=True):
+        if text.startswith(f"{determiner} "):
+            return text[len(determiner) + 1 :]
+    return text
+
+
+def preferred_display_name(names: Iterable[str], determiners: Iterable[str] = ()) -> str:
+    """The most reader-facing of several spellings of one name.
+
+    Only ever called on surfaces that already share a ``canonical_key``, so it
+    chooses a spelling, never a referent: a shouty extraction artifact loses to
+    its cased twin (``BILLINA`` -> ``Billina``), an article-led one to its bare
+    form (``THE shaggy man`` -> ``Shaggy Man``). Ties break on input order.
+    """
+    candidates = [str(n) for n in names if str(n).strip()]
+    if not candidates:
+        return ""
+
+    def rank(name: str) -> tuple[bool, bool, bool, int]:
+        letters = [c for c in name if c.isalpha()]
+        normalized = normalize_name(name)
+        return (
+            bool(letters) and all(c.isupper() for c in letters),
+            normalized != _strip_leading_determiner(normalized, determiners),
+            bool(letters) and all(c.islower() for c in letters),
+            candidates.index(name),
+        )
+
+    return min(candidates, key=rank)
 
 
 def is_bare_role(name: object, roles: Iterable[str], articles: Iterable[str] = ()) -> bool:
@@ -92,6 +144,10 @@ def is_bare_role(name: object, roles: Iterable[str], articles: Iterable[str] = (
     (``Crown Prince``), and a modifier + role head (``High Lord`` — English
     titles are head-final, so the head carries the role, STU-471). A title plus
     a surname (``Captain Westfall``) keeps a non-role head and is not bare.
+
+    This is alias-resolution's rule, inside one book, where a title designating
+    one character is exactly what merges. The series merge asks a stricter
+    question — see :func:`is_generic_role_name`.
     """
     tokens = canonical_tokens(name, articles)
     if not tokens:
@@ -102,3 +158,29 @@ def is_bare_role(name: object, roles: Iterable[str], articles: Iterable[str] = (
     if all(token in role_set for token in tokens):
         return True
     return len(tokens) > 1 and tokens[-1] in role_set
+
+
+def is_generic_role_name(
+    name: str,
+    role_words: Iterable[str],
+    determiners: Iterable[str] = (),
+    connectors: Iterable[str] = (),
+) -> bool:
+    """True when ``name`` says only what someone *is*, never who: every content
+    token is a role word (``King``, ``Captain``), or the whole phrase is an
+    enumerated role (``Guardian of the Gates`` when a reader declared it).
+
+    The series merge needs exactly this distinction. A generic role names a
+    different referent in every tome — Ev's Queen is not Oz's — so it cannot
+    become one cross-tome page. A role qualified by a proper noun (``Nome King``,
+    ``Princess Langwidere``) names one character and must survive, which is why
+    this is stricter than alias-resolution's head-noun rule.
+    """
+    role_set = _normalized_set(role_words)
+    if not role_set:
+        return False
+    if normalize_name(name) in role_set:
+        return True
+    skip = _normalized_set(determiners) | _normalized_set(connectors)
+    tokens = [t for t in _NON_ALNUM.sub(" ", normalize_name(name)).split() if t not in skip]
+    return bool(tokens) and all(t in role_set for t in tokens)

@@ -811,6 +811,43 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   clustering/alias seed from the series registry), so series mode is a pure
   sequential loop — each tome must finish before the next seeds from it.
 
+- **The series merge canonicalizes what `Registry.accumulate` could not (STU-719).**
+  Accumulation joins tome N on `normalize_name` (case + accents only), which is
+  enough inside a book and not across them: on Oz it left `Saw-Horse`/`Sawhorse`,
+  `Tik-tok`/`Tiktok`, `BILLINA`, `THE shaggy man` as separate series records, bare
+  role titles (`King`, `Queen`, …) as standalone characters, and 136 dead links in
+  `output/_series/`. `wiki_creator/canonicalize.py` owns the stricter key —
+  `canonical_key` also folds spacing, punctuation and a leading article,
+  `preferred_display_name` picks the reader-facing spelling of a group,
+  `is_generic_role_name` names a role that is a different referent in every tome.
+  Three consequences to know:
+  * **Vocabulary is what limits the role drop.** The lang pack's `role_words`
+    catches `King`/`Queen`/`Prince`/`Princess`/`Captain`/`Champion`; `Sorcerer`,
+    `Chief Steward`, `Keeper of the Wicket` need a reader to declare them in the
+    book YAML `classification.role_words`, which *extends* the pack here (in
+    `entity_classification` it replaces it — a deliberate difference).
+    `is_generic_role_name` is stricter than alias-resolution's head-noun rule on
+    purpose: that rule matches `Nome King`, and dropping him would be worse than
+    keeping `Guardian`.
+  * **A drop or a merge is a retarget, never a red link.** `series.link_targets`
+    maps every surface any tome could have linked to the surviving page title (or
+    `""` for a dropped one), and `series_export` retargets the whole page body
+    through it (`wikilinks.retarget_links` — the tome's own wording survives as the
+    link label, `[[Tin Woodman|Nick Chopper]]`). Measured on the committed Oz
+    output: 136 dead links → 0, Dorothy's relationship index 40 lines → 31.
+  * **Series notability is max-across-tomes, not latest-wins.** `reconcile_status`
+    stays latest-wins (dead stays dead); `reconcile_importance` does not — reading
+    book 6 as the verdict dropped the Scarecrow, Tin Woodman, Ozma and the Wizard
+    out of the Oz hub's main characters. Cowardly Lion is still absent after the
+    fix: he is `secondary` in *every* tome, an upstream tiering call, not a merge bug.
+  STU-724 then unified two of the three role-title/honorific detectors into this
+  same module — `alias_resolution._is_pure_title` became `is_bare_role`, and
+  `_leading_role` reads the key. `entity_classification._is_role_entity_name`
+  stands: it answers a different question (is this entity a *role entity* at
+  typing time) and reads regex `role_patterns`, not a key. Left standing too: the
+  semantic short-forms no normalization key can fold (`Polly`/`Polychrome`,
+  `Tiger`/`Hungry Tiger`, `City of Emeralds`/`Emerald City`).
+
 - Collation (STU-511): a tier can trade its dedicated pages for one collective
   page, or none at all. Book YAML `generation.collation.<tier>.mode` =
   `dedicated` (default, pre-STU-511 behavior) | `collective` | `drop`, with
@@ -1296,11 +1333,11 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   every site that needed them, and forgotten at the next — STU-636 folded
   `Queen`/`The Queen` on a roster and STU-719 met the same pair at series scope;
   STU-541's honorific rule lived in alias-resolution and STU-585 found clustering
-  remarrying the Beavers one stage upstream. Three sites now read the module:
+  remarrying the Beavers one stage upstream. Three sites read the module:
   `entity_clustering.tokenize_name`/`extract_leading_titles`, `alias_resolution`'s
   `_leading_role`/`_role_remainder`/`is_bare_role` (the old `_is_pure_title`), and
-  `series.build_series_characters` (its `articles` come from the first tome's
-  language, like the arc and the labels).
+  `series` (STU-719's half, above — `group_records`, `link_targets`, the vocabulary
+  read off the first tome).
   **Two keys, because two questions.** `canonical_key` answers *same name* — it
   strips a leading article, which carries no referent, and **keeps an honorific,
   which discriminates one** (`Mr Beaver` ≠ `Mrs Beaver`). `canonical_tokens`
@@ -1308,10 +1345,19 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   (titles, honorifics, articles), which is what lets `Mr Tumnus` still reach
   `Tumnus`. Neither ever strips the last token (STU-636).
   Punctuation is **dropped, not replaced by a space**, so `Saw-Horse` = `Sawhorse`
-  and `Tik-tok` = `Tiktok` (STU-719's Oz duplicates). Vocabulary is folded on both
+  and `Tik-tok` = `Tiktok` (STU-719's Oz duplicates). **Word boundaries survive**,
+  which is what lets the same key double as the token-run form alias-resolution
+  matches on; the cost is that a word split (`Tinwoodman` / `Tin Woodman`) stays
+  two keys — unobserved in the library, and the conservative direction on a merge
+  (STU-538/549). STU-719's key removed spaces too; every one of its cases passes
+  unchanged under this one. Vocabulary is folded on both
   sides (`fold_vocabulary`), so the cue word `m.` matches the token `M.` writes —
   which is why STU-585's "the apparent `mr.`/`mr` duplication is load-bearing" no
   longer holds for *matching*: both forms fold to `mr`. The data was left alone.
+  **Two role predicates, because two questions.** `is_bare_role` is
+  alias-resolution's head-noun rule inside a book (`Crown Prince` is a title);
+  `is_generic_role_name` (STU-719) is the stricter cross-tome test — *every*
+  content token must be a role, so `Nome King` survives the series drop.
   **Not built: a registry-side short-form fold** (`the Rabbit` → `White Rabbit`).
   STU-714 measured that `should_cluster_tokens`' subset branch already does it —
   declaring `Rabbit` in the gazetteer was the whole fix — so writing a second one

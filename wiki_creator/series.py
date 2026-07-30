@@ -12,8 +12,16 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from wiki_creator.canonicalize import canonical_key
-from wiki_creator.registry import Registry
+import yaml
+
+from wiki_creator.canonicalize import (
+    canonical_key,
+    is_generic_role_name,
+    preferred_display_name,
+)
+from wiki_creator.lang import load_lang_config
+from wiki_creator.page_templates import TIERS, output_language
+from wiki_creator.registry import EntityRecord, Registry
 from wiki_creator.tome_labels import tome_number
 
 
@@ -37,6 +45,28 @@ def discover_series_books(series_dir: Path | str) -> list[Path]:
     if not books:
         raise FileNotFoundError(f"No book YAML found under {books_dir}")
     return books
+
+
+def series_vocabulary(book: Path | str) -> dict[str, list[str]]:
+    """The name-canonicalization vocabulary for a series, read from its first
+    tome's config (STU-719) — language properties every tome of one series
+    declares alike, as the arc pass already assumes.
+
+    ``classification.role_words`` is where a reader declares this book's titles;
+    it *extends* the language pack here rather than replacing it, so naming a role
+    the pack missed cannot silently drop the ones it knew.
+    """
+    cfg = yaml.safe_load(Path(book).read_text(encoding="utf-8")) or {}
+    lang_cfg = load_lang_config(output_language(cfg), allow_en_fallback=True)
+    classification = cfg.get("classification") or {}
+    return {
+        "role_words": list(dict.fromkeys(
+            [str(w) for w in classification.get("role_words") or []]
+            + [str(w) for w in lang_cfg.get("role_words") or []]
+        )),
+        "determiners": [str(w) for w in lang_cfg.get("determiners") or []],
+        "connectors": [str(w) for w in lang_cfg.get("name_connectors") or []],
+    }
 
 
 def series_title(series_dir: Path | str) -> str:
@@ -102,16 +132,22 @@ class SeriesCharacter:
 
 
 def reconcile_importance(contributions: list[TomeContribution]) -> str:
-    """Latest-wins notability tier — the resolved tier of the furthest reading
-    position, consistent with Status (STU-668). Operates on the resolved tier
+    """Highest notability tier the entity reached in any tome (STU-719).
+
+    Not latest-wins like Status, because the two questions differ: "is she
+    alive?" is answered at the furthest reading position, "is she a main
+    character of this *series*?" by the series as a whole. Reading the last tome
+    as the verdict dropped the Scarecrow — principal in book 1, a walk-on in
+    book 6 — out of the Oz hub entirely. Operates on the resolved tier
     (``WikiPage.importance``), never the raw percentile, which is deliberately
     non-comparable across tomes (STU-509/513). ``figurant`` when no tome typed it.
     """
-    for contribution in reversed(contributions):
-        page = contribution.page
-        if page and page.get("importance"):
-            return str(page["importance"])
-    return "figurant"
+    tiers = [
+        str(c.page["importance"])
+        for c in contributions
+        if c.page and str(c.page.get("importance") or "") in TIERS
+    ]
+    return max(tiers, key=TIERS.index) if tiers else "figurant"
 
 
 def reconcile_status(contributions: list[TomeContribution]) -> dict | None:
@@ -152,57 +188,102 @@ def load_tome_artifacts(processing_dir: Path | str, book_id: str) -> TomeArtifac
     )
 
 
-def _name_set(record, articles: Iterable[str]) -> set[str]:
-    return {canonical_key(n, articles) for n in (record.canonical_name, *record.aliases) if n}
+def _all_names(records: list[EntityRecord]) -> list[str]:
+    """Every surface the grouped records carry, canonical names first, deduped."""
+    names = [r.canonical_name for r in records] + [a for r in records for a in r.aliases]
+    return list(dict.fromkeys(n for n in names if n))
 
 
-def _match_page(pages: list[dict], names: set[str], articles: Iterable[str]) -> dict | None:
+def _match_page(pages: list[dict], keys: set[str], determiners: Iterable[str]) -> dict | None:
     for page in pages:
-        if canonical_key(page.get("title") or "", articles) in names:
+        if canonical_key(page.get("title") or "", determiners) in keys:
             return page
     return None
 
 
-def _match_status(verdicts: dict[str, dict], names: set[str], articles: Iterable[str]) -> dict | None:
+def _match_status(
+    verdicts: dict[str, dict], keys: set[str], determiners: Iterable[str]
+) -> dict | None:
     for name, verdict in verdicts.items():
-        if canonical_key(name, articles) in names and isinstance(verdict, dict):
+        if canonical_key(name, determiners) in keys and isinstance(verdict, dict):
             return verdict
     return None
 
 
-def _match_events(events: list[dict], names: set[str], articles: Iterable[str]) -> list[dict]:
+def _match_events(
+    events: list[dict], keys: set[str], determiners: Iterable[str]
+) -> list[dict]:
     return [
         e for e in events
-        if names & {canonical_key(p, articles) for p in (e.get("participants") or [])}
+        if keys & {canonical_key(p, determiners) for p in (e.get("participants") or [])}
     ]
 
 
+def group_records(
+    registry: Registry, determiners: Iterable[str] = ()
+) -> list[list[EntityRecord]]:
+    """Registry records grouped into one group per cross-tome entity (STU-719).
+
+    The registry accumulates tome N onto tomes 1..N-1 by ``normalize_name``, which
+    folds case and accents only — so a tome spelling the character ``Sawhorse``
+    where an earlier one wrote ``Saw-Horse`` lands as a second record and the
+    series renders two pages. Grouping on ``canonical_key`` closes that gap at the
+    merge, per entity type (a PERSON and a PLACE homonym stay distinct, STU-506).
+
+    Groups are in registry order, and so are the records inside each one.
+    """
+    groups: dict[tuple[str, str], list[EntityRecord]] = {}
+    for record in registry.entities:
+        key = canonical_key(record.canonical_name, determiners)
+        groups.setdefault((key or record.entity_id, record.entity_type), []).append(record)
+    return list(groups.values())
+
+
+def group_display_name(records: list[EntityRecord], determiners: Iterable[str] = ()) -> str:
+    """The page title for a merged group: the most reader-facing spelling of its
+    canonical name. Chosen among the surfaces sharing the group's key, so it is
+    never another referent's alias — ``Tin Woodman`` never becomes ``Nick``."""
+    names = _all_names(records)
+    group_key = canonical_key(records[0].canonical_name, determiners)
+    same_key = [n for n in names if canonical_key(n, determiners) == group_key]
+    return preferred_display_name(same_key or names, determiners)
+
+
 def build_series_characters(
-    registry: Registry, tomes: list[TomeArtifacts], articles: Iterable[str] = ()
+    registry: Registry,
+    tomes: list[TomeArtifacts],
+    *,
+    role_words: Iterable[str] = (),
+    determiners: Iterable[str] = (),
+    connectors: Iterable[str] = (),
 ) -> list[SeriesCharacter]:
-    """One ``SeriesCharacter`` per canonical entity that has a page in some tome.
+    """One ``SeriesCharacter`` per cross-tome entity that has a page in some tome.
 
     ``tomes`` are in reading order; each character's contributions preserve that
-    order. Identity is the series registry's — an entity's page in any tome is
-    the one whose title matches its canonical name or any accumulated alias, so a
-    tome that renamed it still joins. The match is the registry's canonical key
-    (STU-724), so a tome titling its page ``BILLINA``, ``Saw-Horse`` or ``The
-    Queen`` still joins ``Billina`` / ``Sawhorse`` / ``Queen``; ``articles`` is
-    the book language's determiners. Notability is reconciled latest-wins.
+    order. Identity is the series registry's, canonicalized across tomes
+    (:func:`group_records`) — an entity's page in any tome is the one whose title
+    matches any surface of its group, so a tome that renamed or respelled it still
+    joins. Notability is the highest tier reached in any tome.
+
+    An entity whose name is a generic role (``King``, ``Queen``) is dropped: it
+    names a different referent in every tome, so one merged page would be a
+    fiction. ``role_words`` empty disables the drop.
 
     All entity types merge cross-tome (STU-706), not just PERSON. Status
     (alive/dead) is PERSON-only — the reader-facing slot for non-PERSON drops,
     matching the infobox (``series_pages._infobox_fields``).
     """
     characters: list[SeriesCharacter] = []
-    for record in registry.entities:
-        is_person = record.entity_type == "PERSON"
-        names = _name_set(record, articles)
+    for records in group_records(registry, determiners):
+        entity_type = records[0].entity_type
+        is_person = entity_type == "PERSON"
+        names = _all_names(records)
+        keys = {k for k in (canonical_key(n, determiners) for n in names) if k}
         contributions: list[TomeContribution] = []
         for tome in tomes:
-            page = _match_page(tome.pages, names, articles)
-            status = _match_status(tome.status_verdicts, names, articles) if is_person else None
-            events = _match_events(tome.events, names, articles)
+            page = _match_page(tome.pages, keys, determiners)
+            status = _match_status(tome.status_verdicts, keys, determiners) if is_person else None
+            events = _match_events(tome.events, keys, determiners)
             if page or status or events:
                 contributions.append(
                     TomeContribution(
@@ -216,15 +297,57 @@ def build_series_characters(
                 )
         if not any(c.page for c in contributions):
             continue
+        canonical = group_display_name(records, determiners)
+        if is_generic_role_name(canonical, role_words, determiners, connectors):
+            continue
         characters.append(
             SeriesCharacter(
-                entity_id=record.entity_id,
-                canonical_name=record.canonical_name,
-                entity_type=record.entity_type,
-                aliases=list(record.aliases),
+                entity_id=records[0].entity_id,
+                canonical_name=canonical,
+                entity_type=entity_type,
+                aliases=names,
                 contributions=contributions,
                 importance=reconcile_importance(contributions),
                 status=reconcile_status(contributions),
             )
         )
     return characters
+
+
+def link_targets(
+    registry: Registry,
+    characters: list[SeriesCharacter],
+    *,
+    role_words: Iterable[str] = (),
+    determiners: Iterable[str] = (),
+    connectors: Iterable[str] = (),
+) -> dict[str, str]:
+    """``canonical_key(surface) -> series page title``, for every surface any tome
+    could have linked (STU-719).
+
+    A tome links whatever it called the entity, so its pages carry
+    ``[[Nick Chopper]]``, ``[[The Scarecrow]]`` and ``[[WIZARD]]`` — one character
+    exploded into three targets, none of them the series page title. Every alias
+    the registry knows maps here, plus every spelling variant ``canonical_key``
+    folds, so the merged page links resolve to one page per entity.
+
+    Every surface of an entity dropped as a generic role maps to the empty string
+    — including the ones that read like a name (``Queen of Ev`` is the dropped
+    ``Queen``'s alias) — and the renderer unlinks them instead of leaving links to
+    a page that no longer exists.
+    """
+    targets: dict[str, str] = {}
+    for character in characters:
+        for name in [character.canonical_name, *character.aliases]:
+            key = canonical_key(name, determiners)
+            if key:
+                targets.setdefault(key, character.canonical_name)
+    for records in group_records(registry, determiners):
+        display = group_display_name(records, determiners)
+        if not is_generic_role_name(display, role_words, determiners, connectors):
+            continue
+        for name in _all_names(records):
+            key = canonical_key(name, determiners)
+            if key:
+                targets.setdefault(key, "")
+    return targets
