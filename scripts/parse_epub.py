@@ -17,6 +17,7 @@ import yaml
 
 # Ensure project root is importable when running as `python scripts/parse_epub.py`.
 from wiki_creator.canon import resolve_book_source
+from wiki_creator.chapters import declared_chapter_marks
 from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator import studio_io
 
@@ -450,8 +451,9 @@ def _clears_min_chars(cleaned: str) -> bool:
     return len(cleaned) - cleaned.count('\n\n') >= MIN_CHAPTER_CHARS
 
 
-def _plant_split_marks(soup, fragments: list) -> list[str]:
-    """Mark every declared fragment that resolves, in document order; return its id.
+def _plant_split_marks(soup, fragments: list) -> list[tuple[str, str]]:
+    """Mark every declared fragment that resolves, in document order; return
+    `(id, title)` per section.
 
     `find_all(id=True)` yields elements in document order, so this is robust to
     anchors nested at different depths (Oz packs some in a `<div>`) — the marker
@@ -461,30 +463,64 @@ def _plant_split_marks(soup, fragments: list) -> list[str]:
     empty `<a id=…/>` (STU-728), and unwrapping that tag would erase the anchor
     before it could be found.
     """
-    wanted = {fragment for fragment, _ in fragments}
-    ordered, seen = [], set()
-    for el in soup.find_all(id=True):
-        fid = el.get('id')
-        if fid in wanted and fid not in seen:
-            el.insert_before(_SPLIT_MARK)
-            ordered.append(fid)
-            seen.add(fid)
-    return ordered
-
-
-def _split_item_chapters(soup, item, fragments: list, marked: list[str]) -> list:
-    """Split one spine item into a chapter per marked anchor (STU-727).
-
-    `_plant_split_marks` has already marked each resolving anchor in document
-    order; run the text pipeline once, then split the flat text on the marker:
-    segment 0 is the front matter before the first anchor, segments 1..N align
-    with `marked`. Titles come from the contents entry (the anchor's own heading,
-    on the Gutenberg books).
-    """
     title_of: dict[str, str] = {}
     for fragment, title in fragments:
         title_of.setdefault(fragment, title)
 
+    ordered, seen = [], set()
+    for el in soup.find_all(id=True):
+        fid = el.get('id')
+        if fid in title_of and fid not in seen:
+            el.insert_before(_SPLIT_MARK)
+            ordered.append((fid, title_of[fid] or fid))
+            seen.add(fid)
+    return ordered
+
+
+_MARK_ID_RE = re.compile(r'\W+', re.UNICODE)
+
+
+def _mark_id(mark: str) -> str:
+    """A chapter id for a printed mark: the mark itself, slugged."""
+    return _MARK_ID_RE.sub('-', mark.lower()).strip('-') or 'mark'
+
+
+def _normalized_line(text: str) -> str:
+    """A printed line as a reader transcribes it: one space between words.
+
+    The book YAML holds what the page shows; the markup holds whatever the
+    typesetter's line breaks and `&#13;` charrefs (STU-531) left between them.
+    """
+    return ' '.join(text.split())
+
+
+def _plant_printed_mark_splits(soup, marks: list[str]) -> list[tuple[str, str]]:
+    """Mark every block printing one of the book's declared chapter marks (STU-736).
+
+    Returns `(id, title)` per mark found, in document order — the shape
+    `_plant_split_marks` returns for an anchored contents. Only a **leaf** block
+    can be the mark: a wrapper around it prints the same text, and marking both
+    would cut the same boundary twice and lose the section to the length gate.
+    """
+    wanted = {_normalized_line(mark): mark for mark in marks}
+    found, seen = [], set()
+    for block in _leaf_blocks(soup):
+        mark = wanted.get(_normalized_line(block.get_text()))
+        if mark is None or _mark_id(mark) in seen:
+            continue
+        seen.add(_mark_id(mark))
+        block.insert_before(_SPLIT_MARK)
+        found.append((_mark_id(mark), mark))
+    return found
+
+
+def _split_item_chapters(soup, item, sections: list[tuple[str, str]]) -> list:
+    """Split one spine item into a chapter per marked boundary (STU-727).
+
+    The boundaries are already marked in document order; run the text pipeline
+    once, then split the flat text on the marker: segment 0 is the front matter
+    before the first boundary, segments 1..N align with `sections`.
+    """
     lead_title = _extract_chapter_title(soup, item, {})
     _mark_paragraph_breaks(soup)
     segments = soup.get_text(separator="\n", strip=True).split(_SPLIT_MARK)
@@ -493,13 +529,13 @@ def _split_item_chapters(soup, item, fragments: list, marked: list[str]) -> list
     lead = clean_chapter_text(segments[0])
     if _clears_min_chars(lead):
         chapters.append({"id": item.get_id(), "title": lead_title, "content": lead})
-    for fid, segment in zip(marked, segments[1:]):
+    for (section_id, title), segment in zip(sections, segments[1:]):
         cleaned = clean_chapter_text(segment)
         if not _clears_min_chars(cleaned):
             continue
         chapters.append({
-            "id": f"{item.get_id()}#{fid}",
-            "title": title_of.get(fid) or fid,
+            "id": f"{item.get_id()}#{section_id}",
+            "title": title,
             "content": cleaned,
         })
     return chapters
@@ -559,7 +595,12 @@ def _env_max_chapters() -> int | None:
     return n if n > 0 else None
 
 
-def parse_epub(file_path: str, language: str = "fr", max_chapters: int | None = None) -> dict:
+def parse_epub(
+    file_path: str,
+    language: str = "fr",
+    max_chapters: int | None = None,
+    chapter_marks: list[str] | None = None,
+) -> dict:
     import ebooklib
     from ebooklib import epub
     from bs4 import BeautifulSoup
@@ -588,26 +629,38 @@ def parse_epub(file_path: str, language: str = "fr", max_chapters: int | None = 
         if spine_id in items_by_id
     ]
 
+    # A book that declares the chapter marks it prints declares them whole
+    # (STU-736): they are the contents, and no anchored source is read beside
+    # them. An edition needing this has no anchors to union anyway — that is why
+    # its reader had to write them down.
+    marks = chapter_marks or []
+    printed_contents = [] if marks else _build_printed_contents(soup for _, soup in spine)
+
     # A thin TOC — one declaring fewer sections than the book's own printed list of
     # chapters — is superseded by that list, whole (STU-728). The more complete
     # contents wins; the two are never unioned, or a printed list would inherit the
     # thin TOC's front-matter anchors as extra chapter boundaries.
-    printed_contents = _build_printed_contents(soup for _, soup in spine)
-    if len(printed_contents) > _count_toc_entries(book.toc):
+    if marks or len(printed_contents) > _count_toc_entries(book.toc):
         toc_fragments = {}
     else:
         printed_contents = []
 
     chapters = []
+    found_marks: set[str] = set()
     for item, soup in spine:
-        # A spine item holding fragment anchors the contents declares holds several
-        # chapters; split it at those publisher-declared boundaries (STU-727).
-        fragments = toc_fragments.get(os.path.basename(item.get_name())) or printed_contents
-        marked = _plant_split_marks(soup, fragments) if fragments else []
+        if marks:
+            sections = _plant_printed_mark_splits(soup, marks)
+            found_marks.update(title for _, title in sections)
+        else:
+            # A spine item holding fragment anchors the contents declares holds
+            # several chapters; split it at those publisher-declared boundaries
+            # (STU-727).
+            fragments = toc_fragments.get(os.path.basename(item.get_name())) or printed_contents
+            sections = _plant_split_marks(soup, fragments) if fragments else []
         _flatten_inline_markup(soup)
         _merge_block_dropcaps(soup)
-        if marked:
-            split = _split_item_chapters(soup, item, fragments, marked)
+        if sections:
+            split = _split_item_chapters(soup, item, sections)
             if split:
                 if _continues_previous(chapters, split[0]):
                     chapters[-1]["content"] += "\n\n" + split.pop(0)["content"]
@@ -627,6 +680,10 @@ def parse_epub(file_path: str, language: str = "fr", max_chapters: int | None = 
             "title": chapter_title,
             "content": cleaned,
         })
+
+    for mark in marks:
+        if mark not in found_marks:
+            print(f"parse_epub: declared chapter mark not printed anywhere: {mark!r}", file=sys.stderr)
 
     chapters = strip_gutenberg_boilerplate(chapters)
 
@@ -655,7 +712,12 @@ def main():
     # file_path anchors identity (it derives every output path); the series canon
     # policy decides which source is actually read.
     source_path = resolve_book_source(file_path)
-    result = parse_epub(str(source_path), language=language, max_chapters=max_chapters)
+    result = parse_epub(
+        str(source_path),
+        language=language,
+        max_chapters=max_chapters,
+        chapter_marks=declared_chapter_marks(input_data),
+    )
     result["language"] = language
     paths = studio_io.paths_from_payload(payload)
     paths.processing.mkdir(parents=True, exist_ok=True)

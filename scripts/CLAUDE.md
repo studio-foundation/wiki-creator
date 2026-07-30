@@ -469,12 +469,12 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   `Page_N` list of illustrations that would cut their chapters mid-scene. (3) **The
   mark is planted before `_flatten_inline_markup`**: a printed contents anchors an
   empty `<a id=…/>`, and unwrapping that tag erases the anchor.
-  **`01-the_call_of_cthulhu` stays at 1 chapter, and that is measured, not skipped.**
-  Its 3 sections are marked only by CSS class (`<hr class="chap">` +
+  **`01-the_call_of_cthulhu` stays at 1 chapter here, and that was measured, not
+  skipped.** Its 3 sections are marked only by CSS class (`<hr class="chap">` +
   `<p class="ph1">`), and `hr.chap` is not a chapter boundary: dracula prints 32 of
   them for 32 chapters (every boundary would move) and glinda_of_oz 35 for 28 (the
-  count would change), both correct today. Reaching it needs the book YAML to declare
-  its own chapter mark — the STU-559 shape, a fast-follow.
+  count would change), both correct today. It is reached by declaring the mark
+  instead (STU-736, below).
   Splitting changes chapter text, so it moves every STU-489 mention offset on the two
   recovered books; `public_domain/l_frank_baum/oz/output/05-the_road_to_oz/` is a
   rendering of the 4-chapter parse and is stale until a re-run.
@@ -519,6 +519,34 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   must be re-run (STU-737). Four have committed rendered output that is now stale:
   `oz/output/{03-ozma_of_oz,04-dorothy_and_the_wizard_in_oz,05-the_road_to_oz}` and
   `oz/output/_series`. No `library/` book is affected.
+
+- The chapter mark a book prints is declared by its reader (STU-736): the book YAML
+  `parsing.chapter_marks` holds, verbatim, the lines this edition prints to open
+  each section, and `parse_epub` splits at the leaf block printing each one — a
+  third contents source beside STU-728's two, and like them never unioned with
+  another (a book declaring marks reads no TOC fragment and no printed contents).
+  `01-the_call_of_cthulhu` goes 1 → 4 sections: the 3 the novella prints, plus the
+  title page / transcriber's note / epigraph lead STU-728 already keeps rather than
+  drops.
+  The **value names the book, never the markup**: the reader who transcribes
+  `1. The Horror in Clay.` needs to know the novella and nothing about us, where a
+  book YAML holding `hr.chap` would be the class-name rule this exists to avoid —
+  32 marks for dracula's 32 correct chapters, 35 for glinda_of_oz's 28, 6 for
+  Cthulhu's 3, so it is wrong on all three books at once.
+  Three properties are load-bearing. (1) **Only a leaf block is the mark**
+  (`_leaf_blocks`): a wrapper prints the same text, and cutting there too would
+  leave a sub-minimum segment the length gate drops — the section, silently.
+  (2) **Matching is on the printed line, whitespace-collapsed** — the YAML holds
+  what the page shows, the markup holds whatever the typesetter's line breaks and
+  `&#13;` charrefs (STU-531) left between the words. (3) **A declared mark the book
+  never prints warns**, and a malformed `parsing.chapter_marks` raises
+  (`chapters.declared_chapter_marks`) rather than degrading — a chapter mark
+  silently ignored is the STU-470 shape.
+  Measured: all 21 `public_domain/` EPUBs re-parsed with each book's own YAML, the
+  20 declaring nothing byte-identical on `chapters`; `make golden` / `make smoke`
+  untouched (the fixture novella declares no marks). Value is one novella, and the
+  mechanism is the point — the next edition that marks its chapters typographically
+  has no other way in.
 
 - Block dropcaps (STU-532): a dropcap can be its own **block**, not its own span
   — `<p>I</p><p>n a hole…</p>`, The Hobbit's opening sentence. Inline flattening
