@@ -1,7 +1,6 @@
 {{Infobox organization
-|name=Court of Hearts
-|type=Royal court
-|leader=[[Queen of Hearts]]
+|nom=Court of Hearts
+|leaders=[[Queen of Hearts]]
 }}
 
 == Overview ==

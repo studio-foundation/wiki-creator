@@ -1,7 +1,9 @@
 <includeonly>
 {| class="infobox"
 |-
-! colspan="2" | {{{name}}}
+! colspan="2" | {{{nom}}}
+|-
+| '''Appearance''' || {{{apparition|}}}
 |-
 | '''Participants''' || {{{participants|}}}
 |-

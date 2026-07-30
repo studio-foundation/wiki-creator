@@ -107,11 +107,14 @@ def _person_entity():
             "aliases": ["Ver"]}
 
 
-def test_bind_overwrites_swapped_nom():
+def test_bind_overwrites_swapped_nom_and_drops_non_token_keys():
+    # STU-729: every infobox slot is pipeline-owned, so a writer-emitted key that is
+    # not a declared token (`rôle`) is dropped — it matches no template parameter and
+    # would render nowhere. `nom` is overwritten from the batch identity.
     page = {"infobox_fields": {"nom": "Kaltain", "rôle": "Espionne"}}
     gwp._bind_batch_fields(page, _person_entity(), {})
-    assert page["infobox_fields"]["nom"] == "Verin"          # overwritten from batch
-    assert page["infobox_fields"]["rôle"] == "Espionne"      # non-pipeline-owned untouched
+    assert page["infobox_fields"]["nom"] == "Verin"
+    assert "rôle" not in page["infobox_fields"]
 
 
 def test_bind_clears_writer_owned_extracted_fact_when_pipeline_has_none():

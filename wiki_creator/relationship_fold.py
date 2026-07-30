@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from wiki_creator.relationship_discovery import flip
+from wiki_creator.relationship_discovery import flip, normalize_direction
 
 if TYPE_CHECKING:  # pragma: no cover
     from wiki_creator.registry import Registry
@@ -85,6 +85,7 @@ def fold_relationships(relationships: list[dict], registry: "Registry") -> list[
         oriented = a <= b
         direction = rel.get("direction")
         if direction is not None:
+            direction = normalize_direction(direction)
             base["_directions"].add(direction if oriented else flip(direction))
         # sub_role_a/b are the two parties' roles; they swap with the pair when the
         # edge is reordered onto its canonical key (STU-665).

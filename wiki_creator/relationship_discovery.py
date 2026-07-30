@@ -26,9 +26,19 @@ from typing import Iterable
 
 from wiki_creator.relationship_eval import pair_key
 
-SYMMETRIC = "symétrique"
+SYMMETRIC = "symmetric"
 DIRECTIONS = frozenset({SYMMETRIC, "A→B", "B→A"})
 _FLIP = {"A→B": "B→A", "B→A": "A→B", SYMMETRIC: SYMMETRIC}
+
+# STU-733: the French token the agents asked for before the rename. Accepted on
+# read so a relationship artifact already on disk still folds, the way
+# `relationships.enum.*.legacy` carries the pre-STU-472 type strings.
+_LEGACY_SYMMETRIC = "symétrique"
+
+
+def normalize_direction(direction: str) -> str:
+    """Map a legacy direction token onto its canonical form."""
+    return SYMMETRIC if direction == _LEGACY_SYMMETRIC else direction
 
 _MAX_EVIDENCE_CHARS = 200
 _MAX_SAMPLE_CONTEXTS = 3
@@ -43,7 +53,8 @@ _OVERSIZE_FACTOR = 2
 
 def flip(direction: str) -> str:
     """Restate a direction against the opposite entity order."""
-    return _FLIP.get(direction, direction)
+    normalized = normalize_direction(direction)
+    return _FLIP.get(normalized, normalized)
 
 
 def chunk_chapters(chapters: list[dict], size: int) -> list[dict]:
@@ -228,14 +239,15 @@ def valid_relations(
         if rel["relationship_type"] not in types:
             rejected.append(f"type off-vocabulary: {rel['relationship_type']!r}")
             continue
-        if rel["direction"] not in DIRECTIONS:
+        direction = normalize_direction(rel["direction"])
+        if direction not in DIRECTIONS:
             rejected.append(f"direction off-vocabulary: {rel['direction']!r}")
             continue
         clean = {
             "entity_a": a,
             "entity_b": b,
             "relationship_type": rel["relationship_type"],
-            "direction": rel["direction"],
+            "direction": direction,
             "evidence": (rel.get("evidence") or "").strip()[:_MAX_EVIDENCE_CHARS],
         }
         for slot in ("sub_role_a", "sub_role_b"):

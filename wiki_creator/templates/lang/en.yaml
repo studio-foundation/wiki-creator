@@ -1,0 +1,281 @@
+# English output strings (STU-732).
+#
+# `base.yaml` holds STRUCTURE — entity types, slots, provenance/obligation/tiers,
+# the relationship enum and its English classifier criteria. Every reader-facing
+# STRING lives here instead, one file per language, so adding a language is one
+# new file and reviewing a language's copy is reading one file.
+#
+# This is the REFERENCE pack: resolution is `requested language` -> `en`, so a
+# key present here must exist in every other pack (tests/test_template_packs.py
+# fails on a gap), and a key missing HERE raises rather than degrading silently.
+#
+# Prompt *scaffolding* (instructions, grounding labels, the classifier criteria)
+# stays English regardless of the wiki's output language and therefore stays in
+# `base.yaml` — only output-anchoring content belongs in a pack (STU-510).
+
+# The (English) display name of THIS pack's language, for the write-in-<language>
+# prompt directive. English in every pack, including this one: it names the
+# language to an English-instructed writer, it is not a string the reader sees.
+language_name: English
+
+# Display name of every page token — infobox rows and section headings. A token
+# with no entry here renders titlecased, so a book-declared custom slot needs no
+# pack edit.
+labels:
+  nom:            Name
+  type:           Type
+  alias:          Aliases
+  apparition:     Appearance
+  status:         Status
+  death:          Death
+  species:        Species
+  affiliation:    Affiliation
+  titles:         Titles
+  family:         Family
+  romance:        Romance
+  friends_allies: "Friends & Allies"
+  enemies:        Enemies
+  location:       Location
+  leaders:        Leaders
+  participants:   Participants
+  lieu:           Place
+  chapitre:       Chapter
+  issue:          Outcome
+  infobox:        Infobox
+  biography:      Biography
+  backstory:      "Before the events of the book"
+  relationships:  Relationships
+  personality:    Personality
+  physical:       Appearance
+  powers:         Powers
+  trivia:         Trivia
+  narrative_role: "Narrative role"
+  events:         Events
+  references:     References
+  # STU-514: event-page section heading.
+  course:         "Course of events"
+
+# STU-510: reader-facing export chrome — spoiler collapsible controls, Main_Page
+# navigation and statistics, collective-page titles, the status enum's labels.
+# `{placeholders}` are filled by the caller.
+chrome:
+  reveal:         "Chapter {chapter} — reveal"
+  reveal_spoiler: "Spoiler — reveal"
+  collapse:       Hide
+  evolution:      "Evolution:"
+  # STU-668: the tome axis of the collapsible (series wiki). `reveal` is the
+  # chapter axis; these gate one section per tome on a merged character page.
+  reveal_tome:    "Book {tome} — reveal"
+  tome_heading:   "Book {tome}"
+  # STU-734: the `apparition` infobox slot — an entity's tome provenance. `{first}`
+  # and `{last}` are tome numbers; `appearance_range` renders when they differ.
+  appearance_one:   "Appears in book {first}"
+  appearance_range: "First appears in book {first}, last appears in book {last}"
+  # STU-488: the `status` infobox slot. The enum itself lives in
+  # wiki_creator/entity_status.py; its labels are data.
+  status_alive:    Alive
+  status_deceased: Deceased
+  status_missing:  Missing
+  status_unknown:  Unknown
+  status_undead:   Undead
+  death_by_at:     "Killed by {agent} at {place}"
+  death_by:        "Killed by {agent}"
+  death_at:        "Died at {place}"
+  # STU-514: Main_Page navigation, showcase headings, and statistics.
+  main_characters:    "Main characters"
+  main_locations:     "Important locations"
+  navigation:         Navigation
+  # STU-707: series hub (front page) — heading of the tome list.
+  reading_order:      "Reading order"
+  statistics:         Statistics
+  synopsis:           Synopsis
+  synopsis_link:      "Book synopsis"
+  all_characters:     "All characters"
+  all_locations:      "All locations"
+  all_organizations:  "All organizations"
+  stat_pages:         "wiki pages"
+  stat_characters:    characters
+  stat_locations:     locations
+  stat_organizations: organizations
+  # STU-514: collective-page (collation) chrome — titles and per-entry lines.
+  minor_persons:       "Minor characters"
+  minor_locations:     "Minor locations"
+  minor_organizations: "Minor organizations"
+  minor_other:         "Other minor entities"
+  collation_aliases:   "Aliases: {aliases}"
+  collation_mentions:  "Mentioned {mentions} times in {chapters} chapter(s)."
+  # STU-514: event-page title disambiguation suffix (chapter tag on colliding titles).
+  chapter_tag:         "chapter {chapter}"
+  # STU-734: categories.wiki heading + blurb — the last two literals of the page
+  # (every category name below them already comes from export.categories.labels).
+  categories_heading:  Categories
+  categories_blurb:    "This page documents the category hierarchy used in this wiki."
+  # STU-651: export category / showcase label defaults. `{n}` is the tome number.
+  # Overridable per book via export.categories.labels.
+  principal:             "Main characters"
+  secondary:             "Secondary characters"
+  persons_by_tome:       "Characters of Book {n}"
+  locations_by_tome:     "Locations of Book {n}"
+  organizations_by_tome: "Organizations of Book {n}"
+
+# STU-516: reader-facing stub-page bodies, rendered as-is in the wiki when an
+# entity's page cannot be generated.
+stubs:
+  failed:        "Technical failure while generating this entity."
+  insufficient:  "Insufficient information available for this entity."
+  # STU-514: event-page stubs (dry-run / generation failure).
+  event_failed:  "Technical failure while generating this page."
+  event_dry_run: "Event page not generated (dry run)."
+  # STU-734: book-synopsis stubs (dry-run / generation failure), rendered under the
+  # `synopsis` heading — were hardcoded French in the stage script.
+  synopsis_failed:  "Technical failure while generating the synopsis."
+  synopsis_dry_run: "Synopsis not generated (dry run)."
+
+# STU-517: wiki-page-validator error messages, keyed by the stable neutral `code`
+# scripts/wiki_page_validator.py declares — generate_wiki_pages matches on the
+# code for identity-only recovery, so the prose here is free to be reworded.
+validator_errors:
+  language_contamination:       "Content in another language detected (markers: {markers})"
+  epub_id:                      "EPUB ID in the content (e.g. C07.xhtml)"
+  infobox_key_prefix:           "Infobox key prefixed with '- ': {key}"
+  series_anchor_missing:        "The series title '{series}' is missing from the first paragraph"
+  forbidden_series:             "Cross-series hallucination detected: {hit}"
+  forbidden_name:               "Spoiler detected (forbidden name): {name}"
+  identity_title_mismatch:      "Page title '{page_title}' ≠ requested entity '{expected}'"
+  identity_infobox_mismatch:    "Infobox '{key}: {value}' does not match entity '{expected}'"
+  ungrounded_name:              "Name not grounded in the source excerpts: {name}"
+  ungrounded_claim:             "Statement not grounded in the source excerpts: {claim}"
+  unauthorized_reference_title: "Unauthorized title in References: '{title}'"
+
+# STU-510: per-section writing briefs, keyed by entity_type then section token.
+# A type with no block falls back to PERSON.
+briefs:
+  PERSON:
+    infobox:        "Key factual fields: name, aliases, role, affiliation, status. Omit unknown fields."
+    biography:      "Who this character is and their role in the world. Events serve as context, not a chronological list."
+    backstory:      "The character's past revealed in flashback, before the book's present-day narrative. Prose grounded only in the backstory context. Do not repeat the present-day biography."
+    narrative_role: "The character's chronological arc through the plot, in prose, grounded only in the listed events."
+    personality:    "Observed traits with textual grounding. Avoid generic adjectives without evidence. Show internal contradictions or tensions where they exist."
+    physical:       "Physical details confirmed by the text only, concise. Omit this section entirely if the text gives no physical description — do not pad it with personality traits."
+    powers:         "Powers, supernatural abilities, or exceptional skills that set the character apart. Omit this section entirely if the character has none — do not pad it with ordinary human traits."
+    relationships:  "One bold entry per significant relationship, followed by a description of the nature of the bond. Format: **Name** — description."
+    trivia:         "Specific, concrete facts that do not fit the other sections. Omit this section entirely if you have no such fact — do not pad it by restating a fact already covered elsewhere (biography included)."
+  PLACE:
+    infobox:        "Name, place type, region/country, status (active, ruined, etc.). Omit unknown fields."
+    biography:      "What this place is, where it is, and what it looks like according to the excerpts."
+    physical:       "Physical and geographic details of the place confirmed by the text."
+    events:         "What happens at this place — the narrative events occurring here, grounded in the 'Events at this place' block above. Do not limit yourself to geography or architecture."
+    relationships:  "Groups or characters associated with this place."
+    trivia:         "Specific details that do not fit elsewhere."
+  ORG:
+    infobox:        "Name, organization type, affiliation, status. Omit unknown fields."
+    biography:      "What this organization is, its role and objectives according to the excerpts."
+    relationships:  "Affiliated characters mentioned in the text."
+  EVENT:
+    infobox:        "Name, event type, location, time period if mentioned. Omit unknown fields."
+    biography:      "What this event is and its importance in the narrative."
+    relationships:  "Characters involved."
+
+# STU-510: few-shot tone/format example. A single PERSON/principal example, used
+# regardless of entity type. Fictional book, so it anchors format without
+# leaking a real novel's content.
+few_shot:
+  title: "John Doe"
+  importance: principal
+  entity_type: PERSON
+  infobox_fields:
+    name: "John Doe"
+    full name: "Jonathan Aldric Doe"
+    aliases: "The Ghost, Jay"
+    role: "Crown spy, former soldier"
+    affiliation: "The Shadow Guild (former), Crown of Arenell"
+    status: "Active"
+  content: |-
+    ## Infobox
+
+    - Name: John Doe
+    - Full name: Jonathan Aldric Doe
+    - Aliases: The Ghost, Jay
+    - Role: Crown spy, former soldier
+    - Affiliation: The Shadow Guild (former), Crown of Arenell
+    - Status: Active
+
+    ## Biography
+
+    John Doe, born Jonathan Aldric Doe, is a spy in the service of the Crown of Arenell. A former soldier who reinvented himself after the fall of the fortress of Veldrath, he operates under the alias **The Ghost** in the criminal circles of the capital. His double identity — courtier by day, informant by night — lets him infiltrate networks the king's official services cannot reach.
+
+    After the betrayal of his former commander during the siege of Veldrath, Doe broke with the regular army and vanished for three years. He resurfaces in Arenell under a false merchant identity, before being recruited by councillor Mira Vayne for missions the Council prefers to deny.
+
+    ## Personality
+
+    Doe is methodical and hard to read. He speaks little, observes much, and rarely offers his opinion unasked. Those around him describe a selective loyalty: he honors his commitments to the letter, but invests nothing beyond what was agreed. Beneath this calculated coldness a dry humor sometimes surfaces, especially in the tensest situations.
+
+    His relationship to violence is pragmatic — neither eager nor reluctant. He weighs means by their effectiveness, which regularly puts him at odds with the idealists around him.
+
+    ## Appearance
+
+    Tall, dark-haired, with a linear scar running from the corner of his left eye to his jaw — a legacy of an interrogation at Veldrath. He dresses so as not to draw attention: dark tones, functional cuts, no jewelry. The one constant detail: a dull silver signet ring on his right ring finger, whose origin is never explained.
+
+    ## Powers and skills
+
+    Doe has no magic. His skills are entirely acquired: infiltration, disguise, close combat, and a near-photographic memory for faces and architectural plans. He speaks four languages fluently, including the Southern dialect he uses for his merchant covers.
+
+    ## Relationships
+
+    **[[Mira Vayne]]** — mentor. His recruiter and direct superior; their relationship is professional, tinged with a mutual wariness neither truly seeks to dissolve.
+
+    **[[Lira]]** — ally. A Shadow Guild informant with whom Doe shared a mission at Veldrath.
+
+    **[[Commander Arek]]** — enemy. The former superior whose betrayal at Veldrath redefined Doe's trajectory.
+
+    ## Trivia
+
+    - The nickname "The Ghost" was given to him by Guild members, not by his Crown allies.
+    - His merchant cover involves a trade in fabrics imported from the South — a choice that justifies his frequent travels between provinces.
+
+# STU-651: default [[Category:X]] label per entity type, keyed by the type
+# `base.yaml#entity_types` declares. A type with no entry gets no default
+# category (OTHER, and the generation-only pseudo-types).
+category_defaults:
+  PERSON:  Characters
+  PLACE:   Locations
+  ORG:     Organizations
+  EVENT:   Events
+  FACTION: Factions
+
+# STU-477: reader-facing label per relationship type. The tokens are
+# `base.yaml#relationships.enum`; a book's own types (STU-472) carry their name
+# as their label and need no entry.
+relationship_labels:
+  family:              Family
+  mentor:              Mentor
+  romance:             Romance
+  budding_attraction:  "Budding attraction"
+  strained_friendship: "Strained friendship"
+  friendly_rivalry:    "Friendly rivalry"
+  wary_alliance:       "Wary alliance"
+  enemy:               Enemy
+  ally:                Ally
+  employment:          Employment
+  friend:              Friend
+  acquaintance:        Acquaintance
+  other:               Other
+
+# STU-665: reader-facing label per kinship/romance sub-role, rendered as the
+# infobox qualifier — `[[James Potter]] (father) †`. Tokens are
+# `base.yaml#relationships.sub_roles`.
+sub_role_labels:
+  father:    father
+  mother:    mother
+  parent:    parent
+  son:       son
+  daughter:  daughter
+  child:     child
+  brother:   brother
+  sister:    sister
+  sibling:   sibling
+  spouse:    spouse
+  ex_spouse: ex-spouse
+  partner:   partner
+  ex_partner: ex-partner
+  betrothed: betrothed

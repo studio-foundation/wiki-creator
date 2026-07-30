@@ -1,10 +1,10 @@
 """No French literal survives an English render (STU-734).
 
 The regression gate the STU-734 audit exists to install. Every reader-facing
-surface is rendered with ``lang="en"`` and checked against the *French* side of
-base.yaml itself — so a new localized string added to `chrome`/`labels`/`stubs`
-is covered the day it lands, and a string built in Python instead of read from
-the template is caught the day someone writes it.
+surface is rendered with ``lang="en"`` and checked against the strings
+``templates/lang/fr.yaml`` declares — so a new localized key is covered the day it
+lands, and a string built in Python instead of read from its pack is caught the day
+someone writes it.
 """
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from scripts.wiki_export import _build_categories_wiki, render_page
 from scripts.wiki_page_validator import check_language_contamination, validate_page
 from wiki_creator.collation import collation_labels, collective_pages
 from wiki_creator.export_helpers import category_labels, main_page_content
-from wiki_creator.page_templates import load_base_template
+from wiki_creator.page_templates import load_lang_template
 from wiki_creator.registry import Registry
 from wiki_creator.series import TomeArtifacts, build_series_characters
 from wiki_creator.series_hub import SeriesTome, build_series_hub, render_series_hub
@@ -28,18 +28,23 @@ LABELS = category_labels({}, "en")
 _STUB_ENTITY = {"canonical_name": "Nox", "type": "PERSON", "importance": "figurant"}
 
 
+# The pack groups holding reader-facing output strings. `briefs`/`few_shot` are
+# prompt-side, so a French value there is not a rendered page (STU-733's axis).
+_OUTPUT_GROUPS = ("chrome", "labels", "stubs", "validator_errors", "category_defaults")
+
+
 def _french_strings() -> list[str]:
-    """Every base.yaml string whose French differs from its English — the exact
+    """Every fr.yaml string whose value differs from en.yaml's — the exact
     vocabulary an English render must never contain. Placeholders are stripped so
     a `{n}`-carrying template is matched on its literal prefix."""
-    base = load_base_template()
+    fr_pack = load_lang_template("fr")
+    en_pack = load_lang_template("en")
     out = []
-    for group in ("chrome", "labels", "stubs"):
-        for entry in (base.get(group) or {}).values():
-            if not isinstance(entry, dict):
-                continue
-            fr, en = entry.get("fr"), entry.get("en")
-            if not fr or fr == en:
+    for group in _OUTPUT_GROUPS:
+        en_group = en_pack.get(group) or {}
+        for key, fr in (fr_pack.get(group) or {}).items():
+            en = en_group.get(key)
+            if not isinstance(fr, str) or not isinstance(en, str) or fr == en:
                 continue
             head = fr.split("{")[0].strip(" :,—")
             if len(head) < 5:
@@ -47,10 +52,7 @@ def _french_strings() -> list[str]:
             if head in en:
                 continue  # "Relations" inside "Relationships": not detectable by search
             out.append(head)
-    for spec in (base.get("entity_types") or {}).values():
-        default = ((spec.get("export") or {}).get("category_default")) or {}
-        if default.get("fr") and default["fr"] != default.get("en"):
-            out.append(default["fr"])
+    assert out, "no French vocabulary harvested — the gate would pass vacuously"
     return sorted(set(out))
 
 

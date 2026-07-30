@@ -902,3 +902,231 @@ def test_build_toc_fragment_map_keeps_only_in_file_fragments():
         ("part", "Part One"),
         ("c3", "Chapter 3"),
     ]
+
+
+# --- A thin TOC superseded by the book's own printed contents (STU-728) ---
+
+
+_THIN_TOC_TITLES = ["The First Day", "The Second Day", "The Third Day", "The Fourth Day"]
+
+
+def _thin_toc_epub(tmp_path, *, toc_anchors=1, split_after=None, duplicate_href=False):
+    """Several chapters in one XHTML, only some of them anchored in the EPUB TOC.
+
+    The shape STU-727 measured and deferred: every boundary is declared, but in
+    the book's own printed LIST OF CHAPTERS rather than in the TOC, so the TOC
+    fragment rule alone yields a partial split. Anchors are the empty `<a id=…/>`
+    Project Gutenberg emits — the tag `_flatten_inline_markup` unwraps.
+
+    `split_after` cuts the body into two spine items after that many chapters
+    while leaving every printed href naming the first half, which is what a
+    converter does to a long file (The Road to Oz, chapters 12-24).
+    """
+    from ebooklib import epub
+
+    book = epub.EpubBook()
+    book.set_identifier("thin")
+    book.set_title("Thin TOC Book")
+    book.set_language("en")
+
+    rows = "".join(
+        f'<tr><td><a href="body.xhtml#c{i}">{i}.</a></td><td>{name}</td></tr>'
+        for i, name in enumerate(_THIN_TOC_TITLES, start=1)
+    )
+    if duplicate_href:
+        rows = rows.replace('href="body.xhtml#c3"', 'href="body.xhtml#c2"')
+    front = epub.EpubHtml(uid="front", title="Front", file_name="front.xhtml", lang="en")
+    front.set_content(
+        f"<html><body><h1 id='contents'>LIST OF CHAPTERS</h1><table>{rows}</table>"
+        "</body></html>".encode()
+    )
+
+    def _body(indices):
+        out = "<html><body>"
+        for i in indices:
+            out += f'<p><a id="c{i}"></a></p><h2>{_THIN_TOC_TITLES[i - 1]}</h2>'
+            out += "".join(
+                f"<p>Chapter {i} paragraph {j}, with plenty of words to clear the bar.</p>"
+                for j in range(4)
+            )
+        return out + "</body></html>"
+
+    all_indices = list(range(1, len(_THIN_TOC_TITLES) + 1))
+    bodies = [all_indices]
+    if split_after is not None:
+        bodies = [all_indices[:split_after], all_indices[split_after:]]
+    # The first half keeps the name every printed href points at; the second is the
+    # one the converter invented, so its anchors are reachable only by id.
+    names = ["body.xhtml", "body1.xhtml"]
+    items = [
+        epub.EpubHtml(uid=f"body{n}", title="Body", file_name=names[n], lang="en")
+        for n in range(len(bodies))
+    ]
+    for item, indices in zip(items, bodies):
+        item.set_content(_body(indices).encode())
+
+    for item in [front, *items]:
+        book.add_item(item)
+    book.spine = [front, *items]
+    book.toc = [
+        epub.Link("front.xhtml#contents", "Contents", "contents"),
+        *[epub.Link(f"body.xhtml#c{i}", f"TOC name {i}", f"c{i}") for i in range(1, toc_anchors)],
+    ]
+    book.add_item(epub.EpubNcx())
+    book.add_item(epub.EpubNav())
+
+    path = str(tmp_path / "thin.epub")
+    epub.write_epub(path, book)
+    return path
+
+
+def test_thin_toc_is_superseded_by_the_printed_contents(tmp_path):
+    """A TOC anchoring one section loses to the printed contents' four."""
+    from scripts.parse_epub import parse_epub
+
+    chapters = parse_epub(_thin_toc_epub(tmp_path), language="en")["chapters"]
+    assert [c["id"] for c in chapters] == [f"body0#c{i}" for i in range(1, 5)]
+    assert [c["title"] for c in chapters] == _THIN_TOC_TITLES
+    assert chapters[1]["content"].startswith("The Second Day")
+    assert "Second Day" not in chapters[0]["content"]
+
+
+def test_printed_contents_anchor_survives_inline_flattening(tmp_path):
+    """The anchor is an empty `<a id=…/>`, so the split must be marked before
+    `_flatten_inline_markup` unwraps it — the whole reason the pipeline reordered."""
+    from scripts.parse_epub import parse_epub
+
+    chapters = parse_epub(_thin_toc_epub(tmp_path), language="en")["chapters"]
+    assert len(chapters) == 4
+    for i, ch in enumerate(chapters, start=1):
+        assert ch["content"].count(f"Chapter {i} paragraph 3") == 1
+
+
+def test_printed_contents_anchors_resolve_in_the_item_that_holds_them(tmp_path):
+    """Every printed href names the first half after a converter split the file;
+    the fragment is found by id in whichever spine item carries it."""
+    from scripts.parse_epub import parse_epub
+
+    chapters = parse_epub(_thin_toc_epub(tmp_path, split_after=2), language="en")["chapters"]
+    assert [c["id"] for c in chapters] == ["body0#c1", "body0#c2", "body1#c3", "body1#c4"]
+    assert chapters[2]["content"].startswith("The Third Day")
+
+
+def test_a_toc_as_complete_as_the_printed_contents_keeps_its_own_titles(tmp_path):
+    """The gate: the printed contents supersedes a *thinner* TOC, never an equal
+    one, so a book correct today never changes source."""
+    from scripts.parse_epub import parse_epub
+
+    chapters = parse_epub(_thin_toc_epub(tmp_path, toc_anchors=5), language="en")["chapters"]
+    assert [c["title"] for c in chapters] == [f"TOC name {i}" for i in range(1, 5)]
+
+
+def test_printed_contents_keeps_the_first_of_two_entries_sharing_an_href(tmp_path):
+    """The Patchwork Girl's printed contents points chapters 22 and 23 at the same
+    anchor; the duplicate is dropped and its text stays with the chapter before it."""
+    from scripts.parse_epub import parse_epub
+
+    chapters = parse_epub(_thin_toc_epub(tmp_path, duplicate_href=True), language="en")["chapters"]
+    assert [c["title"] for c in chapters] == ["The First Day", "The Second Day", "The Fourth Day"]
+    assert "Chapter 3 paragraph 0" in chapters[1]["content"]
+
+
+def test_whole_file_toc_entries_count_against_the_printed_contents(tmp_path):
+    """The library shape: a TOC of whole-file entries, one per chapter, plus a
+    handful of in-file links in the body (endnotes, an index). Counting only the
+    TOC's *fragments* would read that TOC as declaring nothing and let the endnote
+    list supersede it — so the gate counts every entry the TOC declares."""
+    from ebooklib import epub
+    from scripts.parse_epub import parse_epub
+
+    book = epub.EpubBook()
+    book.set_title("Whole File TOC")
+    book.set_language("en")
+    items = []
+    for i in range(1, 5):
+        item = epub.EpubHtml(uid=f"c{i}", title=f"Chapter {i}", file_name=f"c{i}.xhtml", lang="en")
+        # The endnote anchors resolve, so only the gate keeps them from splitting.
+        refs = "".join(
+            f'<p><a id="ref{n}"></a>a note reference {n} in the middle of the prose.</p>'
+            for n in range(1, 5)
+        ) if i == 1 else ""
+        item.set_content(
+            (f"<html><body><h2>Chapter {i}</h2><p>" + f"chapter {i} word " * 40
+             + f"</p>{refs}</body></html>").encode()
+        )
+        items.append(item)
+        book.add_item(item)
+    notes = epub.EpubHtml(uid="notes", title="Notes", file_name="notes.xhtml", lang="en")
+    notes.set_content(
+        ("<html><body><ol>"
+         + "".join(f'<li><a href="c1.xhtml#ref{i}">note {i}</a></li>' for i in range(1, 5))
+         + "</ol><p>" + "note text " * 40 + "</p></body></html>").encode()
+    )
+    book.add_item(notes)
+    book.spine = [*items, notes]
+    book.toc = [epub.Link(f"c{i}.xhtml", f"Chapter {i}", f"c{i}") for i in range(1, 5)]
+    book.add_item(epub.EpubNcx())
+    book.add_item(epub.EpubNav())
+    path = str(tmp_path / "wholefile.epub")
+    epub.write_epub(path, book)
+
+    chapters = parse_epub(path, language="en")["chapters"]
+    assert [c["id"] for c in chapters] == ["c1", "c2", "c3", "c4", "notes"]
+    # Splitting there would cut each reference into its own sub-minimum segment and
+    # drop it, so the leak costs prose without changing the chapter count.
+    assert "a note reference 4" in chapters[0]["content"]
+
+
+def test_build_printed_contents_reads_the_densest_list_of_in_file_links():
+    """The book's printed contents is the densest table/list of `#fragment` links;
+    a `<div>` is not a list, and a couple of cross-references are not a contents."""
+    from bs4 import BeautifulSoup
+    from scripts.parse_epub import _build_printed_contents
+
+    contents = BeautifulSoup(
+        "<body>"
+        '<div><a href="b.xhtml#x">a cross-reference</a><a href="b.xhtml#y">another</a>'
+        '<a href="b.xhtml#z">a third</a></div>'
+        '<table><tr><td><a href="b.xhtml#c1">1.</a></td><td>Opening</td></tr>'
+        '<tr><td><a href="b.xhtml#c2">2.</a></td><td>Middle</td></tr>'
+        '<tr><td><a href="b.xhtml#c3">3.</a></td><td>Ending</td></tr></table>'
+        '<ul><li><a href="b.xhtml#n1">A footnote</a></li></ul>'
+        "</body>",
+        "html.parser",
+    )
+    assert _build_printed_contents([contents]) == [
+        ("c1", "Opening"),
+        ("c2", "Middle"),
+        ("c3", "Ending"),
+    ]
+
+
+def test_build_printed_contents_is_empty_when_the_book_prints_none():
+    """Every `library/` EPUB: whole-file hrefs only, so nothing supersedes the TOC."""
+    from bs4 import BeautifulSoup
+    from scripts.parse_epub import _build_printed_contents
+
+    soup = BeautifulSoup(
+        '<body><ul><li><a href="c1.xhtml">One</a></li><li><a href="c2.xhtml">Two</a></li>'
+        '<li><a href="c3.xhtml">Three</a></li></ul></body>',
+        "html.parser",
+    )
+    assert _build_printed_contents([soup]) == []
+
+
+def test_printed_contents_entry_title_falls_back_to_the_link_text():
+    """A contents whose link is the whole entry has no row text to prefer."""
+    from bs4 import BeautifulSoup
+    from scripts.parse_epub import _build_printed_contents
+
+    soup = BeautifulSoup(
+        '<body><ul><li><a href="b.xhtml#c1">The Opening</a></li>'
+        '<li><a href="b.xhtml#c2">The Middle</a></li>'
+        '<li><a href="b.xhtml#c3">The Ending</a></li></ul></body>',
+        "html.parser",
+    )
+    assert _build_printed_contents([soup]) == [
+        ("c1", "The Opening"),
+        ("c2", "The Middle"),
+        ("c3", "The Ending"),
+    ]

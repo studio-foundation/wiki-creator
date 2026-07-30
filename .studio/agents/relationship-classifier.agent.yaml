@@ -126,7 +126,7 @@ system_prompt: |
     "evidence": "verbatim sentence or short passage from the excerpts — for a direct interaction it must contain both names or clear references to both; for a structural relationship it is the role/institution/causation line and may name only one",
     "evidence_kind": "direct|structural",
     "confidence": "the \"name\" of one confidence_levels entry, verbatim, grading the evidence above — or null when relationship_type is null",
-    "direction": "symétrique|A→B|B→A|null",
+    "direction": "symmetric|A→B|B→A|null",
     "evolution": "one sentence describing HOW the relationship changes across the provided chapters, or null if no change is observable — do NOT write \"relation stable\" or any equivalent filler",
     "key_moments": ["chXX: short description"]
   }

@@ -833,7 +833,7 @@ GROUNDING EXCERPTS — these are the ONLY facts you may use:
 Related entities (disambiguation only — do not derive narrative from cooccurrence):
 {related_block}
 
-Typed relationships (use these directly for the ## Relations section):
+Typed relationships (use these directly for the ## {relations_title} section):
 {relationships_block if relationships_block else "  (no typed relationships available)"}{indirect_section}
 
 Chapter summaries (orientation context — lower priority than excerpts):
@@ -1057,6 +1057,13 @@ def _bind_batch_fields(page: dict, entity: dict, book_config: dict | None) -> No
                 page["infobox_fields"][slot.token] = value
             else:
                 page["infobox_fields"].pop(slot.token, None)
+    # STU-729: every infobox slot is pipeline-owned (batch-bound/extracted-fact),
+    # so the writer owns no infobox field — drop any key it emitted that is not a
+    # declared token. Such a key (`region`, `place_type`, `name`) matches no
+    # template parameter and would render nowhere. Rebuilt in slot order.
+    declared = [slot.token for slot in resolved.infobox()]
+    fields = page["infobox_fields"]
+    page["infobox_fields"] = {t: fields[t] for t in declared if fields.get(t)}
 
 
 # The neutral error codes check_identity_match emits (scripts/wiki_page_validator.py).
@@ -1790,7 +1797,7 @@ def _generate_relationships_subsections(
     grounding: dict | None = None,
     runner: StudioRunner | None = None,
 ) -> str | None:
-    """The full ``## Relations`` block: one prose subsection per typed relationship
+    """The full relationships block, headed in ``language``: one prose subsection per typed relationship
     (most-recent-reveal first). None when no subsection is produced."""
     own = {entity.get("canonical_name")} | set(entity.get("aliases") or [])
     typed = []
@@ -1812,7 +1819,7 @@ def _generate_relationships_subsections(
             subs.append(block)
     if not subs:
         return None
-    return "## Relations\n\n" + "\n\n".join(subs)
+    return f"## {slot_label('relationships', language)}\n\n" + "\n\n".join(subs)
 
 
 def _run_generation_for_entity(

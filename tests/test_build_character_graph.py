@@ -21,7 +21,7 @@ SAMPLE_RELATIONSHIPS = [
         "cooccurrence_count": 45, "chapters": ["C01.xhtml", "C05.xhtml"],
         "chapter_weights": {"01-tog/C01.xhtml": 10, "01-tog/C05.xhtml": 35},
         "sample_contexts": ["Ils marchèrent."],
-        "relationship_type": "ally", "direction": "symétrique",
+        "relationship_type": "ally", "direction": "symmetric",
         "evolution": "", "books": ["01-tog"],
     },
     {

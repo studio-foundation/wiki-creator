@@ -35,7 +35,7 @@ def test_add_interaction_stored_as_edge():
     g.add_character("Celaena", {"importance": "major", "aliases": [], "books": ["01-tog"]})
     g.add_character("Chaol", {"importance": "major", "aliases": [], "books": ["01-tog"]})
     g.add_interaction("Celaena", "Chaol", {
-        "relationship_type": "allié", "direction": "symétrique",
+        "relationship_type": "allié", "direction": "symmetric",
         "cooccurrence_count": 45,
         "chapter_weights": {"01-tog/C01.xhtml": 10},
         "sample_contexts": ["ils marchèrent ensemble."],

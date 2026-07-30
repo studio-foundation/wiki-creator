@@ -444,6 +444,41 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   run to verify — left in place.
 
 
+- Packed spine items (STU-727/728): a Project Gutenberg EPUB puts a dozen chapters
+  in one spine item and declares their boundaries only as `file.xhtml#anchor`
+  entries, so the one-chapter-per-spine-item rule collapsed 16 of 21
+  `public_domain/` books into 1-5 "chapters" with nothing warning. `parse_epub`
+  splits such an item at those anchors: a marker before each resolving anchor in
+  document order, one run of the text pipeline, split the flat text on the marker.
+  **Two contents sources, never unioned** — the EPUB TOC, and the book's own printed
+  LIST OF CHAPTERS (`_build_printed_contents`: the densest `table`/`ul`/`ol` of
+  in-file fragment links in the spine). The printed one wins only where it declares
+  **more sections than the whole TOC**: The Road to Oz anchors 6 in its TOC and
+  prints 24, the Patchwork Girl 8 against 27 — 4 → 26 and 10 → 31 chapters. Over all
+  21 `public_domain` books the other 19 stay **byte-identical**, and `make golden` /
+  `make smoke` are untouched by construction (a library TOC yields no fragments, and
+  those books print no in-file contents).
+  Three things are load-bearing. (1) **The gate counts TOC *entries*, not fragments**
+  (`_count_toc_entries`). A commercial EPUB declares one whole-file entry per
+  chapter, so a fragment count reads its TOC as declaring nothing and lets any
+  three-link endnote list supersede it — and since a sub-minimum segment is
+  *dropped*, that leak costs prose without moving the chapter count, which is why
+  the test asserts the note text survives rather than the count. (2) **A `<div>` is
+  not a contents container**: it also wraps the list, so it absorbs whatever sits
+  beside it — dracula, Ozma of Oz and Dorothy and the Wizard each print a 20-27-entry
+  `Page_N` list of illustrations that would cut their chapters mid-scene. (3) **The
+  mark is planted before `_flatten_inline_markup`**: a printed contents anchors an
+  empty `<a id=…/>`, and unwrapping that tag erases the anchor.
+  **`01-the_call_of_cthulhu` stays at 1 chapter, and that is measured, not skipped.**
+  Its 3 sections are marked only by CSS class (`<hr class="chap">` +
+  `<p class="ph1">`), and `hr.chap` is not a chapter boundary: dracula prints 32 of
+  them for 32 chapters (every boundary would move) and glinda_of_oz 35 for 28 (the
+  count would change), both correct today. Reaching it needs the book YAML to declare
+  its own chapter mark — the STU-559 shape, a fast-follow.
+  Splitting changes chapter text, so it moves every STU-489 mention offset on the two
+  recovered books; `public_domain/l_frank_baum/oz/output/05-the_road_to_oz/` is a
+  rendering of the 4-chapter parse and is stale until a re-run.
+
 - Block dropcaps (STU-532): a dropcap can be its own **block**, not its own span
   — `<p>I</p><p>n a hole…</p>`, The Hobbit's opening sentence. Inline flattening
   cannot reach it, so `_mark_paragraph_breaks` used to put a paragraph break
@@ -825,7 +860,7 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
 
 - Never add hardcoded word lists to scripts. All vocabulary belongs in `wiki_creator/cue_words/<lang>.json` (language-wide) or the book YAML `classification` section (book-specific). No script may define a fallback vocabulary constant — if a key is absent from cue_words, degrade gracefully to an empty collection.
 
-- English is the default and the only language allowed in code. Nothing user-visible may be hardcoded in another language — no French (or any non-English) string literals in `.py`. Anything that needs translation is data, not code: it lives in YAML (`wiki_creator/templates/base.yaml` for template/output strings — `labels`, `briefs`, `few_shot`, `length_by_tier`, `chrome`, `language_names`; cue_words for detection vocabulary) keyed by language, and is read via helpers (`slot_label`, `section_brief`, `chrome_label`, …). Prompt *scaffolding* (instructions, grounding labels) stays English regardless of output language; only output-anchoring content (section titles, briefs, few-shot, the write-in-`<language>` directive) and reader-facing chrome follow `output_language(book_config)` (STU-510).
+- English is the default and the only language allowed in code. Nothing user-visible may be hardcoded in another language — no French (or any non-English) string literals in `.py`. Anything that needs translation is data, not code, and it lives in **one file per language**: `wiki_creator/templates/lang/<code>.yaml` for output strings (`labels`, `chrome`, `stubs`, `validator_errors`, `briefs`, `few_shot`, `category_defaults`, `relationship_labels`, `sub_role_labels`, `language_name`), `wiki_creator/cue_words/<code>.json` for detection vocabulary. It is read via helpers (`slot_label`, `section_brief`, `chrome_label`, `stub_message`, `validator_message`, `few_shot_example`, `language_name`, `entity_taxonomy.category_default`), all resolving through one chain — **requested language → `en` → raise** (STU-732). `en.yaml` is the reference pack and must hold every key; `tests/test_template_packs.py` fails on a gap in any shipped pack. `base.yaml` keeps structure only: prompt *scaffolding* (instructions, grounding labels, the classifier `description` criteria, `length_by_tier`) stays English regardless of output language, and only output-anchoring content (section titles, briefs, few-shot, the write-in-`<language>` directive) and reader-facing chrome follow `output_language(book_config)` (STU-510).
 
 - **`lang` is a required keyword argument, never a defaulted one (STU-734).** Every
   render/prompt helper that takes the output language declares `*, lang: str` (or
@@ -848,11 +883,12 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   declares `language_id_markers`, so an English wiki is a no-op and a French one is
   still compared against English.
   The gate is `tests/test_output_localization.py`: every reader-facing surface is
-  rendered with `lang="en"` and searched for the *French* side of base.yaml itself,
-  so a new localized key is covered the day it lands and a string built in Python
-  rather than read from the template is caught the day someone writes it.
-  Still open (STU-733): `synopsis.build_synopsis_prompt` and the `.studio/agents`
-  prompts order French prose regardless of `output_language`.
+  rendered with `lang="en"` and searched for the strings `templates/lang/fr.yaml`
+  declares (`chrome`/`labels`/`stubs`/`validator_errors`/`category_defaults`), so a
+  new localized key is covered the day it lands and a string built in Python rather
+  than read from its pack is caught the day someone writes it. It **asserts the
+  harvest is non-empty** — the STU-732 pack split moved those groups out of
+  `base.yaml` and a gate reading the old location passes vacuously, green and blind.
 
 - `tests/test_e2e_golden.py` chains all deterministic resolution stages on the fixture novella and compares every stage output to goldens in `tests/fixtures/e2e/golden/stages/`. Any intentional behavior change in those stages requires `make golden-update` and a review of the golden diff in the same PR. The extraction seed is committed (`golden/seed/`, regenerate with `gen_seed.py`); a `@requires_en_sm` test keeps it shape-compatible with real extraction in CI.
 
@@ -1127,8 +1163,9 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
 - Unified entity taxonomy (STU-505): `base.yaml#entity_types` is the single
   authority for the type vocabulary AND its routing. Each type declares
   `ner_labels` (the stock+custom NER labels it absorbs) and an `export` block
-  (`subdir`, `full_key`, `infobox_template`, `infobox_rows`, `category_key`,
-  `category_default`, `importance_categories`, `tome_label_key`) — the data the
+  (`subdir`, `full_key`, `infobox_template`, `category_key`,
+  `importance_categories`, `tome_label_key`; its default category label moved to
+  the template packs' `category_defaults` in STU-732) — the data the
   five old Python tables (`types.py` Literal, `entity_extraction.LABEL_TO_TYPE`,
   `export_helpers._INFOBOX_TEMPLATES`, `wiki_export._SUBDIR`,
   `md2wiki._TEMPLATE_NAMES`) encoded separately. All consumers read it via
@@ -1146,3 +1183,34 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   `entity_classification.get_total_mentions` still threads only PERSON/PLACE/ORG/
   EVENT full-registries; a FACTION entity's counts come from the surface index,
   not its `*_full.json` — a possible fast-follow.
+
+- The infobox template is generated, not hand-kept (STU-729): `infobox_source` is
+  gone from `base.yaml#entity_types.export`; `page_templates.render_infobox_source`
+  builds the `<includeonly>` table from the type's `infobox` slot tokens (header =
+  first token, one labelled row per remaining token, localized by `lang`). The bug
+  it closes: the hand-kept template declared `{{{name}}}`/`{{{first_seen}}}` while
+  the renderer emitted `nom=`/`apparition=`, so every infobox row — the character
+  name included — rendered empty on the whole Oz run. Because the template's
+  parameters ARE the slot tokens, the two vocabularies cannot drift. Two rules
+  travel with it. (1) **Every infobox slot is pipeline-owned** (batch-bound or
+  extracted-fact — none is `llm-prose`), so `_bind_batch_fields` drops any
+  `infobox_fields` key the writer emitted that is not a declared token (`region`,
+  `place_type`, the English `name`): it matches no template parameter and would
+  render nowhere. (2) The deterministic builders emit only declared tokens —
+  `event_pages` uses `nom` (not `name`) and its `participants`/`lieu`/`chapitre`/
+  `issue` are EVENT slots; `infobox_relationships` emits the four PERSON buckets.
+  `test_infobox_vocabulary.py` pins `render → tokens` equality and the subset. The
+  inert `type` infobox token (never filled for any type) was removed rather than
+  rendered as a permanently-empty row.
+  **This absorbs STU-730's `infobox_rows`.** That ticket landed first and fixed the
+  *labels* (the template stored one hardcoded French literal per type, so an English
+  wiki read `Décès`) by replacing the wikitext string with a hand-kept ordered row
+  list built against the localized `labels` map. It deliberately left the parameter
+  names alone ("rendered pages are byte-identical"), which is the half STU-729 is
+  about — so `infobox_rows` arrived carrying `{header: name}`, `param: first_seen`,
+  `occupation`, `residents`, and a second hand-kept vocabulary that can drift from
+  the `infobox:` slots exactly as the string did. Deriving the rows from the slot
+  tokens keeps STU-730's localization (each row label is `slot_label(token, lang)`)
+  and deletes the drift surface, so `infobox_rows` is gone with `infobox_source`.
+  STU-730's "an `en` template ships no French label" tests moved to
+  `test_infobox_vocabulary.py` — the property is now the generator's and must stay.

@@ -15,8 +15,10 @@ def test_canonical_passthrough_and_unknown():
 def test_relationship_label_localized():
     assert pt.relationship_label("enemy", "en") == "Enemy"
     assert pt.relationship_label("enemy", "fr") == "Ennemi"
-    # unknown token/lang falls back to the token
-    assert pt.relationship_label("enemy", "de") == "enemy"
+    # STU-732: a language with no pack falls back to the English label, not the token
+    assert pt.relationship_label("enemy", "de") == "Enemy"
+    # a book's own type carries its name as its label (STU-472)
+    assert pt.relationship_label("dragon_bond", "fr") == "dragon_bond"
 
 
 # --- sub-roles (STU-665) ----------------------------------------------------
@@ -39,5 +41,5 @@ def test_sub_role_definitions_carry_a_criterion():
 def test_sub_role_label_localized_and_fallback():
     assert pt.sub_role_label("father", "en") == "father"
     assert pt.sub_role_label("father", "fr") == "père"
-    assert pt.sub_role_label("father", "de") == "father"   # unknown lang → token
+    assert pt.sub_role_label("father", "de") == "father"   # no pack → the English label
     assert pt.sub_role_label("gibberish", "en") == "gibberish"  # unknown token → itself

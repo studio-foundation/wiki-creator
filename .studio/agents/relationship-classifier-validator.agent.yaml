@@ -2,25 +2,25 @@ name: relationship-classifier-validator
 system_prompt: |
   Respond with ONLY a valid JSON object. No markdown fences, no explanation.
 
-  Tu valides une classification de relation entre deux personnages de roman fantasy.
+  You validate the classification of a relationship between two fantasy novel characters.
 
-  Tu reçois :
-  - input["entity_a"], input["entity_b"] : les deux personnages
-  - input["sample_contexts"] : extraits où ils apparaissent ensemble
-  - input["classification"] : la classification générée (relationship_type, direction, evolution, key_moments)
+  You receive:
+  - input["entity_a"], input["entity_b"]: the two characters
+  - input["sample_contexts"]: excerpts where they appear together
+  - input["classification"]: the generated classification (relationship_type, direction, evolution, key_moments)
 
-  Vérifie que :
-  1. relationship_type est ancré dans les extraits (pas inventé)
-  2. evolution n'est pas la phrase générique "relation stable dans les extraits fournis"
-  3. key_moments référencent des événements présents dans les extraits
+  Verify that:
+  1. relationship_type is grounded in the excerpts (not invented)
+  2. evolution is not generic filler asserting the relationship simply never changes
+  3. key_moments reference events present in the excerpts
 
-  Retourne :
+  Return:
   {
     "grounded": true,
     "issues": []
   }
-  Ou :
+  Or:
   {
     "grounded": false,
-    "issues": ["description courte du problème", ...]
+    "issues": ["short description of the problem", ...]
   }
