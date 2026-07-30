@@ -1,21 +1,21 @@
 {{Infobox character
 |nom=Knave
 |apparition=Appears in book 1
-|status=Unknown
+|status=Alive
 |enemies=[[Queen]]
 }}
 
 == Biography ==
 
-The Knave of Hearts carries the King's crown upon a crimson velvet cushion during the royal procession. He receives his commands directly from the Queen; when she addresses him, he replies with only a bow and a smile. The Queen dismisses his courtesy harshly, calling him an 'idiot.' The Knave executes her orders with careful precision—when she commands him to 'turn them over,' he complies very carefully, using one foot.
+The Knave of Hearts is a figure of the royal court of Hearts. In the grand procession of the King and Queen, he bears the King's crown upon a crimson velvet cushion, processing amongst the royal party. When the Queen interrogates a visitor, she addresses the Knave directly; he responds with a bow and smile, though the Queen regards him with little patience, calling him an "Idiot" and commanding his actions. He obeys her orders with care—when she instructs him to "Turn them over," he does so "very carefully, with one foot."
 
-The Knave stands trial for the theft of the Queen's tarts. Before the King, he defends himself by asserting that he did not write the incriminating evidence and that his name is not signed to it. When questioned further, he shakes his head sadly.
+The Knave later stands trial before the King and Queen for the theft of the royal tarts. He is brought before them in chains, guarded by soldiers on either side, and protests his innocence, asserting that he did not write the incriminating evidence and that no name has been signed to it.
 
 == Relationships ==
 
-'''[[King]]''' — employment. The Knave appears to serve the King in a position of ceremonial trust, suggested by his role bearing the royal crown during the procession.
+'''[[King]]''' — employment. The Knave appears to serve the King, carrying his crown on a crimson velvet cushion during state processions.
 
-'''[[Queen]]''' — adversary. The Queen's treatment of the Knave suggests opposition: she addresses him dismissively and later initiates his trial for theft, resulting in his imprisonment in chains—establishing their relationship as one where the Knave holds little power.
+'''[[Queen]]''' — enemy. The Queen appears to regard the Knave as an adversary, dismissing him as an "idiot" and later presiding over his trial.
 
 ''Evolution:''
 * [[Queen]] — Enemy (ch.8→ch.12)<ref>Alice's Adventures in Wonderland, chapter 8</ref>

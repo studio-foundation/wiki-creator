@@ -1,25 +1,22 @@
 {{Infobox character
 |nom=Mock Turtle
 |apparition=Appears in book 1
-|status=Unknown
-|friends_allies=[[Gryphon]], [[Tortoise]]
+|status=Alive
+|friends_allies=[[Gryphon]]
 }}
 
 == Biography ==
 
-The Mock Turtle is a creature of Wonderland who attended school in the sea as a youth, studying under an old Turtle whom the pupils called the Tortoise. The Mock Turtle possesses a sharp and easily vexed temperament; when questioned about their teacher's curious name, they respond with considerable anger, saying 'We called him Tortoise because he taught us.' Those who pose questions the Mock Turtle deems simple or foolish find themselves rebuked as dull and are apt to receive curt commands such as 'Hold your tongue!' Yet the Mock Turtle engages in the social customs of Wonderland, participating in its elaborate dances and conversing freely upon the strange creatures of their realm, including the whitings. The Mock Turtle is exacting in matters of clarity and explanation; they become openly exasperated when recitations proceed without sufficient context, finding such haphazard discourse most confusing and troublesome. Accounts from Wonderland describe the Mock Turtle as miserable, with their heavy sobs noted among the peculiar sounds that fill that strange realm.
+The Mock Turtle is a creature of Wonderland whose nature is sharp and easily provoked. He speaks with quick rebuke to those he considers foolish, commanding Alice to hold her tongue without hesitation. Yet for all his acerbic manner, he possesses genuine knowledge of Wonderland's customs, most notably the Lobster Quadrille, with all its peculiar steps and choreography. He is exacting about clarity in conversation, becoming indignant when others speak without proper explanation, dismissing such efforts as 'by far the most confusing thing I ever heard.' There is melancholy in him, too—according to Alice's memory of Wonderland, his heavy sobs could be heard even from a distance.
 
 == Relationships ==
 
-'''[[Gryphon]]''' — appears to be a close companion and fellow student from the sea school. The two attended school together and remain in each other's company in Wonderland, with the Gryphon displaying a familiar ease in directing the Mock Turtle's actions.
+'''[[Alice]]''' — acquaintance. They encounter one another on several occasions in Wonderland, with Alice seeking the Mock Turtle's knowledge of the realm's creatures and customs.
 
-'''[[Alice]]''' — an acquaintance met in Wonderland. The Mock Turtle engages Alice in conversation, though his manner suggests impatience with her understanding.
-
-'''[[Tortoise]]''' — served as a teaching figure in the Mock Turtle's education. The Mock Turtle recalls studying under this creature, whom he and his schoolmates called Tortoise "because he taught us."
+'''[[Gryphon]]''' — ally. The two are frequent companions, moving about Wonderland together, with the Gryphon addressing the Mock Turtle with familiar authority.
 
 ''Evolution:''
-* [[Gryphon]] — Friend (ch.9→ch.10)<ref>Alice's Adventures in Wonderland, chapter 9</ref>
-* [[Tortoise]] — Mentor (ch.9)<ref>Alice's Adventures in Wonderland, chapter 9</ref>
+* [[Gryphon]] — Ally (ch.9→ch.10)<ref>Alice's Adventures in Wonderland, chapter 9</ref>
 == References ==
 
 <references/>

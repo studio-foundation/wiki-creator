@@ -1,29 +1,29 @@
 {{Infobox character
 |nom=King
 |apparition=Appears in book 1
-|status=Unknown
+|status=Alive
 |titles=King
 |family=[[Queen]] (spouse)
-|enemies=[[Cheshire Cat]]
 }}
 
 == Biography ==
 
-The King of Hearts is the judge presiding over the trial of the Knave of Hearts. He is seated upon a throne with the Queen of Hearts, wearing both a crown and a wig—an arrangement that appears, by Alice's account, neither comfortable nor becoming. When attending to matters of his court, he dons spectacles to examine those who come before him.
-
-The King is exacting in his regard for courtroom procedure. He speaks in a grave voice and insists, with great emphasis, that all jury members return to their proper places before the trial can proceed, repeating this requirement as he looks intently at those in his court. He questions those who appear before him directly, seeking their knowledge of the matters at hand.
+The King of Hearts presides as judge over the trial of the Knave of Hearts in his royal court. He is notable for his great wig and crown, which he wears together in a manner that appears neither comfortable nor becoming. The King administers his proceedings with grave solemnity and considerable concern for propriety, insisting with great emphasis that all jurymen remain in their proper places before the trial may proceed. His interrogations are marked by methodical persistence; he questions those who appear before him with formal gravity, repeating his lines of inquiry even when the answers prove inconsequential.
 
 == Relationships ==
 
-'''[[Queen]]''' — family. The King reigns alongside the Queen of Hearts, seated upon their shared throne as co-sovereign of Wonderland.
+'''[[Queen]]''' — family. They are seated together upon the throne during the trial proceedings.
 
-'''[[Knave]]''' — authority. The Knave of Hearts stands trial before the King, who presides as judge over the proceedings.
+'''[[Knave]]''' — employment. The Knave of Hearts carries the King's crown on a crimson velvet cushion, suggesting a service relationship.
 
-'''[[Alice]]''' — acquaintance. The King questions Alice as a witness during the trial, examining her knowledge of the alleged theft.
+'''[[Alice]]''' — acquaintance. The King approaches Alice during the trial and questions her about her knowledge of the case.
 
-'''[[White Rabbit]]''' — employment. The White Rabbit attends the King during court proceedings, carrying official regalia and serving in an official capacity within the court.
+'''[[White Rabbit]]''' — employment. The White Rabbit stands near the King with a trumpet and parchment scroll, apparently serving as an official of the court.
+
+'''[[Cheshire Cat]]''' — enemy. The King expresses disapproval of the Cat's appearance yet permits it to kiss his hand, suggesting a complicated relationship marked by distrust and reluctant tolerance.
 
 ''Evolution:''
+* [[Hatter]] — Enemy (ch.11)<ref>Alice's Adventures in Wonderland, chapter 11</ref>
 * [[Queen]] — Family (ch.8→ch.12)<ref>Alice's Adventures in Wonderland, chapter 8</ref>
 * [[Cheshire Cat]] — Enemy (ch.8)<ref>Alice's Adventures in Wonderland, chapter 8</ref>
 == References ==

@@ -1,12 +1,12 @@
 {{Infobox character
 |nom=Eaglet
 |apparition=Appears in book 1
-|status=Unknown
+|status=Alive
 }}
 
 == Biography ==
 
-The Eaglet is a young bird of forthright disposition and ready wit. Among the creatures drawn into the pool and washed ashore, the Eaglet distinguishes itself by its candid speech. When the Dodo launches into a pronouncement laden with long words, the Eaglet demands plainness, declaring it can understand scarcely half such verbose language and casting doubt upon the Dodo's own comprehension. In this moment of candid criticism, the Eaglet bends its head to conceal a smile, whilst the other birds titter audibly at its boldness.
+The Eaglet is a sharp-eared creature who shares the misfortune of having tumbled into Alice's pool of tears. When the company assembled on the shore, it proved itself no admirer of the Dodo's elaborate speech, declaring plainly that it understood not half of such long words—and, what is more, doubted the Dodo did either. This bold observation brought a smile to the Eaglet's face, though it bent its head to hide the amusement while the other birds tittered audibly.
 
 [[Category:Characters]]
 [[Category:Characters of Book 1]]

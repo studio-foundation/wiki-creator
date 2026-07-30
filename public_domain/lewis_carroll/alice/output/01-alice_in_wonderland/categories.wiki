@@ -1,4 +1,4 @@
-= Catégories =
+= Categories =
 This page documents the category hierarchy used in this wiki.
 
 == Characters ==

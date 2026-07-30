@@ -1,0 +1,15 @@
+{{Infobox event
+|nom=The Mock Turtle becomes intrigued when Alice claims the words she recited to the Caterpillar came out different than she remembered
+|participants=Alice, Caterpillar, Mock Turtle
+|chapitre=10
+}}
+
+== Course of events ==
+
+In the course of recounting her adventures to the creatures of Wonderland, Alice comes to speak of her earlier encounter with the Caterpillar, when she had recited verses for that curious creature. Yet in speaking thus to the Mock Turtle, she makes a most perplexing disclosure: the very words she had uttered to the Caterpillar had emerged quite differently than she remembered them. The Mock Turtle finds himself quite intrigued by this peculiar claim—that what Alice had said should differ so markedly from what she recollected having said. The notion of such transformation, a discrepancy between utterance and memory, kindles in him a keen and absorbed attention, for few things in Wonderland are so curious as the strange games that memory and speech might play upon one another.
+
+== References ==
+
+* Alice's Adventures in Wonderland
+
+[[Category:Events]]

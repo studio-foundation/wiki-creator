@@ -1,30 +1,31 @@
 {{Infobox character
 |nom=Hatter
 |apparition=Appears in book 1
-|status=Unknown
+|status=Alive
 |friends_allies=[[March Hare]]
 |enemies=[[Queen]]
 }}
 
 == Biography ==
 
-The Hatter is a Wonderland resident, described by the Cheshire Cat as quite mad. He hosts a tea party at which he engages in elaborate logical disputation, particularly regarding language and meaning. When his guest claims that "I mean what I say" is the same thing, the Hatter vigorously objects. He argues that such logic would make "I see what I eat" the same as "I eat what I see," employing this paradox to demonstrate the faulty reasoning in his interlocutor's claim. He shows a certain contempt for those unable to follow his arguments, though his own memory is frustratingly unreliable; when questioned, he admits readily to facts he cannot recall.
+The Hatter is a resident of Wonderland, known to be mad. He is celebrated for the tea parties he holds beneath a tree, where conversation turns upon questions of language and logic with surprising rigour. When it is suggested that to say "I mean what I say" is the same thing as saying "I see what I eat," the Hatter objects with great certainty: "Not the same thing a bit! You might just as well say that 'I see what I eat' is the same thing as 'I eat what I see'!" He speaks of Time as one might speak of an acquaintance—as someone one might converse with—and holds in contempt those who claim never to have spoken with Time.
 
-At the trial of the Knave of Hearts, the Hatter's manner changes entirely. Confronted by the Queen and King, he becomes seized with fear, trembling so violently that he shakes off his very shoes when the Queen stares at him, and dropping his teacup in panic when threatened with execution. He describes himself as a poor man, and his anxious deference to authority stands in sharp contrast to the argumentative confidence he displays at his tea table.
+The Hatter finds himself later in the King's court, summoned to give evidence at trial. There, beneath the Queen's unwavering stare, he becomes greatly agitated, trembling so violently that his shoes fall away. When the King presses him to remember what transpired, the Hatter confesses himself a poor man, quite unable to recollect the particulars. In his distress, he drops his teacup and bread-and-butter, falling to one knee before the throne.
 
 == Relationships ==
 
-'''[[March Hare]]''' — strained friendship. The two appear to maintain both companionship and tension, engaging in debates over logic and meaning at their shared tea table.
+'''[[March Hare]]''' — strained friendship. They share a residence in Wonderland and host the mad tea party together, though their association seems marked by tension.
 
-'''[[Queen]]''' — adversary. The Queen's anger was once incited against the Hatter, whom she accused of murdering the time and against whom she demanded execution.
+'''[[Queen]]''' — enemy. The Queen called for the Hatter's head after he sang at the tea party, and at trial her intense stare causes him profound distress and visible fear.
 
-'''[[Alice]]''' — acquaintance. The Hatter encounters Alice at the tea party, observing her with curiosity and drawing her into his games of logical disputation.
+'''[[Alice]]''' — acquaintance. Alice joins the Hatter at his tea party, engaging in philosophical discourse with him about the nature of language and meaning.
 
-'''[[Dormouse]]''' — fellow participant. The Dormouse sits asleep between the Hatter and the March Hare at their table, serving as an unwitting cushion for their elbows.
+'''[[Dormouse]]''' — acquaintance. The Dormouse attends the Hatter's tea party as a third guest.
 
-'''[[King]]''' — stern authority. The King summoned the Hatter to give evidence during the trial of the Knave of Hearts and threatened him with execution for his inability to recall what was demanded of him.
+'''[[King]]''' — adversary. The King interrogates the Hatter at trial, demanding evidence and threatening him with execution if his memory fails.
 
 ''Evolution:''
+* [[King]] — Enemy (ch.11)<ref>Alice's Adventures in Wonderland, chapter 11</ref>
 * [[March Hare]] — Strained friendship (ch.7→ch.11)<ref>Alice's Adventures in Wonderland, chapter 7</ref>
 * [[Queen]] — Enemy (ch.7→ch.11)<ref>Alice's Adventures in Wonderland, chapter 7</ref>
 == References ==

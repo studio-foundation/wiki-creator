@@ -1,25 +1,26 @@
 {{Infobox character
 |nom=Five
 |apparition=Appears in book 1
-|status=Unknown
+|status=Alive
 }}
 
 == Biography ==
 
-Five is one of three gardeners in the Queen's garden, engaged in the curious task of repainting white roses red. A character of sulky disposition, he is quick to deflect blame for his own mishaps. When warned by a companion against splashing paint during his labour, Five protested that he could not help it, insisting that Seven had jogged his elbow and caused the accident. Seven, observing this pattern of excuse-making, remarked pointedly that Five was always inclined to lay the blame on others rather than himself.
+Five is one of the three gardeners employed to paint the white roses in the Queen's garden red. He speaks in a sulky tone and, when paint splatters across the work, attributes the mishap to his companion Seven, claiming Seven jogged his elbow. Seven dismisses this excuse, retorting that Five is forever laying the blame on others rather than owning his own mistakes. Their exchange suggests an uneasy familiarity born of shared employment and shared peril under the Queen's service.
 
 == Relationships ==
 
-'''[[Seven]]''' — friendly_rivalry. Five and Seven work in close proximity; their interactions suggest frequent mutual blame and defensiveness between them.
+'''[[Alice]]''' — ally. An observer of the gardeners at their work in the rose garden.
 
-'''[[Alice]]''' — ally. Alice encounters Five while observing the gardeners at their task.
+'''[[Queen]]''' — enemy. The gardeners fear the Queen's wrath should she discover their mistake in planting a white rose-tree instead of a red one.
 
-'''[[Queen]]''' — enemy. Five appears to serve under the Queen's authority in the royal garden.
+'''[[Seven]]''' — acquaintance. A fellow gardener; their interactions suggest friction, with Seven accusing Five of laying blame on others.
+
+'''[[Two]]''' — acquaintance. A fellow member of the gardening trio.
 
 ''Evolution:''
 * [[Alice]] — Ally (ch.8)<ref>Alice's Adventures in Wonderland, chapter 8</ref>
 * [[Queen]] — Enemy (ch.8)<ref>Alice's Adventures in Wonderland, chapter 8</ref>
-* [[Seven]] — Friendly rivalry (ch.8)<ref>Alice's Adventures in Wonderland, chapter 8</ref>
 
 
 [[Category:Characters]]

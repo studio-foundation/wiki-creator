@@ -1,30 +1,27 @@
 {{Infobox character
 |nom=Dormouse
 |apparition=Appears in book 1
-|status=Unknown
-|friends_allies=[[Alice]]
-|enemies=[[Queen]]
+|status=Alive
 }}
 
 == Biography ==
 
-The Dormouse is a creature best described as perpetually asleep. At the tea party beneath the tree, it sat nestled between the March Hare and the Hatter, where the two used it as a comfortable cushion, resting their elbows upon it as they talked over its head. Yet despite its slumber, the Dormouse would speak—replies emerging from its sleep in the curious logic of dreams. When the March Hare claimed that "I like what I get" is the same as "I get what I like," the Dormouse answered (still sleeping) that "I breathe when I sleep" is equally the same as "I sleep when I breathe." The creature also sang whilst asleep, though a pinch from its companions was required to bring the singing to an end.
+The Dormouse is a creature distinguished by his pronounced somnolence. He is present at the Mad Tea-Party held beneath a tree, where he sits between the March Hare and the Hatter, settling immediately into sleep. The two companions show little regard for his comfort, using him as a cushion and resting their elbows upon him as they converse over his head. Extraordinarily, despite his sleeping state, the Dormouse participates in the philosophical absurdities of the tea party. Speaking from within his slumber, he contributes paradoxes of his own—remarking that breathing while one sleeps is equivalent to sleeping while one breathes.
 
-The Dormouse attended the trial alongside the March Hare. There, it answered "Sixteenth" to a question about a date. Seated beside Alice during the trial, it complained of her proximity: "I wish you wouldn't squeeze so. I can hardly breathe."
+The Dormouse later appears at the trial of the Knave of Hearts, attending with the March Hare and the Hatter. He offers testimony during the proceedings, declaring "Sixteenth" when dates are discussed. Seated near Alice during the trial, he protests as she grows larger in the crowded courtroom, imploring her: "I wish you wouldn't squeeze so. I can hardly breathe."
 
 == Relationships ==
 
-'''[[March Hare]]''' — acquaintance. At the tea party, the Dormouse sits between the March Hare and Hatter, who use it as a cushion. The two share wordplay and conversation, remaining together at trial.
+'''[[Alice]]''' — acquaintance. The Dormouse appears at the tea party alongside Alice and later sits beside her during the trial, where he complains of being squeezed.
 
-'''[[Alice]]''' — acquaintance. Alice encounters the Dormouse at the tea party and again at trial. At trial, when Alice sits adjacent to the Dormouse, it protests against the crowding.
+'''[[March Hare]]''' — acquaintance. The Dormouse is intimately positioned between the March Hare and the Hatter at the tea party, and enters the courtroom arm-in-arm with the March Hare at the trial.
 
-'''[[Hatter]]''' — acquaintance. The Hatter is the Dormouse's companion at the tea party, using it as a cushion and engaging it in conversation. Both later appear together at trial.
+'''[[Hatter]]''' — acquaintance. The Dormouse participates with the Hatter in the tea party's absurd logical exchanges and later accompanies him to the trial.
 
-'''[[Queen]]''' — The Dormouse seems to incur the Queen's displeasure when it sings in its sleep at the tea party; the Queen's outburst suggests the Dormouse is viewed unfavorably.
+'''[[Queen]]''' — adversary. The Queen reacts with fury to the Dormouse's singing, reportedly declaring him "murderous" toward time and calling for his death.
 
 ''Evolution:''
 * [[Queen]] — Enemy (ch.11)<ref>Alice's Adventures in Wonderland, chapter 11</ref>
-* [[Alice]] — Friend (ch.7→ch.11)<ref>Alice's Adventures in Wonderland, chapter 7</ref>
 == References ==
 
 <references/>

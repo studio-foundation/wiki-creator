@@ -1,29 +1,60 @@
 {{Infobox character
 |nom=White Rabbit
+|alias=Rabbit
 |apparition=Appears in book 1
-|status=Unknown
+|status=Alive
 }}
 
 == Biography ==
 
-The White Rabbit is a figure of authority in Wonderland's court, bearing a trumpet and a scroll of parchment. During the trial of the Knave of Hearts, he maintains order and decorum, calling out "Silence in the court!" when others speak out of turn. His manner toward the King is fastidiously respectful, though he does not hesitate to correct what he perceives as the monarch's errors—once interrupting to say "Unimportant, your Majesty means, of course" in a dutiful tone, even as he frowned and made faces in contradiction.
+The White Rabbit is a creature consumed by anxiety and time-consciousness, marked by his snow-white coat and vivid pink eyes. He dresses with peculiar formality in a waistcoat that contains a pocket—a marvel that strikes Alice with wonder, for she has "never before seen a rabbit with either a waistcoat-pocket, or a watch to take out of it." From this pocket he produces a watch, which he consults with evident alarm, muttering to himself "Oh dear! Oh dear! I shall be late!" His wardrobe also includes white kid gloves and a fan, which he carries about with great concern.
 
-The White Rabbit carries himself with considerable consequence and concern for propriety. He dresses splendidly, with white kid gloves and a large fan always in hand. He maintains a household marked with his initials—"W. RABBIT"—engraved upon a bright brass plate, and appears to command servants who run his errands, fetching his gloves and fan at his word. His attention is much occupied with the Duchess, whose favor he anxiously seeks, muttering to himself in worry lest he has kept her waiting.
+The White Rabbit appears to hold some position of service within Wonderland's court, seemingly obliged to answer to the Duchess and the Queen, whose displeasure he greatly fears. When Alice first approaches him, he starts violently at her address and scurries away into the darkness, abandoning his gloves and fan. Later, he mistakes her for his housemaid Mary Ann, commanding her in an angry tone to fetch his belongings. He is preoccupied with serving his superiors, muttering anxiously about the Duchess and fretting over his lost possessions.
+
+At the trial of the Knave of Hearts, the White Rabbit assumes an official role, bearing a trumpet in one hand and a scroll of parchment in the other. He announces witnesses with three blasts of the trumpet and maintains order by crying "Silence in the court!" when Alice speaks. Though his manner remains anxious throughout—he jumps up in great hurry whenever new evidence appears—he demonstrates a careful deference toward authority. He speaks to the King "in a very respectful tone," though he does not hesitate to gently correct him when the occasion warrants, suggesting that his formal duties carry a certain dignity, even as his nervousness never quite abandons him.
+
+== Narrative role ==
+
+The White Rabbit is the creature that sets all of Alice's adventures in motion—a being distinguished by his white coat and pink eyes, marked by anxiety and perpetual haste. He carries a pocket watch kept in a waistcoat-pocket, a detail that astonishes Alice upon her first glimpse of him, for she has never before seen a rabbit, or indeed any creature, possessed of such an object and such urgency about the time.
+
+On the bank where Alice sits idle with her sister, the Rabbit rushes past her, muttering anxiously to himself about the lateness of the hour. Burning with curiosity, Alice pursues him across the field and watches him vanish down a large rabbit-hole. Later, she catches sight of him again as he hastens through a long, lamplit hall lined with countless locked doors. When he appears carrying white kid gloves and a fan, Alice addresses him timidly; the Rabbit starts in violent alarm at her words, drops his items, and flees into the darkness.
+
+In subsequent meetings, the Rabbit mistakes Alice for Mary Ann, his housemaid, and commands her peremptorily to fetch him a fresh pair of gloves and a fan. When Alice enters his house in search of these items, the Rabbit and his companions make determined efforts to extract her after she becomes trapped within his home—efforts that fail when Alice kicks one of his servants, a creature named Bill, down the chimney. These events reveal the Rabbit to be a master of his own household, accustomed to issuing orders and attending to his own concerns with little regard for the comfort of those around him.
+
+The Rabbit serves in the attendance of the Duchess and stands in evident fear of the Queen, both potent figures in Wonderland's hierarchy. By the time of the trial of the Knave of Hearts, he has assumed the formal role of herald to the King, carrying a trumpet in one hand and a scroll of parchment in the other. His conduct of the trial's proceedings is marked by his attempts to maintain order—crying "Silence in the court!"—and by his repeated interruptions of the King's words, couched always in deferential language, though his manner suggests underlying anxiety about his position.
+
+Alice, in recounting her extraordinary journey to the Gryphon and another creature, identifies the White Rabbit as the beginning of all that followed, the catalyst who first sparked her descent into this bewildering realm through the simple act of his anxious passing on the riverbank.
+
+== Personality ==
+
+The White Rabbit is fundamentally anxious and hurried. He speaks in low, hasty tones; he mutters constantly; he moves with perpetual urgency. Each of these habits suggests a creature convinced that catastrophe awaits if he slows his pace even momentarily. His anxiety is rooted in a fear of disappointing those he serves—the Duchess and the Queen loom large in his mind as figures of terrible retribution. When confronted with the unexpected, this anxiety manifests in visible panic and an impulse to flee.
+
+Yet this same anxious creature demonstrates a strikingly different character when operating within the formal structures of law and ceremony. As herald at the trial, he commands authority: he sounds trumpet blasts, calls out witnesses, and enforces silence with genuine assurance. Even in this official capacity, however, his inherent nervousness bleeds through—he frowns, he makes grimaces, he cannot quite hide his discomfort. His authority appears to be something donned, like a costume, rather than an essential part of his nature.
+
+This contradiction suggests a creature who is fundamentally dependent on clear hierarchy and defined role. He seems unable to be at ease with uncertainty or ambiguity; he requires the rigid structure of established protocol to feel secure in himself. Within such structures, he can function with confidence; outside them, he is all anxiety and haste. He is, perhaps, less an individual than a function of the social order around him.
+
+== Appearance ==
+
+The White Rabbit is a small creature with white fur and pink eyes. He wears a waistcoat furnished with pockets, from which he carries a pocket watch—a remarkable possession for a rabbit. He is described as "splendidly dressed" and is frequently seen holding a pair of white kid gloves in one hand and a fan in the other.
 
 == Relationships ==
 
-'''[[Alice]]''' — acquaintance. The Rabbit reacts with alarm to Alice's approach, dropping his gloves and fan in a startled fashion.
+'''[[Alice]]''' — acquaintance. The Rabbit first passes near Alice on the riverbank, and later encounters her when he mistakes her for his housemaid Mary Ann. When Alice addresses him timidly, he starts violently and flees, suggesting a fraught interaction between them.
 
-'''[[King]]''' — appears to serve as a court official. The Rabbit maintains courtroom order, presents evidence at the sovereign's direction, and demonstrates careful deference to royal authority, though he permits himself gentle corrections of the King's language.
+'''[[King]]''' — employment. The White Rabbit appears to serve the King, taking on the role of herald at the trial, where he sounds his trumpet and calls forth witnesses. He addresses the King formally and maintains a respectful tone throughout the proceedings.
 
-'''[[Duchess]]''' — seems to work in service to the Duchess. The Rabbit's anxious concern for his mistress dominates his attention, and he greatly fears her displeasure.
+'''[[Duchess]]''' — employment. The Rabbit seems bound to serve the Duchess, expressing acute anxiety about his obligations to her and fearing her displeasure greatly.
 
-'''[[Mary Ann]]''' — appears to command household servants. The Rabbit gives urgent orders to Mary Ann to fetch his gloves and fan, suggesting he holds authority over domestic staff.
+'''[[Queen]]''' — employment. The White Rabbit appears to hold a subordinate position in the royal household under the Queen's authority, reporting evidence to her during the trial and maintaining evident concern for her attention.
+
+== Trivia ==
+
+* He mistakes Alice for his housemaid, calling her Mary Ann, and instructs her to fetch his gloves and fan.
 
 == References ==
 
 <references/>
 
 [[Category:Characters]]
-[[Category:Secondary Characters]]
+[[Category:Main Characters]]
 [[Category:Characters of Book 1]]

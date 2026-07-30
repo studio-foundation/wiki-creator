@@ -1,24 +1,23 @@
 {{Infobox character
 |nom=Dodo
 |apparition=Appears in book 1
-|status=Unknown
-|friends_allies=[[Alice]]
+|status=Alive
 }}
 
 == Biography ==
 
-The Dodo is a creature of Wonderland, notably present among the pool of animals and birds who gathered together after an unusual deluge. When the waterlogged party came ashore, the Dodo proved to be a creature of formal bearing and practical temperament. It speaks with measured solemnity, consulting the group on matters of consequence—though its elaborate vocabulary sometimes provokes confusion among its companions, who found its turns of phrase unnecessarily ornate.
+The Dodo is a solemn creature of Wonderland who arrives on shore among the animals that fell into the pool. Rising to its feet with particular formality, the Dodo assumes the manner of one accustomed to command, proposing that the meeting adjourn in favor of "more energetic remedies" to address the company's dampness. When the Eaglet interrupts with a demand to "speak English," the Dodo responds in an offended tone—wounded by the suggestion that its language is unclear—yet persists in its purposes undeterred.
 
-The Dodo is perhaps most recognized for its ingenuity in addressing the problem of persistent dampness that plagued the drowned creatures. When simple methods failed to dry the assembly, the Dodo proposed an alternative remedy: the Caucus-race, a curious competition whose rules—or lack thereof—it undertook to organize. The Dodo marked out a race-course in a circle, dismissing concerns about its exact shape as irrelevant to the endeavor, and set all the party upon the course in various positions. It appears the Dodo's approach to solving problems is to demonstrate rather than merely explain, embodying a peculiar Wonderland logic of its own.
+It is the Dodo who proposes the Caucus-race as a solution to their predicament, and when asked to explain what such a thing might be, the Dodo insists that "the best way to explain it is to do it." With methodical authority, the Dodo then marks out a race-course in a circle, noting with offhand precision that "the exact shape doesn't matter," before positioning all the party members along the course. Through these actions, the Dodo reveals itself as the architect of ceremony in Wonderland—dignified, somewhat pompous in its speech, yet practical and determined in its execution of the most peculiar of plans.
 
 == Relationships ==
 
-'''[[Alice]]''' — ally. The Dodo gestures toward Alice, suggesting some degree of partnership in the Caucus-race gathering.
+'''[[Alice]]''' — acquaintance. Dodo seems to regard Alice as part of the assembled party on the shore, acknowledging her presence among the creatures.
 
-'''[[Eaglet]]''' — acquaintance. The two appear acquainted, though the Eaglet's public mockery of the Dodo's elaborate speech introduces tension to their interaction.
+'''[[Eaglet]]''' — friendly_rivalry. The Eaglet's challenge to Dodo's elaborate manner of speech appears to spark spirited exchange, though the two creatures continue to interact without apparent lasting discord during the Caucus-race.
 
 ''Evolution:''
-* [[Alice]] — Ally (ch.3)<ref>Alice's Adventures in Wonderland, chapter 3</ref>
+* [[Eaglet]] — Friendly rivalry (ch.3)<ref>Alice's Adventures in Wonderland, chapter 3</ref>
 == References ==
 
 <references/>

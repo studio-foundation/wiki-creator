@@ -6,15 +6,19 @@
 
 == Biography ==
 
-The Duchess is a personage of Wonderland known chiefly through others' regard. The White Rabbit fears her temper should he keep her waiting. When encountered during a walk through the croquet ground, she was found in pleasant spirits, though inclined to seek moral lessons in all about her. The Queen's threat of execution marks her precarious standing.
+The Duchess is a noblewoman marked by a fierce temperament. The White Rabbit, seemingly in her service, grows anxious at the thought of keeping her waiting, for she is renowned for her savage nature. When Alice encountered her in a kitchen, the Duchess proved sharp-tempered, though Alice later wondered whether the pepper in that room might have accounted for such severity. According to Alice, the Duchess also displayed a more amiable disposition in other moments and frequently sought moral lessons in everyday things. She now faces sentence of execution by the Queen and has fled to escape this fate.
 
 == Relationships ==
 
-'''[[Alice]]''' — acquaintance. The two encountered one another in the Duchess's kitchen and again in Wonderland.
+'''[[Queen]]''' — enemy. The Queen threatens the Duchess with execution.
 
-'''[[Queen]]''' — acquaintance. Their connection is not clearly established.
+'''[[White Rabbit]]''' — employment. The Rabbit appears to serve the Duchess, hurrying to meet her and fearing her displeasure if kept waiting.
 
-'''[[White Rabbit]]''' — employment. The Rabbit appears anxious about keeping the Duchess waiting, suggesting he may serve her.
+'''[[Alice]]''' — acquaintance. The two meet in the kitchen, where the Duchess displays both fierce and pleasant temperament in Alice's account.
+
+''Evolution:''
+* [[Queen]] — Enemy (ch.6→ch.9)<ref>Alice's Adventures in Wonderland, chapter 6</ref>
+
 
 [[Category:Characters]]
 [[Category:Characters of Book 1]]

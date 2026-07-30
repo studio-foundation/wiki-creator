@@ -1,23 +1,23 @@
 {{Infobox character
 |nom=March Hare
 |apparition=Appears in book 1
-|status=Unknown
+|status=Alive
 |friends_allies=[[Hatter]]
 }}
 
 == Biography ==
 
-The March Hare is a resident of Wonderland known for his madness; according to the Cheshire Cat, he is as mad as the Hatter, his habitual companion. He keeps house in Wonderland and is customarily found hosting afternoon tea beneath a tree with the Hatter and the Dormouse, the latter being perpetually asleep and serving, by necessity, as a cushion for the other two.
+The March Hare is an inhabitant of Wonderland, described by the Cheshire Cat as mad. Alice speculates that his madness may be seasonal, less pronounced in May than it was in March.
 
-When Alice came upon one of these gatherings unbidden, the March Hare greeted her with an encouraging tone and offered her wine—though she found the table held only tea. He proved impatient with sustained conversation, interrupting to suggest changing the subject because he had grown weary of it. In the dream-reveries of Wonderland, he remains fixed at his never-ending meal, forever sharing teacups with his companions.
+The March Hare hosts a tea party beneath a tree outside his house, where he takes tea with the Hatter and a sleeping Dormouse, whom they use as a cushion. When Alice joins them, he offers her wine in an encouraging tone, though only tea sits on the table. He grows weary of their conversation and interrupts to suggest they change the subject, yawning as he does so. His manner exemplifies the peculiar logic of Wonderland—he offers wine with apparent sincerity despite the absence of any wine to serve.
 
 == Relationships ==
 
-'''[[Dormouse]]''' — companion. The March Hare and the Hatter appear to use the sleeping Dormouse as a cushion at their endless tea table, resting their elbows upon it as they converse.
+'''[[Hatter]]''' — strained friendship. The two share the tea table, though their dynamic seems marked by tension.
 
-'''[[Hatter]]''' — fellow host. The March Hare appears to share an endless tea party with the Hatter beneath a tree in Wonderland.
+'''[[Dormouse]]''' — acquaintance. The sleeping Dormouse sits between them at tea.
 
-'''[[Alice]]''' — guest. The March Hare appears to receive Alice at the tea table, offering her wine and engaging with her in conversation, though he seems quick to tire of the subject.
+'''[[Alice]]''' — acquaintance. The March Hare remarked upon the impropriety of Alice sitting down at his table without having been invited.
 
 ''Evolution:''
 * [[Hatter]] — Strained friendship (ch.7→ch.11)<ref>Alice's Adventures in Wonderland, chapter 7</ref>
