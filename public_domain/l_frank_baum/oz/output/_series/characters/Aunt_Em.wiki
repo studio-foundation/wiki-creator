@@ -5,23 +5,11 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
-== Book 1 ==
-
-== Biography ==
+== The Wonderful Wizard of Oz ==
 
 Aunt Em is the wife of Uncle Henry, a farmer, and Dorothy's aunt. She lives with him on the Kansas prairies, in a small house built from lumber hauled by wagon over many miles — a single room holding a cookstove, a cupboard, a table, a few chairs, and the beds, along with a dug-out cyclone cellar where the family could shelter from the great whirlwinds that could crush the building. When Aunt Em first came to live there she was a young, pretty wife, but the sun and wind of the prairie changed her over the years, much as they grayed the house and the land around it.
 
 Throughout Dorothy's time away, Aunt Em remains constantly in her niece's thoughts: Dorothy repeatedly voices her wish to return to Aunt Em and Uncle Henry, worries that Aunt Em will be dreadfully anxious over her long absence, and fears Aunt Em may believe something terrible has befallen her. When Dorothy finally makes her way home, she finds Aunt Em outside the house watering the cabbages; seeing Dorothy running toward her, Aunt Em calls out, "My darling child!" and welcomes her back.
-
-== Relationships ==
-
-'''[[Dorothy]]''' — family. Aunt Em shares the small Kansas farmhouse with Dorothy, and the available context suggests Dorothy first came to live with her as an orphan; Dorothy repeatedly names her among the people she most wants to return to, and upon arriving home Aunt Em rushes out to greet her, crying "My darling child!"
-
-'''[[Uncle Henry]]''' — family. Excerpts identify Aunt Em as "the farmer's wife," sharing the same one-room house and bed with Uncle Henry; the available context hints she is spoken of as his wife, consistent with Dorothy naming them together whenever she longs for home.
-
-== References ==
-
-<references/>
 
 === Events ===
 
@@ -34,9 +22,7 @@ Throughout Dorothy's time away, Aunt Em remains constantly in her niece's though
 * Aunt Em cries out and embraces Dorothy, kissing her face and asking where she came from.
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 3 — reveal" data-collapsetext="Hide">
-== Book 3 ==
-
-== Biography ==
+== Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein ==
 
 Aunt Em lives at the old Kansas farm together with Uncle Henry. When Dorothy wishes to see the farm, a vision shows Aunt Em there, washing dishes by the kitchen window, and she seems quite well and contented. While trapped as an ornament in the Nome King's palace, Dorothy wonders whether Uncle Henry or Aunt Em will ever learn what has become of her.
 
@@ -45,27 +31,9 @@ Aunt Em lives at the old Kansas farm together with Uncle Henry. When Dorothy wis
 * Dorothy uses Ozma's magic picture to check on Aunt Em (well and content) and Uncle Henry (in Australia, sad and unwell) and decides she must return to him.
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
-== Book 6 ==
-
-== Biography ==
+== The Emerald City of Oz ==
 
 Aunt Em travels with Dorothy, Uncle Henry, and the Wizard through the Land of Oz, encountering many oddities she does not fully understand. Skeptical of unfamiliar things, she remarks that "no one would suspect it from their name" upon hearing of an unfamiliar group, and later wonders whether they are "more paper things." When a kangaroo cries inconsolably, she suggests "it must be her mince-pie," a guess Uncle Henry answers with his own, "or her milk-toast." Invited to lunch with the Tin Woodman, she asks with some apprehension, "Must we lunch on tin?", and Dorothy reassures her that Nick Chopper will provide "plenty of good things to eat." At the Tin Woodman's castle she remains wary of local hazards, inquiring whether he keeps "any Flutterbudgets or Rigmaroles," and comments dryly on the castle's spotless tin surfaces, supposing "they polish their Emperor, too."
-
-== Relationships ==
-
-'''[[Dorothy]]''' — family. Dorothy addresses her directly as "Aunt Em" and admits she "can't say 'zactly" what lies ahead, an exchange that suggests a close, familial closeness; according to Dorothy's own account of her day, Aunt Em also reacts with disbelief on hearing her adventures.
-
-'''[[Uncle Henry]]''' — family. Their paired banter — she guesses a crying kangaroo's trouble is "her mince-pie," and he counters with "Or her milk-toast" — suggests a familial rapport, though the excerpts do not spell out its exact nature.
-
-'''[[Wizard]]''' — acquaintance. He answers one of her questions with "No one, madam," a reply that suggests a cordial but formal acquaintance rather than close familiarity.
-
-'''[[Billina]]''' — friendly_rivalry. She is said to have gotten "into an argument with Billina about the proper way to raise chickens," an exchange that suggests good-natured rivalry rather than real hostility.
-
-'''[[Nick Chopper]]''' — acquaintance. She asks uneasily, "Must we lunch on tin?" and later inquires whether he keeps "any Flutterbudgets or Rigmaroles at his castle," questions that suggest wary curiosity about him rather than familiarity.
-
-== References ==
-
-<references/>
 
 === Events ===
 
@@ -79,7 +47,10 @@ Aunt Em travels with Dorothy, Uncle Henry, and the Wizard through the Land of Oz
 * [[Dorothy]] — Family (ch.1→ch.2)<ref>The Emerald City of Oz, chapter 1</ref>
 * [[Uncle Henry]] — Family (ch.1→ch.2)<ref>The Emerald City of Oz, chapter 1</ref>
 * [[Billina]] — Friendly rivalry (ch.1)<ref>The Emerald City of Oz, chapter 1</ref>
-* [[DOROTHY]] — Family (ch.1→ch.2)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
+
+== References ==
+
+<references/>
 
 [[Category:Characters]]
 [[Category:Secondary Characters]]

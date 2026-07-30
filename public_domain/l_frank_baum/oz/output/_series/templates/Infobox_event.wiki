@@ -1,14 +1,16 @@
 <includeonly>
 {| class="infobox"
 |-
-! colspan="2" | {{{name}}}
+! colspan="2" | {{{nom}}}
+|-
+| '''Appearance''' || {{{apparition|}}}
 |-
 | '''Participants''' || {{{participants|}}}
 |-
-| '''Lieu''' || {{{lieu|}}}
+| '''Place''' || {{{lieu|}}}
 |-
-| '''Chapitre''' || {{{chapitre|}}}
+| '''Chapter''' || {{{chapitre|}}}
 |-
-| '''Issue''' || {{{issue|}}}
+| '''Outcome''' || {{{issue|}}}
 |}
 </includeonly>

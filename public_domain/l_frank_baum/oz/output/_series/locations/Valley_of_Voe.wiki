@@ -5,18 +5,17 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
-== Book 4 ==
+== Dorothy and the Wizard in Oz ==
 
-== Infobox ==
+=== Infobox ===
 
 * Name: Valley of Voe
 * Also known as: Voe
 * Place type: Valley
 * Status: Inhabited
 
-== Biography ==
-
 The Valley of Voe, also known as Voe, is a valley reached through a tunnel in a glass mountain. It is inhabited by the people of Voe, who are invisible — when asked "are you all invisible?", a woman of Voe answers "Surely" and adds, with a low, rippling laugh, "Are you surprised that you are unable to see the people of Voe?" The valley holds pretty cottages along a broad stream, with fruits and flowers growing plentifully, including cherries, plums, and a fruit called damas that the people of Voe are fond of. Dangerous bears, themselves unseen, live near the orchards of the valley.
+</div>
 
 == Appearance ==
 
@@ -34,7 +33,6 @@ A group fleeing through a tunnel in a glass mountain emerges into the invisible 
 == References ==
 
 <references/>
-</div>
 
 [[Category:Locations]]
 [[Category:Locations of Book 4]]

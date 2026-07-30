@@ -5,26 +5,24 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
-== Book 6 ==
+== The Emerald City of Oz ==
 
-== Infobox ==
+=== Infobox ===
 
 * Name: Chief of the Whimsies
 * Aliases: Whimsies
 * Role: Leader of the Whimsies
 * Affiliation: Allied with the Nome King and the Grand Gallipoot of the Growleywogs
 
-== Biography ==
-
 The Chief of the Whimsies leads the Whimsies, one of the peoples allied with the Nome King in his campaign against Ozma of Oz. The Chief stood before the Nome King alongside the Grand Gallipoot of the Growleywogs, surrounded by their most skillful generals; so fierce and powerful did the two allied leaders appear that even the Nome King and his General Guph seemed a bit fearful in their presence.
 
 Confident of victory, the Chief of the Whimsies declared, with an evil laugh, that in a few hours Oz would be a desert, echoing the Nome King's own vow that his vengeance upon Ozma of Oz and her people was about to be accomplished.
 
 Later, upon encountering a fountain, the Chief of the Whimsies and his people rushed to drink of its forbidden waters, pushing aside the Growleywogs who had arrived first. In doing so, the Whimsies cast off their false heads in order to drink from the fountain, revealing this practice as part of their nature. The waters both peoples drank were the Water of Oblivion.
+</div>
 
 == References ==
 
 <references/>
-</div>
 
 [[Category:Factions]]

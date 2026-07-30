@@ -5,9 +5,7 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
-== Book 1 ==
-
-== Biography ==
+== The Wonderful Wizard of Oz ==
 
 Gayelette is a sorceress who lives in a handsome palace built from great blocks of ruby, using all her magic to help the people and never harming anyone who was good. Everyone loved her, but her greatest sorrow was that she could find no one to love in return, since all the men were said to be too stupid and ugly to mate with one so beautiful and wise. At last she found a boy who was handsome, manly, and wise beyond his years; she took him to her ruby palace and used her magic to make him as strong and good and lovely as any woman could wish, resolving to make him her husband once he grew to manhood.
 

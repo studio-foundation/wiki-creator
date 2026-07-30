@@ -6,9 +6,7 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 3 — reveal" data-collapsetext="Hide">
-== Book 3 ==
-
-== Biography ==
+== Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein ==
 
 The Prince, whose name is Evring, is a Prince of Ev. Found as a small enchanted purple kitten, he had no memory of his past until Dorothy rescued him and returned him to his true form; once restored, he proudly announced his identity and lineage, though he recalled nothing of what had happened to him after his transformation.
 
@@ -18,11 +16,39 @@ After his rescue, Evring rode with Dorothy upon the Sawhorse, having overcome hi
 
 During the journey, Evring came into unwitting possession of the Tin Woodman's enchanted whistle, having pocketed it without meaning to trap its owner. Billina revealed that the whistle, when touched and spoken over with the word "Ev," restored the Tin Woodman instantly. Evring, upon realizing the whistle had been taken from him in turn, cried out for its return.
 
+=== Events ===
+
+* Dorothy is allowed to guess and succeeds in freeing Prince Evring, the youngest son of the Queen of Ev.
+* Billina reveals that Prince Evring had accidentally trapped the Tin Woodman by pocketing his enchanted whistle, and blowing it ("Ev") restores him instantly.
+</div>
+<div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
+== Dorothy and the Wizard in Oz ==
+
+The Prince presides over the glass city of the Mangaboos, a vegetable people living beneath the earth's crust. His subjects address him as "my Lord," and when wonders appeared in the air, the Prince and all of his people flocked out of the hall into the street to see them. He listens with attention to those who address him, as when he remarked on a visitor "from the crust of the earth" who had called a companion a Wizard.
+
+=== Events ===
+
+* They land in the glass city of the Mangaboos, a vegetable people ruled by a Prince, where Jim and the kitten Eureka unexpectedly gain the power of speech.
+* Dorothy and the Wizard pick the ripe Royal Princess from the Royal Bush, and she deposes the Prince to become the new ruler of the Mangaboos.
+* Ozma crowns Sawhorse "Prince of Horses" and Tin Woodman repairs its leg and ear.
+</div>
+
 == Narrative role ==
 
 Prince Evring is a Prince of Ev, the youngest son of the Queen of Ev, who had been enchanted as a purple kitten after his father the King sold his mother and all her children to the cruel ruler of the Nomes, the Nome King. Dorothy is allowed to guess among the Nome King's ornaments and succeeds in freeing him, restoring Evring to his true form. Once free, Evring rides with Dorothy upon the Sawhorse, having recovered from his early shyness and grown fond of the girl who rescued him; the two become fast friends and converse pleasantly as they travel, and Evring marvels that Billina, a hen, can talk and say such sensible things.
 
 Later, Billina reveals that Evring had accidentally trapped the Tin Woodman by pocketing his enchanted whistle without realizing what it did, and that blowing the whistle while saying Ev restores the Tin Woodman instantly. Evring protests that he only took the whistle, and when Billina reclaims it he begins to cry and asks for it back, prompting Billina to hush him.
+
+== Relationships ==
+
+''Evolution:''
+* [[Zeb]] — Enemy (ch.1)<ref>Dorothy and the Wizard in Oz, chapter 1</ref>
+* [[Eureka]] — Enemy (ch.1)<ref>Dorothy and the Wizard in Oz, chapter 1</ref>
+* [[Dorothy|DOROTHY]] — Friend (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
+* [[Nome King]] — Enemy (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
+* Queen of Ev — Family (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
+* [[Evardo]] — Family (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
+* King — Family (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
 
 == Personality ==
 
@@ -36,18 +62,6 @@ His reaction to the whistle incident reveals a more childlike, defensive streak.
 
 Evring is described as a small child, referred to as "the little one" and "the little Prince." Before his true form was restored, he had been transformed into a purple kitten, a shape from which Dorothy rescued him.
 
-== Relationships ==
-
-'''[[DOROTHY]]''' — friend. Evring rides with Dorothy upon the Sawhorse and becomes fast friends with her after she rescues him from an enchanted state; Dorothy resolves to save his siblings and, "perhaps," his mother as well.
-
-'''[[BILLINA]]''' — acquaintance. Evring pockets the Tin Woodman's whistle without realizing its purpose, prompting Billina to reveal the mishap and demonstrate how blowing it restores the Tin Woodman.
-
-'''[[Nome King]]''' — enemy. Evring recounts that his father the King "sold my mother and all her children to the cruel ruler of the Nomes," casting the Nome King as the one responsible for his family's captivity.
-
-'''[[Queen of Ev]]''' — family. Evring is one of the Queen's children, and he stands among his siblings "beside their happy mother" once she is restored.
-
-'''[[Evardo]]''' — family. Evring is named as the younger brother of Evardo, "who was older than his brother Evring."
-
 == Trivia ==
 
 * Evring once carried the Tin Woodman's enchanted whistle in his pocket without realizing what it was capable of; when Billina touched it and spoke the word "Ev," the Tin Woodman appeared at once, restored from wherever the whistle had held him.
@@ -57,48 +71,7 @@ Evring is described as a small child, referred to as "the little one" and "the l
 
 <references/>
 
-=== Events ===
-
-* Dorothy is allowed to guess and succeeds in freeing Prince Evring, the youngest son of the Queen of Ev.
-* Billina reveals that Prince Evring had accidentally trapped the Tin Woodman by pocketing his enchanted whistle, and blowing it ("Ev") restores him instantly.
-</div>
-<div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
-== Book 4 ==
-
-== Biography ==
-
-The Prince presides over the glass city of the Mangaboos, a vegetable people living beneath the earth's crust. His subjects address him as "my Lord," and when wonders appeared in the air, the Prince and all of his people flocked out of the hall into the street to see them. He listens with attention to those who address him, as when he remarked on a visitor "from the crust of the earth" who had called a companion a Wizard.
-
-== Relationships ==
-
-'''[[WIZARD]]''' — acquaintance. The Prince addressed the Wizard directly and listened attentively to him, suggesting an acquaintance between the two.
-
-'''[[DOROTHY]]''' — acquaintance. Cooccurrence in the same scenes suggests some acquaintance with Dorothy, though the excerpts do not detail the nature of this bond.
-
-'''[[Princess]]''' — other. Cooccurrence suggests a connection with the Princess, though its nature is unclear from the available excerpts.
-
-'''[[Sorcerer]]''' — employment. Cooccurrence during the Sorcerer's display of sorcery in the Prince's hall could indicate the Sorcerer serves under the Prince's authority.
-
-'''[[Zeb]]''' — enemy. Cooccurrence suggests some tension with Zeb, though the excerpts do not clarify the nature of this bond.
-
-=== Events ===
-
-* They land in the glass city of the Mangaboos, a vegetable people ruled by a Prince, where Jim and the kitten Eureka unexpectedly gain the power of speech.
-* Dorothy and the Wizard pick the ripe Royal Princess from the Royal Bush, and she deposes the Prince to become the new ruler of the Mangaboos.
-* Ozma crowns Sawhorse "Prince of Horses" and Tin Woodman repairs its leg and ear.
-</div>
-
-== Relationships ==
-
-''Evolution:''
-* [[Zeb]] — Enemy (ch.1)<ref>Dorothy and the Wizard in Oz, chapter 1</ref>
-* [[Eureka]] — Enemy (ch.1)<ref>Dorothy and the Wizard in Oz, chapter 1</ref>
-* [[DOROTHY]] — Friend (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
-* [[Nome King]] — Enemy (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
-* [[Queen of Ev]] — Family (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
-* [[Evardo]] — Family (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
-* [[King]] — Family (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
-
 [[Category:Characters]]
+[[Category:Main Characters]]
 [[Category:Characters of Book 3]]
 [[Category:Characters of Book 4]]

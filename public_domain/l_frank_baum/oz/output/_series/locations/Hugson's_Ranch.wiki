@@ -4,16 +4,15 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
-== Book 4 ==
+== Dorothy and the Wizard in Oz ==
 
-== Infobox ==
+=== Infobox ===
 
 * Name: Hugson's Ranch
 * Place type: Ranch
 
-== Biography ==
-
 Hugson's Ranch is a rural homestead reached by buggy along a well-known road leading up to its gates. It is the home of Uncle Hugson, who comes out to greet arrivals in astonishment, and of Zeb, who considers it home and speaks fondly of the country and its people. Dorothy's Uncle Henry also travels there for a visit after reaching San Francisco, suggesting the ranch serves as a destination for family arriving from farther afield, reached by train to a nearby siding and then by buggy.
+</div>
 
 == Events ==
 
@@ -22,7 +21,6 @@ At the ranch, Dorothy Gale arrives by train at Hugson's Siding and is met by Zeb
 == References ==
 
 <references/>
-</div>
 
 [[Category:Locations]]
 [[Category:Locations of Book 4]]

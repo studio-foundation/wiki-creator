@@ -5,19 +5,9 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
-== Book 1 ==
-
-== Biography ==
+== The Wonderful Wizard of Oz ==
 
 The Guardian of the Gates is an officer of the Emerald City who lives in a room by its gate and is responsible for admitting travelers. When Dorothy and her companions first arrive, he unlocks their green spectacles, returns them to his great box, and opens the gate for them. Asked which road leads to the Wicked Witch of the West, he answers that there is no road, since no one ever wishes to go that way; on learning the travelers mean to destroy her, he remarks that this is different, as he had assumed she would make slaves of them as she has of others. When the group returns to the Emerald City after Dorothy melts the Wicked Witch of the West, the Guardian of the Gates greets them again, surprised at their return, and it is through him that the people of the city first learn of the Witch's defeat.
-
-== Relationships ==
-
-'''[[Dorothy]]''' — acquaintance
-
-'''[[Scarecrow]]''' — acquaintance
-
-'''[[Wizard]]''' — employment
 
 === Events ===
 

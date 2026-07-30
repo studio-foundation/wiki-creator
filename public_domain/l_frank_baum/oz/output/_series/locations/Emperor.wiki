@@ -4,59 +4,43 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 2 — reveal" data-collapsetext="Hide">
-== Book 2 ==
+== The Marvelous Land of Oz ==
 
-== Infobox ==
+=== Infobox ===
 
 * Place type: Palace
 * Region: Kingdom of the Winkies
 * Status: Active
 
-== Biography ==
-
 The Emperor designates the seat of the Tin Woodman (Nick Chopper), who rules over the Winkies and calls himself their Emperor, having made himself an Absolute Monarch whose conduct of public or personal affairs no one interferes with. Also referred to as the Emperor's palace, it stands within the City of the Winkies, forming part of the castle and city of the Tin Woodman, and its ruler has recently been nickel-plated.
-
-== Events ==
-
-Fearing for his safety, the Scarecrow resolves to flee to the Emperor's domain, seeking protection from his friend the Tin Woodman. Tip and the Scarecrow's party later reach the City of the Winkies and its Emperor's palace, where they are told that the Tin Woodman was made Emperor of the Winkies after the destruction of the Wicked Witch, and that the Emperor has recently been polished and had himself nickel-plated.
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 5 — reveal" data-collapsetext="Hide">
-== Book 5 ==
+== The Road to Oz ==
 
-== Infobox ==
+=== Infobox ===
 
 * Name: Emperor
 * Affiliation: tin castle
 * Status: Active
 
-== Biography ==
-
 The Emperor rules from a tin castle whose furniture, floors, and walls are all made of brightly polished tin, a detail he takes pride in showing visitors. He dresses only in tin himself and offers hospitality to guests, inviting them to prepare for dinner served in his grand tin dining-hall.
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
-== Book 6 ==
-
-== Biography ==
+== The Emerald City of Oz ==
 
 The Emperor is nickel-plated and kept free of rust by thousands of Winkies who polish his castle out of devotion to him. His people are described as loving to do anything in their power for their beloved Emperor. He maintains a Tin Cornet Band, which entertained guests one evening with several melodies after dinner.
-
-== Relationships ==
-
-'''[[Dorothy]]''' — friend. Their frequent appearance together suggests a friendly bond, though the excerpts do not detail its nature.
-
-'''[[Ozma]]''' — ally. Their association could indicate an alliance, though this is not explicitly confirmed.
-
-'''[[Roquat]]''' — enemy. Their opposition seems suggested by context, though not explicitly stated.
-
-'''[[Wizard]]''' — friend. The Wizard's familiarity with the Emperor's castle and habits suggests a friendly acquaintance.
 </div>
+
+== Events ==
+
+Fearing for his safety, the Scarecrow resolves to flee to the Emperor's domain, seeking protection from his friend the Tin Woodman. Tip and the Scarecrow's party later reach the City of the Winkies and its Emperor's palace, where they are told that the Tin Woodman was made Emperor of the Winkies after the destruction of the Wicked Witch, and that the Emperor has recently been polished and had himself nickel-plated.
 
 == Relationships ==
 
 ''Evolution:''
 * [[Dorothy]] — Friend (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
 * [[Ozma]] — Ally (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
-* [[Roquat]] — Enemy (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
+* [[Nome King|Roquat]] — Enemy (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
 * [[Wizard]] — Friend (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
 
 [[Category:Locations]]

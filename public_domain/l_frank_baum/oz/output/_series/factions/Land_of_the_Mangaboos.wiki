@@ -5,15 +5,13 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
-== Book 4 ==
+== Dorothy and the Wizard in Oz ==
 
-== Infobox ==
+=== Infobox ===
 
 * Name: Land of the Mangaboos
 * Aliases: Mangaboo, MANGABOOS, Mangaboos
 * Role: Vegetable domain ruled by a Princess
-
-== Biography ==
 
 The Land of the Mangaboos lies beneath six colored suns and is home to the Mangaboo people, ruled by a vegetable Princess. When Dorothy, Zeb, and the Wizard arrived there, the Princess and a throng of her people met them at the House of the Sorcerer. After consulting her advisors, the Princess declared that the newcomers, whom she called "meat people," did not belong in the Land of the Mangaboos and could not remain there — and that since they could not simply go away, they must be destroyed.
 </div>

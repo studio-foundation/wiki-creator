@@ -1,34 +1,16 @@
 {{Infobox character
-|nom=BILLINA
-|alias=Billina, Yellow Hen
+|nom=Billina
+|alias=BILLINA, Yellow Hen
 |apparition=First appears in book 3, last appears in book 5
 |status=<span class="mw-collapsible mw-collapsed" data-expandtext="Spoiler — reveal" data-collapsetext="Hide">Alive</span>
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 3 — reveal" data-collapsetext="Hide">
-== Book 3 ==
-
-== Biography ==
+== Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein ==
 
 Billina is a hen who travels in Dorothy's company through the underground realm of the Nome King. Nestled in Dorothy's arms, she draws the attention of the Hungry Tiger, who admits that her "present appearance makes my mouth water" and looks at her "greedily," clicking his jaws, though he ultimately concedes it "wouldn't be right" to eat her. Dorothy addresses her with familiarity, at one point crying, "Why, Billina! Have you been fighting?" When amused, Billina responds not with an ordinary laugh but with "the peculiar cackle that served her for a laugh."
 
 During the search for the Tin Woodman, Billina cackles as she reveals that the little Prince has been carrying him "in his pocket," a claim the Prince immediately denies. She then hushes the child, telling him "the whistle is lost, but you may have another when you get home," showing she is willing to scold even a young royal. The Nome King, for his part, dismisses her contemptuously as a "stupid fowl."
-
-== Relationships ==
-
-'''[[DOROTHY]]''' — amie
-
-'''[[Nome King]]''' — ennemi
-
-'''[[King]]''' — ennemi
-
-'''[[Scarecrow]]''' — amie
-
-'''[[Ozma]]''' — amie
-
-== References ==
-
-<references/>
 
 === Events ===
 
@@ -40,9 +22,7 @@ During the search for the Tin Woodman, Billina cackles as she reveals that the l
 * Dorothy bids farewell to her friends in Oz, including Billina who chooses to stay, and is transported to Uncle Henry in Australia, comforting him as he recovers.
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
-== Book 4 ==
-
-== Biography ==
+== Dorothy and the Wizard in Oz ==
 
 Billina is a yellow hen residing in Oz, a fact clarified when the Wizard, unfamiliar with her, asks whether she is a girl and is told otherwise. She is described by Dorothy as a great friend of hers. Billina chose to remain in Oz rather than return to Kansas or travel with Dorothy to Australia, preferring life there. She is mentioned together with other Oz residents, including the Cowardly Lion and his friend the Hungry Tiger, all of whom, according to Dorothy, still live in Oz.
 
@@ -51,25 +31,9 @@ Billina is a yellow hen residing in Oz, a fact clarified when the Wizard, unfami
 * In Oz they reunite with the Scarecrow, Tin Woodman, Billina, the Cowardly Lion, the Hungry Tiger, and the Woggle-Bug, ending with a race between Jim and the Sawhorse.
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 5 — reveal" data-collapsetext="Hide">
-== Book 5 ==
-
-== Biography ==
+== The Road to Oz ==
 
 Billina is a yellow hen with fluffy feathers and a pearl necklace around her throat, seen perched on the shoulder of the copper man Tik-tok. When Dorothy catches sight of her, she cries out in a glad voice and the hen flies to her arms, where Dorothy hugs and pets her in turn. Dorothy sits down in the road with Billina in her arms and strokes her back while the copper man offers his monotonous welcome to Oz. Billina tells Dorothy she has "some wonderful news" to share with her.
-
-== Relationships ==
-
-'''[[Dorothy]]''' — friend. Dorothy calls Billina "one of my dearest friends," who "mustn't be hurt—now or ever," indicating a close bond between them.
-
-'''[[Ozma]]''' — Billina's tie to Ozma seems to be one of service: she reports being sent, together with Tik-tok, "to wel-come" Dorothy on Ozma's behalf.
-
-'''[[Tik-tok]]''' — friend. A reference to Tik-tok having saved "my life—and Billina's life, too" suggests a bond of loyalty between them.
-
-'''[[Toto]]''' — some tension between Billina and Toto is suggested, though no specific incident is described.
-
-== References ==
-
-<references/>
 
 === Events ===
 
@@ -80,16 +44,19 @@ Billina is a yellow hen with fluffy feathers and a pearl necklace around her thr
 
 ''Evolution:''
 * [[Dorothy]] — Friend (ch.1)<ref>The Road to Oz, chapter 1</ref>
-* [[Tik-tok]] — Friend (ch.1)<ref>The Road to Oz, chapter 1</ref>
+* [[Tiktok|Tik-tok]] — Friend (ch.1)<ref>The Road to Oz, chapter 1</ref>
 * [[Toto]] — Enemy (ch.1)<ref>The Road to Oz, chapter 1</ref>
-* [[DOROTHY]] — Friend (ch.2)<ref>Dorothy and the Wizard in Oz, chapter 2</ref>
 * [[Eureka]] — Enemy (ch.2)<ref>Dorothy and the Wizard in Oz, chapter 2</ref>
 * [[Nome King]] — Enemy (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
-* [[King]] — Enemy (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
+* King — Enemy (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
 * [[Scarecrow]] — Friend (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
 * [[Ozma]] — Friend (ch.1→ch.2)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
-* [[Queen of Ev]] — Ally (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
+* Queen of Ev — Ally (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
 * [[Tiger]] — Enemy (ch.1)<ref>Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein, chapter 1</ref>
+
+== References ==
+
+<references/>
 
 [[Category:Characters]]
 [[Category:Secondary Characters]]

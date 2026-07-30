@@ -6,21 +6,9 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 2 — reveal" data-collapsetext="Hide">
-== Book 2 ==
-
-== Biography ==
+== The Marvelous Land of Oz ==
 
 Jellia Jamb, also known as Jellia, is a green-clad maiden of the Emerald City who serves the Scarecrow during his reign, dismissed alongside the Soldier with the Green Whiskers after an audience and called upon to translate the Scarecrow's speech for Jack Pumpkinhead. Later, when Jinjur holds power, Mombi uses a magical rite to transform Jellia into her own likeness, taking Jellia's true form for herself so that Jellia, appearing as an aged Mombi, is led from the city gates and brought before Glinda; Glinda subsequently reverses the enchantment, restoring Jellia to her proper shape while the real Mombi resumes her own crooked form elsewhere, and the Scarecrow recognizes her again as one of his old friends.
-
-== Relationships ==
-
-'''[[Jack Pumpkinhead]]''' — acquaintance. Jellia's appearances alongside Jack Pumpkinhead suggest a passing acquaintance, though no direct exchange between the two is recorded.
-
-'''[[The Scarecrow]]''' — employment. Jellia's presence at the Scarecrow's court, where she is called on to translate for him, could indicate a position in his service.
-
-'''[[Glinda the Good]]''' — ally. Jellia's delivery before Glinda as "the person you demanded" hints at a connection between them, though the nature of any alliance is not made explicit.
-
-'''[[Old Mombi]]''' — other. Mombi's use of magic to exchange forms with Jellia ties the two together, though the exact nature of their bond is not otherwise defined.
 
 === Events ===
 
@@ -30,56 +18,30 @@ Jellia Jamb, also known as Jellia, is a green-clad maiden of the Emerald City wh
 * Glinda questions the disguised Jellia, discovers the deception through magic, and restores Jellia to her true form while Mombi resumes her own shape back in the palace.
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
-== Book 4 ==
-
-== Biography ==
+== Dorothy and the Wizard in Oz ==
 
 Jellia Jamb is a green-robed maiden who serves as maid to Princess Ozma in the Emerald City. When the Wizard first sees her again, he greets her warmly, calling her "little Jellia Jamb" and remarking she is "as pert and pretty as ever," which suggests the two knew each other before the Princess came to rule. Jellia herself acknowledges this past but tells the Wizard he cannot rule the Emerald City as he once did, since the Emerald City now has a Princess whom everyone loves dearly.
 
 When Zeb and the Wizard arrive at the palace, Jellia tells them that Dorothy is with Princess Ozma in the private rooms of the palace, and says Ozma has ordered her to welcome the newcomers and show them to their apartments. She is momentarily perplexed by the unfamiliar sight of the cab-horse, an animal unknown in the Land, though she decides not to be afraid of it after noting the mild look in its eyes.
 
 As Ozma's maid, Jellia is sent to the Princess's boudoir to fetch a white piglet, but returns with a troubled face to report that the piglet is not there. Asked next to fetch Dorothy's kitten, she goes and comes back again, reporting that the kitten will not come.
-
-== Relationships ==
-
-'''[[WIZARD]]''' — friend. The Wizard greets her with evident familiarity and fondness, calling her "little Jellia Jamb—as pert and pretty as ever," which suggests a friendly acquaintance predating his return.
-
-'''[[Jim]]''' — acquaintance. Jellia is the one who must decide how to handle Jim, the unfamiliar cab-horse brought into the palace, though her caution gives way to acceptance once she studies his manner.
-
-'''[[Princess]]''' — employment. Jellia serves the Princess directly, as shown when she is sent to fetch a white piglet from the boudoir and later to retrieve Dorothy's kitten.
-
-'''[[Princess Ozma]]''' — employment. Jellia's role as palace attendant appears bound to Ozma's household, though the excerpts do not detail further direct exchanges between them.
-
-== References ==
-
-<references/>
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 5 — reveal" data-collapsetext="Hide">
-== Book 5 ==
-
-== Biography ==
+== The Road to Oz ==
 
 Jellia Jamb is a pretty little maid with dark hair and eyes, dressed in green embroidered with silver. She greets Dorothy warmly upon her arrival, with Dorothy exclaiming in evident pleasure, "O Jellia Jamb! I'm so glad to see you again," suggesting the two are already well acquainted. Jellia Jamb welcomes the travelers and tells them, "Come in, please; it shall be our pleasant duty to escort all of you to the rooms prepared for your use," indicating she plays a hosting role for arriving guests. Her position could suggest a connection to Ozma, though this is not stated outright.
-
-== Relationships ==
-
-'''[[Ozma]]''' — employment. Jellia Jamb seems to have served in Ozma's household, described as "Ozma's favorite attendant."
-
-'''[[Dorothy]]''' — friend. The two appear to share a warm, familiar bond, as Dorothy greeted her with, "O Jellia Jamb! I'm so glad to see you again."
-
-'''[[Polychrome]]''' — acquaintance. Jellia Jamb seems to have personally attended to Polychrome on her arrival, as she "herself ushered the beautiful Daughter of the Rainbow to her apartments."
-
-== References ==
-
-<references/>
 </div>
 
 == Relationships ==
 
 ''Evolution:''
 * [[Dorothy]] — Friend (ch.1)<ref>The Road to Oz, chapter 1</ref>
-* [[WIZARD]] — Friend (ch.2)<ref>Dorothy and the Wizard in Oz, chapter 2</ref>
-* [[Glinda the Good]] — Ally (ch.21)<ref>The Marvelous Land of Oz, chapter 21</ref>
+* [[Wizard|WIZARD]] — Friend (ch.2)<ref>Dorothy and the Wizard in Oz, chapter 2</ref>
+* [[Glinda|Glinda the Good]] — Ally (ch.21)<ref>The Marvelous Land of Oz, chapter 21</ref>
+
+== References ==
+
+<references/>
 
 [[Category:Characters]]
 [[Category:Secondary Characters]]

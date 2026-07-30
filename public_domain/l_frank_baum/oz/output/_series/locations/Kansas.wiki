@@ -4,97 +4,52 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
-== Book 1 ==
+== The Wonderful Wizard of Oz ==
 
-== Infobox ==
+=== Infobox ===
 
 * Name: Kansas
 * Place type: Prairie
 * Status: Unreachable from the Land of Oz by any known route
 
-== Biography ==
-
 Kansas is the home of Dorothy, who lives there with her guardians, Aunt Em and Uncle Henry, in a small house on the prairies. Her dog Toto also lived there before arriving in the Land of Oz, and had been accustomed to chasing mice while at home. From the moment Dorothy arrives in Oz, she repeatedly states her wish to return to Kansas, calling it her home even though she cannot say exactly where it lies — when a man asks her where Kansas is, she admits she does not know, only that it is her home and that she is sure it exists somewhere. According to the Munchkins and the Witch, deserts block every direction out of the country and none of them can be crossed, and even Oz himself confesses he has no idea which way Kansas lies, saying it will take more than imagination to carry Dorothy back there. When Dorothy later asks the Winged Monkeys to fly her to Kansas, their King refuses.
-
-== Appearance ==
-
-Kansas is described as gray, a description Dorothy draws in contrast to the beauty of the country she finds herself in after arriving in Oz.
-
-== Events ==
-
-Dorothy lives with Uncle Henry and Aunt Em in a small house on the gray Kansas prairies before her arrival in Oz. Once in Oz, she asks how to get home, only to be told that deserts block every direction and none can be crossed. She explains to the Scarecrow why she wants to return to gray Kansas despite the beauty of the land she is in. She decides to ask Oz to send her home, just as the Scarecrow wishes for brains and the Tin Woodman for a heart, and each companion in turn states the same wishes before Oz. Oz eventually promises to find a way to send her back, though left alone he privately admits to himself that he does not know how it can be done. Afterward, when the four companions meet again, the Scarecrow, the Tin Woodman, and the Lion each express contentment with what they gained from Oz, while Dorothy alone insists she still wants to return to Aunt Em and Uncle Henry in Kansas.
-
-== Trivia ==
-
-* A man Dorothy meets is surprised to learn of Kansas at all, asking "Where is Kansas?" as though the place is unknown to him.
-* Dorothy notes that Omaha, where the Wizard says he was born, is not very far from Kansas, though the Wizard replies that it is "farther from here."
-
-== References ==
-
-<references/>
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
-== Book 4 ==
+== Dorothy and the Wizard in Oz ==
 
-== Infobox ==
+=== Infobox ===
 
 * Name: Kansas
 * Place type: Farm region
 * Notable residents: Dorothy, Uncle Henry, Aunt Em
 
-== Biography ==
-
 Kansas is a farm region and the home of Dorothy, her Uncle Henry, and her Aunt Em. Dorothy states she was born on a farm in Kansas. On one occasion, after traveling to Oz and becoming separated from her companions, she got back to Kansas by means of a pair of magical silver shoes. Uncle Henry and Aunt Em remain at the farm in Kansas during Dorothy's travels; through an enchanted picture, Dorothy once saw that Uncle Henry had returned to the farm in Kansas, and that both he and Aunt Em were dressed in mourning, believing their niece had been killed by an earthquake. Dorothy considers herself bound to the farm, explaining she cannot be away for long because Uncle Henry and Aunt Em need her help.
-
-== Events ==
-
-Dorothy returns to Kansas after bidding farewell to Oz, while her companions Zeb and Jim return instead to Hugson's Ranch.
-
-== Trivia ==
-
-* While Dorothy travels in California, her dog Toto remains in Kansas.
-* Uncle Henry and Dorothy plan to travel back to Kansas after being away from home for a long time.
-
-== References ==
-
-<references/>
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 5 — reveal" data-collapsetext="Hide">
-== Book 5 ==
+== The Road to Oz ==
 
-== Infobox ==
+=== Infobox ===
 
 * Notable resident: Dorothy
 
-== Biography ==
-
 Kansas is the home of Dorothy, who is repeatedly referred to as "the little Kansas girl." It exists as a point of comparison for the wonders of Oz: when praising the skill of the Winkie tinsmiths who built a castle, the shaggy man remarks that "it would be hard to match this castle in Kansas," suggesting that Kansas construction does not rival the craftsmanship found among the Winkies.
-
-== Events ==
-
-Following Ozma's birthday celebration, which draws many guests to the palace and its grounds, the Wizard sends several visitors home by magic bubbles, while Dorothy returns to Kansas using the Magic Belt.
-
-== Trivia ==
-
-* Dorothy is twice identified by others as "the little Kansas girl," a phrase used both by Jack Pumpkinhead's greeter and in her own joyful exclamation upon reuniting with the Hungry Tiger.
-
-== References ==
-
-<references/>
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
-== Book 6 ==
+== The Emerald City of Oz ==
 
-== Infobox ==
+=== Infobox ===
 
 * Name: Kansas
 * Region/country: United States
 
-== Biography ==
-
 Kansas is a place in the United States and is Dorothy's home. Dorothy has stated that she used to live in Kansas, in the United States, and that she has also been to California and Australia, as has Uncle Henry. Using her magic picture, Ozma has watched Dorothy in her Kansas home, and once did so again while Dorothy and her companions were occupied at Fuddlecumjig, laughing merrily at the scene. Aunt Em and Uncle Henry, associated with Dorothy, are likewise connected to Kansas: Aunt Em recalls the flies of Kansas as unwilling to behave unless swatted, unlike the more agreeable flies of Oz, and Uncle Henry has traveled from there to California and Australia as well.
 
 Kansas is also spoken of as a possible destination reachable from Oz by means of the Magic Belt, raising the idea of escape from danger by returning there, with the suggestion that Ozma might be brought along and supported through the group's work so she would not be left alone and unhappy over the loss of her fairy country.
+</div>
+
+== Appearance ==
+
+Kansas is described as gray, a description Dorothy draws in contrast to the beauty of the country she finds herself in after arriving in Oz.
 
 == Events ==
 
@@ -109,7 +64,6 @@ When faced with the destruction of her fairy country, Ozma refuses to fight or f
 == References ==
 
 <references/>
-</div>
 
 [[Category:Locations]]
 [[Category:Locations of Book 1]]

@@ -4,18 +4,17 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 5 — reveal" data-collapsetext="Hide">
-== Book 5 ==
+== The Road to Oz ==
 
-== Infobox ==
+=== Infobox ===
 
 * Name: Royal Palace
 * Type: Palace
 * Location: Emerald City
 * Status: Inhabited
 
-== Biography ==
-
 The Royal Palace is a vast, noble, and elegant building so distinctive that it can be recognized on sight. Its gardens and grounds are enclosed by a separate wall, one that is lower and thinner than the wall surrounding the Emerald City itself but more daintily designed, and built entirely of green marble. Visitors are received in a grand hall upon entering. Several residents keep permanent quarters there: Tik-Tok lives at the Royal Palace, the Tin Woodman is given the same room each time he visits Ozma, and Dorothy keeps a suite of rooms that she occupies whenever she is in the Emerald City. According to Dorothy, all of her friends are welcome at Ozma's palace.
+</div>
 
 == Appearance ==
 
@@ -32,7 +31,6 @@ Ozma's golden chariot, escorted by the Cowardly Lion and the Hungry Tiger, meets
 == References ==
 
 <references/>
-</div>
 
 [[Category:Locations]]
 [[Category:Locations of Book 5]]

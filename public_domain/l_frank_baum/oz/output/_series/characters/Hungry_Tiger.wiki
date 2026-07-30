@@ -5,21 +5,9 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
-== Book 4 ==
-
-== Biography ==
+== Dorothy and the Wizard in Oz ==
 
 The Hungry Tiger is a resident of Oz and a friend of the Cowardly Lion. Introduced by the Sawhorse as "the terror of the jungle, who longs to devour fat babies but is prevented by his conscience from doing so," he is known among the folk of Oz for this constant inner struggle between appetite and restraint. His standing in Oz is such that even Eureka, suspected of trying to eat Ozma's piglet, found herself shunned by him along with the rest of the palace.
-
-== Relationships ==
-
-'''[[Jim]]''' — friendly_rivalry. Their interactions suggest a lighthearted rivalry rather than true hostility.
-
-'''[[DOROTHY]]''' — friend. Their association suggests a friendly acquaintance among Oz's residents.
-
-'''[[Eureka]]''' — enemy. Their distance suggests strained relations, as the Hungry Tiger reportedly preferred not to associate with her after the piglet incident.
-
-'''[[Sawhorse]]''' — friend. Their shared appearance among Oz's companions suggests a cordial bond.
 
 === Events ===
 
@@ -32,8 +20,8 @@ The Hungry Tiger is a resident of Oz and a friend of the Cowardly Lion. Introduc
 ''Evolution:''
 * [[Eureka]] — Enemy (ch.3)<ref>Dorothy and the Wizard in Oz, chapter 3</ref>
 * [[Jim]] — Friendly rivalry (ch.2→ch.3)<ref>Dorothy and the Wizard in Oz, chapter 2</ref>
-* [[DOROTHY]] — Friend (ch.2)<ref>Dorothy and the Wizard in Oz, chapter 2</ref>
-* [[Sawhorse]] — Friend (ch.2)<ref>Dorothy and the Wizard in Oz, chapter 2</ref>
+* [[Dorothy|DOROTHY]] — Friend (ch.2)<ref>Dorothy and the Wizard in Oz, chapter 2</ref>
+* [[Saw-Horse|Sawhorse]] — Friend (ch.2)<ref>Dorothy and the Wizard in Oz, chapter 2</ref>
 
 [[Category:Characters]]
 [[Category:Characters of Book 4]]

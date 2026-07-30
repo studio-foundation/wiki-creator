@@ -4,18 +4,17 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
-== Book 6 ==
+== The Emerald City of Oz ==
 
-== Infobox ==
+=== Infobox ===
 
 * Name: Rigmarole Town
 * Place type: Village
 * Region: Oz
 * Status: Defensive Settlement of Oz
 
-== Biography ==
-
 Rigmarole Town is a village reached by a road that, according to the Wizard, leads there because he enchanted the wagon wheels. Its houses are Munchkin-shaped, and its inhabitants — called Rigmaroles — are so absorbed in their own affairs that they scarcely notice strangers. They are known for answering even simple questions with extremely long, roundabout sentences, as shown when a boy in the town responds to a question about the town's identity with a meandering, unfinished explanation, prompting the Wizard to laugh and remark, "It's a rigmarole because the boy is a Rigmarole and we've come to Rigmarole Town." Alongside Flutterbudget Center, Rigmarole Town is counted among what Omby Amby calls "the Defensive Settlements of Oz."
+</div>
 
 == Events ==
 
@@ -24,7 +23,6 @@ The enchanted wagon carrying the Wizard and his companions arrives in Rigmarole 
 == References ==
 
 <references/>
-</div>
 
 [[Category:Locations]]
 [[Category:Locations of Book 6]]

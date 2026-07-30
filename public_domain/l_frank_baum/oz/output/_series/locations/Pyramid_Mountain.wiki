@@ -4,21 +4,19 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
-== Book 4 ==
+== Dorothy and the Wizard in Oz ==
 
-== Infobox ==
+=== Infobox ===
 
 * Name: Pyramid Mountain
 * Place type: Mountain
 
-== Biography ==
-
 Pyramid Mountain lies beyond a stretch of the valley, reached by following the river that flows in its direction. To get there, travelers must cross a mile or so of the valley, a stretch with few houses, orchards, or flowers, where the risk of encountering savage bears is feared. A man with braids maintains a factory halfway up the mountain, in a spot he describes as no longer inhabited by him at the surface, having lived there for many years.
+</div>
 
 == Events ==
 
 After resisting the invisibility-granting dama-fruit and learning they must cross toward Pyramid Mountain to continue their journey, the travelers make their way there by river. Once at the mountain, they climb a long spiral stairway inside it leading toward the Land of the Gargoyles.
-</div>
 
 [[Category:Locations]]
 [[Category:Locations of Book 4]]

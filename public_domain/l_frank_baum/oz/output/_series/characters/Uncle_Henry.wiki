@@ -5,23 +5,11 @@
 }}
 
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 1 — reveal" data-collapsetext="Hide">
-== Book 1 ==
-
-== Biography ==
+== The Wonderful Wizard of Oz ==
 
 Uncle Henry is a farmer living on the great Kansas prairies with his wife, Aunt Em, and their niece Dorothy, an orphan who came to live with them. Their original house was small, built of lumber carried by wagon many miles, and contained a single room with a rusty cookstove, a cupboard, a table, a few chairs, and the beds, along with a dug-out cyclone cellar for shelter from the great whirlwinds that threatened the region. Years of hard labor marked him: he worked from morning till night and, according to the account of his household, never laughed and did not know what joy was.
 
 After a cyclone carried away the old house, Uncle Henry built a new farmhouse on the same prairie land. He is later seen milking the cows in the barnyard of this new home. Dorothy repeatedly names him, together with Aunt Em, as the person she most wishes to return to, and she expresses worry that a poor harvest might leave him unable to afford the hardships of her prolonged absence.
-
-== Relationships ==
-
-'''[[Dorothy]]''' — family. Uncle Henry lives with Dorothy on the Kansas prairies, and she names him alongside Aunt Em as the family she longs to return to throughout her time in Oz.
-
-'''[[Aunt Em]]''' — family. Uncle Henry and Aunt Em share a home and a bed in one corner of their small house, with Dorothy in another corner nearby.
-
-== References ==
-
-<references/>
 
 === Events ===
 
@@ -31,9 +19,7 @@ After a cyclone carried away the old house, Uncle Henry built a new farmhouse on
 * Dorothy recounts her whole story to Glinda and says her greatest wish is to return to Kansas to Aunt Em and Uncle Henry.
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 3 — reveal" data-collapsetext="Hide">
-== Book 3 ==
-
-== Biography ==
+== Ozma of Oz / A Record of Her Adventures with Dorothy Gale of Kansas, the Yellow Hen, the Scarecrow, the Tin Woodman, Tiktok, the Cowardly Lion, and the Hungry Tiger; Besides Other Good People too Numerous to Mention Faithfully Recorded Herein ==
 
 Uncle Henry is Dorothy's uncle. While Dorothy travels through Oz and Ev, he is far away in Australia, having reached the country aboard his ship. In a vision Dorothy sees of him, he sits in an easy chair in a pleasant room in Sydney, solemnly smoking his briar pipe, his hair now quite white and his hands and face thin and wasted. Dorothy, watching him, believes his condition has worsened because he is worried about her prolonged absence.
 
@@ -43,46 +29,18 @@ Uncle Henry is Dorothy's uncle. While Dorothy travels through Oz and Ev, he is f
 * Dorothy bids farewell to her friends in Oz, including Billina who chooses to stay, and is transported to Uncle Henry in Australia, comforting him as he recovers.
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 4 — reveal" data-collapsetext="Hide">
-== Book 4 ==
-
-== Biography ==
+== Dorothy and the Wizard in Oz ==
 
 Uncle Henry is Dorothy's uncle and lives on a farm in Kansas. Dorothy travelled with him to Australia and afterward to San Francisco, before he went on to Hugson's Ranch for a visit while she stayed a few days in the city. Uncle Henry's wife's sister is married to Uncle Bill Hugson, the rancher Zeb works for, a connection Zeb describes as making them second cousins.
 
 After Dorothy vanished, the enchanted picture in Ozma's palace showed that Uncle Henry had returned to the Kansas farm, dressed in mourning together with Aunt Em, believing their niece had been killed by the earthquake. Dorothy considers helping Uncle Henry and Aunt Em on the farm one of her responsibilities, saying she can never stay away from it for very long.
-
-== Relationships ==
-
-'''[[Dorothy]]''' — family. The excerpts identify her as his niece, and this bond seems to explain why Dorothy, on seeing Uncle Henry and Aunt Em mourning her in the enchanted picture, insists she cannot stay long away from the farm, since he and Aunt Em need her help.
-
-== References ==
-
-<references/>
 </div>
 <div class="mw-collapsible mw-collapsed" data-expandtext="Book 6 — reveal" data-collapsetext="Hide">
-== Book 6 ==
-
-== Biography ==
+== The Emerald City of Oz ==
 
 Uncle Henry is a member of the travelling party that accompanies Princess Dorothy through the Land of Oz, alongside the Wizard, Aunt Em, the Shaggy Man, and Omby Amby. Even amid the country's oddities, he keeps a good-humored, practical outlook, remarking to Aunt Em that "this is a queer country, and we may as well take people as we find them." When the group visited the Fuddles, he found the experience more entertaining than playing solitaire or mumbletypeg, and said he was glad they had gone. He is also quick to offer suggestions, wondering aloud whether the Wizard might know the way to a destination, and joking with the Tin Woodman that, being hollow, he might find work in a canning factory.
 
 He is not merely an observer: when cries for help were heard along the road, Uncle Henry was among those — with the Wizard, the Shaggy Man, and Omby Amby — who jumped from the wagon and ran to the aid of the man in distress. During a visit to the Tin Woodman's tin castle, he and Aunt Em were bubbling over with admiration for the castle and its polished owner, so much that Dorothy set aside, for a time, her suspicion that something was troubling their host. According to Dorothy's account, Uncle Henry was also among those with whom she later shared the story of her day's visits to Utensia, Bunbury, and Bunnybury.
-
-== Relationships ==
-
-'''[[Aunt Em]]''' — family. Their domestic closeness comes through in small shared moments, such as Uncle Henry proposing her milk-toast, and their joint reaction of admiration at the Tin Woodman's castle.
-
-'''[[Dorothy]]''' — family. A remark noting that he has "been to California and to Australia" alongside her suggests a shared personal history consistent with a familial bond, though the excerpts do not state the relation outright.
-
-'''[[Ozma]]''' — employment. A mention of making Uncle Henry "the Keeper of the Jewels" could indicate some employment tie to Ozma, though it is not confirmed whether this ever took effect.
-
-'''[[Wizard]]''' — ally. Their cooperation appears in his deference to the Wizard for guidance early on and in acting together, alongside the Shaggy Man and Omby Amby, to help a stranger in distress.
-
-'''[[Nick Chopper]]''' — friend. Their exchange, in which Uncle Henry jokingly suggests the hollow Tin Woodman could work in a canning factory, hints at an easy familiarity between them.
-
-== References ==
-
-<references/>
 
 === Events ===
 
@@ -92,11 +50,14 @@ He is not merely an observer: when cries for help were heard along the road, Unc
 == Relationships ==
 
 ''Evolution:''
-* [[Nick Chopper]] — Friend (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
+* [[Tin Woodman|Nick Chopper]] — Friend (ch.2)<ref>The Emerald City of Oz, chapter 2</ref>
 * [[Aunt Em]] — Family (ch.1→ch.2)<ref>The Emerald City of Oz, chapter 1</ref>
 * [[Dorothy]] — Family (ch.1→ch.2)<ref>The Emerald City of Oz, chapter 1</ref>
 * [[Wizard]] — Ally (ch.1→ch.2)<ref>The Emerald City of Oz, chapter 1</ref>
-* [[DOROTHY]] — Family (ch.1→ch.3)<ref>Dorothy and the Wizard in Oz, chapter 1</ref>
+
+== References ==
+
+<references/>
 
 [[Category:Characters]]
 [[Category:Secondary Characters]]
