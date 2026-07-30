@@ -1,0 +1,19 @@
+{{Infobox event
+|nom=The Rabbit and his companions attempt to extract Alice; she kicks a creature named Bill down the chimney
+|participants=Alice, Bill, White Rabbit
+|chapitre=4
+}}
+
+== Course of events ==
+
+Alice's tribulations had been many: she had swollen to a size most enormous within the confines of a small room, then shrunk back to her natural proportions by means of enchanted cakes that fell like pebbles through the window.
+
+The White Rabbit and his companions, arriving upon the scene, sought to extract her. During this extraction, the creature Bill was present, and Alice delivered a vigorous kick that sent him down the chimney—a turn of events that concluded the matter with sudden finality.
+
+The bewildered Rabbit, his confusion yet to deepen, would soon mistake Alice for his housemaid Mary Ann.
+
+== References ==
+
+* Alice's Adventures in Wonderland
+
+[[Category:Events]]

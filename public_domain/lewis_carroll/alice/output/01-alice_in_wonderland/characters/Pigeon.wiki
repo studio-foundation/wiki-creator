@@ -1,12 +1,12 @@
 {{Infobox character
 |nom=Pigeon
 |apparition=Appears in book 1
-|status=Unknown
+|status=Alive
 }}
 
 == Biography ==
 
-The Pigeon is a large bird of Wonderland, possessed of considerable distress and preoccupation with the problem of serpents. It has devoted considerable effort to searching for solutions, having tried the roots of trees, riverbanks, and hedges, yet finds that nothing seems to suit the creatures—as it sorrowfully remarks, "there's no pleasing them." When it encounters Alice, it becomes most alarmed, mistaking her for a serpent and beating her violently with its wings whilst shrieking accusations. Its agitation and tendency to speak without listening suggest a creature entirely consumed by its own troubles.
+The Pigeon is a large, anxious bird of Wonderland convinced that Alice is a serpent. Upon encountering her, it attacks violently, beating her with its wings and screaming accusations. Despite Alice's firm denials, the Pigeon remains unconvinced, speaking instead of the deeper problem that consumes it—a persistent serpent trouble that no amount of searching through tree roots, banks, or hedges has been able to solve.
 
 [[Category:Characters]]
 [[Category:Characters of Book 1]]

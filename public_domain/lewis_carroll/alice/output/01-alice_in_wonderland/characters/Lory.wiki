@@ -1,19 +1,24 @@
 {{Infobox character
 |nom=Lory
 |apparition=Appears in book 1
-|status=Unknown
+|status=Alive
+|friends_allies=[[Alice]]
 }}
 
 == Biography ==
 
-Lory is one of the creatures residing in Wonderland. Finding itself in the pool alongside a Duck, Dodo, Eaglet, and others, Lory eventually swam to shore with the group. Lory proved to be an opinionated and temperamental creature—when Alice raised questions about age, Lory grew sulky, insisting "I am older than you, and must know better," yet refusing absolutely to reveal its actual years. Lory also displayed considerable sensitivity to certain topics, reacting with visible distaste to the Mouse's recitation of historical matters.
+The Lory is one of the curious creatures encountered in Wonderland, among those who found their way into Alice's pool. The Lory regards itself with some consequence, insisting to Alice that it must know better by virtue of being older. However, when pressed to substantiate this claim by revealing its age, the Lory steadfastly refused, growing sulky at the challenge.
+
+The creature exhibits a marked sensitivity in its dispositions. When the Mouse recited passages of English history, the Lory shuddered noticeably and pronounced its disapproval with an emphatic "Ugh!" In this way, the Lory revealed itself to be both proud and peculiar in its temperament.
 
 == Relationships ==
 
-'''[[Alice]]''' — acquaintance. Lory engaged Alice in a heated dispute, declaring "I am older than you, and must know better" and stubbornly refusing to disclose its actual age.
+'''[[Alice]]''' — Lory seems to regard Alice as a rival, having engaged in a prolonged argument with her over matters of age and wisdom. Lory insisted it was older and therefore knew better; when Alice refused to accept this without knowing Lory's actual age, Lory turned sulky.
 
-'''[[Mouse]]''' — acquaintance. Both were among the creatures gathered at the shore after falling into the pool.
+'''[[Mouse]]''' — Lory and the Mouse were among the creatures who gathered on the shore together.
 
+''Evolution:''
+* [[Alice]] — Friendly rivalry (ch.3)<ref>Alice's Adventures in Wonderland, chapter 3</ref>
 == References ==
 
 <references/>

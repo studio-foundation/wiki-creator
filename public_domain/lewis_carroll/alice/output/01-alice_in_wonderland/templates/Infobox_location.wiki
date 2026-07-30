@@ -1,14 +1,10 @@
 <includeonly>
 {| class="infobox"
 |-
-! colspan="2" | {{{name}}}
+! colspan="2" | {{{nom}}}
 |-
-| '''Type''' || {{{type|}}}
+| '''Appearance''' || {{{apparition|}}}
 |-
-| '''Localisation''' || {{{location|}}}
-|-
-| '''Première mention''' || {{{first_seen|}}}
-|-
-| '''Résidents notables''' || {{{residents|}}}
+| '''Location''' || {{{location|}}}
 |}
 </includeonly>

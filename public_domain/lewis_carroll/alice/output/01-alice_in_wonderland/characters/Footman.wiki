@@ -1,12 +1,12 @@
 {{Infobox character
 |nom=Footman
 |apparition=Appears in book 1
-|status=Unknown
+|status=Alive
 }}
 
 == Biography ==
 
-The Footman is a servant posted outside a house in Wonderland, known for his peculiar logic and unflinching composure. When Alice seeks entry, he explains with absurdist reasoning that knocking would make sense only if he stood inside—then he could let her out. He remarks he will sit outside "till tomorrow—or next day, maybe," revealing an indifference to time's passage. When a large plate suddenly flies from the door and grazes his nose before shattering against a tree, he continues speaking in the same tone, entirely unmoved by the incident.
+A Footman stationed at the door of the Duchess's house, he maintains an extraordinary equanimity in the midst of disorder. When Alice arrives at the threshold, he applies himself to logical argument, observing that there would be "some sense in your knocking" were "the door between us"—for if she were already within, she might knock to summon him without. He declares his intention to sit there "till tomorrow—" or "next day, maybe," settling into his post with unyielding patience. When a large plate comes hurtling out through the doorway and grazes his very nose before shattering upon a tree behind him, he continues his discourse in the same tone, as though the incident were of no moment whatsoever.
 
 [[Category:Characters]]
 [[Category:Characters of Book 1]]

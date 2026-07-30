@@ -1,21 +1,21 @@
 {{Infobox character
 |nom=Mouse
 |apparition=Appears in book 1
-|status=Unknown
+|status=Alive
 |friends_allies=[[Alice]]
 }}
 
 == Biography ==
 
-The Mouse is a creature of Wonderland whom Alice encounters in the pool. When she addresses it in formal Latin declension, the Mouse observes her with apparent curiosity and seems to wink with one of its little eyes, though it offers no response. Alice wonders whether it understands English at all, and speculates that it might be a French mouse, come over with William the Conqueror.
+The Mouse is a creature of Wonderland who appears to hold authority among its inhabitants. When Alice encounters it in the pool, the Mouse regards her with an inquisitive expression and winks with one of its little eyes, though it does not speak at first. The Mouse, however, is fluent in English.
 
-When the wet creatures later gather to discuss how to dry off, the Mouse commands their attention and positions itself at the center of their assembled ring. With an air of importance, it promises to make them dry with what it calls "the driest thing I know." Among the strange assembly of Wonderland's denizens, the Mouse holds evident authority that the others seem willing to accept.
+Among the animals gathered after their swim, the Mouse assumes a commanding presence. It calls upon the others to sit and listen, and they obey at once, arranging themselves in a large ring with the Mouse positioned in the center. Speaking with an important air, the Mouse promises to dry them all, claiming to know "the driest thing" for accomplishing this task.
 
 == Relationships ==
 
-'''[[Alice]]''' — wary alliance. Mouse and Alice form a connection born of circumstance and mystery. When Alice sought his help escaping the pool, Mouse examined her with apparent interest but offered no reply, leaving her to puzzle over his nature. He later indicated he would accompany her to shore and tell her his history, a gesture suggesting some degree of alliance, though its exact nature remains uncertain and somewhat guarded.
+'''[[Alice]]''' — wary_alliance. Alice seems to regard the Mouse as a potential guide when caught in the pool and follows it to shore, though the connection appears tentative and cautious.
 
-'''[[Lory]]''' — acquaintance. Mouse held command over the assembly of animals and birds that included Lory, suggesting familiarity among Wonderland's strange inhabitants.
+'''[[Lory]]''' — acquaintance. The Mouse appears among the same gathering of wet animals as the Lory, though any true relationship between them remains unclear.
 
 ''Evolution:''
 * [[Alice]] — Wary alliance (ch.2→ch.3)<ref>Alice's Adventures in Wonderland, chapter 2</ref>
