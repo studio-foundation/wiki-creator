@@ -534,5 +534,53 @@
       "evidence/evolution/key_moments always empty in relationship discovery output - 100% of relationships, all 6 Oz books",
       "extraction junk / casing artifacts surface as named entities - 'The' (books 01/04/05), 'L. FRANK BAUM' extracted from the copyright page (book 04), and all-caps canonical variants (DOROTHY / WIZARD / BILLINA / LAND OF OZ / TWINKLE / 'THE shaggy man') - stopword + copyright-boilerplate + small-caps normalization gap in extraction/classification"
     ]
+  },
+  {
+    "run": 1,
+    "date": "2026-07-30",
+    "scope": "series (wiki-series pipeline, STU-709/719/740, output/_series/)",
+    "providers": {
+      "generation": "claude-code/claude-sonnet-5 (per tome, unchanged from run 1)",
+      "verdict_agents": "not inspected (pinned per-agent yaml, STU-624)",
+      "chapter_summaries": "ollama/qwen2.5 (book yaml override, unchanged from run 1)",
+      "series_arc": "series-arc-verdict call (STU-720), same generation provider"
+    },
+    "book": "_series",
+    "pages_generated": 115,
+    "infobox_pct": null,
+    "lang_fr_pct": null,
+    "expected_language": "en (book output_language; series pages inherit each tome's own content verbatim per character, so a tome-level FR contamination surfaces unchanged on the merged page)",
+    "alias_duplicates": 0,
+    "hallucinations": 0,
+    "gt_violations": [],
+    "gt_status": "n/a - ground-truth corpus is per-tome/single-book scoped (forbidden_book1 etc.); does not map cleanly onto a cross-tome merged page. Regression/coverage checks used instead (see below).",
+    "coverage": {
+      "batch_entities": 109,
+      "pages_generated": 109,
+      "missing": [],
+      "failed": [],
+      "filtered_before_batch": 0,
+      "note": "series_assembly.json only carries tomes 1-6 (the only tomes ever run); tomes 7-14 have book YAMLs + ground-truth corpora but no processing_output, so they contribute no characters and their titles fall back to the raw book_id slug in Main_Page's reading order/main characters list - expected given never-run state, not a regression."
+    },
+    "weak_entities": [],
+    "regression": {
+      "prefixed_keys": "pass",
+      "epub_ids": "pass",
+      "entity_type_null": "pass",
+      "alias_duplicates": "pass (8 junk/dup PERSON pages correctly dropped: Captain, Champion, King, Princess, Queen, Sawhorse, Tik-tok, THE_shaggy_man)",
+      "cross_serie": "pass",
+      "evolution_quality": "n/a (not re-checked at series scope)",
+      "temporal_context": "n/a (not re-checked at series scope)",
+      "ground_truth": "n/a",
+      "page_generation": "n/a",
+      "wikilinks_series": "fail (10 dead [[Billina]] links, down from 136 dead links across 118 pages pre-PR - net large improvement, one residual case)",
+      "cross_tome_language": "fail (5 merged pages carry untranslated French paragraphs from a single contributing tome)"
+    },
+    "verdict": "Series regen after STU-719/740 canonicalization is a large net win: check_wikilinks.py --series dead links dropped 136->10 and 8 junk/duplicate PERSON pages were correctly removed. Two defect classes remain: (1) a stale-case export artifact leaves BILLINA.wiki out of sync with the now-correct canonical_name 'Billina', producing 10 dead links; (2) 5 series pages carry untranslated French prose inherited verbatim from a single contributing tome's own wiki_pages.json (pre-existing per-tome generation bug, not caused by this PR, previously only visible as an aggregate lang_fr_pct in run 1 and not traced to specific pages). A third, lower-priority class: STU-740's stopword/dedup fix was scoped to PERSON entities and missed the same class of junk in other entity types (locations/His_Majesty, locations/Emperor, events/The) and one unmerged PERSON duplicate (Guardian vs Guardian_of_the_Gates).",
+    "new_issues": [
+      "check_wikilinks.py --series reports 10 dead [[Billina]] links: output/_series/characters/BILLINA.wiki keeps its old all-caps filename even though series_assembly.json's canonical_name for that character is now 'Billina' (fixed by STU-719) - series-export's stateless rebuild (shutil.rmtree + rewrite) did not rename the file, likely a case-insensitive-filesystem artifact (core.ignorecase=true) swallowing the case-only rename. Every other page links it as [[Billina]]. Fix: rename/regenerate so filename matches canonical_name casing, or make series-export's rmtree/write path case-rename-safe.",
+      "5 series character pages carry untranslated French paragraphs mixed into an English-declared wiki (export.categories.language: en): characters/Saw-Horse.wiki (tome 2 Biography), characters/Old_Mombi.wiki (tome 4 Biography), characters/Wizard.wiki (tome 5 Biography), characters/Lord_High_Chigglewitz.wiki (tome 6, entire page), characters/Nome_King.wiki (tome 6 Personality + Trivia sections). Traced to each tome's own processing_output/<tome>/wiki_pages.json - the French text is already there, i.e. a wiki-pages generation-stage LLM output that ignored the declared language for isolated items, pre-existing since the original tome runs and not introduced by this PR. Run 1's lang_fr_pct sniff (2.9-5.6% per book 02/04/05/06) already flagged this in aggregate but was never traced to specific pages or filed. Fix: regenerate the affected wiki-pages items (force re-run those specific entities) and consider a post-generation language-verdict check for wiki-pages output, the same shape as the existing per-unit verdict stages.",
+      "STU-740's stopword/junk-entity drop was scoped to PERSON entities and missed the same class of junk in other entity types: output/_series/locations/His_Majesty.wiki and output/_series/locations/Emperor.wiki are near-empty junk pages (generic role phrases misclassified as LOCATION), and output/_series/events/The.wiki is a bare stopword title. Also output/_series/characters/Guardian.wiki (tome 2) and characters/Guardian_of_the_Gates.wiki (tome 1) are an unmerged duplicate of the same office/character. Fix: extend the STU-719/740 generic-role/stopword drop beyond PERSON, and merge the Guardian/Guardian of the Gates alias."
+    ]
   }
 ]
