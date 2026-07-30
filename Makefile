@@ -6,6 +6,7 @@
         generate-pages generate-pages-dry generate-pages-primary generate-pages-entity \
         discover-relationships \
         smoke golden golden-update eval-relationships coverage \
+        sync-push sync-pull sync-push-dry sync-pull-dry sync-paths \
         clean
 
 #BOOK ?= library/carlos-ruiz-zafon/el-cementerio-de-los-libros-olvidados/books/02-le-jeu-de-lange.yaml
@@ -157,6 +158,70 @@ coverage:  ## Coverage/faithfulness report over a run's artifacts (STU-723): cha
 eval-relationships:  ## Score the relationship classifier against the hand-labelled gold fixture (STU-499). PREDICTIONS=<file> to score offline, else --run (needs studio/LLM)
 	python scripts/eval_relationship_classifier.py \
 		$(if $(PREDICTIONS),--predictions $(PREDICTIONS),--run --book $(BOOK))
+
+# --- Derived-artifact sync between machines ---------------------------------
+# Moves the gitignored artifacts that are expensive to regenerate (verdict
+# caches, resolved entities, rendered wikis, Studio resume state) through a
+# central rsync hub, so a second machine never re-pays the LLM/GPU cost.
+#
+#   export WIKI_SYNC_REMOTE=user@pi:/path/to/wiki-creator-sync
+#   make sync-push-dry   # review the file list
+#   make sync-push
+#   make sync-pull
+#
+# --update in BOTH directions and never --delete: these trees are edited from
+# both machines, so an older copy must never clobber a newer one.
+# -r is explicit because --files-from cancels the -r that -a would otherwise
+# imply, so a bare -a would copy the listed directories empty.
+SYNC_REMOTE ?= $(WIKI_SYNC_REMOTE)
+SYNC_RSYNC_FLAGS ?= -a -r --update
+SYNC_DRY_RUN ?=
+
+# The synced path set, in one place. Emitted by `find` at run time rather than
+# by a static glob, because these dirs are scattered and most books have only
+# some of them — a glob that matches nothing is an error, a find is silent.
+# public_domain/**/output is committed in git, so it is pruned, not synced.
+SYNC_PATHS_CMD = { \
+	test -d library && find library \
+		\( -type d \( -name processing_output -o -name wiki_inputs -o -name output \) -prune -print \) \
+		-o \( -type f \( -name registry.json -o -name character_graph.json \) -print \); \
+	test -d public_domain && find public_domain \
+		\( -type d -name output -prune \) \
+		-o \( -type d \( -name processing_output -o -name wiki_inputs \) -prune -print \) \
+		-o \( -type f \( -name registry.json -o -name character_graph.json \) -print \); \
+	test -d .studio/runs && echo .studio/runs; \
+	true; \
+	}
+
+define require_sync_remote
+	@if [ -z "$(SYNC_REMOTE)" ]; then \
+		echo "WIKI_SYNC_REMOTE is not set — nowhere to sync to."; \
+		echo "  export WIKI_SYNC_REMOTE=user@pi:/path/to/wiki-creator-sync"; \
+		exit 1; \
+	fi
+endef
+
+sync-paths:  ## Print the path set sync-push/sync-pull cover
+	@$(SYNC_PATHS_CMD) | sort
+
+# --files-from implies --relative, so the hub mirrors the repo tree and a pull
+# restores every path in place.
+sync-push:  ## Push local derived artifacts to $WIKI_SYNC_REMOTE
+	$(require_sync_remote)
+	@$(SYNC_PATHS_CMD) | rsync $(SYNC_RSYNC_FLAGS) $(SYNC_DRY_RUN) --files-from=- ./ "$(SYNC_REMOTE)/"
+
+# Pull is a whole-hub fetch, not a local-path list: a book generated only on the
+# other machine has no local path to enumerate, and the hub holds nothing but
+# what sync-push put there.
+sync-pull:  ## Pull derived artifacts back from $WIKI_SYNC_REMOTE
+	$(require_sync_remote)
+	@rsync $(SYNC_RSYNC_FLAGS) $(SYNC_DRY_RUN) "$(SYNC_REMOTE)/" ./
+
+sync-push-dry:  ## sync-push, listing what would move without moving it
+	@$(MAKE) --no-print-directory sync-push SYNC_DRY_RUN="--dry-run -v"
+
+sync-pull-dry:  ## sync-pull, listing what would move without moving it
+	@$(MAKE) --no-print-directory sync-pull SYNC_DRY_RUN="--dry-run -v"
 
 clean:  ## Remove generated files (keeps .gitkeep sentinels)
 	@SERIES_DIR=$$(python -c "from wiki_creator.paths import book_paths_from_yaml; p = book_paths_from_yaml('$(BOOK)'); print(p.processing.parent.parent)"); \
