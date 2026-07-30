@@ -270,6 +270,7 @@ library/sarah_j_maas/throne-of-glass/output/_series/
 - [scripts/resolve_clusters.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/resolve_clusters.py): resolves NER clusters
 - [scripts/alias_resolution.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/alias_resolution.py): conservative PERSON alias merging, runs after resolve-clusters
 - [scripts/entity_classification.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/entity_classification.py): classifies entities, reads from alias-resolution output
+- [wiki_creator/canonicalize.py](/home/arianeguay/dev/src/wiki-creator-by-studio/wiki_creator/canonicalize.py): the registry's normalization key (STU-724) — `canonical_key` (identity: case/accents/punctuation/spacing + leading article), `canonical_tokens` (comparison: also strips the caller's declared titles), `is_bare_role`. Read by `entity_clustering`, `alias_resolution` and `series.py`; see `scripts/CLAUDE.md`
 
 ## Script Executor Conventions
 

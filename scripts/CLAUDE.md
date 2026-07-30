@@ -1290,3 +1290,31 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   and deletes the drift surface, so `infobox_rows` is gone with `infobox_source`.
   STU-730's "an `en` template ships no French label" tests moved to
   `test_infobox_vocabulary.py` — the property is now the generator's and must stay.
+
+- One normalization key, owned by the registry (STU-724): `wiki_creator/canonicalize.py`.
+  Casing, spacing, punctuation and leading articles were folded independently at
+  every site that needed them, and forgotten at the next — STU-636 folded
+  `Queen`/`The Queen` on a roster and STU-719 met the same pair at series scope;
+  STU-541's honorific rule lived in alias-resolution and STU-585 found clustering
+  remarrying the Beavers one stage upstream. Three sites now read the module:
+  `entity_clustering.tokenize_name`/`extract_leading_titles`, `alias_resolution`'s
+  `_leading_role`/`_role_remainder`/`is_bare_role` (the old `_is_pure_title`), and
+  `series.build_series_characters` (its `articles` come from the first tome's
+  language, like the arc and the labels).
+  **Two keys, because two questions.** `canonical_key` answers *same name* — it
+  strips a leading article, which carries no referent, and **keeps an honorific,
+  which discriminates one** (`Mr Beaver` ≠ `Mrs Beaver`). `canonical_tokens`
+  answers *comparable names* — it strips whatever the caller declares strippable
+  (titles, honorifics, articles), which is what lets `Mr Tumnus` still reach
+  `Tumnus`. Neither ever strips the last token (STU-636).
+  Punctuation is **dropped, not replaced by a space**, so `Saw-Horse` = `Sawhorse`
+  and `Tik-tok` = `Tiktok` (STU-719's Oz duplicates). Vocabulary is folded on both
+  sides (`fold_vocabulary`), so the cue word `m.` matches the token `M.` writes —
+  which is why STU-585's "the apparent `mr.`/`mr` duplication is load-bearing" no
+  longer holds for *matching*: both forms fold to `mr`. The data was left alone.
+  **Not built: a registry-side short-form fold** (`the Rabbit` → `White Rabbit`).
+  STU-714 measured that `should_cluster_tokens`' subset branch already does it —
+  declaring `Rabbit` in the gazetteer was the whole fix — so writing a second one
+  in the registry is the defect this ticket closes, not the fix.
+  **Not swept.** The key is unit-tested and the goldens are byte-identical, but no
+  live run over `library/` has measured whether it over-merges (STU-543's norm).
