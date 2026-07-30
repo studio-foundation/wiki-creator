@@ -151,6 +151,44 @@ def test_gather_matches_events_by_participant():
     assert chars[0].contributions[0].events == [ev]
 
 
+def test_gather_joins_on_the_canonical_key_not_the_raw_title():
+    # STU-724/719: the Oz tomes title the same entity `BILLINA`, `Saw-Horse` and
+    # `The Queen`; each must join its registry record, not open a second page.
+    reg = _registry([
+        {"entity_id": "b", "canonical_name": "Billina", "entity_type": "PERSON", "aliases": []},
+        {"entity_id": "s", "canonical_name": "Sawhorse", "entity_type": "PERSON", "aliases": []},
+        {"entity_id": "q", "canonical_name": "Queen", "entity_type": "PERSON", "aliases": []},
+    ])
+    tomes = [
+        TomeArtifacts("01", pages=[_page("Billina"), _page("Sawhorse"), _page("Queen")]),
+        TomeArtifacts("02", pages=[_page("BILLINA"), _page("Saw-Horse"), _page("The Queen")]),
+    ]
+    chars = build_series_characters(reg, tomes, ["the", "a", "an"])
+    assert {c.canonical_name: c.books for c in chars} == {
+        "Billina": ["01", "02"], "Sawhorse": ["01", "02"], "Queen": ["01", "02"],
+    }
+
+
+def test_gather_keeps_distinct_roles_apart():
+    # The article folds, the role does not: `The King` is not `The Queen`.
+    reg = _registry([
+        {"entity_id": "k", "canonical_name": "King", "entity_type": "PERSON", "aliases": []},
+        {"entity_id": "q", "canonical_name": "Queen", "entity_type": "PERSON", "aliases": []},
+    ])
+    tomes = [TomeArtifacts("01", pages=[_page("The King"), _page("The Queen")])]
+    chars = build_series_characters(reg, tomes, ["the"])
+    assert [c.contributions[0].page["title"] for c in chars] == ["The King", "The Queen"]
+
+
+def test_gather_matches_a_status_verdict_on_the_canonical_key():
+    reg = _registry([
+        {"entity_id": "b", "canonical_name": "Billina", "entity_type": "PERSON", "aliases": []},
+    ])
+    verdict = {"status": "alive", "quote": "q"}
+    tomes = [TomeArtifacts("01", pages=[_page("Billina")], status_verdicts={"BILLINA": verdict})]
+    assert build_series_characters(reg, tomes)[0].status == verdict
+
+
 # --- disk loader -----------------------------------------------------------
 
 def test_load_tome_artifacts_reads_the_three_files(tmp_path):

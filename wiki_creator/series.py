@@ -8,10 +8,12 @@ order, propagating the accumulated series registry from one tome to the next.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from wiki_creator.registry import Registry, normalize_name
+from wiki_creator.canonicalize import canonical_key
+from wiki_creator.registry import Registry
 from wiki_creator.tome_labels import tome_number
 
 
@@ -150,40 +152,43 @@ def load_tome_artifacts(processing_dir: Path | str, book_id: str) -> TomeArtifac
     )
 
 
-def _name_set(record) -> set[str]:
-    return {normalize_name(n) for n in (record.canonical_name, *record.aliases) if n}
+def _name_set(record, articles: Iterable[str]) -> set[str]:
+    return {canonical_key(n, articles) for n in (record.canonical_name, *record.aliases) if n}
 
 
-def _match_page(pages: list[dict], names: set[str]) -> dict | None:
+def _match_page(pages: list[dict], names: set[str], articles: Iterable[str]) -> dict | None:
     for page in pages:
-        if normalize_name(page.get("title") or "") in names:
+        if canonical_key(page.get("title") or "", articles) in names:
             return page
     return None
 
 
-def _match_status(verdicts: dict[str, dict], names: set[str]) -> dict | None:
+def _match_status(verdicts: dict[str, dict], names: set[str], articles: Iterable[str]) -> dict | None:
     for name, verdict in verdicts.items():
-        if normalize_name(name) in names and isinstance(verdict, dict):
+        if canonical_key(name, articles) in names and isinstance(verdict, dict):
             return verdict
     return None
 
 
-def _match_events(events: list[dict], names: set[str]) -> list[dict]:
+def _match_events(events: list[dict], names: set[str], articles: Iterable[str]) -> list[dict]:
     return [
         e for e in events
-        if names & {normalize_name(p) for p in (e.get("participants") or [])}
+        if names & {canonical_key(p, articles) for p in (e.get("participants") or [])}
     ]
 
 
 def build_series_characters(
-    registry: Registry, tomes: list[TomeArtifacts]
+    registry: Registry, tomes: list[TomeArtifacts], articles: Iterable[str] = ()
 ) -> list[SeriesCharacter]:
     """One ``SeriesCharacter`` per canonical entity that has a page in some tome.
 
     ``tomes`` are in reading order; each character's contributions preserve that
     order. Identity is the series registry's — an entity's page in any tome is
     the one whose title matches its canonical name or any accumulated alias, so a
-    tome that renamed it still joins. Notability is reconciled latest-wins.
+    tome that renamed it still joins. The match is the registry's canonical key
+    (STU-724), so a tome titling its page ``BILLINA``, ``Saw-Horse`` or ``The
+    Queen`` still joins ``Billina`` / ``Sawhorse`` / ``Queen``; ``articles`` is
+    the book language's determiners. Notability is reconciled latest-wins.
 
     All entity types merge cross-tome (STU-706), not just PERSON. Status
     (alive/dead) is PERSON-only — the reader-facing slot for non-PERSON drops,
@@ -192,12 +197,12 @@ def build_series_characters(
     characters: list[SeriesCharacter] = []
     for record in registry.entities:
         is_person = record.entity_type == "PERSON"
-        names = _name_set(record)
+        names = _name_set(record, articles)
         contributions: list[TomeContribution] = []
         for tome in tomes:
-            page = _match_page(tome.pages, names)
-            status = _match_status(tome.status_verdicts, names) if is_person else None
-            events = _match_events(tome.events, names)
+            page = _match_page(tome.pages, names, articles)
+            status = _match_status(tome.status_verdicts, names, articles) if is_person else None
+            events = _match_events(tome.events, names, articles)
             if page or status or events:
                 contributions.append(
                     TomeContribution(
