@@ -1,0 +1,141 @@
+{
+  "lion": {
+    "entity": "Lion",
+    "canonical_aliases_book1": [
+      "Lion"
+    ],
+    "known_facts_book1": [
+      "Is fighting the Unicorn for the crown when Alice arrives, in such a cloud of dust that she cannot tell which is which.",
+      "Is the subject of the old song in which the Lion beat the Unicorn all round the town and both were drummed out of town.",
+      "Looks very tired and sleepy with his eyes half shut, and speaks in a deep hollow tone like the tolling of a great bell.",
+      "Asks Alice whether she is animal, vegetable or mineral, yawning at every other word.",
+      "Calls Alice 'the Monster' and tells her to hand round the plum-cake and to sit down for fair play with the cake.",
+      "Claims he would win easily, and reminds the Unicorn he beat him all round the town, calling him a chicken.",
+      "Says there was too much dust to see anything, so he does not know which way round the town they went.",
+      "Rises to his feet with the Unicorn, angry at being interrupted in the feast, when the drums begin."
+    ],
+    "known_relations_book1": {
+      "Unicorn": "His opponent in the fight for the crown, each of them down about eighty-seven times.",
+      "White King": "The King whose crown they are fighting for, who calls the ten minutes for refreshments.",
+      "Alice": "The 'Monster' he asks to carve and hand round the plum-cake."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Lion kills the Unicorn",
+        "the Lion wins the crown",
+        "the Lion is king of the Looking-glass world",
+        "the Lion appears in Wonderland"
+      ]
+    },
+    "hallucination_signals": [
+      "the Lion is crowned",
+      "the Lion devours",
+      "the Lion rules"
+    ],
+    "identity_confusion_forbidden": []
+  },
+  "unicorn": {
+    "entity": "Unicorn",
+    "canonical_aliases_book1": [
+      "Unicorn"
+    ],
+    "known_facts_book1": [
+      "Is distinguished from the Lion by his horn, and ran the Lion through with it during the fight.",
+      "Saunters by with his hands in his pockets and asks the King whether he had the best of it this time.",
+      "Looks at Alice with the deepest disgust and asks 'What—is—this?', having always thought children were fabulous monsters.",
+      "Strikes a bargain with Alice: if she will believe in him, he will believe in her.",
+      "Demands the plum-cake and refuses the brown bread.",
+      "Explains that Looking-glass cake has to be handed round first and cut afterwards.",
+      "Complains that the Monster has given the Lion twice as much cake as him."
+    ],
+    "known_relations_book1": {
+      "Lion": "His opponent in the fight for the crown, whom he claims he is not sure of losing to.",
+      "Alice": "The 'fabulous monster' he agrees to believe in if she believes in him.",
+      "White King": "Addressed as 'old man' when the Unicorn calls for the plum-cake."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Unicorn is killed",
+        "the Unicorn wins the crown",
+        "the Unicorn carries Alice",
+        "the Unicorn appears in Wonderland"
+      ]
+    },
+    "hallucination_signals": [
+      "the Unicorn is slain",
+      "the Unicorn is crowned",
+      "the Unicorn's magic"
+    ],
+    "identity_confusion_forbidden": []
+  },
+  "haigha": {
+    "entity": "Haigha",
+    "canonical_aliases_book1": [
+      "Haigha"
+    ],
+    "known_facts_book1": [
+      "Is one of the White King's two Messengers, pronounced by the King so as to rhyme with 'mayor'.",
+      "Comes along the road skipping up and down and wriggling like an eel, with his great hands spread out like fans — the King calls these Anglo-Saxon attitudes.",
+      "Lives on the Hill, according to the King, in answer to Alice's alphabet game.",
+      "Carries a bag round his neck holding ham sandwiches, hay and a large plum-cake, and feeds the fainting King from it.",
+      "Reports that he passed Nobody on the road.",
+      "Puts his arm affectionately round Hatta's neck and asks him whether he was happy in prison.",
+      "Introduces Alice to the Unicorn as a child they only found to-day, as large as life and twice as natural, and says solemnly that it can talk."
+    ],
+    "known_relations_book1": {
+      "White King": "His master, one of the two Messengers kept so that one comes and one goes.",
+      "Hatta": "The other Messenger, whom he greets as 'dear child' when he comes out of prison.",
+      "Alice": "Introduces her to the Unicorn and hands her the plum-cake to hold."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Haigha is the March Hare",
+        "Haigha was at the tea-party",
+        "Haigha is a hare"
+      ]
+    },
+    "hallucination_signals": [
+      "Haigha is the March Hare",
+      "Haigha the hare"
+    ],
+    "identity_confusion_forbidden": [
+      "alias: March Hare"
+    ]
+  },
+  "hatta": {
+    "entity": "Hatta",
+    "canonical_aliases_book1": [
+      "Hatta"
+    ],
+    "known_facts_book1": [
+      "Is the White King's other Messenger, watching the fight with a cup of tea in one hand and bread-and-butter in the other.",
+      "Is only just out of prison, where they gave them nothing but oyster-shells, and had not finished his tea when he was sent in.",
+      "Weeps when asked whether he was happy in prison and will not say a word about it.",
+      "Reports that the Lion and the Unicorn have each been down about eighty-seven times.",
+      "Is threatened with buttering by the King for shouting instead of whispering.",
+      "Goes bounding away like a grasshopper to order the drums to begin."
+    ],
+    "known_relations_book1": {
+      "White King": "His master, who threatens to have him buttered and sends him to order the drums.",
+      "Haigha": "The other Messenger, who greets him fondly outside the prison.",
+      "Alice": "Present at the fight beside her; they never speak to each other directly."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Hatta is the Mad Hatter",
+        "Hatta wears a top hat marked 10/6",
+        "Hatta held a tea-party",
+        "Hatta was tried by the King of Hearts"
+      ]
+    },
+    "hallucination_signals": [
+      "Hatta is the Hatter",
+      "Hatta is the Mad Hatter",
+      "Hatta's tea-party"
+    ],
+    "identity_confusion_forbidden": [
+      "alias: Mad Hatter",
+      "alias: the Hatter"
+    ]
+  }
+}

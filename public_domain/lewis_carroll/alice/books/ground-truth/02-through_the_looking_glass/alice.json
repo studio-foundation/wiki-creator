@@ -1,0 +1,84 @@
+{
+  "entity": "Alice",
+  "canonical_aliases_book1": [
+    "Alice",
+    "Queen Alice"
+  ],
+  "known_facts_book1": [
+    "Opens the book curled up in an arm-chair, winding a ball of worsted and scolding the black kitten, while snow falls against the window-panes.",
+    "Tells the black kitten it has three faults and says she is saving up all its punishments for Wednesday week.",
+    "Holds the kitten up to the glass and threatens to put it through into Looking-glass House.",
+    "Climbs onto the chimney-piece and passes through the glass, which melts away like a bright silvery mist.",
+    "Finds the chessmen walking about in the hearth among the cinders, and lifts the White Queen and then the White King onto the table without either of them seeing or hearing her.",
+    "Writes 'The White Knight is sliding down the poker. He balances very badly' in the White King's memorandum-book by taking hold of his pencil.",
+    "Reads the poem 'Jabberwocky' by holding the looking-glass book up to a glass, and says somebody killed something, that's clear at any rate.",
+    "Cannot reach the hill because every path twists back to the house, until she tries walking in the opposite direction.",
+    "Is criticised by the Rose and the Tiger-lily in the garden of live flowers, and told she is beginning to fade.",
+    "Runs hand in hand with the Red Queen fast enough to skim through the air, and ends up under the same tree they started from.",
+    "Is made the White Queen's Pawn, starts in the Second Square, and is told she will be a Queen when she reaches the Eighth.",
+    "Crosses the Third Square by railway with no ticket, and is told by the Guard that she is travelling the wrong way.",
+    "Loses her name in the wood where things have no names, and can only remember that it begins with L.",
+    "Walks through that wood with her arms round the neck of a Fawn, which bounds away in alarm the moment it remembers she is a human child.",
+    "Dances a ring with Tweedledum and Tweedledee, hears 'The Walrus and the Carpenter', and helps arm them with bolsters and dish-covers for their battle.",
+    "Cries when Tweedledee tells her she is only a sort of thing in the Red King's dream.",
+    "Catches the White Queen's shawl after the crow passes, and puts her pins, her brooch and her hair straight for her.",
+    "Tells the White Queen she is seven and a half exactly, and tells Humpty Dumpty seven years and six months.",
+    "Rows a boat with oars that were knitting-needles, and picks scented rushes that fade the moment she picks them.",
+    "Buys one egg from the Sheep for fivepence farthing, and the egg grows into Humpty Dumpty.",
+    "Carves the plum-cake for the Lion and the Unicorn, is called 'the Monster' throughout, and finds the slices join on again until she hands it round first.",
+    "Is claimed as the Red Knight's prisoner and rescued by the White Knight, who sees her to the end of the wood and sings her 'A-sitting On A Gate'.",
+    "Waves her handkerchief to the White Knight at the turn in the road, and always remembered that scene most clearly of the whole journey.",
+    "Crosses the last brook into the Eighth Square and finds a golden crown already on her head.",
+    "Is examined by the Red and White Queens on Addition, Subtraction, Division, Languages and the cause of lightning.",
+    "Holds both Queens asleep in her lap, then finds herself at an arched doorway lettered QUEEN ALICE with a Visitors' Bell and a Servants' Bell.",
+    "Is introduced to a leg of mutton and to a pudding at her own banquet, and is told it isn't etiquette to cut anyone she has been introduced to.",
+    "Pulls the table-cloth and brings plates, dishes, guests and candles down in a heap, then seizes the dwindled Red Queen and shakes her.",
+    "Wakes on the hearth-rug holding the black kitten, and asks whether she dreamed it or the Red King did."
+  ],
+  "known_relations_book1": {
+    "Kitty": "Her black kitten, scolded in the first chapter and identified as the Red Queen at the end.",
+    "Dinah": "The old cat at home, mother of the kittens; never enters the Looking-glass world.",
+    "Red Queen": "Sets her the chessboard directions, runs with her, examines her at the Eighth Square, and is shaken back into a kitten.",
+    "White Queen": "Whose Pawn she becomes; Alice tidies her pins and hair and carries her asleep in her lap.",
+    "White Knight": "Rescues her from the Red Knight and escorts her to the last brook; the one scene she always remembered most clearly.",
+    "Humpty Dumpty": "Meets him on the wall; he explains 'Jabberwocky' and dismisses her without recognising her again.",
+    "Tweedledum": "One of the two fat little men in the wood; she helps dress him for the battle over the rattle.",
+    "Tweedledee": "His brother, who recites 'The Walrus and the Carpenter' and tells her she is a thing in the Red King's dream.",
+    "Fawn": "Walks through the nameless wood with its neck in her arms until it remembers what she is.",
+    "Sheep": "Sells her the egg and shouts 'Feather!' at her while she rows."
+  },
+  "forbidden_book1": {
+    "previous_book_only": [
+      "Alice falls down a rabbit-hole",
+      "Alice drinks from a bottle labelled DRINK ME",
+      "Alice attends the Mad Tea-Party",
+      "Alice plays croquet with flamingoes",
+      "Alice is a witness at the Knave's trial",
+      "the Queen of Hearts",
+      "the Cheshire Cat",
+      "the Mad Hatter",
+      "the March Hare",
+      "the Mock Turtle"
+    ],
+    "not_in_this_book": [
+      "Alice fights the Jabberwock",
+      "Alice takes the vorpal sword",
+      "Alice is crowned by the White King"
+    ],
+    "invented_biography": [
+      "Alice Liddell",
+      "Alice lives in Oxford",
+      "Alice's parents"
+    ]
+  },
+  "hallucination_signals": [
+    "down the rabbit-hole",
+    "the Mad Hatter",
+    "Queen of Hearts",
+    "the Cheshire Cat",
+    "Alice Liddell",
+    "Alice slays the Jabberwock",
+    "her blue dress"
+  ],
+  "identity_confusion_forbidden": []
+}

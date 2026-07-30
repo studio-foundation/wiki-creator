@@ -1,0 +1,72 @@
+{
+  "tweedledum": {
+    "entity": "Tweedledum",
+    "canonical_aliases_book1": [
+      "Tweedledum"
+    ],
+    "known_facts_book1": [
+      "Is one of two fat little men standing under a tree with an arm round the other's neck, the collar embroidered 'DUM'.",
+      "Says 'nohow' where his brother says 'Contrariwise', and tells Alice that if she thinks they are wax-works she ought to pay.",
+      "Insists the first thing in a visit is to say 'How d'ye do?' and shake hands, then dances a ring with Alice and his brother.",
+      "Names 'The Walrus and the Carpenter' as the longest thing his brother could repeat.",
+      "Says the Red King is dreaming about Alice and that if he woke she would go out bang, just like a candle.",
+      "Finds his nice new rattle spoilt under the tree, screams, stamps about and tears his hair over it.",
+      "Agrees to have a battle, is dressed by Alice in a bolster and a helmet that looks like a saucepan, and admits he happens to have a headache.",
+      "Proposes to fight till six and then have dinner, and boasts he hits everything within reach whether he can see it or not.",
+      "Runs off with his brother the moment the monstrous crow arrives, so the battle is never fought."
+    ],
+    "known_relations_book1": {
+      "Tweedledee": "His brother, hugged, contradicted and armed for a battle over the rattle that never happens.",
+      "Alice": "Dances with her, has her tie on his armour, and tells her she is only a thing in the Red King's dream.",
+      "Red King": "Leads Alice with his brother to where the King lies asleep and snoring."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Tweedledum defeats Tweedledee",
+        "the battle over the rattle is fought to the end",
+        "Tweedledum appears in Wonderland",
+        "Tweedledum is killed by the crow"
+      ]
+    },
+    "hallucination_signals": [
+      "Tweedledum wins the battle",
+      "Tweedledum kills",
+      "the brothers finish their battle"
+    ],
+    "identity_confusion_forbidden": []
+  },
+  "tweedledee": {
+    "entity": "Tweedledee",
+    "canonical_aliases_book1": [
+      "Tweedledee"
+    ],
+    "known_facts_book1": [
+      "Is the brother whose collar is embroidered 'DEE', and who answers everything with 'Contrariwise'.",
+      "Offers the logic 'if it was so, it might be; and if it were so, it would be; but as it isn't, it ain't.'",
+      "Recites the whole of 'The Walrus and the Carpenter' instead of telling Alice the road out of the wood.",
+      "Argues that the Walrus ate more than the Carpenter by holding his handkerchief in front so the count was hidden.",
+      "Tells Alice she is only a sort of thing in the Red King's dream and that she is not real, which makes her cry.",
+      "Tries to fold himself up inside the umbrella and ends rolled up in it with only his head out, looking more like a fish than anything else.",
+      "Has a toothache on the day of the battle and a watch that says half-past four.",
+      "Runs off with his brother when the monstrous crow comes."
+    ],
+    "known_relations_book1": {
+      "Tweedledum": "His brother, whose spoilt rattle starts the quarrel.",
+      "Alice": "Recites poetry at her, dances with her, and denies that she is real.",
+      "Red King": "The sleeper whose dream he says contains Alice and both brothers alike."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Tweedledee defeats Tweedledum",
+        "Tweedledee wrote the poem about the Walrus",
+        "Tweedledee appears in Wonderland"
+      ]
+    },
+    "hallucination_signals": [
+      "Tweedledee wins the battle",
+      "Tweedledee kills",
+      "Tweedledee composed"
+    ],
+    "identity_confusion_forbidden": []
+  }
+}

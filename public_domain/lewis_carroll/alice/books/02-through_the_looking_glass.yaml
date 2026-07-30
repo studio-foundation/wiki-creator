@@ -1,0 +1,94 @@
+description: |
+  Build a wiki for "Through the Looking-Glass, and What Alice Found There" by Lewis Carroll,
+  book 2 of the Alice series.
+  Parse the book, extract all named entities (characters, locations, organizations, events),
+  resolve aliases, and generate Markdown wiki pages for each entity.
+
+file_path: public_domain/lewis_carroll/alice/books/02-through_the_looking_glass.epub
+spacy_model: en_core_web_lg
+aliases: [ttlg]
+ner:
+  # Invented world, same as tome 1: Jabberwock, Bandersnatch, Tweedledum,
+  # Haigha, Hatta, Snowdrop are coinages spaCy has no lexicon for.
+  # threshold 0.3 is the measured default (STU-535).
+  invented_names: true
+  threshold: 0.3
+  # The looking-glass cast is named by common nouns and chess ranks, which
+  # GLiNER's `person name` label under-detects (STU-630/714). Counts below are
+  # occurrences in the parsed text.
+  # Bare "Queen" (187) and bare "King" (67) are deliberately absent: unlike
+  # tome 1's "Cat", they are ambiguous between the Red and the White piece
+  # inside the same chapter, so a literal match would fuse two characters.
+  # "Knight" (58) is safe — every bare occurrence is in chapter VIII, where the
+  # Red Knight leaves after two pages and the rest is the White Knight.
+  character_names:
+    - Red Queen        # 56
+    - White Queen      # 35
+    - Red King         # 5
+    - White King       # 6
+    - White Knight     # 7
+    - Red Knight       # 5
+    - Knight           # 58
+    - Unicorn          # 24
+    - Lion             # 20
+    - Sheep            # 20
+    - Gnat             # 18
+    - Walrus           # 14
+    - Tiger-lily       # 13
+    - Carpenter        # 13
+    - Rose             # 12
+    - Messenger        # 12
+    - Fawn             # 7
+    - Frog             # 7
+    - Daisy            # 6
+
+coref: false
+workers: 8
+
+min_mentions_absolute: 3
+
+generation:
+  register: >-
+    Whimsical and storybook, in the wondering, matter-of-fact voice of a Victorian
+    children's tale, told in mirror-logic: a chess game played out as a journey,
+    where reversal, nonsense verse and pedantic word-play are reported as plain
+    fact, without winking at the reader or explaining the joke.
+  chapter_summary:
+    mode: llm
+    max_bullets: 8
+    llm_fallback_to_extractive: true
+    llm_model: qwen2.5
+    llm_timeout_seconds: 45
+  chapter_summary_max_chapters_per_entity: 20
+  # Like tome 1, the book is a string of self-contained encounters — the live
+  # flowers, the Gnat, the Tweedles, the Sheep's shop, Humpty Dumpty, the Lion
+  # and the Unicorn, the White Knight — strung on Alice's march from pawn to
+  # queen. Short setup (one chapter through the mirror), long episodic middle,
+  # and unlike Wonderland a real climax: the banquet of chapter IX, the longest
+  # chapter in the book, then two one-page chapters and a coda.
+  narrative_arc:
+    weights: [0.15, 0.65, 0.20]
+    max_events: 22
+  principal:
+    sections: [infobox, biography, narrative_role, personality, physical, powers, relationships, trivia, references]
+    sections_by_type:
+      PLACE: [infobox, biography, physical, relationships, trivia, references]
+      ORG: [infobox, biography, relationships, references]
+      EVENT: [infobox, biography, relationships, references]
+    max_tokens_per_page: 2000
+  secondary:
+    sections: [infobox, biography, relationships, references]
+    max_tokens_per_page: 800
+  figurant:
+    sections: [infobox, biography]
+    max_tokens_per_page: 200
+
+export:
+  categories:
+    language: en
+    labels:
+      persons: Characters
+      principal: Main Characters
+      secondary: Secondary Characters
+      locations: Locations
+      organizations: Organizations

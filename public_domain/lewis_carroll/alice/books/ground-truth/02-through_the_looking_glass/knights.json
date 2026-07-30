@@ -1,0 +1,77 @@
+{
+  "white_knight": {
+    "entity": "White Knight",
+    "canonical_aliases_book1": [
+      "White Knight"
+    ],
+    "known_facts_book1": [
+      "Arrives shouting 'Ahoy! Ahoy! Check!' and tumbles off his horse exactly as the Red Knight had done.",
+      "Fights the Red Knight under the Rules of Battle and calls the result a glorious victory.",
+      "Is dressed in tin armour that fits him very badly, with a helmet hanging from the saddle.",
+      "Carries a deal box upside-down with the lid hanging open, so that everything in it has fallen out, and hangs it on a tree hoping bees will nest in it.",
+      "Has a bee-hive and a mouse-trap on the saddle, and anklets round the horse's feet to guard against the bites of sharks.",
+      "Falls off his horse constantly, always on his head, and insists he has had plenty of practice.",
+      "Invents a way of getting over a gate by standing on his head, and a sugar-loaf helmet he once fell into and had to be kicked out of.",
+      "Invented a pudding during the meat-course, beginning with blotting paper and mixed with gunpowder and sealing-wax, which he does not believe ever will be cooked.",
+      "Explains that the name of his song is called 'Haddocks' Eyes', the name really is 'The Aged Aged Man', the song is called 'Ways and Means', and the song really is 'A-sitting On A Gate'.",
+      "Sings the ballad of the aged aged man to a tune that Alice recognises as 'I give thee all, I can no more'.",
+      "Sees Alice to the end of the wood because that is the end of his move, and rides away tumbling off first on one side and then on the other.",
+      "Is the one sight of the whole journey that Alice always remembered most clearly, with the setting sun blazing on his armour."
+    ],
+    "known_relations_book1": {
+      "Alice": "Rescues her from the Red Knight, escorts her to the last brook and sings to her; she waves her handkerchief as he goes. Gentle and foolish, not a suitor.",
+      "Red Knight": "The crimson knight he fights and defeats for possession of Alice as a prisoner."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the White Knight marries Alice",
+        "the White Knight is Alice's father",
+        "the White Knight slays the Jabberwock",
+        "the White Knight kills the Red Knight",
+        "the White Knight escorts Alice to the banquet"
+      ],
+      "outside_the_book": [
+        "the White Knight is a self-portrait of Lewis Carroll",
+        "the White Knight is in love with Alice"
+      ]
+    },
+    "hallucination_signals": [
+      "the White Knight slays",
+      "the White Knight loves Alice",
+      "a self-portrait of the author",
+      "the White Knight is Carroll"
+    ],
+    "identity_confusion_forbidden": []
+  },
+  "red_knight": {
+    "entity": "Red Knight",
+    "canonical_aliases_book1": [
+      "Red Knight"
+    ],
+    "known_facts_book1": [
+      "Comes galloping down on Alice in crimson armour, brandishing a great club and shouting 'Ahoy! Ahoy! Check!'",
+      "Tumbles off his horse the moment it stops, and claims Alice as his prisoner.",
+      "Puts on a helmet something the shape of a horse's head before the fight.",
+      "Says he always observes the Rules of Battle, and fights the White Knight until both fall on their heads side by side.",
+      "Shakes hands with the White Knight after the fight, mounts, and gallops off; he does not appear again."
+    ],
+    "known_relations_book1": {
+      "Alice": "Claims her as his prisoner and loses her in the fight; they never speak to each other.",
+      "White Knight": "His opponent in the duel fought under the Rules of Battle."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Red Knight is killed",
+        "the Red Knight serves the Red Queen",
+        "the Red Knight captures Alice and carries her away",
+        "the Red Knight is the Red King"
+      ]
+    },
+    "hallucination_signals": [
+      "the Red Knight is slain",
+      "the Red Knight returns",
+      "the Red Knight's master"
+    ],
+    "identity_confusion_forbidden": []
+  }
+}

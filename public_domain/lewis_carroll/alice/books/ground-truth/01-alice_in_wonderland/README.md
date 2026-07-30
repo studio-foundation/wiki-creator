@@ -3,7 +3,8 @@
 Corpus for step 1b of the `validate-wiki-run` skill. Every fact here was verified against
 `processing_output/01-alice_in_wonderland/chapters.json`, the text the pipeline itself reads —
 never against memory. Book 1 only: this EPUB is *Alice's Adventures in Wonderland*, and
-*Through the Looking-Glass* is not in it.
+*Through the Looking-Glass* is not in it — that tome has its own corpus in
+`../02-through_the_looking_glass/`.
 
 ## Files
 

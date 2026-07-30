@@ -1,0 +1,228 @@
+{
+  "kitty": {
+    "entity": "Kitty",
+    "canonical_aliases_book1": [
+      "Kitty"
+    ],
+    "known_facts_book1": [
+      "Is the black kitten, finished with its washing earlier in the afternoon, that unwinds Alice's ball of worsted over the hearth-rug.",
+      "Is charged with three faults: squeaking while Dinah washed its face, pulling Snowdrop away by the tail, and unwinding the worsted.",
+      "Is held up to the glass and threatened with Looking-glass House, and refuses to fold its arms like the Red Queen.",
+      "Never goes through the glass: it is on the hearth-rug when Alice wakes, purring.",
+      "Is set face to face with the Red Queen chessman at the end and looks a little ashamed of itself, so Alice concludes it was the Red Queen."
+    ],
+    "known_relations_book1": {
+      "Alice": "Her kitten, scolded, lectured and finally accused of having been the Red Queen.",
+      "Dinah": "Its mother, who washes its face.",
+      "Snowdrop": "The white kitten it pulled away by the tail."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Kitty goes through the looking-glass",
+        "Kitty talks to Alice",
+        "Kitty appears in the Looking-glass world"
+      ]
+    },
+    "hallucination_signals": [
+      "Kitty said",
+      "Kitty followed Alice through"
+    ],
+    "identity_confusion_forbidden": []
+  },
+  "snowdrop": {
+    "entity": "Snowdrop",
+    "canonical_aliases_book1": [
+      "Snowdrop"
+    ],
+    "known_facts_book1": [
+      "Is the white kitten, having its face washed by the old cat for the last quarter of an hour and bearing it pretty well.",
+      "Had a saucer of milk put down before her, and was pulled away by the tail by the black kitten.",
+      "Is still patiently undergoing its toilet at the end of the book, when Alice calls her 'your White Majesty' and decides she was the White Queen.",
+      "Never speaks and never leaves the hearth-rug."
+    ],
+    "known_relations_book1": {
+      "Alice": "Her white kitten, addressed at the end as the White Queen.",
+      "Dinah": "Its mother, still scrubbing it in the last chapter.",
+      "Kitty": "The black kitten that pulled her away from the milk."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Snowdrop goes through the looking-glass",
+        "Snowdrop speaks",
+        "Snowdrop appears in the Looking-glass world"
+      ]
+    },
+    "hallucination_signals": [
+      "Snowdrop said",
+      "Snowdrop travels"
+    ],
+    "identity_confusion_forbidden": []
+  },
+  "dinah": {
+    "entity": "Dinah",
+    "canonical_aliases_book1": [
+      "Dinah"
+    ],
+    "known_facts_book1": [
+      "Is the old cat, mother of the two kittens, who washes their faces by holding them down by one ear and rubbing the wrong way from the nose.",
+      "Is reproached by Alice for not having taught the black kitten better manners.",
+      "Is still washing Snowdrop in the last chapter, and Alice tells her she is scrubbing a White Queen.",
+      "Never goes through the glass; Alice only wonders aloud whether Dinah turned into Humpty Dumpty, and says she is not sure."
+    ],
+    "known_relations_book1": {
+      "Alice": "Her cat, scolded at the start and questioned at the end.",
+      "Kitty": "Her black kitten.",
+      "Snowdrop": "Her white kitten."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Dinah enters the Looking-glass world",
+        "Dinah is Humpty Dumpty",
+        "Dinah speaks to Alice"
+      ]
+    },
+    "hallucination_signals": [
+      "Dinah said",
+      "Dinah went through the glass",
+      "Dinah turned into Humpty Dumpty"
+    ],
+    "identity_confusion_forbidden": []
+  },
+  "frog": {
+    "entity": "Frog",
+    "canonical_aliases_book1": [
+      "Frog"
+    ],
+    "known_facts_book1": [
+      "Is a very old Frog sitting under a tree by the door lettered QUEEN ALICE, dressed in bright yellow with enormous boots on.",
+      "Speaks in a deep hoarse whisper Alice can scarcely hear, and drawls so slowly she almost stamps with irritation.",
+      "Asks which door, then what the door has been asking of, and tells Alice she shouldn't knock because it vexes it.",
+      "Kicks the door with one of his great feet and hobbles back to his tree, advising her to let it alone and it'll let her alone."
+    ],
+    "known_relations_book1": {
+      "Alice": "The only creature who answers her at the door of her own house, and refuses to open it."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Frog opens the door for Alice",
+        "the Frog is a footman",
+        "the Frog serves at the banquet"
+      ]
+    },
+    "hallucination_signals": [
+      "the Frog opened the door",
+      "the Frog-Footman"
+    ],
+    "identity_confusion_forbidden": [
+      "alias: Frog-Footman"
+    ]
+  },
+  "jabberwock": {
+    "entity": "Jabberwock",
+    "canonical_aliases_book1": [
+      "Jabberwock"
+    ],
+    "known_facts_book1": [
+      "Exists only in the poem Alice reads by holding the looking-glass book up to a glass; it never appears in the story.",
+      "Is described with jaws that bite and claws that catch, and eyes of flame, coming whiffling through the tulgey wood and burbling as it came.",
+      "Is killed by an unnamed beamish boy with a vorpal blade, who leaves it dead and goes galumphing back with its head.",
+      "Its hard words are later glossed by Humpty Dumpty, who explains brillig, slithy, toves, gyre, gimble, wabe, mimsy, borogove and mome raths.",
+      "Alice's whole verdict on the poem is that somebody killed something, that's clear at any rate."
+    ],
+    "known_relations_book1": {
+      "Alice": "Reads about it; the two never meet.",
+      "Humpty Dumpty": "Explains the vocabulary of the poem it lives in."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Alice meets the Jabberwock",
+        "the Jabberwock attacks",
+        "the Jabberwock guards the Eighth Square",
+        "the White Knight slew the Jabberwock"
+      ]
+    },
+    "hallucination_signals": [
+      "Alice faces the Jabberwock",
+      "the Jabberwock attacks",
+      "the Jabberwock appears"
+    ],
+    "identity_confusion_forbidden": []
+  },
+  "bandersnatch": {
+    "entity": "Bandersnatch",
+    "canonical_aliases_book1": [
+      "Bandersnatch"
+    ],
+    "known_facts_book1": [
+      "Is named in the 'Jabberwocky' poem as the frumious Bandersnatch, to be shunned along with the Jubjub bird.",
+      "Is used twice by the White King as a figure of speed: you might as well try to stop a Bandersnatch, and you might as well try to catch a Bandersnatch.",
+      "Never appears on the page and is never seen by anybody."
+    ],
+    "known_relations_book1": {
+      "White King": "Uses it as his comparison for a minute going by and for the White Queen running."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Bandersnatch chases Alice",
+        "the Bandersnatch appears",
+        "Alice escapes the Bandersnatch"
+      ]
+    },
+    "hallucination_signals": [
+      "the Bandersnatch chases",
+      "the Bandersnatch attacks"
+    ],
+    "identity_confusion_forbidden": []
+  },
+  "violet": {
+    "entity": "Violet",
+    "canonical_aliases_book1": [
+      "Violet"
+    ],
+    "known_facts_book1": [
+      "Speaks exactly once, saying it never saw anybody that looked stupider, so suddenly that Alice jumps.",
+      "Is told by the Tiger-lily to hold its tongue, since it keeps its head under the leaves and snores away there.",
+      "Says nothing else for the rest of the book."
+    ],
+    "known_relations_book1": {
+      "Tiger-lily": "Silences it immediately after its one remark.",
+      "Alice": "The target of its single insult."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Violet speaks with Alice at length",
+        "the Violet travels with Alice"
+      ]
+    },
+    "hallucination_signals": [
+      "the Violet explained",
+      "the Violet follows"
+    ],
+    "identity_confusion_forbidden": []
+  },
+  "larkspur": {
+    "entity": "Larkspur",
+    "canonical_aliases_book1": [
+      "Larkspur"
+    ],
+    "known_facts_book1": [
+      "Speaks exactly one line, crying 'She's coming!' and saying it hears the Red Queen's footstep along the gravel-walk.",
+      "Is the flower that announces the Red Queen's arrival in the garden, and says nothing else."
+    ],
+    "known_relations_book1": {
+      "Red Queen": "The arrival it announces.",
+      "Alice": "Present for its one line; they never speak to each other."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Larkspur converses with Alice",
+        "the Larkspur is picked"
+      ]
+    },
+    "hallucination_signals": [
+      "the Larkspur explained",
+      "the Larkspur said to Alice"
+    ],
+    "identity_confusion_forbidden": []
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "entity": "Humpty Dumpty",
+  "canonical_aliases_book1": [
+    "Humpty Dumpty"
+  ],
+  "known_facts_book1": [
+    "Is the egg Alice bought from the Sheep, grown larger and more human until she sees it is Humpty Dumpty himself.",
+    "Sits with his legs crossed like a Turk on the top of a very narrow high wall, and finds it provoking to be called an egg.",
+    "Says his name means the shape he is, and that Alice's name is stupid enough because it could mean any shape.",
+    "Says the King has promised him with his very own mouth to send all his horses and all his men if he ever fell.",
+    "Wears a cravat, an un-birthday present from the White King and Queen, which Alice mistakes for a belt.",
+    "Works out with Alice that there are three hundred and sixty-four days a year for un-birthday presents.",
+    "Says 'When I use a word, it means just what I choose it to mean—neither more nor less', and that the question is which is to be master.",
+    "Says he pays words extra when he makes them do a lot of work, and that they come round him of a Saturday night for their wages.",
+    "Explains the hard words of 'Jabberwocky': brillig, slithy as a portmanteau, toves, gyre, gimble, wabe, mimsy, borogove, mome raths and outgrabe.",
+    "Recites the poem about sending a message to the fish, which breaks off unfinished at the locked door.",
+    "Dismisses Alice with 'I shouldn't know you again if we did meet—you're so exactly like other people', and complains her face is the same as everybody's.",
+    "Is left sitting on the wall with his eyes shut, and a moment later a heavy crash shakes the forest from end to end.",
+    "Is reported by the White Queen to have come to the door with a corkscrew in his hand, looking for a hippopotamus."
+  ],
+  "known_relations_book1": {
+    "Alice": "Argues with her about names, words and age; never learns to recognise her and says good-bye twice.",
+    "White King": "Promised him all his horses and all his men, and gave him the cravat.",
+    "White Queen": "Gave him the cravat with the King, and later tells the story of his corkscrew visit.",
+    "Sheep": "Sold Alice the egg he grew out of."
+  },
+  "forbidden_book1": {
+    "not_in_this_book": [
+      "the King's men put Humpty Dumpty together again",
+      "Humpty Dumpty is mended after his fall",
+      "Humpty Dumpty appears in Wonderland",
+      "Humpty Dumpty rules an egg kingdom"
+    ],
+    "invented_biography": [
+      "Humpty Dumpty is a wealthy merchant",
+      "Humpty Dumpty has a family"
+    ]
+  },
+  "hallucination_signals": [
+    "put Humpty Dumpty together again",
+    "Humpty Dumpty is mended",
+    "Humpty Dumpty's wife",
+    "Humpty Dumpty dies"
+  ],
+  "identity_confusion_forbidden": []
+}
