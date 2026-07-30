@@ -48,7 +48,32 @@ make check-wikilinks-series  # same over output/_series/
 make smoke        # e2e smoke test on the committed fixture novella
 make golden       # golden regression run: chained resolution stages vs committed goldens (~2s, no spaCy/LLM)
 make golden-update  # regenerate goldens after an INTENTIONAL behavior change, then review the diff
+
+make sync-push    # push this machine's derived artifacts to the rsync hub
+make sync-pull    # pull them back
+make sync-push-dry / sync-pull-dry   # same, rsync --dry-run, prints the file list
+make sync-paths   # print the synced path set
 ```
+
+`sync-push`/`sync-pull` move the gitignored artifacts that cost real LLM/GPU
+time to regenerate — `library/**` and `public_domain/**`
+`{processing_output,wiki_inputs,registry.json,character_graph.json}`,
+`library/**/output`, and `.studio/runs/` — between machines through a central
+rsync hub. `public_domain/**/output` is committed in git, so it is excluded.
+
+The hub comes from the environment, never from the Makefile:
+
+```bash
+export WIKI_SYNC_REMOTE=user@pi:/path/to/wiki-creator-sync
+```
+
+Unset, both targets fail with that line. Both directions run `rsync -a --update`
+and **never** `--delete` — these trees are edited from both machines, so an older
+copy can never clobber a newer one, and nothing is ever removed remotely. Paths
+are discovered by `find` at run time (a missing `wiki_inputs/` is silent, not an
+error) and pushed with full relative paths, so the hub mirrors the repo tree and
+a pull restores each file in place. Edit the set in one place: `SYNC_PATHS_CMD`
+in the `Makefile`.
 
 The `wiki` CLI is the ergonomic front door (STU-597), a thin launcher over
 `studio run` with short book aliases and `--help` — it owns no stage order
