@@ -22,6 +22,32 @@ def chapter_number(key: object) -> int | None:
     return int(m.group()) if m else None
 
 
+def declared_chapter_marks(book_config: dict) -> list[str]:
+    """The lines this edition prints to open each of its sections (STU-736).
+
+    An edition can mark its sections typographically and nowhere else — no TOC
+    entry, no heading, no printed contents — so no markup rule can find them
+    (`hr class="chap"` is 32 marks for 32 chapters on dracula and 6 for 3
+    sections on The Call of Cthulhu). A reader holding the book can transcribe
+    the lines it prints; that is what `parsing.chapter_marks` holds, verbatim.
+
+    A book declaring none (every book but one) splits exactly as it does today.
+    A present-but-malformed value raises rather than degrading: a chapter mark
+    silently ignored is the STU-470 shape.
+    """
+    raw = (book_config.get("parsing") or {}).get("chapter_marks")
+    if raw is None:
+        return []
+    if not isinstance(raw, list) or not raw:
+        raise ValueError("parsing.chapter_marks must be a non-empty list of printed lines")
+    marks = []
+    for mark in raw:
+        if not isinstance(mark, str) or not mark.strip():
+            raise ValueError("parsing.chapter_marks entries must be non-empty strings")
+        marks.append(mark.strip())
+    return marks
+
+
 def is_frontmatter_chapter(chapter: dict) -> bool:
     """Return True if the section filter tagged this section as front/back matter.
 

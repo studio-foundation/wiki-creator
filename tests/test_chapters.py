@@ -4,6 +4,7 @@ import pytest
 
 from wiki_creator.chapters import (
     chapter_number_index,
+    declared_chapter_marks,
     number_chapters,
     resolve_chapter_number,
 )
@@ -53,3 +54,33 @@ def test_resolve_chapter_number_never_falls_back_to_digits(capsys):
 @pytest.mark.parametrize("ref", [7, 0])
 def test_resolve_chapter_number_passes_numbers_through(ref):
     assert resolve_chapter_number(ref, {}) == ref
+
+
+# --- The chapter mark a book prints, declared in its YAML (STU-736) ---
+
+
+def test_declared_chapter_marks_reads_the_lines_the_book_prints():
+    config = {
+        "parsing": {
+            "chapter_marks": ["1. The Horror in Clay.", " 2. The Tale of Inspector Legrasse. "]
+        }
+    }
+    assert declared_chapter_marks(config) == [
+        "1. The Horror in Clay.",
+        "2. The Tale of Inspector Legrasse.",
+    ]
+
+
+@pytest.mark.parametrize("config", [{}, {"parsing": {}}, {"parsing": None}])
+def test_declared_chapter_marks_is_empty_for_every_other_book(config):
+    """The STU-539 asymmetry: an undeclared book splits as it does today."""
+    assert declared_chapter_marks(config) == []
+
+
+@pytest.mark.parametrize(
+    "marks", [[], "1. The Horror in Clay.", ["1. The Horror in Clay.", ""], [1]]
+)
+def test_declared_chapter_marks_refuses_a_malformed_declaration(marks):
+    """A mark the pipeline silently ignores is the STU-470 shape."""
+    with pytest.raises(ValueError):
+        declared_chapter_marks({"parsing": {"chapter_marks": marks}})

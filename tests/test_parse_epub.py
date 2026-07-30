@@ -1130,3 +1130,186 @@ def test_printed_contents_entry_title_falls_back_to_the_link_text():
         ("c2", "The Middle"),
         ("c3", "The Ending"),
     ]
+
+
+# --- A book whose sections are marked typographically and nowhere else (STU-736) ---
+
+
+_PRINTED_MARKS = [
+    "1. The Horror in Clay.",
+    "2. The Tale of Inspector Legrasse.",
+    "3. The Madness from the Sea.",
+]
+
+
+def _typographic_epub(tmp_path, *, wrap_in_div=False, lead_paragraphs=0):
+    """Several sections in one XHTML, marked only by the line each one opens with.
+
+    The Call of Cthulhu's shape: the TOC anchors front matter, the book prints no
+    contents list, and no section carries a heading — the only marker is a CSS
+    class (`<p class="ph1"><i>1. The Horror in Clay.</i></p>`), which no rule may
+    read (dracula prints 32 `hr.chap` for its 32 correct chapters).
+    """
+    from ebooklib import epub
+
+    book = epub.EpubBook()
+    book.set_identifier("typographic")
+    book.set_title("Typographic Book")
+    book.set_language("en")
+
+    body = "<html><body>"
+    body += "".join(
+        f"<p>Front matter paragraph {j} that is long enough to stand on its own.</p>"
+        for j in range(lead_paragraphs)
+    )
+    for i, mark in enumerate(_PRINTED_MARKS, start=1):
+        chunk = f'<hr class="chap"/><p class="ph1"><i>{mark}</i></p>'
+        chunk += "".join(
+            f"<p>Section {i} paragraph {j}, with plenty of words to clear the length bar.</p>"
+            for j in range(4)
+        )
+        if wrap_in_div:
+            chunk = f'<div class="section">{chunk}</div>'
+        body += chunk
+    body += "</body></html>"
+
+    item = epub.EpubHtml(uid="whole", title="Whole", file_name="whole.xhtml", lang="en")
+    item.set_content(body.encode())
+    book.add_item(item)
+    book.spine = [item]
+    book.toc = (item,)
+    book.add_item(epub.EpubNcx())
+    book.add_item(epub.EpubNav())
+
+    path = str(tmp_path / "typographic.epub")
+    epub.write_epub(path, book)
+    return path
+
+
+def test_declared_chapter_marks_split_a_typographically_marked_book(tmp_path):
+    """The book declares the lines it prints; each one opens a section."""
+    from scripts.parse_epub import parse_epub
+
+    chapters = parse_epub(
+        _typographic_epub(tmp_path), language="en", chapter_marks=_PRINTED_MARKS
+    )["chapters"]
+    assert [c["title"] for c in chapters] == _PRINTED_MARKS
+    assert [c["id"] for c in chapters] == [
+        "whole#1-the-horror-in-clay",
+        "whole#2-the-tale-of-inspector-legrasse",
+        "whole#3-the-madness-from-the-sea",
+    ]
+    assert chapters[0]["content"].startswith("1. The Horror in Clay.")
+    assert "Inspector Legrasse" not in chapters[0]["content"]
+
+
+def test_the_same_book_undeclared_stays_one_chapter(tmp_path):
+    """The STU-539 asymmetry, measured on the shape itself: no declaration, no
+    split — which is what keeps every other book byte-identical."""
+    from scripts.parse_epub import parse_epub
+
+    chapters = parse_epub(_typographic_epub(tmp_path), language="en")["chapters"]
+    assert len(chapters) == 1
+    assert chapters[0]["id"] == "whole"
+
+
+def test_declared_marks_split_preserves_all_prose(tmp_path):
+    """Splitting partitions the text; it never drops or duplicates prose."""
+    from scripts.parse_epub import parse_epub
+
+    chapters = parse_epub(
+        _typographic_epub(tmp_path), language="en", chapter_marks=_PRINTED_MARKS
+    )["chapters"]
+    for i, ch in enumerate(chapters, start=1):
+        assert ch["content"].count(f"Section {i} paragraph 3") == 1
+
+
+def test_declared_marks_ignore_the_wrapper_printing_the_same_text(tmp_path):
+    """Only a leaf block is the mark: a `<div>` around the section prints the mark
+    too, and cutting there as well would lose the section to the length gate."""
+    from scripts.parse_epub import parse_epub
+
+    chapters = parse_epub(
+        _typographic_epub(tmp_path, wrap_in_div=True), language="en", chapter_marks=_PRINTED_MARKS
+    )["chapters"]
+    assert [c["title"] for c in chapters] == _PRINTED_MARKS
+
+
+def test_declared_marks_keep_the_front_matter_before_the_first_one(tmp_path):
+    """Cthulhu prints its title page and epigraph before section 1; that prose is
+    kept as its own leading section, never dropped (the STU-728 lead)."""
+    from scripts.parse_epub import parse_epub
+
+    chapters = parse_epub(
+        _typographic_epub(tmp_path, lead_paragraphs=3),
+        language="en",
+        chapter_marks=_PRINTED_MARKS,
+    )["chapters"]
+    assert chapters[0]["id"] == "whole"
+    assert "Front matter paragraph 0" in chapters[0]["content"]
+    assert [c["title"] for c in chapters[1:]] == _PRINTED_MARKS
+
+
+def test_a_declared_mark_the_book_never_prints_warns(tmp_path, capsys):
+    """A mistyped line splits nothing and says so — a silent no-op is the bug."""
+    from scripts.parse_epub import parse_epub
+
+    chapters = parse_epub(
+        _typographic_epub(tmp_path),
+        language="en",
+        chapter_marks=[*_PRINTED_MARKS, "4. The Section That Is Not There."],
+    )["chapters"]
+    assert len(chapters) == 3
+    assert "4. The Section That Is Not There." in capsys.readouterr().err
+
+
+def test_declared_marks_match_the_printed_line_across_typesetting_whitespace(tmp_path):
+    """The YAML holds what the page shows; the markup holds the typesetter's line
+    breaks and `&#13;` charrefs (STU-531) between the words."""
+    from ebooklib import epub
+    from scripts.parse_epub import parse_epub
+
+    book = epub.EpubBook()
+    book.set_title("Wrapped Mark")
+    book.set_language("en")
+    item = epub.EpubHtml(uid="whole", title="Whole", file_name="whole.xhtml", lang="en")
+    item.set_content(
+        ("<html><body><p>" + "opening word " * 20 + "</p>"
+         "<p class='ph1'><i>1. The Horror\n&#13; in Clay.</i></p><p>"
+         + "section word " * 40 + "</p></body></html>").encode()
+    )
+    book.add_item(item)
+    book.spine = [item]
+    book.toc = (item,)
+    book.add_item(epub.EpubNcx())
+    book.add_item(epub.EpubNav())
+    path = str(tmp_path / "wrapped.epub")
+    epub.write_epub(path, book)
+
+    chapters = parse_epub(path, language="en", chapter_marks=["1. The Horror in Clay."])["chapters"]
+    assert [c["title"] for c in chapters[1:]] == ["1. The Horror in Clay."]
+
+
+def test_the_call_of_cthulhu_parses_to_its_three_printed_sections():
+    """The measured case (STU-736). The tracked EPUB, the tracked book YAML."""
+    import yaml
+
+    from scripts.parse_epub import parse_epub
+    from wiki_creator.chapters import declared_chapter_marks
+
+    book_yaml = Path(
+        "public_domain/h_p_lovecraft/the_call_of_cthulhu/books/01-the_call_of_cthulhu.yaml"
+    )
+    config = yaml.safe_load(book_yaml.read_text(encoding="utf-8"))
+    chapters = parse_epub(
+        config["file_path"], language="en", chapter_marks=declared_chapter_marks(config)
+    )["chapters"]
+    # The lead is the title page, the transcriber's note and the epigraph — front
+    # matter the section filter tags, kept rather than dropped.
+    assert [c["title"] for c in chapters[1:]] == [
+        "1. The Horror in Clay.",
+        "2. The Tale of Inspector Legrasse.",
+        "3. The Madness from the Sea.",
+    ]
+    assert chapters[1]["content"].startswith("1. The Horror in Clay.")
+    assert "Inspector Legrasse" not in chapters[0]["content"]

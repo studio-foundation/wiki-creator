@@ -5,6 +5,15 @@ description: |
 
 file_path: public_domain/h_p_lovecraft/the_call_of_cthulhu/books/01-the_call_of_cthulhu.epub
 spacy_model: en_core_web_lg
+
+parsing:
+  # This edition prints no table of contents and gives its sections no heading:
+  # each one opens with its numbered title on a line of its own (STU-736).
+  chapter_marks:
+    - 1. The Horror in Clay.
+    - 2. The Tale of Inspector Legrasse.
+    - 3. The Madness from the Sea.
+
 ner:
   # STU-616: invented world. GLiNER typing 20/33 vs spaCy 17/33
   # (LLM oracle, claude-opus-4-8). Cthulhu, R'lyeh, the Cthulhu Cult: invented cosmic names spaCy mistypes; GLiNER wins PLACE too (8/10 vs 7/8).
