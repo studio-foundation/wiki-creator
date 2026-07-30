@@ -366,6 +366,61 @@ def test_write_registry_cross_tome_keeps_earlier_tome_without_canon(tmp_path):
     assert _accumulate_two_tomes(tmp_path, None)["entity_type"] == "PLACE"
 
 
+def _queen_artifacts(name: str) -> tuple[dict, dict]:
+    return (
+        {
+            "entities": [
+                {
+                    "canonical_name": name,
+                    "type": "PERSON",
+                    "aliases": [name],
+                    "source_ids": ["e_queen"],
+                    "relevant": True,
+                }
+            ],
+            "relationships": [],
+            "narrator": None,
+            "stats": {"merges_applied": 0},
+        },
+        {
+            "e_queen": {
+                "type": "PERSON",
+                "raw_mentions": [name],
+                "first_seen": "ch01",
+                "mention_count": 1,
+                "mentions_by_chapter": {"ch01": [f"{name} ruled Ev."]},
+            }
+        },
+    )
+
+
+def test_write_registry_accumulation_strips_the_book_languages_article(tmp_path):
+    """STU-742 wiring: the book language's determiners reach `Registry.articles`,
+    so tome 2's `The Queen` accumulates onto tome 1's `Queen`. Unwire the
+    determiners in main() and this test fails."""
+    for tree, name in (
+        (_book_tree(tmp_path), "Queen"),
+        (_second_book_tree(tmp_path), "The Queen"),
+    ):
+        epub, processing = tree
+        alias_output, persons_full = _queen_artifacts(name)
+        splits, _, _ = _artifacts()
+        (processing / "splits.json").write_text(json.dumps(splits), encoding="utf-8")
+        (processing / "persons_full.json").write_text(json.dumps(persons_full), encoding="utf-8")
+        result = _run(
+            {
+                "additional_context": f"file_path: {epub}\nlanguage: en\n",
+                "previous_outputs": {"entity-classification": alias_output},
+            }
+        )
+        assert result.returncode == 0, result.stderr
+
+    series_path = tmp_path / "library" / "author" / "series" / "registry.json"
+    series = json.loads(series_path.read_text(encoding="utf-8"))
+    assert [e["entity_id"] for e in series["entities"]] == ["queen"]
+    assert series["entities"][0]["aliases"] == ["Queen", "The Queen"]
+
+
 def test_write_registry_skips_accumulation_on_corrupt_series_registry(tmp_path):
     """An unreadable series registry must not be clobbered."""
     epub, processing = _book_tree(tmp_path)

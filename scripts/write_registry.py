@@ -34,6 +34,7 @@ import yaml
 from wiki_creator import studio_io
 from wiki_creator.canon import load_canon
 from wiki_creator.entity_taxonomy import full_registry_files
+from wiki_creator.lang import LangPackError, book_language, load_lang_config
 from wiki_creator.naming import naming_policy
 from wiki_creator.paths import book_paths_from_epub
 from wiki_creator.registry import Registry
@@ -105,7 +106,7 @@ def main() -> None:
     for warning in registry.warnings:
         print(f"[write-registry] warning: {warning}", file=sys.stderr)
 
-    series_summary = _accumulate_into_series(paths, registry)
+    series_summary = _accumulate_into_series(paths, registry, _determiners(ctx))
 
     json.dump(
         {
@@ -122,7 +123,21 @@ def main() -> None:
     )
 
 
-def _accumulate_into_series(paths, registry: Registry) -> dict | None:
+def _determiners(ctx: dict) -> list[str]:
+    """The book language's determiners — what lets cross-tome matching join
+    ``The Queen`` to ``Queen`` (STU-742). An unsupported language degrades to
+    none, which still folds case, accents, punctuation and spacing."""
+    try:
+        lang_cfg = load_lang_config(book_language(ctx), allow_en_fallback=True)
+    except (LangPackError, ValueError) as exc:
+        print(f"[write-registry] warning: no determiners ({exc})", file=sys.stderr)
+        return []
+    return [str(w) for w in lang_cfg.get("determiners") or []]
+
+
+def _accumulate_into_series(
+    paths, registry: Registry, determiners: list[str]
+) -> dict | None:
     """Accumulate this tome's registry into the series registry (STU-485).
 
     Loads library/<author>/<series>/registry.json (starting empty when absent),
@@ -138,7 +153,7 @@ def _accumulate_into_series(paths, registry: Registry) -> dict | None:
     series_path = paths.series_registry
     if series_path.exists():
         try:
-            series = Registry.load(series_path)
+            series = Registry.load(series_path, determiners)
         except (OSError, ValueError, json.JSONDecodeError) as e:
             print(
                 f"[write-registry] warning: series registry {series_path} unreadable "
@@ -147,7 +162,7 @@ def _accumulate_into_series(paths, registry: Registry) -> dict | None:
             )
             return None
     else:
-        series = Registry()
+        series = Registry(articles=determiners)
 
     canon = load_canon(paths.series_canon)
     delta = series.accumulate(

@@ -1708,6 +1708,77 @@ def test_series_seed_merges_known_aliases_without_local_evidence():
     assert result["stats"]["merges_by_method"]["series_seed"] == 1
 
 
+def _queen_seed_registry() -> "Registry":
+    """A series record known under both `Ozma` and `Queen` (STU-742)."""
+    from wiki_creator.registry import Registry
+
+    return Registry.from_dict({
+        "version": 1,
+        "entities": [
+            {
+                "entity_id": "ozma",
+                "canonical_name": "Ozma",
+                "entity_type": "PERSON",
+                "aliases": ["Ozma", "Queen"],
+                "mentions": [],
+                "decisions": ["d_seed"],
+                "books": ["01-book"],
+                "first_book": "01-book",
+            },
+        ],
+        "decisions": [
+            {
+                "decision_id": "d_seed",
+                "strategy": "llm",
+                "inputs": ["ozma", "queen"],
+                "evidence": "Ozma, Queen of Oz",
+                "confidence": "high",
+                "reversible": True,
+            }
+        ],
+        "warnings": [],
+    })
+
+
+def _resolve_the_queen(determiners: list[str] | None) -> dict:
+    the_queen = {
+        "canonical_name": "The Queen",
+        "type": "PERSON",
+        "aliases": ["The Queen"],
+        "source_ids": ["entity_010"],
+        "relevant": True,
+    }
+    ozma = {
+        "canonical_name": "Ozma",
+        "type": "PERSON",
+        "aliases": ["Ozma"],
+        "source_ids": ["entity_011"],
+        "relevant": True,
+    }
+    return resolve_aliases(
+        [the_queen, ozma],
+        persons_full={},
+        seed_lookup=_queen_seed_registry().seed_table(),
+        determiners=determiners,
+    )
+
+
+def test_series_seed_matches_an_article_led_surface():
+    """STU-742: the seed lookup reads the same key the table is built with, so
+    tome N's `The Queen` replays the link tome 1 recorded on `Queen`."""
+    result = _resolve_the_queen(["the"])
+    assert len(result["entities"]) == 1
+    assert result["stats"]["merges_by_method"]["series_seed"] == 1
+
+
+def test_series_seed_keeps_the_article_apart_without_declared_determiners():
+    """No determiners (unknown language) degrades to the pre-STU-742 miss rather
+    than guessing an article."""
+    result = _resolve_the_queen(None)
+    assert len(result["entities"]) == 2
+    assert result["stats"]["merges_by_method"]["series_seed"] == 0
+
+
 def test_series_seed_does_not_merge_distinct_known_entities():
     nehemia = {
         "canonical_name": "Nehemia",

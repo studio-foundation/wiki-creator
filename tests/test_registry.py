@@ -1094,15 +1094,71 @@ def test_accumulate_series_round_trips_through_save_load(tmp_path):
     assert loaded.to_dict() == series.to_dict()
 
 
-def test_seed_table_maps_normalized_aliases_to_records():
+def test_seed_table_maps_canonical_keys_to_records():
     series = Registry()
     series.accumulate(_book_registry("01-book", [
         {"canonical": "Celaena Sardothien", "aliases": ["Adarlan's Assassin"]},
     ]))
     table = series.seed_table()
-    assert table[normalize_name("ADARLAN'S ASSASSÍN")].entity_id == "celaena_sardothien"
-    assert table[normalize_name("celaena sardothien")].entity_id == "celaena_sardothien"
-    assert normalize_name("Nehemia") not in table
+    assert table[series.match_key("ADARLAN'S ASSASSÍN")].entity_id == "celaena_sardothien"
+    assert table[series.match_key("celaena sardothien")].entity_id == "celaena_sardothien"
+    assert series.match_key("Nehemia") not in table
+
+
+# --- STU-742: cross-tome matching joins on the canonical key ----------------
+
+
+def test_accumulate_joins_punctuation_and_case_variants_without_articles():
+    """The half that needs no language: `BILLINA`/`Billina` and
+    `Saw-Horse`/`Sawhorse` land on one series record with `articles` empty."""
+    series = Registry()
+    series.accumulate(_book_registry("01-book", [
+        {"canonical": "Billina"},
+        {"canonical": "Saw-Horse"},
+    ]))
+    delta = series.accumulate(_book_registry("02-book", [
+        {"canonical": "BILLINA"},
+        {"canonical": "Sawhorse"},
+    ]))
+    assert [r.entity_id for r in series.entities] == ["billina", "saw_horse"]
+    assert delta["added"] == []
+    assert {m["series_entity_id"] for m in delta["matched"]} == {"billina", "saw_horse"}
+    series.validate()
+
+
+def test_accumulate_joins_a_leading_article_when_the_language_is_declared():
+    series = Registry(articles=["the"])
+    series.accumulate(_book_registry("01-book", [{"canonical": "Queen"}]))
+    delta = series.accumulate(_book_registry("02-book", [{"canonical": "The Queen"}]))
+    assert [r.entity_id for r in series.entities] == ["queen"]
+    assert delta["matched"] == [
+        {"book_entity_id": "the_queen", "series_entity_id": "queen"}
+    ]
+    assert series.entities[0].aliases == ["Queen", "The Queen"]
+    series.validate()
+
+
+def test_accumulate_keeps_the_article_apart_without_a_declared_language():
+    """`articles` defaults to empty, so a caller that knows no language degrades
+    to the pre-STU-742 split instead of guessing a determiner."""
+    series = Registry()
+    series.accumulate(_book_registry("01-book", [{"canonical": "Queen"}]))
+    series.accumulate(_book_registry("02-book", [{"canonical": "The Queen"}]))
+    assert [r.entity_id for r in series.entities] == ["queen", "the_queen"]
+
+
+def test_accumulate_warns_about_records_a_past_run_already_split():
+    """Accumulation matches an incoming record against existing ones and never
+    re-joins two that are already there, so a registry written before the key
+    widened keeps its duplicates until it is regenerated — and says so."""
+    old = Registry()
+    old.accumulate(_book_registry("01-book", [{"canonical": "Queen"}]))
+    old.accumulate(_book_registry("02-book", [{"canonical": "The Queen"}]))
+
+    series = Registry(entities=old.entities, decisions=old.decisions, articles=["the"])
+    delta = series.accumulate(_book_registry("03-book", [{"canonical": "Ozma"}]))
+    assert len(series.entities) == 3
+    assert any("'the_queen' and 'queen' are one name" in w for w in delta["warnings"])
 
 
 def _registry_with_decision(strategy: str) -> Registry:
