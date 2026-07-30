@@ -479,6 +479,47 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   recovered books; `public_domain/l_frank_baum/oz/output/05-the_road_to_oz/` is a
   rendering of the 4-chapter parse and is stale until a re-run.
 
+- A cut file opens mid-chapter (STU-735): the converter that packs a dozen chapters
+  into one spine item also **cuts that item into several files, mid-chapter**, so the
+  second file opens on the tail of the previous chapter with no anchor in front of it.
+  `_split_item_chapters` emitted that lead as a section of its own, titled by the raw
+  filename (`_extract_chapter_title`'s last fallback) — 26 chapters where The Road to
+  Oz has 24, and its chapter 11 split across two entries, so nothing downstream read
+  it whole. `_continues_previous` appends it instead.
+  **The discriminator is the previous item's last segment, not the lead's size or
+  title.** A lead is a tail only when the previous item ended *inside* a chapter, i.e.
+  its last emitted segment opened at an anchor (`"#" in chapters[-1]["id"]`). The rule
+  can never be "always append": the anchorless lead of the **first** content item is
+  genuine front matter on every book (`test_packed_item_keeps_substantial_front_matter
+  _before_first_anchor`), and a lead following a **whole-file** chapter follows a file
+  boundary that was already a chapter boundary.
+  **The defect was never the two books the ticket named — it is 8 of the 21, and the
+  EPUB-TOC path (STU-727) has it as badly as the printed-contents path.** Every one of
+  the 13 leads was read at its boundary and every one is a mid-sentence continuation:
+  dracula's `item4` is 26860 chars of chapter VII (whose own segment was 3070) titled
+  `CHAPTER VIII.`, because the item's first heading belongs to the *next* chapter.
+  Measured over all 21 `public_domain` books, chapter counts go dracula 32→30,
+  journey_to_the_centre 48→46, ozma_of_oz 34→32, dorothy_and_the_wizard 26→24,
+  road_to_oz 26→25, patchwork_girl 31→28, rinkitink 28→27, tin_woodman 29→28; the
+  other **13 are byte-identical**, and no chapter but the 13 welds moved a byte.
+  `make golden`/`make smoke` are untouched by construction (a library TOC yields no
+  fragments at all).
+  Two things are load-bearing. (1) **`pg-footer` is absorbed and then cut back to
+  nothing**, which is why 13 books survive: its anchorless lead follows an
+  anchor-terminated item on nearly every book, so the rule welds it onto the last real
+  chapter — and it *opens on the `*** END OF THE PROJECT GUTENBERG EBOOK ***` marker*,
+  so `strip_gutenberg_boilerplate` truncates the merged chapter at `m.start()` and
+  returns it byte-identical. (2) **The `_clears_min_chars` gate stays where it was**,
+  deciding whether the lead is material at all before the tail question is asked. It
+  keeps the odyssey byte-identical — its `item4` lead is a 74-char Italian dedication
+  that would otherwise weld onto the `Contents` section — at the price of one measured
+  leftover, journey's 89-char `item7` tail, which is genuine prose still dropped as it
+  was before. Below the bar the lead is dropped exactly as pre-STU-735.
+  Merging moves the STU-489 mention offsets on all 8 books, so their cached extraction
+  must be re-run (STU-737). Four have committed rendered output that is now stale:
+  `oz/output/{03-ozma_of_oz,04-dorothy_and_the_wizard_in_oz,05-the_road_to_oz}` and
+  `oz/output/_series`. No `library/` book is affected.
+
 - Block dropcaps (STU-532): a dropcap can be its own **block**, not its own span
   — `<p>I</p><p>n a hole…</p>`, The Hobbit's opening sentence. Inline flattening
   cannot reach it, so `_mark_paragraph_breaks` used to put a paragraph break
