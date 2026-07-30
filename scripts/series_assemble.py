@@ -29,8 +29,10 @@ from wiki_creator.series import (
     TomeArtifacts,
     build_series_characters,
     discover_series_books,
+    link_targets,
     load_tome_artifacts,
     series_title,
+    series_vocabulary,
 )
 from wiki_creator.series_hub import SeriesTome, build_series_hub
 
@@ -67,7 +69,8 @@ def load_tomes(books: list[Path]) -> tuple[list[TomeArtifacts], list[SeriesTome]
 
 def build_assembly(series_dir: Path | str, *, arc: str | None = None) -> dict:
     series_dir = Path(series_dir)
-    artifacts, entries, author = load_tomes(discover_series_books(series_dir))
+    books = discover_series_books(series_dir)
+    artifacts, entries, author = load_tomes(books)
 
     registry = Registry.load_from_processing(series_dir)
     if registry is None:
@@ -76,7 +79,8 @@ def build_assembly(series_dir: Path | str, *, arc: str | None = None) -> dict:
             "run the tomes first"
         )
 
-    characters = build_series_characters(registry, artifacts)
+    vocabulary = series_vocabulary(books[0])
+    characters = build_series_characters(registry, artifacts, **vocabulary)
     hub = build_series_hub(series_title(series_dir), author, entries, characters)
     return {
         "series_dir": str(series_dir),
@@ -84,6 +88,8 @@ def build_assembly(series_dir: Path | str, *, arc: str | None = None) -> dict:
         "arc": arc,
         "hub": studio_io.to_dict(hub),
         "characters": [studio_io.to_dict(c) for c in characters],
+        "link_targets": link_targets(registry, characters, **vocabulary),
+        "determiners": vocabulary["determiners"],
     }
 
 

@@ -6,11 +6,13 @@ tome-axis collapsible primitive (wiki_creator/spoiler_blocks.py).
 """
 import json
 
+from wiki_creator.canonicalize import canonical_key
 from wiki_creator.registry import Registry
 from wiki_creator.series import (
     TomeArtifacts,
     TomeContribution,
     build_series_characters,
+    link_targets,
     load_tome_artifacts,
     reconcile_importance,
     reconcile_status,
@@ -33,15 +35,20 @@ def _contrib(book_id: str, importance: str | None = None, status: dict | None = 
 
 # --- reconciliation --------------------------------------------------------
 
-def test_importance_latest_wins():
+def test_importance_promotes_to_the_highest_tier_reached():
     contribs = [_contrib("01", "figurant"), _contrib("05", "principal")]
     assert reconcile_importance(contribs) == "principal"
 
 
-def test_importance_latest_wins_even_when_it_demotes():
-    # State at the furthest reading position wins, not the max tier ever held.
+def test_importance_survives_a_later_demotion():
+    # STU-719: unlike Status, notability is not latest-wins — a principal of book 1
+    # who walks on in book 6 is still a main character of the series.
     contribs = [_contrib("01", "principal"), _contrib("05", "figurant")]
-    assert reconcile_importance(contribs) == "figurant"
+    assert reconcile_importance(contribs) == "principal"
+
+
+def test_importance_ignores_an_unknown_tier():
+    assert reconcile_importance([_contrib("01", "vedette"), _contrib("05", "secondary")]) == "secondary"
 
 
 def test_importance_skips_tomes_without_a_page():
@@ -149,6 +156,111 @@ def test_gather_matches_events_by_participant():
     tomes = [TomeArtifacts("05", pages=[_page("Gavriel")], events=[ev, {"participants": ["Other"]}])]
     chars = build_series_characters(reg, tomes)
     assert chars[0].contributions[0].events == [ev]
+
+
+# --- cross-tome canonicalization (STU-719) ---------------------------------
+
+def test_gather_merges_spelling_variants_of_one_character():
+    # The registry accumulates on normalize_name (case + accents), so two tomes
+    # spelling the same character differently reach the merge as two records.
+    reg = _registry([
+        {"entity_id": "saw_horse", "canonical_name": "Saw-Horse", "entity_type": "PERSON",
+         "aliases": ["Saw-Horse"]},
+        {"entity_id": "sawhorse", "canonical_name": "Sawhorse", "entity_type": "PERSON",
+         "aliases": ["Sawhorse"]},
+    ])
+    tomes = [
+        TomeArtifacts("02", pages=[_page("Saw-Horse", "secondary")]),
+        TomeArtifacts("04", pages=[_page("Sawhorse", "figurant")]),
+    ]
+    chars = build_series_characters(reg, tomes)
+    assert len(chars) == 1
+    assert chars[0].books == ["02", "04"]
+
+
+def test_gather_prefers_a_cased_spelling_over_a_shouty_one():
+    reg = _registry([
+        {"entity_id": "billina", "canonical_name": "BILLINA", "entity_type": "PERSON",
+         "aliases": ["BILLINA", "Billina", "Yellow Hen"]},
+    ])
+    chars = build_series_characters(reg, [TomeArtifacts("03", pages=[_page("BILLINA")])])
+    assert chars[0].canonical_name == "Billina"
+
+
+def test_gather_folds_a_leading_article_when_the_language_declares_it():
+    reg = _registry([
+        {"entity_id": "shaggy", "canonical_name": "Shaggy Man", "entity_type": "PERSON",
+         "aliases": ["Shaggy Man"]},
+        {"entity_id": "the_shaggy", "canonical_name": "THE shaggy man", "entity_type": "PERSON",
+         "aliases": ["THE shaggy man"]},
+    ])
+    tomes = [
+        TomeArtifacts("05", pages=[_page("THE shaggy man")]),
+        TomeArtifacts("06", pages=[_page("Shaggy Man")]),
+    ]
+    assert len(build_series_characters(reg, tomes)) == 2          # no article vocabulary
+    chars = build_series_characters(reg, tomes, determiners=["the"])
+    assert len(chars) == 1
+    assert chars[0].canonical_name == "Shaggy Man"
+
+
+def test_gather_keeps_a_homonym_of_another_type_distinct():
+    # STU-506: a PERSON and a PLACE sharing a name are not one entity.
+    reg = _registry([
+        {"entity_id": "p", "canonical_name": "Emperor", "entity_type": "PERSON", "aliases": []},
+        {"entity_id": "l", "canonical_name": "Emperor", "entity_type": "PLACE", "aliases": []},
+    ])
+    tomes = [TomeArtifacts("01", pages=[
+        _page("Emperor", entity_type="PERSON"), _page("Emperor", entity_type="PLACE"),
+    ])]
+    assert len(build_series_characters(reg, tomes)) == 2
+
+
+def test_gather_drops_a_generic_role_but_keeps_a_qualified_one():
+    # 'Queen' is Ev's queen in one tome and Oz's in another — one merged page for
+    # both would be a fiction. 'Nome King' is one character and must survive.
+    reg = _registry([
+        {"entity_id": "queen", "canonical_name": "Queen", "entity_type": "PERSON", "aliases": []},
+        {"entity_id": "nome", "canonical_name": "Nome King", "entity_type": "PERSON", "aliases": []},
+        {"entity_id": "gates", "canonical_name": "Guardian of the Gates",
+         "entity_type": "PERSON", "aliases": []},
+    ])
+    tomes = [TomeArtifacts("01", pages=[
+        _page("Queen"), _page("Nome King"), _page("Guardian of the Gates"),
+    ])]
+    names = [c.canonical_name for c in build_series_characters(
+        reg, tomes, role_words=["king", "queen", "guardian of the gates"],
+        determiners=["the"], connectors=["of", "the"],
+    )]
+    assert names == ["Nome King"]
+
+
+def test_no_role_vocabulary_drops_nothing():
+    reg = _registry([
+        {"entity_id": "queen", "canonical_name": "Queen", "entity_type": "PERSON", "aliases": []},
+    ])
+    chars = build_series_characters(reg, [TomeArtifacts("01", pages=[_page("Queen")])])
+    assert [c.canonical_name for c in chars] == ["Queen"]
+
+
+def test_link_targets_map_every_tome_surface_to_the_series_page():
+    reg = _registry([
+        {"entity_id": "tw", "canonical_name": "Tin Woodman", "entity_type": "PERSON",
+         "aliases": ["Nick Chopper", "The Tin Woodman", "Tin Woodman"]},
+        {"entity_id": "queen", "canonical_name": "Queen", "entity_type": "PERSON",
+         "aliases": ["Queen", "Queen of Ev"]},
+    ])
+    tomes = [TomeArtifacts("01", pages=[_page("Tin Woodman"), _page("Queen")])]
+    kwargs = {"role_words": ["queen"], "determiners": ["the"]}
+    chars = build_series_characters(reg, tomes, **kwargs)
+    targets = link_targets(reg, chars, **kwargs)
+    assert targets[canonical_key("Nick Chopper")] == "Tin Woodman"
+    assert targets[canonical_key("THE TIN WOODMAN", ["the"])] == "Tin Woodman"
+    # A dropped generic role maps to "" — the renderer unlinks instead of red-linking.
+    # Every surface of the dropped entity, including the ones that read like a name.
+    assert targets[canonical_key("Queen")] == ""
+    assert targets[canonical_key("Queen of Ev")] == ""
+    assert canonical_key("Ozma") not in targets
 
 
 # --- disk loader -----------------------------------------------------------
