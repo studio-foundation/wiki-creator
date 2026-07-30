@@ -120,14 +120,14 @@ def test_salience_label_thresholds():
 
 def test_prompt_contains_events_and_book_title():
     events = [_event(1, "Celaena is freed from Endovier", participants=["Celaena Sardothien"])]
-    prompt = build_synopsis_prompt(events, "Throne of Glass")
+    prompt = build_synopsis_prompt(events, "Throne of Glass", lang="fr")
     assert "Throne of Glass" in prompt
     assert "[Chapter 1] Celaena is freed from Endovier" in prompt
     assert "## Synopsis" in prompt
 
 
 def test_prompt_declares_page_identity_contract():
-    prompt = build_synopsis_prompt([], "Throne of Glass")
+    prompt = build_synopsis_prompt([], "Throne of Glass", lang="fr")
     assert f'"title": "{SYNOPSIS_TITLE}"' in prompt
     assert f'"importance": "{SYNOPSIS_IMPORTANCE}"' in prompt
     assert f'"entity_type": "{SYNOPSIS_ENTITY_TYPE}"' in prompt
@@ -135,13 +135,13 @@ def test_prompt_declares_page_identity_contract():
 
 def test_prompt_includes_forbidden_names_rule_only_when_given():
     events = [_event(1, "a beat")]
-    with_names = build_synopsis_prompt(events, "TOG", forbidden_names=["Aelin"])
+    with_names = build_synopsis_prompt(events, "TOG", forbidden_names=["Aelin"], lang="fr")
     assert "FORBIDDEN NAMES" in with_names
     assert "- Aelin" in with_names
-    without = build_synopsis_prompt(events, "TOG")
+    without = build_synopsis_prompt(events, "TOG", lang="fr")
     assert "FORBIDDEN NAMES" not in without
 
 
 def test_prompt_handles_no_events():
-    prompt = build_synopsis_prompt([], "TOG")
+    prompt = build_synopsis_prompt([], "TOG", lang="fr")
     assert "(no events available)" in prompt

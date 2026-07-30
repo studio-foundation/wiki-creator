@@ -137,7 +137,8 @@ def build_synopsis_item(
 
     selected = select_events(events, max_per_chapter)
     prompt = build_synopsis_prompt(
-        selected, book_title, forbidden_names, register=register_clause(book_cfg)
+        selected, book_title, forbidden_names,
+        lang=language, register=register_clause(book_cfg),
     )
     # language / forbidden_names / file_path feed the wiki-page-validator
     # stage inside the wiki-page-item pipeline (same channel as entity pages).

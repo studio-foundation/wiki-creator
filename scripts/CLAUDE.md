@@ -889,6 +889,13 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   than read from its pack is caught the day someone writes it. It **asserts the
   harvest is non-empty** — the STU-732 pack split moved those groups out of
   `base.yaml` and a gate reading the old location passes vacuously, green and blind.
+  `synopsis.build_synopsis_prompt` is the same defect one layer over, and it fell
+  between two tickets: STU-733 de-Frenchified the `.studio/agents` prompts, this one
+  is a Python prompt builder, so it kept ordering "encyclopedic French" and a
+  `## Références` section while every sibling builder (`event_pages`, `series_arc`,
+  `generate_wiki_pages`) already read `language_name(lang)`. It takes `lang` like the
+  rest now, which busts the synopsis map-resume key by construction — the rendered
+  prompt *is* the key.
 
 - `tests/test_e2e_golden.py` chains all deterministic resolution stages on the fixture novella and compares every stage output to goldens in `tests/fixtures/e2e/golden/stages/`. Any intentional behavior change in those stages requires `make golden-update` and a review of the golden diff in the same PR. The extraction seed is committed (`golden/seed/`, regenerate with `gen_seed.py`); a `@requires_en_sm` test keeps it shape-compatible with real extraction in CI.
 
