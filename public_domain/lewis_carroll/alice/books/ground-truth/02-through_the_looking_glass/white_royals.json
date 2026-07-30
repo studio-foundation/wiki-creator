@@ -1,0 +1,88 @@
+{
+  "white_queen": {
+    "entity": "White Queen",
+    "canonical_aliases_book1": [
+      "White Queen"
+    ],
+    "known_facts_book1": [
+      "Cries 'It is the voice of my child! My precious Lily! My imperial kitten!' and knocks the White King over among the cinders rushing past him.",
+      "Is carried onto the table by Alice, and loses her breath from the rapid journey through the air.",
+      "Comes running through the wood after the crow with both arms stretched out as if she were flying, and loses her shawl.",
+      "Is dreadfully untidy: every single thing crooked, all over pins, the brush entangled in her hair, and the comb lost yesterday.",
+      "Offers Alice a lady's-maid place at twopence a week and jam every other day, the rule being jam to-morrow and jam yesterday but never jam to-day.",
+      "Lives backwards, so that her memory works both ways, and remembers best the things that happened the week after next.",
+      "Cites the King's Messenger, who is in prison being punished before his trial next Wednesday, the crime coming last of all.",
+      "Screams before she pricks her finger on the shawl brooch, and does not scream at all once she has pricked it.",
+      "Says she is just one hundred and one, five months and a day, and that she has sometimes believed as many as six impossible things before breakfast.",
+      "Turns into an old Sheep knitting behind a shop counter, her last 'better' ending in a long bleat.",
+      "Tells Alice she can read words of one letter.",
+      "Asks the examination questions about Division and the cause of lightning, and tells the story of the thunderstorm that left her unable to remember her own name.",
+      "Says Humpty Dumpty came to the door with a corkscrew in his hand looking for a hippopotamus.",
+      "Falls asleep on Alice's shoulder, and at the banquet recites the riddle in poetry about the fish and the dish-cover.",
+      "Disappears into the soup tureen, her face grinning at Alice for a moment over the edge, with a leg of mutton left sitting in her chair."
+    ],
+    "known_relations_book1": {
+      "Alice": "Whose Pawn Alice becomes; Alice straightens her shawl and hair and carries her asleep.",
+      "White King": "Her King, whom she knocks over among the cinders and who worries about her running speed.",
+      "Red Queen": "Her fellow Queen at the examination and the banquet, who apologises for her and calls her good-tempered.",
+      "Sheep": "What she turns into at the end of the wool-and-water chapter.",
+      "Snowdrop": "The white kitten Alice decides she was."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the White Queen fights the Red Queen",
+        "the White Queen crowns Alice",
+        "the White Queen is Alice's mother"
+      ],
+      "previous_book_only": [
+        "the White Queen appears in Wonderland",
+        "the White Queen presides over a trial"
+      ]
+    },
+    "hallucination_signals": [
+      "the White Queen's army",
+      "the White Queen crowns",
+      "the White Queen rescues"
+    ],
+    "identity_confusion_forbidden": []
+  },
+  "white_king": {
+    "entity": "White King",
+    "canonical_aliases_book1": [
+      "White King"
+    ],
+    "known_facts_book1": [
+      "Is knocked among the cinders by the White Queen and comes up covered with ashes from head to foot.",
+      "Can neither hear nor see Alice, and is astonished to find himself held in the air by an invisible hand and dusted.",
+      "Says he turned cold to the very ends of his whiskers, and is told by the Queen that he hasn't got any whiskers.",
+      "Writes in an enormous memorandum-book, and asks for a thinner pencil when Alice writes for him.",
+      "Has sent four thousand two hundred and seven soldiers and horses, keeping back two horses wanted in the game.",
+      "Keeps two Messengers, Haigha and Hatta, one to come and one to go, one to fetch and one to carry.",
+      "Makes the joke about Nobody on the road walking slower than the Messenger.",
+      "Says the crown the Lion and the Unicorn are fighting for is his all the while.",
+      "Threatens to have Hatta buttered for shouting a whisper that went through his head like an earthquake.",
+      "Says of the White Queen that you might as well try to catch a Bandersnatch, and makes a memorandum about her instead of helping.",
+      "Gave Humpty Dumpty his cravat as an un-birthday present, together with the White Queen, and promised him all his horses and all his men."
+    ],
+    "known_relations_book1": {
+      "White Queen": "His Queen, who knocks him into the cinders and whom he declines to run after.",
+      "Alice": "Cannot see or hear her in the first chapter; talks with her freely from the seventh onward.",
+      "Haigha": "One of his two Anglo-Saxon Messengers, who carries his ham sandwiches and hay.",
+      "Hatta": "His other Messenger, just out of prison, whom he threatens to have buttered.",
+      "Humpty Dumpty": "Gave him the cravat and the promise of all his horses and all his men."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the White King fights the Red King",
+        "the White King crowns Alice a Queen",
+        "the White King wins the crown from the Lion"
+      ]
+    },
+    "hallucination_signals": [
+      "the White King draws his sword",
+      "the White King crowns Alice",
+      "the White King's throne"
+    ],
+    "identity_confusion_forbidden": []
+  }
+}

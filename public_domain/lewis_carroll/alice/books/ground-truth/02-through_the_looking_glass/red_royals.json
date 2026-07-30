@@ -1,0 +1,87 @@
+{
+  "red_queen": {
+    "entity": "Red Queen",
+    "canonical_aliases_book1": [
+      "Red Queen"
+    ],
+    "known_facts_book1": [
+      "Is first a chessman three inches high, walking two and two among the cinders of the Looking-glass room hearth.",
+      "Is taken off the table by Alice and set up before the black kitten as a model for it to imitate.",
+      "Appears in the garden grown to half a head taller than Alice, announced by the Larkspur hearing her footstep along the gravel-walk.",
+      "Tells Alice to look up, speak nicely, and not twiddle her fingers, and that all the ways about here belong to her.",
+      "Advises 'Curtsey while you're thinking what to say, it saves time.'",
+      "Runs with Alice until they skim through the air, and explains that here it takes all the running you can do to keep in the same place.",
+      "Offers Alice a biscuit for her thirst, which is very dry and nearly chokes her.",
+      "Measures the ground with a ribbon marked in inches and sticks in pegs at two, three, four and five yards.",
+      "Gives the chessboard directions: the Fourth Square belongs to Tweedledum and Tweedledee, the Fifth is mostly water, the Sixth belongs to Humpty Dumpty, the Seventh is all forest, and in the Eighth they will be Queens together.",
+      "Makes Alice the White Queen's Pawn because Lily is too young to play.",
+      "Vanishes at the last peg without Alice seeing how.",
+      "At the Eighth Square insists Alice cannot be a Queen until she has passed the proper examination.",
+      "Says 'Queens never make bargains.'",
+      "Says that when you have once said a thing, that fixes it, and you must take the consequences.",
+      "Sings 'Hush-a-by lady, in Alice's lap' and falls asleep on Alice's shoulder.",
+      "Introduces Alice to the leg of mutton and to the plum-pudding at the banquet, and has both removed.",
+      "Dwindles to the size of a little doll on the table, running round after her own shawl, and is shaken by Alice into the black kitten."
+    ],
+    "known_relations_book1": {
+      "Alice": "Sets her directions across the board, examines her at the Eighth Square, and is the cause of all the mischief she blames at the banquet. Stern instructor, not a friend.",
+      "White Queen": "Her fellow Queen at the examination and the banquet; she strokes her hand and apologises for her to Alice.",
+      "Red King": "Her husband, as Alice tells the kitten at the end.",
+      "Kitty": "The black kitten Alice decides she turned into."
+    },
+    "forbidden_book1": {
+      "previous_book_only": [
+        "the Red Queen is the Queen of Hearts",
+        "the Red Queen orders a beheading",
+        "the Red Queen has the roses painted red"
+      ],
+      "not_in_this_book": [
+        "the Red Queen is married to the White King",
+        "the Red Queen is defeated in battle",
+        "the Red Queen is Alice's enemy"
+      ]
+    },
+    "hallucination_signals": [
+      "Queen of Hearts",
+      "painting the roses red",
+      "the Red Queen beheads",
+      "the Red Queen's croquet"
+    ],
+    "identity_confusion_forbidden": [
+      "alias: Queen of Hearts"
+    ]
+  },
+  "red_king": {
+    "entity": "Red King",
+    "canonical_aliases_book1": [
+      "Red King"
+    ],
+    "known_facts_book1": [
+      "Is found asleep under a tree in the wood, in a tall red night-cap with a tassel, crumpled into an untidy heap and snoring loud.",
+      "Tweedledee says he is dreaming about Alice, and that if he left off dreaming about her she would be nowhere.",
+      "Tweedledum says that if the King were to wake, Alice would go out bang, just like a candle.",
+      "Never wakes and never speaks anywhere in the book.",
+      "Is the alternative dreamer in the question Alice leaves unanswered at the end: whether it was her dream or his."
+    ],
+    "known_relations_book1": {
+      "Alice": "Dreams her, according to the Tweedle brothers; the two never meet or speak.",
+      "Red Queen": "His wife, as Alice tells the kitten in the last chapter.",
+      "Tweedledee": "Leads Alice to where he sleeps and explains the dream."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Red King wakes up",
+        "the Red King speaks to Alice",
+        "the Red King rules the Looking-glass world",
+        "the Red King leads an army"
+      ]
+    },
+    "hallucination_signals": [
+      "the Red King said",
+      "the Red King woke",
+      "the Red King commands",
+      "the Red King's court"
+    ],
+    "identity_confusion_forbidden": []
+  }
+}

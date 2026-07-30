@@ -1,0 +1,147 @@
+{
+  "gnat": {
+    "entity": "Gnat",
+    "canonical_aliases_book1": [
+      "Gnat"
+    ],
+    "known_facts_book1": [
+      "Is first only an extremely small voice close to Alice's ear in the railway carriage, suggesting jokes about 'horse' and 'hoarse'.",
+      "Says it knows Alice is a friend, a dear friend and an old friend, and that she won't hurt it though it is an insect.",
+      "Turns out to be a very large Gnat, about the size of a chicken, balancing on a twig and fanning her with its wings.",
+      "Names the Looking-glass insects: the Rocking-horse-fly of wood that lives on sap and sawdust, the Snap-dragon-fly of plum-pudding and holly-leaves, and the Bread-and-Butterfly whose head is a lump of sugar.",
+      "Says the Bread-and-Butterfly would die if it could not find weak tea with cream in it, and that this always happens.",
+      "Points out the wood further on where things have got no names.",
+      "Makes the joke about the governess calling 'Miss!', asks Alice to admire it, and weeps large tears when she calls it a bad one.",
+      "Sighs itself away, leaving nothing whatever to be seen on the twig."
+    ],
+    "known_relations_book1": {
+      "Alice": "Talks with her from the carriage to the twig, makes bad jokes at her and vanishes; she is sorry for it."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Gnat stings Alice",
+        "the Gnat guides Alice to the Eighth Square",
+        "the Gnat appears in Wonderland"
+      ]
+    },
+    "hallucination_signals": [
+      "the Gnat stings",
+      "the Gnat guides"
+    ],
+    "identity_confusion_forbidden": []
+  },
+  "fawn": {
+    "entity": "Fawn",
+    "canonical_aliases_book1": [
+      "Fawn"
+    ],
+    "known_facts_book1": [
+      "Comes wandering by in the wood where things have no names, and looks at Alice with large gentle eyes without being frightened.",
+      "Asks Alice what she calls herself, and is told 'Nothing, just now'.",
+      "Says it cannot remember its own name in that place, and asks Alice to move a little further on.",
+      "Walks out of the wood with Alice's arms clasped lovingly round its soft neck.",
+      "Cries 'I'm a Fawn! and, dear me! you're a human child!' the moment they leave the wood, and darts away at full speed in alarm."
+    ],
+    "known_relations_book1": {
+      "Alice": "Her fellow-traveller through the nameless wood, lost the instant both remember what they are. Not an enemy — the alarm is instinct, not malice."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Fawn returns to Alice",
+        "the Fawn is hunted",
+        "the Fawn speaks again after leaving the wood"
+      ]
+    },
+    "hallucination_signals": [
+      "the Fawn returns",
+      "the Fawn is killed"
+    ],
+    "identity_confusion_forbidden": []
+  },
+  "sheep": {
+    "entity": "Sheep",
+    "canonical_aliases_book1": [
+      "Sheep"
+    ],
+    "known_facts_book1": [
+      "Is what the White Queen becomes, her last 'better' ending in a long bleat.",
+      "Sits in an arm-chair behind the counter of a little dark shop, knitting and looking at Alice through a great pair of spectacles.",
+      "Tells Alice she may look in front of her and on both sides, but cannot look all round unless she has eyes at the back of her head.",
+      "Knits with fourteen pairs of needles at once, and takes up more and more until she sticks some in her hair.",
+      "Hands Alice a pair of knitting-needles that turn into oars in a little boat.",
+      "Cries 'Feather!' at Alice while she rows, warns her she will be catching a crab, and calls her a little goose.",
+      "Sells eggs at fivepence farthing for one and twopence for two, on the condition that two must both be eaten.",
+      "Refuses to put the egg into Alice's hands and sets it upright on a shelf at the far end of the shop, where it turns into Humpty Dumpty."
+    ],
+    "known_relations_book1": {
+      "White Queen": "The Queen she is a transformation of, in the middle of the wool-and-water chapter.",
+      "Alice": "Serves her in the shop, rows with her, and sells her the egg. Brusque, never hostile.",
+      "Humpty Dumpty": "The egg she sold Alice grows into him."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Sheep follows Alice",
+        "the Sheep is shorn",
+        "the Sheep appears in Wonderland"
+      ]
+    },
+    "hallucination_signals": [
+      "the Sheep travels with Alice",
+      "the Sheep is shorn"
+    ],
+    "identity_confusion_forbidden": []
+  },
+  "guard": {
+    "entity": "Guard",
+    "canonical_aliases_book1": [
+      "Guard"
+    ],
+    "known_facts_book1": [
+      "Puts his head in at the carriage window calling 'Tickets, please!'",
+      "Demands Alice's ticket angrily, and the chorus of voices says his time is worth a thousand pounds a minute.",
+      "Tells her she should have bought one from the engine-driver, since there was no ticket-office where she came from.",
+      "Looks at her first through a telescope, then through a microscope, then through an opera-glass.",
+      "Tells her 'You're travelling the wrong way', shuts the window and goes away."
+    ],
+    "known_relations_book1": {
+      "Alice": "Inspects her, finds her ticketless, and pronounces her to be going the wrong way."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Guard throws Alice off the train",
+        "the Guard arrests Alice",
+        "the Guard appears in Wonderland"
+      ]
+    },
+    "hallucination_signals": [
+      "the Guard arrests",
+      "the Guard throws Alice"
+    ],
+    "identity_confusion_forbidden": []
+  },
+  "goat": {
+    "entity": "Goat",
+    "canonical_aliases_book1": [
+      "Goat"
+    ],
+    "known_facts_book1": [
+      "Sits next to the gentleman dressed in white paper in the railway carriage.",
+      "Shuts his eyes and says in a loud voice that Alice ought to know her way to the ticket-office even if she doesn't know her alphabet.",
+      "Has his beard caught by Alice when the carriage rises into the air to jump the brook, and the beard melts away as she touches it."
+    ],
+    "known_relations_book1": {
+      "Alice": "One of the passengers who takes his turn at telling her what she ought to know."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Goat butts Alice",
+        "the Goat follows Alice out of the train"
+      ]
+    },
+    "hallucination_signals": [
+      "the Goat butts",
+      "the Goat leads Alice"
+    ],
+    "identity_confusion_forbidden": []
+  }
+}

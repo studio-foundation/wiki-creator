@@ -1,0 +1,92 @@
+{
+  "tiger_lily": {
+    "entity": "Tiger-lily",
+    "canonical_aliases_book1": [
+      "Tiger-lily"
+    ],
+    "known_facts_book1": [
+      "Is the flower Alice addresses first, wishing it could talk, and answers 'We can talk, when there's anybody worth talking to.'",
+      "Says the flowers can talk as well as Alice can, and a great deal louder.",
+      "Remarks that Alice would be all right if only her petals curled up a little more.",
+      "Silences the daisies by waving itself passionately from side to side, and says they are worst of all.",
+      "Explains that the flowers here can talk because the beds are hard, whereas in most gardens the beds are made too soft and the flowers are always asleep.",
+      "Tells the Violet to hold its tongue, since it keeps its head under the leaves and snores.",
+      "Says of the Red Queen that her petals are done up close, almost like a dahlia."
+    ],
+    "known_relations_book1": {
+      "Alice": "Criticises her shape and colour, then explains why the flowers of this garden are awake.",
+      "Rose": "The other talking flower of the bed, who speaks with it about Alice and the Red Queen.",
+      "Daisy": "The chorus of daisies it silences with a threat they cannot answer."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Tiger-lily follows Alice",
+        "the Tiger-lily sings to Alice",
+        "the Tiger-lily appears in Wonderland"
+      ]
+    },
+    "hallucination_signals": [
+      "the Tiger-lily sings",
+      "the flowers sing to Alice"
+    ],
+    "identity_confusion_forbidden": []
+  },
+  "rose": {
+    "entity": "Rose",
+    "canonical_aliases_book1": [
+      "Rose"
+    ],
+    "known_facts_book1": [
+      "Says it isn't manners for the flowers to begin, and that it was wondering when Alice would speak.",
+      "Judges that Alice's face has got some sense in it though it's not a clever one, and that she is the right colour.",
+      "Says the tree in the middle of the bed is good for nothing but saying 'Bough-wough'.",
+      "Tells Alice she never thinks at all, and that she is beginning to fade, so her petals get untidy.",
+      "Describes the Red Queen as another flower that can move about, redder and bushier than Alice, and one of the thorny kind who wears her thorns round her head.",
+      "Advises Alice to walk the other way in order to meet the Red Queen, which turns out to be the only thing that works."
+    ],
+    "known_relations_book1": {
+      "Alice": "Insults and advises her in the same breath; its advice about walking backwards is what gets her to the Red Queen.",
+      "Tiger-lily": "The flower it converses with over Alice's head.",
+      "Red Queen": "Described to Alice as the other flower in the garden that can move about."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Rose is painted red",
+        "the Rose is a gardener",
+        "the Rose follows Alice"
+      ]
+    },
+    "hallucination_signals": [
+      "painting the roses",
+      "the Rose leads Alice"
+    ],
+    "identity_confusion_forbidden": []
+  },
+  "daisy": {
+    "entity": "Daisy",
+    "canonical_aliases_book1": [
+      "Daisy"
+    ],
+    "known_facts_book1": [
+      "Forms the border of the flower-bed, and one of them cries that the tree says 'Bough-wough!' — that's why its branches are called boughs.",
+      "The daisies all begin shouting together till the air seems full of little shrill voices.",
+      "Fall silent in a moment when Alice stoops down and whispers that she will pick them, and several of the pink ones turn white.",
+      "Are called the worst of all by the Tiger-lily, because when one speaks they all begin together."
+    ],
+    "known_relations_book1": {
+      "Alice": "Silenced by her threat to pick them.",
+      "Tiger-lily": "The flower that keeps ordering them to be quiet."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the daisies are picked by Alice",
+        "the Daisy travels with Alice"
+      ]
+    },
+    "hallucination_signals": [
+      "Alice picks the daisies",
+      "the Daisy follows"
+    ],
+    "identity_confusion_forbidden": []
+  }
+}

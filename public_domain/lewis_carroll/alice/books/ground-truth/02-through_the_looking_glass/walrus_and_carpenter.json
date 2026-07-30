@@ -1,0 +1,97 @@
+{
+  "walrus": {
+    "entity": "Walrus",
+    "canonical_aliases_book1": [
+      "Walrus"
+    ],
+    "known_facts_book1": [
+      "Exists only inside the poem Tweedledee recites; he never meets Alice and never appears in the story itself.",
+      "Walks close at hand with the Carpenter and weeps to see such quantities of sand.",
+      "Beseeches the Oysters to come and walk with them along the briny beach, saying they cannot do with more than four.",
+      "Proposes to talk of shoes and ships and sealing-wax, of cabbages and kings, and why the sea is boiling hot.",
+      "Says a loaf of bread is what they chiefly need, with pepper and vinegar besides.",
+      "Weeps and deeply sympathizes while sorting out the oysters of the largest size behind his pocket handkerchief.",
+      "Alice likes him best for being a little sorry for the oysters, until Tweedledee points out he ate more than the Carpenter under cover of the handkerchief."
+    ],
+    "known_relations_book1": {
+      "Carpenter": "His companion on the beach; they eat every one of the oysters between them.",
+      "Tweedledee": "The brother who recites the poem he lives in.",
+      "Oysters": "The four and four and more that follow him from the oyster-bed and are eaten."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Walrus meets Alice",
+        "the Walrus speaks to Alice",
+        "the Walrus walks the Looking-glass world",
+        "the Walrus appears in Wonderland"
+      ]
+    },
+    "hallucination_signals": [
+      "the Walrus told Alice",
+      "the Walrus met Alice",
+      "Alice walked with the Walrus"
+    ],
+    "identity_confusion_forbidden": []
+  },
+  "carpenter": {
+    "entity": "Carpenter",
+    "canonical_aliases_book1": [
+      "Carpenter"
+    ],
+    "known_facts_book1": [
+      "Exists only inside the poem Tweedledee recites; he never meets Alice and never appears in the story itself.",
+      "Doubts that seven maids with seven mops could sweep the sand clear in half a year, and sheds a bitter tear.",
+      "Says 'No hurry!' to the oysters, and is thanked much for it.",
+      "Says nothing but 'Cut us another slice' and 'The butter's spread too thick!'",
+      "Asks the oysters whether they shall be trotting home again, when there is no one left to answer.",
+      "Alice likes him best after the Walrus is exposed, until Tweedledum says he ate as many as he could get."
+    ],
+    "known_relations_book1": {
+      "Walrus": "His companion; the two of them eat every oyster.",
+      "Tweedledee": "The brother whose recitation he exists in.",
+      "Oysters": "The victims of the pleasant walk and pleasant talk."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Carpenter meets Alice",
+        "the Carpenter builds",
+        "the Carpenter appears in Wonderland"
+      ]
+    },
+    "hallucination_signals": [
+      "the Carpenter told Alice",
+      "the Carpenter met Alice"
+    ],
+    "identity_confusion_forbidden": []
+  },
+  "oysters": {
+    "entity": "Oysters",
+    "canonical_aliases_book1": [
+      "Oysters"
+    ],
+    "known_facts_book1": [
+      "Exist only inside the poem Tweedledee recites.",
+      "The eldest Oyster looks at the Walrus, winks his eye and shakes his heavy head, meaning that he did not choose to leave the oyster-bed.",
+      "Four young oysters hurry up with their coats brushed and their shoes clean and neat, though they hadn't any feet, and four more follow, and then more and more.",
+      "Beg for a bit of time before the chat because some are out of breath and all of them are fat.",
+      "Cry 'But not on us!' and turn a little blue when the Walrus calls for bread, pepper and vinegar.",
+      "Are all eaten: 'answer came there none—And that was scarcely odd, because They'd eaten every one.'"
+    ],
+    "known_relations_book1": {
+      "Walrus": "Lured from the oyster-bed by his beseeching and eaten by him.",
+      "Carpenter": "The other eater, who complains only about the butter."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the Oysters escape",
+        "the Oysters meet Alice",
+        "the Oysters are rescued"
+      ]
+    },
+    "hallucination_signals": [
+      "the Oysters escaped",
+      "the Oysters survived"
+    ],
+    "identity_confusion_forbidden": []
+  }
+}
