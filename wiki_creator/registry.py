@@ -15,7 +15,7 @@ import json
 import re
 import sys
 import unicodedata
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -169,10 +169,28 @@ class Registry:
         entities: list[EntityRecord] | None = None,
         decisions: dict[str, MergeDecision] | None = None,
         warnings: list[str] | None = None,
+        articles: Iterable[str] = (),
     ) -> None:
         self.entities: list[EntityRecord] = list(entities or [])
         self.decisions: dict[str, MergeDecision] = dict(decisions or {})
         self.warnings: list[str] = list(warnings or [])
+        # The language's determiners, so `match_key` can strip a leading article
+        # (STU-742). Empty is the safe default — punctuation/spacing/case still
+        # fold, only the article class needs the book's language.
+        self.articles: tuple[str, ...] = tuple(articles)
+
+    def match_key(self, surface: str) -> str:
+        """The key identity matching joins on — ``canonical_key`` (STU-724).
+
+        ``normalize_name`` folds case and accents, which is enough inside one
+        book and not across them: a tome contributing ``The Queen``, ``BILLINA``
+        or ``Saw-Horse`` has to reach the series record ``Queen`` / ``Billina``
+        / ``Sawhorse`` (STU-742). Empty for a name carrying no alphanumeric
+        character; callers never match on an empty key.
+        """
+        from wiki_creator.canonicalize import canonical_key
+
+        return canonical_key(surface, self.articles)
 
     def lookup(self, surface: str) -> EntityRecord | None:
         key = str(surface).casefold()
@@ -216,22 +234,24 @@ class Registry:
         return sorted(self.decisions.values(), key=lambda d: d.decision_id)
 
     def seed_table(self) -> dict[str, "EntityRecord"]:
-        """normalize_name(alias) → owning record — the seeding view (STU-485).
+        """match_key(alias) → owning record — the seeding view (STU-485).
 
         Book-N resolution (clustering / alias-resolution) starts from the
         entities already known to the series instead of re-deriving identity
-        from scratch. Normalization is the tolerant STU-450 matching (casefold
-        + accents stripped); on the rare post-normalization collision between
-        two records the first record in registry order wins (deterministic).
+        from scratch. Keys are ``match_key``, so a consumer looks up with the
+        same key (STU-742); on the rare collision between two records the first
+        record in registry order wins (deterministic).
         """
         table: dict[str, EntityRecord] = {}
         for record in self.entities:
             for alias in record.aliases:
-                table.setdefault(normalize_name(alias), record)
+                key = self.match_key(alias)
+                if key:
+                    table.setdefault(key, record)
         return table
 
     def retired_seed_aliases(self) -> dict[str, str]:
-        """normalize_name(alias) → strategy, for every alias whose *only*
+        """match_key(alias) → strategy, for every alias whose *only*
         justification is a decision no live code path can produce (STU-584).
 
         The canonical name is never listed — it is the record's own identity,
@@ -251,7 +271,7 @@ class Registry:
                     continue
                 strategies = backing.get(entity_slug(alias))
                 if strategies and not (strategies & LIVE_MERGE_STRATEGIES):
-                    retired[normalize_name(alias)] = sorted(strategies)[0]
+                    retired[self.match_key(alias)] = sorted(strategies)[0]
         return retired
 
     def accumulate(self, book: "Registry", *, later_tome_overrides: bool = False) -> dict:
@@ -264,7 +284,7 @@ class Registry:
         a cross-tome disagreement instead of the earlier tome's. Guarantees:
 
         * entity_id **stability** — a book entity whose aliases match an
-          existing series entity (normalize_name comparison, STU-450) keeps the
+          existing series entity (``match_key`` comparison, STU-742) keeps the
           series ``entity_id``; nothing existing is overwritten (canonical name
           always wins for the series record, entity_type per the cross-tome
           policy; mismatches warn either way);
@@ -308,14 +328,15 @@ class Registry:
                 self.warnings.append(message)
 
         # Invariant-1 ownership is casefold; identity matching is the more
-        # tolerant normalize_name (casefold ⊂ normalize, so a casefold
-        # collision always surfaces as a normalized match first).
-        by_normalized: dict[str, EntityRecord] = self.seed_table()
+        # tolerant match_key (casefold ⊂ the key, so a casefold collision always
+        # surfaces as a key match first).
+        by_key: dict[str, EntityRecord] = self.seed_table()
         owners_casefold: dict[str, EntityRecord] = {
             alias.casefold(): record
             for record in self.entities
             for alias in record.aliases
         }
+        self._warn_pre_split_records(_warn)
         order = {id(record): i for i, record in enumerate(self.entities)}
         used_entity_ids = {record.entity_id for record in self.entities}
 
@@ -323,7 +344,7 @@ class Registry:
             matches: list[EntityRecord] = []
             overlap: dict[int, int] = {}
             for alias in incoming.aliases:
-                found = by_normalized.get(normalize_name(alias))
+                found = by_key.get(self.match_key(alias))
                 if found is None:
                     continue
                 if found not in matches:
@@ -331,7 +352,7 @@ class Registry:
                 overlap[id(found)] = overlap.get(id(found), 0) + 1
 
             if matches:
-                canonical_owner = by_normalized.get(normalize_name(incoming.canonical_name))
+                canonical_owner = by_key.get(self.match_key(incoming.canonical_name))
                 if canonical_owner is not None:
                     target = canonical_owner
                 else:
@@ -345,7 +366,7 @@ class Registry:
                         f"{others}; folded into '{target.entity_id}'"
                     )
                 self._accumulate_into(
-                    target, incoming, incoming_books, by_normalized,
+                    target, incoming, incoming_books, by_key,
                     owners_casefold, delta, _warn, later_tome_overrides,
                 )
                 delta["matched"].append(
@@ -396,7 +417,9 @@ class Registry:
             self.entities.append(record)
             order[id(record)] = len(self.entities) - 1
             for alias in record.aliases:
-                by_normalized.setdefault(normalize_name(alias), record)
+                key = self.match_key(alias)
+                if key:
+                    by_key.setdefault(key, record)
                 owners_casefold[alias.casefold()] = record
             delta["added"].append(
                 {"book_entity_id": incoming.entity_id, "series_entity_id": entity_id}
@@ -404,12 +427,36 @@ class Registry:
 
         return delta
 
+    def _warn_pre_split_records(self, warn: Callable[[str], None]) -> None:
+        """Name the series records an earlier run split on the weaker key.
+
+        Accumulation is idempotent per tome but only ever matches an *incoming*
+        record against existing ones — it never re-joins two records already on
+        disk. So a series registry written before STU-742 keeps its duplicates
+        until it is regenerated, and this says so rather than letting them look
+        like two characters. Folding them here is refused on purpose: their
+        aliases, decisions and mentions were accumulated as separate identities
+        and re-joining them is a merge nothing adjudicated.
+        """
+        seen: dict[tuple[str, str], EntityRecord] = {}
+        for record in self.entities:
+            key = self.match_key(record.canonical_name)
+            if not key:
+                continue
+            first = seen.setdefault((key, record.entity_type), record)
+            if first is not record:
+                warn(
+                    f"series registry: '{record.entity_id}' and '{first.entity_id}' "
+                    f"are one name under the current matching key; regenerate the "
+                    f"series registry to join them"
+                )
+
     def _accumulate_into(
         self,
         target: EntityRecord,
         incoming: EntityRecord,
         incoming_books: list[str],
-        by_normalized: dict[str, "EntityRecord"],
+        by_key: dict[str, "EntityRecord"],
         owners_casefold: dict[str, "EntityRecord"],
         delta: dict,
         warn: Callable[[str], None],
@@ -450,7 +497,9 @@ class Registry:
             target.aliases.append(alias)
             existing.add(alias.casefold())
             owners_casefold[alias.casefold()] = target
-            by_normalized.setdefault(normalize_name(alias), target)
+            alias_key = self.match_key(alias)
+            if alias_key:
+                by_key.setdefault(alias_key, target)
             added_aliases.append(alias)
 
             evidence = (
@@ -563,7 +612,7 @@ class Registry:
         }
 
     @classmethod
-    def from_dict(cls, raw: dict) -> "Registry":
+    def from_dict(cls, raw: dict, articles: Iterable[str] = ()) -> "Registry":
         decisions: dict[str, MergeDecision] = {}
         for d in raw.get("decisions") or []:
             inputs = list(d.get("inputs") or ["", ""])
@@ -596,6 +645,7 @@ class Registry:
             entities=entities,
             decisions=decisions,
             warnings=[str(w) for w in raw.get("warnings") or []],
+            articles=articles,
         )
 
     def save(self, path: Path | str) -> None:
@@ -608,9 +658,9 @@ class Registry:
             f.write("\n")
 
     @classmethod
-    def load(cls, path: Path | str) -> "Registry":
+    def load(cls, path: Path | str, articles: Iterable[str] = ()) -> "Registry":
         with open(path, encoding="utf-8") as f:
-            registry = cls.from_dict(json.load(f))
+            registry = cls.from_dict(json.load(f), articles)
         registry.validate()
         return registry
 
@@ -629,7 +679,9 @@ class Registry:
             return None
 
     @classmethod
-    def load_seed_table(cls, path: Path | str) -> dict[str, "EntityRecord"]:
+    def load_seed_table(
+        cls, path: Path | str, articles: Iterable[str] = ()
+    ) -> dict[str, "EntityRecord"]:
         """Load ``path`` (the series registry) and return its ``seed_table()``,
         or {} when the file is absent or unreadable — single-book runs and
         pre-STU-485 series degrade gracefully to unseeded resolution.
@@ -643,7 +695,7 @@ class Registry:
         if not p.exists():
             return {}
         try:
-            registry = cls.load(p)
+            registry = cls.load(p, articles)
         except (OSError, ValueError, json.JSONDecodeError):
             return {}
         table = registry.seed_table()

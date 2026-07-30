@@ -812,8 +812,9 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   sequential loop — each tome must finish before the next seeds from it.
 
 - **The series merge canonicalizes what `Registry.accumulate` could not (STU-719).**
-  Accumulation joins tome N on `normalize_name` (case + accents only), which is
-  enough inside a book and not across them: on Oz it left `Saw-Horse`/`Sawhorse`,
+  Accumulation joined tome N on `normalize_name` (case + accents only, until
+  STU-742 below), which is enough inside a book and not across them: on Oz it left
+  `Saw-Horse`/`Sawhorse`,
   `Tik-tok`/`Tiktok`, `BILLINA`, `THE shaggy man` as separate series records, bare
   role titles (`King`, `Queen`, …) as standalone characters, and 136 dead links in
   `output/_series/`. `wiki_creator/canonicalize.py` owns the stricter key —
@@ -1364,3 +1365,35 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   in the registry is the defect this ticket closes, not the fix.
   **Not swept.** The key is unit-tested and the goldens are byte-identical, but no
   live run over `library/` has measured whether it over-merges (STU-543's norm).
+
+
+- The registry's own matching reads that key too (STU-742): `Registry.match_key`
+  is `canonical_key(alias, self.articles)`, and `seed_table` / `accumulate` /
+  `retired_seed_aliases` all join on it. STU-724 wired the three sites it scoped
+  and left this one, so a tome contributing `The Queen`, `BILLINA` or `Saw-Horse`
+  did not match the series record `Queen` / `Billina` / `Sawhorse` and
+  accumulation added a **second** `EntityRecord` — STU-719's defect 1, one layer
+  upstream of where STU-719 puts its fix.
+  **`articles` is a `Registry` attribute set at construction**, the way `policy`
+  already is (STU-506), because the key strips a determiner and determiners are
+  language data the registry has no way to know. It defaults to empty, and that
+  default is not a degradation to nothing: punctuation, spacing, case and accents
+  still fold, so only the article class needs a caller that knows the book
+  (`write_registry` reads `book_language(ctx)`; `entity_clustering` and
+  `alias_resolution` pass the same determiners into `load_seed_table` **and** into
+  their lookups — the table and its consumers must key alike or seeding silently
+  stops matching).
+  **A registry a past run already split is named, not folded.** Accumulation
+  matches an *incoming* record against existing ones and never re-joins two that
+  are already on disk, so `library/<author>/<series>/registry.json` keeps its
+  pre-STU-742 duplicates until it is regenerated (re-run `write-registry` per
+  tome, or delete the series registry and re-accumulate — both are LLM-free).
+  `_warn_pre_split_records` warns per duplicate pair on every accumulation
+  instead: folding them here would be a merge nothing adjudicated, since their
+  aliases, decisions and mentions were accumulated as separate identities.
+  `series.group_records` stays for exactly that state.
+  **Invariant-1 alias ownership is untouched** — `validate`/`lookup` are
+  `casefold`-keyed on purpose and `_resolve_alias_collisions` buckets per type;
+  widening the *matching* key is a separate decision from widening *ownership*.
+  **Not swept**, same as STU-724: proving it does not over-merge needs the STU-543
+  sweep over `library/` on real accumulated registries.

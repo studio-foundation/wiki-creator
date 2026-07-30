@@ -20,7 +20,7 @@ from wiki_creator import studio_io
 from wiki_creator.canonicalize import canonical_key, is_bare_role
 from wiki_creator.lang import load_lang_config, infer_language
 from wiki_creator.llm import ollama
-from wiki_creator.registry import EntityRecord, Registry, normalize_name
+from wiki_creator.registry import EntityRecord, Registry
 from wiki_creator.tokens import contains_token_run
 
 
@@ -188,23 +188,29 @@ def _detect_series_seed(
     entity_a: dict,
     entity_b: dict,
     seed_lookup: dict[str, EntityRecord] | None,
+    determiners: list[str] | None = None,
 ) -> dict | None:
     """Series seeding (STU-485): two entities whose names are known aliases of
     the same series-registry entity are the same person — identity established
     in a prior tome, no local evidence needed. Names must be *distinct*
-    surfaces (normalize_name) so this only replays known alias links, never
-    folds same-name duplicates that upstream stages deliberately kept apart.
+    surfaces so this only replays known alias links, never folds same-name
+    duplicates that upstream stages deliberately kept apart; distinctness reads
+    the same key the table is built with (``Registry.match_key``, STU-742), so
+    ``The Queen`` and ``Queen`` count as one surface here.
     """
     if not seed_lookup:
         return None
+    articles = determiners or ()
     for name_a in _entity_names(entity_a):
-        record = seed_lookup.get(normalize_name(name_a))
+        key_a = canonical_key(name_a, articles)
+        record = seed_lookup.get(key_a)
         if record is None:
             continue
         for name_b in _entity_names(entity_b):
-            if normalize_name(name_b) == normalize_name(name_a):
+            key_b = canonical_key(name_b, articles)
+            if key_b == key_a:
                 continue
-            if seed_lookup.get(normalize_name(name_b)) is record:
+            if seed_lookup.get(key_b) is record:
                 books = ", ".join(record.books) or "prior tomes"
                 return {
                     "method": "series_seed",
@@ -648,7 +654,7 @@ def resolve_aliases(
 
             stats["candidates_considered"] += 1
 
-            seed = _detect_series_seed(entity, candidate, seed_lookup)
+            seed = _detect_series_seed(entity, candidate, seed_lookup, determiners)
             if seed:
                 merged = _merge_entities(entity, candidate, seed, persons_full, role_words=role_words)
                 stats["merges_applied"] += 1
@@ -775,7 +781,7 @@ def main() -> None:
         persons_full = _load_persons_full(paths.processing)
         # Series seeding (STU-485): tome N starts from the identities
         # accumulated over tomes 1..N-1.
-        seed_lookup = Registry.load_seed_table(paths.series_registry)
+        seed_lookup = Registry.load_seed_table(paths.series_registry, determiners)
         if seed_lookup:
             print(
                 f"[alias-resolution] series seeding active: "

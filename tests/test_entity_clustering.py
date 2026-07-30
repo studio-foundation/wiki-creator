@@ -3,7 +3,6 @@ import sys
 import os
 
 from scripts.entity_clustering import (
-    normalize_for_comparison,
     tokenize_name,
     is_single_given_name,
     should_cluster_tokens,
@@ -27,18 +26,6 @@ _FR_FEM = load_feminine_titles("fr")
 _EN_TITLES = load_title_prefixes("en")
 _EN_MASC = load_masculine_titles("en")
 _EN_FEM = load_feminine_titles("en")
-
-
-# --- normalize_for_comparison ---
-
-def test_normalize_strips_accents():
-    assert normalize_for_comparison("Martín") == "martin"
-
-def test_normalize_lowercases():
-    assert normalize_for_comparison("BARCELONE") == "barcelone"
-
-def test_normalize_strips_leading_trailing_spaces():
-    assert normalize_for_comparison("  Vidal  ") == "vidal"
 
 
 # --- tokenize_name ---
@@ -731,6 +718,31 @@ def test_build_clusters_seed_unions_known_aliases():
     clusters, unclustered = build_clusters(entities, seed=seed)
     assert len(clusters) == 1
     assert set(clusters[0]["entity_ids"]) == {"e001", "e002", "e003"}
+
+
+def test_build_clusters_seed_matches_a_punctuation_variant():
+    """STU-742: the seed table is keyed on canonical_key, so a tome spelling a
+    known alias with different punctuation still finds its record."""
+    entities = {
+        "e001": {"type": "PERSON", "raw_mentions": ["Eragon"], "first_seen": "ch01"},
+        "e002": {"type": "PERSON", "raw_mentions": ["Shade-slayer"], "first_seen": "ch07"},
+    }
+    assert build_clusters(entities)[0] == []
+    clusters, _ = build_clusters(entities, seed=_seed_registry().seed_table())
+    assert set(clusters[0]["entity_ids"]) == {"e001", "e002"}
+
+
+def test_build_clusters_seed_strips_an_article_only_in_a_known_language():
+    """The article class needs the book's determiners; no language degrades to
+    the pre-STU-742 miss rather than guessing one."""
+    entities = {
+        "e001": {"type": "PERSON", "raw_mentions": ["Eragon"], "first_seen": "ch01"},
+        "e002": {"type": "PERSON", "raw_mentions": ["The Argetlam"], "first_seen": "ch04"},
+    }
+    seed = _seed_registry().seed_table()
+    assert build_clusters(entities, seed=seed)[0] == []
+    clusters, _ = build_clusters(entities, language="en", seed=seed)
+    assert set(clusters[0]["entity_ids"]) == {"e001", "e002"}
 
 
 def test_build_clusters_seed_ignores_unknown_names():

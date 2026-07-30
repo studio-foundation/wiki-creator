@@ -224,11 +224,13 @@ def group_records(
 ) -> list[list[EntityRecord]]:
     """Registry records grouped into one group per cross-tome entity (STU-719).
 
-    The registry accumulates tome N onto tomes 1..N-1 by ``normalize_name``, which
-    folds case and accents only — so a tome spelling the character ``Sawhorse``
-    where an earlier one wrote ``Saw-Horse`` lands as a second record and the
-    series renders two pages. Grouping on ``canonical_key`` closes that gap at the
-    merge, per entity type (a PERSON and a PLACE homonym stay distinct, STU-506).
+    Accumulation joins tome N onto tomes 1..N-1 on ``canonical_key`` too since
+    STU-742, so this is no longer the only place the gap closes — but it stays
+    load-bearing: a registry accumulated before that (or by a caller that knew no
+    book language, so no article was stripped) still carries ``Saw-Horse`` beside
+    ``Sawhorse``, and accumulation never re-joins two records already on disk.
+    Grouping is per entity type (a PERSON and a PLACE homonym stay distinct,
+    STU-506).
 
     Groups are in registry order, and so are the records inside each one.
     """

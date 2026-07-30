@@ -48,10 +48,15 @@ from collections import defaultdict
 from pathlib import Path
 
 
-from wiki_creator.canonicalize import canonical_tokens, fold_tokens, fold_vocabulary
+from wiki_creator.canonicalize import (
+    canonical_key,
+    canonical_tokens,
+    fold_tokens,
+    fold_vocabulary,
+)
 from wiki_creator.entity_taxonomy import resolution_types
 from wiki_creator.paths import book_paths_from_epub, book_paths_from_yaml
-from wiki_creator.registry import Registry, normalize_name as normalize_for_comparison
+from wiki_creator.registry import Registry
 
 # --- Configuration ---
 
@@ -101,6 +106,21 @@ def load_name_connectors(language: str | None = None) -> frozenset[str]:
         import logging
         logging.warning("load_name_connectors: could not load cue_words for language %r: %s", language, exc)
         return frozenset()
+
+
+def load_determiners(language: str | None = None) -> tuple[str, ...]:
+    """Return the language's determiners from cue_words/{lang}.json — the
+    articles the series-registry matching key strips (STU-742). Unknown language
+    → empty, which still folds case, accents, punctuation and spacing."""
+    if not language:
+        return ()
+    try:
+        from wiki_creator.lang import load_lang_config
+        return tuple(load_lang_config(language).get("determiners", []))
+    except Exception as exc:
+        import logging
+        logging.warning("load_determiners: could not load cue_words for language %r: %s", language, exc)
+        return ()
 
 
 JW_THRESHOLD = 0.92  # Jaro-Winkler threshold for orthographic variant matching
@@ -432,7 +452,10 @@ def build_clusters(
             parent[ra] = rb
 
     if seed:
-        _apply_seed_unions(entities, seed, union, name_connectors, title_prefixes)
+        _apply_seed_unions(
+            entities, seed, union, name_connectors, title_prefixes,
+            load_determiners(language),
+        )
 
     # Compare all entity pairs via their mentions
     entity_ids = list(entities.keys())
@@ -519,14 +542,19 @@ def _apply_seed_unions(
     union,
     name_connectors: frozenset[str],
     title_prefixes: frozenset[str],
+    determiners: tuple[str, ...] = (),
 ) -> None:
     """Pre-union entities that surface known aliases of one series entity
     (STU-485 seeding). The STU-473 cross-type guard still applies between the
-    matched surfaces, so a PLACE toponym never folds into a PERSON title."""
+    matched surfaces, so a PLACE toponym never folds into a PERSON title.
+
+    Lookup is on the same key the table was built with (``Registry.match_key``,
+    STU-742) — a surface differing from the series alias by case, punctuation or
+    a leading article still finds its record."""
     groups: dict[str, list[tuple[str, str]]] = defaultdict(list)  # series id → [(eid, surface)]
     for eid, entity in entities.items():
         for mention in entity.get("raw_mentions", []):
-            record = seed.get(normalize_for_comparison(mention))
+            record = seed.get(canonical_key(mention, determiners))
             if record is not None:
                 groups[record.entity_id].append((eid, mention))
 
@@ -900,7 +928,9 @@ def main() -> None:
     seed = {}
     file_path = ctx.get("file_path")
     if file_path:
-        seed = Registry.load_seed_table(book_paths_from_epub(file_path).series_registry)
+        seed = Registry.load_seed_table(
+            book_paths_from_epub(file_path).series_registry, load_determiners(language)
+        )
         if seed:
             print(
                 f"[entity-clustering] series seeding active: {len(seed)} known surfaces",
