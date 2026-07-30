@@ -18,6 +18,7 @@ Output (stdout):
 """
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -37,9 +38,24 @@ def _default_noise_words() -> frozenset[str]:
 
 
 _NOISE_WORDS = _default_noise_words()
+_WORD = re.compile(r"[^\W_]+")
 
 
-def is_relevant(name: str, noise_words: frozenset[str] = _NOISE_WORDS) -> bool:
+def name_tokens(name: str) -> frozenset[str]:
+    """Order- and punctuation-free token set of a name.
+
+    Matches the epub's declared author against the extracted surface however the
+    two are written: ``Baum, L. Frank`` (DC creator) vs ``L. FRANK BAUM`` (title
+    page).
+    """
+    return frozenset(_WORD.findall(name.lower()))
+
+
+def is_relevant(
+    name: str,
+    noise_words: frozenset[str] = _NOISE_WORDS,
+    author_tokens: frozenset[str] = frozenset(),
+) -> bool:
     """Heuristic: is this a real proper noun worth keeping?"""
     if not name:
         return False
@@ -51,25 +67,45 @@ def is_relevant(name: str, noise_words: frozenset[str] = _NOISE_WORDS) -> bool:
     # Proper nouns start with uppercase
     if cleaned[0].islower():
         return False
+    # The book's own author is title/copyright-page boilerplate, not a character
+    # (STU-740) — derived from the epub metadata, so no stopword list to curate.
+    if author_tokens and name_tokens(cleaned) == author_tokens:
+        return False
     return True
 
 
-def cluster_to_entity(cluster: dict, noise_words: frozenset[str] = _NOISE_WORDS) -> dict:
+def cluster_to_entity(
+    cluster: dict,
+    noise_words: frozenset[str] = _NOISE_WORDS,
+    author_tokens: frozenset[str] = frozenset(),
+) -> dict:
     """Map a cluster directly to a resolved entity. No invention."""
     return {
         "canonical_name": cluster.get("canonical_candidate", ""),
         "type": cluster.get("type", "OTHER"),
         "aliases": cluster.get("all_mentions", []),
         "source_ids": cluster.get("entity_ids", []),
-        "relevant": is_relevant(cluster.get("canonical_candidate", ""), noise_words),
+        "relevant": is_relevant(cluster.get("canonical_candidate", ""), noise_words, author_tokens),
     }
 
 
-def resolve(splits: dict, noise_words: frozenset[str] = _NOISE_WORDS) -> dict:
+def resolve(
+    splits: dict,
+    noise_words: frozenset[str] = _NOISE_WORDS,
+    author_tokens: frozenset[str] = frozenset(),
+) -> dict:
     entities: list[dict] = []
 
-    # Singles: already in resolved format, include as-is
-    entities.extend(splits.get("singles_resolved", []))
+    # Singles: already in resolved format, but split-clusters stamps them
+    # relevant=True unconditionally — the noise check happens here, or a bare
+    # "The" reaches classification and gets a page (STU-740).
+    for single in splits.get("singles_resolved", []):
+        entities.append({
+            **single,
+            "relevant": is_relevant(
+                single.get("canonical_name", ""), noise_words, author_tokens
+            ),
+        })
 
     # Multi-clusters: one cluster = one entity, no LLM needed
     by_type = splits.get("by_type") or {}
@@ -79,9 +115,18 @@ def resolve(splits: dict, noise_words: frozenset[str] = _NOISE_WORDS) -> dict:
             print(f"Warning: {entity_type} is not a list, skipping", file=sys.stderr)
             continue
         for cluster in clusters:
-            entities.append(cluster_to_entity(cluster, noise_words))
+            entities.append(cluster_to_entity(cluster, noise_words, author_tokens))
 
     return {"entities": entities, "narrator": None}
+
+
+def _declared_author_tokens(processing: Path) -> frozenset[str]:
+    """The epub's own `author` metadata, as written by epub-parse."""
+    try:
+        data = json.loads((processing / "epub_data.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return frozenset()
+    return name_tokens(str(data.get("author") or ""))
 
 
 def main() -> None:
@@ -113,7 +158,11 @@ def main() -> None:
         except Exception:
             pass
 
-    result = resolve(splits, noise_words=noise_words)
+    result = resolve(
+        splits,
+        noise_words=noise_words,
+        author_tokens=_declared_author_tokens(splits_path.parent),
+    )
     json.dump(result, sys.stdout, ensure_ascii=False)
 
 

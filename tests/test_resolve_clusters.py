@@ -68,6 +68,49 @@ def test_main_reads_splits_from_disk_not_from_stage_context(monkeypatch, tmp_pat
     assert [e["canonical_name"] for e in out["entities"]] == ["Celaena"]
 
 
+def test_stopword_single_is_dropped(monkeypatch, tmp_path):
+    """STU-740: split-clusters stamps every single relevant=True, so a bare
+    determiner reached classification, got typed, and got a rendered page."""
+    processing = tmp_path / "processing"
+    processing.mkdir()
+    (processing / "splits.json").write_text(json.dumps(_splits("The")), encoding="utf-8")
+    paths = type("_Paths", (), {"processing": processing})()
+
+    out = _run_main(monkeypatch, paths, {"additional_context": "file_path: fake.epub"})
+
+    assert out["entities"][0]["relevant"] is False
+
+
+def test_declared_author_single_is_dropped(monkeypatch, tmp_path):
+    """STU-740: the title page names the author in a casing and order the epub
+    metadata does not — token identity matches both."""
+    processing = tmp_path / "processing"
+    processing.mkdir()
+    (processing / "splits.json").write_text(json.dumps(_splits("L. FRANK BAUM")), encoding="utf-8")
+    (processing / "epub_data.json").write_text(
+        json.dumps({"author": "Baum, L. Frank"}), encoding="utf-8"
+    )
+    paths = type("_Paths", (), {"processing": processing})()
+
+    out = _run_main(monkeypatch, paths, {"additional_context": "file_path: fake.epub"})
+
+    assert out["entities"][0]["relevant"] is False
+
+
+def test_character_survives_the_author_check(monkeypatch, tmp_path):
+    processing = tmp_path / "processing"
+    processing.mkdir()
+    (processing / "splits.json").write_text(json.dumps(_splits("Dorothy")), encoding="utf-8")
+    (processing / "epub_data.json").write_text(
+        json.dumps({"author": "L. Frank Baum"}), encoding="utf-8"
+    )
+    paths = type("_Paths", (), {"processing": processing})()
+
+    out = _run_main(monkeypatch, paths, {"additional_context": "file_path: fake.epub"})
+
+    assert out["entities"][0]["relevant"] is True
+
+
 def test_main_exits_when_extraction_has_not_run(monkeypatch, tmp_path):
     paths = type("_Paths", (), {"processing": tmp_path})()
     with pytest.raises(SystemExit):
