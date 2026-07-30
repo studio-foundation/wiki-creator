@@ -17,7 +17,7 @@ how the page set is built.
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 
 from wiki_creator.export_helpers import page_filename
@@ -58,6 +58,43 @@ def extract_link_targets(text: str) -> list[str]:
         if raw.split("#", 1)[0].strip():
             targets.append(raw.strip())
     return targets
+
+
+def retarget_links(text: str, resolve: Callable[[str], str | None]) -> str:
+    """Rewrite every content wikilink in ``text`` through ``resolve``.
+
+    ``resolve(target)`` returns the page title to link instead, ``""`` to unlink
+    (the label survives as plain text — a merged-away target must not become a
+    red link), or ``None`` to leave the link untouched. The visible label is
+    preserved: ``[[Nick Chopper]]`` retargeted to ``Tin Woodman`` becomes
+    ``[[Tin Woodman|Nick Chopper]]``, so the tome's own wording still reads while
+    the link resolves (STU-719). Namespace links are never touched.
+    """
+
+    def rewrite(match: re.Match) -> str:
+        raw = match.group(1)
+        if _NAMESPACE_RE.match(raw.lstrip()):
+            return match.group(0)
+        target, _, label = raw.partition("|")
+        anchor = ""
+        base = target
+        if "#" in target:
+            base, _, anchor = target.partition("#")
+        base, label = base.strip(), label.strip()
+        if not base:
+            return match.group(0)
+        resolved = resolve(base)
+        if resolved is None:
+            return match.group(0)
+        if not resolved:
+            return label or base
+        if _resolve_key(resolved) == _resolve_key(base):
+            return match.group(0)
+        shown = label or base
+        suffix = f"#{anchor}" if anchor else ""
+        return f"[[{resolved}{suffix}|{shown}]]"
+
+    return _LINK_RE.sub(rewrite, text)
 
 
 def find_dead_links(

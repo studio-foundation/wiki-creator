@@ -9,7 +9,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-from wiki_creator.wikilinks import DeadLink, extract_link_targets, find_dead_links
+from wiki_creator.wikilinks import (
+    DeadLink,
+    extract_link_targets,
+    find_dead_links,
+    retarget_links,
+)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -30,6 +35,35 @@ def test_extract_excludes_category_and_file_links():
 def test_extract_strips_anchor_and_drops_anchor_only_links():
     text = "[[Emerald City#History]] and [[#Overview|top]]"
     assert extract_link_targets(text) == ["Emerald City#History"]
+
+
+# --- retargeting (STU-719) -------------------------------------------------
+
+_SERIES = {"Nick Chopper": "Tin Woodman", "Queen": "", "Scarecrow": "Scarecrow"}
+
+
+def _resolve(target):
+    return _SERIES.get(target)
+
+
+def test_retarget_keeps_the_tome_wording_as_the_label():
+    assert retarget_links("Met [[Nick Chopper]].", _resolve) == "Met [[Tin Woodman|Nick Chopper]]."
+
+
+def test_retarget_preserves_an_existing_label_and_anchor():
+    assert retarget_links("[[Nick Chopper|Nick]]", _resolve) == "[[Tin Woodman|Nick]]"
+    assert retarget_links("[[Nick Chopper#Death]]", _resolve) == "[[Tin Woodman#Death|Nick Chopper]]"
+
+
+def test_retarget_unlinks_an_empty_resolution():
+    # A merged-away target must not become a red link; the label survives as prose.
+    assert retarget_links("Fled the [[Queen]].", _resolve) == "Fled the Queen."
+    assert retarget_links("Fled the [[Queen|wicked queen]].", _resolve) == "Fled the wicked queen."
+
+
+def test_retarget_leaves_an_unknown_or_already_canonical_target_untouched():
+    text = "[[Ozma]] and [[Scarecrow]] and [[Category:Personnages]]"
+    assert retarget_links(text, _resolve) == text
 
 
 def test_all_links_resolve_is_clean():
