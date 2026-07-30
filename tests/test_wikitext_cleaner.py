@@ -64,15 +64,19 @@ class TestCleanWikitext:
 
 
 class TestNormalizeInfoboxFields:
-    def test_rename_english_keys(self):
-        fields = {"name": "Abraxos", "allegiance": "Manon", "status": "Alive"}
+    def test_fold_synonym_keys_without_translating(self):
+        """STU-734: the map folds synonyms onto one key; it no longer translates
+        the scraped keys to French — this feeds a LoRA dataset, not the wiki."""
+        fields = {"name": "Abraxos", "allegiance": "Manon", "occupation": "Rider",
+                  "AKA": "Little Bastard", "status": "Alive"}
         result = normalize_infobox_fields(fields)
-        assert result == {"nom": "Abraxos", "affiliation": "Manon", "statut": "Alive"}
+        assert result == {"name": "Abraxos", "affiliation": "Manon", "role": "Rider",
+                          "alias": "Little Bastard", "status": "Alive"}
 
     def test_drop_image_fields(self):
         fields = {"name": "Abraxos", "image": "photo.jpg", "caption": "A wyvern"}
         result = normalize_infobox_fields(fields)
-        assert result == {"nom": "Abraxos"}
+        assert result == {"name": "Abraxos"}
 
     def test_passthrough_unknown_keys(self):
         fields = {"species": "Wyvern", "origin": "Morath"}
@@ -82,7 +86,7 @@ class TestNormalizeInfoboxFields:
     def test_drop_collapse_fields(self):
         fields = {"affcollapse": "off", "statcollapse": "off", "name": "X"}
         result = normalize_infobox_fields(fields)
-        assert result == {"nom": "X"}
+        assert result == {"name": "X"}
 
     def test_strip_wiki_markup_in_values(self):
         fields = {"partner": "[[Narene]] (mate)"}

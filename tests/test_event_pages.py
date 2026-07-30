@@ -99,7 +99,7 @@ def test_event_infobox_fields_omits_empty_and_redundant_outcome():
 def test_prompt_contains_facts_title_and_book():
     event = _event(12, "Celaena defeats Cain", participants=["Cain", "Celaena Sardothien"],
                    places=["Rifthold"], outcome="Celaena wins despite the poison")
-    prompt = build_event_prompt(event, "Celaena defeats Cain", "Throne of Glass")
+    prompt = build_event_prompt(event, "Celaena defeats Cain", "Throne of Glass", lang="fr")
     assert "Throne of Glass" in prompt
     assert "Celaena defeats Cain" in prompt
     assert "Cain, Celaena Sardothien" in prompt
@@ -120,17 +120,17 @@ def test_prompt_localizes_heading_and_directive_by_lang():
 
 
 def test_prompt_declares_event_identity_contract():
-    prompt = build_event_prompt(_event(1, "x"), "x", "TOG")
+    prompt = build_event_prompt(_event(1, "x"), "x", "TOG", lang="fr")
     assert f'"importance": "{EVENT_IMPORTANCE}"' in prompt
     assert f'"entity_type": "{EVENT_ENTITY_TYPE}"' in prompt
 
 
 def test_prompt_includes_forbidden_names_rule_only_when_given():
     event = _event(1, "a beat")
-    with_names = build_event_prompt(event, "a beat", "TOG", forbidden_names=["Aelin"])
+    with_names = build_event_prompt(event, "a beat", "TOG", forbidden_names=["Aelin"], lang="fr")
     assert "FORBIDDEN NAMES" in with_names
     assert "- Aelin" in with_names
-    assert "FORBIDDEN NAMES" not in build_event_prompt(event, "a beat", "TOG")
+    assert "FORBIDDEN NAMES" not in build_event_prompt(event, "a beat", "TOG", lang="fr")
 
 
 # --- neighbor_context ---
@@ -173,7 +173,7 @@ def test_prompt_injects_narrative_context_and_situate_rule():
         _event(2, "Celaena arrives at the castle"),
         _event(3, "Celaena wins the final duel"),
     ]
-    prompt = build_event_prompt(events[1], "Celaena arrives at the castle", "TOG", events=events)
+    prompt = build_event_prompt(events[1], "Celaena arrives at the castle", "TOG", events=events, lang="fr")
     assert "NARRATIVE CONTEXT" in prompt
     assert "Just before" in prompt and "Celaena is freed from Endovier" in prompt
     assert "Just after" in prompt and "Celaena wins the final duel" in prompt
@@ -181,5 +181,5 @@ def test_prompt_injects_narrative_context_and_situate_rule():
 
 
 def test_prompt_omits_context_section_when_no_events():
-    prompt = build_event_prompt(_event(1, "lonely beat"), "lonely beat", "TOG")
+    prompt = build_event_prompt(_event(1, "lonely beat"), "lonely beat", "TOG", lang="fr")
     assert "NARRATIVE CONTEXT" not in prompt

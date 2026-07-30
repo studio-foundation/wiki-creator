@@ -28,15 +28,15 @@ def test_tome_number_empty_or_none():
 
 
 def test_appearance_label_empty_books():
-    assert appearance_label([]) == ""
+    assert appearance_label([], lang="fr") == ""
 
 
 def test_appearance_label_single_book_fr():
-    assert appearance_label(["01-throne-of-glass"]) == "Apparaît au tome 1"
+    assert appearance_label(["01-throne-of-glass"], lang="fr") == "Apparaît au tome 1"
 
 
 def test_appearance_label_multi_book_fr():
-    assert appearance_label(["01-throne-of-glass", "02-crown-of-midnight"]) == (
+    assert appearance_label(["01-throne-of-glass", "02-crown-of-midnight"], lang="fr") == (
         "Apparaît au tome 1, dernière apparition tome 2"
     )
 

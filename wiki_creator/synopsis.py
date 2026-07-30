@@ -6,6 +6,7 @@ pure-module pattern.
 """
 from __future__ import annotations
 
+from wiki_creator.page_templates import chrome_label, language_name, slot_label
 from wiki_creator.register import DEFAULT_REGISTER
 
 SYNOPSIS_TITLE = "Synopsis"
@@ -101,6 +102,8 @@ def build_synopsis_prompt(
     events: list[dict],
     book_title: str,
     forbidden_names: list[str] | None = None,
+    *,
+    lang: str,
     register: str = DEFAULT_REGISTER,
 ) -> str:
     """Anchored writer prompt for the book synopsis page.
@@ -111,6 +114,9 @@ def build_synopsis_prompt(
     spoiler safety is inherited from the Event Layer, which is bounded to the
     current book.
     """
+    lang_name = language_name(lang)
+    synopsis_heading = chrome_label("synopsis", lang)
+    references_heading = slot_label("references", lang)
     lines = event_lines(events)
     events_block = "\n".join(f"  {line}" for line in lines) if lines else "  (no events available)"
 
@@ -138,8 +144,8 @@ EVENTS OF THE BOOK, IN NARRATIVE ORDER — these are the ONLY facts you may use:
 WRITING RULES (follow strictly):
 
 Tone and register:
-- Write in encyclopedic French. {register}
-- Flowing prose in paragraphs — no bullet lists, no headings other than the single "## Synopsis" heading.
+- Write in encyclopedic {lang_name}. {register}
+- Flowing prose in paragraphs — no bullet lists, no headings other than the single "## {synopsis_heading}" heading.
 - Use specific, concrete language anchored in the listed events.
 
 Content constraints:
@@ -148,16 +154,16 @@ Content constraints:
 - Do NOT invent scenes, motives, outcomes, relationships, or characters that are not in the events.
 - Scope is strictly this book: no sequels, no series-level information, no real-world publication or author information.
 - When referring to characters or places, use their names EXACTLY as written in the events — do not paraphrase, alter, or approximate names.
-- Context labels like [Chapitre N] are internal references — never mention chapters or chapter numbers in your output.
-- Do NOT include a ## Références section — it is added automatically.
+- Context labels like [Chapter N] are internal references — never mention chapters or chapter numbers in your output.
+- Do NOT include a ## {references_heading} section — it is added automatically.
 
 Structure:
-- The "content" field must contain a single "## Synopsis" heading followed by 4 to 8 paragraphs.
+- The "content" field must contain a single "## {synopsis_heading}" heading followed by 4 to 8 paragraphs.
 - Keep infobox_fields empty: this page has no infobox.{forbidden_names_rule}
 
 ---
 
-REMINDER: Write ALL content in French. Source events may be in English — your output must always be in French regardless.
+REMINDER: Write ALL content in {lang_name}. Source events may be in another language — your output must always be in {lang_name} regardless.
 
 Output this JSON object:
 {{

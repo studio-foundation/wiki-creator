@@ -273,10 +273,10 @@ def build() -> dict[str, str]:
         files[f"templates/{template_name.replace(' ', '_')}.wiki"] = source
 
     for page in pages:
-        rel_path, content = render_page(page, labels, COLLAPSE_AFTER, stance, LANG)
+        rel_path, content = render_page(page, labels, COLLAPSE_AFTER, stance, lang=LANG)
         files[rel_path] = content
 
-    files["categories.wiki"] = _build_categories_wiki(labels)
+    files["categories.wiki"] = _build_categories_wiki(labels, LANG)
 
     # Hand-authored reference wiki (not exporter output): shown in the preview's
     # "Original Wiki" nav group so a generated page can be read side by side with

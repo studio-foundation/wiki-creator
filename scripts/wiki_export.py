@@ -22,7 +22,7 @@ from wiki_creator.export_helpers import (
     index_limits,
     main_page_content,
 )
-from wiki_creator.page_templates import output_language
+from wiki_creator.page_templates import chrome_label, output_language
 from wiki_creator.paths import BookPaths
 from wiki_creator import studio_io
 from wiki_creator.spoiler_blocks import (
@@ -76,7 +76,8 @@ def render_page(
     labels: dict,
     collapse_after: int | None = None,
     stance: EditorialStance | None = None,
-    lang: str = "fr",
+    *,
+    lang: str,
 ) -> tuple[str, str]:
     """(path relative to the wiki dir, wikitext content) for one page.
 
@@ -96,12 +97,12 @@ def render_page(
     relation_units = page.get("relation_units")
     if relation_units:
         if collapse_after is not None:
-            body = wrap_collapsible(body, page.get("content_units") or [], collapse_after, lang)
-            body = wrap_relation_collapsibles(body, relation_units, collapse_after, lang)
+            body = wrap_collapsible(body, page.get("content_units") or [], collapse_after, lang=lang)
+            body = wrap_relation_collapsibles(body, relation_units, collapse_after, lang=lang)
     else:
-        body = inject_relationship_index(body, page.get("relationship_index") or [], lang)
+        body = inject_relationship_index(body, page.get("relationship_index") or [], lang=lang)
         if collapse_after is not None:
-            body = wrap_collapsible(body, page.get("content_units") or [], collapse_after, lang)
+            body = wrap_collapsible(body, page.get("content_units") or [], collapse_after, lang=lang)
     filename = page_filename(title) + ".wiki"
 
     if entity_type in ("SYNOPSIS", "COLLATION"):
@@ -109,7 +110,7 @@ def render_page(
 
     infobox_fields = page.get("infobox_fields", {})
     if collapse_after is not None:
-        infobox_fields = gate_infobox_spoilers(infobox_fields, lang)
+        infobox_fields = gate_infobox_spoilers(infobox_fields, lang=lang)
     infobox = make_infobox_call(entity_type, infobox_fields)
     cats = category_tags(
         entity_type, page.get("importance", "secondary"), labels, page.get("books"),
@@ -191,13 +192,13 @@ def main() -> None:
 
     # Write entity pages (and the synopsis page at the wiki root, if present)
     for page in pages:
-        rel_path, page_content = render_page(page, labels, collapse_after, stance, lang)
+        rel_path, page_content = render_page(page, labels, collapse_after, stance, lang=lang)
         path = wiki_dir / rel_path
         path.write_text(page_content, encoding="utf-8")
         files_written += 1
 
     # Write categories.wiki
-    cats_content = _build_categories_wiki(labels)
+    cats_content = _build_categories_wiki(labels, lang)
     (wiki_dir / "categories.wiki").write_text(cats_content, encoding="utf-8")
     files_written += 1
 
@@ -214,11 +215,11 @@ def main() -> None:
     json.dump({"files_written": files_written, "wiki_dir": str(wiki_dir)}, sys.stdout)
 
 
-def _build_categories_wiki(labels: dict) -> str:
+def _build_categories_wiki(labels: dict, lang: str) -> str:
     """Generate categories.wiki — a reference page listing the wiki's category hierarchy."""
     lines = [
-        "= Catégories =",
-        "This page documents the category hierarchy used in this wiki.",
+        f"= {chrome_label('categories_heading', lang)} =",
+        chrome_label("categories_blurb", lang),
         "",
         f"== {labels['persons']} ==",
         f"* [[Category:{labels['persons']}]]",

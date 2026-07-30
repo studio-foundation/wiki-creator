@@ -111,7 +111,8 @@ def main_page_content(
     principals_shown: int = DEFAULT_PRINCIPALS_SHOWN,
     places_shown: int = DEFAULT_PLACES_SHOWN,
     expose_pipeline_metadata: bool = True,
-    lang: str = "fr",
+    *,
+    lang: str,
 ) -> str:
     """Generate Main_Page.wiki content from pipeline data.
 
@@ -131,9 +132,12 @@ def main_page_content(
     principals = [p for p in persons if p["importance"] == "principal"][:principals_shown]
     major_places = [p for p in places if p["importance"] == "principal"][:places_shown]
 
-    persons_label = labels.get("persons", "Personnages") if labels else "Personnages"
-    locations_label = labels.get("locations", "Lieux") if labels else "Lieux"
-    orgs_label = labels.get("organizations", "Organisations") if labels else "Organisations"
+    # STU-734: an absent label falls back to the type's ``lang`` default, never to a
+    # French literal — the series hub already resolved it this way.
+    labels = labels or {}
+    persons_label = labels.get("persons") or entity_taxonomy.category_default("PERSON", lang)
+    locations_label = labels.get("locations") or entity_taxonomy.category_default("PLACE", lang)
+    orgs_label = labels.get("organizations") or entity_taxonomy.category_default("ORG", lang)
 
     lines = [
         f"= {book_title} =",

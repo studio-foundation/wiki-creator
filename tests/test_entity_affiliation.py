@@ -197,13 +197,13 @@ from scripts.wiki_preparation import build_entity_bundle, load_affiliation_verdi
 
 
 def test_the_binder_renders_affiliation_from_the_batch_entity():
-    assert _extracted_fact_value({"affiliation": "Varden"}, "affiliation", "fr") == "Varden"
+    assert _extracted_fact_value({"affiliation": "Varden"}, "affiliation", lang="fr") == "Varden"
 
 
 def test_an_unstamped_entity_renders_no_affiliation():
     # OPT with no declared fallback: _bind_batch_fields omits a falsy value.
-    assert _extracted_fact_value({}, "affiliation", "fr") is None
-    assert _extracted_fact_value({"affiliation": ""}, "affiliation", "fr") is None
+    assert _extracted_fact_value({}, "affiliation", lang="fr") is None
+    assert _extracted_fact_value({"affiliation": ""}, "affiliation", lang="fr") is None
 
 
 def test_preparation_stamps_affiliation_onto_the_batch_entity():

@@ -50,15 +50,10 @@ from wiki_creator.page_templates import (
     chrome_label,
     output_language,
     slot_label,
-    stub_message,
+    stub_content,
 )
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.register import DEFAULT_REGISTER, register_clause
-
-
-def _event_stub(lang: str, kind: str) -> str:
-    """Reader-facing stub body under the localized ``course`` heading (STU-514)."""
-    return f"## {slot_label('course', lang)}\n\n*{stub_message(kind, lang)}*"
 
 
 # Mirrors generate_book_synopsis: the writer is told not to author a references
@@ -92,7 +87,7 @@ def _stub_page(title: str, event: dict, lang: str, *, failed: bool = False) -> d
     page = _base_page(
         title,
         event,
-        _event_stub(lang, "event_failed" if failed else "event_dry_run"),
+        stub_content("event_failed" if failed else "event_dry_run", lang, heading="course"),
     )
     if failed:
         page["_failed"] = True
@@ -105,7 +100,7 @@ def _finalize_page(result: dict, title: str, event: dict, book_title: str, lang:
     deterministic infobox."""
     content = str(result.get("content", "") or "")
     content = _references_section_re(lang).sub("", content).rstrip("\n")
-    return _base_page(title, event, content + "\n\n" + _references_block(book_title, lang))
+    return _base_page(title, event, content + "\n\n" + _references_block(book_title, lang=lang))
 
 
 def build_event_item(
@@ -353,7 +348,7 @@ def run_post(payload: dict, *, book_cfg: dict, language: str) -> dict:
     results = _results_by_index(_map_output_from_payload(payload))
     pages: list[dict] = []
     for i, (event, title) in enumerate(planned):
-        result = page_from_map_result(results.get(i), _event_entity(title), language)
+        result = page_from_map_result(results.get(i), _event_entity(title), language=language)
         pages.append(
             finalize_event(
                 result, title, event,

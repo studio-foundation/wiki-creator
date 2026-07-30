@@ -62,25 +62,25 @@ def test_grounding_block_carries_no_stance_rule():
 
 
 def test_stance_block_names_the_mode_and_the_hybrid_exceptions():
-    block = EditorialStance().prompt_block()
+    block = EditorialStance().prompt_block(lang="fr")
     assert "EDITORIAL STANCE — hybrid" in block
     assert "Références" in block and "Rôle dans le récit" in block
 
 
 def test_stance_block_names_only_the_exceptions_among_the_written_sections():
-    block = EditorialStance().prompt_block(["infobox", "biography", "references"])
+    block = EditorialStance().prompt_block(["infobox", "biography", "references"], lang="fr")
     assert "Références" in block
     assert "Rôle dans le récit" not in block
 
 
 def test_stance_block_drops_the_exception_line_when_no_exception_is_written():
-    block = EditorialStance().prompt_block(["infobox", "biography"])
+    block = EditorialStance().prompt_block(["infobox", "biography"], lang="fr")
     assert "Exception" not in block
 
 
 def test_stance_block_author_rule_is_independent_of_mode():
-    assert "real-world author" in EditorialStance(mode="out_of_universe").prompt_block()
+    assert "real-world author" in EditorialStance(mode="out_of_universe").prompt_block(lang="fr")
     assert (
         "real-world author"
-        not in EditorialStance(mode="in_universe", forbid_author_mentions=False).prompt_block()
+        not in EditorialStance(mode="in_universe", forbid_author_mentions=False).prompt_block(lang="fr")
     )

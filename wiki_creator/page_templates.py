@@ -358,15 +358,17 @@ def chrome_label(key, lang) -> str:
 
 def stub_message(kind, lang) -> str:
     """Localized stub body text (pack ``stubs``) — the sentence rendered in place
-    of a page that could not be generated. ``stub_content`` wraps it under the
-    biography heading; the event pages use the ``course`` heading instead."""
+    of a page that could not be generated. ``stub_content`` wraps it under a
+    localized section heading."""
     return localized(lang, "stubs", kind)
 
 
-def stub_content(kind, lang) -> str:
-    """Localized reader-facing stub page body. ``kind`` is ``failed`` or
-    ``insufficient``. Rendered under the biography heading."""
-    return f"## {slot_label('biography', lang)}\n\n*{stub_message(kind, lang)}*"
+def stub_content(kind, lang, *, heading="biography") -> str:
+    """Localized reader-facing stub page body, rendered under the localized
+    ``heading`` section title. ``kind`` names the stub: an entity page's
+    ``failed``/``insufficient`` under `biography`, an event page's ``event_*``
+    under `course`, the synopsis' ``synopsis_*`` under `synopsis` (STU-734)."""
+    return f"## {slot_label(heading, lang)}\n\n*{stub_message(kind, lang)}*"
 
 
 def validator_message(code, lang, **params) -> str:

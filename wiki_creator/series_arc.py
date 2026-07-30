@@ -102,7 +102,8 @@ def build_arc_prompt(
     tomes: list[TomeGrounding],
     main_characters: list[str],
     series_title: str,
-    lang: str = "fr",
+    *,
+    lang: str,
     register: str = DEFAULT_REGISTER,
 ) -> str:
     """Anchored writer prompt for the series hub's overarching-arc paragraph.

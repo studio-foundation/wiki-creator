@@ -862,6 +862,41 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
 
 - English is the default and the only language allowed in code. Nothing user-visible may be hardcoded in another language — no French (or any non-English) string literals in `.py`. Anything that needs translation is data, not code, and it lives in **one file per language**: `wiki_creator/templates/lang/<code>.yaml` for output strings (`labels`, `chrome`, `stubs`, `validator_errors`, `briefs`, `few_shot`, `category_defaults`, `relationship_labels`, `sub_role_labels`, `language_name`), `wiki_creator/cue_words/<code>.json` for detection vocabulary. It is read via helpers (`slot_label`, `section_brief`, `chrome_label`, `stub_message`, `validator_message`, `few_shot_example`, `language_name`, `entity_taxonomy.category_default`), all resolving through one chain — **requested language → `en` → raise** (STU-732). `en.yaml` is the reference pack and must hold every key; `tests/test_template_packs.py` fails on a gap in any shipped pack. `base.yaml` keeps structure only: prompt *scaffolding* (instructions, grounding labels, the classifier `description` criteria, `length_by_tier`) stays English regardless of output language, and only output-anchoring content (section titles, briefs, few-shot, the write-in-`<language>` directive) and reader-facing chrome follow `output_language(book_config)` (STU-510).
 
+- **`lang` is a required keyword argument, never a defaulted one (STU-734).** Every
+  render/prompt helper that takes the output language declares `*, lang: str` (or
+  `language: str`), so a call that forgets to thread it is a `TypeError` at the call
+  site instead of a French page in an English wiki. `lang: str = "fr"` sat on ~35
+  signatures across `spoiler_blocks`, `series_pages`/`series_hub`/`series_arc`,
+  `collation`, `event_pages`, `export_helpers`, `editorial_stance`, `wiki_export`,
+  `wiki_page_validator` and `generate_wiki_pages` (plus `GenerationConfig.language`),
+  and the sweep is what found the callers that never passed it — the synopsis stage
+  appended a French `## Références` to an English page, and `main_page_content` fell
+  back to `"Personnages"`. Two "fr" defaults survive on purpose: `book_language()`
+  (the documented historical default of this corpus) and the *input*-side
+  `language` of `parse_epub`/`grounding`, which selects detection cue-words, not
+  output strings.
+  **The contamination check follows the output language too**: `check_language_fr`
+  is `check_language_contamination`, and its markers come from every lang pack *but*
+  `lang` (`lang.contamination_markers`). Hardcoding `en` as the contaminant meant an
+  English book tripped `language_contamination` on the very markers its pages are
+  made of — the check fired on exactly the pages it should pass. Only `en.json`
+  declares `language_id_markers`, so an English wiki is a no-op and a French one is
+  still compared against English.
+  The gate is `tests/test_output_localization.py`: every reader-facing surface is
+  rendered with `lang="en"` and searched for the strings `templates/lang/fr.yaml`
+  declares (`chrome`/`labels`/`stubs`/`validator_errors`/`category_defaults`), so a
+  new localized key is covered the day it lands and a string built in Python rather
+  than read from its pack is caught the day someone writes it. It **asserts the
+  harvest is non-empty** — the STU-732 pack split moved those groups out of
+  `base.yaml` and a gate reading the old location passes vacuously, green and blind.
+  `synopsis.build_synopsis_prompt` is the same defect one layer over, and it fell
+  between two tickets: STU-733 de-Frenchified the `.studio/agents` prompts, this one
+  is a Python prompt builder, so it kept ordering "encyclopedic French" and a
+  `## Références` section while every sibling builder (`event_pages`, `series_arc`,
+  `generate_wiki_pages`) already read `language_name(lang)`. It takes `lang` like the
+  rest now, which busts the synopsis map-resume key by construction — the rendered
+  prompt *is* the key.
+
 - `tests/test_e2e_golden.py` chains all deterministic resolution stages on the fixture novella and compares every stage output to goldens in `tests/fixtures/e2e/golden/stages/`. Any intentional behavior change in those stages requires `make golden-update` and a review of the golden diff in the same PR. The extraction seed is committed (`golden/seed/`, regenerate with `gen_seed.py`); a `@requires_en_sm` test keeps it shape-compatible with real extraction in CI.
 
 - Spoiler blocks (STU-492): `wiki_export.render_page` wraps chapter-gated sections
