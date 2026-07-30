@@ -811,6 +811,42 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   clustering/alias seed from the series registry), so series mode is a pure
   sequential loop — each tome must finish before the next seeds from it.
 
+- **The series merge canonicalizes what `Registry.accumulate` could not (STU-719).**
+  Accumulation joins tome N on `normalize_name` (case + accents only), which is
+  enough inside a book and not across them: on Oz it left `Saw-Horse`/`Sawhorse`,
+  `Tik-tok`/`Tiktok`, `BILLINA`, `THE shaggy man` as separate series records, bare
+  role titles (`King`, `Queen`, …) as standalone characters, and 136 dead links in
+  `output/_series/`. `wiki_creator/canonicalize.py` owns the stricter key —
+  `canonical_key` also folds spacing, punctuation and a leading article,
+  `preferred_display_name` picks the reader-facing spelling of a group,
+  `is_generic_role_name` names a role that is a different referent in every tome.
+  Three consequences to know:
+  * **Vocabulary is what limits the role drop.** The lang pack's `role_words`
+    catches `King`/`Queen`/`Prince`/`Princess`/`Captain`/`Champion`; `Sorcerer`,
+    `Chief Steward`, `Keeper of the Wicket` need a reader to declare them in the
+    book YAML `classification.role_words`, which *extends* the pack here (in
+    `entity_classification` it replaces it — a deliberate difference).
+    `is_generic_role_name` is stricter than alias-resolution's head-noun rule on
+    purpose: that rule matches `Nome King`, and dropping him would be worse than
+    keeping `Guardian`.
+  * **A drop or a merge is a retarget, never a red link.** `series.link_targets`
+    maps every surface any tome could have linked to the surviving page title (or
+    `""` for a dropped one), and `series_export` retargets the whole page body
+    through it (`wikilinks.retarget_links` — the tome's own wording survives as the
+    link label, `[[Tin Woodman|Nick Chopper]]`). Measured on the committed Oz
+    output: 136 dead links → 0, Dorothy's relationship index 40 lines → 31.
+  * **Series notability is max-across-tomes, not latest-wins.** `reconcile_status`
+    stays latest-wins (dead stays dead); `reconcile_importance` does not — reading
+    book 6 as the verdict dropped the Scarecrow, Tin Woodman, Ozma and the Wizard
+    out of the Oz hub's main characters. Cowardly Lion is still absent after the
+    fix: he is `secondary` in *every* tome, an upstream tiering call, not a merge bug.
+  Unifying this key with the three role-title/honorific detectors
+  (`alias_resolution._is_pure_title`, `entity_classification._is_role_entity_name`,
+  `_leading_role`) is STU-724 — it changes identity merging inside a book, so it
+  needs the library-wide sweep this deliberately does not. Left standing for it:
+  the semantic short-forms no normalization key can fold (`Polly`/`Polychrome`,
+  `Tiger`/`Hungry Tiger`, `City of Emeralds`/`Emerald City`).
+
 - Collation (STU-511): a tier can trade its dedicated pages for one collective
   page, or none at all. Book YAML `generation.collation.<tier>.mode` =
   `dedicated` (default, pre-STU-511 behavior) | `collective` | `drop`, with

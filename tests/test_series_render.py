@@ -10,7 +10,7 @@ from pathlib import Path
 
 from wiki_creator.export_helpers import category_labels
 from wiki_creator.registry import Registry
-from wiki_creator.series import TomeArtifacts, build_series_characters
+from wiki_creator.series import TomeArtifacts, build_series_characters, link_targets
 from wiki_creator.series_pages import render_series_character_page
 
 GOLDEN_DIR = Path(__file__).parent / "fixtures" / "series"
@@ -123,7 +123,7 @@ def test_gavriel_page_key_properties():
     relpath, wiki = render_series_character_page(gavriel, category_labels({}, "en"), lang="en")
 
     assert relpath == "characters/Gavriel.wiki"
-    assert gavriel.importance == "principal"          # latest-wins (secondary -> principal)
+    assert gavriel.importance == "principal"          # highest tier reached (secondary -> principal)
     # latest-wins status, collapsed behind the spoiler span
     assert "mw-collapsible mw-collapsed" in wiki and "Deceased" in wiki
     assert "Alive" not in wiki
@@ -147,3 +147,52 @@ def test_gavriel_page_key_properties():
     assert wiki.count("\n== Relationships ==") == 1
     # the per-tome prose Relationships is dropped in favor of the merged index
     assert "reunited at last" not in wiki and "unknown to him" not in wiki
+
+
+def test_tome_links_are_retargeted_onto_the_series_page_set():
+    """STU-719: each tome links the entity by whatever it called it. On the series
+    page those targets must resolve to the one merged page — and a target the merge
+    dropped must be unlinked, never left as a red link."""
+    registry = Registry.from_dict({
+        "version": 1,
+        "entities": [
+            {"entity_id": "aelin", "canonical_name": "Aelin Galathynius",
+             "entity_type": "PERSON", "aliases": ["Aelin Galathynius", "Celaena Sardothien"]},
+            {"entity_id": "queen", "canonical_name": "Queen", "entity_type": "PERSON",
+             "aliases": ["Queen"]},
+            {"entity_id": "chaol", "canonical_name": "Chaol", "entity_type": "PERSON",
+             "aliases": ["Chaol"]},
+        ],
+        "decisions": [], "warnings": [],
+    })
+    tome = TomeArtifacts(
+        book_id="01-heir", title="Throne of Glass",
+        pages=[
+            {"title": "Chaol", "importance": "secondary", "entity_type": "PERSON",
+             "content": "## Biography\n\nSworn to [[Celaena Sardothien]] and to the [[Queen]].",
+             "relationship_index": ["* [[Celaena Sardothien]] — romance (ch.5)",
+                                    "* [[Aelin Galathynius]] — romance (ch.40)",
+                                    "* [[Queen]] — duty (ch.1)"]},
+            {"title": "Aelin Galathynius", "importance": "principal", "entity_type": "PERSON",
+             "content": "## Biography\n\nQueen of Terrasen."},
+            {"title": "Queen", "importance": "secondary", "entity_type": "PERSON",
+             "content": "## Biography\n\nSomeone's queen."},
+        ],
+    )
+    vocab = {"role_words": ["queen"], "determiners": ["the"]}
+    chars = build_series_characters(registry, [tome], **vocab)
+    targets = link_targets(registry, chars, **vocab)
+
+    assert "Queen" not in {c.canonical_name for c in chars}
+    chaol = next(c for c in chars if c.canonical_name == "Chaol")
+    _, wiki = render_series_character_page(
+        chaol, category_labels({}, "en"), lang="en", targets=targets, determiners=["the"],
+    )
+
+    # Two tome spellings of one character collapse to one line pointing at her page.
+    assert wiki.count("romance") == 1
+    assert "[[Aelin Galathynius|Celaena Sardothien]] — romance (ch.5)" in wiki
+    # The dropped generic role is unlinked in the index and in the prose.
+    assert "[[Queen]]" not in wiki
+    assert "* Queen — duty (ch.1)" in wiki
+    assert "and to the Queen." in wiki
