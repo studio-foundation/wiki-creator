@@ -178,6 +178,17 @@ def test_gather_merges_spelling_variants_of_one_character():
     assert chars[0].books == ["02", "04"]
 
 
+def test_gather_matches_a_status_verdict_on_the_canonical_key():
+    # STU-724: the verdict is keyed by the roster name the tome wrote, which is
+    # not always the spelling the registry kept.
+    reg = _registry([
+        {"entity_id": "b", "canonical_name": "Billina", "entity_type": "PERSON", "aliases": []},
+    ])
+    verdict = {"status": "alive", "quote": "q"}
+    tomes = [TomeArtifacts("01", pages=[_page("Billina")], status_verdicts={"BILLINA": verdict})]
+    assert build_series_characters(reg, tomes)[0].status == verdict
+
+
 def test_gather_prefers_a_cased_spelling_over_a_shouty_one():
     reg = _registry([
         {"entity_id": "billina", "canonical_name": "BILLINA", "entity_type": "PERSON",

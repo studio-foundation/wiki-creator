@@ -17,6 +17,7 @@ import yaml
 from collections.abc import Callable
 
 from wiki_creator import studio_io
+from wiki_creator.canonicalize import canonical_key, is_bare_role
 from wiki_creator.lang import load_lang_config, infer_language
 from wiki_creator.llm import ollama
 from wiki_creator.registry import EntityRecord, Registry, normalize_name
@@ -126,33 +127,6 @@ def _pick_snippets(entity: dict, persons_full: dict, n: int = 3) -> list[str]:
     return ordered[:n]
 
 
-def _is_pure_title(name: str, role_words: list[str]) -> bool:
-    """Return True if name is a bare title, not a title + proper name.
-
-    Recognises:
-      * single-word roles: 'Master', 'King'
-      * enumerated role phrases: 'Crown Prince' when 'crown prince' ∈ role_words
-      * modifier + role head: 'Crown Prince', 'High Lord' — a multi-word phrase whose
-        HEAD noun (last token) is a role word, so the leading modifier need not be
-        enumerated (STU-471). English titles are head-final, so the head carries the
-        role. A title + surname ('Captain Westfall') keeps a non-role head and is
-        therefore NOT pure — it is handled by _detect_title_alias instead.
-    """
-    name_lower = name.lower()
-    if not name_lower:
-        return False
-    role_set = {r.lower() for r in role_words}
-    # Match the full name as a role phrase (e.g. "Crown Prince" in {"crown prince", ...})
-    if name_lower in role_set:
-        return True
-    tokens = name_lower.split()
-    # Match token-by-token (e.g. "Master" where "master" in role_set)
-    if all(t in role_set for t in tokens):
-        return True
-    # Modifier + role head: last token is a role word ("Crown Prince" -> "prince").
-    return len(tokens) > 1 and tokens[-1] in role_set
-
-
 def _pick_canonical_name(
     entity_a: dict,
     entity_b: dict,
@@ -171,7 +145,7 @@ def _pick_canonical_name(
     return sorted(
         counts,
         key=lambda name: (
-            _is_pure_title(name, role_words),   # False (0) sorts before True (1) — proper names first
+            is_bare_role(name, role_words),   # False (0) sorts before True (1) — proper names first
             -counts[name],
             -len(name.split()),
             -len(name),
@@ -397,13 +371,20 @@ def _detect_reveal_signal(entity_a: dict, entity_b: dict, persons_full: dict, re
 
 
 def _leading_role(name: str, role_words: list[str]) -> str | None:
-    """Return the role_word a name leads with ("Mrs Beaver" -> "mrs"), longest match first."""
-    name_lower = name.lower()
-    for role in sorted(role_words, key=len, reverse=True):
-        role_lower = role.lower()
-        if name_lower.startswith(role_lower + " "):
-            return role_lower
+    """Return the role_word a name leads with ("Mrs Beaver" -> "mrs"), longest match first.
+
+    Compared on the registry's canonical key (STU-724), so "Mrs. Beaver" and
+    "Mrs Beaver" lead with the same role."""
+    key = canonical_key(name)
+    for role in sorted((canonical_key(r) for r in role_words), key=len, reverse=True):
+        if key.startswith(role + " "):
+            return role
     return None
+
+
+def _role_remainder(name: str, role: str) -> str:
+    """What a name holds beyond the role it leads with ("Mrs Beaver" -> "beaver")."""
+    return canonical_key(name)[len(role) + 1:].strip()
 
 
 def _entity_roles(names: list[str], role_words: list[str]) -> set[str]:
@@ -423,7 +404,7 @@ def _ambiguous_remainders(entities: list[dict], role_words: list[str]) -> frozen
             role = _leading_role(name, role_words)
             if role is None:
                 continue
-            remainder = name.lower()[len(role) + 1:].strip()
+            remainder = _role_remainder(name, role)
             if remainder:
                 roles_by_remainder.setdefault(remainder, set()).add(role)
     return frozenset(remainder for remainder, roles in roles_by_remainder.items() if len(roles) > 1)
@@ -467,13 +448,14 @@ def _detect_title_alias(
             role = _leading_role(name, role_words)
             if role is None:
                 continue
-            remainder = name.lower()[len(role) + 1:].strip()
+            remainder = _role_remainder(name, role)
             if not remainder:
                 continue
             for full_name in names_full:
-                if remainder in ambiguous_remainders and full_name.lower() == remainder:
+                full_key = canonical_key(full_name)
+                if remainder in ambiguous_remainders and full_key == remainder:
                     continue
-                if contains_token_run(full_name.lower(), remainder):
+                if contains_token_run(full_key, remainder):
                     return {
                         "method": "title_alias",
                         "confidence": "medium",

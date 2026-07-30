@@ -840,11 +840,12 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
     book 6 as the verdict dropped the Scarecrow, Tin Woodman, Ozma and the Wizard
     out of the Oz hub's main characters. Cowardly Lion is still absent after the
     fix: he is `secondary` in *every* tome, an upstream tiering call, not a merge bug.
-  Unifying this key with the three role-title/honorific detectors
-  (`alias_resolution._is_pure_title`, `entity_classification._is_role_entity_name`,
-  `_leading_role`) is STU-724 — it changes identity merging inside a book, so it
-  needs the library-wide sweep this deliberately does not. Left standing for it:
-  the semantic short-forms no normalization key can fold (`Polly`/`Polychrome`,
+  STU-724 then unified two of the three role-title/honorific detectors into this
+  same module — `alias_resolution._is_pure_title` became `is_bare_role`, and
+  `_leading_role` reads the key. `entity_classification._is_role_entity_name`
+  stands: it answers a different question (is this entity a *role entity* at
+  typing time) and reads regex `role_patterns`, not a key. Left standing too: the
+  semantic short-forms no normalization key can fold (`Polly`/`Polychrome`,
   `Tiger`/`Hungry Tiger`, `City of Emeralds`/`Emerald City`).
 
 - Collation (STU-511): a tier can trade its dedicated pages for one collective
@@ -1326,3 +1327,40 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   and deletes the drift surface, so `infobox_rows` is gone with `infobox_source`.
   STU-730's "an `en` template ships no French label" tests moved to
   `test_infobox_vocabulary.py` — the property is now the generator's and must stay.
+
+- One normalization key, owned by the registry (STU-724): `wiki_creator/canonicalize.py`.
+  Casing, spacing, punctuation and leading articles were folded independently at
+  every site that needed them, and forgotten at the next — STU-636 folded
+  `Queen`/`The Queen` on a roster and STU-719 met the same pair at series scope;
+  STU-541's honorific rule lived in alias-resolution and STU-585 found clustering
+  remarrying the Beavers one stage upstream. Three sites read the module:
+  `entity_clustering.tokenize_name`/`extract_leading_titles`, `alias_resolution`'s
+  `_leading_role`/`_role_remainder`/`is_bare_role` (the old `_is_pure_title`), and
+  `series` (STU-719's half, above — `group_records`, `link_targets`, the vocabulary
+  read off the first tome).
+  **Two keys, because two questions.** `canonical_key` answers *same name* — it
+  strips a leading article, which carries no referent, and **keeps an honorific,
+  which discriminates one** (`Mr Beaver` ≠ `Mrs Beaver`). `canonical_tokens`
+  answers *comparable names* — it strips whatever the caller declares strippable
+  (titles, honorifics, articles), which is what lets `Mr Tumnus` still reach
+  `Tumnus`. Neither ever strips the last token (STU-636).
+  Punctuation is **dropped, not replaced by a space**, so `Saw-Horse` = `Sawhorse`
+  and `Tik-tok` = `Tiktok` (STU-719's Oz duplicates). **Word boundaries survive**,
+  which is what lets the same key double as the token-run form alias-resolution
+  matches on; the cost is that a word split (`Tinwoodman` / `Tin Woodman`) stays
+  two keys — unobserved in the library, and the conservative direction on a merge
+  (STU-538/549). STU-719's key removed spaces too; every one of its cases passes
+  unchanged under this one. Vocabulary is folded on both
+  sides (`fold_vocabulary`), so the cue word `m.` matches the token `M.` writes —
+  which is why STU-585's "the apparent `mr.`/`mr` duplication is load-bearing" no
+  longer holds for *matching*: both forms fold to `mr`. The data was left alone.
+  **Two role predicates, because two questions.** `is_bare_role` is
+  alias-resolution's head-noun rule inside a book (`Crown Prince` is a title);
+  `is_generic_role_name` (STU-719) is the stricter cross-tome test — *every*
+  content token must be a role, so `Nome King` survives the series drop.
+  **Not built: a registry-side short-form fold** (`the Rabbit` → `White Rabbit`).
+  STU-714 measured that `should_cluster_tokens`' subset branch already does it —
+  declaring `Rabbit` in the gazetteer was the whole fix — so writing a second one
+  in the registry is the defect this ticket closes, not the fix.
+  **Not swept.** The key is unit-tested and the goldens are byte-identical, but no
+  live run over `library/` has measured whether it over-merges (STU-543's norm).

@@ -487,6 +487,18 @@ def test_detect_title_alias_different_honorifics_same_surname():
     assert _detect_title_alias(entity_a, entity_b, role_words=["mr", "mrs"]) is None
 
 
+def test_detect_title_alias_reads_the_canonical_key():
+    # STU-724: role and remainder are compared on the registry's key, so the
+    # period form of an honorific behaves exactly like the bare one.
+    from scripts.alias_resolution import _detect_title_alias
+    titled = {"canonical_name": "Capt. Westfall", "aliases": ["Capt. Westfall"]}
+    full = {"canonical_name": "Chaol Westfall", "aliases": ["Chaol Westfall"]}
+    assert _detect_title_alias(titled, full, role_words=["capt."]) is not None
+    spouse_a = {"canonical_name": "Mrs. Beaver", "aliases": ["Mrs. Beaver"]}
+    spouse_b = {"canonical_name": "Mr. Beaver", "aliases": ["Mr. Beaver"]}
+    assert _detect_title_alias(spouse_a, spouse_b, role_words=["mr.", "mrs."]) is None
+
+
 def test_detect_title_alias_titled_alias_blocks_transitive_remarriage():
     from scripts.alias_resolution import _detect_title_alias
     # Once bare "Beaver" carries "Mr Beaver" as an alias, it is Mr Beaver
@@ -1268,14 +1280,14 @@ def test_resolve_aliases_pure_title_auto_merges_without_llm():
 def test_is_pure_title_recognizes_modifier_plus_role_head():
     """'Crown Prince' is a title because its head noun 'prince' is a role word,
     without 'crown prince' being enumerated (STU-471). Title+surname stays non-title."""
-    from scripts.alias_resolution import _is_pure_title
+    from wiki_creator.canonicalize import is_bare_role
     role_words = ["prince", "king", "captain", "lord"]
-    assert _is_pure_title("Crown Prince", role_words) is True
-    assert _is_pure_title("High Lord", role_words) is True
-    assert _is_pure_title("King", role_words) is True
+    assert is_bare_role("Crown Prince", role_words) is True
+    assert is_bare_role("High Lord", role_words) is True
+    assert is_bare_role("King", role_words) is True
     # title + surname must remain a title_alias case, not a pure title
-    assert _is_pure_title("Captain Westfall", role_words) is False
-    assert _is_pure_title("Dorian Havilliard", role_words) is False
+    assert is_bare_role("Captain Westfall", role_words) is False
+    assert is_bare_role("Dorian Havilliard", role_words) is False
 
 
 def test_resolve_aliases_merges_crown_prince_without_phrase_in_role_words():

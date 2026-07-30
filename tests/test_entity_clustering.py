@@ -44,7 +44,7 @@ def test_normalize_strips_leading_trailing_spaces():
 # --- tokenize_name ---
 
 def test_tokenize_strips_monsieur():
-    assert tokenize_name("Monsieur Martín", _FR_TITLES) == ["martín"]
+    assert tokenize_name("Monsieur Martín", _FR_TITLES) == ["martin"]
 
 def test_tokenize_strips_inspecteur():
     assert tokenize_name("inspecteur Grandes", _FR_TITLES) == ["grandes"]
@@ -54,12 +54,13 @@ def test_tokenize_strips_don():
     assert tokenize_name("Don Quijote", load_title_prefixes("es")) == ["quijote"]
 
 def test_tokenize_keeps_full_name():
-    assert tokenize_name("David Martín") == ["david", "martín"]
+    assert tokenize_name("David Martín") == ["david", "martin"]
 
 def test_tokenize_bare_title_survives_as_last_token():
     # STU-636: the last token is never stripped — a name that is only a title/role
     # is identified by it, not emptied (needed so bare "Queen" has a comparison key).
-    assert tokenize_name("M.", _FR_TITLES) == ["m."]
+    # STU-724: punctuation is folded out, so the surviving token is "m".
+    assert tokenize_name("M.", _FR_TITLES) == ["m"]
 
 def test_tokenize_strips_leading_determiner():
     # STU-636: "the" is a determiner; "queen" is the surviving role token.
@@ -304,7 +305,7 @@ def test_extract_leading_titles_no_title():
     assert extract_leading_titles("Pedro Vidal", _FR_TITLES) == frozenset()
 
 def test_extract_leading_titles_stops_at_first_non_title():
-    assert extract_leading_titles("M. Vidal", _FR_TITLES) == frozenset({"m."})
+    assert extract_leading_titles("M. Vidal", _FR_TITLES) == frozenset({"m"})
 
 
 # --- has_conflicting_gender_title ---
@@ -395,7 +396,7 @@ def test_extract_surname_and_firstname_with_title():
 def test_extract_surname_and_firstname_three_tokens():
     surname, firsts = extract_surname_and_firstname("A. C. Vidal")
     assert surname == "vidal"
-    assert firsts == ["a.", "c."]
+    assert firsts == ["a", "c"]
 
 
 # --- build_clusters AC tests ---
@@ -501,6 +502,18 @@ def test_should_cluster_allows_mr_tumnus_to_bare():
 
 def test_should_cluster_allows_captain_to_full_name():
     assert should_cluster("Captain Westfall", "Chaol Westfall", _EN_TITLES, _EN_MASC, _EN_FEM) is True
+
+
+def test_should_cluster_folds_punctuation_variants():
+    # STU-724: clustering compares the registry's canonical tokens, so the Oz
+    # spelling variants are one entity here and not only at series scope (STU-719).
+    assert should_cluster("Tik-tok", "Tiktok", _EN_TITLES, _EN_MASC, _EN_FEM) is True
+    assert should_cluster("Saw-Horse", "Sawhorse", _EN_TITLES, _EN_MASC, _EN_FEM) is True
+
+
+def test_should_cluster_still_blocks_mr_vs_mrs_through_the_period_form():
+    # The gender sets fold too, so `Mr.`/`Mrs.` conflict exactly like `Mr`/`Mrs`.
+    assert should_cluster("Mr. Beaver", "Mrs. Beaver", _EN_TITLES, _EN_MASC, _EN_FEM) is False
 
 
 def _cluster_of(clusters, unclustered, eid):

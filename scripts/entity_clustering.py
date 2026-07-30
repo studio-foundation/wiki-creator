@@ -48,6 +48,7 @@ from collections import defaultdict
 from pathlib import Path
 
 
+from wiki_creator.canonicalize import canonical_tokens, fold_tokens, fold_vocabulary
 from wiki_creator.entity_taxonomy import resolution_types
 from wiki_creator.paths import book_paths_from_epub, book_paths_from_yaml
 from wiki_creator.registry import Registry, normalize_name as normalize_for_comparison
@@ -139,16 +140,9 @@ def _extend_from_lang(base: frozenset[str], key: str, language: str | None) -> f
 # --- String utilities ---
 
 def tokenize_name(name: str, title_prefixes: frozenset[str] = TITLE_PREFIXES) -> list[str]:
-    """Strip leading title/determiner prefixes and tokenize a name.
-
-    The last token is never stripped (STU-636): a name that is nothing but a
-    title or role — ``Queen``, ``The Queen`` — is identified by that role, not
-    emptied. ``The Queen`` strips its determiner to ``["queen"]`` and matches a
-    bare ``Queen``; ``The King`` reduces to ``["king"]`` and stays distinct."""
-    tokens = name.lower().strip().split()
-    while len(tokens) > 1 and tokens[0] in title_prefixes:
-        tokens = tokens[1:]
-    return [t for t in tokens if t]
+    """The registry's comparison tokens for a name (STU-724), stripping this
+    book's leading title/determiner prefixes."""
+    return canonical_tokens(name, title_prefixes)
 
 
 def _canonical_score(mention: str, title_prefixes: frozenset[str] = TITLE_PREFIXES) -> tuple[int, int, bool]:
@@ -165,12 +159,15 @@ def _canonical_score(mention: str, title_prefixes: frozenset[str] = TITLE_PREFIX
 
 
 def extract_leading_titles(name: str, title_prefixes: frozenset[str] = TITLE_PREFIXES) -> frozenset[str]:
-    """Return the set of title prefixes at the START of a name (stops at first non-title)."""
-    tokens = name.lower().strip().split()
+    """Return the set of title prefixes at the START of a name (stops at first non-title).
+
+    Folded on both sides (STU-724), so the cue word ``m.`` matches the token
+    ``M.`` writes."""
+    prefixes = fold_vocabulary(title_prefixes)
     result = set()
-    for t in tokens:
-        if t in title_prefixes:
-            result.add(t)
+    for token in fold_tokens(name):
+        if token in prefixes:
+            result.add(token)
         else:
             break
     return frozenset(result)
@@ -186,8 +183,9 @@ def has_conflicting_gender_title(
     """Rule 1: block merge if one name has a feminine title and the other a masculine title."""
     t1 = extract_leading_titles(name1, title_prefixes)
     t2 = extract_leading_titles(name2, title_prefixes)
-    masc1, fem1 = bool(t1 & masculine_titles), bool(t1 & feminine_titles)
-    masc2, fem2 = bool(t2 & masculine_titles), bool(t2 & feminine_titles)
+    masculine, feminine = fold_vocabulary(masculine_titles), fold_vocabulary(feminine_titles)
+    masc1, fem1 = bool(t1 & masculine), bool(t1 & feminine)
+    masc2, fem2 = bool(t2 & masculine), bool(t2 & feminine)
     return (masc1 and fem2) or (fem1 and masc2)
 
 
@@ -200,15 +198,13 @@ def extract_surname_and_firstname(name: str, title_prefixes: frozenset[str] = TI
     """
     Extract (surname, first_names) from a name after title stripping.
     Convention: last token = surname, all preceding tokens = first names.
-    Returns normalized (lowercase, accent-stripped) tokens.
     """
     tokens = tokenize_name(name, title_prefixes)
     if not tokens:
         return "", []
-    normalized = [normalize_for_comparison(t) for t in tokens]
-    if len(normalized) == 1:
-        return normalized[0], []
-    return normalized[-1], normalized[:-1]
+    if len(tokens) == 1:
+        return tokens[0], []
+    return tokens[-1], tokens[:-1]
 
 
 # --- Similarity algorithms ---
@@ -284,7 +280,7 @@ def should_cluster_tokens(name1: str, name2: str, title_prefixes: frozenset[str]
         # "Queen" must not absorb "Red Queen" / "White Queen". The determiner
         # variant "The Queen" still merges — it hits the exact branch above.
         smaller = t1 if len(s1) <= len(s2) else t2
-        if len(smaller) == 1 and smaller[0] in title_prefixes:
+        if len(smaller) == 1 and smaller[0] in fold_vocabulary(title_prefixes):
             return False
         # Safety: single given names don't match each other
         if is_single_given_name(t1) and is_single_given_name(t2):
@@ -307,8 +303,7 @@ def should_cluster_jw(name1: str, name2: str, title_prefixes: frozenset[str] = T
     # Same safety as token path: single given names don't match each other
     if is_single_given_name(t1) and is_single_given_name(t2):
         return False
-    n1 = normalize_for_comparison(" ".join(t1))
-    n2 = normalize_for_comparison(" ".join(t2))
+    n1, n2 = " ".join(t1), " ".join(t2)
     if not n1 or not n2:
         return False
     # Only match if names are roughly the same length (avoids "Mar" matching "Martín")
@@ -332,9 +327,9 @@ def is_place_titled_toponym(
     Empty `connectors` (unknown language) → never fires."""
     if not connectors:
         return False
-    person_tokens = [normalize_for_comparison(t) for t in tokenize_name(person_name, title_prefixes)]
-    place_tokens = {normalize_for_comparison(t) for t in tokenize_name(place_name, title_prefixes)}
-    connectors_n = {normalize_for_comparison(c) for c in connectors}
+    person_tokens = tokenize_name(person_name, title_prefixes)
+    place_tokens = set(tokenize_name(place_name, title_prefixes))
+    connectors_n = fold_vocabulary(connectors)
     if not place_tokens:
         return False
     for i in range(1, len(person_tokens)):
