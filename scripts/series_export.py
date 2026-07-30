@@ -74,7 +74,11 @@ def export_series(series_dir: Path | str) -> dict:
     stance = editorial_stance(first_cfg)
 
     wiki_dir = series_output_dir(series_dir)
-    shutil.rmtree(wiki_dir, ignore_errors=True)
+    # Not ignore_errors: a swallowed wipe leaves a stale-case page behind on a
+    # case-insensitive filesystem — the rewrite of `Billina.wiki` keeps the old
+    # `BILLINA.wiki` name and every `[[Billina]]` link dies (STU-746).
+    if wiki_dir.exists():
+        shutil.rmtree(wiki_dir)
     (wiki_dir / "templates").mkdir(parents=True)
     for subdir in entity_taxonomy.subdirs():
         (wiki_dir / subdir).mkdir()
