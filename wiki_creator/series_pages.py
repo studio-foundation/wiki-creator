@@ -21,8 +21,11 @@ disambiguation is needed (STU-553's collision killer does not apply).
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
+from dataclasses import dataclass, field
 
 from wiki_creator import entity_taxonomy
+from wiki_creator.canonicalize import canonical_key
 from wiki_creator.entity_status import death_label, status_label
 from wiki_creator.export_helpers import category_tags, page_filename
 from wiki_creator.md2wiki import convert, make_infobox_call
@@ -30,6 +33,28 @@ from wiki_creator.page_templates import chrome_label, load_base_template, slot_l
 from wiki_creator.series import SeriesCharacter, TomeContribution
 from wiki_creator.spoiler_blocks import gate_infobox_spoilers, tome_collapsible_section
 from wiki_creator.tome_labels import appearance_label
+from wiki_creator.wikilinks import retarget_links
+
+
+@dataclass(frozen=True)
+class _Retarget:
+    """Maps a link target written by one tome onto the series page it belongs to.
+
+    ``targets`` is ``series.link_targets()``: ``canonical_key`` -> page title, or
+    the empty string for an entity the merge dropped. An unknown target resolves
+    to ``None`` and is left exactly as the tome wrote it — a red link the wikilink
+    check (STU-725) still reports, rather than a link silently rewritten to the
+    wrong page.
+    """
+
+    targets: dict[str, str] = field(default_factory=dict)
+    determiners: tuple[str, ...] = ()
+
+    def resolve(self, name: str) -> str | None:
+        return self.targets.get(canonical_key(name, self.determiners))
+
+    def apply(self, wikitext: str) -> str:
+        return retarget_links(wikitext, self.resolve) if self.targets else wikitext
 
 
 def _infobox_fields(character: SeriesCharacter, lang: str) -> dict:
@@ -100,17 +125,22 @@ def _tome_narrative(contribution: TomeContribution, biography: str, lang: str) -
 _REL_TARGET_RE = re.compile(r"\[\[([^\]|]+)")
 
 
-def _merged_relationship_index(character: SeriesCharacter) -> list[str]:
+def _merged_relationship_index(character: SeriesCharacter, retarget: _Retarget) -> list[str]:
     """Every tome's ``relationship_index`` merged to one line per related entity,
     latest tome winning the chapter span — the same latest-wins reconciliation as
     Status. Walked latest tome first so the first line seen for a target is kept;
-    within a tome the lines are already most-recent-reveal first."""
+    within a tome the lines are already most-recent-reveal first.
+
+    Deduped on the *canonicalized* target (STU-719): each tome links the entity by
+    whatever it called it, so ``Ozma``, ``Princess Ozma`` and ``Queen`` reached the
+    merged index as three relationships with one character."""
     seen: set[str] = set()
     merged: list[str] = []
     for contribution in reversed(character.contributions):
         for line in (contribution.page or {}).get("relationship_index") or []:
             match = _REL_TARGET_RE.search(line)
-            key = match.group(1).strip() if match else line
+            raw = match.group(1).strip() if match else line
+            key = retarget.resolve(raw) or raw
             if key not in seen:
                 seen.add(key)
                 merged.append(line)
@@ -123,12 +153,19 @@ def render_series_character_page(
     *,
     lang: str,
     expose_importance_tier: bool = True,
+    targets: dict[str, str] | None = None,
+    determiners: Iterable[str] = (),
 ) -> tuple[str, str]:
     """``(path relative to the series wiki dir, wikitext)`` for one merged character.
 
     Per-tome sections carry only that tome's Biography récit (headed by the tome
     title); the character's attribute sections are consolidated once, latest tome
-    winning; Relationships is the single merged evolution index (STU-718)."""
+    winning; Relationships is the single merged evolution index (STU-718).
+
+    ``targets`` is ``series.link_targets()``: every link the tomes wrote is
+    retargeted onto the series page set through it (STU-719). Omitted, the tome
+    wording is published as-is."""
+    retarget = _Retarget(dict(targets or {}), tuple(determiners))
     infobox = make_infobox_call(character.entity_type, _infobox_fields(character, lang))
 
     collapse = chrome_label("collapse", lang)
@@ -159,7 +196,7 @@ def render_series_character_page(
 
     body = "".join(sections)
 
-    rel_lines = _merged_relationship_index(character)
+    rel_lines = _merged_relationship_index(character, retarget)
     for token in tokens:
         if token == "relationships":
             if rel_lines:
@@ -169,7 +206,7 @@ def render_series_character_page(
         elif token in globals_content:
             body += f"\n== {slot_label(token, lang)} ==\n\n{globals_content[token]}\n"
 
-    page_content = infobox + "\n\n" + body.rstrip()
+    page_content = infobox + "\n\n" + retarget.apply(body).rstrip()
     cats = category_tags(
         character.entity_type, character.importance, labels, character.books,
         expose_importance_tier=expose_importance_tier,
