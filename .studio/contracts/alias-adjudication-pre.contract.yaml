@@ -1,0 +1,7 @@
+name: alias-adjudication-pre
+version: 1
+schema:
+  required_fields:
+    - book_title
+    - roster
+    - needs_verdict

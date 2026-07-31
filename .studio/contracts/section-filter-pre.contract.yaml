@@ -1,0 +1,7 @@
+name: section-filter-pre
+version: 1
+schema:
+  required_fields:
+    - book_title
+    - sections
+    - needs_verdict
