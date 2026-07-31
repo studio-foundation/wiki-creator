@@ -1,0 +1,21 @@
+name: classify-relationships
+version: 1
+schema:
+  required_fields:
+    - pairs
+    - classified
+    - unjudged
+# pairs: total pairs in relationships_classified.json
+# classified: pairs with a relationship_type; unjudged: classification_error stamps
+# The `{skipped: missing_input}` output fails this schema on purpose: no relation
+# source on disk means relationship-extraction never ran — a broken run, not a
+# gracefully-degraded one.
+expected_outputs:
+  files:
+    # classify-relationships (classify_relationships.py) writes the typed graph
+    # wiki-preparation and the event layer consume. Moved here from the consumer
+    # (wiki-preparation.contract.yaml) so a missing file fails the writer stage
+    # inside its own RALPH loop (STU-600/759) — the consumer-side assert dated
+    # from before STU-457 made the classifier a stage of this pipeline.
+    # Glob: per-book slug, cwd = repo root.
+    - "{library,public_domain}/*/*/processing_output/*/relationships_classified.json"

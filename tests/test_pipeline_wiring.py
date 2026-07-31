@@ -48,7 +48,7 @@ MOVED_OUTPUT_DECLARATIONS = [
     ("chapter-summary", "chapter_summaries.json"),
     ("entity-classification", "entities_classified.json"),
     ("write-registry", "registry.json"),
-    ("wiki-preparation", "relationships_classified.json"),
+    ("classify-relationships", "relationships_classified.json"),
     ("wiki-preparation", "batch_"),
     ("wiki-page", "wiki_pages.json"),
 ]
