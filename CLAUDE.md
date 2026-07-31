@@ -95,6 +95,7 @@ wiki series run inheritance               # wiki-full over every tome, then wiki
 wiki cache clean tog [--llm | --all]      # clear a book's caches (verdicts + map-cache); --all wipes every artifact
 wiki replay <run-id> [--stage wiki-resolution]     # studio replay, restart from a boundary
 wiki status [run-id]  ·  wiki logs <run-id>        # observability (run-ids feed replay)
+wiki cost <run-id> [<run-id> ...]         # per-stage cost report from a run's usage events (STU-758)
 wiki <cmd> --dry-run                      # print the studio command(s) instead of running
 ```
 
@@ -104,7 +105,10 @@ ambiguous or unknown query lists candidates. `book add` fills only the
 mechanical fields; the load-bearing reader-authored ones (`ner.invented_names`,
 `notability`, `classification` roles) stay for a human — `--llm` drafts only a
 `novel_summary`. `replay`/`status`/`logs` are thin passthroughs to the matching
-`studio` command. `cache clean <book>` (STU-641) clears a book's caches so a
+`studio` command; `cost` is the one exception — it reads `.studio/runs/*.jsonl`
+directly (pure aggregation, no `studio` shell-out) and accepts multiple run-ids
+so a failed run plus its completing resume merge into one report.
+`cache clean <book>` (STU-641) clears a book's caches so a
 re-run regenerates instead of replaying: `--llm` (default) removes the five
 verdict JSONs plus the global `studio cache clean` map-cache, keeping extraction
 — the provider-comparison path (STU-622); `--all` wipes the book's whole

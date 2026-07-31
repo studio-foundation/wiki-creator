@@ -14,7 +14,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from wiki_creator import book_import, item_stream, library, preview
+from wiki_creator import book_import, cost, item_stream, library, preview
 from wiki_creator.paths import book_paths_from_yaml, series_output_dir
 from wiki_creator.series import discover_series_books
 
@@ -209,6 +209,11 @@ def _cmd_logs(args: argparse.Namespace) -> int:
     return _exec(["studio", "logs", args.run_id], dry_run=args.dry_run)
 
 
+def _cmd_cost(args: argparse.Namespace) -> int:
+    print(cost.build_report(args.run_ids, library._PROJECT_ROOT))
+    return 0
+
+
 def _cmd_preview(args: argparse.Namespace) -> int:
     if args.output:
         output_dir = Path(args.output)
@@ -377,6 +382,16 @@ def _build_parser() -> argparse.ArgumentParser:
     logs = sub.add_parser("logs", parents=[common], help="show a run's log")
     logs.add_argument("run_id", help="run id")
     logs.set_defaults(func=_cmd_logs)
+
+    cost_p = sub.add_parser(
+        "cost", parents=[common],
+        help="per-stage cost report from a run's usage events (STU-758)",
+    )
+    cost_p.add_argument(
+        "run_ids", nargs="+", metavar="run-id",
+        help="run id(s) -- pass a failed run and its resume to merge them",
+    )
+    cost_p.set_defaults(func=_cmd_cost)
 
     prev = sub.add_parser("preview", parents=[common], help="serve a book's (or series') exported wiki in the browser (STU-646)")
     prev.add_argument("book", nargs="?", help="book slug, alias, series or author (a series name with --series)")
