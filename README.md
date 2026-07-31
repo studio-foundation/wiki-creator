@@ -32,7 +32,8 @@ A multi-tome series adds a sixth pipeline, **wiki-series**, run once after every
 
 - Python 3.11+
 - Node.js LTS ≤ 22 (Node 24's V8 headers break `better-sqlite3`'s native build) and the
-  [Studio CLI](https://github.com/studio-foundation/studio):
+  [Studio CLI](https://github.com/studio-foundation/studio) **≥ 0.15.0**
+  (batch map-stage dispatch + per-call token usage, STU-757):
   `npm i -g @studio-foundation/cli`
 - The spaCy models the books declare — installed by the `models` extra below
   (`en_core_web_lg`, `fr_core_news_lg`; ~1 GB). Skipping it does not fail the

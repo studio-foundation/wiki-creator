@@ -14,9 +14,12 @@
   missing or resolves to a dangling symlink, check `node --version` /
   `nvm alias default` first — a global install done under a different active
   Node version than your shell defaults to produces exactly that.
-- Studio CLI **≥ 0.10.0** — below that, agent-yaml env interpolation
+- Studio CLI **≥ 0.15.0** — below that, agent-yaml env interpolation
   (`${VAR:-default}`, `.studio/agents/*.agent.yaml`) isn't supported and the
-  five whole-book verdict agents silently no-op (`.studio/CLAUDE.md`).
+  five whole-book verdict agents silently no-op (`.studio/CLAUDE.md`); 0.15.0
+  is also the first version with `batch:` map-stage dispatch and per-call
+  token usage (STU-757), which the four BULK fan-outs and `studio status` now
+  depend on.
 - Python: `pip install -e ".[dev]"` first (test suite), then `".[models]"` (the
   spaCy lg models books declare), `".[gliner]"` (any book with
   `ner.invented_names: true`), `".[coref]"` (any book with `coref: true`) — see
