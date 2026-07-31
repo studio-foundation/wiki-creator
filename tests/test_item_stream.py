@@ -96,6 +96,43 @@ def test_render_classify_names_the_pair_from_its_label(capsys):
     assert "Alice <=> Hatter — enemy (explicit)" in capsys.readouterr().err
 
 
+def test_render_generate_names_the_section_from_its_output(capsys):
+    # STU-743: every section item of a page shares the entity-title label, so the
+    # section is recovered from the child's re-emitted single-section content.
+    render_map_item(
+        {
+            "map": "generate",
+            "label": "Alice",
+            "status": "success",
+            "output": {"content": "## Personality\n\nAlice is curious."},
+        },
+        out=sys.stderr,
+    )
+    assert "Alice — Personality" in capsys.readouterr().err
+
+
+def test_render_generate_names_the_relation_partner_from_a_subsection(capsys):
+    # A per-relation subsection heads on `### [[Other]]` — name the partner.
+    render_map_item(
+        {
+            "map": "generate",
+            "label": "Alice",
+            "status": "success",
+            "output": {"content": "### [[White Rabbit]]\n\nThey first meet…"},
+        },
+        out=sys.stderr,
+    )
+    assert "Alice — White Rabbit" in capsys.readouterr().err
+
+
+def test_render_generate_falls_back_to_page_without_a_heading(capsys):
+    render_map_item(
+        {"map": "generate", "label": "Alice", "status": "success", "output": {"content": "no heading here"}},
+        out=sys.stderr,
+    )
+    assert "Alice — page" in capsys.readouterr().err
+
+
 def test_render_failed_item_is_marked(capsys):
     render_map_item({"map": "generate", "label": "Lucy", "status": "failed"}, out=sys.stderr)
     assert "Lucy — FAILED" in capsys.readouterr().err
