@@ -710,16 +710,20 @@ from scripts.relationship_extraction import _run_studio_classifier_item
 
 
 def test_run_studio_classifier_item_returns_classification_on_success():
+    """STU-751: the stage returns a batch; the one-off dispatcher unwraps the
+    lone entry so its own callers keep seeing the flat classification shape."""
     fake_output = json.dumps({
         "stages": [
             {
                 "stage_name": "relationship-classifier",
                 "status": "success",
                 "output": {
-                    "relationship_type": "ami",
-                    "direction": "symmetric",
-                    "evolution": "Leur complicité grandit.",
-                    "key_moments": ["ch03: entraînement commun"],
+                    "classifications": [{
+                        "relationship_type": "ami",
+                        "direction": "symmetric",
+                        "evolution": "Leur complicité grandit.",
+                        "key_moments": ["ch03: entraînement commun"],
+                    }],
                 },
             }
         ]
@@ -746,7 +750,7 @@ _SUCCESS_STDOUT = json.dumps({
     "stages": [{
         "stage_name": "relationship-classifier",
         "status": "success",
-        "output": {"relationship_type": "ami"},
+        "output": {"classifications": [{"relationship_type": "ami"}]},
     }]
 })
 

@@ -26,8 +26,11 @@ _MAX_SAMPLE_CONTEXTS = 12
 # these to None; STU-556 then fed it the already-typed discovered graph, so
 # nulling them wiped every discovered type before the classifier could read it.
 # ``direction`` is carried separately because it must flip when the pair is
-# reordered onto its canonical key.
-_CARRIED_FIELDS = ("relationship_type", "evolution", "evidence")
+# reordered onto its canonical key. ``confidence`` joined in STU-751: it is now
+# derived deterministically at discovery time (`relationship_discovery.aggregate`)
+# and must survive the fold the same way the type it grades does, or the
+# classifier would find no grade to preserve and the pair would render ungraded.
+_CARRIED_FIELDS = ("relationship_type", "evolution", "evidence", "confidence")
 
 
 def fold_relationships(relationships: list[dict], registry: "Registry") -> list[dict]:
@@ -39,9 +42,9 @@ def fold_relationships(relationships: list[dict], registry: "Registry") -> list[
     sample_contexts unioned. Names absent from the alias table pass through
     unchanged (graceful degradation — the edge is kept, just not folded).
 
-    ``relationship_type`` / ``direction`` / ``evolution`` / ``evidence`` are
-    carried through when the merged edges agree, else nulled (STU-583). The
-    untyped co-occurrence graph carries no types, so it still folds to ``None``;
+    ``relationship_type`` / ``direction`` / ``evolution`` / ``evidence`` /
+    ``confidence`` are carried through when the merged edges agree, else nulled
+    (STU-583). The untyped co-occurrence graph carries no types, so it still folds to ``None``;
     the pre-typed discovered graph is already canonical (one edge per pair), so
     its type survives intact.
     """

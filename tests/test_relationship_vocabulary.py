@@ -78,7 +78,7 @@ def test_classifier_payload_carries_the_vocabulary(monkeypatch):
         {"entity_a": "A", "entity_b": "B"}, novel_summary="", additional_context=""
     )
 
-    sent = captured["payload"]["relationship_types"]
+    sent = captured["payload"]["pairs"][0]["relationship_types"]
     assert [d["name"] for d in sent] == pt.relationship_tokens()
     assert all(d["description"] for d in sent)
 

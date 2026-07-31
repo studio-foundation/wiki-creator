@@ -107,7 +107,7 @@ def test_book_types_reach_the_classifier_payload(monkeypatch):
         book_config=ERAGON_CONFIG,
     )
 
-    sent = [d["name"] for d in captured["payload"]["relationship_types"]]
+    sent = [d["name"] for d in captured["payload"]["pairs"][0]["relationship_types"]]
     assert DRAGON_BOND in sent
 
 

@@ -15,6 +15,11 @@ reshaped to the production `Relationship` dict.
 is the book's dominant reading. A relation moves inside one book (wary_alliance
 for twenty chapters, friends by the end), and that arc is what the demoted
 classifier writes as `evolution` prose; here it only decides the primary type.
+
+It also grades the pair's `confidence` deterministically from that same vote
+pattern (STU-751) — vote agreement on the primary type, and whether any vote
+carried a quote — so `classify_relationships.py` no longer asks the LLM to
+re-grade a pair discovery already typed.
 """
 from __future__ import annotations
 
@@ -24,6 +29,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Iterable
 
+from wiki_creator.confidence import EXPLICIT, INFERRED, INTERPRETATION
 from wiki_creator.relationship_eval import pair_key
 
 SYMMETRIC = "symmetric"
@@ -317,6 +323,38 @@ def votes_from_map_output(
     return votes, failed
 
 
+# STU-751: thresholds on the winning type's share of the pair's total chunk
+# votes. A chunk vote already read the passage and quoted evidence directly, so
+# unanimous agreement across independent chunks is as textually grounded as a
+# human analyst reading the same lines; a type only a minority of chunks
+# proposed, or with no surviving quote, is not.
+_AGREEMENT_EXPLICIT = 1.0
+_AGREEMENT_INFERRED = 0.5
+
+
+def _pair_confidence(slot: dict, primary_type: str) -> str:
+    """Deterministic confidence grade from the discovery vote pattern (STU-751).
+
+    Replaces asking the classifier to re-grade a pair discovery already typed:
+    every vote in ``slot`` already read its passage and quoted evidence, so the
+    fold's own signal — how many independent chunks agree on the primary type,
+    and whether any of them left a quote at all — grades the tier without a
+    second LLM call. No evidence at all ⇒ interpretation; every voting chunk
+    agreeing on ``primary_type`` ⇒ explicit; a bare majority ⇒ inferred; a type
+    only a minority of chunks proposed ⇒ interpretation (the pair's "primary"
+    reading is contested, not confirmed).
+    """
+    if not slot["evidence"]:
+        return INTERPRETATION
+    total = slot["votes"]
+    agreement = slot["types"][primary_type] / total if total else 0.0
+    if agreement >= _AGREEMENT_EXPLICIT:
+        return EXPLICIT
+    if agreement >= _AGREEMENT_INFERRED:
+        return INFERRED
+    return INTERPRETATION
+
+
 def aggregate(votes: list[dict], roster_names: set[str]) -> list[dict]:
     """Fold per-chunk relation votes into book-level ``Relationship`` dicts.
 
@@ -367,6 +405,7 @@ def aggregate(votes: list[dict], roster_names: set[str]) -> list[dict]:
             "cooccurrence_count": slot["votes"],
             "sample_contexts": slot["evidence"][:_MAX_SAMPLE_CONTEXTS],
         }
+        pair["confidence"] = _pair_confidence(slot, pair["relationship_type"])
         if slot["sub_roles_a"]:
             pair["sub_role_a"] = slot["sub_roles_a"].most_common(1)[0][0]
         if slot["sub_roles_b"]:

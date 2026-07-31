@@ -6,6 +6,8 @@ import pytest
 
 import scripts.classify_relationships as clf
 from scripts.classify_relationships import (
+    _batched,
+    _BATCH_SIZE,
     _entity_role_contexts,
     _merge_classification,
     _save,
@@ -35,7 +37,7 @@ def test_select_input_falls_back_to_cooccurrence(tmp_path):
 
 def test_merge_pretyped_keeps_discovery_type_and_takes_prose():
     """A discovered pair's type/direction is authoritative; the classifier only
-    contributes prose and the confidence grade — it cannot overwrite the type."""
+    contributes prose — it cannot overwrite the type."""
     pair = {"entity_a": "A", "entity_b": "B", "relationship_type": "mentor",
             "direction": "A→B", "evidence": "discovered quote"}
     classification = {"relationship_type": "friend", "direction": "symmetric",
@@ -47,7 +49,17 @@ def test_merge_pretyped_keeps_discovery_type_and_takes_prose():
     assert merged["evidence"] == "discovered quote"
     assert merged["evolution"] == "grows warmer"
     assert merged["key_moments"] == ["ch1: meet"]
-    assert merged["confidence"] == "inferred"
+
+
+def test_merge_pretyped_ignores_classifier_confidence():
+    """STU-751: a discovered pair's confidence is derived deterministically
+    upstream (relationship_discovery.aggregate) and carried on the pair itself —
+    even a stray classifier-supplied grade must not override it."""
+    pair = {"entity_a": "A", "entity_b": "B", "relationship_type": "mentor",
+            "direction": "A→B", "confidence": "explicit"}
+    classification = {"evolution": "grows warmer", "key_moments": [], "confidence": "interpretation"}
+    merged = _merge_classification(pair, classification, pre_typed=True)
+    assert merged["confidence"] == "explicit"
 
 
 def test_merge_untyped_takes_classifier_type():
@@ -114,13 +126,13 @@ def test_stray_llm_key_does_not_crash_save(tmp_path, monkeypatch):
     )])
     studio_io.save_artifact(processing / "relationships.json", input_bundle, RelationshipBundle)
 
-    monkeypatch.setattr(clf, "_run_classify_fanout", lambda items, fp: ({
+    monkeypatch.setattr(clf, "_run_classify_fanout", lambda batches, fp: ({
         "total": 1, "succeeded": 1, "failed": 0, "resumed": 0,
-        "results": [{"index": 0, "status": "success", "output": {
+        "results": [{"index": 0, "status": "success", "output": {"classifications": [{
             "relationship_type": "allies", "direction": "mutual", "evolution": None,
             "key_moments": [], "evidence": "they train together",
             "reasoning": "stray freeform key the LLM invented",  # not in Relationship
-        }}],
+        }]}}],
     }, None))
     monkeypatch.setattr(sys, "argv", ["classify_relationships.py", "--book", str(book_yaml)])
 
@@ -235,6 +247,141 @@ def test_fanout_level_failure_stamps_every_pair(tmp_path, monkeypatch):
         processing / "relationships_classified.json", RelationshipBundle
     )
     assert out.relationships[0].classification_error == "studio_cli_missing"
+
+
+# ---------------------------------------------------------------------------
+# STU-751: batching pairs per classify-relationships map item
+# ---------------------------------------------------------------------------
+
+def test_batched_groups_by_size():
+    assert _batched(list(range(8)), 6) == [[0, 1, 2, 3, 4, 5], [6, 7]]
+
+
+def test_batched_empty_input():
+    assert _batched([], 6) == []
+
+
+def _pairs(n):
+    return [
+        clf.Relationship(entity_a=f"E{i}", entity_b=f"F{i}", cooccurrence_count=1,
+                          chapters=["ch01"], sample_contexts=["ctx"])
+        for i in range(n)
+    ]
+
+
+def test_batches_unbatch_to_the_right_pair_by_position(tmp_path, monkeypatch):
+    """classifications[j] of batch i must merge onto to_classify[i*_BATCH_SIZE+j],
+    never scrambled across a batch boundary."""
+    series = tmp_path / "library" / "author" / "series"
+    processing = series / "processing_output" / "01-book"
+    processing.mkdir(parents=True)
+    book_yaml = series / "books" / "01-book.yaml"
+    book_yaml.parent.mkdir(parents=True)
+    book_yaml.write_text("novel_summary: A tale.\n", encoding="utf-8")
+
+    n = _BATCH_SIZE + 2
+    input_bundle = RelationshipBundle(relationships=_pairs(n))
+    studio_io.save_artifact(processing / "relationships.json", input_bundle, RelationshipBundle)
+
+    def fake_fanout(batches, fp):
+        assert [len(b) for b in batches] == [_BATCH_SIZE, 2]
+        results = []
+        for i, batch in enumerate(batches):
+            classifications = [
+                {"relationship_type": f"{pair['entity_a']}_typed", "direction": "symmetric",
+                 "evolution": None, "key_moments": [], "evidence": "ev", "confidence": "inferred"}
+                for pair in batch
+            ]
+            results.append({"index": i, "status": "success", "output": {"classifications": classifications}})
+        return {"total": n, "results": results, "resumed": 0}, None
+
+    monkeypatch.setattr(clf, "_run_classify_fanout", fake_fanout)
+    monkeypatch.setattr(sys, "argv", ["classify_relationships.py", "--book", str(book_yaml)])
+
+    clf.main()
+
+    out = studio_io.load_artifact(processing / "relationships_classified.json", RelationshipBundle)
+    by_entity_a = {r.entity_a: r.relationship_type for r in out.relationships}
+    for i in range(n):
+        assert by_entity_a[f"E{i}"] == f"E{i}_typed"
+
+
+def test_batch_level_failure_stamps_every_pair_in_that_batch(tmp_path, monkeypatch):
+    """A failed batch (status != success) stamps EVERY pair still in it, not just
+    one — the STU-562 per-pair error path, one level up now that a map item is a
+    batch (STU-751: resume/failure granularity coarsened from pair to batch)."""
+    series = tmp_path / "library" / "author" / "series"
+    processing = series / "processing_output" / "01-book"
+    processing.mkdir(parents=True)
+    book_yaml = series / "books" / "01-book.yaml"
+    book_yaml.parent.mkdir(parents=True)
+    book_yaml.write_text("novel_summary: A tale.\n", encoding="utf-8")
+
+    n = _BATCH_SIZE + 2
+    input_bundle = RelationshipBundle(relationships=_pairs(n))
+    studio_io.save_artifact(processing / "relationships.json", input_bundle, RelationshipBundle)
+
+    def fake_fanout(batches, fp):
+        results = [
+            {"index": 0, "status": "success", "output": {"classifications": [
+                {"relationship_type": "friend", "direction": "symmetric", "evolution": None,
+                 "key_moments": [], "evidence": "ev", "confidence": "inferred"}
+                for _ in batches[0]
+            ]}},
+            {"index": 1, "status": "failed", "error": "child run failed"},
+        ]
+        return {"total": n, "results": results, "resumed": 0}, None
+
+    monkeypatch.setattr(clf, "_run_classify_fanout", fake_fanout)
+    monkeypatch.setattr(sys, "argv", ["classify_relationships.py", "--book", str(book_yaml)])
+
+    clf.main()
+
+    out = studio_io.load_artifact(processing / "relationships_classified.json", RelationshipBundle)
+    by_entity_a = {r.entity_a: r for r in out.relationships}
+    for i in range(_BATCH_SIZE):
+        assert by_entity_a[f"E{i}"].relationship_type == "friend"
+    for i in range(_BATCH_SIZE, n):
+        assert by_entity_a[f"E{i}"].classification_error == "child run failed"
+
+
+def test_confidence_survives_dry_run_passthrough_without_classifier(tmp_path, monkeypatch):
+    """STU-751: a discovered pair's deterministic confidence needs no classifier
+    call at all — it must reach the artifact through the fold + dry-run
+    passthrough path untouched."""
+    series = tmp_path / "library" / "author" / "series"
+    processing = series / "processing_output" / "01-book"
+    processing.mkdir(parents=True)
+    book_yaml = series / "books" / "01-book.yaml"
+    book_yaml.parent.mkdir(parents=True)
+    book_yaml.write_text("novel_summary: A tale.\n", encoding="utf-8")
+
+    Registry(entities=[
+        EntityRecord(entity_id="peter", canonical_name="Peter",
+                     entity_type="PERSON", aliases=["Peter"]),
+        EntityRecord(entity_id="susan", canonical_name="Susan",
+                     entity_type="PERSON", aliases=["Susan"]),
+    ]).save(processing / "registry.json")
+
+    discovered = RelationshipBundle(relationships=[clf.Relationship(
+        entity_a="Peter", entity_b="Susan", cooccurrence_count=3,
+        chapters=["ch01"], sample_contexts=["they are siblings"],
+        relationship_type="family", direction="symmetric", confidence="explicit",
+    )])
+    studio_io.save_artifact(
+        processing / "relationships_discovered.json", discovered, RelationshipBundle
+    )
+
+    monkeypatch.setattr(
+        sys, "argv",
+        ["classify_relationships.py", "--book", str(book_yaml), "--dry-run"],
+    )
+    clf.main()
+
+    out = studio_io.load_artifact(
+        processing / "relationships_classified.json", RelationshipBundle
+    )
+    assert out.relationships[0].confidence == "explicit"
 
 
 # ---------------------------------------------------------------------------

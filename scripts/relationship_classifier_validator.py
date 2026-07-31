@@ -1,14 +1,20 @@
 #!/usr/bin/env python3
 """Stage: relationship-classifier-validator (script executor)
 
-Valide la classification d'une relation générée par relationship-classifier.
+Valide les classifications d'un batch de paires généré par relationship-classifier
+(STU-751 : un item est désormais un batch de ~6 paires, plus une seule).
 
 Input (Studio stdin):
-  previous_outputs["relationship-classifier"]: classification générée
-  input: données originales de la paire (entity_a, entity_b, sample_contexts)
+  previous_outputs["relationship-classifier"]["classifications"]: liste générée,
+    une entrée par paire, même ordre que input["pairs"]
+  input["pairs"]: liste des paires d'origine (entity_a, entity_b, sample_contexts, ...)
 
 Output (stdout):
   { "valid": bool, "errors": [...], "feedback": str }
+
+Un batch n'est valide que si TOUTES ses paires le sont : une seule classification
+invalide fait régénérer le batch entier — le coût de résumabilité que STU-751
+accepte (un batch échoué repaie toutes ses paires, pas seulement la mauvaise).
 """
 import json
 import sys
@@ -32,11 +38,17 @@ _ROLE_ASYMMETRIC_TYPES = {"mentor", "employment"}
 _STRUCTURAL_EVIDENCE_KIND = "structural"
 
 
-def parse_payload(payload: dict) -> tuple[dict, dict]:
+def parse_payload(payload: dict) -> tuple[list, list]:
+    """Returns ``(classifications, pairs)``, both lists, same order (STU-751)."""
     prev = payload.get("previous_outputs", {})
     clf = prev.get("relationship-classifier", {})
     inp = payload.get("input", {})
-    return clf, inp
+    classifications = clf.get("classifications") if isinstance(clf, dict) else None
+    pairs = inp.get("pairs") if isinstance(inp, dict) else None
+    return (
+        classifications if isinstance(classifications, list) else [],
+        pairs if isinstance(pairs, list) else [],
+    )
 
 
 def allowed_types(meta: dict | None) -> list[str]:
@@ -125,14 +137,27 @@ def check_evolution_not_generic(clf: dict) -> list[str]:
     return []
 
 
-def check_confidence_graded(clf: dict) -> list[str]:
-    """STU-476 : une relation typée porte un grade de confiance déclaré, une relation null aucun."""
+def check_confidence_graded(clf: dict, meta: dict | None = None) -> list[str]:
+    """STU-476 : une relation typée porte un grade de confiance déclaré, une relation null aucun.
+
+    STU-751 : une paire déjà typée par la découverte (``meta``'s own
+    ``relationship_type`` est non-null — l'AUTHORITATIVE TYPE du prompt) est
+    gradée déterministement en amont, à partir du vote de découverte ; le
+    classifieur ne doit PAS renvoyer un second avis, même correct.
+    """
     conf = clf.get("confidence")
     tokens = confidence_tokens()
-    if clf.get("relationship_type") is None:
+    pre_typed = bool((meta or {}).get("relationship_type"))
+    rt_is_null = clf.get("relationship_type") is None
+    if rt_is_null or pre_typed:
         if conf is None:
             return []
-        return [f"❌ confidence doit être null quand relationship_type est null (reçu : '{conf}')"]
+        reason = (
+            "relationship_type est null"
+            if rt_is_null
+            else "la paire est déjà typée par la découverte (grade dérivé séparément, STU-751)"
+        )
+        return [f"❌ confidence doit être null — {reason} (reçu : '{conf}')"]
     if conf is None:
         return [
             "❌ confidence absent — grade la force de l'evidence citée : "
@@ -144,11 +169,12 @@ def check_confidence_graded(clf: dict) -> list[str]:
 
 
 def validate_classification(clf: dict, meta: dict) -> dict:
+    """Validate one pair's classification against its own input pair."""
     errors: list[str] = []
     errors += check_relationship_type_valid(clf, meta)
     errors += check_evolution_not_generic(clf)
     errors += check_evidence_contains_both_names(clf, meta)
-    errors += check_confidence_graded(clf)
+    errors += check_confidence_graded(clf, meta)
     return {
         "valid": len(errors) == 0,
         "errors": errors,
@@ -156,10 +182,36 @@ def validate_classification(clf: dict, meta: dict) -> dict:
     }
 
 
+def validate_batch(classifications: list, pairs: list) -> dict:
+    """Validate a whole batch's classifications against their pairs, in order (STU-751).
+
+    Reuses ``validate_classification`` per pair rather than duplicating the
+    rules — this only adds the count guard, per-pair labeling, and the
+    all-or-nothing aggregation the group retry needs.
+    """
+    errors: list[str] = []
+    if len(classifications) != len(pairs):
+        errors.append(
+            f"❌ classifications compte {len(classifications)} entrée(s), attendu "
+            f"{len(pairs)} — exactement une par paire de \"pairs\", dans le même ordre"
+        )
+    else:
+        for clf, meta in zip(classifications, pairs):
+            label = f"{meta.get('entity_a', '?')}↔{meta.get('entity_b', '?')}"
+            pair_result = validate_classification(clf if isinstance(clf, dict) else {}, meta)
+            errors += [f"[{label}] {e}" for e in pair_result["errors"]]
+    return {
+        "valid": len(errors) == 0,
+        "errors": errors,
+        "feedback": build_feedback(errors, pairs[0] if pairs else None) if errors else "",
+    }
+
+
 def build_feedback(errors: list[str], meta: dict | None = None) -> str:
     lines = "\n".join(f"- {e}" for e in errors)
     return (
-        "La classification précédente contient les erreurs suivantes. Régénère-la :\n"
+        "Les classifications précédentes contiennent les erreurs suivantes. "
+        "Régénère le batch entier, dans le même ordre :\n"
         f"{lines}\n\n"
         "Rappels : utilise uniquement les types autorisés "
         f"({'|'.join(allowed_types(meta))}). "
@@ -167,12 +219,13 @@ def build_feedback(errors: list[str], meta: dict | None = None) -> str:
         "evidence doit être un extrait verbatim de sample_contexts montrant les deux personnages "
         "en interaction directe — ce champ est obligatoire quand relationship_type n'est pas null. "
         f"confidence ({'|'.join(confidence_tokens())}) grade la force de cet extrait, pas ta "
-        "certitude : un sourire cité verbatim reste un sourire."
+        "certitude : un sourire cité verbatim reste un sourire — et doit être null pour une paire "
+        "déjà typée par la découverte (grade dérivé séparément, STU-751)."
     )
 
 
 if __name__ == "__main__":
     payload = json.load(sys.stdin)
-    clf, inp = parse_payload(payload)
-    result = validate_classification(clf, inp)
+    classifications, pairs = parse_payload(payload)
+    result = validate_batch(classifications, pairs)
     print(json.dumps(result))

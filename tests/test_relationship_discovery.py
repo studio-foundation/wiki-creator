@@ -182,6 +182,53 @@ def test_aggregate_caps_sample_contexts_at_three():
     assert len(pairs[0]["sample_contexts"]) == 3
 
 
+# --- aggregate: deterministic confidence (STU-751) --------------------------
+
+
+def test_aggregate_confidence_explicit_when_votes_unanimous_and_evidenced():
+    votes = [
+        _vote("ch1", "Eragon", "Brom", "mentor"),
+        _vote("ch2", "Eragon", "Brom", "mentor"),
+    ]
+    pairs = aggregate(votes, ROSTER)
+    assert pairs[0]["confidence"] == "explicit"
+
+
+def test_aggregate_confidence_inferred_on_evidenced_majority():
+    # 2 wary_alliance + 1 friend: primary is wary_alliance at 2/3 agreement.
+    votes = [
+        _vote("ch1", "Eragon", "Murtagh", "wary_alliance"),
+        _vote("ch2", "Eragon", "Murtagh", "wary_alliance"),
+        _vote("ch3", "Eragon", "Murtagh", "friend"),
+    ]
+    pairs = aggregate(votes, ROSTER)
+    assert pairs[0]["relationship_type"] == "wary_alliance"
+    assert pairs[0]["confidence"] == "inferred"
+
+
+def test_aggregate_confidence_interpretation_when_primary_is_a_minority():
+    # primary "mentor" wins with 2 of 5 votes — agreement 0.4, contested reading.
+    votes = [
+        _vote("ch1", "Eragon", "Brom", "mentor"),
+        _vote("ch2", "Eragon", "Brom", "mentor"),
+        _vote("ch3", "Eragon", "Brom", "friend"),
+        _vote("ch4", "Eragon", "Brom", "family"),
+        _vote("ch5", "Eragon", "Brom", "wary_alliance"),
+    ]
+    pairs = aggregate(votes, ROSTER)
+    assert pairs[0]["relationship_type"] == "mentor"
+    assert pairs[0]["confidence"] == "interpretation"
+
+
+def test_aggregate_confidence_interpretation_when_no_evidence_survives():
+    votes = [
+        _vote("ch1", "Eragon", "Brom", "mentor", evidence=""),
+        _vote("ch2", "Eragon", "Brom", "mentor", evidence=""),
+    ]
+    pairs = aggregate(votes, ROSTER)
+    assert pairs[0]["confidence"] == "interpretation"
+
+
 # --- build_roster -----------------------------------------------------------
 
 

@@ -8,12 +8,14 @@ Usage:
 Input:  processing_output/<slug>/relationships.json
 Output: processing_output/<slug>/relationships_classified.json
 
-The engine fans out one child run per pair (`map` stage, STU-589) with
-`resume: true` (STU-605): a completed pair replays free on a re-run, a failed
-pair is never cached and retries, and the resume key carries the classifier
-prompt fingerprint so a prompt or vocabulary edit re-classifies every pair
-(STU-560). RALPH retries and the classification-validation group live in the
-child pipeline — the subprocess-level retry layer this script used to need
+The engine fans out one child run per batch of ~`_BATCH_SIZE` pairs (`map`
+stage, STU-589/751) with `resume: true` (STU-605): a completed batch replays
+free on a re-run, a failed batch is never cached and retries whole (resume
+granularity coarsened from pair to batch in STU-751 — a failed batch re-pays
+every pair in it), and the resume key carries the classifier prompt
+fingerprint so a prompt or vocabulary edit re-classifies every pair (STU-560).
+RALPH retries and the classification-validation group live in the child
+pipeline — the subprocess-level retry layer this script used to need
 (`_CLASSIFIER_MAX_ATTEMPTS`) is gone from the production path.
 """
 import argparse
@@ -74,10 +76,25 @@ _KNOWN_CLASSIFICATION_KEYS = frozenset(
 
 # STU-556: a pair discovered by the schema pass is already typed and directed
 # (20/20 against a human gold on Eragon), so the demoted classifier contributes
-# only prose and the confidence grade — it must not overwrite the type it was
-# handed. A co-occurrence-fallback pair carries no type, so the classifier still
-# types it (legacy path) via the full key set above.
-_PROSE_KEYS = frozenset({"evolution", "key_moments", "confidence"})
+# only prose — it must not overwrite the type it was handed. A co-occurrence-
+# fallback pair carries no type, so the classifier still types it (and grades
+# its own confidence) via the full key set above. `confidence` is deliberately
+# absent here (STU-751): a discovered pair's grade is already on the folded
+# pair itself, derived from the discovery vote pattern
+# (`relationship_discovery.aggregate`) rather than asked of the classifier —
+# the agent is told not to re-grade it, and even a stray value would be
+# dropped here rather than overwrite the deterministic one.
+_PROSE_KEYS = frozenset({"evolution", "key_moments"})
+
+# STU-751: pairs grouped into one classify-relationships map item. Per-call
+# fixed overhead (system prompt, type/confidence vocabulary, role-context
+# boilerplate) dominates a single-pair call's input — the same shape STU-603
+# measured on discovery — so batching amortizes it across several pairs.
+_BATCH_SIZE = 6
+
+
+def _batched(items: list, size: int) -> list[list]:
+    return [items[i:i + size] for i in range(0, len(items), size)]
 
 
 def _select_input(processing: Path) -> tuple[Path, bool]:
@@ -93,8 +110,8 @@ def _select_input(processing: Path) -> tuple[Path, bool]:
 
 def _merge_classification(pair: dict, classification: dict, *, pre_typed: bool) -> dict:
     """Fold the classifier's contribution onto a pair. For a discovered pair only
-    prose + confidence are taken (the discovered type/direction/evidence stand);
-    for a co-occurrence pair the classifier's type/direction too."""
+    prose is taken (the discovered type/direction/evidence/confidence stand);
+    for a co-occurrence pair the classifier's type/direction/confidence too."""
     keys = _PROSE_KEYS if pre_typed else _KNOWN_CLASSIFICATION_KEYS
     contrib = {k: v for k, v in classification.items() if k in keys and v is not None}
     return {**pair, **contrib}
@@ -134,9 +151,17 @@ def _entity_role_contexts(
 _TIMEOUT_SECONDS = 7200
 
 
-def _run_classify_fanout(items: list[dict], prompt_fingerprint: str) -> tuple[dict | None, str | None]:
-    """One `studio run` fanning out over all classifiable pairs. Returns (map_output, error)."""
-    payload = {"pairs": items, "prompt_fingerprint": prompt_fingerprint}
+def _run_classify_fanout(
+    batches: list[list[dict]], prompt_fingerprint: str
+) -> tuple[dict | None, str | None]:
+    """One `studio run` fanning out over all classifiable pair batches (STU-751).
+
+    Returns (map_output, error).
+    """
+    payload = {
+        "batches": [{"pairs": batch} for batch in batches],
+        "prompt_fingerprint": prompt_fingerprint,
+    }
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".yaml", delete=False) as tmp:
         yaml.safe_dump(payload, tmp, sort_keys=False, allow_unicode=True)
         input_path = tmp.name
@@ -258,6 +283,13 @@ def prepare_classify(book_cfg: dict, book_paths) -> tuple[dict | None, str | Non
         )
         for pair in to_classify
     ]
+    batches = _batched(items, _BATCH_SIZE)
+    if batches:
+        print(
+            f"[classify-relationships] {len(items)} pairs → {len(batches)} batches "
+            f"of up to {_BATCH_SIZE} (STU-751)",
+            file=sys.stderr,
+        )
     return {
         "output_path": output_path,
         "pre_typed": pre_typed,
@@ -265,6 +297,7 @@ def prepare_classify(book_cfg: dict, book_paths) -> tuple[dict | None, str | Non
         "to_classify": to_classify,
         "passthrough": passthrough,
         "items": items,
+        "batches": batches,
         "fingerprint": fingerprint,
         "total": len(relationships),
     }, None
@@ -292,10 +325,21 @@ def collect_and_save_classify(prep: dict, map_output: dict | None, error: str | 
             if isinstance(result, dict) and isinstance(result.get("index"), int):
                 results_by_index[result["index"]] = result
         for i, pair in enumerate(to_classify):
-            result = results_by_index.get(i)
+            # STU-751: a map item is now a batch of _BATCH_SIZE pairs — unbatch by
+            # position within it. A batch-level failure (or a short/off-shape
+            # `classifications` list) stamps every pair still in it, mirroring the
+            # STU-562 per-pair error path one level up.
+            batch_index, within_batch = divmod(i, _BATCH_SIZE)
+            result = results_by_index.get(batch_index)
             label = f"{pair.get('entity_a', '?')}↔{pair.get('entity_b', '?')}"
+            classification = None
             if result and result.get("status") == "success" and isinstance(result.get("output"), dict):
-                merged = _merge_classification(pair, result["output"], pre_typed=pre_typed)
+                classifications = result["output"].get("classifications")
+                if isinstance(classifications, list) and within_batch < len(classifications):
+                    candidate = classifications[within_batch]
+                    classification = candidate if isinstance(candidate, dict) else None
+            if classification is not None:
+                merged = _merge_classification(pair, classification, pre_typed=pre_typed)
                 print(f"  [CLF]  {label} → {merged.get('relationship_type') or 'null'}", file=sys.stderr)
             else:
                 item_error = (result or {}).get("error") or "no_result"
@@ -304,7 +348,7 @@ def collect_and_save_classify(prep: dict, map_output: dict | None, error: str | 
             classified.append(merged)
         resumed = map_output.get("resumed", 0)
         if resumed:
-            print(f"[classify-relationships] {resumed} pairs served from resume cache", file=sys.stderr)
+            print(f"[classify-relationships] {resumed} batches served from resume cache", file=sys.stderr)
 
     _save(prep["output_path"], prep["base"], classified)
     succeeded = sum(1 for r in classified if r.get("relationship_type") is not None)
@@ -323,7 +367,7 @@ def run(book_cfg: dict, book_paths, *, dry_run: bool = False) -> dict:
         sys.exit(1)
     if dry_run or not prep["to_classify"]:
         return collect_and_save_classify(prep, None, None)
-    map_output, error = _run_classify_fanout(prep["items"], prep["fingerprint"])
+    map_output, error = _run_classify_fanout(prep["batches"], prep["fingerprint"])
     return collect_and_save_classify(prep, map_output, error)
 
 

@@ -863,6 +863,53 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
 
 - `classify_relationships.py` (a `wiki-preparation` stage) folds the co-occurrence graph onto canonical entities via `registry.alias_table()` before classifying (STU-435). The graph is built at mention level (pre alias-resolution), so surface forms of one entity (`Chaol Westfall` / `Captain Westfall`) are collapsed, counts summed, `chapters`/`sample_contexts` unioned — one classification per canonical pair. Requires `registry.json` (written by `write-registry`); degrades to unfolded edges if absent. Fold logic is pure in `wiki_creator/relationship_fold.py`.
 
+- classify-relationships batches pairs per call and grades a discovered pair's
+  confidence without a second LLM call (STU-751), two independent cuts on the
+  same stage (49 calls / $3.76-equivalent / 27% of the Alice run). **Batching**:
+  `classify_relationships._batched` groups `_BATCH_SIZE` (6) pairs into one map
+  item — `over: input.batches` instead of `input.pairs`
+  (`.studio/pipelines/classify-relationships.pipeline.yaml`), each item
+  `{"pairs": [...]}` classified by one `relationship-classifier` call returning
+  `{"classifications": [...]}` in the same order. The child pipeline kept its
+  name (`relationship-classifier-item`) rather than rename — the offline eval
+  dispatcher (`_run_studio_classifier_item` in `relationship_extraction.py`,
+  called by `research/relation-eval/runners/{measure_classifier_verdicts,
+  run_cooccurrence_classified}.py`) also goes through it, so it now sends a
+  batch of exactly one and unwraps `classifications[0]`
+  (`_unwrap_single_classification`) rather than needing its own pipeline.
+  **Cost accepted**: resume/failure granularity coarsened from pair to batch —
+  a failed batch retries every pair in it, and `relationship_classifier_validator
+  .validate_batch` fails the WHOLE batch on one bad classification, so the
+  group regenerates all `_BATCH_SIZE` pairs, not just the offender.
+  **Deterministic confidence**: `relationship_discovery.aggregate` (STU-556's
+  fold) now grades each pair's `confidence` itself, from the discovery vote
+  pattern already in `slot` — unanimous agreement across chunks that voted the
+  primary type, plus at least one surviving evidence quote, is `explicit`;
+  bare-majority agreement is `inferred`; a primary type only a minority of
+  chunks proposed, or no evidence at all, is `interpretation`
+  (`_pair_confidence`). This grade must be added to `relationship_fold
+  ._CARRIED_FIELDS` or it is silently dropped when `classify_relationships.py`
+  folds surface edges before classifying — the fold only carries fields it is
+  told to (STU-583's mechanism), and `confidence` joining `relationship_type`/
+  `evolution`/`evidence` there is what makes it survive to the classifier.
+  Downstream, `classify_relationships._PROSE_KEYS` no longer includes
+  `confidence` for a pre-typed pair, so a classifier-returned grade — even a
+  stray one the agent wasn't supposed to produce — cannot overwrite the
+  deterministic value already on the pair. The agent prompt (STU-556's
+  AUTHORITATIVE TYPE branch) tells the model to return `confidence: null` for a
+  pre-typed pair, and the validator's `check_confidence_graded` rejects a
+  non-null grade there (keyed on the *pair's own* `relationship_type`, not the
+  classifier's output — i.e. "was this pair pre-typed", not "did the model
+  decide a type"). The legacy co-occurrence path (no `registry.json`, or no
+  `relationships_discovered.json` at all) is untouched: the classifier still
+  types those pairs itself and grades its own confidence, exactly as before.
+  **Migrates for free**: `relationships_discovered.json` on disk from before
+  this ticket carries no `confidence` field, so a re-run of
+  `discover-relationships` is needed to backfill it — but that re-run is cheap,
+  since `aggregate()` is pure and re-runs over the engine's per-item resume
+  cache (STU-605) without a single new LLM call, the same mechanism that lets
+  any `aggregate()` logic change take effect on a re-run for free.
+
 - Mention offsets (STU-489): extraction persists `mention_spans_by_chapter` in
   `*_full.json` — one `{surface, start, end}` per occurrence (uncapped, unlike the
   3-per-chapter context cap), character offsets into the chapter content saved to

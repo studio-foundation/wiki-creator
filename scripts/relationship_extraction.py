@@ -1075,9 +1075,13 @@ def _run_studio_classifier_item(
         role_contexts_b=role_contexts_b,
         book_config=book_config,
     )
+    # STU-751: the pipeline classifies a batch now, not one pair — this one-off
+    # dispatcher sends a batch of exactly one and unwraps its lone result, so its
+    # own callers (the eval harness) keep receiving the flat classification shape.
+    batch_input = {"pairs": [item_input]}
 
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".yaml", delete=False) as tmp:
-        yaml.safe_dump(item_input, tmp, sort_keys=False, allow_unicode=True)
+        yaml.safe_dump(batch_input, tmp, sort_keys=False, allow_unicode=True)
         input_path = tmp.name
 
     cmd = ["studio", "run", "relationship-classifier-item", "--input-file", input_path, "--json"]
@@ -1087,9 +1091,24 @@ def _run_studio_classifier_item(
             outcome = _run_studio_classifier_once(cmd, timeout_seconds)
             if outcome.get("error") not in _TRANSIENT_CLASSIFIER_ERRORS:
                 break
-        return outcome
+        return _unwrap_single_classification(outcome)
     finally:
         Path(input_path).unlink(missing_ok=True)
+
+
+def _unwrap_single_classification(outcome: dict) -> dict:
+    """The lone entry of a batch-of-one `classifications` list, or the error as-is.
+
+    STU-751: the stage always returns a batch now; this keeps
+    `_run_studio_classifier_item`'s return shape (a flat classification dict)
+    unchanged for its existing callers.
+    """
+    if "error" in outcome:
+        return outcome
+    classifications = outcome.get("classifications")
+    if not isinstance(classifications, list) or not classifications or not isinstance(classifications[0], dict):
+        return {"error": "studio_run_output_missing"}
+    return classifications[0]
 
 
 _NON_INTERPERSONAL_TYPES = frozenset({"PLACE", "OTHER"})

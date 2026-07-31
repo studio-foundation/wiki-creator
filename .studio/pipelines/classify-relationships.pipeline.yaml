@@ -1,33 +1,26 @@
 name: classify-relationships
-description: Fan out relationship classification over canonical pairs — one child run per pair
+description: Fan out relationship classification over batches of canonical pairs — one child run per ~6 pairs (STU-751)
 version: 1
 
 # The fan-out lives in the engine (STU-589): per-item resume (STU-605) replaces
 # the output-artifact resume, collect-all replaces the per-pair error ladder,
 # and RALPH + the classification-validation group retry inside the child. Each
-# item is the complete classifier payload (`classifier_item_input`, the same
-# shape the one-off eval path dispatches), so the resume key — the resolved
-# item input, fingerprint included — busts on a prompt/vocabulary edit
-# (STU-560) and an unchanged pair replays free.
+# item groups ~_BATCH_SIZE pairs (`classify_relationships._batched`) instead of
+# one (STU-751) — per-call fixed overhead (system prompt, type/confidence
+# vocabulary) dominated a single-pair call's input, the same shape STU-603
+# measured on discovery, so batching amortizes it. The resume key — the
+# resolved batch input, fingerprint included — busts on a prompt/vocabulary
+# edit (STU-560) and an unchanged batch replays free; a failed batch retries
+# every pair in it, not just the one that failed (resume granularity coarsened
+# from pair to batch, the accepted cost).
 stages:
   - map: classify
-    over: input.pairs
+    over: input.batches
     pipeline: relationship-classifier-item
     resume: true
     batch: true
     concurrency: 4
     on_item_failure: collect-all
     input:
-      entity_a: "{{item.entity_a}}"
-      entity_b: "{{item.entity_b}}"
-      cooccurrence_count: "{{item.cooccurrence_count}}"
-      sample_contexts: "{{item.sample_contexts}}"
-      role_contexts_a: "{{item.role_contexts_a}}"
-      role_contexts_b: "{{item.role_contexts_b}}"
-      novel_summary: "{{item.novel_summary}}"
-      relationship_types: "{{item.relationship_types}}"
-      confidence_levels: "{{item.confidence_levels}}"
-      relationship_type: "{{item.relationship_type}}"
-      direction: "{{item.direction}}"
-      evidence: "{{item.evidence}}"
+      pairs: "{{item.pairs}}"
       prompt_fingerprint: "{{input.prompt_fingerprint}}"
