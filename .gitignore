@@ -48,8 +48,13 @@ chapters.json
 models/wiki-page-item-lora/
 unsloth_compiled_cache/
 
-# Claude Code
-.claude/
+# Claude Code — skills are project process docs and travel with the repo;
+# everything else in .claude/ stays local (a dir pattern can't be re-negated,
+# hence .claude/* + negations)
+.claude/*
+!.claude/settings.json
+!.claude/skills/
+.claude/skills/_local/
 .agents/
 skills-lock.json
 
