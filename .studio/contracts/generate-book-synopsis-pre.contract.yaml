@@ -1,0 +1,9 @@
+name: generate-book-synopsis-pre
+version: 1
+schema:
+  required_fields:
+    - items
+    - prompt_fingerprint
+    - needs_verdict
+# items: the single `wiki-pages` map item for the synopsis page (0 or 1 entries)
+# needs_verdict: gates the downstream `call: book-synopsis-verdict` stage

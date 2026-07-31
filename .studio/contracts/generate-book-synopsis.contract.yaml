@@ -1,0 +1,10 @@
+name: generate-book-synopsis
+version: 1
+schema:
+  required_fields:
+    - skipped
+    - failed
+# skipped: true when events.json is absent/empty — no synopsis page written,
+# never fails the run (scripts/CLAUDE.md)
+# failed: whether the synopsis page ended up a `_failed` stub (always false
+# when skipped)

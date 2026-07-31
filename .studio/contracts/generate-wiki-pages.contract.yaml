@@ -1,0 +1,8 @@
+name: generate-wiki-pages
+version: 1
+schema:
+  required_fields:
+    - pages
+    - failed
+# pages: number of pages committed to wiki_pages.json by the final replay walk
+# failed: how many of those pages are `_failed` fallback stubs

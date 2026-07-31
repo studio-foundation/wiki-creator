@@ -19,6 +19,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/generate_wiki_pages_plan.py
+    contract: generate-wiki-pages-plan
     timeout_ms: 600000
     context:
       include:
@@ -37,6 +38,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/generate_wiki_pages_probe.py
+    contract: generate-wiki-pages-probe
     timeout_ms: 600000
     context:
       include:
@@ -56,6 +58,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/generate_wiki_pages.py
+    contract: generate-wiki-pages
     timeout_ms: 21600000
     context:
       include:
@@ -72,6 +75,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/generate_book_synopsis_pre.py
+    contract: generate-book-synopsis-pre
     timeout_ms: 300000
     context:
       include:
@@ -90,6 +94,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/generate_book_synopsis.py
+    contract: generate-book-synopsis
     timeout_ms: 1800000
     context:
       include:
@@ -101,6 +106,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/generate_event_pages_pre.py
+    contract: generate-event-pages-pre
     timeout_ms: 300000
     context:
       include:
@@ -119,6 +125,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/generate_event_pages.py
+    contract: generate-event-pages
     timeout_ms: 7200000
     context:
       include:

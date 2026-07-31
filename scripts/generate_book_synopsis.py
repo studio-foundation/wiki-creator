@@ -281,13 +281,13 @@ def _result_at_index(map_output: dict | None, index: int) -> dict | None:
 
 def run_post(payload: dict, *, book_cfg: dict, language: str) -> dict:
     """Studio post stage (STU-621): finalize the synopsis from the `wiki-pages`
-    call's map output. Emits `{skipped}` / `{failed}`."""
+    call's map output. Emits `{skipped, failed}`."""
     paths = studio_io.paths_from_payload(payload)
     events = read_events(paths.processing)
     if not events:
         reason = "events.json not found" if events is None else "events.json has no events"
         print(f"[synopsis] {reason} — skipping synopsis", file=sys.stderr)
-        return {"skipped": True}
+        return {"skipped": True, "failed": False}
 
     book_title = load_book_title(str(paths.processing / "epub_data.json"))
     _item_input, entity, forbidden_names = build_synopsis_item(
@@ -300,7 +300,7 @@ def run_post(payload: dict, *, book_cfg: dict, language: str) -> dict:
         result, book_title=book_title, forbidden_names=forbidden_names, lang=language
     )
     _write_synopsis_page(page, paths.processing)
-    return {"failed": bool(page.get("_failed"))}
+    return {"skipped": False, "failed": bool(page.get("_failed"))}
 
 
 def main() -> None:
