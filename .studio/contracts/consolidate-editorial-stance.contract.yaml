@@ -1,0 +1,13 @@
+name: consolidate-editorial-stance
+version: 1
+schema:
+  required_fields:
+    - status
+    - findings
+# status: report verdict from build_report; findings: drift finding count
+expected_outputs:
+  files:
+    # consolidate-editorial-stance (consolidate_editorial_stance.py) scans every
+    # generated page and writes the advisory drift report (STU-508), written
+    # unconditionally on success (STU-600/759). Glob: per-book slug, cwd = repo root.
+    - "{library,public_domain}/*/*/processing_output/*/editorial_stance_report.json"

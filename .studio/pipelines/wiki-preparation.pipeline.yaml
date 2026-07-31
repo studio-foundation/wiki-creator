@@ -156,6 +156,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/classify_relationships.py
+    contract: classify-relationships
     timeout_ms: 300000
     context:
       include:
@@ -179,6 +180,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/build_event_layer.py
+    contract: build-event-layer
     timeout_ms: 300000
     context:
       include:

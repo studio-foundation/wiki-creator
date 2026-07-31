@@ -21,8 +21,6 @@ expected_outputs:
     # old check verified) is the stronger, culprit-pointing form: the stage's job
     # is to emit batches. Moved from run_wiki.py required_files() (STU-600).
     - "{library,public_domain}/*/*/wiki_inputs/*/batch_*.json"
-    # relationships_classified.json is a required INPUT of this stage, written by
-    # the wiki-preparation pre-step (scripts/classify_relationships.py). No stage
-    # here writes it; asserting it on its sole consumer keeps run_wiki.py's old
-    # required_files() coverage after the pre-step is removed. Glob: per-book slug.
-    - "{library,public_domain}/*/*/processing_output/*/relationships_classified.json"
+    # relationships_classified.json is asserted on its writer now
+    # (classify-relationships.contract.yaml, STU-759) — the consumer-side assert
+    # here dated from when the classifier was a pre-step outside the pipeline.
