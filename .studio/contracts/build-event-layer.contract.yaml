@@ -1,0 +1,13 @@
+name: build-event-layer
+version: 1
+schema:
+  required_fields:
+    - events
+# events: number of events structured into events.json
+expected_outputs:
+  files:
+    # build-event-layer (build_event_layer.py) structures chapter_summaries.json
+    # + relationships_classified.json into events.json (SP0, STU-478), written
+    # unconditionally on success — a run that produced no file must fail this
+    # stage, not its consumers (STU-600/759). Glob: per-book slug, cwd = repo root.
+    - "{library,public_domain}/*/*/processing_output/*/events.json"

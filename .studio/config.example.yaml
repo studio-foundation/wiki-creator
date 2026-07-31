@@ -26,11 +26,12 @@ providers:
   # Local, no API key required. Install: https://ollama.com
   ollama:
     baseUrl: http://localhost:11434
-  # Cloud providers, billed per token. Only declare a block once you have the
-  # key: an empty ${VAR} makes the provider construct with a blank key, and the
-  # OpenAI client throws on that at startup even if no stage uses it.
-  # anthropic:
-  #   apiKey: ${ANTHROPIC_API_KEY}
+  # Cloud providers, billed per token. anthropic is safe to leave declared
+  # with no key set — the SDK only errors on an actual call, never at
+  # construction. openai is not: an empty ${VAR} makes its client throw at
+  # startup, so only declare that block once you have the key.
+  anthropic:
+    apiKey: ${ANTHROPIC_API_KEY}
   # openai:
   #   apiKey: ${OPENAI_API_KEY}
 
@@ -39,6 +40,19 @@ defaults:
   # accuracy figure in CLAUDE.md was produced here. Swap the provider and those
   # numbers no longer describe your run. ${STUDIO_BULK_*} lets a .env retarget
   # it without editing this file; unset falls back to the pin.
+  #
+  # The four BULK fan-out pipelines (chapter-summaries,
+  # discover/classify-relationships, wiki-pages) declare `batch: true` on
+  # their map stage (STU-757) — Anthropic's Message Batches API bills every
+  # token at 50% in exchange for up to 24h to finish. That only takes effect
+  # under `provider: anthropic`; claude-code has no batch endpoint (it owns
+  # its own agent loop, so there is no single call to intercept) and runs the
+  # stage unchanged, just not cheaper. Switch with:
+  #
+  #   STUDIO_BULK_PROVIDER=anthropic
+  #
+  # claude-code stays the shipped default until a real run measures the
+  # anthropic path (STU-757).
   provider: ${STUDIO_BULK_PROVIDER:-claude-code}
   model: ${STUDIO_BULK_MODEL:-claude-haiku-4-5}
 

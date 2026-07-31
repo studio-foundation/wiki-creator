@@ -130,6 +130,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/consolidate_editorial_stance.py
+    contract: consolidate-editorial-stance
     timeout_ms: 300000
     context:
       include:

@@ -16,6 +16,7 @@ stages:
     over: input.items
     pipeline: wiki-page-item
     resume: true
+    batch: true
     concurrency: 4
     on_item_failure: collect-all
     input:
