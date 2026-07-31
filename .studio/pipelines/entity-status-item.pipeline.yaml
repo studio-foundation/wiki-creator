@@ -1,5 +1,5 @@
 name: entity-status-item
-description: Decide which PERSON roster entries are dead by the end of this book — one call per book
+description: Decide whether one PERSON entity is dead by the end of this book — searches the book itself (STU-753)
 version: 1
 
 stages:
@@ -9,6 +9,7 @@ stages:
     contract: entity-status-item
     ralph:
       max_attempts: 3
+      max_tool_calls: 8
     context:
       include:
         - input

@@ -1,29 +1,38 @@
 name: entity-status
-# Whole-book verdict (one call/book, strict JSON over the whole PERSON roster). Pinned
-# to a capable model: the local default (a 7B) loses the output contract on big rosters
-# and thrashes all 3 RALPH attempts (STU-624). Negligible volume, ~one call per book.
+# Point-query verdict (STU-753): one call per PERSON entity, searching the book
+# instead of receiving a pre-selected snippet pack. Pinned to a capable model —
+# the whole-roster verdict this replaces needed one because a 7B loses strict
+# JSON on a big prompt (STU-624); a multi-turn tool loop needs a model that
+# tool-calls reliably, which a 7B is no more suited to.
 provider: ${STUDIO_SMART_PROVIDER:-claude-code}
 model: ${STUDIO_SMART_MODEL:-claude-haiku-4-5}
+tools:
+  - book-search-search_book
 system_prompt: |
   Respond with ONLY a valid JSON object. No markdown fences, no explanation, no other text.
 
-  You decide, for each character in a novel's roster, whether they are alive at the
-  end of this book.
+  You decide whether ONE character in a novel is alive at the end of this book.
 
   You receive input with:
   - book_title
-  - roster: one block per character, formatted
-    "## Name (also called: alias, alias)" followed by snippets from the book that
-    mention that character
+  - name: the character's canonical name
+  - aliases: other names this character is called
+  - book_dir: pass this EXACT value as book_dir on every book-search-search_book call
+
+  Before you answer, call book-search-search_book (query = the character's name,
+  then an alias if the first search finds nothing) to find passages that mention
+  them. If the passages you find do not settle their fate, search again with a
+  different phrase — a death, a departure, a wound. Do not answer from a single
+  search, and do not answer from anything you have not searched for.
 
   Return exactly:
   {
-    "status": [ {"name": "...", "status": "...", "quote": "...", "agent": "...", "place": "..."} ]
+    "status": "...", "quote": "...", "agent": "...", "place": "..."
   }
 
-  "status" is exactly one of: alive, deceased, missing, undead
-  "quote" is copied VERBATIM from a snippet shown above under THAT character's own
-  "## " heading.
+  "status" is exactly one of: alive, deceased, missing, undead, unknown
+  "quote" is copied VERBATIM from a passage book-search-search_book returned —
+  required for every status except "unknown".
 
   "agent" and "place" are OPTIONAL and only for "deceased". Omit either one you
   cannot fill from the quote itself.
@@ -31,45 +40,36 @@ system_prompt: |
   - "place": where they died, named in the quote.
 
   Both must be written EXACTLY as the quote writes them, and both must be in the
-  quote you returned — not in a neighbouring snippet. A place the character
+  quote you returned — not in a neighbouring passage. A place the character
   travelled to in another sentence is not where they died. If the quote names no
   killer, omit "agent". If it names no place, omit "place". Neither is a guess:
   a field we cannot read off the quote is dropped, and the status still stands.
 
-  List ONLY characters whose status the snippets state. Every character you do not
-  list is recorded as unknown, which is the correct answer whenever the text shown
-  does not settle it.
+  THE TEST — does a passage you found state what became of THIS character?
 
-  THE TEST — do the snippets shown for THIS character state what became of them?
-
-  - deceased: a snippet shows this character dying or dead.
-  - missing: a snippet shows this character vanishing, with their fate left open.
-  - undead: a snippet shows this character dead and still acting.
-  - alive: a snippet shows this character acting, and no snippet shows them dead.
+  - deceased: a passage shows this character dying or dead.
+  - missing: a passage shows this character vanishing, with their fate left open.
+  - undead: a passage shows this character dead and still acting.
+  - alive: a passage shows this character acting, and no passage shows them dead.
 
   WHO THE SENTENCE IS ABOUT IS THE WHOLE QUESTION.
-  "Eragon watched Brom die" appears in the snippets of BOTH characters. It makes
+  "Eragon watched Brom die" surfaces under a search for either name. It makes
   Brom deceased. It says nothing about Eragon except that he was there.
   A character who witnesses, mourns, avenges, buries, or is threatened with death
   is not dead. A character who kills is not dead.
 
-  NEVER list these:
-  - A character whose fate you know because you have read this novel before. Your
-    memory of the plot is not evidence. If the snippets shown do not say it, it is
+  NEVER answer these from memory:
+  - A character's fate you know because you have read this novel before. Your
+    memory of the plot is not evidence. If no passage you found says it, it is
     not here — this book may end before the death you remember.
-  - A death that is feared, predicted, dreamt, threatened, or told as a story about
-    someone else. Only what happens to this character in this book counts.
-  - A character whose snippets show nothing about their fate. Leave them out.
+  - A death that is feared, predicted, dreamt, threatened, or told as a story
+    about someone else. Only what happens to this character in this book counts.
 
-  Grounding: the snippets are the only truth. Decide from them alone.
-
-  WHEN IN DOUBT, LEAVE THE CHARACTER OUT. Do not list a character you are unsure
-  about. A wrong "deceased" kills a living character on a page nobody will reread.
-  A missing verdict renders "unknown", which is honest.
+  Return {"status": "unknown"} if nothing you found settles this character's
+  fate. WHEN IN DOUBT, RETURN "unknown". A wrong "deceased" kills a living
+  character on a page nobody will reread. "unknown" is honest.
 
   Rules:
-  - Never list a name that does not appear as a "## " heading in the roster
-  - "quote" must be text you can find in a snippet under that character's own
-    heading, character for character. A verdict whose quote is not there is discarded.
-  - Return {"status": []} if the snippets settle nobody's fate
-  - Do not return a string in place of the object
+  - "quote" must be text you can find with book-search-search_book, character
+    for character. A verdict whose quote is not real is discarded.
+  - Do not return a string in place of the object.

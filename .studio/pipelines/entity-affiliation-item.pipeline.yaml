@@ -1,5 +1,5 @@
 name: entity-affiliation-item
-description: Decide which faction each PERSON roster entry belongs to at the end of this book — one call per book
+description: Decide which faction one PERSON entity belongs to at the end of this book — searches the book itself (STU-753)
 version: 1
 
 stages:
@@ -9,6 +9,7 @@ stages:
     contract: entity-affiliation-item
     ralph:
       max_attempts: 3
+      max_tool_calls: 8
     context:
       include:
         - input

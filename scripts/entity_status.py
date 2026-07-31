@@ -3,11 +3,13 @@
 
 Script executor interface: reads JSON from stdin, writes JSON to stdout.
 
-Post-step of the entity-status split (STU-457). The LLM verdict arrives from
-the `call: entity-status-verdict` stage (native invocation, no subprocess);
-this stage parses it, caches it to `entity_status.json`, which wiki-preparation
-then stamps onto the batch entity so `generate_wiki_pages.py` can render the
-`status` infobox slot.
+Post-step of the entity-status split (STU-457/753). The `call:
+entity-status-verdict` stage that precedes this one fans out one agentic
+search-and-decide call per PERSON entity over the engine map (STU-589/605);
+this stage folds the per-entity results, verifies each against the book's own
+text, and writes `entity_status.json`, which `wiki_preparation.py` then stamps
+onto the batch entity so `generate_wiki_pages.py` can render the `status`
+infobox slot.
 
 It sits in wiki-preparation and not wiki-resolution on purpose.
 `alias-adjudication` sits inside resolution because it changes identity —
@@ -15,48 +17,40 @@ entity-classification reads its output. This changes no identity; it only
 decorates the batch entity. And resolution is chained by `make golden`, which
 stays LLM-free by construction.
 
-Never fails a run: a book whose verdict cannot be obtained renders `unknown`
+Never fails a run: a book whose verdicts cannot be obtained renders `unknown`
 for every character, loudly.
 
 Input:  { "additional_context": "<book yaml>",
-          "all_stage_outputs": {"entity-status-verdict": {...}} }
+          "all_stage_outputs": {"entity-status-verdict": {<map output>}} }
 Output: { "decided", "roster" }
 """
+import json
 import sys
 from pathlib import Path
 
-import yaml
-
 from wiki_creator import studio_io
+from wiki_creator.book_search import full_text, load_chapters
 from wiki_creator.entity_status import (
+    ARTIFACT_VERSION,
     build_name_index,
-    load_cached_status,
+    entity_rows,
     parse_status_verdict,
-    roster_rows,
-    save_status_cache,
 )
-from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator.registry import Registry
 
 VERDICT_STAGE = "entity-status-verdict"
 
 
-def contexts_by_entity(registry: Registry) -> dict[str, list[dict]]:
-    """Per-PERSON context sentences with the chapter each came from.
-
-    The chapter rides along because `select_status_snippets` sorts by it.
-    """
-    contexts: dict[str, list[dict]] = {}
+def contexts_by_entity(registry: Registry) -> dict[str, list]:
+    """PERSON entities that have at least one mention — the set with anything to
+    decide. The mentions' text is not read here (STU-753: the agent searches the
+    book directly); only presence matters, so callers just check membership."""
+    contexts: dict[str, list] = {}
     for record in registry.entities:
         if record.entity_type != "PERSON":
             continue
-        snippets = [
-            {"text": mention.context.strip(), "chapter_id": mention.chapter_id}
-            for mention in record.mentions
-            if mention.context and mention.context.strip()
-        ]
-        if snippets:
-            contexts[record.canonical_name] = snippets
+        if any(mention.context and mention.context.strip() for mention in record.mentions):
+            contexts[record.canonical_name] = []
     return contexts
 
 
@@ -67,26 +61,35 @@ def verdict_from_payload(payload: dict, stage_name: str) -> object | None:
     return verdict
 
 
-def resolve_status(
-    rows: list[dict],
-    verdict_output: object | None,
-    cache_path: Path,
-    name_index: dict[str, dict[str, str]],
+def resolve_verdicts(
+    rows: list[dict], map_output: object | None, book_text: str, name_index: dict[str, dict[str, str]]
 ) -> dict[str, dict]:
-    """Verified status per character, from cache or the call stage's verdict.
+    """Verified status per character, from the map fan-out's per-item results.
 
-    Never raises. Every failure path returns {} — every character then renders
-    the slot's declared fallback, `unknown`.
+    Never raises. A missing map output, a missing per-item result, and a
+    per-item verdict that fails grounding all fall through the same way: that
+    one character stays out of the returned dict, which renders `unknown` — a
+    per-unit failure fails that unit, never the run.
     """
-    cached = load_cached_status(cache_path, rows)
-    if cached:
-        return cached
-    if verdict_output is None:
+    if map_output is None:
         return _give_up("no verdict (call skipped or failed)", rows)
 
-    verdicts = parse_status_verdict(verdict_output, rows, name_index)
-    if verdicts:
-        save_status_cache(cache_path, rows, verdicts)
+    results_by_index: dict[int, dict] = {}
+    if isinstance(map_output, dict):
+        for result in map_output.get("results") or []:
+            if isinstance(result, dict) and isinstance(result.get("index"), int):
+                results_by_index[result["index"]] = result
+
+    verdicts: dict[str, dict] = {}
+    for i, row in enumerate(rows):
+        result = results_by_index.get(i)
+        if not result or result.get("status") != "success":
+            continue
+        verdict = parse_status_verdict(
+            result.get("output"), row["name"], row["aliases"], book_text, name_index
+        )
+        if verdict is not None:
+            verdicts[row["name"]] = verdict
     return verdicts
 
 
@@ -98,9 +101,16 @@ def _give_up(error: str, rows: list[dict]) -> dict[str, dict]:
     return {}
 
 
+def _write_artifact(path: Path, verdicts: dict[str, dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps({"version": ARTIFACT_VERSION, "verdicts": verdicts}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
 def main() -> None:
     payload = studio_io.read_payload()
-    ctx = yaml.safe_load(payload.get("additional_context", "") or "") or {}
     paths = studio_io.paths_from_payload(payload)
     cache_path = paths.processing / "entity_status.json"
 
@@ -114,9 +124,6 @@ def main() -> None:
         studio_io.write_output({"decided": 0, "roster": 0})
         return
 
-    lang_cfg = load_lang_config(book_language(ctx))
-    status_markers = list(lang_cfg.get("status_markers", []))
-
     contexts = contexts_by_entity(registry)
     persons = [
         {"canonical_name": record.canonical_name, "aliases": record.aliases}
@@ -128,7 +135,8 @@ def main() -> None:
         studio_io.write_output({"decided": 0, "roster": 0})
         return
 
-    rows = roster_rows(persons, contexts, status_markers)
+    rows = entity_rows(persons)
+    book_text = full_text(load_chapters(paths.processing))
     name_index = build_name_index(
         [
             {
@@ -139,12 +147,13 @@ def main() -> None:
             for record in registry.entities
         ]
     )
-    verdicts = resolve_status(
+    verdicts = resolve_verdicts(
         rows,
-        verdict_output=verdict_from_payload(payload, VERDICT_STAGE),
-        cache_path=cache_path,
-        name_index=name_index,
+        verdict_from_payload(payload, VERDICT_STAGE),
+        book_text,
+        name_index,
     )
+    _write_artifact(cache_path, verdicts)
 
     decided = {name: v["status"] for name, v in verdicts.items()}
     print(
