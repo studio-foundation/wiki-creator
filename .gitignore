@@ -121,6 +121,11 @@ research/alias-eval/run.log
 # embedding-eval: masked mention windows + their encodings (STU-576). Regenerable by
 # build_corpus.py from the processing_output caches, which are themselves gitignored.
 research/embedding-eval/corpus/
+# relation-eval chunk sweep (STU-611): per-size discovered snapshots + log,
+# regenerable by run_sweep.sh (live LLM run)
+research/relation-eval/chunk-sweep/discovered_*.json
+research/relation-eval/chunk-sweep/sweep.log
+research/relation-eval/chunk-sweep/stale-*/
 
 # Local, per-machine agent notes
 CLAUDE.local.md
