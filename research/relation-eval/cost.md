@@ -18,7 +18,10 @@ ran. What follows is Narnia's actual cache plus a census of the 6 books whose
 
 One `studio run relationship-discovery-item` per chunk. The votes cache is keyed on
 roster + prompt fingerprint, so once every chunk is cached a re-run costs **zero**
-calls until the roster or the discovery prompt changes.
+calls until the roster or the discovery prompt changes. (2026-07-20 shape: the
+script-side votes cache is retired since STU-589/605 — the same property now
+lives in the engine map-cache, keyed on chunk text + subset roster + prompt
+fingerprint.)
 
 | book (live `epub_data`) | narrative ch. | chars | chunks @6k = cold calls | cached |
 |---|---:|---:|---:|---:|
