@@ -14,6 +14,7 @@ stages:
     over: input.pairs
     pipeline: relationship-classifier-item
     resume: true
+    batch: true
     concurrency: 4
     on_item_failure: collect-all
     input:

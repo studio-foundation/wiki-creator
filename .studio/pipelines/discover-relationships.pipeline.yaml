@@ -13,6 +13,7 @@ stages:
     over: input.chunks
     pipeline: relationship-discovery-item
     resume: true
+    batch: true
     concurrency: 4
     on_item_failure: collect-all
     input:
