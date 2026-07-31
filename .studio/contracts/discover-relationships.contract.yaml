@@ -1,0 +1,15 @@
+name: discover-relationships
+version: 1
+schema:
+  required_fields:
+    - chunks
+    - chunks_failed
+    - pairs
+# chunks: total chunks the map fanned out over
+# chunks_failed: chunks that failed and stayed uncached (retried next run)
+# pairs: aggregated typed pairs written to relationships_discovered.json
+# The `{skipped: "missing_artifacts" | "empty_roster" | "no_chapters" |
+# "no_verdict"}` output fails this schema on purpose, same as
+# classify-relationships.contract.yaml's `{skipped: missing_input}`: each reason
+# means either an upstream stage never ran or the map fan-out produced nothing to
+# fold — a broken/partial run, not a gracefully-degraded one.

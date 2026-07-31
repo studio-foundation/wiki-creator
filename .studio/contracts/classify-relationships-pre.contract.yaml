@@ -1,0 +1,9 @@
+name: classify-relationships-pre
+version: 1
+schema:
+  required_fields:
+    - pairs
+    - prompt_fingerprint
+    - needs_verdict
+# pairs: one map item per classifiable pair, each carrying a `label` for --stream-items
+# needs_verdict: gates the downstream `call: classify-relationships-verdict` stage

@@ -1,0 +1,8 @@
+name: entity-affiliation
+version: 1
+schema:
+  required_fields:
+    - decided
+    - roster
+# decided: count of characters with a resolved affiliation
+# roster: count of roster rows considered

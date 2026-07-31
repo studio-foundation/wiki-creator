@@ -1,0 +1,10 @@
+name: discover-relationships-pre
+version: 1
+schema:
+  required_fields:
+    - chunks
+    - relationship_types
+    - prompt_fingerprint
+    - needs_verdict
+# chunks: list of {title, text, roster} the downstream call fans out over, one child run each
+# needs_verdict: gates the downstream `call: discover-relationships-verdict` stage

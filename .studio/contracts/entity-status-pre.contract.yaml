@@ -1,0 +1,9 @@
+name: entity-status-pre
+version: 1
+schema:
+  required_fields:
+    - book_title
+    - roster
+    - needs_verdict
+# roster: rendered PERSON roster text block, not the row list
+# needs_verdict: gates the downstream `call: entity-status-verdict` stage

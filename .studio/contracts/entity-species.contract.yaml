@@ -1,0 +1,8 @@
+name: entity-species
+version: 1
+schema:
+  required_fields:
+    - decided
+    - roster
+# decided: count of characters with a resolved species
+# roster: count of roster rows considered
