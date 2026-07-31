@@ -19,12 +19,13 @@ stages:
         - input
 
   - call: entity-status-verdict
-    pipeline: entity-status-item
+    pipeline: entity-status-verdicts
     condition: stages.entity-status-pre.output.needs_verdict == true
     on_failure: continue
     input:
       book_title: "{{stages.entity-status-pre.output.book_title}}"
-      roster: "{{stages.entity-status-pre.output.roster}}"
+      entities: "{{stages.entity-status-pre.output.entities}}"
+      prompt_fingerprint: "{{stages.entity-status-pre.output.prompt_fingerprint}}"
 
   - name: entity-status
     kind: extraction
@@ -48,12 +49,13 @@ stages:
         - input
 
   - call: entity-affiliation-verdict
-    pipeline: entity-affiliation-item
+    pipeline: entity-affiliation-verdicts
     condition: stages.entity-affiliation-pre.output.needs_verdict == true
     on_failure: continue
     input:
       book_title: "{{stages.entity-affiliation-pre.output.book_title}}"
-      roster: "{{stages.entity-affiliation-pre.output.roster}}"
+      entities: "{{stages.entity-affiliation-pre.output.entities}}"
+      prompt_fingerprint: "{{stages.entity-affiliation-pre.output.prompt_fingerprint}}"
 
   - name: entity-affiliation
     kind: extraction
@@ -79,12 +81,13 @@ stages:
         - input
 
   - call: entity-species-verdict
-    pipeline: entity-species-item
+    pipeline: entity-species-verdicts
     condition: stages.entity-species-pre.output.needs_verdict == true
     on_failure: continue
     input:
       book_title: "{{stages.entity-species-pre.output.book_title}}"
-      roster: "{{stages.entity-species-pre.output.roster}}"
+      entities: "{{stages.entity-species-pre.output.entities}}"
+      prompt_fingerprint: "{{stages.entity-species-pre.output.prompt_fingerprint}}"
 
   - name: entity-species
     kind: extraction

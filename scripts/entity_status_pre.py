@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
-"""Pre-step of the entity-status split (STU-457): build the roster input.
+"""Pre-step of the entity-status split (STU-457/753): build the fan-out items.
 
 Script executor interface: reads JSON from stdin, writes JSON to stdout.
 
-Emits the rendered PERSON roster and whether a verdict is still needed — the
-`call: entity-status-verdict` stage that follows runs the LLM only when
-`needs_verdict` is true (cache miss). The verdict cache stays keyed on the
-roster rows themselves (STU-488), so this stage deciding "no call needed" is
-exactly the old in-script cache hit. On a cache miss the stale cache is
-unlinked here (the defensive pre-call unlink, STU-551): a failed call must not
-leave a verdict made for a different roster on disk.
+Emits one item per PERSON entity — the `call: entity-status-verdict` stage
+that follows fans out one agentic search-and-decide call per character via the
+engine map (STU-589/605-style per-item resume). There is no roster/snippet
+pack to build anymore (STU-753): each item carries only identity (name,
+aliases) plus `book_dir`, so the agent can search the book itself, and a
+`prompt_fingerprint` covering both the agent's system prompt and the book's
+own text — either changing busts the engine's per-item resume cache, since
+either can change the answer.
 
 Input:  { "additional_context": "<book yaml>" }
-Output: { "book_title", "roster", "needs_verdict" }
+Output: { "book_title", "entities", "prompt_fingerprint", "needs_verdict" }
 """
 
 import json
@@ -23,17 +24,12 @@ import yaml
 
 from scripts.entity_status import contexts_by_entity
 from wiki_creator import studio_io
-from wiki_creator.entity_status import load_cached_status, render_roster, roster_rows
-from wiki_creator.lang import book_language, load_lang_config
+from wiki_creator.book_search import load_chapters
+from wiki_creator.entity_status import entity_rows
 from wiki_creator.registry import Registry
 
-
-def _emit(book_title: str = "", roster: str = "", needs_verdict: bool = False) -> None:
-    json.dump(
-        {"book_title": book_title, "roster": roster, "needs_verdict": needs_verdict},
-        sys.stdout,
-        ensure_ascii=False,
-    )
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+_AGENT_YAML = PROJECT_ROOT / ".studio" / "agents" / "entity-status.agent.yaml"
 
 
 def main() -> None:
@@ -53,15 +49,6 @@ def main() -> None:
         _emit()
         return
 
-    lang_cfg = load_lang_config(book_language(ctx))
-    status_markers = list(lang_cfg.get("status_markers", []))
-    if not status_markers:
-        print(
-            "[entity-status] no `status_markers` in this language's cue_words — "
-            "selecting the latest snippets only",
-            file=sys.stderr,
-        )
-
     contexts = contexts_by_entity(registry)
     persons = [
         {"canonical_name": record.canonical_name, "aliases": record.aliases}
@@ -74,15 +61,46 @@ def main() -> None:
         _emit()
         return
 
-    rows = roster_rows(persons, contexts, status_markers)
-    needs_verdict = load_cached_status(cache_path, rows) is None
-    if needs_verdict:
+    chapters = load_chapters(paths.processing)
+    if not chapters:
+        print(
+            f"[entity-status] chapters.json not found in {paths.processing} — "
+            "nothing for the agent to search",
+            file=sys.stderr,
+        )
         Path(cache_path).unlink(missing_ok=True)
+        _emit()
+        return
+
+    book_dir = str(paths.processing)
+    rows = entity_rows(persons)
+    fingerprint = studio_io.prompt_fingerprint(
+        [_AGENT_YAML, paths.processing / "chapters.json"], {}
+    )
 
     _emit(
         book_title=str(ctx.get("title") or paths.processing.name),
-        roster=render_roster(rows),
-        needs_verdict=needs_verdict,
+        entities=[{**row, "book_dir": book_dir} for row in rows],
+        prompt_fingerprint=fingerprint,
+        needs_verdict=True,
+    )
+
+
+def _emit(
+    book_title: str = "",
+    entities: list[dict] | None = None,
+    prompt_fingerprint: str = "",
+    needs_verdict: bool = False,
+) -> None:
+    json.dump(
+        {
+            "book_title": book_title,
+            "entities": entities or [],
+            "prompt_fingerprint": prompt_fingerprint,
+            "needs_verdict": needs_verdict,
+        },
+        sys.stdout,
+        ensure_ascii=False,
     )
 
 

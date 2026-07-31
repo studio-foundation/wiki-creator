@@ -46,14 +46,13 @@ def _rendered(verdict: Verdict, typing: dict[str, str]) -> dict:
     only if it is on the roster (right type) and verbatim in this quote.
     """
     name_index = build_name_index(name_index_entities(typing))
-    rows = [{"name": verdict.name, "aliases": [], "snippets": [{"text": verdict.quote, "chapter_id": "cN"}]}]
-    entry = {"name": verdict.name, "status": "deceased", "quote": verdict.quote}
+    entry = {"status": "deceased", "quote": verdict.quote}
     if verdict.proposed_agent is not None:
         entry["agent"] = verdict.proposed_agent
     if verdict.proposed_place is not None:
         entry["place"] = verdict.proposed_place
 
-    parsed = parse_status_verdict({"status": [entry]}, rows, name_index).get(verdict.name, {})
+    parsed = parse_status_verdict(entry, verdict.name, [], verdict.quote, name_index) or {}
     agent, place = parsed.get("agent"), parsed.get("place")
     return {
         "agent": agent,
@@ -166,13 +165,12 @@ def _adversarial(typing: dict[str, str]) -> None:
     print(f"{'case':<42} renders")
     print("-" * 62)
     for label, subject, quote, agent, place in ADVERSARIAL:
-        rows = [{"name": subject, "aliases": [], "snippets": [{"text": quote, "chapter_id": "cN"}]}]
-        entry = {"name": subject, "status": "deceased", "quote": quote}
+        entry = {"status": "deceased", "quote": quote}
         if agent is not None:
             entry["agent"] = agent
         if place is not None:
             entry["place"] = place
-        parsed = parse_status_verdict({"status": [entry]}, rows, name_index).get(subject, {})
+        parsed = parse_status_verdict(entry, subject, [], quote, name_index) or {}
         rendered = death_label(parsed.get("agent"), parsed.get("place"), "fr")
         print(f"{label:<42} {rendered or '— (dropped)'}")
 

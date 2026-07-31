@@ -1,0 +1,22 @@
+name: entity-affiliation-verdicts
+description: Fan out entity-affiliation over the PERSON roster — one child run per character (STU-753)
+version: 1
+
+# The fan-out lives in the engine (STU-589 shape, extended to a point-query
+# agent by STU-753): per-item resume (STU-605) keyed on the resolved item
+# input (name, aliases, book_dir, prompt_fingerprint) replaces the roster-diff
+# cache the pre stage used to gate on — a character or a book's text unchanged
+# since the last run resumes for free; either changing re-runs just that item.
+stages:
+  - map: affiliation
+    over: input.entities
+    pipeline: entity-affiliation-item
+    resume: true
+    concurrency: 4
+    on_item_failure: collect-all
+    input:
+      book_title: "{{input.book_title}}"
+      name: "{{item.name}}"
+      aliases: "{{item.aliases}}"
+      book_dir: "{{item.book_dir}}"
+      prompt_fingerprint: "{{input.prompt_fingerprint}}"

@@ -57,13 +57,13 @@ def test_the_tickets_false_belief_is_dropped_against_broms_real_quote():
     from corpus import name_index_entities
 
     real_quote = '"Brom\'s dead," said Eragon abruptly. "The Ra\'zac killed him."'
-    rows = [{"name": "Brom", "aliases": [], "snippets": [{"text": real_quote, "chapter_id": "cN"}]}]
     parsed = parse_status_verdict(
-        {"status": [{"name": "Brom", "status": "deceased", "quote": real_quote,
-                     "agent": "Durza", "place": "Farthen Dûr"}]},
-        rows,
+        {"status": "deceased", "quote": real_quote, "agent": "Durza", "place": "Farthen Dûr"},
+        "Brom",
+        [],
+        real_quote,
         build_name_index(name_index_entities(TYPING_CACHED)),
-    )["Brom"]
+    )
     assert "agent" not in parsed and "place" not in parsed
     assert parsed["status"] == "deceased"  # the verdict itself survives
 

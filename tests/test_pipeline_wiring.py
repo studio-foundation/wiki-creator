@@ -123,15 +123,16 @@ def test_wiki_preparation_runs_classify_before_events() -> None:
 
 
 def test_wiki_preparation_wires_the_entity_trio_as_pre_call_post() -> None:
-    """The STU-457 shape: pre decides cache hit/miss, the call runs the LLM only
-    on a miss (condition), post applies with the stage's safe default — so a
+    """The STU-457 shape, extended to a per-entity agentic fan-out by STU-753:
+    pre builds the fan-out items, the call runs the engine map only when there
+    is work (condition), post applies with the stage's safe default — so a
     failed verdict merges nothing and the run proceeds (on_failure: continue)."""
     stages = _pipeline("wiki-preparation")["stages"]
     by_call = {s.get("call"): s for s in stages if s.get("call")}
     for verdict, item_pipeline in [
-        ("entity-status-verdict", "entity-status-item"),
-        ("entity-affiliation-verdict", "entity-affiliation-item"),
-        ("entity-species-verdict", "entity-species-item"),
+        ("entity-status-verdict", "entity-status-verdicts"),
+        ("entity-affiliation-verdict", "entity-affiliation-verdicts"),
+        ("entity-species-verdict", "entity-species-verdicts"),
     ]:
         call = by_call[verdict]
         assert call["pipeline"] == item_pipeline

@@ -240,10 +240,12 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   just a re-run.
 
 
-- Entity status (STU-488): the `status` infobox slot was declared `MIN` with
+- Entity status (STU-488, retrieval mechanism replaced by STU-753 — see that
+  bullet below): the `status` infobox slot was declared `MIN` with
   `fallback: unknown` in STU-504 and never populated. It is filled by one
-  `entity-status-item` call per book (native `call` stage since STU-457) over the PERSON roster — the
-  STU-529/STU-539 shape — as a **wiki-preparation stage** (pre/call/post since STU-457), not a
+  agentic call per PERSON entity, fanned out over the engine map (native `call`
+  stage since STU-457, per-entity fan-out since STU-753) — the STU-529/STU-539
+  shape — as a **wiki-preparation stage** (pre/call/post since STU-457), not a
   wiki-resolution stage: it changes no identity (unlike `alias-adjudication`,
   which entity-classification reads), and resolution is the chain `make golden`
   runs, so it stays LLM-free by construction. Enum is the fandom-wiki convention
@@ -324,9 +326,11 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   stays open. Toggle chrome is chapter-less: `chrome.reveal_spoiler`.
 
 
-- Affiliation is a scalar, not a dated edge (STU-551): the `affiliation` slot is
-  filled by one `entity-affiliation-item` call per book (native `call` stage since STU-457) over the PERSON
-  roster — the STU-488 shape, a wiki-preparation stage so resolution stays
+- Affiliation is a scalar, not a dated edge (STU-551; retrieval mechanism
+  replaced by STU-753 — see that bullet below): the `affiliation` slot is
+  filled by one agentic call per PERSON entity, fanned out over the engine map
+  (native `call` stage since STU-457, per-entity fan-out since STU-753) — the
+  STU-488 shape, a wiki-preparation stage so resolution stays
   LLM-free. The ticket asked for a **dated edge** and three findings refused it.
   (1) Its own acceptance test — tome 3's faction on tome 3's page, tome 1's on
   tome 1's — is true **by construction** under a per-tome wiki, exactly as for
@@ -357,10 +361,13 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   (`_PIPELINE_OWNED_FACTS`); `species`/`location`/`leaders` are declared
   extracted-fact with nothing computing them, and `titles` has the same hole —
   STU-572. Shared roster plumbing lives in
-  `wiki_creator/roster.py` (`normalize`, `has_marker`, `latest_first`,
-  `render_roster`, `is_quoted`, `load_cache`, `save_cache`), extracted from
-  `entity_status` rather than copied — `normalize`'s typographic folding is the
-  `99a6a71` fix and must exist once.
+  `wiki_creator/roster.py` (`normalize`, `fold_typography`, `is_quoted`,
+  `quote_names_entity`, `quote_names_value`), extracted from `entity_status`
+  rather than copied — `normalize`'s typographic folding is the `99a6a71` fix
+  and must exist once. (`has_marker`/`latest_first`/`render_roster`/
+  `load_cache`/`save_cache` were the pre-STU-753 snippet-selection and
+  roster-diff-cache plumbing; deleted when the trio moved to free retrieval —
+  see the STU-753 bullet below.)
   **A marker names the relation, never the group.** The first vocabulary included
   `side`, `order`, `band`, `army`, `ranks`, `guild`: `side` alone fired on 28 of
   the ~70 selected snippets ("his side burned sharply", "at her side"), crowding
@@ -382,14 +389,16 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   identical evidence); precision is not — STU-488 recorded the same asymmetry.
 
 
-- Species is an attribute, not the collective entity (STU-574): the `species`
+- Species is an attribute, not the collective entity (STU-574; retrieval
+  mechanism replaced by STU-753 — see that bullet below): the `species`
   PERSON infobox slot (declared, `genre_gated: true`, inert since STU-504) is
-  filled by one `entity-species-item` call per book (native `call` stage since STU-457) over the PERSON roster
-  — the STU-551 shape: single-source marker snippets, and a verdict survives only
-  when its species is verbatim in a quote from that entity's own snippets
-  (`quote_names_value`, lifted to `roster.py` and shared with `affiliation`; it is
-  the companion of `is_quoted` — one checks the quote is real, the other that the
-  quote names the value). STU-571 assumed the value was already collected into the
+  filled by one agentic call per PERSON entity, fanned out over the engine map
+  (native `call` stage since STU-457, per-entity fan-out since STU-753)
+  — the STU-551 shape: a verdict survives only when its species is verbatim in
+  a quote that names this entity (`quote_names_value`, lifted to `roster.py`
+  and shared with `affiliation`; it is the companion of `is_quoted` — one
+  checks the quote is real, the other that the quote names the value). STU-571
+  assumed the value was already collected into the
   FACTION bucket (`Elves`, `Dwarves`) and a typing fix would feed it: `Elves` the
   collective noun is an *entity* with its own page; Eragon's `human` is an
   *attribute* of the Eragon PERSON, so extracting the collective says nothing about
@@ -417,6 +426,75 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   and `status` before it. Measurement runs the standalone stage on cached
   registries (1 LLM call/book, no re-extraction); no species gold exists, so
   precision is human-judged against canon like STU-543.
+
+
+- **Point-query verdicts search the book instead of receiving it (STU-753).**
+  The trio above (status/affiliation/species) was the last one-call-per-book
+  verdict shape left after STU-457; each converted to a per-PERSON agentic
+  fan-out, the same `map` shape the four other fan-outs already used (STU-589),
+  but with a tool instead of a pre-assembled prompt. Premise: exhaustive-coverage
+  tasks (extraction, discover-relationships) need a chunk sweep so every passage
+  is seen; a point-query ("is X alive? what faction?") does not — a targeted
+  search is less noise for the same evidence. `wiki book add --llm` was the one
+  place this repo had already proven the agentic pattern (an agent finding what
+  it needs instead of being handed everything).
+  **Shape**: each `*-pre` script now emits `entities: [{name, aliases,
+  book_dir}]` (identity only — no snippet pack, no marker vocabulary) plus one
+  `prompt_fingerprint` covering both the stage's agent yaml and the book's own
+  `chapters.json` (`studio_io.prompt_fingerprint`). The `call:` target is a new
+  `entity-<slot>-verdicts` pipeline (`entity-status-verdicts`, mirroring
+  `discover-relationships`'s outer/inner naming) — a `map` stage fanning out
+  one child run per entity over the existing `entity-<slot>-item` leaf pipeline,
+  each with `tools: [book-search-search_book]` on its agent and
+  `tool_calls: {minimum: 1, required_tools: [book-search.search_book]}` on its
+  contract (anti-theatre: the agent cannot answer without having searched). The
+  leaf's output contract shrank from a list (`{status: [...]}`) to one object
+  per call — there is no roster to enumerate inside a single-entity call.
+  **The tool**: `wiki_creator/book_search.py::search_chapters` is a literal,
+  case-insensitive substring search over `chapters.json` — never a regex (the
+  caller is an LLM tool call; a regex engine on model-shaped input is a
+  catastrophic-backtracking surface a substring search never opens).
+  `scripts/book_search_tool.py` is the `.tool.yaml` shell executor; it confines
+  `book_dir` to the two corpus roots' shape (STU-623's glob, mirrored as a
+  regex) resolved under `PROJECT_ROOT`, rejecting path traversal — `book_dir`
+  is agent-supplied (the pre-stage hands it the real value, but a tool
+  parameter is not a guarantee the agent echoes it back unchanged).
+  **The cache moved to the engine.** The pre stage no longer keeps a
+  script-side roster-diff cache to decide `needs_verdict` — the engine's
+  per-item resume (STU-605) already skips an unchanged item, keyed on the
+  resolved item input (name, aliases, book_dir, prompt_fingerprint), so either
+  the agent's prompt or the book's own text changing re-runs exactly the
+  entities affected. The post stage still writes the same
+  `entity_status.json`/`entity_affiliation.json`/`entity_species.json`
+  artifact `wiki_preparation.py` reads (`{"version", "verdicts"}`), rebuilt
+  unconditionally from the fresh map output each run — downstream is
+  unaffected.
+  **Grounding widened, so a name-in-quote gate replaces the old scoping.** The
+  pre-STU-753 snippet pack was built per entity, so a quote lifted from a
+  different character's evidence failed `is_quoted` by construction — the
+  pool it checked against literally did not contain it. Free retrieval
+  searches the whole book, so `is_quoted` alone would now accept any real
+  sentence regardless of who it names. `roster.quote_names_entity` (the quote
+  must literally name this entity or one of its aliases, whole-token) is the
+  mechanical replacement, checked before the enum/value-specific gates. It does
+  not resolve the co-mention ambiguity within a single sentence ("Eragon
+  watched Brom die" names both) — that was always the prompt's job ("WHO THE
+  SENTENCE IS ABOUT IS THE WHOLE QUESTION"), in both the old and new shape.
+  **The marker vocabulary (`status_markers`/`affiliation_markers`/
+  `species_markers` in `cue_words/<lang>.json`) is now unread** — it only ever
+  retrieved, and retrieval is the agent's job now. Left in place rather than
+  deleted (a config-surface cleanup, not required by this change); a lang pack
+  omitting it degrades to empty exactly as before, so nothing breaks either way.
+  **Not (yet) measured against the acceptance criteria STU-753 asked for**: a
+  live-provider A/B on The Hobbit (contract pass rate across RALPH attempts,
+  verdict agreement with a human check, tokens/wall-clock per entity) needs a
+  paid run this environment does not make on its own initiative — see
+  `CLAUDE.local.md`. STU-624 (this ticket's cited motivation, "big-book
+  verdicts lose the output contract") was independently fixed by model pinning
+  before STU-753 shipped — payloads measured under 8&nbsp;KB, first-attempt
+  pass — so the context-stuffing premise this shape was meant to attack was
+  already false on the one measured case; the value case here is the reusable
+  point-query pattern for STU-754/755, not a re-fix of STU-624.
 
 
 - Name-collision policy (STU-506): `registry.py::_merge_duplicate_canonicals`

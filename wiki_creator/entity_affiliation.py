@@ -7,13 +7,11 @@ and STU-488 measured that dating a fact from the snippet that quotes it does not
 work (3 of 4 derived chapters wrong: the place where the text states a fact is not
 the place where the fact happens).
 
-Snippet selection is single-source where `status` is two-source: no sentence proves
-"no affiliation", so there is no `alive`-analogue proved by acting late. Marker-bearing
-snippets, latest-first — which is what makes the scalar mean "end of tome" and absorbs
-an intra-tome switch without dating it.
-
-The marker vocabulary only **retrieves**; the classifier decides. STU-538 measured
-that lesson at 340 fires and 0 true positives when a pattern *was* the verdict.
+Since STU-753 the classifier no longer receives a pre-selected snippet pack — it
+searches the book itself (`wiki_creator.book_search`, one call per PERSON,
+STU-605-style per-item resume) and must ground every claim in what it found. The
+marker vocabulary that used to *retrieve* (`affiliation_markers` in each
+language's cue_words) is gone from this path along with it.
 
 Every helper here fails toward an omitted slot. `affiliation` is OPT with no declared
 fallback: a false affiliation puts a character in the wrong army on a page nobody will
@@ -24,71 +22,41 @@ from __future__ import annotations
 
 import json
 
-from wiki_creator.roster import (
-    has_marker,
-    is_quoted,
-    latest_first,
-    quote_names_value,
-)
+from wiki_creator.roster import is_quoted, quote_names_entity, quote_names_value
 
-# This stage's verdict schema. Its own number, not entity_status's: each stage's
-# verdict evolves on its own (STU-552 bumped `status` to 2 when it added the
-# death circumstance; that says nothing about `affiliation`).
-CACHE_VERSION = 1
-
-SNIPPETS_PER_ENTITY = 5
-SNIPPET_CHARS = 300
+# Stamped on the artifact this stage writes — informational (STU-753 moved the
+# cache-hit decision to the engine's per-item resume, so nothing reads this back
+# to gate a call anymore).
+ARTIFACT_VERSION = 2
 
 
-def select_affiliation_snippets(snippets: list[dict], markers: list[str]) -> list[dict]:
-    """Up to ``SNIPPETS_PER_ENTITY`` marker-bearing snippets, latest-first.
+def entity_rows(entities: list[dict]) -> list[dict]:
+    """One row per PERSON entity — the map fan-out's items.
 
-    Single-source, unlike `select_status_snippets`. `status` needs the latest
-    snippets too because `alive` is proved by a character acting late; nothing
-    proves the absence of an affiliation, so a snippet with no marker can only
-    confirm the character exists.
-
-    Snippets are ``{"text": str, "chapter_id": str}``.
-    """
-    marked = [
-        snippet
-        for snippet in snippets or []
-        if has_marker(str(snippet.get("text") or ""), markers or [])
-    ]
-    return [
-        {"text": str(s.get("text") or "")[:SNIPPET_CHARS], "chapter_id": s.get("chapter_id")}
-        for s in latest_first(marked)[:SNIPPETS_PER_ENTITY]
-    ]
-
-
-def roster_rows(
-    entities: list[dict], contexts: dict[str, list[dict]], markers: list[str]
-) -> list[dict]:
-    """One row per PERSON entity — the roster the classifier sees.
-
-    ``contexts`` maps canonical_name -> that entity's snippets.
+    Identity only (``name``, ``aliases``): since STU-753 there is no snippet
+    pack to attach, the agent searches the book itself for each one.
     """
     return [
         {
             "name": entity["canonical_name"],
             "aliases": sorted(a for a in (entity.get("aliases") or []) if a),
-            "snippets": select_affiliation_snippets(
-                contexts.get(entity["canonical_name"], []), markers
-            ),
         }
         for entity in entities
     ]
 
 
-def parse_affiliation_verdict(payload: object, rows: list[dict]) -> dict[str, dict]:
-    """Map the classifier's reply to verified verdicts, keyed by roster name.
+def parse_affiliation_verdict(
+    payload: object, name: str, aliases: list[str], book_text: str
+) -> dict | None:
+    """This entity's verified affiliation, from the agent's reply, or None.
 
-    A name absent from the result renders no slot; unparseable input verdicts
-    nothing. A verdict survives three rules (see `quote_names_value` for rule 3):
+    A reply survives three rules (see `quote_names_value` for rule 3,
+    `quote_names_entity` for rule 2):
 
-    1. its name is on the roster (the model hallucinates characters);
-    2. its quote is verbatim in **that entity's own** snippets (STU-539: these
+    1. its quote is verbatim somewhere in the book's own text (STU-539: these
        novels are in the model's training data);
+    2. that quote actually names this character — what a pre-selected snippet
+       pack used to give for free (STU-753);
     3. **the affiliation is literally in the quote.** This is the rule `status`
        does not need. Its value is an enum member, so verifying the quote verifies
        the verdict; here the value is a name, so the model can quote a real
@@ -98,27 +66,18 @@ def parse_affiliation_verdict(payload: object, rows: list[dict]) -> dict[str, di
         try:
             payload = json.loads(payload)
         except ValueError:
-            return {}
+            return None
     if not isinstance(payload, dict):
-        return {}
-    entries = payload.get("affiliation")
-    if not isinstance(entries, list):
-        return {}
+        return None
 
-    rows_by_name = {row["name"]: row for row in rows}
-    verdicts: dict[str, dict] = {}
-    for entry in entries:
-        if not isinstance(entry, dict):
-            continue
-        name = str(entry.get("name", "")).strip()
-        affiliation = str(entry.get("affiliation", "") or "").strip()
-        quote = str(entry.get("quote", "") or "").strip()
-        row = rows_by_name.get(name)
-        if row is None or name in verdicts or not affiliation:
-            continue
-        if not is_quoted(quote, row["snippets"]):
-            continue
-        if not quote_names_value(quote, affiliation):
-            continue
-        verdicts[name] = {"affiliation": affiliation, "quote": quote}
-    return verdicts
+    affiliation = str(payload.get("affiliation", "") or "").strip()
+    quote = str(payload.get("quote", "") or "").strip()
+    if not affiliation:
+        return None
+    if not is_quoted(quote, [{"text": book_text}]):
+        return None
+    if not quote_names_entity(quote, name, aliases):
+        return None
+    if not quote_names_value(quote, affiliation):
+        return None
+    return {"affiliation": affiliation, "quote": quote}

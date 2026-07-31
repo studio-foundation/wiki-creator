@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
-"""Pre-step of the entity-affiliation split (STU-457): build the roster input.
+"""Pre-step of the entity-affiliation split (STU-457/753): build the fan-out items.
 
 Script executor interface: reads JSON from stdin, writes JSON to stdout.
 
-Emits the rendered PERSON roster and whether a verdict is still needed — the
-`call: entity-affiliation-verdict` stage that follows runs the LLM only when
-`needs_verdict` is true (cache miss). The verdict cache stays keyed on the
-roster rows themselves (STU-551), so this stage deciding "no call needed" is
-exactly the old in-script cache hit. On a cache miss the stale cache is
-unlinked here: a failed call must not leave a verdict made for a different
-roster on disk.
+Emits one item per PERSON entity — the `call: entity-affiliation-verdict`
+stage that follows fans out one agentic search-and-decide call per character
+via the engine map (STU-589/605-style per-item resume). There is no
+roster/snippet pack to build anymore (STU-753): each item carries only
+identity (name, aliases) plus `book_dir`, so the agent can search the book
+itself, and a `prompt_fingerprint` covering both the agent's system prompt and
+the book's own text — either changing busts the engine's per-item resume
+cache, since either can change the answer.
 
 Input:  { "additional_context": "<book yaml>" }
-Output: { "book_title", "roster", "needs_verdict" }
+Output: { "book_title", "entities", "prompt_fingerprint", "needs_verdict" }
 """
 
 import json
@@ -23,15 +24,27 @@ import yaml
 
 from scripts.entity_status import contexts_by_entity
 from wiki_creator import studio_io
-from wiki_creator.entity_affiliation import CACHE_VERSION, roster_rows
-from wiki_creator.lang import book_language, load_lang_config
+from wiki_creator.book_search import load_chapters
+from wiki_creator.entity_affiliation import entity_rows
 from wiki_creator.registry import Registry
-from wiki_creator.roster import load_cache, render_roster
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+_AGENT_YAML = PROJECT_ROOT / ".studio" / "agents" / "entity-affiliation.agent.yaml"
 
 
-def _emit(book_title: str = "", roster: str = "", needs_verdict: bool = False) -> None:
+def _emit(
+    book_title: str = "",
+    entities: list[dict] | None = None,
+    prompt_fingerprint: str = "",
+    needs_verdict: bool = False,
+) -> None:
     json.dump(
-        {"book_title": book_title, "roster": roster, "needs_verdict": needs_verdict},
+        {
+            "book_title": book_title,
+            "entities": entities or [],
+            "prompt_fingerprint": prompt_fingerprint,
+            "needs_verdict": needs_verdict,
+        },
         sys.stdout,
         ensure_ascii=False,
     )
@@ -54,18 +67,6 @@ def main() -> None:
         _emit()
         return
 
-    lang_cfg = load_lang_config(book_language(ctx))
-    markers = list(lang_cfg.get("affiliation_markers", []))
-    if not markers:
-        print(
-            "[entity-affiliation] no `affiliation_markers` in this language's cue_words — "
-            "no snippet can be selected, so no character renders an affiliation",
-            file=sys.stderr,
-        )
-        Path(cache_path).unlink(missing_ok=True)
-        _emit()
-        return
-
     contexts = contexts_by_entity(registry)
     persons = [
         {"canonical_name": record.canonical_name, "aliases": record.aliases}
@@ -81,15 +82,28 @@ def main() -> None:
         _emit()
         return
 
-    rows = roster_rows(persons, contexts, markers)
-    needs_verdict = load_cache(cache_path, rows, CACHE_VERSION) is None
-    if needs_verdict:
+    chapters = load_chapters(paths.processing)
+    if not chapters:
+        print(
+            f"[entity-affiliation] chapters.json not found in {paths.processing} — "
+            "nothing for the agent to search",
+            file=sys.stderr,
+        )
         Path(cache_path).unlink(missing_ok=True)
+        _emit()
+        return
+
+    book_dir = str(paths.processing)
+    rows = entity_rows(persons)
+    fingerprint = studio_io.prompt_fingerprint(
+        [_AGENT_YAML, paths.processing / "chapters.json"], {}
+    )
 
     _emit(
         book_title=str(ctx.get("title") or paths.processing.name),
-        roster=render_roster(rows),
-        needs_verdict=needs_verdict,
+        entities=[{**row, "book_dir": book_dir} for row in rows],
+        prompt_fingerprint=fingerprint,
+        needs_verdict=True,
     )
 
 
