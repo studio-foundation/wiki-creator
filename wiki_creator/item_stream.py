@@ -15,6 +15,7 @@ only ships the item's raw output on the wire.
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from functools import lru_cache
@@ -33,6 +34,32 @@ def parse_item_line(line: str) -> dict | None:
     except (ValueError, TypeError):
         return None
     return payload if isinstance(payload, dict) else None
+
+
+_WIKILINK_RE = re.compile(r"\[\[([^\]|]+)(?:\|[^\]]+)?\]\]")
+
+
+def _generate_section(output: dict) -> str | None:
+    """The section a `generate` item produced, recovered from its own output.
+
+    A PERSON page is generated one section per LLM call (STU-643), so the map
+    label — the entity title — is the same for every item of a page. The
+    section is not on the wire, but the child re-emits the page it wrote, and a
+    single-section item's `content` opens on that section's heading (`## …`, or
+    `### [[Other]]` for a per-relation subsection). Recover it from there so the
+    stream names what each item wrote instead of N identical `— page` lines.
+    Falls back to None when the content carries no heading (an empty or
+    whole-page output).
+    """
+    content = output.get("content")
+    if not isinstance(content, str):
+        return None
+    for line in content.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            text = _WIKILINK_RE.sub(r"\1", stripped.lstrip("#").strip())
+            return text or None
+    return None
 
 
 def render_map_item(payload: dict, out: TextIO | None = None) -> None:
@@ -83,7 +110,7 @@ def render_map_item(payload: dict, out: TextIO | None = None) -> None:
         bullets = output.get("summary_bullets") or []
         print(f"{tick} {label} — {len(bullets)} bullets", file=out)
     elif kind == "generate":
-        print(f"{tick} {label} — page", file=out)
+        print(f"{tick} {label} — {_generate_section(output) or 'page'}", file=out)
     else:
         print(f"{tick} {label} — {status}", file=out)
 
