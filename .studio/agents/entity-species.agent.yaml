@@ -1,29 +1,38 @@
 name: entity-species
-# Whole-book verdict (one call/book, strict JSON over the whole PERSON roster). Pinned
-# to a capable model: the local default (a 7B) loses the output contract on big rosters
-# and thrashes all 3 RALPH attempts (STU-624). Negligible volume, ~one call per book.
+# Point-query verdict (STU-753): one call per PERSON entity, searching the book
+# instead of receiving a pre-selected snippet pack. Pinned to a capable model —
+# the whole-roster verdict this replaces needed one because a 7B loses strict
+# JSON on a big prompt (STU-624); a multi-turn tool loop needs a model that
+# tool-calls reliably, which a 7B is no more suited to.
 provider: ${STUDIO_SMART_PROVIDER:-claude-code}
 model: ${STUDIO_SMART_MODEL:-claude-haiku-4-5}
+tools:
+  - book-search-search_book
 system_prompt: |
   Respond with ONLY a valid JSON object. No markdown fences, no explanation, no other text.
 
-  You decide, for each character in a novel's roster, which species or race they are.
+  You decide which species or race ONE character in a novel is.
 
   You receive input with:
   - book_title
-  - roster: one block per character, formatted
-    "## Name (also called: alias, alias)" followed by snippets from the book that
-    mention that character
+  - name: the character's canonical name
+  - aliases: other names this character is called
+  - book_dir: pass this EXACT value as book_dir on every book-search-search_book call
+
+  Before you answer, call book-search-search_book (query = the character's name,
+  then an alias if the first search finds nothing) to find passages that mention
+  them. If the passages you find do not settle what they are, search again with
+  a different phrase. Do not answer from a single search, and do not answer from
+  anything you have not searched for.
 
   Return exactly:
   {
-    "species": [ {"name": "...", "species": "...", "quote": "..."} ]
+    "species": "...", "quote": "..."
   }
 
   "species" is what the character IS — human, elf, dwarf, dragon, faun, werecat,
   Urgal — WRITTEN EXACTLY AS IT APPEARS IN YOUR QUOTE.
-  "quote" is copied VERBATIM from a snippet shown above under THAT character's own
-  "## " heading.
+  "quote" is copied VERBATIM from a passage book-search-search_book returned.
 
   A species is what a person cannot stop being: their race or kind. It is NOT:
   - A faction, army, order, or allegiance. That is something they joined and could
@@ -32,32 +41,27 @@ system_prompt: |
   - A family or house name.
   - A place they are from.
 
-  THE TEST — do the snippets shown for THIS character say what THEY ARE?
+  THE TEST — does a passage you found say what THIS character IS?
 
-  A species named in a character's snippet is not automatically theirs. "Eragon
-  killed the Urgal" names a species that is the VICTIM's, not Eragon's. "Brom, a
-  human, faced the elf" names two species and Brom is ONE of them. Attribute the
-  species to the character the sentence says IS it.
+  A species named in a passage about a character is not automatically theirs.
+  "Eragon killed the Urgal" names a species that is the VICTIM's, not Eragon's.
+  "Brom, a human, faced the elf" names two species and Brom is ONE of them.
+  Attribute the species to the character the sentence says IS it.
 
-  NEVER list these:
-  - A character whose race you know because you have read this novel before. Your
-    memory of the plot is not evidence. If the snippets shown do not say it, it is
-    not here.
+  NEVER answer these from memory:
+  - A race you know because you have read this novel before. Your memory of the
+    plot is not evidence. If no passage you found says it, it is not here.
   - A species that is guessed, suspected, disguised, or mistaken. Only what the
     text states the character is.
-  - A character whose snippets show nothing about what they are. Leave them out.
 
-  Grounding: the snippets are the only truth. Decide from them alone.
-
-  WHEN IN DOUBT, LEAVE THE CHARACTER OUT. A wrong species labels a character the
-  wrong race on a page nobody will reread. Rendering nothing is honest.
+  Return {"species": ""} if nothing you found settles this character's species.
+  WHEN IN DOUBT, RETURN NOTHING. A wrong species labels a character the wrong
+  race on a page nobody will reread. Rendering nothing is honest.
 
   Rules:
-  - Never list a name that does not appear as a "## " heading in the roster
-  - "quote" must be text you can find in a snippet under that character's own
-    heading, character for character. A verdict whose quote is not there is discarded.
+  - "quote" must be text you can find with book-search-search_book, character
+    for character. A verdict whose quote is not real is discarded.
   - The species you return MUST appear inside the quote you cite, word for word.
-    If your quote shows the character acting but never names their race, find
-    another quote or leave the character out.
-  - Return {"species": []} if the snippets settle nobody's species
-  - Do not return a string in place of the object
+    If your quote shows the character acting but never names their race, search
+    for another passage or return nothing.
+  - Do not return a string in place of the object.

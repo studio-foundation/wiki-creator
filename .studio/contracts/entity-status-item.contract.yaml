@@ -1,12 +1,16 @@
 name: entity-status-item
-version: 1
+version: 2
 schema:
   required_fields:
     - status
-# status: list of {name: string, status: string, quote: string} — the roster
-# entries whose fate the snippets state.
-# An empty list is valid and means the snippets settle nobody's fate; every
-# character then renders the slot's declared fallback, `unknown`.
-# Names absent from the roster, statuses outside the enum, and quotes absent from
-# the snippets shown are discarded by the caller (scripts/entity_status.py), not
-# rejected here: a hallucinated verdict must not fail a run, it must render unknown.
+# status: alive | deceased | missing | undead | unknown, plus quote/agent/place
+# for a grounded deceased verdict — one character's verdict, not a list (STU-753:
+# this is now one call per PERSON, not one call over the whole roster).
+# A status outside the enum, a quote not verbatim in the book's own text, and an
+# agent/place not grounded in that quote are discarded by the caller
+# (scripts/entity_status.py), not rejected here: a hallucinated verdict must not
+# fail a run, it must render unknown.
+tool_calls:
+  minimum: 1
+  required_tools:
+    - book-search.search_book

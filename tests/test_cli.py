@@ -228,3 +228,28 @@ def test_status_and_logs(capsys):
     assert "$ studio status\n" in out
     assert "$ studio status abc123" in out
     assert "$ studio logs abc123" in out
+
+
+def test_cost_reads_run_files_directly_no_studio_shellout(fake_lib, monkeypatch, capsys):
+    # Unlike replay/status/logs, `wiki cost` never shells out to `studio` --
+    # it's a pure read of `.studio/runs/*.jsonl` (STU-758).
+    monkeypatch.setattr(library, "_PROJECT_ROOT", fake_lib)
+    runs_dir = fake_lib / ".studio" / "runs"
+    runs_dir.mkdir(parents=True)
+    (runs_dir / "2026-07-30T10h00m-wiki-full-abc12345.jsonl").write_text(
+        '{"event": "stage_complete", "stage": "chapter-summary", '
+        '"tokens": {"prompt_tokens": 1000, "completion_tokens": 200, "total_tokens": 1200, '
+        '"by_model": {"claude-haiku-4-5": {"prompt_tokens": 1000, "completion_tokens": 200, "total_tokens": 1200}}}}\n',
+        encoding="utf-8",
+    )
+    assert cli.main(["cost", "abc12345"]) == 0
+    out = capsys.readouterr().out
+    assert "chapter-summary" in out
+    assert "claude-haiku-4-5" in out
+    assert "$ studio" not in out
+
+
+def test_cost_unknown_run_id_reports_no_files(fake_lib, monkeypatch, capsys):
+    monkeypatch.setattr(library, "_PROJECT_ROOT", fake_lib)
+    assert cli.main(["cost", "deadbeef"]) == 0
+    assert "no run files found" in capsys.readouterr().out
