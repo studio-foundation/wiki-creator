@@ -200,7 +200,7 @@ stages:
     condition: stages.classify-relationships-pre.output.needs_verdict == true
     on_failure: continue
     input:
-      pairs: "{{stages.classify-relationships-pre.output.pairs}}"
+      batches: "{{stages.classify-relationships-pre.output.batches}}"
       prompt_fingerprint: "{{stages.classify-relationships-pre.output.prompt_fingerprint}}"
 
   - name: classify-relationships
