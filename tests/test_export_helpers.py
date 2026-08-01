@@ -20,6 +20,18 @@ def test_page_filename_sanitizes_slashes():
     assert "/" not in page_filename("Le Café / Bar")
 
 
+def test_page_filename_caps_length_for_very_long_titles():
+    long_title = "A " * 200  # a grounded event description can run this long (STU-502)
+    filename = page_filename(long_title)
+    assert len(filename) <= 200
+
+
+def test_page_filename_stays_distinct_past_the_cutoff():
+    filename_a = page_filename("A " * 200 + "one")
+    filename_b = page_filename("A " * 200 + "two")
+    assert filename_a != filename_b
+
+
 def test_category_tags_principal_person():
     labels = {
         "persons": "Personnages",

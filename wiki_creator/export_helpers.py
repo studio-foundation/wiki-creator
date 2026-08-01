@@ -2,15 +2,30 @@
 """Helper functions for wiki export — pure logic, no I/O."""
 from __future__ import annotations
 
+import hashlib
+
 from wiki_creator import entity_taxonomy
 from wiki_creator.page_templates import chrome_label, slot_label
 from wiki_creator.tome_labels import tome_number
 
+# Filesystem filename components cap at 255 bytes on every filesystem this
+# project writes to; an event page's title is its full grounded description
+# (STU-502, no LLM naming), which is unbounded. 200 leaves headroom for the
+# ".wiki" suffix and the type-disambiguation label naming.py can append.
+_MAX_FILENAME_CHARS = 200
+
 
 def page_filename(canonical_name: str) -> str:
-    """Convert canonical name to wiki filename (spaces → underscores, slashes removed)."""
+    """Convert canonical name to wiki filename (spaces → underscores, slashes removed).
+
+    Hard-capped: a name past the limit is truncated with a content hash
+    appended, so two long names differing only past the cutoff stay distinct.
+    """
     name = canonical_name.replace(" ", "_")
     name = name.replace("/", "_")
+    if len(name) > _MAX_FILENAME_CHARS:
+        digest = hashlib.sha256(name.encode("utf-8")).hexdigest()[:8]
+        name = f"{name[:_MAX_FILENAME_CHARS - 9]}_{digest}"
     return name
 
 

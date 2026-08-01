@@ -2,8 +2,8 @@ name: classify-relationships-pre
 version: 1
 schema:
   required_fields:
-    - pairs
+    - batches
     - prompt_fingerprint
     - needs_verdict
-# pairs: one map item per classifiable pair, each carrying a `label` for --stream-items
+# batches: one map item per ~_BATCH_SIZE-pair batch (STU-751), each `{pairs: [...]}`
 # needs_verdict: gates the downstream `call: classify-relationships-verdict` stage
