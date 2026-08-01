@@ -1,0 +1,14 @@
+name: relation-reconciliation-pre
+version: 1
+schema:
+  required_fields:
+    - book_title
+    - gaps
+    - roster
+    - relationship_types
+    - sub_roles
+    - prompt_fingerprint
+    - needs_verdict
+# gaps: one row per roster PERSON with a completeness gap — a zero-relation
+# orphan, or an entity on one side of a strong but untyped co-occurrence pair
+# (STU-754). needs_verdict gates the downstream `call: relation-reconciliation-verdict` stage.

@@ -497,6 +497,52 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   point-query pattern for STU-754/755, not a re-fix of STU-624.
 
 
+- **The relation graph is reconciled against the roster, not just discovered
+  (STU-754).** `discover-relationships`' chunk sweep guarantees every *passage*
+  is read once; it does not guarantee every roster *entry* ends up with a
+  relation, since a character's evidence can be scattered thin across chunks
+  that each individually decided "nothing specific here." `relation-
+  reconciliation-pre`/`relation-reconciliation` is a `wiki-preparation` stage
+  sitting right after `discover-relationships` and before
+  `classify-relationships-pre` (so a recovered pair reaches the classifier,
+  and therefore `build-character-graph`, exactly like a discovered one). It
+  diffs `relationships_discovered.json`'s pairs against the PERSON roster
+  (`relationship_discovery.build_roster`, so `offstage` is excluded exactly as
+  discovery excludes it) to find two gap shapes: a roster PERSON in **zero**
+  typed pairs (an orphan), and a pair in `relationships.json` (co-occurrence)
+  above `_MIN_COOCCURRENCE_FOR_GAP` chunks that never made it into the typed
+  graph — STU-715's lesson is why that floor exists at all, a single
+  incidental co-occurrence stays a gap nobody queries, not a promotion
+  candidate. A pair-gap contributes only **one** endpoint to the query set
+  (`pair_key`'s first element) rather than a dedicated pair query — that
+  entity's own "who do you relate to" point-query re-surveys the pair anyway,
+  which is what keeps volume at "a handful of queries per book" instead of
+  `n²`.
+  **Reuses the STU-753 shape unchanged, not a second discovery stage.** Same
+  `map` fan-out (`relation-reconciliation-verdicts` → `relation-
+  reconciliation-item`), same anti-theatre contract
+  (`tool_calls: {minimum: 1, required_tools: [book-search.search_book]}`),
+  same model pin. The one shape difference from the entity trio: each item
+  also carries the book-wide `roster`/`relationship_types`/`sub_roles` (not
+  per-item, unlike discover-relationships' per-chunk *subset* roster) — a gap
+  query has to be able to name any roster character as the other party, where
+  entity-status/affiliation/species only ever decide a value for the queried
+  entity itself. A recovered relation is folded through the **exact same**
+  `canonicalize_relations`/`valid_relations`/`aggregate` discovery uses
+  (`fold_chunk_result`, one "vote" per successful item) — off-roster and
+  off-vocabulary are dropped exactly as a chunk's reply would be, and a pair
+  discovery already typed is filtered out of the recovered set even if the
+  query re-proves it, so this can only ever add a pair, never override one.
+  Never fails a run: no discovered graph yet (discover-relationships wrote
+  nothing this pass), no registry, no roster, or no chapters all skip cleanly
+  and leave `relationships_discovered.json` untouched — the STU-539 fail-safe
+  bias, same direction as every other verdict stage in this file.
+  **Not yet measured against the ticket's acceptance criteria** (orphans
+  found, relations recovered per query, false-positive rate on Alice/Narnia
+  against the ground-truth corpora) — that needs a live-provider run this
+  environment does not make on its own initiative, same caveat as STU-753's.
+
+
 - Name-collision policy (STU-506): `registry.py::_merge_duplicate_canonicals`
   used to fold two entities on `canonical_name.casefold()` alone — a PERSON and
   a PLACE homonym became one false entity. Policy is now declared in the book

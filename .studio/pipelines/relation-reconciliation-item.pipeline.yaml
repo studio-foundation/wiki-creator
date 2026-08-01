@@ -1,0 +1,13 @@
+name: relation-reconciliation-item
+version: 1
+stages:
+  - name: relation-reconciliation-item
+    kind: analysis
+    agent: relation-reconciliation
+    contract: relation-reconciliation-item
+    ralph:
+      max_attempts: 3
+      max_tool_calls: 8
+    context:
+      include:
+        - input

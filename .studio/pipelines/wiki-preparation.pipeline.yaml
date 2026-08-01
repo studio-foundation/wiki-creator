@@ -144,6 +144,46 @@ stages:
         - input
         - all_stage_outputs
 
+  # STU-754: a deterministic diff of the roster against the typed graph finds
+  # completeness gaps (zero-relation orphans, strong-but-untyped cooccurrence
+  # pairs) and fires one point-query per gap — reusing the STU-753 tooling
+  # unchanged. Sits after discover-relationships and before classify so a
+  # recovered pair reaches the classifier exactly like a discovered one.
+  - name: relation-reconciliation-pre
+    kind: analysis
+    executor: script
+    runtime: python
+    script: scripts/relation_reconciliation_pre.py
+    contract: relation-reconciliation-pre
+    timeout_ms: 300000
+    context:
+      include:
+        - input
+
+  - call: relation-reconciliation-verdict
+    pipeline: relation-reconciliation-verdicts
+    condition: stages.relation-reconciliation-pre.output.needs_verdict == true
+    on_failure: continue
+    input:
+      book_title: "{{stages.relation-reconciliation-pre.output.book_title}}"
+      gaps: "{{stages.relation-reconciliation-pre.output.gaps}}"
+      roster: "{{stages.relation-reconciliation-pre.output.roster}}"
+      relationship_types: "{{stages.relation-reconciliation-pre.output.relationship_types}}"
+      sub_roles: "{{stages.relation-reconciliation-pre.output.sub_roles}}"
+      prompt_fingerprint: "{{stages.relation-reconciliation-pre.output.prompt_fingerprint}}"
+
+  - name: relation-reconciliation
+    kind: analysis
+    executor: script
+    runtime: python
+    script: scripts/relation_reconciliation.py
+    contract: relation-reconciliation
+    timeout_ms: 300000
+    context:
+      include:
+        - input
+        - all_stage_outputs
+
   - name: classify-relationships-pre
     kind: analysis
     executor: script
