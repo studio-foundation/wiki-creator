@@ -654,7 +654,7 @@ def _resolve_coref_device(explicit: str | None = None) -> str:
     return "cpu"
 
 
-def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
+def _coref_worker(args: tuple) -> tuple[list[tuple[str, str, str]], str, str | None]:
     """Worker function for ProcessPoolExecutor: load model + process one chapter.
 
     Each worker process loads its own LingMessCoref instance (~590 MB RAM).
@@ -668,8 +668,10 @@ def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
             device: torch device for LingMessCoref ("cpu" or "cuda")
 
     Returns:
-        List of (canonical_name, chapter_id, sentence) tuples to be merged
-        by the parent process. Returns [] on any error (graceful degradation).
+        (pairs, chapter_id, resolved_chunk) — pairs is a list of
+        (canonical_name, chapter_id, sentence) tuples to be merged by the
+        parent process, resolved_chunk is the coref-resolved text of the
+        processed chunk (STU-763), or None on any error (graceful degradation).
     """
     # Tolerate the legacy 6-tuple (no device) for backward compatibility;
     # default to "cpu" as the old hardcoded behavior did.
@@ -679,7 +681,7 @@ def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
         chapter_id, text, name_to_canonical, spacy_model, max_chars, pronouns = args
         device = "cpu"
     if not text or not text.strip():
-        return []
+        return [], chapter_id, None
 
     chunk = text[:max_chars] if max_chars > 0 else text
 
@@ -715,14 +717,15 @@ def _coref_worker(args: tuple) -> list[tuple[str, str, str]]:
     except MemoryError:
         import sys as _sys
         print(f"[coref/worker] MemoryError on {chapter_id} — skipping", file=_sys.stderr)
-        return []
+        return [], chapter_id, None
     except Exception as e:
         import sys as _sys
         print(f"[coref/worker] Error on {chapter_id}: {e}", file=_sys.stderr)
-        return []
+        return [], chapter_id, None
 
     raw_clusters = doc._.coref_clusters or []
-    return _process_chapter_clusters(raw_clusters, chunk, chapter_id, name_to_canonical, pronouns)
+    pairs = _process_chapter_clusters(raw_clusters, chunk, chapter_id, name_to_canonical, pronouns)
+    return pairs, chapter_id, (doc._.resolved_text or chunk)
 
 
 def enrich_mentions_with_fastcoref(
@@ -733,7 +736,7 @@ def enrich_mentions_with_fastcoref(
     spacy_model: str = "fr_core_news_lg",
     max_chars: int = 8000,
     device: str | None = None,
-) -> dict[str, dict[str, list[str]]]:
+) -> tuple[dict[str, dict[str, list[str]]], dict[str, str]]:
     """Enrich mentions using fastcoref + LingMessCoref for accurate coreference.
 
     For each chapter (first `max_chars` characters; 0 = full chapter), run LingMessCoref to get coreference
@@ -757,10 +760,15 @@ def enrich_mentions_with_fastcoref(
         device: torch device ("cpu"/"cuda"). None auto-detects CUDA.
 
     Returns:
-        mentions_by_entity enriched in-place (also returned for convenience)
+        (mentions_by_entity, resolved_chapters) — mentions_by_entity enriched
+        in-place (also returned for convenience); resolved_chapters (STU-763)
+        holds {chapter_id: coref-resolved chunk text} for every chapter fastcoref
+        actually processed (pronouns replaced by canonical names), empty when
+        nothing was processed (no chapters, no PERSON roster, or fastcoref
+        unavailable).
     """
     if not chapters:
-        return mentions_by_entity
+        return mentions_by_entity, {}
 
     # Build name → canonical lookup for PERSON entities
     persons = [e for e in entities if e.get("type") == "PERSON" and e.get("relevant", True)]
@@ -773,9 +781,10 @@ def enrich_mentions_with_fastcoref(
                 name_to_canonical[alias.lower()] = canonical
 
     if not name_to_canonical:
-        return mentions_by_entity
+        return mentions_by_entity, {}
 
     total_added = 0
+    resolved_chapters: dict[str, str] = {}
     pronouns = _pronouns_for_model(spacy_model)
 
     device = _resolve_coref_device(device)
@@ -813,7 +822,7 @@ def enrich_mentions_with_fastcoref(
                 f"[WARN] fastcoref unavailable ({e}) — falling back to heuristic",
                 file=sys.stderr,
             )
-            return enrich_mentions_with_coref(chapters, entities, mentions_by_entity)
+            return enrich_mentions_with_coref(chapters, entities, mentions_by_entity), {}
 
         for chapter_id, text in chapters.items():
             if not text or not text.strip():
@@ -825,6 +834,7 @@ def enrich_mentions_with_fastcoref(
                 print(f"[WARN] fastcoref inference failed on {chapter_id}: {e}", file=sys.stderr)
                 continue
 
+            resolved_chapters[chapter_id] = doc._.resolved_text or chunk
             raw_clusters = doc._.coref_clusters or []
             for canonical, cid, sentence in _process_chapter_clusters(raw_clusters, chunk, chapter_id, name_to_canonical, pronouns):
                 if canonical not in mentions_by_entity:
@@ -864,8 +874,10 @@ def enrich_mentions_with_fastcoref(
             return enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=1, spacy_model=spacy_model, max_chars=max_chars, device=device)
 
         # Merge results from all workers
-        for worker_results in all_results:
-            for canonical, chapter_id, sentence in worker_results:
+        for pairs, resolved_chapter_id, resolved_chunk in all_results:
+            if resolved_chunk is not None:
+                resolved_chapters[resolved_chapter_id] = resolved_chunk
+            for canonical, chapter_id, sentence in pairs:
                 if canonical not in mentions_by_entity:
                     mentions_by_entity[canonical] = {}
                 if chapter_id not in mentions_by_entity[canonical]:
@@ -876,7 +888,7 @@ def enrich_mentions_with_fastcoref(
                     total_added += 1
 
     print(f"[coref/fastcoref] Pronoun sentences added: {total_added}", file=sys.stderr)
-    return mentions_by_entity
+    return mentions_by_entity, resolved_chapters
 
 
 def run_test_mode(
@@ -930,7 +942,7 @@ def run_test_mode(
 
     mentions_by_entity: dict[str, dict[str, list[str]]] = {}
     if coref:
-        mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=workers, max_chars=coref_max_chars, device=coref_device)
+        mentions_by_entity, _resolved_chapters = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=workers, max_chars=coref_max_chars, device=coref_device)
 
     relationships, stats = build_cooccurrence_graph(
         entities, chapters, window_size, threshold,
@@ -1270,7 +1282,7 @@ def run_live_mode(
 
     mentions_by_entity: dict[str, dict[str, list[str]]] = {}
     if coref:
-        mentions_by_entity = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=workers, max_chars=coref_max_chars, device=coref_device)
+        mentions_by_entity, _resolved_chapters = enrich_mentions_with_fastcoref(chapters, entities, mentions_by_entity, workers=workers, max_chars=coref_max_chars, device=coref_device)
 
     print(f"=== LIVE MODE — relationship-extraction ===\n")
     print(f"Loaded {len(entities)} persons from {persons_path}")
@@ -1475,9 +1487,19 @@ def main() -> None:
 
     mentions_by_entity: dict[str, dict[str, list[str]]] = {}
     if do_coref:
-        mentions_by_entity = enrich_mentions_with_fastcoref(
+        mentions_by_entity, resolved_chapters = enrich_mentions_with_fastcoref(
             chapters, entities, mentions_by_entity, workers=workers, spacy_model=spacy_model, max_chars=coref_max_chars, device=coref_device
         )
+        # STU-763: chapters_resolved.json — pronouns replaced by canonical names,
+        # so a pronoun-only fact search-hits under the entity's own name
+        # (wiki_creator.book_search.load_chapters prefers it when present).
+        # Chapters fastcoref didn't touch (empty text, inference error) keep
+        # their original text, so the file stays a complete chapters.json variant.
+        if paths is not None and resolved_chapters:
+            full_resolved = dict(chapters)
+            full_resolved.update(resolved_chapters)
+            with open(paths.processing / "chapters_resolved.json", "w", encoding="utf-8") as f:
+                json.dump({"chapters": full_resolved}, f, ensure_ascii=False)
 
     relationships, stats = build_cooccurrence_graph(
         entities, chapters, window_size, threshold,

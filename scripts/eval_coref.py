@@ -220,7 +220,7 @@ def run_variant(book_yaml: Path, variant: str, workers: int) -> None:
     mentions: dict[str, dict[str, list[str]]] = {}
 
     if variant != "baseline":
-        mentions = enrich_mentions_with_fastcoref(
+        mentions, _resolved_chapters = enrich_mentions_with_fastcoref(
             chapters, entities, mentions,
             workers=workers,
             spacy_model=cfg.get("spacy_model", "fr_core_news_lg"),

@@ -159,15 +159,17 @@ def test_narrator_passthrough_null_when_absent():
 
 
 def test_coref_worker_returns_list():
-    """_coref_worker returns a list (empty when fastcoref not available)."""
+    """_coref_worker returns (pairs, chapter_id, resolved_chunk)."""
     from scripts.relationship_extraction import _coref_worker
-    result = _coref_worker(("ch01", "Il travaillait.", {"david martín": "David Martín"}, "fr_core_news_lg", 8000, frozenset({"il"})))
-    assert isinstance(result, list)
-    for item in result:
+    pairs, chapter_id, resolved_chunk = _coref_worker(("ch01", "Il travaillait.", {"david martín": "David Martín"}, "fr_core_news_lg", 8000, frozenset({"il"})))
+    assert isinstance(pairs, list)
+    for item in pairs:
         assert len(item) == 3
         assert isinstance(item[0], str)
         assert isinstance(item[1], str)
         assert isinstance(item[2], str)
+    assert chapter_id == "ch01"
+    assert isinstance(resolved_chunk, str)
 
 
 def test_enrich_fastcoref_accepts_workers_param():
@@ -195,6 +197,40 @@ def test_enrich_fastcoref_accepts_device_param():
     sig = inspect.signature(enrich_mentions_with_fastcoref)
     assert "device" in sig.parameters
     assert sig.parameters["device"].default is None
+
+
+@requires_fastcoref
+@requires_fr_lg
+def test_enrich_fastcoref_returns_resolved_chapters_with_pronouns_replaced():
+    """STU-763: resolved_chapters replaces a pronoun with the entity's canonical name."""
+    from scripts.relationship_extraction import enrich_mentions_with_fastcoref
+
+    chapters = {
+        "ch01": (
+            "David Martín était un écrivain qui vivait à Barcelone. "
+            "Il travaillait chaque nuit dans son atelier."
+        ),
+    }
+    entities = [
+        {"canonical_name": "David Martín", "type": "PERSON", "aliases": ["Martín", "David"], "relevant": True},
+    ]
+
+    _mentions, resolved_chapters = enrich_mentions_with_fastcoref(
+        chapters, entities, {}, device="cpu"
+    )
+
+    assert "ch01" in resolved_chapters
+    assert "martín" in resolved_chapters["ch01"].lower()
+
+
+def test_enrich_fastcoref_no_person_roster_returns_empty_resolved_chapters():
+    """No PERSON entities to link pronouns to ⇒ nothing to resolve, nothing persisted."""
+    from scripts.relationship_extraction import enrich_mentions_with_fastcoref
+
+    _mentions, resolved_chapters = enrich_mentions_with_fastcoref(
+        {"ch01": "The garden was quiet."}, [], {}
+    )
+    assert resolved_chapters == {}
 
 
 def test_resolve_coref_device_respects_explicit():
@@ -291,7 +327,7 @@ def test_executor_parses_coref_max_chars(monkeypatch, tmp_path, capsys):
 
     def fake_enrich(chapters, entities, mentions_by_entity, workers=1, spacy_model="fr_core_news_lg", max_chars=8000, device=None):
         captured["max_chars"] = max_chars
-        return mentions_by_entity
+        return mentions_by_entity, {}
 
     monkeypatch.setattr(rel, "enrich_mentions_with_fastcoref", fake_enrich)
     monkeypatch.setattr(rel.studio_io, "paths_from_payload", lambda payload, strict=False: SimpleNamespace(processing=tmp_path))
@@ -311,6 +347,77 @@ def test_executor_parses_coref_max_chars(monkeypatch, tmp_path, capsys):
     assert captured["max_chars"] == 4321
     out = capsys.readouterr().out
     assert json.loads(out)  # executor still emits valid JSON
+
+
+def test_main_persists_chapters_resolved_json(monkeypatch, tmp_path):
+    """STU-763: main() writes chapters_resolved.json, unresolved chapters kept as-is."""
+    import io
+    import json
+    import sys
+    from types import SimpleNamespace
+    import scripts.relationship_extraction as rel
+
+    (tmp_path / "chapters.json").write_text(
+        json.dumps({"chapters": {"ch01": "Celaena walked. She smiled.", "ch02": "Untouched chapter."}}),
+        encoding="utf-8",
+    )
+
+    def fake_enrich(chapters, entities, mentions_by_entity, workers=1, spacy_model="fr_core_news_lg", max_chars=8000, device=None):
+        return mentions_by_entity, {"ch01": "Celaena walked. Celaena smiled."}
+
+    monkeypatch.setattr(rel, "enrich_mentions_with_fastcoref", fake_enrich)
+    monkeypatch.setattr(rel.studio_io, "paths_from_payload", lambda payload, strict=False: SimpleNamespace(processing=tmp_path))
+
+    payload = {
+        "previous_outputs": {
+            "entity-resolution": {
+                "entities": [{"canonical_name": "Celaena", "type": "PERSON", "aliases": [], "source_ids": [], "relevant": True}],
+            },
+        },
+        "additional_context": "coref: true\n",
+    }
+    monkeypatch.setattr(sys, "argv", ["rel.py"])
+    monkeypatch.setattr(sys, "stdin", io.StringIO(json.dumps(payload)))
+    rel.main()
+
+    resolved_path = tmp_path / "chapters_resolved.json"
+    assert resolved_path.exists()
+    resolved = json.loads(resolved_path.read_text(encoding="utf-8"))["chapters"]
+    assert resolved["ch01"] == "Celaena walked. Celaena smiled."
+    assert resolved["ch02"] == "Untouched chapter."
+
+
+def test_main_skips_chapters_resolved_json_when_nothing_resolved(monkeypatch, tmp_path):
+    """No coref-processed chapters ⇒ no file written (nothing to prefer over chapters.json)."""
+    import io
+    import json
+    import sys
+    from types import SimpleNamespace
+    import scripts.relationship_extraction as rel
+
+    (tmp_path / "chapters.json").write_text(
+        json.dumps({"chapters": {"ch01": "Celaena walked."}}), encoding="utf-8"
+    )
+
+    def fake_enrich(chapters, entities, mentions_by_entity, workers=1, spacy_model="fr_core_news_lg", max_chars=8000, device=None):
+        return mentions_by_entity, {}
+
+    monkeypatch.setattr(rel, "enrich_mentions_with_fastcoref", fake_enrich)
+    monkeypatch.setattr(rel.studio_io, "paths_from_payload", lambda payload, strict=False: SimpleNamespace(processing=tmp_path))
+
+    payload = {
+        "previous_outputs": {
+            "entity-resolution": {
+                "entities": [{"canonical_name": "Celaena", "type": "PERSON", "aliases": [], "source_ids": [], "relevant": True}],
+            },
+        },
+        "additional_context": "coref: true\n",
+    }
+    monkeypatch.setattr(sys, "argv", ["rel.py"])
+    monkeypatch.setattr(sys, "stdin", io.StringIO(json.dumps(payload)))
+    rel.main()
+
+    assert not (tmp_path / "chapters_resolved.json").exists()
 
 
 def test_parallel_merge_matches_direct_process_chapters():
@@ -349,11 +456,19 @@ def test_parallel_merge_matches_direct_process_chapters():
     # Simulate a worker returning the same sentence twice (e.g., from overlapping clusters)
     # The merge should deduplicate — only one copy should end up in mentions_by_entity
     simulated_worker_results = {
-        "ch01": [
-            ("David Martín", "ch01", "Il ferma la porte derrière lui."),
-            ("David Martín", "ch01", "Il ferma la porte derrière lui."),  # duplicate
-        ],
-        "ch02": [("Pedro Vidal", "ch02", "Il signa le contrat au matin.")],
+        "ch01": (
+            [
+                ("David Martín", "ch01", "Il ferma la porte derrière lui."),
+                ("David Martín", "ch01", "Il ferma la porte derrière lui."),  # duplicate
+            ],
+            "ch01",
+            "David Martín entra dans la pièce. David Martín ferma la porte derrière lui.",
+        ),
+        "ch02": (
+            [("Pedro Vidal", "ch02", "Il signa le contrat au matin.")],
+            "ch02",
+            "Pedro Vidal écrivit toute la nuit. Pedro Vidal signa le contrat au matin.",
+        ),
     }
 
     # Fake executor that returns pre-computed results without loading the model
@@ -361,14 +476,14 @@ def test_parallel_merge_matches_direct_process_chapters():
         def __enter__(self): return self
         def __exit__(self, *a): pass
         def map(self, fn, items):
-            return [simulated_worker_results.get(item[0], []) for item in items]
+            return [simulated_worker_results.get(item[0], ([], item[0], None)) for item in items]
 
     mentions = {"David Martín": {}, "Pedro Vidal": {}}
     # device="cpu" is load-bearing: auto-detect picks CUDA on a GPU host, which
     # forces workers=1 (STU-466) and takes the sequential path — FakeExecutor is
     # never constructed and the real model runs instead (STU-530).
     with patch("concurrent.futures.ProcessPoolExecutor", return_value=FakeExecutor()):
-        result = rel.enrich_mentions_with_fastcoref(chapters, entities, mentions, workers=2, device="cpu")
+        result, resolved_chapters = rel.enrich_mentions_with_fastcoref(chapters, entities, mentions, workers=2, device="cpu")
 
     # Verify the expected sentences are present (from simulated worker results)
     dm_sentences = result.get("David Martín", {}).get("ch01", [])
@@ -441,7 +556,7 @@ def test_coref_worker_accepts_6_tuple():
     """_coref_worker must unpack (chapter_id, text, name_to_canonical, spacy_model, max_chars, pronouns)."""
     from scripts.relationship_extraction import _coref_worker
     result = _coref_worker(("ch01", "", {}, "en_core_web_sm", 8000, frozenset({"she"})))
-    assert result == []
+    assert result == ([], "ch01", None)
 
 
 def test_enrich_heuristic_accepts_pronouns_param():
