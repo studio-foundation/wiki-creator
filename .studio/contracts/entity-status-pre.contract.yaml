@@ -3,7 +3,8 @@ version: 1
 schema:
   required_fields:
     - book_title
-    - roster
+    - entities
+    - prompt_fingerprint
     - needs_verdict
-# roster: rendered PERSON roster text block, not the row list
+# entities: per-PERSON fan-out items (name, aliases, book_dir), not a rendered roster (STU-753)
 # needs_verdict: gates the downstream `call: entity-status-verdict` stage
