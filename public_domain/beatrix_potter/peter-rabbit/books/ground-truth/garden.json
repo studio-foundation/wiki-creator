@@ -1,0 +1,30 @@
+{
+  "entity": "McGregor's garden",
+  "canonical_aliases_book1": [
+    "McGregor's garden"
+  ],
+  "known_facts_book1": [
+    "The place Peter's mother forbids her children from entering, because their father had a fatal accident there.",
+    "Grows lettuces, French beans, radishes, parsley, young cabbages, potatoes and onions.",
+    "Peter squeezes under its gate to get in, and slips back under the same gate to escape at the end.",
+    "Contains a cucumber frame, a gooseberry net, a tool-shed, a window, a wheelbarrow and a pond where Mr. McGregor fills his water-cans.",
+    "The scene of the whole chase: Peter loses both his shoes and his jacket here before escaping into the wood outside."
+  ],
+  "known_relations_book1": {
+    "Mr. McGregor": "Its owner and gardener; tends the vegetables and chases Peter through it.",
+    "Peter": "Trespasses in it to eat vegetables, and is chased through it for most of the book."
+  },
+  "forbidden_book1": {
+    "not_in_this_book": [
+      "a scarecrow guards the garden",
+      "the garden has a maze",
+      "a walled garden"
+    ]
+  },
+  "hallucination_signals": [
+    "scarecrow guards",
+    "garden maze",
+    "walled garden",
+    "behind McGregor's house"
+  ]
+}

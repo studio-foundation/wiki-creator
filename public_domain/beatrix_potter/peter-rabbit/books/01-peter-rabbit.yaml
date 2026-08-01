@@ -1,0 +1,65 @@
+description: |
+  Build a wiki for "The Tale of Peter Rabbit" by Beatrix Potter.
+  Parse the book, extract all named entities (characters, locations, organizations, events),
+  resolve aliases, and generate Markdown wiki pages for each entity.
+
+file_path: public_domain/beatrix_potter/peter-rabbit/books/01-peter-rabbit.epub
+spacy_model: en_core_web_lg
+aliases: [peter-rabbit]
+
+ner:
+  # Checked with en_core_web_lg against the parsed text: Peter, McGregor,
+  # Flopsy, Mopsy and Benjamin Bunny all come back PERSON correctly — this is
+  # not an invented-names book like Wonderland/Eragon, spaCy's default path
+  # is fine. One literal miss: "Cotton-tail" (hyphenated, 3 mentions) never
+  # surfaces as an entity at all, so it is gazetteer-matched instead.
+  character_names:
+    - Cotton-tail
+
+# Cheap either way token-wise (local model, no LLM calls); text is 5370
+# chars so even the CPU-hardcoded device bug (nlp/CLAUDE.md) costs nothing.
+coref: true
+workers: 8
+
+# Default 3 drops "Mrs. Rabbit" (2 literal mentions: gives the garden warning,
+# tends Peter after his ordeal) — she is load-bearing despite the low count in
+# this very short story, so the floor is lowered to 2. Benjamin Bunny (1
+# mention) and Mrs. McGregor (1 mention) still fall below it and are correctly
+# left offstage.
+min_mentions_absolute: 2
+
+generation:
+  register: >-
+    A gentle, matter-of-fact Edwardian children's-story voice: warm and lightly
+    moralizing, narrating Peter's mischief and fright without ever losing its
+    calm, storybook tone.
+  narrative_arc:
+    # One continuous episode, not multi-chapter: a short setup (the mother's
+    # warning), a long garden chase that is almost the whole story, a short
+    # return home. Same shape as Wonderland's episodic middle, compressed to
+    # one scene instead of twelve chapters.
+    weights: [0.15, 0.70, 0.15]
+    max_events: 6
+  principal:
+    sections: [infobox, biography, narrative_role, personality, physical, relationships, trivia, references]
+    sections_by_type:
+      PLACE: [infobox, biography, physical, relationships, references]
+      ORG: [infobox, biography, relationships, references]
+      EVENT: [infobox, biography, relationships, references]
+    max_tokens_per_page: 2000
+  secondary:
+    sections: [infobox, biography, relationships, references]
+    max_tokens_per_page: 800
+  figurant:
+    sections: [infobox, biography]
+    max_tokens_per_page: 200
+
+export:
+  categories:
+    language: en
+    labels:
+      persons: Characters
+      principal: Main Characters
+      secondary: Secondary Characters
+      locations: Locations
+      organizations: Organizations

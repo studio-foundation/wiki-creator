@@ -1,0 +1,114 @@
+{
+  "mrs_rabbit": {
+    "canonical_aliases_book1": [
+      "Mrs. Rabbit"
+    ],
+    "known_facts_book1": [
+      "Mother of Peter, Flopsy, Mopsy and Cotton-tail; lives with them in a sand-bank under a big fir-tree.",
+      "Warns her children not to go into Mr. McGregor's garden, telling them their father had an accident there and was put in a pie by Mrs. McGregor.",
+      "Tells them to run along and not get into mischief, then goes out herself.",
+      "Takes a basket and an umbrella and walks through the wood to the baker's, buying a loaf of brown bread and five currant buns.",
+      "Is busy cooking when Peter finally gets home, and wonders what he has done with his clothes.",
+      "Puts Peter to bed that evening and gives him a dose of camomile tea instead of supper."
+    ],
+    "known_relations_book1": {
+      "Peter": "Her son; warns him against the garden, then tends him after his ordeal.",
+      "Flopsy": "Her daughter.",
+      "Mopsy": "Her daughter.",
+      "Cotton-tail": "Her daughter."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Peter's father is alive",
+        "Old Mr. Rabbit returns",
+        "Old Mr. Rabbit appears"
+      ]
+    },
+    "hallucination_signals": [
+      "her husband",
+      "Peter's father is alive",
+      "Old Mr. Rabbit returns",
+      "Old Mr. Rabbit is alive"
+    ]
+  },
+  "flopsy": {
+    "canonical_aliases_book1": [
+      "Flopsy"
+    ],
+    "known_facts_book1": [
+      "One of the four little Rabbits, named first among the siblings at the start of the book.",
+      "One of the 'good little bunnies' who goes down the lane with Mopsy and Cotton-tail to gather blackberries, instead of raiding Mr. McGregor's garden.",
+      "Has bread, milk and blackberries for supper, while Peter is given camomile tea instead."
+    ],
+    "known_relations_book1": {
+      "Mrs. Rabbit": "Her mother.",
+      "Peter": "Her brother; she goes blackberrying while he raids the garden.",
+      "Mopsy": "Her sister; the two gather blackberries together with Cotton-tail.",
+      "Cotton-tail": "Her sister; the two gather blackberries together with Mopsy."
+    },
+    "forbidden_book1": {
+      "sequel_only": [
+        "Flopsy marries Benjamin Bunny",
+        "The Tale of the Flopsy Bunnies"
+      ]
+    },
+    "hallucination_signals": [
+      "marries Benjamin Bunny",
+      "Flopsy Bunnies"
+    ]
+  },
+  "mopsy": {
+    "canonical_aliases_book1": [
+      "Mopsy"
+    ],
+    "known_facts_book1": [
+      "One of the four little Rabbits, named second among the siblings at the start of the book.",
+      "One of the 'good little bunnies' who goes down the lane with Flopsy and Cotton-tail to gather blackberries, instead of raiding Mr. McGregor's garden.",
+      "Has bread, milk and blackberries for supper, while Peter is given camomile tea instead."
+    ],
+    "known_relations_book1": {
+      "Mrs. Rabbit": "Her mother.",
+      "Peter": "Her brother; she goes blackberrying while he raids the garden.",
+      "Flopsy": "Her sister; the two gather blackberries together with Cotton-tail.",
+      "Cotton-tail": "Her sister; the two gather blackberries together with Flopsy."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Mopsy enters the garden",
+        "Mopsy is caught by Mr. McGregor"
+      ]
+    },
+    "hallucination_signals": [
+      "Mopsy enters the garden",
+      "Mopsy is caught"
+    ]
+  },
+  "cotton_tail": {
+    "canonical_aliases_book1": [
+      "Cotton-tail"
+    ],
+    "known_facts_book1": [
+      "One of the four little Rabbits, named third among the siblings — always spelled 'Cotton-tail', with a hyphen, in the book.",
+      "One of the 'good little bunnies' who goes down the lane with Flopsy and Mopsy to gather blackberries, instead of raiding Mr. McGregor's garden.",
+      "Has bread, milk and blackberries for supper, while Peter is given camomile tea instead."
+    ],
+    "known_relations_book1": {
+      "Mrs. Rabbit": "Her mother.",
+      "Peter": "Her brother; she goes blackberrying while he raids the garden.",
+      "Flopsy": "Her sister; the two gather blackberries together with Mopsy.",
+      "Mopsy": "Her sister; the two gather blackberries together with Flopsy."
+    },
+    "forbidden_book1": {
+      "adaptation_inventions": [
+        "Cottontail"
+      ],
+      "not_in_this_book": [
+        "Cotton-tail enters the garden"
+      ]
+    },
+    "hallucination_signals": [
+      "Cotton-tail enters the garden",
+      "Cottontail is caught"
+    ]
+  }
+}
