@@ -687,6 +687,91 @@ def test_normalize_concept_name_retags_place_to_other():
     assert new_type == "OTHER"
 
 
+def test_normalize_bare_honorific_retags_place_to_person():
+    """STU-741: a bare honorific noun names a person, whatever the extractor tagged it."""
+    entity = {
+        "canonical_name": "Emperor",
+        "type": "PLACE",
+        "source_ids": [],
+        "aliases": [],
+    }
+    new_type = _normalize_entity_type(
+        entity, {}, person_cue_words=frozenset({"emperor", "majesty"}),
+    )
+    assert new_type == "PERSON"
+
+
+def test_normalize_possessive_honorific_phrase_retags_place_to_person():
+    """STU-741: 'His Majesty' is a form of address, not a place ('Emperor'/'His Majesty', Oz)."""
+    entity = {
+        "canonical_name": "His Majesty",
+        "type": "PLACE",
+        "source_ids": [],
+        "aliases": [],
+    }
+    new_type = _normalize_entity_type(
+        entity, {},
+        person_cue_words=frozenset({"emperor", "majesty"}),
+        pronouns=frozenset({"his", "her", "their"}),
+    )
+    assert new_type == "PERSON"
+
+
+def test_normalize_possessive_phrase_without_honorific_stays_place():
+    """The possessive-phrase rule requires a person cue as the second token."""
+    entity = {
+        "canonical_name": "His Landing",
+        "type": "PLACE",
+        "source_ids": [],
+        "aliases": [],
+    }
+    new_type = _normalize_entity_type(
+        entity, {},
+        person_cue_words=frozenset({"emperor", "majesty"}),
+        pronouns=frozenset({"his", "her", "their"}),
+    )
+    assert new_type == "PLACE"
+
+
+def test_normalize_generic_place_name_suppressed_to_other():
+    """STU-741: a name made only of place-cue vocabulary ('Palace') names a category, not a place."""
+    entity = {
+        "canonical_name": "Palace",
+        "type": "PLACE",
+        "source_ids": [],
+        "aliases": [],
+    }
+    new_type = _normalize_entity_type(
+        entity, {}, place_cue_words=frozenset({"palace", "city"}),
+    )
+    assert new_type == "OTHER"
+
+
+def test_normalize_named_place_with_cue_word_is_not_suppressed():
+    """A real place name ('Emerald City', 'Royal Palace of Oz') keeps a non-cue token."""
+    entity = {
+        "canonical_name": "Emerald City",
+        "type": "PLACE",
+        "source_ids": [],
+        "aliases": [],
+    }
+    new_type = _normalize_entity_type(
+        entity, {}, place_cue_words=frozenset({"palace", "city"}),
+    )
+    assert new_type == "PLACE"
+
+    entity2 = {
+        "canonical_name": "Royal Palace of Oz",
+        "type": "PLACE",
+        "source_ids": [],
+        "aliases": [],
+    }
+    new_type2 = _normalize_entity_type(
+        entity2, {}, place_cue_words=frozenset({"palace", "city"}),
+    )
+    assert new_type2 == "PLACE"
+
+
 def test_normalize_no_false_positive_on_plain_person_name():
     """Name with no geo-suffix tokens stays PERSON."""
     entity = {
