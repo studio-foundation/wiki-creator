@@ -343,12 +343,18 @@ def _normalize_entity_type(
     event_keywords=None,
     concept_keywords=None,
     geo_suffixes=None,
+    person_cue_words=None,
+    place_cue_words=None,
+    pronouns=None,
 ) -> str:
     """Deterministic type normalization for common extraction confusions."""
     _geo = geo_keywords if geo_keywords is not None else frozenset()
     _evt = event_keywords if event_keywords is not None else frozenset()
     _concept = concept_keywords if concept_keywords is not None else frozenset()
     _geo_sfx = geo_suffixes if geo_suffixes is not None else frozenset()
+    _person_cue = person_cue_words if person_cue_words is not None else frozenset()
+    _place_cue = place_cue_words if place_cue_words is not None else frozenset()
+    _pronouns = pronouns if pronouns is not None else frozenset()
 
     name = str(entity.get("canonical_name", "") or "").strip()
     if not name:
@@ -367,6 +373,19 @@ def _normalize_entity_type(
         return "PLACE"
     if lowered in {"samhuinn", "yulemas"}:
         return "EVENT"
+
+    # A bare honorific ("Emperor") or a possessive-honorific phrase ("His
+    # Majesty") names a person by construction, whatever the extractor
+    # tagged it — the PLACE/ORG analogue of STU-541's title rule.
+    ordered_tokens = [t for t in re.split(r"[\s'\-]+", lowered) if t]
+    if lowered in _person_cue:
+        return "PERSON"
+    if (
+        len(ordered_tokens) == 2
+        and ordered_tokens[0] in _pronouns
+        and ordered_tokens[1] in _person_cue
+    ):
+        return "PERSON"
 
     context = " ".join(
         _collect_context_sentences(entity, registries)
@@ -409,6 +428,14 @@ def _normalize_entity_type(
         )
         if persons_mention_count >= 3:
             return "PERSON"
+
+        # A name built only of place-cue vocabulary ("Palace") names a
+        # category, not a referent: place_cue_words is a context signal,
+        # backwards when it is all the entity's own name is made of. A real
+        # place ("Emerald City", "Royal Palace of Oz") always keeps at least
+        # one non-cue token, so this can never suppress it.
+        if name_tokens and _place_cue and name_tokens <= _place_cue:
+            return "OTHER"
 
     return current_type
 
@@ -740,6 +767,9 @@ def run_studio_mode() -> None:
     geo_keywords = frozenset(lang_cfg.get("geo_keywords", []))
     event_keywords = frozenset(lang_cfg.get("event_keywords", []))
     geo_suffixes = frozenset(lang_cfg.get("geo_suffixes", []))
+    person_cue_words = frozenset(lang_cfg.get("person_cue_words", []))
+    place_cue_words = frozenset(lang_cfg.get("place_cue_words", []))
+    pronouns = frozenset(lang_cfg.get("pronouns", []))
 
     # Book-specific classification hints from book YAML
     classification = book_input.get("classification", {})
@@ -759,6 +789,9 @@ def run_studio_mode() -> None:
             event_keywords=event_keywords,
             concept_keywords=concept_keywords,
             geo_suffixes=geo_suffixes,
+            person_cue_words=person_cue_words,
+            place_cue_words=place_cue_words,
+            pronouns=pronouns,
         )
 
     # Apply persisted LLM type corrections (STU-302).
