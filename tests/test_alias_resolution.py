@@ -468,6 +468,66 @@ def test_detect_title_alias_symmetric():
     assert _detect_title_alias(entity_full, entity_title, role_words=["captain"]) is not None
 
 
+# --- _detect_short_form (STU-748) ---
+
+
+def test_detect_short_form_guardian_of_the_gates():
+    from scripts.alias_resolution import _detect_short_form
+    entity_short = {"canonical_name": "Guardian", "aliases": ["Guardian"]}
+    entity_full  = {"canonical_name": "Guardian of the Gates", "aliases": ["Guardian of the Gates"]}
+    result = _detect_short_form(entity_short, entity_full)
+    assert result is not None
+    assert result["method"] == "short_form"
+    assert result["confidence"] == "medium"
+
+
+def test_detect_short_form_symmetric():
+    from scripts.alias_resolution import _detect_short_form
+    entity_short = {"canonical_name": "Guardian", "aliases": ["Guardian"]}
+    entity_full  = {"canonical_name": "Guardian of the Gates", "aliases": ["Guardian of the Gates"]}
+    assert _detect_short_form(entity_full, entity_short) is not None
+
+
+def test_detect_short_form_no_match_suffix_not_prefix():
+    """"Brullo" is a suffix of "Old Brullo" (a different character sharing a
+    surname), not a leading short form — must not fold (STU-636's lesson)."""
+    from scripts.alias_resolution import _detect_short_form
+    entity_a = {"canonical_name": "Brullo", "aliases": ["Brullo"]}
+    entity_b = {"canonical_name": "Old Brullo", "aliases": ["Old Brullo"]}
+    assert _detect_short_form(entity_a, entity_b) is None
+
+
+def test_detect_short_form_no_match_exact_name():
+    from scripts.alias_resolution import _detect_short_form
+    entity_a = {"canonical_name": "Celaena", "aliases": ["Celaena"]}
+    entity_b = {"canonical_name": "Celaena", "aliases": ["Celaena"]}
+    assert _detect_short_form(entity_a, entity_b) is None
+
+
+def test_detect_short_form_no_match_bare_role_word():
+    """A bare role word ("King") is left to the gated role-word paths, not the
+    short-form fold."""
+    from scripts.alias_resolution import _detect_short_form
+    entity_a = {"canonical_name": "King", "aliases": ["King"]}
+    entity_b = {"canonical_name": "King Arthur", "aliases": ["King Arthur"]}
+    assert _detect_short_form(entity_a, entity_b, role_words=["king"]) is None
+
+
+def test_resolve_aliases_guardian_short_form_merges():
+    from scripts.alias_resolution import resolve_aliases
+    guardian = {
+        "canonical_name": "Guardian", "type": "PERSON",
+        "aliases": ["Guardian"], "source_ids": [], "relevant": True,
+    }
+    guardian_full = {
+        "canonical_name": "Guardian of the Gates", "type": "PERSON",
+        "aliases": ["Guardian of the Gates"], "source_ids": [], "relevant": True,
+    }
+    result = resolve_aliases([guardian_full, guardian], persons_full={}, role_words=[])
+    assert len(result["entities"]) == 1
+    assert result["stats"]["merges_by_method"]["short_form"] == 1
+
+
 def test_detect_title_alias_via_aliases_list():
     from scripts.alias_resolution import _detect_title_alias
     # Title is in entity's aliases list, not canonical_name

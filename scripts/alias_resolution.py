@@ -17,7 +17,7 @@ import yaml
 from collections.abc import Callable
 
 from wiki_creator import studio_io
-from wiki_creator.canonicalize import canonical_key, is_bare_role
+from wiki_creator.canonicalize import canonical_key, fold_tokens, is_bare_role
 from wiki_creator.lang import load_lang_config, infer_language
 from wiki_creator.llm import ollama
 from wiki_creator.registry import EntityRecord, Registry
@@ -28,7 +28,7 @@ def _empty_stats() -> dict:
     return {
         "candidates_considered": 0,
         "merges_applied": 0,
-        "merges_by_method": {"cooccurrence": 0, "llm": 0, "title_alias": 0, "role_symmetric": 0, "pure_title": 0, "series_seed": 0},
+        "merges_by_method": {"cooccurrence": 0, "llm": 0, "title_alias": 0, "role_symmetric": 0, "pure_title": 0, "series_seed": 0, "short_form": 0},
         "ambiguous_pairs": 0,
         "llm_attempts": 0,
         "llm_confirmed": 0,
@@ -470,6 +470,40 @@ def _detect_title_alias(
     return None
 
 
+def _is_token_prefix(short_tokens: list[str], long_tokens: list[str]) -> bool:
+    return 0 < len(short_tokens) < len(long_tokens) and long_tokens[: len(short_tokens)] == short_tokens
+
+
+def _detect_short_form(entity_a: dict, entity_b: dict, role_words: list[str] | None = None) -> dict | None:
+    """Return evidence when one entity's name is the exact leading words of the
+    other's fuller name, e.g. "Guardian" / "Guardian of the Gates" (STU-748) — a
+    short form used later in the book once the fuller title is established.
+
+    Prefix only, not any shared/subset token (STU-636's honorific lesson still
+    applies here): "Brullo" is a *suffix* of "Old Brullo", a different
+    character sharing a surname, and must not fold with it. A bare role word
+    ("King", "Guardian") is excluded too — that ambiguity already has its own
+    gated path, ``_detect_title_alias``/``_detect_pure_title_in_context``,
+    which requires book-declared config or in-text apposition.
+    """
+    role_words = role_words or []
+    names_a = _entity_names(entity_a)
+    names_b = _entity_names(entity_b)
+    for short_names, full_names in ((names_a, names_b), (names_b, names_a)):
+        for short_name in short_names:
+            if is_bare_role(short_name, role_words):
+                continue
+            short_tokens = fold_tokens(short_name)
+            for full_name in full_names:
+                if _is_token_prefix(short_tokens, fold_tokens(full_name)):
+                    return {
+                        "method": "short_form",
+                        "confidence": "medium",
+                        "snippet": f"{short_name} / {full_name}",
+                    }
+    return None
+
+
 def _build_role_index(relationships: list[dict]) -> dict[tuple[str, str], list[str]]:
     """
     Build an inverted index: (third_party_canonical, relationship_type) → [entity names with this role].
@@ -680,6 +714,14 @@ def resolve_aliases(
                 merged = _merge_entities(entity, candidate, pure_title, persons_full, role_words=role_words)
                 stats["merges_applied"] += 1
                 stats["merges_by_method"]["pure_title"] = stats["merges_by_method"].get("pure_title", 0) + 1
+                consumed.add(candidate_index)
+                break
+
+            short_form = _detect_short_form(entity, candidate, role_words)
+            if short_form:
+                merged = _merge_entities(entity, candidate, short_form, persons_full, role_words=role_words)
+                stats["merges_applied"] += 1
+                stats["merges_by_method"]["short_form"] += 1
                 consumed.add(candidate_index)
                 break
 
