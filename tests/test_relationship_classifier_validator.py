@@ -3,6 +3,8 @@ from scripts.relationship_classifier_validator import (
     check_relationship_type_valid,
     check_evolution_not_generic,
     check_evidence_contains_both_names,
+    parse_payload,
+    validate_batch,
     validate_classification,
 )
 
@@ -273,3 +275,90 @@ def test_validate_classification_rejects_an_ungraded_typed_relation():
     result = validate_classification(clf, meta={})
     assert result["valid"] is False
     assert any("confidence" in e for e in result["errors"])
+
+
+# ---------------------------------------------------------------------------
+# STU-751: a pre-typed pair (discovery's own relationship_type on the input
+# pair) is graded deterministically upstream — the classifier must return null
+# confidence for it, not a second opinion.
+# ---------------------------------------------------------------------------
+
+
+def test_check_confidence_graded_requires_null_for_a_pretyped_pair():
+    meta = {"relationship_type": "mentor"}  # discovery already typed this pair
+    assert check_confidence_graded({"relationship_type": "mentor", "confidence": None}, meta) == []
+    assert check_confidence_graded({"relationship_type": "mentor", "confidence": "explicit"}, meta) != []
+
+
+def test_check_confidence_graded_still_requires_a_grade_when_not_pretyped():
+    meta = {"relationship_type": None}  # legacy co-occurrence pair, classifier decides
+    assert check_confidence_graded({"relationship_type": "friend", "confidence": "inferred"}, meta) == []
+    assert check_confidence_graded({"relationship_type": "friend", "confidence": None}, meta) != []
+
+
+def test_validate_classification_rejects_a_graded_pretyped_pair():
+    clf = {
+        "relationship_type": "mentor", "direction": "A→B",
+        "evolution": "Leur lien se renforce.", "key_moments": ["ch03: entraînement"],
+        "evidence": "Brullo forma Celaena.", "confidence": "explicit",
+    }
+    meta = {"entity_a": "Brullo", "entity_b": "Celaena", "relationship_type": "mentor"}
+    result = validate_classification(clf, meta)
+    assert result["valid"] is False
+    assert any("confidence" in e for e in result["errors"])
+
+
+# ---------------------------------------------------------------------------
+# STU-751: validate_batch / parse_payload — an item is now a batch of pairs
+# ---------------------------------------------------------------------------
+
+
+def _ok_clf(entity_a="A", entity_b="B"):
+    return {
+        "relationship_type": "friend", "direction": "symmetric",
+        "evolution": "Leur amitié grandit.", "key_moments": ["ch01: rencontre"],
+        "evidence": f"{entity_a} et {entity_b} se lièrent d'amitié.",
+        "confidence": "inferred",
+    }
+
+
+def test_validate_batch_passes_when_every_pair_is_valid():
+    pairs = [{"entity_a": "A", "entity_b": "B"}, {"entity_a": "C", "entity_b": "D"}]
+    classifications = [_ok_clf("A", "B"), _ok_clf("C", "D")]
+    result = validate_batch(classifications, pairs)
+    assert result["valid"] is True
+    assert result["errors"] == []
+
+
+def test_validate_batch_fails_the_whole_batch_on_one_bad_pair():
+    """One invalid pair in the batch fails the group — the whole batch retries."""
+    pairs = [{"entity_a": "A", "entity_b": "B"}, {"entity_a": "C", "entity_b": "D"}]
+    classifications = [_ok_clf("A", "B"), {"relationship_type": "friend"}]  # missing confidence/evidence
+    result = validate_batch(classifications, pairs)
+    assert result["valid"] is False
+    assert any("C↔D" in e or "C" in e for e in result["errors"])
+
+
+def test_validate_batch_flags_a_count_mismatch():
+    pairs = [{"entity_a": "A", "entity_b": "B"}, {"entity_a": "C", "entity_b": "D"}]
+    result = validate_batch([_ok_clf("A", "B")], pairs)  # only 1 of 2
+    assert result["valid"] is False
+    assert any("classifications" in e for e in result["errors"])
+
+
+def test_validate_batch_empty_is_valid():
+    assert validate_batch([], [])["valid"] is True
+
+
+def test_parse_payload_reads_classifications_and_pairs():
+    payload = {
+        "previous_outputs": {"relationship-classifier": {"classifications": [{"relationship_type": "friend"}]}},
+        "input": {"pairs": [{"entity_a": "A", "entity_b": "B"}]},
+    }
+    classifications, pairs = parse_payload(payload)
+    assert classifications == [{"relationship_type": "friend"}]
+    assert pairs == [{"entity_a": "A", "entity_b": "B"}]
+
+
+def test_parse_payload_degrades_gracefully_on_missing_keys():
+    assert parse_payload({}) == ([], [])

@@ -2,9 +2,10 @@ name: relationship-classifier-item
 version: 1
 schema:
   required_fields:
-    - relationship_type
-    - direction
-    - evolution
-    - key_moments
-    - evidence
-    - confidence
+    - classifications
+# classifications: a list, one entry per input.pairs, same order (STU-751) — each
+# entry {relationship_type, direction, evolution, key_moments, evidence,
+# confidence}. Same shallow-contract shape as relationship-discovery-item: the
+# stage script (relationship_classifier_validator.py) re-validates every
+# element's shape and count against the pairs it was asked to classify, so this
+# only pins that the list itself is present.

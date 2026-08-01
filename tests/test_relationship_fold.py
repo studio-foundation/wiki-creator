@@ -66,6 +66,18 @@ def test_pre_typed_edge_type_direction_preserved():
     assert edge["evidence"] == "quote"
 
 
+def test_pre_typed_confidence_preserved():
+    """STU-751: a discovered pair's deterministic confidence grade must survive
+    the fold the same way its type does, or the classifier finds nothing to
+    preserve and the pair renders ungraded."""
+    rels = [
+        {"entity_a": "Celaena", "entity_b": "Chaol", "cooccurrence_count": 5,
+         "relationship_type": "enemy", "direction": "A→B", "confidence": "explicit"},
+    ]
+    edge = fold_relationships(rels, _registry(CHAOL, CELAENA))[0]
+    assert edge["confidence"] == "explicit"
+
+
 def test_pre_typed_direction_flips_when_pair_reordered():
     """Carrying direction through a canonical reorder restates it (STU-583)."""
     # Input order Chaol→Celaena; canonical key sorts to (Celaena, Chaol), so the

@@ -1,10 +1,17 @@
 name: relationship-classifier-item
-description: Classify one relationship pair with validation loop
+description: Classify a batch of relationship pairs with validation loop
 version: 1
 
 # STU-670: `max_iterations: 2` caps re-generation to one revalidation (was 3).
 # The validator is a deterministic script; the trimmed cost is the classifier
 # LLM stage re-running on rejection.
+#
+# STU-751: `input` is now `{pairs: [...]}` — a batch, not one pair (the pipeline
+# name stayed to avoid rewiring the offline eval dispatchers that also call it,
+# `_run_studio_classifier_item`/research/relation-eval, which now send a
+# batch of one). A single off-shape or invalid classification in the batch
+# fails the whole group, so a retry regenerates every pair in it, not just the
+# bad one.
 stages:
   - group: classification-validation
     max_iterations: 2
