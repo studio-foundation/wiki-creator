@@ -1,0 +1,28 @@
+<includeonly>
+{| class="infobox"
+|-
+! colspan="2" | {{{nom}}}
+|-
+| '''Aliases''' || {{{alias|}}}
+|-
+| '''Appearance''' || {{{apparition|}}}
+|-
+| '''Status''' || {{{status|}}}
+|-
+| '''Death''' || {{{death|}}}
+|-
+| '''Species''' || {{{species|}}}
+|-
+| '''Affiliation''' || {{{affiliation|}}}
+|-
+| '''Titles''' || {{{titles|}}}
+|-
+| '''Family''' || {{{family|}}}
+|-
+| '''Romance''' || {{{romance|}}}
+|-
+| '''Friends & Allies''' || {{{friends_allies|}}}
+|-
+| '''Enemies''' || {{{enemies|}}}
+|}
+</includeonly>
