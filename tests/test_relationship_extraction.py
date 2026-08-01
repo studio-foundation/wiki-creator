@@ -159,7 +159,8 @@ def test_narrator_passthrough_null_when_absent():
 
 
 def test_coref_worker_returns_list():
-    """_coref_worker returns (pairs, chapter_id, resolved_chunk)."""
+    """_coref_worker returns (pairs, chapter_id, resolved_chunk); resolved_chunk
+    is None when fastcoref isn't installed (graceful degradation), a str otherwise."""
     from scripts.relationship_extraction import _coref_worker
     pairs, chapter_id, resolved_chunk = _coref_worker(("ch01", "Il travaillait.", {"david martín": "David Martín"}, "fr_core_news_lg", 8000, frozenset({"il"})))
     assert isinstance(pairs, list)
@@ -169,7 +170,7 @@ def test_coref_worker_returns_list():
         assert isinstance(item[1], str)
         assert isinstance(item[2], str)
     assert chapter_id == "ch01"
-    assert isinstance(resolved_chunk, str)
+    assert resolved_chunk is None or isinstance(resolved_chunk, str)
 
 
 def test_enrich_fastcoref_accepts_workers_param():
