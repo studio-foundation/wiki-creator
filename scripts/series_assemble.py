@@ -23,6 +23,7 @@ from pathlib import Path
 
 from scripts.generate_series_arc import arc_from_payload, run_for_series
 from wiki_creator import studio_io
+from wiki_creator.canon import load_canon
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.registry import Registry
 from wiki_creator.series import (
@@ -81,7 +82,21 @@ def build_assembly(series_dir: Path | str, *, arc: str | None = None) -> dict:
 
     vocabulary = series_vocabulary(books[0])
     characters = build_series_characters(registry, artifacts, **vocabulary)
-    hub = build_series_hub(series_title(series_dir), author, entries, characters)
+    canon = load_canon(series_dir / "canon.yaml")
+    hub_kwargs = {}
+    if canon and canon.recurrence_tier:
+        hub_kwargs["recurrence_tier"] = canon.recurrence_tier
+    if canon and canon.recurrence_share:
+        hub_kwargs["recurrence_share"] = canon.recurrence_share
+    # STU-738: the recurrence share is measured against tomes that actually
+    # published pages, not every book YAML discovered on disk — a series with
+    # unrun tomes must not have its recurrence floor inflated by books with no
+    # data at all.
+    published_tomes = sum(1 for tome in artifacts if tome.pages)
+    hub = build_series_hub(
+        series_title(series_dir), author, entries, characters,
+        tome_count=published_tomes, **hub_kwargs,
+    )
     return {
         "series_dir": str(series_dir),
         "series_title": hub.series_title,
