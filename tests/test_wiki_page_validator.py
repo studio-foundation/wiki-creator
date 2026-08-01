@@ -51,6 +51,15 @@ def test_check_language_contamination_passes_mixed_names():
     assert errors == []
 
 
+def test_check_language_contamination_detects_french_on_english_page():
+    """STU-747: fr.json had no `language_id_markers`, so an English page with
+    a French paragraph never tripped the check — the pack lacked the
+    vocabulary to name French as the contaminant."""
+    page = {"content": "The Nome King ruled underground. Il était une fois un roi avare."}
+    errors = check_language_contamination(page, lang="en")
+    assert any(e.code == "language_contamination" for e in errors)
+
+
 def test_check_epub_ids_detects_xhtml():
     page = {"content": "mentionné dans C07.xhtml pour la première fois."}
     assert check_epub_ids(page, lang="fr") != []

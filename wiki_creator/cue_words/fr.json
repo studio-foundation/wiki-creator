@@ -315,6 +315,20 @@
     "il sentait",
     "elle sentait"
   ],
+  "language_id_markers": [
+    "est le",
+    "est la",
+    "était un",
+    "était une",
+    "connu sous le nom",
+    "connue sous le nom",
+    "elle était",
+    "il était",
+    "ils sont",
+    "elles sont",
+    "est un",
+    "est une"
+  ],
   "name_connectors": [
     "de",
     "du",
