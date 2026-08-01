@@ -1,0 +1,46 @@
+{
+  "entity": "Mr. McGregor",
+  "canonical_aliases_book1": [
+    "Mr. McGregor"
+  ],
+  "known_facts_book1": [
+    "Owns the garden Peter's mother forbids her children from entering.",
+    "Grows lettuces, French beans, radishes, parsley, cabbages, potatoes and onions in the garden.",
+    "Killed Peter's father, who 'had an accident' in the garden and was made into a pie — by Mrs. McGregor, not by him directly.",
+    "Is on his hands and knees planting out young cabbages near a cucumber frame when he first spots Peter.",
+    "Jumps up and chases Peter, waving a rake and calling out 'Stop thief!'",
+    "Comes after Peter in the tool-shed with a sieve, intending to pop it over him.",
+    "Is after Peter again the moment he hears him sneeze, but Peter jumps out of a window too small for McGregor to follow.",
+    "Gives up and goes back to his work once Peter escapes through the window.",
+    "Fills his water-cans at a pond where a white cat sits watching goldfish.",
+    "Is last seen hoeing onions with his back turned, right before Peter makes his final dash for the gate.",
+    "Catches sight of Peter at the corner as Peter slips under the gate, but does not catch him.",
+    "Hangs up Peter's abandoned little jacket and shoes for a scare-crow, to frighten the blackbirds."
+  ],
+  "known_relations_book1": {
+    "Peter": "Chases him the length of the garden with a rake and a sieve; never catches him.",
+    "Mrs. Rabbit": "Told the children of her husband's death in his garden, made into a pie by Mrs. McGregor.",
+    "Mrs. McGregor": "His wife; made Peter's father into a pie. Mentioned once, never appears on the page."
+  },
+  "forbidden_book1": {
+    "adaptation_inventions": [
+      "Thomas McGregor",
+      "Mr. McGregor has a heart attack",
+      "Mr. McGregor's nephew inherits the garden"
+    ],
+    "not_in_this_book": [
+      "Mr. McGregor catches Peter",
+      "Mr. McGregor kills Peter",
+      "Mr. McGregor forgives Peter"
+    ]
+  },
+  "hallucination_signals": [
+    "Thomas McGregor",
+    "heart attack",
+    "McGregor's nephew",
+    "catches Peter",
+    "kills Peter",
+    "forgives Peter",
+    "scarecrow guards"
+  ]
+}

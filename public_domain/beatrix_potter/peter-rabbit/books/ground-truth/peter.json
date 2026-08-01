@@ -1,0 +1,65 @@
+{
+  "entity": "Peter",
+  "canonical_aliases_book1": [
+    "Peter"
+  ],
+  "known_facts_book1": [
+    "One of four little Rabbits — with Flopsy, Mopsy and Cotton-tail — who live with their mother in a sand-bank under a big fir-tree.",
+    "Described as 'very naughty', unlike his sisters, who go blackberrying instead.",
+    "Runs straight to Mr. McGregor's garden and squeezes under the gate while his sisters go down the lane.",
+    "Eats lettuces, French beans and radishes, then goes looking for parsley, feeling rather sick.",
+    "Is spotted by Mr. McGregor near a cucumber frame; McGregor jumps up and chases him, waving a rake and shouting 'Stop thief!'",
+    "Loses one shoe among the cabbages and the other among the potatoes during the chase.",
+    "Runs into a gooseberry net and is caught by the brass buttons of his new blue jacket; wriggles free, leaving the jacket behind.",
+    "Is overheard crying by some friendly sparrows, who fly to him and implore him to exert himself.",
+    "Hides from a sieve McGregor tries to pop over him by jumping into a can inside the tool-shed.",
+    "Gives himself away by sneezing 'Kertyschoo!' while hiding under a flower-pot search.",
+    "Jumps out of a window to escape, upsetting three plants; the window is too small for McGregor to follow.",
+    "Asks an old mouse the way to the gate, but she cannot answer because her mouth is full of a pea.",
+    "Sees a white cat staring at goldfish by a pond and avoids speaking to her, remembering what his cousin Benjamin Bunny told him about cats.",
+    "Climbs onto a wheelbarrow and spots the gate while Mr. McGregor is hoeing onions with his back turned.",
+    "Slips under the gate to safety in the wood, leaving his jacket and shoes behind in the garden.",
+    "It is the second jacket and pair of shoes he has lost in a fortnight.",
+    "Runs home without stopping to the big fir-tree and collapses on the sand floor of the rabbit-hole, exhausted.",
+    "Is unwell that evening; his mother puts him to bed and doses him with camomile tea instead of supper.",
+    "His sisters Flopsy, Mopsy and Cotton-tail have bread, milk and blackberries for supper instead of camomile tea."
+  ],
+  "known_relations_book1": {
+    "Mrs. Rabbit": "His mother; warns him against the garden before he goes, and puts him to bed with camomile tea after his ordeal.",
+    "Mr. McGregor": "Chases him through the garden with a rake and later a sieve; the direct antagonist of the chase. Never catches him.",
+    "Flopsy": "One of his three sisters, who behaves well and goes blackberrying instead of raiding the garden.",
+    "Mopsy": "One of his three sisters, who behaves well and goes blackberrying instead of raiding the garden.",
+    "Cotton-tail": "One of his three sisters, who behaves well and goes blackberrying instead of raiding the garden."
+  },
+  "forbidden_book1": {
+    "sequel_only": [
+      "The Tale of Benjamin Bunny",
+      "The Tale of the Flopsy Bunnies",
+      "Peter and Benjamin retrieve his clothes",
+      "Peter marries",
+      "Peter has children"
+    ],
+    "adaptation_inventions": [
+      "Peter's jacket is red",
+      "Thomas McGregor",
+      "Bea rescues Peter",
+      "Peter talks to Mr. McGregor"
+    ],
+    "not_in_this_book": [
+      "Mr. McGregor catches Peter",
+      "Peter is captured by Mr. McGregor",
+      "Benjamin Bunny helps Peter in the garden"
+    ]
+  },
+  "hallucination_signals": [
+    "red jacket",
+    "Thomas McGregor",
+    "Benjamin Bunny helps Peter",
+    "Benjamin Bunny rescues Peter",
+    "Mr. McGregor catches Peter",
+    "Peter is captured",
+    "Peter marries",
+    "Peter's children",
+    "Flopsy Bunnies"
+  ]
+}
