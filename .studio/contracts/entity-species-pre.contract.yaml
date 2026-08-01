@@ -3,7 +3,8 @@ version: 1
 schema:
   required_fields:
     - book_title
-    - roster
+    - entities
     - needs_verdict
-# roster: rendered PERSON roster text block, not the row list
+# entities: one {name, aliases, book_dir} row per PERSON to fan out over
+# (STU-753 point-query shape, replaced the rendered roster text block)
 # needs_verdict: gates the downstream `call: entity-species-verdict` stage
