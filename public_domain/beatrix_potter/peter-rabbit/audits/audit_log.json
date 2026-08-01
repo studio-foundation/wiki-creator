@@ -1,0 +1,45 @@
+[
+  {
+    "run": 1,
+    "date": "2026-08-01",
+    "book": "01-peter-rabbit",
+    "providers": {
+      "generation": "default (unpinned in book YAML)",
+      "verdict_agents": "claude-code/claude-haiku-4-5",
+      "chapter_summaries": "extractive (generation.chapter_summary.mode not set)"
+    },
+    "pages_generated": 6,
+    "infobox_pct": 100,
+    "lang_expected_pct": 100,
+    "alias_duplicates": 0,
+    "hallucinations": 0,
+    "gt_violations": [],
+    "coverage": {
+      "batch_entities": 6,
+      "pages_generated": 6,
+      "missing": [],
+      "failed": [],
+      "filtered_before_batch": 0
+    },
+    "weak_entities": [
+      "Peter (4 rels, 100% generic evolution, 100% empty key_moments)",
+      "McGregor (1 rel, 100% generic evolution, 100% empty key_moments)",
+      "Cotton (3 rels, 100% generic evolution, 100% empty key_moments)",
+      "Rabbit (3 rels, 100% generic evolution, 100% empty key_moments)",
+      "Mopsy (3 rels, 100% generic evolution, 100% empty key_moments)",
+      "FREDERICK WARNE (0 relations — phantom entity, see STU-768)"
+    ],
+    "regression": {
+      "prefixed_keys": "✅",
+      "epub_ids": "✅",
+      "entity_type_null": "✅",
+      "alias_duplicates": "✅",
+      "cross_serie": "✅",
+      "evolution_quality": "❌",
+      "temporal_context": "❌",
+      "ground_truth": "✅"
+    },
+    "verdict": "First run of a deliberately small fixture book. Ground truth is clean (0 violations, 7-entity corpus written before this run existed) and coverage of the batch roster is complete, but the run surfaced three real, generic pipeline bugs invisible to a 5-page book's ground-truth corpus: a hyphenated character name gets silently truncated in its structured identity (STU-767), front matter glued into a single-spine-item chapter becomes both a phantom character page and the book's highest-salience EVENT page (STU-768), and a fairy-tale opener misfires the flashback-cue detector (STU-769). Relation quality (100% generic evolution, 0% key_moments) is likely inherent to a one-chapter book with no cross-chapter arc, not a defect, and Flopsy's roster drop was a corpus/YAML gap, now fixed by widening ner.character_names to all four siblings — needs a re-run to confirm. Priority for next run: verify STU-767/768/769 fixes and the character_names widening together (they're independent, one re-run covers all three) before treating this book as a stable smoke fixture.",
+    "new_issues": ["STU-767", "STU-768", "STU-769"]
+  }
+]

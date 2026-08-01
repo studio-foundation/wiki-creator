@@ -8,13 +8,20 @@ spacy_model: en_core_web_lg
 aliases: [peter-rabbit]
 
 ner:
-  # Checked with en_core_web_lg against the parsed text: Peter, McGregor,
-  # Flopsy, Mopsy and Benjamin Bunny all come back PERSON correctly — this is
-  # not an invented-names book like Wonderland/Eragon, spaCy's default path
-  # is fine. One literal miss: "Cotton-tail" (hyphenated, 3 mentions) never
-  # surfaces as an entity at all, so it is gazetteer-matched instead.
+  # Checked with en_core_web_lg against the parsed text, then corrected against
+  # a real run (audit run 1, 2026-08-01 — STU-767/768/769): Peter, McGregor and
+  # Benjamin Bunny come back PERSON correctly. "Cotton-tail" (hyphenated) is
+  # never tagged at all — gazetteer-matched. Flopsy and Mopsy are only tagged in
+  # their LAST of 3 real mentions (spaCy misses both inside the two dense
+  # comma-list sentences — "Flopsy, Mopsy, Cotton-tail, and Peter" and "Flopsy,
+  # Mopsy, and Cotton-tail, who were good little bunnies") — Flopsy's single
+  # detected mention fell below min_mentions_absolute and dropped her from the
+  # roster entirely on run 1. Gazetteer-matched too, so all four siblings are
+  # force-tagged on every literal occurrence regardless of list context.
   character_names:
     - Cotton-tail
+    - Flopsy
+    - Mopsy
 
 # Cheap either way token-wise (local model, no LLM calls); text is 5370
 # chars so even the CPU-hardcoded device bug (nlp/CLAUDE.md) costs nothing.

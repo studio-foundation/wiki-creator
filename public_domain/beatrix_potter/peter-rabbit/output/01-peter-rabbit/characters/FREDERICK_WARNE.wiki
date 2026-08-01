@@ -1,0 +1,17 @@
+{{Infobox character
+|nom=FREDERICK WARNE
+|apparition=Appears in book 1
+|status=Unknown
+}}
+
+== Biography ==
+
+Frederick Warne is a name that appears in the tale.
+
+== References ==
+
+<references/>
+
+[[Category:Characters]]
+[[Category:Secondary Characters]]
+[[Category:Characters of Book 1]]

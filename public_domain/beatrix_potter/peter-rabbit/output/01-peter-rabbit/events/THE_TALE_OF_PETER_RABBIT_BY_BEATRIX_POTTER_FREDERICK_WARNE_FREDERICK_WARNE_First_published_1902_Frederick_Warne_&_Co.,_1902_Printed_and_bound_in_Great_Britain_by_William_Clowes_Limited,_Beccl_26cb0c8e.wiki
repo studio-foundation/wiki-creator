@@ -1,0 +1,15 @@
+{{Infobox event
+|nom=THE TALE OF PETER RABBIT BY BEATRIX POTTER FREDERICK WARNE FREDERICK WARNE First published 1902 Frederick Warne & Co., 1902 Printed and bound in Great Britain by William Clowes Limited, Beccles and London Once upon a time there were four little Rabbits, and their names were— Flopsy, Mopsy, Cotton-tail, and Peter
+|participants=Cotton, FREDERICK WARNE, Mopsy, Peter, Rabbit
+|chapitre=1
+}}
+
+== Course of events ==
+
+This tale begins with the introduction of four little rabbits: Flopsy, Mopsy, Cotton-tail, and Peter. These four siblings form the heart of the narrative, and their opening introduction establishes each by name. The story immediately reveals important differences between them. Flopsy, Mopsy, and Cotton-tail were good little bunnies who went down the lane to gather blackberries, conducting themselves properly. Peter, however, was very naughty and chose instead to run straight away, immediately distinguishing himself through his disobedience. This opening moment established the contrasting natures of the four rabbits, with Peter's wayward disposition pointing toward the adventures that awaited him.
+
+== References ==
+
+* The Tale of Peter Rabbit
+
+[[Category:Events]]
