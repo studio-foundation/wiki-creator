@@ -47,7 +47,7 @@ describe('buildIndex', () => {
 describe('loadTemplates', () => {
   it('keys template sources by name (filename `_` → space)', () => {
     const tpl = loadTemplates(FIXTURE);
-    expect(tpl['Infobox character']).toContain('{{{name}}}');
+    expect(tpl['Infobox character']).toContain('{{{nom}}}');
     expect(tpl['Infobox location']).toBeTypeOf('string');
   });
 });

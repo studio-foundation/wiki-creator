@@ -94,8 +94,8 @@ describe('infobox template expansion', () => {
     expect(html).toContain('<table class="infobox">');
     expect(html).toContain('<th colspan="2">Alice</th>'); // name row
     expect(html).toContain('Human'); // species value
-    // the French template row label is preserved (labels are hard-coded in base.yaml)
-    expect(html).toContain('<strong>Statut</strong>');
+    // row label is localized by the fixture book's language (en, STU-729)
+    expect(html).toContain('<strong>Status</strong>');
   });
 
   it('substitutes {{{param|default}}} and drops empty values', () => {
