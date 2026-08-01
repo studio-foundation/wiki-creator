@@ -99,8 +99,36 @@ def test_loads_declared_policy(tmp_path) -> None:
     assert canon.strategy == "highest_authority"
     assert canon.on_unresolved == "flag"
     assert canon.later_tome_overrides is False
+    assert canon.recurrence_tier is None
+    assert canon.recurrence_share is None
     assert [s.id for s in canon.sources] == ["epub_en_01"]
     assert canon.sources[0].authority == 100
+
+
+def test_loads_a_declared_main_character_recurrence_override(tmp_path) -> None:
+    policy = _single_epub_policy()
+    policy["cross_tome"]["main_character_recurrence"] = {"tier": "principal", "share": 0.3}
+    canon = load_canon(_write_canon(tmp_path, policy))
+    assert canon.recurrence_tier == "principal"
+    assert canon.recurrence_share == 0.3
+
+
+@pytest.mark.parametrize(
+    ("recurrence", "match"),
+    [
+        ({"tier": 3}, "tier .* must be a string"),
+        ({"share": "half"}, "share .* must be a number"),
+        ({"share": True}, "share .* must be a number"),
+        ({"share": 0}, "share .* must be in \\(0, 1\\]"),
+        ({"share": 1.5}, "share .* must be in \\(0, 1\\]"),
+    ],
+    ids=["tier_not_str", "share_not_number", "share_bool", "share_zero", "share_over_one"],
+)
+def test_a_malformed_recurrence_override_raises(tmp_path, recurrence, match) -> None:
+    policy = _single_epub_policy()
+    policy["cross_tome"]["main_character_recurrence"] = recurrence
+    with pytest.raises(ValueError, match=match):
+        load_canon(_write_canon(tmp_path, policy))
 
 
 def test_primary_source_matching_no_declared_source_type_raises(tmp_path) -> None:

@@ -12,6 +12,11 @@ from scripts import series_assemble as sa
 from scripts import series_export as se
 from wiki_creator.paths import series_output_dir
 
+RECURRING_ENTITY = {
+    "entity_id": "l", "canonical_name": "Cowardly Lion", "entity_type": "PERSON",
+    "aliases": ["Cowardly Lion"],
+}
+
 
 def _tome(series_dir, book_id: str, pages: list[dict], events: list[dict] | None = None):
     (series_dir / "books").mkdir(parents=True, exist_ok=True)
@@ -111,6 +116,56 @@ def test_assemble_requires_the_series_registry(tmp_path):
 
     with pytest.raises(SystemExit):
         sa.build_assembly(series_dir)
+
+
+DOROTHY_ENTITY = {
+    "entity_id": "d", "canonical_name": "Dorothy", "entity_type": "PERSON", "aliases": ["Dorothy"],
+}
+
+
+def _oz_series(tmp_path, total_tomes: int, secondary_in: tuple[int, ...]) -> "object":
+    """A series where 'Cowardly Lion' is 'secondary' in the given tomes and has
+    no page at all in the rest — never 'principal' anywhere (STU-738). Every
+    tome also publishes a 'Dorothy' page, so every tome counts as published
+    (the recurrence denominator) regardless of whether the Lion has a page in it."""
+    series_dir = tmp_path / "l_frank_baum" / "oz"
+    for i in range(1, total_tomes + 1):
+        pages = [_page("Dorothy", "principal")]
+        if i in secondary_in:
+            pages.append(_page("Cowardly Lion", "secondary"))
+        _tome(series_dir, f"{i:02d}-tome", pages)
+    _registry(series_dir, [RECURRING_ENTITY, DOROTHY_ENTITY])
+    return series_dir
+
+
+def test_assemble_includes_a_series_recurring_secondary_character(tmp_path):
+    # The real Oz corpus (STU-738): secondary in tomes 01 and 03 of 6 published.
+    series_dir = _oz_series(tmp_path, total_tomes=6, secondary_in=(1, 3))
+
+    assembly = sa.build_assembly(series_dir)
+
+    assert "Cowardly Lion" in assembly["hub"]["main_characters"]
+    (character,) = (c for c in assembly["characters"] if c["canonical_name"] == "Cowardly Lion")
+    assert character["importance"] == "secondary"  # never principal in any tome
+
+
+def test_assemble_leaves_out_a_character_below_the_recurrence_share(tmp_path):
+    series_dir = _oz_series(tmp_path, total_tomes=6, secondary_in=(1,))
+
+    assert "Cowardly Lion" not in sa.build_assembly(series_dir)["hub"]["main_characters"]
+
+
+def test_assemble_honors_a_canon_recurrence_override(tmp_path):
+    series_dir = _oz_series(tmp_path, total_tomes=10, secondary_in=(1, 2, 3))
+    assert "Cowardly Lion" not in sa.build_assembly(series_dir)["hub"]["main_characters"]
+
+    (series_dir / "canon.yaml").write_text(yaml.safe_dump({"canon": {
+        "primary_source": "epub",
+        "sources": [{"id": "e", "type": "epub", "path": "books/01-tome.epub"}],
+        "cross_tome": {"main_character_recurrence": {"share": 0.2}},
+    }}), encoding="utf-8")
+
+    assert "Cowardly Lion" in sa.build_assembly(series_dir)["hub"]["main_characters"]
 
 
 # --- export ----------------------------------------------------------------
