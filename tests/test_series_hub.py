@@ -12,12 +12,18 @@ from pathlib import Path
 
 from wiki_creator.export_helpers import category_labels
 from wiki_creator.registry import Registry
-from wiki_creator.series import TomeArtifacts, build_series_characters
+from wiki_creator.series import (
+    SeriesCharacter,
+    TomeArtifacts,
+    TomeContribution,
+    build_series_characters,
+)
 from wiki_creator.series_hub import (
     HUB_FILENAME,
     HUB_MAIN_CHARACTER_TIER,
     SeriesTome,
     build_series_hub,
+    main_characters,
     render_series_hub,
 )
 
@@ -102,6 +108,62 @@ def test_main_characters_are_persons_reaching_the_tier():
         "Throne of Glass", "Sarah J. Maas", TOMES, _characters(), tier="secondary"
     )
     assert lowered.main_characters == ["Gavriel", "Aelin Galathynius", "Nesryn Faliq"]
+
+
+def _recurring_character(hits: int, tomes: int, *, importance: str = "figurant") -> SeriesCharacter:
+    """A PERSON reaching 'secondary' in exactly ``hits`` of ``tomes`` tomes,
+    never higher — the Cowardly Lion shape (STU-738): consistently mid-tier,
+    never the single-tome peak the reconciled ``importance`` tracks."""
+    contributions = [
+        TomeContribution(
+            book_id=f"{i:02d}", tome_number=str(i),
+            page={"title": "Lion", "importance": "secondary"} if i <= hits else None,
+        )
+        for i in range(1, tomes + 1)
+    ]
+    return SeriesCharacter(
+        entity_id="lion", canonical_name="Cowardly Lion", entity_type="PERSON",
+        contributions=contributions, importance=importance,
+    )
+
+
+def test_recurrence_promotes_a_character_never_principal_in_any_single_tome():
+    # The real Oz corpus (STU-738): secondary in 2 of 6 published tomes,
+    # principal nowhere — max-across-tomes alone (character.importance ==
+    # "secondary") would leave him out.
+    character = _recurring_character(hits=2, tomes=6, importance="secondary")
+
+    assert main_characters([character], tome_count=6) == ["Cowardly Lion"]
+
+
+def test_recurrence_below_the_share_does_not_flood_the_hub():
+    # secondary in only 1 of 6 tomes — a one-off, not a recurrence.
+    character = _recurring_character(hits=1, tomes=6, importance="secondary")
+
+    assert main_characters([character], tome_count=6) == []
+
+
+def test_recurrence_needs_more_than_one_tome_even_on_a_short_series():
+    # 2-tome series: share alone (ceil(2/3)=1) would trivially pass on a
+    # single appearance — the >=2 floor keeps that from degenerating into
+    # "reached secondary in any one tome".
+    character = _recurring_character(hits=1, tomes=2, importance="secondary")
+
+    assert main_characters([character], tome_count=2) == []
+
+
+def test_recurrence_is_tunable_per_series():
+    # 3 of 10 tomes: short of the default 1/3 share (needs 4), so a longer
+    # series doesn't flood on this signal by default.
+    character = _recurring_character(hits=3, tomes=10, importance="secondary")
+
+    assert main_characters([character], tome_count=10) == []
+    assert main_characters(
+        [character], tome_count=10, recurrence_share=0.2
+    ) == ["Cowardly Lion"]
+    assert main_characters(
+        [character], tome_count=10, recurrence_tier="principal"
+    ) == []
 
 
 def test_tome_entries_follow_reading_order_and_link_only_when_published():

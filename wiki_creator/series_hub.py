@@ -10,6 +10,7 @@ a single tome.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from math import ceil
 
 from wiki_creator import entity_taxonomy
 from wiki_creator.page_templates import TIERS, chrome_label
@@ -19,6 +20,18 @@ from wiki_creator.tome_labels import tome_number
 # "Who are the main characters of this series?" — a question about the books,
 # answered by the reconciled notability tier (STU-668 latest-wins).
 HUB_MAIN_CHARACTER_TIER = "principal"
+
+# STU-738: a character consistently mid-tier across the whole series (the
+# Cowardly Lion — secondary in every tome, principal in none) is a series main
+# character too, distinct from the single-tome-peak question above. Reaching
+# ``HUB_RECURRENCE_TIER`` in at least ``HUB_RECURRENCE_SHARE`` of the series'
+# *published* tomes clears that floor. Overridable per series via
+# ``canon.yaml`` (``cross_tome.main_character_recurrence``), never a bare
+# constant a reader would have to edit code to tune. 1/3 is calibrated to the
+# ticket's own case on the real Oz corpus: the Lion is ``secondary`` in 2 of
+# its 6 published tomes.
+HUB_RECURRENCE_TIER = "secondary"
+HUB_RECURRENCE_SHARE = 1 / 3
 
 HUB_FILENAME = "Main_Page.wiki"
 
@@ -42,19 +55,48 @@ class SeriesHub:
 
 
 def main_characters(
-    characters: list[SeriesCharacter], tier: str = HUB_MAIN_CHARACTER_TIER
+    characters: list[SeriesCharacter],
+    tier: str = HUB_MAIN_CHARACTER_TIER,
+    *,
+    tome_count: int = 0,
+    recurrence_tier: str = HUB_RECURRENCE_TIER,
+    recurrence_share: float = HUB_RECURRENCE_SHARE,
 ) -> list[str]:
     """Canonical names of the series' main characters, in assembly order: the
-    PERSON entities whose reconciled tier reaches ``tier``. Each one's series page
-    title is its canonical name (A2: exactly one page per entity)."""
+    PERSON entities whose reconciled tier reaches ``tier``, plus (STU-738) any
+    PERSON who never peaked that high but reached ``recurrence_tier`` in at
+    least a ``recurrence_share`` fraction of the series' ``tome_count`` tomes —
+    the recurrence signal max-across-tomes cannot see (a character consistently
+    ``secondary`` everywhere never reaches ``principal`` by that rule alone).
+    Each one's series page title is its canonical name (A2: exactly one page
+    per entity)."""
     floor = TIERS.index(tier if tier in TIERS else HUB_MAIN_CHARACTER_TIER)
-    return [
-        character.canonical_name
-        for character in characters
-        if character.entity_type == "PERSON"
-        and character.importance in TIERS
-        and TIERS.index(character.importance) >= floor
-    ]
+    recurrence_floor = TIERS.index(
+        recurrence_tier if recurrence_tier in TIERS else HUB_RECURRENCE_TIER
+    )
+    # A single tome is not recurrence; require the tier in at least two even
+    # when the share alone (e.g. a 2-tome series) would allow one.
+    recurrence_min = max(2, ceil(tome_count * recurrence_share)) if tome_count > 0 else None
+
+    names = []
+    for character in characters:
+        if character.entity_type != "PERSON":
+            continue
+        if character.importance in TIERS and TIERS.index(character.importance) >= floor:
+            names.append(character.canonical_name)
+            continue
+        if recurrence_min is None:
+            continue
+        hits = sum(
+            1
+            for contribution in character.contributions
+            if contribution.page
+            and str(contribution.page.get("importance") or "") in TIERS
+            and TIERS.index(str(contribution.page["importance"])) >= recurrence_floor
+        )
+        if hits >= recurrence_min:
+            names.append(character.canonical_name)
+    return names
 
 
 def build_series_hub(
@@ -63,14 +105,31 @@ def build_series_hub(
     tomes: list[SeriesTome],
     characters: list[SeriesCharacter],
     tier: str = HUB_MAIN_CHARACTER_TIER,
+    *,
+    tome_count: int | None = None,
+    recurrence_tier: str = HUB_RECURRENCE_TIER,
+    recurrence_share: float = HUB_RECURRENCE_SHARE,
 ) -> SeriesHub:
     """Hub model from the tome list (reading order) and the assembled series
-    characters."""
+    characters.
+
+    ``tome_count`` is the denominator for the recurrence share (STU-738) —
+    defaults to ``len(tomes)``, but a series with tomes discovered on disk that
+    have not actually run yet (no pages generated) must pass the *published*
+    count explicitly, or recurrence is measured against books with no data at
+    all and can never clear its own floor.
+    """
     return SeriesHub(
         series_title=series_title,
         author=author,
         tomes=list(tomes),
-        main_characters=main_characters(characters, tier),
+        main_characters=main_characters(
+            characters,
+            tier,
+            tome_count=tome_count if tome_count is not None else len(tomes),
+            recurrence_tier=recurrence_tier,
+            recurrence_share=recurrence_share,
+        ),
     )
 
 
