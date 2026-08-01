@@ -1,0 +1,12 @@
+name: relation-reconciliation
+version: 1
+schema:
+  required_fields:
+    - gaps_found
+    - gaps_recovered
+# gaps_found: roster orphans + cooccurrence gaps the pre stage found.
+# gaps_recovered: new pairs folded into relationships_discovered.json — never
+# more than gaps_found's worth of new pairs, and never a pair discover-
+# relationships already typed (STU-754 is a recall safety net, not a second
+# discovery stage). Always emitted, even when there was nothing to reconcile —
+# never fails the run (STU-539's bias: this is a fail-safe stage).

@@ -1,0 +1,26 @@
+name: relation-reconciliation-verdicts
+description: Fan out relation-reconciliation over the roster's gaps — one child run per orphan/cooccurrence-gap entity (STU-754)
+version: 1
+
+# Same engine-map shape as entity-status-verdicts (STU-753): per-item resume
+# (STU-605) keyed on the resolved item input (name, aliases, book_dir,
+# prompt_fingerprint) — a character or the book's text unchanged since the
+# last run resumes for free. roster/relationship_types/sub_roles are book-wide
+# (not per-item, unlike discover-relationships' per-chunk subset roster) since
+# a gap query must be able to name any roster character as the other party.
+stages:
+  - map: reconciliation
+    over: input.gaps
+    pipeline: relation-reconciliation-item
+    resume: true
+    concurrency: 4
+    on_item_failure: collect-all
+    input:
+      book_title: "{{input.book_title}}"
+      name: "{{item.name}}"
+      aliases: "{{item.aliases}}"
+      book_dir: "{{item.book_dir}}"
+      roster: "{{input.roster}}"
+      relationship_types: "{{input.relationship_types}}"
+      sub_roles: "{{input.sub_roles}}"
+      prompt_fingerprint: "{{input.prompt_fingerprint}}"

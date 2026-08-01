@@ -1,0 +1,15 @@
+name: relation-reconciliation-item
+version: 1
+schema:
+  required_fields:
+    - relations
+# relations: this one character's provable relations — same object shape
+# relationship-discovery.agent.yaml returns (STU-754: one call per roster gap,
+# not one call over a chunk). An off-roster name, off-vocabulary type/direction,
+# or self-pair is discarded by the caller (scripts/relation_reconciliation.py),
+# not rejected here — a hallucinated relation must not fail a run, it must be
+# dropped and the gap stays a gap.
+tool_calls:
+  minimum: 1
+  required_tools:
+    - book-search.search_book

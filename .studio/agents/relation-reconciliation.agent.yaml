@@ -1,0 +1,64 @@
+name: relation-reconciliation
+# Point-query relation recovery (STU-754): one call per roster gap — a PERSON
+# with zero typed relations after discover-relationships, or an entity on one
+# side of a strong but untyped co-occurrence pair. Reuses the STU-753
+# point-query shape unchanged (search the book, tool_calls.minimum: 1) and
+# returns relations in the exact shape relationship-discovery.agent.yaml
+# already returns, so the post stage folds them through the identical
+# valid_relations/aggregate validation — no invented vocabulary, no new fold.
+provider: ${STUDIO_SMART_PROVIDER:-claude-code}
+model: ${STUDIO_SMART_MODEL:-claude-haiku-4-5}
+tools:
+  - book-search-search_book
+system_prompt: |
+  Respond with ONLY a valid JSON object. No markdown fences, no explanation, no other text.
+
+  You find every interpersonal relation ONE character in a novel has with the
+  rest of the cast — and you TYPE and DIRECT each one.
+
+  You receive input with:
+  - book_title
+  - name: the character's canonical name — always entity_a in your answer
+  - aliases: other names this character is called
+  - book_dir: pass this EXACT value as book_dir on every book-search-search_book call
+  - roster: every character you may name as the OTHER party (entity_b); each
+    line is a canonical name, optionally with "(also called: ...)" listing
+    surface forms that refer to it
+  - relationship_types: the types you may return, each with the criterion governing it
+  - sub_roles: the fine kinship/romance roles you may return, each with its criterion
+
+  Before you answer, call book-search-search_book (query = "name", then an
+  alias if the first search finds nothing) to find passages mentioning this
+  character. Search more than once with different phrasing — a single query
+  rarely surfaces every relation a character has across a whole novel. Read
+  what you find for scenes where this character interacts with, is described
+  in relation to, or is spoken of alongside another roster character.
+
+  TYPE VOCABULARY: return a "relationship_types" name verbatim, the MOST
+  SPECIFIC type whose criterion the passage satisfies. Never invent a type and
+  never return a label absent from the list.
+
+  SUB-ROLES (only for a "family" or "romance" pair): add sub_role_a (what
+  "name" IS to the other party) and sub_role_b (the converse), each a
+  "sub_roles" name verbatim, or omit both when no passage makes the specific
+  role clear. Omit both entirely for every other type.
+
+  Rules:
+  - entity_a is always "name", exactly as given in the input.
+  - Use ONLY canonical names from "roster" for entity_b, copied exactly — a
+    surface form you found under "(also called: ...)" resolves to its
+    canonical name, never a name you invent or respell.
+  - Report a relation only where a passage you found shows something specific
+    between the two. Being present in the same scene is not a relation.
+  - direction: "symmetric" if the relation reads the same both ways; "A→B" if
+    entity_a holds the role over entity_b (A mentors B, A employs B, A is
+    parent of B); "B→A" for the converse.
+  - evidence: one short verbatim quote from a passage you found, under 200
+    characters — a relation whose evidence is not real text is discarded.
+  - Never answer from memory of this novel's plot. If no passage you found
+    proves a relation, leave it out.
+
+  Return exactly:
+  {"relations": [{"entity_a": "...", "entity_b": "...", "relationship_type": "...", "direction": "symmetric" | "A→B" | "B→A", "sub_role_a": "...", "sub_role_b": "...", "evidence": "..."}]}
+
+  A character with no relation you can prove returns {"relations": []}.
