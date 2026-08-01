@@ -174,3 +174,10 @@ stages:
       include:
         - input
         - previous_stage_output
+    # STU-760: push derived artifacts to the sync hub after a real run
+    # completes, so a second machine can `make sync-pull` them without
+    # re-paying the LLM cost. Silently skipped when WIKI_SYNC_REMOTE is unset
+    # (the default — sync-push itself refuses to run without it).
+    hooks:
+      on_stage_complete:
+        - command: '[ -n "$WIKI_SYNC_REMOTE" ] && make sync-push || true'

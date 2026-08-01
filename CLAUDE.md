@@ -431,6 +431,36 @@ Two rules travel with it, and both are load-bearing:
   (keep the section, merge nothing, render `unknown`). Restarting the whole run
   because one call died is the anti-pattern this principle exists to kill.
 
+## A Real Run Snapshots Its Book Before It Overwrites Anything (STU-760)
+
+`epub-parse` — wiki-full's first executing stage, run exactly once per
+top-level `studio run wiki-full`/`wiki-extraction` invocation, never as a
+map/fan-out item — snapshots the book's `processing_output/<slug>`,
+`wiki_inputs/<slug>`, `output/<slug>` and the series `registry.json` to
+`bak_<DD-MM-YY>/` (beside them, under the series dir) before doing anything
+else, via `wiki_creator.backup.snapshot_book_artifacts`. Idempotent per day (an
+existing `bak_<date>/` is never touched) and silent on a cold book (nothing to
+snapshot yet).
+
+This is **not** a Studio `on_stage_start` YAML hook, despite the ritual it
+replaces being framed that way: Studio 0.15.0's hook commands only substitute
+`{{tool.*}}` (`pre_tool_use`/`post_tool_use`) and `{{output.*}}`
+(`on_stage_complete`) — `on_stage_start` gets no context at all, and `call`
+stages (what `wiki-full`'s own stage list is entirely made of) don't support
+`hooks:` in the first place. A plain guard at the top of the first stage
+script that *does* receive the book path gives the same "before this run
+writes a byte" guarantee without needing a Studio change.
+
+`bak_*/` is gitignored and manually pruned — retention is not automated.
+`CLAUDE.local.md`'s manual `mkdir bak_<date>; cp -r ...` ritual still works as
+a fallback (e.g. to snapshot before a stage other than epub-parse, or a
+whole-series backup), it's just no longer required before a normal run.
+
+A second, genuinely hook-shaped addition rides along: `pages-export`'s last
+stage (`wiki-export`) has an `on_stage_complete` hook running `make sync-push`
+when `WIKI_SYNC_REMOTE` is set (silently skipped otherwise) — this one needs
+no book-specific context, so the hook mechanism fits it fine.
+
 ## Config Is Read By People Who Know Books, Not Pipelines
 
 The book YAML is the project's user interface, and its users are readers and

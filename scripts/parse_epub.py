@@ -16,6 +16,7 @@ from pathlib import Path
 import yaml
 
 # Ensure project root is importable when running as `python scripts/parse_epub.py`.
+from wiki_creator.backup import snapshot_book_artifacts
 from wiki_creator.canon import resolve_book_source
 from wiki_creator.chapters import declared_chapter_marks
 from wiki_creator.lang import book_language, load_lang_config
@@ -705,6 +706,11 @@ def main():
         json.dump({"error": "missing field: file_path"}, sys.stdout)
         sys.exit(1)
 
+    paths = studio_io.paths_from_payload(payload)
+    # STU-760: snapshot before anything below writes a byte — the first action
+    # of wiki-full's first executing stage.
+    snapshot_book_artifacts(paths)
+
     language = book_language(input_data)
     max_chapters = _env_max_chapters()
     if max_chapters is not None:
@@ -719,7 +725,6 @@ def main():
         chapter_marks=declared_chapter_marks(input_data),
     )
     result["language"] = language
-    paths = studio_io.paths_from_payload(payload)
     paths.processing.mkdir(parents=True, exist_ok=True)
     with open(paths.processing / "epub_data.json", "w", encoding="utf-8") as _f:
         json.dump(result, _f, ensure_ascii=False)

@@ -18,6 +18,7 @@ import subprocess
 import sys
 import unicodedata
 import zipfile
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -194,6 +195,29 @@ def test_parse_epub_writes_epub_data_json(parse_result, smoke_epub):
     assert data_file.exists()
     on_disk = json.loads(data_file.read_text(encoding="utf-8"))
     assert on_disk["title"] == parse_result["title"]
+
+
+def test_parse_epub_snapshots_before_a_second_run(parse_result, smoke_epub):
+    """STU-760: the first run of the smoke novella is cold (no snapshot — nothing
+    to back up yet). A second run finds a warm book and snapshots it before
+    overwriting; a third run the same day must not clobber that snapshot.
+    """
+    series_dir = smoke_epub.parent.parent
+    today = date.today().strftime("%d-%m-%y")
+    bak_dir = series_dir / f"bak_{today}"
+    assert not bak_dir.exists(), "first (cold) run must not create a snapshot"
+
+    ctx = yaml.safe_dump({"file_path": str(smoke_epub), "language": "en"})
+    _run_stage("parse_epub.py", {"additional_context": ctx})
+    assert bak_dir.exists(), "second (warm) run must snapshot the prior artifacts"
+    snapshot = bak_dir / "processing_output" / "smoke-novella" / "epub_data.json"
+    assert snapshot.exists()
+    first_snapshot_mtime = snapshot.stat().st_mtime_ns
+
+    _run_stage("parse_epub.py", {"additional_context": ctx})
+    assert snapshot.stat().st_mtime_ns == first_snapshot_mtime, (
+        "same-day re-run must not clobber the existing snapshot"
+    )
 
 
 @requires_en_sm
