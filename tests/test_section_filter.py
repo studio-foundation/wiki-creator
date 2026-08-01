@@ -104,6 +104,26 @@ def test_chapters_are_tagged_never_removed():
     assert chapters[0]["content"] == "x" * 500
 
 
+def test_a_verdict_dropping_every_section_is_refused():
+    """A short book with title page and story packed into one spine item gives the
+    classifier nothing but a front-matter-looking opening — dropping the sole
+    section would empty the book, so the whole-book drop is refused."""
+    chapters = [_chapter("pg-header", "The Tale of Peter Rabbit")]
+    dropped = apply_frontmatter(chapters, {"pg-header": "Title page and copyright notice"})
+
+    assert dropped == []
+    assert is_frontmatter_chapter(chapters[0]) is False
+
+
+def test_a_verdict_dropping_every_section_is_refused_even_with_several_sections():
+    chapters = [_chapter("cop", "Copyright"), _chapter("c01", "Chapter 1")]
+    dropped = apply_frontmatter(chapters, {"cop": "copyright page", "c01": "misjudged"})
+
+    assert dropped == []
+    assert is_frontmatter_chapter(chapters[0]) is False
+    assert is_frontmatter_chapter(chapters[1]) is False
+
+
 # --- cache ---
 
 
