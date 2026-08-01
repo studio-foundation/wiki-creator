@@ -182,6 +182,21 @@ def test_aggregate_caps_sample_contexts_at_three():
     assert len(pairs[0]["sample_contexts"]) == 3
 
 
+def test_aggregate_writes_evidence_from_first_sample_context():
+    # STU-764: evidence must be populated, not just sample_contexts — downstream
+    # (classify-relationships pre_typed merge) reads pair["evidence"] directly.
+    votes = [_vote("ch1", "Eragon", "Brom", "mentor", evidence="Brom taught Eragon.")]
+    pairs = aggregate(votes, ROSTER)
+    assert pairs[0]["evidence"] == "Brom taught Eragon."
+    assert pairs[0]["evidence"] == pairs[0]["sample_contexts"][0]
+
+
+def test_aggregate_evidence_is_none_when_no_vote_carried_a_quote():
+    votes = [_vote("ch1", "Eragon", "Brom", "mentor", evidence="")]
+    pairs = aggregate(votes, ROSTER)
+    assert pairs[0]["evidence"] is None
+
+
 # --- aggregate: deterministic confidence (STU-751) --------------------------
 
 

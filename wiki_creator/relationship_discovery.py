@@ -362,7 +362,9 @@ def aggregate(votes: list[dict], roster_names: set[str]) -> list[dict]:
     ``relationship_type`` is the type the most chunks evidenced; ``direction`` is
     stated against the sorted ``pair_key`` (a vote naming the pair the other way
     is flipped). ``cooccurrence_count`` is the number of chunks that evidenced the
-    pair, and ``sample_contexts`` the first few evidence quotes.
+    pair, ``sample_contexts`` the first few evidence quotes, and ``evidence`` the
+    single quote downstream (classify-relationships, writer prompts) reads for a
+    pre-typed pair (STU-764).
     """
     acc: dict[tuple, dict] = {}
     for vote in votes:
@@ -404,6 +406,7 @@ def aggregate(votes: list[dict], roster_names: set[str]) -> list[dict]:
             "chapters": sorted(slot["chapters"]),
             "cooccurrence_count": slot["votes"],
             "sample_contexts": slot["evidence"][:_MAX_SAMPLE_CONTEXTS],
+            "evidence": slot["evidence"][0] if slot["evidence"] else None,
         }
         pair["confidence"] = _pair_confidence(slot, pair["relationship_type"])
         if slot["sub_roles_a"]:
