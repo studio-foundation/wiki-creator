@@ -4,7 +4,7 @@ schema:
   required_fields:
     - book_title
     - entities
+    - prompt_fingerprint
     - needs_verdict
-# entities: one {name, aliases, book_dir} row per PERSON to fan out over
-# (STU-753 point-query shape, replaced the rendered roster text block)
+# entities: per-PERSON fan-out items (name, aliases, book_dir), not a rendered roster (STU-753)
 # needs_verdict: gates the downstream `call: entity-species-verdict` stage

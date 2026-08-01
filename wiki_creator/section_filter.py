@@ -71,7 +71,17 @@ def parse_drop_verdict(payload: object, known_ids: set[str]) -> dict[str, str]:
 
 
 def apply_frontmatter(chapters: list[dict], drops: dict[str, str]) -> list[dict]:
-    """Tag dropped sections in place. Returns what was tagged, for logging."""
+    """Tag dropped sections in place. Returns what was tagged, for logging.
+
+    A verdict dropping every section is refused: a short book whose whole
+    text lands in one spine item (title page and story never split) gives
+    the classifier nothing but a front-matter-looking opening to judge, and
+    a wrong verdict there would empty the book, not just trim it — a worse
+    outcome than the front matter it was trying to avoid.
+    """
+    if chapters and drops and len(drops) >= len(chapters):
+        return []
+
     tagged: list[dict] = []
     for chapter in chapters:
         section_id = str(chapter.get("id", ""))
