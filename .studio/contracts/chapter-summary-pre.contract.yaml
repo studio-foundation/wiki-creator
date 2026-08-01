@@ -1,0 +1,8 @@
+name: chapter-summary-pre
+version: 1
+schema:
+  required_fields:
+    - chapters
+    - prompt_fingerprint
+    - needs_verdict
+# chapters: the per-chapter map items the chapter-summaries-verdict fan-out dispatches over.

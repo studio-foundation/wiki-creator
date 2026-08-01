@@ -1,0 +1,9 @@
+name: generate-wiki-pages-plan
+version: 1
+schema:
+  required_fields:
+    - items
+    - prompt_fingerprint
+    - needs_verdict
+# items: attempt-1 `wiki-pages` map items, one per planned generation call
+# needs_verdict: gates the downstream `call: wiki-pages-verdict` stage

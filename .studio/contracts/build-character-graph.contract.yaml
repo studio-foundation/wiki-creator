@@ -1,0 +1,14 @@
+name: build-character-graph
+version: 1
+schema:
+  required_fields:
+    - nodes
+    - edges
+    - typed
+# nodes/edges: counts in this book's delta merged into the series character graph
+# typed: edges among them carrying a relationship_type
+# The `{skipped: "no_typed_source" | "stale_roster"}` output fails this schema on
+# purpose, same as classify-relationships.contract.yaml's `{skipped:
+# missing_input}`: both reasons mean discover-relationships/classify-relationships
+# never ran or ran against a since-changed roster — a broken/partial run, not a
+# gracefully-degraded one.

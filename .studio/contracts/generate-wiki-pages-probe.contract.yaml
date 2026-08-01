@@ -1,0 +1,8 @@
+name: generate-wiki-pages-probe
+version: 1
+schema:
+  required_fields:
+    - items
+    - needs_retry
+# items: attempt-2 `wiki-pages` map items collected from the forbidden-name retries
+# needs_retry: gates the downstream `call: wiki-pages-retry-verdict` stage

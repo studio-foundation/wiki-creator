@@ -22,6 +22,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/section_filter_pre.py
+    contract: section-filter-pre
     context:
       include:
         - input

@@ -1,0 +1,9 @@
+name: generate-event-pages-pre
+version: 1
+schema:
+  required_fields:
+    - items
+    - prompt_fingerprint
+    - needs_verdict
+# items: one `wiki-pages` map item per event clearing the salience threshold
+# needs_verdict: gates the downstream `call: event-pages-verdict` stage

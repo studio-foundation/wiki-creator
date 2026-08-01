@@ -13,6 +13,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/entity_status_pre.py
+    contract: entity-status-pre
     timeout_ms: 300000
     context:
       include:
@@ -32,6 +33,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/entity_status.py
+    contract: entity-status
     timeout_ms: 300000
     context:
       include:
@@ -43,6 +45,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/entity_affiliation_pre.py
+    contract: entity-affiliation-pre
     timeout_ms: 300000
     context:
       include:
@@ -62,6 +65,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/entity_affiliation.py
+    contract: entity-affiliation
     timeout_ms: 300000
     context:
       include:
@@ -75,6 +79,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/entity_species_pre.py
+    contract: entity-species-pre
     timeout_ms: 300000
     context:
       include:
@@ -94,6 +99,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/entity_species.py
+    contract: entity-species
     timeout_ms: 300000
     context:
       include:
@@ -111,6 +117,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/discover_relationships_pre.py
+    contract: discover-relationships-pre
     timeout_ms: 300000
     context:
       include:
@@ -130,6 +137,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/discover_relationships.py
+    contract: discover-relationships
     timeout_ms: 300000
     context:
       include:
@@ -141,6 +149,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/classify_relationships_pre.py
+    contract: classify-relationships-pre
     timeout_ms: 300000
     context:
       include:
@@ -173,6 +182,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/build_character_graph.py
+    contract: build-character-graph
     timeout_ms: 300000
     context:
       include:

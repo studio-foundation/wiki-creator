@@ -4,8 +4,8 @@
 #
 #   cp .studio/config.example.yaml .studio/config.yaml
 #
-# The ${VAR} syntax reads from your environment, so you can keep keys out of
-# the file entirely (recommended):
+# The dollar-brace substitution syntax reads from your environment, so you can
+# keep keys out of the file entirely (recommended):
 #
 #   export ANTHROPIC_API_KEY=sk-ant-...
 #
@@ -15,7 +15,7 @@
 #     discover/classify-relationships, wiki-pages). Driven by `defaults` below.
 #   - SMART — the five whole-book verdict agents (section-filter,
 #     alias-adjudication, entity-status/affiliation/species), which pin
-#     provider/model in their own agent yaml via ${STUDIO_SMART_*}. A small
+#     provider/model in their own agent yaml via the STUDIO_SMART env vars. A small
 #     local model loses their strict output contract on big books (STU-624),
 #     so they default to claude-code.
 # Changing `defaults` changes what every BULK stage runs on.
@@ -33,12 +33,12 @@ providers:
   anthropic:
     apiKey: ${ANTHROPIC_API_KEY}
   # openai:
-  #   apiKey: ${OPENAI_API_KEY}
+  #   apiKey: <set via env var once you have a key>
 
 defaults:
   # The BULK tier. What the project's own runs and measurements use — every
   # accuracy figure in CLAUDE.md was produced here. Swap the provider and those
-  # numbers no longer describe your run. ${STUDIO_BULK_*} lets a .env retarget
+  # numbers no longer describe your run. The STUDIO_BULK env vars let a .env retarget
   # it without editing this file; unset falls back to the pin.
   #
   # The four BULK fan-out pipelines (chapter-summaries,

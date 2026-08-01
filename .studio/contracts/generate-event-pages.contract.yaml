@@ -1,0 +1,11 @@
+name: generate-event-pages
+version: 1
+schema:
+  required_fields:
+    - skipped
+    - pages
+    - failed
+# skipped: true when events.json is absent/empty or nothing clears the
+# salience threshold — never fails the run (scripts/CLAUDE.md)
+# pages: number of event pages written to event_pages.json (0 when skipped)
+# failed: how many of those pages are `_failed` stubs (0 when skipped)

@@ -1,0 +1,8 @@
+name: series-arc-pre
+version: 1
+schema:
+  required_fields:
+    - items
+    - prompt_fingerprint
+    - needs_verdict
+# items: the single wiki-pages map item for the series hub's arc paragraph.

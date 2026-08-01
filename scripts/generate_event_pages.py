@@ -338,11 +338,11 @@ def _results_by_index(map_output: dict | None) -> dict[int, dict]:
 
 def run_post(payload: dict, *, book_cfg: dict, language: str) -> dict:
     """Studio post stage (STU-621): finalize the event pages from the
-    `wiki-pages` call's map output. Emits `{skipped}` / `{pages, failed}`."""
+    `wiki-pages` call's map output. Emits `{skipped, pages, failed}`."""
     paths = studio_io.paths_from_payload(payload)
     plan = plan_event_pages(paths.processing, book_cfg=book_cfg, language=language)
     if plan is None:
-        return {"skipped": True}
+        return {"skipped": True, "pages": 0, "failed": 0}
     planned, meta = plan
 
     results = _results_by_index(_map_output_from_payload(payload))
@@ -357,7 +357,7 @@ def run_post(payload: dict, *, book_cfg: dict, language: str) -> dict:
             )
         )
     _write_event_pages(pages, paths.processing)
-    return {"pages": len(pages), "failed": sum(1 for p in pages if p.get("_failed"))}
+    return {"skipped": False, "pages": len(pages), "failed": sum(1 for p in pages if p.get("_failed"))}
 
 
 def main() -> None:

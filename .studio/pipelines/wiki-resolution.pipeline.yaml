@@ -13,6 +13,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/chapter_summary_pre.py
+    contract: chapter-summary-pre
     context:
       include:
         - input
@@ -83,6 +84,7 @@ stages:
     executor: script
     runtime: python
     script: scripts/alias_adjudication_pre.py
+    contract: alias-adjudication-pre
     context:
       include:
         - input
