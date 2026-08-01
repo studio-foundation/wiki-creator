@@ -45,6 +45,12 @@ class Canon:
     strategy: str = "highest_authority"
     on_unresolved: str = "flag"
     later_tome_overrides: bool = False
+    # STU-738: who counts as a series main character when no single tome ever
+    # typed them ``principal`` — a PERSON reaching ``recurrence_tier`` in a
+    # ``recurrence_share`` fraction of the series' tomes. None when undeclared;
+    # the hub's own defaults (``series_hub.HUB_RECURRENCE_TIER/SHARE``) apply.
+    recurrence_tier: str | None = None
+    recurrence_share: float | None = None
 
     def resolve_source(self, slug: str) -> CanonSource | None:
         """The authoritative source for book ``slug``, or None when undeclared."""
@@ -157,6 +163,24 @@ def load_canon(path: Path | str) -> Canon | None:
             )
 
     cross_tome = block.get("cross_tome") or {}
+    recurrence = cross_tome.get("main_character_recurrence") or {}
+    recurrence_tier = recurrence.get("tier")
+    if recurrence_tier is not None and not isinstance(recurrence_tier, str):
+        raise ValueError(
+            f"canon: cross_tome.main_character_recurrence.tier in {path} must be a string"
+        )
+    recurrence_share = recurrence.get("share")
+    if recurrence_share is not None:
+        if isinstance(recurrence_share, bool) or not isinstance(recurrence_share, (int, float)):
+            raise ValueError(
+                f"canon: cross_tome.main_character_recurrence.share in {path} must be a number"
+            )
+        if not (0 < recurrence_share <= 1):
+            raise ValueError(
+                f"canon: cross_tome.main_character_recurrence.share in {path} must be in (0, 1]"
+            )
+        recurrence_share = float(recurrence_share)
+
     return Canon(
         primary_source=primary_source,
         sources=sources,
@@ -164,6 +188,8 @@ def load_canon(path: Path | str) -> Canon | None:
         strategy=strategy,
         on_unresolved=on_unresolved,
         later_tome_overrides=bool(cross_tome.get("later_tome_overrides", False)),
+        recurrence_tier=recurrence_tier,
+        recurrence_share=recurrence_share,
     )
 
 
