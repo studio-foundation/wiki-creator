@@ -7,6 +7,7 @@ synopsis.py pure-module pattern.
 """
 from __future__ import annotations
 
+from wiki_creator.lang import load_lang_config
 from wiki_creator.page_templates import language_name, slot_label
 from wiki_creator.register import DEFAULT_REGISTER
 
@@ -61,6 +62,24 @@ def event_title(event: dict) -> str:
     """Deterministic page title for an event: its description, stripped of
     trailing punctuation. Grounded, so no LLM naming hallucination."""
     return str(event.get("description", "")).strip().rstrip(".!—- ").strip()
+
+
+def _default_noise_words() -> frozenset[str]:
+    en = frozenset(load_lang_config("en").get("noise_words", []))
+    fr = frozenset(load_lang_config("fr").get("noise_words", []))
+    return en | fr
+
+
+_NOISE_WORDS = _default_noise_words()
+
+
+def is_noise_title(title: str) -> bool:
+    """True when ``title`` is a bare stopword (STU-748), e.g. a mis-extracted
+    event description of just "The". Events are built from events.json, not
+    from resolved entities, so they never pass through
+    resolve_clusters.is_relevant's equivalent noise-word check on the entity
+    path — this is that same check for the event-title path."""
+    return title.strip().lower() in _NOISE_WORDS
 
 
 def event_infobox_fields(event: dict) -> dict:

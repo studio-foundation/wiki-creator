@@ -41,6 +41,7 @@ LIVE_MERGE_STRATEGIES = frozenset(
         "cooccurrence",
         "title_alias",
         "pure_title",
+        "short_form",
         "role_symmetric",
         "llm",
         "context_adjudication",
