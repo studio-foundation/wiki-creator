@@ -26,6 +26,7 @@ import yaml
 
 
 from wiki_creator import studio_io
+from wiki_creator.canonicalize import canonical_tokens
 from wiki_creator.entity_taxonomy import resolution_types
 from wiki_creator.lang import load_lang_config
 from wiki_creator.types import Splits
@@ -37,7 +38,14 @@ def _default_noise_words() -> frozenset[str]:
     return en | fr
 
 
+def _default_title_prefixes() -> frozenset[str]:
+    en = frozenset(load_lang_config("en").get("title_prefixes", []))
+    fr = frozenset(load_lang_config("fr").get("title_prefixes", []))
+    return en | fr
+
+
 _NOISE_WORDS = _default_noise_words()
+_TITLE_PREFIXES = _default_title_prefixes()
 _WORD = re.compile(r"[^\W_]+")
 
 
@@ -55,6 +63,7 @@ def is_relevant(
     name: str,
     noise_words: frozenset[str] = _NOISE_WORDS,
     author_tokens: frozenset[str] = frozenset(),
+    author_surname: frozenset[str] = frozenset(),
 ) -> bool:
     """Heuristic: is this a real proper noun worth keeping?"""
     if not name:
@@ -67,10 +76,17 @@ def is_relevant(
     # Proper nouns start with uppercase
     if cleaned[0].islower():
         return False
-    # The book's own author is title/copyright-page boilerplate, not a character
-    # (STU-740) — derived from the epub metadata, so no stopword list to curate.
-    if author_tokens and name_tokens(cleaned) == author_tokens:
-        return False
+    # The book's own author is title/copyright-page (or foreword) boilerplate,
+    # not a character (STU-740/744) — derived from the epub metadata, so no
+    # stopword list to curate. A subset match (post title-stripping) catches a
+    # bare "Mr. Baum" the STU-740 equality check missed; a one-token subset
+    # ("Frank") is only the author, not a coincidentally-named character, when
+    # that token is the author's own surname.
+    if author_tokens:
+        entity_tokens = frozenset(canonical_tokens(cleaned, _TITLE_PREFIXES))
+        if entity_tokens and entity_tokens.issubset(author_tokens):
+            if len(entity_tokens) > 1 or entity_tokens.issubset(author_surname):
+                return False
     return True
 
 
@@ -78,6 +94,7 @@ def cluster_to_entity(
     cluster: dict,
     noise_words: frozenset[str] = _NOISE_WORDS,
     author_tokens: frozenset[str] = frozenset(),
+    author_surname: frozenset[str] = frozenset(),
 ) -> dict:
     """Map a cluster directly to a resolved entity. No invention."""
     return {
@@ -85,7 +102,9 @@ def cluster_to_entity(
         "type": cluster.get("type", "OTHER"),
         "aliases": cluster.get("all_mentions", []),
         "source_ids": cluster.get("entity_ids", []),
-        "relevant": is_relevant(cluster.get("canonical_candidate", ""), noise_words, author_tokens),
+        "relevant": is_relevant(
+            cluster.get("canonical_candidate", ""), noise_words, author_tokens, author_surname
+        ),
     }
 
 
@@ -93,6 +112,7 @@ def resolve(
     splits: dict,
     noise_words: frozenset[str] = _NOISE_WORDS,
     author_tokens: frozenset[str] = frozenset(),
+    author_surname: frozenset[str] = frozenset(),
 ) -> dict:
     entities: list[dict] = []
 
@@ -103,7 +123,7 @@ def resolve(
         entities.append({
             **single,
             "relevant": is_relevant(
-                single.get("canonical_name", ""), noise_words, author_tokens
+                single.get("canonical_name", ""), noise_words, author_tokens, author_surname
             ),
         })
 
@@ -115,18 +135,35 @@ def resolve(
             print(f"Warning: {entity_type} is not a list, skipping", file=sys.stderr)
             continue
         for cluster in clusters:
-            entities.append(cluster_to_entity(cluster, noise_words, author_tokens))
+            entities.append(cluster_to_entity(cluster, noise_words, author_tokens, author_surname))
 
     return {"entities": entities, "narrator": None}
 
 
-def _declared_author_tokens(processing: Path) -> frozenset[str]:
+def _declared_author(processing: Path) -> str:
     """The epub's own `author` metadata, as written by epub-parse."""
     try:
         data = json.loads((processing / "epub_data.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
+        return ""
+    return str(data.get("author") or "")
+
+
+def _declared_author_tokens(processing: Path) -> frozenset[str]:
+    return name_tokens(_declared_author(processing))
+
+
+def _declared_author_surname(processing: Path) -> frozenset[str]:
+    """The author's surname tokens, from either DC-creator order (``Baum, L.
+    Frank``) or title-page order (``L. Frank Baum``) — the token that, alone,
+    still identifies the author rather than a coincidentally-named character."""
+    author = _declared_author(processing).strip()
+    if not author:
         return frozenset()
-    return name_tokens(str(data.get("author") or ""))
+    if "," in author:
+        return name_tokens(author.split(",", 1)[0])
+    parts = author.split()
+    return name_tokens(parts[-1]) if parts else frozenset()
 
 
 def main() -> None:
@@ -162,6 +199,7 @@ def main() -> None:
         splits,
         noise_words=noise_words,
         author_tokens=_declared_author_tokens(splits_path.parent),
+        author_surname=_declared_author_surname(splits_path.parent),
     )
     json.dump(result, sys.stdout, ensure_ascii=False)
 

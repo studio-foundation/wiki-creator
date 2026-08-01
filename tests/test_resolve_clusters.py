@@ -97,6 +97,38 @@ def test_declared_author_single_is_dropped(monkeypatch, tmp_path):
     assert out["entities"][0]["relevant"] is False
 
 
+def test_bare_surname_with_honorific_is_dropped(monkeypatch, tmp_path):
+    """STU-744: a foreword addresses the author by honorific + bare surname
+    ("Mr. Baum"), which the STU-740 equality check missed — {baum} != {l, frank, baum}."""
+    processing = tmp_path / "processing"
+    processing.mkdir()
+    (processing / "splits.json").write_text(json.dumps(_splits("Mr. Baum")), encoding="utf-8")
+    (processing / "epub_data.json").write_text(
+        json.dumps({"author": "Baum, L. Frank"}), encoding="utf-8"
+    )
+    paths = type("_Paths", (), {"processing": processing})()
+
+    out = _run_main(monkeypatch, paths, {"additional_context": "file_path: fake.epub"})
+
+    assert out["entities"][0]["relevant"] is False
+
+
+def test_author_first_name_alone_does_not_drop_a_same_named_character(monkeypatch, tmp_path):
+    """STU-744's guard: a one-token subset of the author's tokens must be the
+    author's surname, or a character genuinely named "Frank" would be dropped."""
+    processing = tmp_path / "processing"
+    processing.mkdir()
+    (processing / "splits.json").write_text(json.dumps(_splits("Frank")), encoding="utf-8")
+    (processing / "epub_data.json").write_text(
+        json.dumps({"author": "Baum, L. Frank"}), encoding="utf-8"
+    )
+    paths = type("_Paths", (), {"processing": processing})()
+
+    out = _run_main(monkeypatch, paths, {"additional_context": "file_path: fake.epub"})
+
+    assert out["entities"][0]["relevant"] is True
+
+
 def test_character_survives_the_author_check(monkeypatch, tmp_path):
     processing = tmp_path / "processing"
     processing.mkdir()
