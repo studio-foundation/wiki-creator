@@ -5,6 +5,7 @@ from wiki_creator.event_pages import (
     build_event_prompt,
     event_infobox_fields,
     event_title,
+    is_noise_title,
     neighbor_context,
     select_events,
 )
@@ -70,6 +71,20 @@ def test_select_events_empty_and_none():
 def test_event_title_strips_trailing_punctuation():
     assert event_title(_event(1, "Celaena affronte Cain.")) == "Celaena affronte Cain"
     assert event_title(_event(1, "Champions left—only her.")) == "Champions left—only her"
+
+
+# --- is_noise_title (STU-748) ---
+
+
+def test_is_noise_title_bare_stopword():
+    assert is_noise_title("The") is True
+    assert is_noise_title("the") is True
+    assert is_noise_title("  The  ") is True
+
+
+def test_is_noise_title_real_event():
+    assert is_noise_title("Celaena defeats Cain") is False
+    assert is_noise_title("The Duel") is False
 
 
 # --- event_infobox_fields ---

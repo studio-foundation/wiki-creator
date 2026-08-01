@@ -44,6 +44,7 @@ from wiki_creator.event_pages import (
     build_event_prompt,
     event_infobox_fields,
     event_title,
+    is_noise_title,
     select_events,
 )
 from wiki_creator.page_templates import (
@@ -230,7 +231,7 @@ def plan_event_pages(
     seen_titles: set[str] = set()
     for event in selected:
         base = event_title(event)
-        if not base:
+        if not base or is_noise_title(base):
             continue
         title = base  # keep filenames/wikilinks unique
         if title in seen_titles:

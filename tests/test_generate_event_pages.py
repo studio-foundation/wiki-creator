@@ -46,6 +46,20 @@ def test_run_skips_when_no_event_above_threshold(tmp_path):
     assert got is None
 
 
+def test_run_skips_bare_stopword_title(tmp_path):
+    """STU-748: a mis-extracted event whose description is a bare stopword
+    ("The") must not become an EVENT page."""
+    events = _events()
+    events.append({
+        "event_id": "e_ch1_1", "chapter": 1, "description": "The",
+        "participants": ["Celaena"], "places": [], "outcome": None,
+        "salience": 0.9, "source_bullets": ["The"],
+    })
+    _write_events(tmp_path, events)
+    pages = gep.run_for_processing(tmp_path, book_cfg={}, language="en", dry_run=True)
+    assert [p["title"] for p in pages] == ["Celaena defeats Cain"]
+
+
 def test_run_dry_writes_stub_artifacts(tmp_path):
     _write_events(tmp_path, _events())
     pages = gep.run_for_processing(tmp_path, book_cfg={}, language="en", dry_run=True)
