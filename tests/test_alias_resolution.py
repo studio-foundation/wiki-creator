@@ -887,6 +887,25 @@ def test_pick_canonical_name_keeps_frequency_when_no_pure_title():
     assert canonical == "Celaena"  # higher frequency
 
 
+def test_pick_canonical_name_demotes_role_absent_from_role_words_via_definite_article():
+    """STU-739: 'Sorcerer' is mentioned more than 'Gwig' and 'sorcerer' is not in
+    role_words, so is_bare_role is inert — but 'the Sorcerer' takes a definite
+    article almost every time, and that structural signal must still demote it."""
+    from scripts.alias_resolution import _pick_canonical_name
+    gwig = {"canonical_name": "Gwig", "aliases": ["Gwig"], "source_ids": ["e1"]}
+    sorcerer = {"canonical_name": "Sorcerer", "aliases": ["Sorcerer"], "source_ids": ["e2"]}
+    persons_full = _pf({
+        "e1": {"mentions_by_chapter": {"ch01": [
+            "Gwig ran. Gwig fell. Gwig spoke. Gwig hid. Gwig laughed.",
+        ]}},
+        "e2": {"mentions_by_chapter": {"ch01": [
+            " ".join(["the Sorcerer waved his staff."] * 18),
+        ]}},
+    })
+    canonical = _pick_canonical_name(gwig, sorcerer, persons_full=persons_full, role_words=[])
+    assert canonical == "Gwig"
+
+
 def test_resolve_aliases_title_alias_auto_merges_regardless_of_llm():
     """Title alias pair is auto-merged; LLM rejection is not consulted."""
     from scripts.alias_resolution import resolve_aliases

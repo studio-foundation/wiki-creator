@@ -127,6 +127,23 @@ def _pick_snippets(entity: dict, persons_full: dict, n: int = 3) -> list[str]:
     return ordered[:n]
 
 
+def _takes_definite_article(name: str, contexts: str) -> bool:
+    """True when ``name``'s surface mostly appears preceded by "the" in context.
+
+    A common-noun role reads "the Sorcerer"; a proper name almost never takes a
+    definite article. This is the structural counterpart to ``is_bare_role`` —
+    it needs no ``role_words`` entry, so a title absent from the vocabulary
+    (``sorcerer``, ``keeper of the wicket``) is still demoted (STU-739).
+    Requires at least 2 occurrences so a single incidental "The X said" cannot
+    flip a real proper name.
+    """
+    low = name.lower()
+    total = contexts.count(low)
+    if total < 2:
+        return False
+    return contexts.count(f"the {low}") * 2 >= total
+
+
 def _pick_canonical_name(
     entity_a: dict,
     entity_b: dict,
@@ -138,14 +155,18 @@ def _pick_canonical_name(
     for entity in (entity_a, entity_b):
         for name in _entity_names(entity):
             counts[name] = 0
-    for entity in (entity_a, entity_b):
-        contexts = " ".join(_gather_contexts(entity, persons_full)).lower()
+    contexts_by_entity = [
+        " ".join(_gather_contexts(entity, persons_full)).lower() for entity in (entity_a, entity_b)
+    ]
+    combined_contexts = " ".join(contexts_by_entity)
+    for contexts in contexts_by_entity:
         for name in counts:
             counts[name] += contexts.count(name.lower())
     return sorted(
         counts,
         key=lambda name: (
-            is_bare_role(name, role_words),   # False (0) sorts before True (1) — proper names first
+            # False (0) sorts before True (1) — proper names first
+            is_bare_role(name, role_words) or _takes_definite_article(name, combined_contexts),
             -counts[name],
             -len(name.split()),
             -len(name),
