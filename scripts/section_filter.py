@@ -54,6 +54,13 @@ def tag_frontmatter_sections(
         drops = parse_drop_verdict(verdict_output, {row["id"] for row in rows})
         save_drop_cache(cache_path, rows, drops)
 
+    if drops and len(drops) >= len(rows):
+        print(
+            f"[section-filter] WARNING: verdict dropped all {len(rows)} section(s) as "
+            "front/back matter — refusing, keeping everything",
+            file=sys.stderr,
+        )
+
     tagged = apply_frontmatter(chapters, drops)
     print(f"[section-filter] {len(tagged)}/{len(rows)} sections dropped as front/back matter", file=sys.stderr)
     for section in tagged:
