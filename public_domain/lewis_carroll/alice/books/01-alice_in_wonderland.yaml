@@ -32,7 +32,7 @@ ner:
     - Eaglet
     - Pigeon
 
-coref: false
+coref: true
 workers: 8
 
 min_mentions_absolute: 3

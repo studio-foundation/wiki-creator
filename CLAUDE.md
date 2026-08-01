@@ -155,7 +155,7 @@ studio run wiki-full --input-file <book.yaml> --live    # = make run
 the book yaml as each child's input:
 1. `wiki-extraction` — epub-parse, section-filter (pre/call/post), entity-extraction, entity-clustering, split-clusters
 2. `wiki-resolution` — chapter-summary, resolve-clusters, relationship-extraction, alias-resolution, alias-adjudication (pre/call/post), entity-classification, write-registry
-3. `wiki-preparation` — entity-status/affiliation/species (each pre/call/post), discover-relationships, classify-relationships, build-character-graph, build-event-layer, wiki-preparation
+3. `wiki-preparation` — entity-status/affiliation/species (each pre/call/post), discover-relationships, relation-reconciliation (pre/call/post, STU-754), classify-relationships, build-character-graph, build-event-layer, wiki-preparation
 4. `pages-export` — generate-wiki-pages, generate-book-synopsis, generate-event-pages, consolidate-editorial-stance, assemble, copyright-check, wiki-export
 
 A multi-tome series runs a fifth pipeline **once, after the tome loop** (STU-709):
