@@ -1,0 +1,19 @@
+{{Infobox event
+|nom=The creatures demand Alice repeat lessons; she attempts 'Tis the voice of the Sluggard' but it becomes 'Tis the voice of the Lobster' due to her distraction with the dance
+|participants=Alice
+|chapitre=10
+}}
+
+== Course of events ==
+
+Following a succession of recitations that had grown increasingly bewildering to her audience, Alice finds herself called upon once more to demonstrate her mastery of verse. The creatures, having grown frustrated with her previous attempts to explain the absurdities contained within her poems, demand that she repeat her lessons. In compliance with this demand, Alice sets about to recite the poem 'Tis the voice of the Sluggard,' a piece which ought to be a familiar exercise from her schooling.
+
+Yet as Alice undertakes the recitation, her attention proves fatally divided. Distracted by the spectacle of the dance unfolding around her—the whimsical movements and performances of her Wonderland companions—the words that emerge from her lips undergo a most peculiar transformation. Where 'Sluggard' ought to be spoken, Alice instead finds herself uttering 'Lobster' in its place. The poem, thus corrupted by her wandering mind, becomes 'Tis the voice of the Lobster' rather than the correct version, a slip that speaks to the dreamlike difficulty of maintaining composure in a realm where logic itself seems suspended.
+
+This moment of confusion and verbal mishap marks a turning point in Alice's ordeal, as the creatures' attention turns toward demonstrating the very dance that had so thoroughly captivated her during her recitation—an elaborate affair known as the Lobster Quadrille, complete with its own whimsical accompaniments and further bewilderments.
+
+== References ==
+
+* Alice's Adventures in Wonderland
+
+[[Category:Events]]

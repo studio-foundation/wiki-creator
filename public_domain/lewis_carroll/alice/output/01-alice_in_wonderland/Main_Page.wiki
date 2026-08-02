@@ -13,17 +13,16 @@
 == Important locations ==
 
 == Events ==
-* [[The Queen sentences the gardeners to execution, but Alice rescues them in a flower-pot]]
-* [[The Queen's grand procession arrives at the garden; Alice chooses not to bow]]
-* [[The Cheshire Cat vanishes and reappears, confirming that the baby indeed became a pig before disappearing gradually]]
-* [[Alice enters the Rabbit's house and finds the requested items, but discovers an unlabeled bottle near the looking glass]]
-* [[The Mock Turtle becomes intrigued when Alice claims the words she recited to the Caterpillar came out different than she remembered]]
-* [[After a frustrating exchange with the indifferent Caterpillar, Alice agrees to wait when he promises something important to say]]
-* [[Alice complains about being three inches tall, but the Caterpillar (who is exactly three inches high himself) declares it a good height and says she will adjust in time]]
-* [[The Rabbit and his companions attempt to extract Alice; she kicks a creature named Bill down the chimney]]
-* [[Alice and the wet animals gather on the bank; the Mouse proposes reciting history to dry them off]]
-* [[The Mouse begins telling his personal history but becomes angry when Alice misunderstands his 'long tail' and storms away]]
-* [[Left alone, Alice grieves over mentioning Dinah and waits sadly, hoping the Mouse will return]]
+* [[Alice declares the court nothing but a pack of cards and defies the Queen's orders, causing the card-creatures to fly at her and disperse]]
+* [[Alice observes the courtroom proceedings and notes the absurdity of the twelve jurors writing down their names before the trial has begun]]
+* [[The creatures demand Alice repeat lessons; she attempts 'Tis the voice of the Sluggard' but it becomes 'Tis the voice of the Lobster' due to her distraction with the dance]]
+* [[Alice re-enters the hall, uses the golden key to reach the garden, and eats the mushroom to shrink, finally arriving in the beautiful garden with flower-beds and fountains]]
+* [[She discovers an unlabeled bottle in the Rabbit's room and drinks from it, causing her to grow rapidly until she becomes trapped in the room with her limbs protruding from the window and chimney]]
+* [[Alice grows to nine feet tall and her body becomes disproportionately large, causing her distress about managing her distant feet]]
+* [[The Queen asks if Alice has seen the Mock Turtle and offers to have him tell his history; Alice meets the Gryphon, who assures her the Queen never actually executes anyone]]
+* [[Alice, bored while sitting by her sister, becomes curious when she spots a White Rabbit wearing a waistcoat and carrying a watch]]
+* [[The Rabbit and other animals outside attempt to retrieve Alice, including sending a creature named Bill down the chimney, whom Alice kicks out violently]]
+* [[The Dormouse tells a rambling story about three sisters named Elsie, Lacie, and Tillie who lived at the bottom of a treacle-well and learned to draw things beginning with M]]
 
 == Navigation ==
 * [[:Category:Characters|All characters]]
@@ -31,7 +30,7 @@
 * [[:Category:Organizations|All organizations]]
 
 == Statistics ==
-* 40 wiki pages
+* 39 wiki pages
 * 28 characters
 * 0 locations
 * 0 organizations

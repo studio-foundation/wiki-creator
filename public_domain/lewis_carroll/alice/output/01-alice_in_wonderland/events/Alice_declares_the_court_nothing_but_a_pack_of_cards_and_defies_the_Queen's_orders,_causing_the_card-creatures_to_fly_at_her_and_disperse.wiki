@@ -1,0 +1,19 @@
+{{Infobox event
+|nom=Alice declares the court nothing but a pack of cards and defies the Queen's orders, causing the card-creatures to fly at her and disperse
+|participants=Alice, Queen
+|chapitre=12
+}}
+
+== Course of events ==
+
+Following her earlier challenge to the court's logic and her careful retrieval of the scattered jurymen, Alice reaches the culmination of her confrontation with Wonderland's legal proceedings. The tension that has built through the trial comes to its crescendo when Alice, in a moment of extraordinary defiance, declares the court to be nothing but a pack of cards and refuses to obey the Queen's orders. This declaration represents Alice's ultimate rejection of the dream-logic that has governed Wonderland's absurd proceedings.
+
+Upon Alice's pronouncement and refusal, the card-creatures—the very substance of the court itself—respond in kind. They rise up and fly at her in a tumultuous display, their forms scattering and dispersing into the air. The Queen, as the embodiment of Wonderland's authority, finds herself undermined by Alice's simple but devastating statement of truth: that all the elaborate ceremony, all the nonsensical rules and predetermined verdicts, amount to nothing more than a child's playing cards.
+
+This event marks the moment when Alice's growing awareness of the dream's illusory nature becomes an act of rebellion, transforming her from a confused participant in Wonderland's proceedings into an agent who openly challenges its foundations. The dispersal of the card-creatures signals the fragility of the world that has contained her, foreshadowing the unraveling that will follow.
+
+== References ==
+
+* Alice's Adventures in Wonderland
+
+[[Category:Events]]
