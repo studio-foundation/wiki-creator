@@ -494,6 +494,10 @@ by someone who has read the novel and nothing else.
   `.worktrees/<slug>` worktree/branch, `git stash pop` inside it, commit there,
   open the PR from the worktree. `main` never carries the files — stash-and-pop
   is the bridge, not a one-off cleanup step.
+- **Iterating on a rule/doc mid-task stays on the same branch and PR.** New
+  commits on the existing branch, `git push`, PR updates in place — don't open a
+  second PR for a follow-up tweak in the same task. Only fine while the added
+  commits stay in scope (doc-only here); unrelated code creep still splits out.
 - **A finished task ends with an opened PR, not just a pushed branch.** Once a
   worktree's work is committed and pushed, open the PR as part of finishing the
   task — don't wait to be asked.
