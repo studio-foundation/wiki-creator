@@ -9,7 +9,7 @@ commands:
       book_dir:
         type: string
         required: true
-        description: This book's processing directory, given to you verbatim in the stage input — always pass it back exactly as received
+        from_context: input.book_dir
       query:
         type: string
         required: true
@@ -21,7 +21,8 @@ commands:
       parse_output: json
 
 prompt_snippet: |
-  You have access to book-search-search_book(book_dir, query) — full-text search
-  over this book's chapters. query is a literal phrase, not a regex. Call it as
-  many times as you need, with different phrases (a name, an alias, a keyword),
-  before answering. Every claim you make must quote a passage this tool returned.
+  You have access to book-search-search_book(query) — full-text search over
+  this book's chapters (always this book — you cannot choose another one).
+  query is a literal phrase, not a regex. Call it as many times as you need,
+  with different phrases (a name, an alias, a keyword), before answering.
+  Every claim you make must quote a passage this tool returned.

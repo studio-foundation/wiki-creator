@@ -31,10 +31,11 @@ def resolve_book_dir(book_dir: str, *, root: Path = PROJECT_ROOT) -> Path | None
     """The processing dir ``book_dir`` names under ``root``, or None when it is
     not one of this repo's own book directories.
 
-    Confines the tool to a book's own artifacts. `book_dir` is an
-    agent-supplied argument (the pre-stage hands it the real value, but nothing
-    stops the agent from sending something else) — without this gate a wrong or
-    crafted value would read any file under the repo the shell process can see.
+    Confines the tool to a book's own artifacts. Since STU-762, `book_dir` is a
+    `from_context` tool parameter — Studio resolves it from the stage's own
+    `input.book_dir`, not from the agent's tool call, so it can no longer be an
+    agent-echoed value. This gate stays as defense in depth against a malformed
+    or unresolved context value reading outside the two corpus roots.
     """
     if not _BOOK_DIR_RE.search(str(book_dir or "")):
         return None

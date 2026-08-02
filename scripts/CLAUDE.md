@@ -461,9 +461,12 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   no grounding-gate change (the returned quote already names the entity).
   `scripts/book_search_tool.py` is the `.tool.yaml` shell executor; it confines
   `book_dir` to the two corpus roots' shape (STU-623's glob, mirrored as a
-  regex) resolved under `PROJECT_ROOT`, rejecting path traversal — `book_dir`
-  is agent-supplied (the pre-stage hands it the real value, but a tool
-  parameter is not a guarantee the agent echoes it back unchanged).
+  regex) resolved under `PROJECT_ROOT`, rejecting path traversal. `book_dir`
+  is a `from_context` tool parameter (STU-762, Studio kernel feature): the
+  executor resolves it from the stage's own `input.book_dir` rather than the
+  LLM's tool call, so it is never agent-supplied and the model cannot echo
+  back a different book's path — the regex gate is defense in depth, not the
+  only guard.
   **The cache moved to the engine.** The pre stage no longer keeps a
   script-side roster-diff cache to decide `needs_verdict` — the engine's
   per-item resume (STU-605) already skips an unchanged item, keyed on the
