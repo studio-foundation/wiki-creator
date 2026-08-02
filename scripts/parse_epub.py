@@ -202,6 +202,54 @@ def strip_gutenberg_boilerplate(chapters: list[dict]) -> list[dict]:
     return [ch for ch in chapters if ch["content"].strip()]
 
 
+# A printed line ends a real sentence with one of these — a period/!/?, a closing
+# quote after one, an ellipsis, or a dash trailing off into what follows (STU-768:
+# "...and their names were—" leads into a list on the next line). A title-page
+# label (a title, "BY", an author or publisher name, a print date) carries none of
+# them; it is a name or a date, not a clause.
+_SENTENCE_TERMINAL_CHARS = ('.', '!', '?', '…', '—', '–', '’', '”', '"')
+
+# How many leading paragraphs to look through before giving up: a chapter that never
+# hits a sentence terminal within this many paragraphs is not a title page glued to
+# prose — it is something this heuristic doesn't understand, so it is left alone
+# rather than emptied.
+_MAX_FRONTMATTER_PARAGRAPHS = 12
+
+# A single label paragraph ahead of the prose is the chapter's own heading
+# ("Chapter One" is a leaf block, in-body, exactly like a title-page line, and
+# just as terminal-free) — only two or more in a row is a real title-page block.
+_MIN_FRONTMATTER_PARAGRAPHS = 2
+
+
+def strip_inline_frontmatter(chapters: list[dict]) -> list[dict]:
+    """Drop a title-page block glued into the book's first chapter (STU-768).
+
+    A Gutenberg "images" edition can pack the title/author/publisher/print-info
+    block directly into the *same* spine item as the story, with no chapter
+    boundary between them — `is_frontmatter_chapter` cannot help, since the
+    whole thing is one chapter, not two. The block prints as a run of short,
+    label-like paragraphs with no sentence terminal; the story proper is the
+    first paragraph that has one. Only `chapters[0]` is touched — a title page
+    is only ever glued to the very start of a book, never mid-book.
+    """
+    if not chapters:
+        return chapters
+    paragraphs = chapters[0]["content"].split("\n\n")
+    limit = min(len(paragraphs) - 1, _MAX_FRONTMATTER_PARAGRAPHS)
+    cut = 0
+    for i in range(limit):
+        if paragraphs[i].strip().endswith(_SENTENCE_TERMINAL_CHARS):
+            break
+        cut = i + 1
+    else:
+        cut = 0  # never hit a sentence terminal within the cap: leave it alone
+    if cut < _MIN_FRONTMATTER_PARAGRAPHS:
+        cut = 0
+    if cut:
+        chapters[0]["content"] = "\n\n".join(paragraphs[cut:]).strip()
+    return chapters
+
+
 def _first_person_regex(language: str) -> re.Pattern | None:
     """Build the first-person detection regex from cue_words/<language>.json.
 
@@ -687,6 +735,7 @@ def parse_epub(
             print(f"parse_epub: declared chapter mark not printed anywhere: {mark!r}", file=sys.stderr)
 
     chapters = strip_gutenberg_boilerplate(chapters)
+    chapters = strip_inline_frontmatter(chapters)
 
     if max_chapters is not None and max_chapters > 0:
         chapters = chapters[:max_chapters]
