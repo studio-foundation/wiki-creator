@@ -47,6 +47,7 @@ from wiki_creator.coverage import log_drop
 from wiki_creator.narrative_arc import NarrativeArc, narrative_arc
 from wiki_creator.page_templates import (
     DEFAULT_VALIDATE_PAGES,
+    canonical_relationship,
     few_shot_example,
     language_name,
     length_guide,
@@ -62,7 +63,11 @@ from wiki_creator.provenance import content_units, relation_units
 from wiki_creator import studio_io
 from wiki_creator.entity_links import link_first_mentions
 from wiki_creator.entity_status import death_label, status_label
-from wiki_creator.infobox_relationships import relationship_infobox_fields
+from wiki_creator.infobox_relationships import (
+    MIN_INFOBOX_COOCCURRENCE,
+    bucket_for_type,
+    relationship_infobox_fields,
+)
 from wiki_creator.registry import Registry, normalize_name
 from wiki_creator.spoiler_blocks import relationship_index_lines, per_relation_prose_enabled
 from wiki_creator.relationship_types import usable_relationship_type
@@ -503,9 +508,21 @@ def build_prompt(
             related_lines.append(f"    - Snippet: {snippet}")
     related_block = "\n".join(related_lines) if related_lines else "  (no related entities available)"
 
+    # STU-774: the infobox (relationship_infobox_fields) always shows every
+    # family/romance/friends_allies/enemies bond above MIN_INFOBOX_COOCCURRENCE,
+    # regardless of rank. Priority-boosting those same bonds here, before the
+    # cooccurrence cut, keeps the top-10 prose window from silently dropping a
+    # bond the infobox already promised — else the two surfaces name disjoint
+    # entities on the same page.
+    def _relationship_sort_key(r: dict) -> tuple[bool, int]:
+        count = int(r.get("cooccurrence_count", 0) or 0)
+        rtype = canonical_relationship(usable_relationship_type(r.get("relationship_type")))
+        in_infobox = bool(bucket_for_type(rtype)) and count >= MIN_INFOBOX_COOCCURRENCE
+        return (in_infobox, count)
+
     relationships = sorted(
         entity.get("relationships", []),
-        key=lambda r: int(r.get("cooccurrence_count", 0) or 0),
+        key=_relationship_sort_key,
         reverse=True,
     )
     enrichment_budget = _RELATIONSHIP_ENRICHMENT_BUDGET.get(importance, 0)

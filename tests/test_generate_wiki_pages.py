@@ -961,6 +961,25 @@ def test_build_prompt_relationship_enrichment_budget_by_importance():
     assert "Anchor each" not in prompt
 
 
+def test_build_prompt_relationships_prioritize_infobox_bonds_over_raw_count():
+    """STU-774: a bond the infobox already promises (bucketed type, count >=
+    MIN_INFOBOX_COOCCURRENCE) must survive the top-10 prose cut even when
+    outranked by raw cooccurrence, so the prose section never omits an entity
+    the infobox names."""
+    high_count_acquaintances = [
+        _relationship(f"Perso {i}", 100 - i, relationship_type="connaissance")
+        for i in range(10)
+    ]
+    low_count_friend = _relationship("Dinah", 2, relationship_type="ami")
+    entity = _entity_with_relationships(
+        "principal", high_count_acquaintances + [low_count_friend]
+    )
+    prompt = build_prompt(entity, "Alice's Adventures in Wonderland",
+                           ["infobox", "biography", "relationships"], lang="en")
+    assert "related_entity: Dinah" in prompt
+    assert "related_entity: Perso 9" not in prompt
+
+
 def test_build_prompt_without_evidence_fields_is_unchanged():
     """Regression guard: relations lacking the STU-438 fields keep the bare format."""
     entity = _entity_with_relationships("principal", [
