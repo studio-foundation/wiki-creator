@@ -165,3 +165,57 @@ def test_main_disambiguates_cross_type_homonyms(tmp_path, monkeypatch, capsys):
 def test_main_merge_policy_leaves_titles_untouched(tmp_path, monkeypatch, capsys):
     pages = _run_main(tmp_path, monkeypatch, capsys, naming_cfg={"collision_policy": "merge"})
     assert [p["title"] for p in pages] == ["Adarlan", "Adarlan"]
+
+
+# --- STU-773: drop pages orphaned by an upstream roster change ---
+
+from scripts.assemble_wiki_pages import _drop_orphaned_pages, _load_current_roster_titles
+
+
+def test_load_current_roster_titles_reads_batch_entities(tmp_path):
+    wiki_inputs = tmp_path / "wiki_inputs"
+    wiki_inputs.mkdir()
+    (wiki_inputs / "batch_1.json").write_text(json.dumps({
+        "entities": [{"canonical_name": "Cotton-tail"}, {"canonical_name": "Peter"}],
+    }), encoding="utf-8")
+    (wiki_inputs / "batch_2.json").write_text(json.dumps({
+        "entities": [{"canonical_name": "Flopsy"}],
+    }), encoding="utf-8")
+    assert _load_current_roster_titles(wiki_inputs) == {"Cotton-tail", "Peter", "Flopsy"}
+
+
+def test_load_current_roster_titles_absent_dir_returns_none(tmp_path):
+    assert _load_current_roster_titles(tmp_path / "missing") is None
+
+
+def test_drop_orphaned_pages_removes_stale_titles():
+    pages = [_page(title="Peter"), _page(title="Cotton")]
+    kept = _drop_orphaned_pages(pages, {"Peter"})
+    assert [p.title for p in kept] == ["Peter"]
+
+
+def test_drop_orphaned_pages_keeps_everything_when_roster_covers_all():
+    pages = [_page(title="Peter"), _page(title="Flopsy")]
+    assert _drop_orphaned_pages(pages, {"Peter", "Flopsy"}) == pages
+
+
+def test_main_drops_page_for_entity_no_longer_in_roster(tmp_path, monkeypatch, capsys):
+    processing = tmp_path / "library" / "a" / "s" / "processing_output" / "01"
+    processing.mkdir(parents=True)
+    (processing / "wiki_pages.json").write_text(json.dumps({"pages": [
+        {"title": "Cotton-tail", "entity_type": "PERSON", "importance": "principal",
+         "infobox_fields": {}, "content": "## Bio\n\nRabbit."},
+        {"title": "Cotton", "entity_type": "PERSON", "importance": "principal",
+         "infobox_fields": {}, "content": "## Bio\n\nStale."},
+    ]}), encoding="utf-8")
+    wiki_inputs = tmp_path / "library" / "a" / "s" / "wiki_inputs" / "01"
+    wiki_inputs.mkdir(parents=True)
+    (wiki_inputs / "batch_1.json").write_text(json.dumps({
+        "entities": [{"canonical_name": "Cotton-tail"}],
+    }), encoding="utf-8")
+    cfg = {"file_path": str(tmp_path / "library" / "a" / "s" / "books" / "01.epub")}
+    payload = {"additional_context": yaml.safe_dump(cfg)}
+    monkeypatch.setattr(sys, "stdin", io.StringIO(json.dumps(payload)))
+    main()
+    pages = json.loads(capsys.readouterr().out)["pages"]
+    assert [p["title"] for p in pages] == ["Cotton-tail"]

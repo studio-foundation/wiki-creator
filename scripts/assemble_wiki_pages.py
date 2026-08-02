@@ -89,6 +89,42 @@ def _filter_failed_pages(pages: list[WikiPage]) -> list[WikiPage]:
     return exportable
 
 
+def _load_current_roster_titles(wiki_inputs_dir: Path) -> set[str] | None:
+    """Canonical names of every entity in the current wiki_inputs batch files —
+    the roster wiki_pages.json's per-entity pages must still belong to (STU-773).
+    None when wiki_inputs is absent (e.g. a standalone/test invocation), so
+    callers skip the roster check rather than dropping every page."""
+    if not wiki_inputs_dir.is_dir():
+        return None
+    titles: set[str] = set()
+    for path in sorted(wiki_inputs_dir.glob("*.json")):
+        try:
+            batch = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        for entity in batch.get("entities", []) or []:
+            name = entity.get("canonical_name", "")
+            if name:
+                titles.add(name)
+    return titles
+
+
+def _drop_orphaned_pages(pages: list[WikiPage], roster_titles: set[str]) -> list[WikiPage]:
+    """Drop a per-entity page whose title is no longer in the current roster
+    (STU-773): the entity was renamed, filtered, or reclassified away by an
+    upstream stage after this page was generated, and nothing else in the
+    pipeline retracts it — the resume cache that produced it has no way to
+    notice the roster moved on."""
+    kept = [p for p in pages if p.title in roster_titles]
+    dropped = [p.title for p in pages if p.title not in roster_titles]
+    if dropped:
+        print(
+            f"[assemble-wiki-pages] Dropping {len(dropped)} orphaned page(s) no longer in the roster: {', '.join(dropped)}",
+            file=sys.stderr,
+        )
+    return kept
+
+
 def main() -> None:
     payload = studio_io.read_payload()
     paths = studio_io.paths_from_payload(payload)
@@ -103,6 +139,9 @@ def main() -> None:
         sys.exit(1)
 
     pages = _filter_failed_pages(_read_pages(output_file))
+    roster_titles = _load_current_roster_titles(paths.wiki_inputs)
+    if roster_titles is not None:
+        pages = _drop_orphaned_pages(pages, roster_titles)
     # dict-only boundary: the synopsis page comes from a separate artifact
     # (book_synopsis.json, not wired to studio_io in this task) as a plain
     # dict, and the stdout payload mixes it in with the validated pages.
