@@ -91,5 +91,51 @@
     "new_issues": [
       "STU-771"
     ]
+  },
+  {
+    "run": 3,
+    "date": "2026-08-02",
+    "book": "01-peter-rabbit",
+    "providers": {
+      "generation": "default (unpinned in book YAML)",
+      "verdict_agents": "claude-code/claude-haiku-4-5",
+      "chapter_summaries": "extractive (generation.chapter_summary.mode not set)"
+    },
+    "pages_generated": 6,
+    "infobox_pct": 100,
+    "lang_expected_pct": 100,
+    "alias_duplicates": 0,
+    "hallucinations": 0,
+    "gt_violations": [],
+    "coverage": {
+      "batch_entities": 6,
+      "pages_generated": 6,
+      "missing": [],
+      "failed": [],
+      "filtered_before_batch": 0
+    },
+    "weak_entities": [
+      "Peter (5 rels, 100% generic evolution, 100% empty key_moments)",
+      "McGregor (1 rel, 100% generic evolution, 100% empty key_moments)",
+      "Flopsy (4 rels, 100% generic evolution, 100% empty key_moments)",
+      "Mopsy (4 rels, 100% generic evolution, 100% empty key_moments)",
+      "Cotton-tail (4 rels, 100% generic evolution, 100% empty key_moments)",
+      "Rabbit (4 rels, 100% generic evolution, 100% empty key_moments)"
+    ],
+    "regression": {
+      "prefixed_keys": "✅",
+      "epub_ids": "✅",
+      "entity_type_null": "✅",
+      "alias_duplicates": "✅ (Cotton/Cotton-tail duplicate gone, STU-771 confirmed fixed)",
+      "cross_serie": "✅",
+      "evolution_quality": "❌ (unchanged, likely inherent to a one-chapter book — see run 1 verdict)",
+      "temporal_context": "n/a (extractive summaries this run, same as runs 1-2 — STU-769 still untested live)",
+      "ground_truth": "✅"
+    },
+    "verdict": "First clean run of this fixture: 6 pages, 6/6 batch entities covered, 0 ground-truth violations, 0 alias duplicates, no FREDERICK WARNE phantom, and the top EVENT page now renders the correct opening event instead of the glued front-matter blob — STU-767, STU-768 and STU-771 all confirmed fixed against live artifacts. STU-769 (flashback-cue misfire) stays unverified because chapter summaries are still extractive in this book YAML; it was fixed and merged per the commit log but this run gives it no exercise. Two new, generic defects surfaced by tracing what should have been fully clean: (1) the run-2 phantom EVENT page's rendered .wiki file is still sitting on disk under output/01-peter-rabbit/events/ — wiki_export.py has no eviction logic at all (STU-773's fix only stops a stale entry re-entering the assembled JSON page list, it never prunes a file a prior run already wrote), filed as STU-776; (2) the 'Rabbit' character page is titled and canonicalized without its honorific even though the source text and the page's own biography both say 'Mrs. Rabbit' — spaCy's PERSON span drops the leading 'Mrs.' and nothing in entity_extraction.py re-attaches it, filed as STU-777. Neither is a hallucination or a regression; both are pre-existing generic gaps this book's small size made easy to spot at a glance. Priority for next run: STU-776 first (stale file cleanup is cheap and would resolve on its own on the very next unfiltered book-level run once fixed), then STU-777 if a Peter Rabbit re-run is otherwise already planned.",
+    "new_issues": [
+      "STU-776",
+      "STU-777"
+    ]
   }
 ]
