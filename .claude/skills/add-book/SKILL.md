@@ -58,6 +58,32 @@ PY
 If the author/series directory already exists under either root, that decision is
 already made — the new tome joins it, whatever the metadata says.
 
+**A Gutenberg epub is not always one book.** Many classic-author volumes (a
+Maupassant/Chekhov/de Maupassant-style *Œuvres complètes*) bundle several
+stories after the one the user actually wants — check the parsed chapter list
+(step 3) for headings that don't belong to the target title before authoring
+anything. If it's an anthology, trim the epub down to the target story alone
+at the zip/XML level before proceeding:
+
+1. `ebooklib.epub.read_epub` + `book.spine`/`book.get_item_with_id` to find
+   which spine file(s) hold the target story and which hold the rest.
+2. If the story shares a spine file with other content (chapters split by
+   internal `<div id="pgepubid...">` anchors within one packed HTML file, not
+   separate files), parse that file's body, keep everything up to the next
+   story's heading anchor, drop the rest (`lxml.etree`, not string slicing —
+   preserves the markup).
+3. Drop any spine file that is *entirely* other stories from the manifest
+   and spine (`content.opf`), and remove it from the zip.
+4. Keep the Project Gutenberg header/footer boilerplate spine files
+   untouched — redistribution terms require them.
+5. Rewrite with plain `zipfile` (preserve `mimetype` as the first entry,
+   uncompressed) — **do not** round-trip through `ebooklib.epub.write_epub`,
+   which can crash on `toc.ncx` regeneration for a real-world epub whose
+   nav entries never got a `uid` (hit on `pg10746`; reproduces even
+   unmodified, read-then-write with zero edits).
+6. Re-parse with `scripts/parse_epub.py` and confirm the chapter count now
+   matches only the target story (plus its Gutenberg boilerplate chunks).
+
 ## Step 2 — Import
 
 `entity_slug` derives ugly slugs from long titles
