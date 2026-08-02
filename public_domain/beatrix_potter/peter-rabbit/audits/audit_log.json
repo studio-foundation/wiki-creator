@@ -40,6 +40,56 @@
       "ground_truth": "✅"
     },
     "verdict": "First run of a deliberately small fixture book. Ground truth is clean (0 violations, 7-entity corpus written before this run existed) and coverage of the batch roster is complete, but the run surfaced three real, generic pipeline bugs invisible to a 5-page book's ground-truth corpus: a hyphenated character name gets silently truncated in its structured identity (STU-767), front matter glued into a single-spine-item chapter becomes both a phantom character page and the book's highest-salience EVENT page (STU-768), and a fairy-tale opener misfires the flashback-cue detector (STU-769). Relation quality (100% generic evolution, 0% key_moments) is likely inherent to a one-chapter book with no cross-chapter arc, not a defect, and Flopsy's roster drop was a corpus/YAML gap, now fixed by widening ner.character_names to all four siblings — needs a re-run to confirm. Priority for next run: verify STU-767/768/769 fixes and the character_names widening together (they're independent, one re-run covers all three) before treating this book as a stable smoke fixture.",
-    "new_issues": ["STU-767", "STU-768", "STU-769"]
+    "new_issues": [
+      "STU-767",
+      "STU-768",
+      "STU-769"
+    ]
+  },
+  {
+    "run": 2,
+    "date": "2026-08-01",
+    "book": "01-peter-rabbit",
+    "providers": {
+      "generation": "default (unpinned in book YAML; WIKI_MODEL env-dependent, default qwen2.5)",
+      "verdict_agents": "claude-code/claude-haiku-4-5",
+      "chapter_summaries": "extractive (generation.chapter_summary.mode not set)"
+    },
+    "pages_generated": 8,
+    "infobox_pct": 100,
+    "lang_expected_pct": 100,
+    "alias_duplicates": 0,
+    "hallucinations": 0,
+    "gt_violations": [],
+    "coverage": {
+      "batch_entities": 7,
+      "pages_generated": 8,
+      "missing": [],
+      "failed": [],
+      "filtered_before_batch": 0
+    },
+    "weak_entities": [
+      "Peter (2 rels, 100% generic evolution, 100% empty key_moments)",
+      "McGregor (1 rel, 100% generic evolution, 100% empty key_moments)",
+      "Flopsy (1 rel, 100% generic evolution, 100% empty key_moments)",
+      "Mopsy (1 rel, 100% generic evolution, 100% empty key_moments)",
+      "Cotton-tail (1 rel, 100% generic evolution, 100% empty key_moments)",
+      "Rabbit (4 rels, 100% generic evolution, 100% empty key_moments)",
+      "FREDERICK WARNE (0 relations — phantom entity, STU-768 not reflected in this run, see verdict)"
+    ],
+    "regression": {
+      "prefixed_keys": "✅",
+      "epub_ids": "✅",
+      "entity_type_null": "✅",
+      "alias_duplicates": "❌ (Cotton / Cotton-tail duplicate page, new, STU-771)",
+      "cross_serie": "✅",
+      "evolution_quality": "❌",
+      "temporal_context": "n/a (extractive summaries this run; STU-769 untestable without generation.chapter_summary.mode: llm)",
+      "ground_truth": "✅ (0 violations, but corpus doesn't cover Cotton/FREDERICK WARNE — see verdict)"
+    },
+    "verdict": "This run's own extraction/wiki-preparation stages (epub_data.json 20:16, persons_full.json 20:08, events.json 20:18, batches 20:18) executed BEFORE STU-767/768/769's fixes landed (commits 20:17-20:27), so the run does not actually validate those fixes despite running after they were filed: FREDERICK WARNE is still a phantom entity and the highest-salience EVENT page still renders the raw glued front-matter blob (STU-768's exact symptom), and chapter summaries stayed on the extractive path so STU-769's flashback-detector fix is untested either way. STU-767's fix DID land in time for entity_extraction specifically (entities_classified.json regenerated 20:16:17, one minute before the commit, using the uncommitted local diff already applied) and correctly produced 'Cotton-tail' with Flopsy now on the roster (character_names widening confirmed working, 7 entities up from 6). But the wiki-pages generation stage served a stale global map-cache entry from run 1 (cached_at 18:49:27, pre-dating every fix today) whose title field still reads the old truncated 'Cotton', producing a duplicate page alongside the freshly-generated correct 'Cotton-tail' page — filed as STU-771, exact re-dispatch mechanism not yet pinned. Ground-truth validation still reads 0 violations, but that is because the corpus has no entry for Cotton/FREDERICK WARNE at all (an extra/wrong entity trips no signal), not evidence those pages are correct. Priority for next run: clear .studio/runs/map-cache before re-running now that all three of STU-767/768/769 are fully merged, and set generation.chapter_summary.mode: llm at least once to actually exercise STU-769's fix.",
+    "new_issues": [
+      "STU-771"
+    ]
   }
 ]

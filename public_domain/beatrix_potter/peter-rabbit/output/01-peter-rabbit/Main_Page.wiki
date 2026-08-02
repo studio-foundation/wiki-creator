@@ -8,6 +8,8 @@
 * [[Peter]]
 * [[McGregor]]
 * [[Cotton]]
+* [[Flopsy]]
+* [[Cotton-tail]]
 
 == Important locations ==
 
@@ -20,7 +22,7 @@
 * [[:Category:Organizations|All organizations]]
 
 == Statistics ==
-* 8 wiki pages
-* 6 characters
+* 10 wiki pages
+* 8 characters
 * 0 locations
 * 0 organizations
