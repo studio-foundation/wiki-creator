@@ -80,15 +80,24 @@ def _entity_total_mentions(entity: dict) -> int:
     return sum(len(mentions) for mentions in entity.get("mentions_by_chapter", {}).values())
 
 
-def filter_entities_by_min_mentions(entities_full: dict, min_mentions_absolute: int) -> dict:
-    """Keep only entities whose total mentions are >= min_mentions_absolute."""
+def filter_entities_by_min_mentions(
+    entities_full: dict, min_mentions_absolute: int, role_seed_keys: frozenset[str] = frozenset()
+) -> dict:
+    """Keep only entities whose total mentions are >= min_mentions_absolute.
+
+    An entity synthesized from a declared `roles_naming_one_character` word
+    (STU-778 — e.g. a character named only "Father", never a proper noun) is
+    exempt: the floor exists to drop noise on ordinarily-mentioned characters,
+    not to re-apply a frequency test to a role the book editor already vouched
+    for as naming one character.
+    """
     kept = {}
     for entity_id, entity in entities_full.items():
         total = _entity_total_mentions(entity)
-        if total >= min_mentions_absolute:
+        name = (entity.get("raw_mentions") or [entity_id])[0]
+        if total >= min_mentions_absolute or name.strip().lower() in role_seed_keys:
             kept[entity_id] = entity
         else:
-            name = (entity.get("raw_mentions") or [entity_id])[0]
             log_drop("entity-extraction.min_mentions", name, total, f"below min_mentions_absolute ({min_mentions_absolute})")
     return kept
 
@@ -813,6 +822,19 @@ def main() -> None:
 
     _attach_gazetteer(nlp, list(ner.character_names))
 
+    # Role-word seeding (STU-778): a book-declared role
+    # (`classification.roles_naming_one_character`) that spaCy never tags,
+    # because it is a common noun, not a proper name ("Father", "the Captain").
+    # Matched case-insensitively so both "Father" and "father" are candidate
+    # spans; `_is_valid_mention`'s uppercase-first-letter rule below still
+    # decides which occurrences actually become a mention.
+    classification_cfg = input_data.get("classification", {}) or {}
+    role_seeds = list(classification_cfg.get("roles_naming_one_character", []))
+    _attach_gazetteer(nlp, role_seeds, case_sensitive=False, pipe_name="role_seed_gazetteer")
+    role_seed_keys = frozenset(
+        word.strip().lower() for word in role_seeds if word and word.strip()
+    )
+
     _log_pipeline(nlp, loaded_model)
     _audit_ner_labels(nlp)
     _warn_if_no_pos_tagger(nlp)
@@ -834,7 +856,9 @@ def main() -> None:
         sys.exit(1)
 
     min_mentions_absolute = _get_min_mentions_absolute(input_data)
-    filtered_entities = filter_entities_by_min_mentions(result["entities"], min_mentions_absolute)
+    filtered_entities = filter_entities_by_min_mentions(
+        result["entities"], min_mentions_absolute, role_seed_keys
+    )
     entities_for_resolution, entities_full = split_entities(filtered_entities)
 
     if not entities_for_resolution:

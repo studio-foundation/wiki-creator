@@ -35,6 +35,16 @@ workers: 8
 # left offstage.
 min_mentions_absolute: 2
 
+classification:
+  # STU-778: "your Father had an accident there; he was put in a pie by Mrs.
+  # McGregor" is the story's only mention of Peter's father, and he is never
+  # given a proper name — a bare role word, capitalized as Victorian address,
+  # is the only name he ever has in this book. Declaring it here seeds a PERSON
+  # candidate for him and exempts it from min_mentions_absolute (a one-off role
+  # mention, not a regularly-named character).
+  roles_naming_one_character:
+    - father
+
 generation:
   register: >-
     A gentle, matter-of-fact Edwardian children's-story voice: warm and lightly

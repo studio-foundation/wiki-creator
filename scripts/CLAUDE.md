@@ -112,6 +112,45 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   why splitting `role_words` into titles-vs-species — the shape the ticket
   proposed — would have kept `King` → `Brannon`.
 
+- `roles_naming_one_character` also seeds an entity, not just a merge (STU-778):
+  every mechanism above (`is_bare_role`, `_detect_pure_title_in_context`,
+  `_leading_role`) presupposes a candidate PERSON already exists to strip or
+  merge — none of them can conjure one from nothing. Peter Rabbit's father is
+  never given a proper name at all: `"your Father had an accident there; he was
+  put in a pie by Mrs. McGregor"` is his only mention in the whole book, so no
+  span downstream of `doc.ents` ever has anything to work with. `entity_extraction.py`
+  now attaches a **second** `BookGazetteer` (`wiki_creator/nlp/gazetteer.py`,
+  `case_sensitive=False`/`LOWER` — a role word is book-declared lowercase but a
+  book capitalizes it as address, `"Father"`) keyed off the same
+  `classification.roles_naming_one_character` list `alias-resolution` already
+  reads, so a reader declaring a role there gets both behaviors — merge into a
+  proper name if one is found nearby, or stand alone as its own entity if none
+  ever is — from one config line, not two.
+  **`_is_valid_mention`'s uppercase-first-letter rule is the recall boundary, on
+  purpose.** Matching case-insensitively catches "Father"/"father"/"FATHER" as
+  *candidate* spans, but the extractor's existing validity gate (same one every
+  other PERSON span passes through) only keeps the capitalized ones — a bare
+  lowercase "his father" stays the common noun, never a page. This mirrors why
+  the declared-name gazetteer is case-sensitive at all: a role word only
+  functions as a name-substitute when the book capitalizes it that way. A book
+  whose role word is never capitalized synthesizes nothing — a real, known gap
+  (no book in the corpus needs it today), left rather than solved, per STU-538's
+  "measure before adding a heuristic" norm.
+  **Exempt from `min_mentions_absolute`, not double-gated on it.**
+  `filter_entities_by_min_mentions` takes the same role-word set and keeps a
+  matching entity regardless of mention count — the floor exists to cut noise on
+  an *ordinarily*-mentioned character, and a role the editor already declared as
+  naming one character has already cleared a stricter bar than a frequency
+  count. Peter Rabbit's `Father` has exactly one mention against
+  `min_mentions_absolute: 2`.
+  **Two gazetteer pipes need two names.** spaCy's `Language.factory` component
+  name collides on a second `add_pipe("book_gazetteer", ...)` call with the same
+  default name, so `attach()` takes a `pipe_name` — the declared-name gazetteer
+  keeps `book_gazetteer` (byte-identical for every existing caller), the
+  role-seed one is `role_seed_gazetteer`. `is_bare_role`/
+  `_detect_pure_title_in_context` are unchanged: they still only ever *decide
+  what to do with* a candidate, seeded or not.
+
 
 - Contextual alias adjudication (STU-539): the alias pair no rule proposes is
   decided by one LLM verdict per book, over the **whole PERSON roster** — the

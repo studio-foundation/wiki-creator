@@ -83,3 +83,26 @@ def test_attach_appends_after_the_ner_slot():
     nlp.add_pipe("ner")
     attach(nlp, NAMES)
     assert nlp.pipe_names[-1] == "book_gazetteer"
+
+
+def test_case_insensitive_matches_both_capitalised_and_lowercase():
+    nlp = blank_nlp()
+    comp = BookGazetteer(nlp, ["father"], "PERSON", case_sensitive=False)
+    doc = comp(nlp("Your Father had an accident. His father was never seen again."))
+    assert [e.text for e in doc.ents] == ["Father", "father"]
+
+
+def test_case_sensitive_default_leaves_lowercase_role_word_alone():
+    nlp = blank_nlp()
+    comp = BookGazetteer(nlp, ["Father"], "PERSON")
+    doc = comp(nlp("his father was never seen again"))
+    assert doc.ents == ()
+
+
+def test_attach_with_distinct_pipe_names_coexist():
+    nlp = blank_nlp()
+    attach(nlp, ["Hatter"])
+    attach(nlp, ["father"], case_sensitive=False, pipe_name="role_seed_gazetteer")
+    assert nlp.pipe_names[-2:] == ["book_gazetteer", "role_seed_gazetteer"]
+    doc = nlp("The Hatter told Alice about her Father.")
+    assert {e.text for e in doc.ents} == {"Hatter", "Father"}
