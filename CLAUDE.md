@@ -478,8 +478,29 @@ by someone who has read the novel and nothing else.
 
 ## Working Norms
 
-- **ALWAYS use a git worktree for every task.** Start each task in its own isolated worktree/branch off `main` — never work directly on a shared or unrelated branch. This keeps every change scoped to a single issue and prevents mixing concerns.
+- **ALWAYS use a git worktree for every task, no exceptions.** Never work directly
+  on `main`, in the main checkout, or on a shared/unrelated branch — every task
+  gets its own worktree/branch. This has slipped repeatedly (leftover diffs on
+  `main`) — treat it as a hard rule, not a default.
+- **Worktrees live under `.worktrees/` in the repo root** (`.worktrees/<slug>`),
+  branch named after the issue/task. Sibling-directory worktrees
+  (`../wiki-creator-stu-XXX`, `../wiki-creator-worktrees/stu-XXX`) and
+  `.claude/worktrees/` are pre-existing drift, not the convention — don't add
+  more of those; new worktrees go in `.worktrees/`.
   - **A worktree runs its own `scripts/` against the checkout `pip install -e .` pinned (STU-569).** The editable install records one absolute path for the whole interpreter, so a subprocess (`studio run`, `python scripts/...`) imports `wiki_creator` from *that* tree, not the worktree it was launched from. `make` and the pytest `conftest` prepend the right tree, so those paths are correct by construction; anything else needs `PYTHONPATH=$(pwd)`. `wiki_creator/__init__.py` now fails loudly when the imported package is not the one under the cwd (`WIKI_CREATOR_ALLOW_FOREIGN_CHECKOUT=1` opts out) — the silent case (unchanged signature, changed body, green suite on code the branch never ran) is what this closes.
+- **An audit/run that writes to `main` (reads/writes `library/`, `public_domain/`
+  output on disk) still ends up producing a diff on `main` by nature of the
+  tooling.** When that diff needs a PR: `git stash -u` on `main`, create the
+  `.worktrees/<slug>` worktree/branch, `git stash pop` inside it, commit there,
+  open the PR from the worktree. `main` never carries the files — stash-and-pop
+  is the bridge, not a one-off cleanup step.
+- **Iterating on a rule/doc mid-task stays on the same branch and PR.** New
+  commits on the existing branch, `git push`, PR updates in place — don't open a
+  second PR for a follow-up tweak in the same task. Only fine while the added
+  commits stay in scope (doc-only here); unrelated code creep still splits out.
+- **A finished task ends with an opened PR, not just a pushed branch.** Once a
+  worktree's work is committed and pushed, open the PR as part of finishing the
+  task — don't wait to be asked.
 - Prefer `rg` for search.
 - Use `apply_patch` for manual edits.
 - Do not assume docs are current; verify against `Makefile`, pipeline YAML, and tests.
