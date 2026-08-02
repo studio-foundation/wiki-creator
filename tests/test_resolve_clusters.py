@@ -20,6 +20,15 @@ def test_default_noise_words_contains_en_and_fr():
     assert "oui" in _NOISE_WORDS   # French
 
 
+def test_bare_cardinal_number_is_not_relevant():
+    """STU-761: Alice's croquet-ground gardeners are addressed only by their
+    card-deck rank ("Two", "Five", "Seven" of Spades) — NER tags the bare
+    numeral as a PERSON, and it must not survive as a standalone entity."""
+    assert not is_relevant("Two")
+    assert not is_relevant("Five")
+    assert not is_relevant("Seven")
+
+
 def _splits(name: str) -> dict:
     return {
         "by_type": {
@@ -66,6 +75,20 @@ def test_main_reads_splits_from_disk_not_from_stage_context(monkeypatch, tmp_pat
     })
 
     assert [e["canonical_name"] for e in out["entities"]] == ["Celaena"]
+
+
+def test_bare_card_rank_single_is_dropped(monkeypatch, tmp_path):
+    """STU-761: "Two" (Alice's croquet-ground gardener, "Two of Spades") is a
+    single, not a multi-mention cluster, so it takes the same singles_resolved
+    path a bare stopword does (STU-740) and must be dropped the same way."""
+    processing = tmp_path / "processing"
+    processing.mkdir()
+    (processing / "splits.json").write_text(json.dumps(_splits("Two")), encoding="utf-8")
+    paths = type("_Paths", (), {"processing": processing})()
+
+    out = _run_main(monkeypatch, paths, {"additional_context": "file_path: fake.epub"})
+
+    assert out["entities"][0]["relevant"] is False
 
 
 def test_stopword_single_is_dropped(monkeypatch, tmp_path):

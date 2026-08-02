@@ -105,7 +105,17 @@
     "he",
     "she",
     "they",
-    "we"
+    "we",
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten"
   ],
   "false_positive_words": [],
   "first_person_artifact_tails": [
