@@ -7,6 +7,7 @@ Studio script executor interface:
   Output (stdout): {"files_written": N, "wiki_dir": "output/wiki"}
 """
 import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -173,10 +174,15 @@ def main() -> None:
     labels_cfg = export_cfg.get("categories", {}).get("labels", {})
     labels = category_labels(labels_cfg, lang)
 
-    # Create directories
-    (wiki_dir / "templates").mkdir(parents=True, exist_ok=True)
+    # Stateless full rebuild (mirrors series_export.py, STU-746/776): wipe
+    # first so a page dropped, renamed, or reclassified since the prior run
+    # leaves no stale .wiki file behind. Not ignore_errors — a swallowed wipe
+    # leaves a stale-case file on a case-insensitive filesystem.
+    if wiki_dir.exists():
+        shutil.rmtree(wiki_dir)
+    (wiki_dir / "templates").mkdir(parents=True)
     for subdir in entity_taxonomy.subdirs():
-        (wiki_dir / subdir).mkdir(exist_ok=True)
+        (wiki_dir / subdir).mkdir()
 
     files_written = 0
 
