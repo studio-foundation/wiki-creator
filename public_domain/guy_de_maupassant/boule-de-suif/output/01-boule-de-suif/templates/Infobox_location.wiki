@@ -1,0 +1,10 @@
+<includeonly>
+{| class="infobox"
+|-
+! colspan="2" | {{{nom}}}
+|-
+| '''Apparition''' || {{{apparition|}}}
+|-
+| '''Localisation''' || {{{location|}}}
+|}
+</includeonly>

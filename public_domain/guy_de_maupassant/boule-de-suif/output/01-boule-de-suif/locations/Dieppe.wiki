@@ -1,0 +1,25 @@
+{{Infobox location
+|nom=Dieppe
+|apparition=Apparaît au tome 1
+}}
+
+== Infobox ==
+
+* Nom: Dieppe
+* Type de lieu: Port
+* Statut: Actif
+
+== Biographie ==
+
+Dieppe est un port maritime servant de point d'embarquement. Pendant l'occupation, il demeure une destination majeure pour les commerçants disposant d'intérêts au Havre, lequel est occupé par l'armée française. Ces marchands envisagent de traverser le territoire occupé par voie terrestre jusqu'à Dieppe afin de s'y embarquer.
+
+L'accès à Dieppe requiert une autorisation de départ accordée par le général en chef. Cette permission n'est obtenue qu'en faisant valoir l'influence des officiers allemands, illustrant comment l'activité commerciale demeure soumise à l'autorité militaire occupante.
+
+Dieppe revêt également une importance stratégique d'ordre militaire. Des observateurs envisagent qu'une contre-offensive française emprunterait probablement cette route, ce qui forcerait une rencontre décisive à Tôtes plutôt qu'ailleurs.
+
+== Références ==
+
+<references/>
+
+[[Category:Lieux]]
+[[Category:Lieux du Tome 1]]
