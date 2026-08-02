@@ -1,0 +1,59 @@
+{
+  "entity": "Boule de Suif",
+  "canonical_aliases_book1": [
+    "Boule de Suif",
+    "Élisabeth Rousset"
+  ],
+  "known_facts_book1": [
+    "A prostitute ('une de celles appelées galantes') whose real name is Mademoiselle Élisabeth Rousset; her nickname comes from her precocious plumpness.",
+    "One of ten passengers fleeing occupied Rouen by coach for Le Havre via Dieppe, on a snowbound Tuesday morning.",
+    "The only traveler who thought to bring food: a basket with two whole chickens in aspic, pâtés, fruit and four bottles of Bordeaux, meant to last the three-day trip.",
+    "Shares her provisions with the whole coach once the count formally accepts on everyone's behalf, after the other passengers go hours without eating.",
+    "Is a fervent Bonapartist and flares up in anger when Cornudet mocks Napoléon III ('Badinguet') during the coach conversation.",
+    "Recounts how she strangled a Prussian soldier billeted in her house in Rouen and had to go into hiding afterward.",
+    "At the inn in Tôtes, the Prussian officer sends word through the innkeeper Follenvie that he wants to speak to her; she refuses to go the first time, then goes anyway when the others convince her it is a mere formality.",
+    "Returns from that interview furious and refuses to say what happened, only exclaiming 'la canaille! la canaille!'",
+    "Reveals under pressure from her fellow travelers that the officer wants to sleep with her, and that she has refused.",
+    "Has an illegitimate child raised by peasants at Yvetot, whom she rarely sees; the church bell for a baptism in Tôtes moves her to attend the ceremony.",
+    "Holds out against the officer's demand for several days while the other passengers, held hostage by his refusal to let the coach leave, grow increasingly resentful of her.",
+    "Is worn down by a coordinated campaign of persuasion from the other travelers, including historical/religious examples of self-sacrifice supplied by the count, the countess and the older nun.",
+    "Capitulates on the last night at the inn; the count discreetly confirms to the other men that 'Ça y est' (it's done).",
+    "Is shunned by all the other travelers the next morning when the coach finally departs for Dieppe, after having secured everyone's freedom.",
+    "Cries silently in the coach on the road to Dieppe, having had no time to pack food for herself, while the others eat the provisions she can no longer bring herself to ask for.",
+    "Is the only one still weeping at the story's end, unacknowledged by anyone, while Cornudet whistles the Marseillaise as if to mock the whole company."
+  ],
+  "known_relations_book1": {
+    "Cornudet": "Fellow traveler; tries to seduce her at the inn but is refused because Prussians are billeted next door; the only one who calls the group's pressure campaign 'une infamie', though he too ignores her tears at the end.",
+    "M. et Mme Loiseau": "Fellow travelers; Loiseau ogles her at the start and eats her food eagerly, then mocks her nightly with cruel jokes about the officer once she gives in; Mme Loiseau is the bluntest in arguing she has no right to refuse since 'it's her trade'.",
+    "M. et Mme Carré-Lamadon": "Fellow travelers who eat her food and, alongside the others, pressure her into visiting the officer.",
+    "le comte et la comtesse de Bréville": "Fellow travelers; the count personally walks arm-in-arm with her to make the final, most direct appeal, and the count is the one who quietly confirms to the others that she has given in.",
+    "les deux bonnes soeurs": "Fellow travelers; the elder nun's argument that God forgives any act done for a good motive is what finally breaks her resistance.",
+    "l'officier prussien": "Detains the whole coach at the inn in Tôtes until she agrees to sleep with him."
+  },
+  "forbidden_book1": {
+    "not_in_this_book": [
+      "the travelers apologize to Boule de Suif",
+      "the travelers thank Boule de Suif at the end",
+      "the officer is arrested",
+      "the officer is punished",
+      "Cornudet and Boule de Suif fall in love",
+      "Cornudet shares his food with Boule de Suif",
+      "Boule de Suif refuses the officer permanently",
+      "Boule de Suif is a Republican"
+    ],
+    "adaptation_inventions": [
+      "Boule de Suif takes revenge on the travelers",
+      "Boule de Suif is reunited with her child in this book"
+    ]
+  },
+  "hallucination_signals": [
+    "apologize to Boule de Suif",
+    "thank Boule de Suif",
+    "officer is arrested",
+    "officer is punished",
+    "falls in love with Cornudet",
+    "shares his food with her",
+    "reunited with her child",
+    "Boule de Suif is a Republican"
+  ]
+}
