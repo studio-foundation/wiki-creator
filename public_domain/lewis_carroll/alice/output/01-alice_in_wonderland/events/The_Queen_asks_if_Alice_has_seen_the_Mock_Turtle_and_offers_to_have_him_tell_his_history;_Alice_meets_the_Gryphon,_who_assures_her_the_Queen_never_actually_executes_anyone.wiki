@@ -1,0 +1,19 @@
+{{Infobox event
+|nom=The Queen asks if Alice has seen the Mock Turtle and offers to have him tell his history; Alice meets the Gryphon, who assures her the Queen never actually executes anyone
+|participants=Alice, Gryphon, Mock Turtle, Queen
+|chapitre=9
+}}
+
+== Course of events ==
+
+Following the Mock Turtle's recitation of his extraordinary education—a curriculum encompassing Reeling, Writhing, Arithmetic, and such curious subjects as Ambition and Uglification, taught by creatures of the sea—the Queen arrives to inquire of Alice whether she has encountered the Mock Turtle. Upon learning that she has, the Queen proposes that the Mock Turtle himself relate his history to Alice, an offer she seems keen to facilitate.
+
+During this encounter, Alice meets the Gryphon, a creature who offers her an assurance of considerable importance: the Queen, he confides, never actually executes anyone, despite her fearsome reputation. This revelation stands in striking contrast to the Queen's appearance and manner, which had seemed to inspire terror in those around her, and provides Alice with a curious comfort regarding the true nature of Wonderland's sovereign.
+
+These exchanges occur amidst the dreamlike succession of Wonderland's peculiar society, where Alice continues to navigate the whimsical logic of her surroundings and the creatures who inhabit them.
+
+== References ==
+
+* Alice's Adventures in Wonderland
+
+[[Category:Events]]

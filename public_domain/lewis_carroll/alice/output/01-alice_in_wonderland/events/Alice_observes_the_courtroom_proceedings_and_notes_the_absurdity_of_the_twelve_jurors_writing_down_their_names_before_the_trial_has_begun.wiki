@@ -1,0 +1,17 @@
+{{Infobox event
+|nom=Alice observes the courtroom proceedings and notes the absurdity of the twelve jurors writing down their names before the trial has begun
+|participants=Alice
+|chapitre=11
+}}
+
+== Course of events ==
+
+As the strange trial unfolds in Wonderland, Alice finds herself witness to proceedings that grow ever more bewildering. Having already observed the illogical conversations and peculiar customs of the underwater creatures with mounting perplexity, she now turns her attention to the courtroom itself. There, seated uncomfortably beside the Dormouse after experiencing a sudden growth episode that forced her to negotiate their shared space, Alice observes the twelve jurors as they prepare for the trial to commence. To her astonishment, they are writing down their names before the trial has even begun—a practice that strikes her as profoundly absurd, for how could the verdict or proceedings depend upon such preliminary inscriptions?
+
+The sight encapsulates the dream-logic of Wonderland itself: a realm where order and ceremony are divorced from sense, where the machinery of law moves according to rules that bear no relation to reason. Alice notes this peculiarity with the cool, wondering eye of one who has grown accustomed to impossibility, yet still finds herself capable of recognizing its strangeness. The jurors' dutiful recording of their names, undertaken before any evidence is heard or testimony given, exemplifies the inverted priorities and topsy-turvy procedures that govern this curious underground world.
+
+== References ==
+
+* Alice's Adventures in Wonderland
+
+[[Category:Events]]

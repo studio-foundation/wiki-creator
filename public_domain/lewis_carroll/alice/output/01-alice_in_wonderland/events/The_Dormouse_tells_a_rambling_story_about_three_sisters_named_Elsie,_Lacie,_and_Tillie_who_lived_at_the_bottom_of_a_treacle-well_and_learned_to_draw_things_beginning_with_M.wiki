@@ -1,0 +1,19 @@
+{{Infobox event
+|nom=The Dormouse tells a rambling story about three sisters named Elsie, Lacie, and Tillie who lived at the bottom of a treacle-well and learned to draw things beginning with M
+|participants=Dormouse
+|chapitre=7
+}}
+
+== Course of events ==
+
+During the chaotic tea-party at the table where time remains eternally frozen at tea-time, the Dormouse recounts a peculiar and meandering tale. The story concerns three sisters—Elsie, Lacie, and Tillie—who dwelt at the bottom of a treacle-well. According to the Dormouse's account, these sisters occupied themselves with drawing, their subject matter restricted to things whose names commenced with the letter M.
+
+The Dormouse's narration serves as an interlude amid the Hatter's riddling and the absurd customs of the perpetually stalled tea-party, where cups must be constantly rotated to find clean vessels since dishes go unwashed. The rambling quality of the tale reflects the dream-logic of Wonderland itself, wandering from point to point with the same peculiar certainty that governs the tea-table's eternal routines.
+
+Following this recounting, the conversation returns to the Hatter's riddles and his own troubles—most notably his quarrel with Time and the riddle of why a raven should resemble a writing-desk—as the tea-party's strange customs and stranger discourse continue unabated.
+
+== References ==
+
+* Alice's Adventures in Wonderland
+
+[[Category:Events]]
