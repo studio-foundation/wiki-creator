@@ -1,0 +1,17 @@
+{{Infobox event
+|nom=Once upon a time there were four little Rabbits, and their names were— Flopsy, Mopsy, Cotton-tail, and Peter
+|participants=Cotton-tail, Flopsy, Mopsy, Peter
+|chapitre=1
+}}
+
+== Course of events ==
+
+Once upon a time, four little Rabbits entered the tale: Flopsy, Mopsy, Cotton-tail, and Peter. This introduction of the four characters by name constitutes the opening event of the narrative. The naming of Flopsy, Mopsy, Cotton-tail, and Peter establishes the principal cast upon whom all subsequent events depend.
+
+Though the event itself consists only of this introduction and naming, it serves as the essential foundation for the story that unfolds thereafter. The four Rabbits, having been thus named and introduced, would embark upon their respective paths as the narrative continues.
+
+== References ==
+
+* The Tale of Peter Rabbit
+
+[[Category:Events]]
