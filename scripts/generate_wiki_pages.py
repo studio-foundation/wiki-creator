@@ -2322,6 +2322,7 @@ class GenerationConfig:
     book_config: dict | None = None
     identity_registry: Registry | None = None
     force: bool = False
+    filtered_run: bool = False
 
 
 _AGENTS_DIR = PROJECT_ROOT / ".studio" / "agents"
@@ -2376,10 +2377,16 @@ def generate_pages(
         for _, batch in batches
         for e in batch.get("entities", [])
     }
+    # STU-771: on an unfiltered run, `regenerable` is the whole current roster —
+    # a saved page whose title isn't in it belongs to an entity the roster no
+    # longer has (renamed or dropped upstream) and must not ride through, or it
+    # accumulates forever as a duplicate under its old name. A filtered run's
+    # `regenerable` is deliberately a subset, so this only fires unfiltered.
     all_pages = [
         p for p in _load_existing(config.output_file)
         if not p.get("_failed") and not p.get("_dry_run") and _is_page_complete(p)
         and not (p.get("title") in regenerable and p.get("_prompt") != fingerprint)
+        and not (not config.filtered_run and p.get("title") not in regenerable)
     ]
 
     def _commit(page: dict) -> None:
@@ -2595,6 +2602,7 @@ def _prepare_generation(
         book_config=book_cfg,
         identity_registry=identity_registry,
         force=force,
+        filtered_run=bool(importance or entities),
     )
     return config, batches
 

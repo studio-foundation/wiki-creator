@@ -2303,9 +2303,9 @@ def test_generate_pages_regenerates_on_prompt_fingerprint_change(tmp_path):
     assert "Stale." not in pages[0]["content"]
 
 
-def test_generate_pages_preserves_unfiltered_stale_pages(tmp_path):
-    """A stale page outside the current (filtered) batch rides through verbatim — the
-    targeted-regeneration contract wins over the fingerprint bust."""
+def test_generate_pages_preserves_stale_pages_outside_a_filtered_run(tmp_path):
+    """A stale page outside a *filtered* (--entities) batch rides through verbatim —
+    the targeted-regeneration contract wins over the fingerprint bust."""
     output_file = tmp_path / "wiki_pages.json"
     output_file.write_text(
         json.dumps({"pages": [{"title": "Endovier", "importance": "secondary",
@@ -2314,12 +2314,31 @@ def test_generate_pages_preserves_unfiltered_stale_pages(tmp_path):
         encoding="utf-8",
     )
     runner = _FakeRunner()
-    pages = generate_pages(_named_place_batch("Rifthold"), _config(tmp_path), runner)
+    config = _config(tmp_path)
+    config.filtered_run = True
+    pages = generate_pages(_named_place_batch("Rifthold"), config, runner)
 
     titles = {p["title"] for p in pages}
     assert titles == {"Rifthold", "Endovier"}  # Endovier preserved though stale
     endovier = next(p for p in pages if p["title"] == "Endovier")
     assert "Preserved." in endovier["content"]
+
+
+def test_generate_pages_evicts_orphaned_pages_on_an_unfiltered_run(tmp_path):
+    """STU-771: an unfiltered run's batches are the whole current roster, so a saved
+    page for a title no longer in it (renamed or dropped upstream) must not survive —
+    else it accumulates forever as a duplicate under its old name."""
+    output_file = tmp_path / "wiki_pages.json"
+    output_file.write_text(
+        json.dumps({"pages": [{"title": "Cotton", "importance": "secondary",
+                                "entity_type": "PERSON", "content": "## Description\n\nStale.",
+                                "_prompt": "stale-fingerprint"}]}),
+        encoding="utf-8",
+    )
+    runner = _FakeRunner()
+    pages = generate_pages(_named_place_batch("Rifthold"), _config(tmp_path), runner)
+
+    assert {p["title"] for p in pages} == {"Rifthold"}  # Cotton dropped, not carried over
 
 
 # --- STU-497: small-dataset subset re-run (--entities / --force) ---
@@ -2356,6 +2375,7 @@ def test_generate_pages_force_regenerates_only_target_preserves_others(tmp_path)
     runner = _FakeRunner()
     config = _config(tmp_path)
     config.force = True
+    config.filtered_run = True
 
     pages = generate_pages(_named_place_batch("Rifthold"), config, runner)
 
