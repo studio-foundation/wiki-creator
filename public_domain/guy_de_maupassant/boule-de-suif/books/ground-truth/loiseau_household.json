@@ -1,0 +1,65 @@
+{
+  "m_loiseau": {
+    "canonical_aliases_book1": [
+      "Loiseau"
+    ],
+    "known_facts_book1": [
+      "A wholesale wine merchant on the rue Grand-Pont in Rouen, who bought out his former, ruined employer and made his own fortune.",
+      "Sells very bad wine very cheaply to small country shopkeepers and has a local reputation as a sly, jovial rogue — a pun on his name ('Loiseau vole', 'the bird steals') once made the rounds of Rouen society.",
+      "Is owed a large sum by the French army supply service for wine he sold off before fleeing, which he expects to collect at Le Havre.",
+      "Ogles Boule de Suif openly when the other travelers first recognize and whisper about her.",
+      "Is the first to eat from Boule de Suif's basket once she offers it, and talks his own wife into eating too.",
+      "Hides his watch-chain in his pocket, fearing the Prussians will demand ransom money from the richer travelers.",
+      "Spies on the inn corridor at Tôtes through his keyhole and sees Cornudet try to enter Boule de Suif's room and be refused.",
+      "Proposes to the officer, through Follenvie, that Boule de Suif alone be kept behind so the rest can leave; the officer refuses.",
+      "Mocks Boule de Suif with cruel double-meaning jokes the night she finally gives in to the officer, and later gleefully tells the other men what he saw at the keyhole.",
+      "Buys six casks of Bordeaux from the innkeeper Follenvie for after the Prussians leave.",
+      "Cheats at the card game of trente-et-un with his wife, which Cornudet notices.",
+      "Toasts 'to our deliverance' with champagne once word comes that Boule de Suif has given in."
+    ],
+    "known_relations_book1": {
+      "Mme Loiseau": "His wife; he eggs her on to eat Boule de Suif's food and to join him cheating at cards.",
+      "Boule de Suif": "Ogles her at the start, eats her food gladly, later mocks her nightly once she has slept with the officer, but never apologizes.",
+      "Cornudet": "Spies on him through the inn corridor keyhole and later mocks him too as 'not much fun tonight'."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Loiseau apologizes to Boule de Suif",
+        "Loiseau defends Boule de Suif",
+        "Loiseau is a nobleman"
+      ]
+    },
+    "hallucination_signals": [
+      "apologizes to Boule de Suif",
+      "defends Boule de Suif",
+      "is a nobleman"
+    ]
+  },
+  "mme_loiseau": {
+    "canonical_aliases_book1": [
+      "Mme Loiseau"
+    ],
+    "known_facts_book1": [
+      "Wife of the wine merchant Loiseau; tall, strong and decisive, described as the 'order and arithmetic' of their business.",
+      "Is reluctant to eat Boule de Suif's food at first out of pride, but gives in after her husband presses her.",
+      "Is the bluntest of the travelers, arguing that since sleeping with men is Boule de Suif's trade, she has no right to refuse this one man in particular.",
+      "Proposes the game of trente-et-un to pass the time at the inn.",
+      "Watches the young Mme Carré-Lamadon with suspicion, remarking privately to her husband that Mme Carré-Lamadon laughed a little too readily that evening.",
+      "Refuses to greet Boule de Suif or sit near her once the coach resumes its journey to Dieppe, and comments with quiet triumph that Boule de Suif is 'crying over her shame'."
+    ],
+    "known_relations_book1": {
+      "Loiseau": "Her husband; the two cheat together at cards and mock Boule de Suif together.",
+      "Boule de Suif": "Argues most bluntly that she has no right to refuse the officer, and later shows her open contempt once the coach leaves Tôtes."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Mme Loiseau defends Boule de Suif",
+        "Mme Loiseau apologizes to Boule de Suif"
+      ]
+    },
+    "hallucination_signals": [
+      "defends Boule de Suif",
+      "apologizes to Boule de Suif"
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "entity": "Cornudet",
+  "canonical_aliases_book1": [
+    "Cornudet"
+  ],
+  "known_facts_book1": [
+    "A well-known democrat ('le démoc'), the terror of respectable people, who has spent twenty years dipping his long red beard into the beer of every democratic café.",
+    "Inherited a comfortable fortune from his father, a former confectioner, and has largely eaten through it.",
+    "Believed himself appointed prefect after the 4 September revolution, but was turned away when he tried to take up the post.",
+    "Spent the lead-up to the invasion energetically organizing (largely useless) defenses: having trenches dug, young trees felled across roads, and traps set.",
+    "Plans to make himself useful at Le Havre, where new fortifications will be needed.",
+    "Offers his rum flask to the other coach passengers when hunger strikes; only Loiseau accepts.",
+    "Is the only traveler who accepts Boule de Suif's food as an equal without hesitation, alongside the two nuns.",
+    "Argues with Mme Follenvie that war is barbarous when attacking a peaceful neighbor but a sacred duty in self-defense, and calls her 'citoyenne' approvingly.",
+    "Refuses to go with the count and Carré-Lamadon to petition the Prussian officer, declaring he wants nothing to do with Germans.",
+    "Tries to seduce Boule de Suif at her door on the first night at the inn in Tôtes; she refuses him because Prussians are billeted in the next room, and he retreats after a single kiss.",
+    "Is caught spying on the same encounter by Loiseau, in reverse — he is himself the one Loiseau sees stealing to Boule de Suif's door.",
+    "Is the only traveler to openly condemn the group's campaign to pressure Boule de Suif, shouting 'Je vous dis à tous que vous venez de faire une infamie!' and storming out.",
+    "Whistles the Marseillaise obstinately, and at times sings its words, all the way to Dieppe once the coach resumes its journey — visibly needling the other, now-relieved travelers.",
+    "Does not share his own food (four hard-boiled eggs and bread) with Boule de Suif at the end, despite having condemned the others' treatment of her; nobody, including him, pays her any attention while she cries."
+  ],
+  "known_relations_book1": {
+    "Boule de Suif": "Tries to seduce her the first night, is refused, and is later the only traveler to call the group's treatment of her 'une infamie' — though he too ignores her tears at the story's end.",
+    "Loiseau": "Spies on him at Boule de Suif's door and mocks him afterward as 'not much fun tonight'.",
+    "M. Carré-Lamadon et le comte de Bréville": "Refuses to join them in petitioning the Prussian officer."
+  },
+  "forbidden_book1": {
+    "not_in_this_book": [
+      "Cornudet is a Bonapartist",
+      "Cornudet is appointed prefect",
+      "Cornudet marries Boule de Suif",
+      "Cornudet shares his food with Boule de Suif"
+    ]
+  },
+  "hallucination_signals": [
+    "is a Bonapartist",
+    "appointed prefect",
+    "marries Boule de Suif",
+    "shares his food with Boule de Suif"
+  ]
+}

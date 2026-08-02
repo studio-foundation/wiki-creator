@@ -1,0 +1,57 @@
+{
+  "m_carre_lamadon": {
+    "canonical_aliases_book1": [
+      "M. Carré-Lamadon"
+    ],
+    "known_facts_book1": [
+      "A prominent cotton manufacturer, owner of three mills, officer of the Légion d'honneur and member of the Conseil général.",
+      "Spent the whole Empire as the head of a 'benevolent opposition', purely to sell his eventual support to the regime at a higher price, by his own account.",
+      "Sent six hundred thousand francs to England for safekeeping, as insurance against the war.",
+      "Is one of the two men, along with the count, who go to speak to the Prussian officer on the travelers' behalf and are refused.",
+      "Reflects, listening to Mme Follenvie's plain complaints about the war, that the manpower wasted on soldiering could enrich a country if put to industrial use instead.",
+      "Weeps with laughter, along with the count, when Loiseau reveals what he saw and heard at the inn corridor keyhole.",
+      "Discusses stocks and business terms with the count in the coach once they finally leave Tôtes."
+    ],
+    "known_relations_book1": {
+      "Mme Carré-Lamadon": "His wife, much younger than him.",
+      "le comte de Bréville": "Fellow notable among the travelers; goes with him to petition the Prussian officer."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Carré-Lamadon is ruined financially",
+        "Carré-Lamadon is a Republican"
+      ]
+    },
+    "hallucination_signals": [
+      "is ruined financially",
+      "is a Republican"
+    ]
+  },
+  "mme_carre_lamadon": {
+    "canonical_aliases_book1": [
+      "Mme Carré-Lamadon"
+    ],
+    "known_facts_book1": [
+      "Much younger than her husband; described as the 'consolation' of well-bred officers garrisoned at Rouen, implying an eye for handsome soldiers.",
+      "Faints from hunger in the coach before Boule de Suif's food is shared, and is revived with a few drops of wine given by the older nun.",
+      "Privately thinks she would refuse the Prussian officer even less readily than Boule de Suif does, when the travelers joke about it.",
+      "Goes pale and shivers, as if imagining herself taken by force, when Mme Loiseau argues the officer could simply have taken any of the married women instead.",
+      "Remarks that the Prussian officer is rather good-looking and regrets he is not French, once they see him in the street.",
+      "Laughs a little too easily the night Boule de Suif gives in, which her own husband's rival Mme Loiseau notes with suspicion."
+    ],
+    "known_relations_book1": {
+      "M. Carré-Lamadon": "Her husband.",
+      "la comtesse de Bréville": "Fellow traveler; the two women chat about mutual society friends, including Mme d'Étrelles, once the coach leaves Tôtes."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Mme Carré-Lamadon defends Boule de Suif",
+        "Mme Carré-Lamadon is the officer's mistress"
+      ]
+    },
+    "hallucination_signals": [
+      "defends Boule de Suif",
+      "is the officer's mistress"
+    ]
+  }
+}

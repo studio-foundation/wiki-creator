@@ -1,0 +1,59 @@
+description: |
+  Build a wiki for "Boule de Suif" by Guy de Maupassant.
+  Parse the book, extract all named entities (characters, locations, organizations, events),
+  resolve aliases, and generate Markdown wiki pages for each entity.
+
+file_path: public_domain/guy_de_maupassant/boule-de-suif/books/01-boule-de-suif.epub
+spacy_model: fr_core_news_lg
+aliases: [boule-de-suif]
+
+# Ordinary French surnames (Loiseau, Carré-Lamadon, Bréville, Cornudet,
+# Follenvie), not invented — ner.invented_names left at its false default.
+# The protagonist's own name ("Boule de Suif", 31 mentions vs 5 for her real
+# surname Rousset) is itself capitalized like a normal name in the text, so it
+# needs no character_names entry. The two nuns and the Prussian officer are
+# referred to only by lowercase common-noun role ("les bonnes sœurs",
+# "l'officier prussien") and never given a proper name in the text at all —
+# not a common-noun-name case (see book_add table), just characters this
+# corpus documents as offstage/unnamed rather than forcing into the roster.
+coref: false
+workers: 8
+
+# Default: every named character (Loiseau 48, Boule de Suif/Rousset 36,
+# Cornudet 27, Carré-Lamadon 18, Follenvie 12, Bréville 5) clears it with room
+# to spare — a Peter-Rabbit-style floor drop isn't needed here.
+min_mentions_absolute: 3
+
+generation:
+  register: >-
+    Third-person omniscient, ironic and socially observant: Maupassant's cool,
+    unsentimental narration of bourgeois hypocrisy during the 1870
+    Franco-Prussian occupation, letting the travelers' self-serving moralizing
+    indict itself without editorializing.
+  narrative_arc:
+    # One continuous novella, no internal chapter breaks (13k words, single
+    # unbroken block in epub_data.json) — same shape as Peter Rabbit: a short
+    # setup (the coach's flight from occupied Rouen), a long central
+    # standoff (the days at Tôtes, the pressure on Boule de Suif), a short
+    # bitter coda (the group's ingratitude on the road to Dieppe).
+    weights: [0.15, 0.70, 0.15]
+    max_events: 6
+  principal:
+    sections: [infobox, biography, narrative_role, personality, physical, relationships, trivia, references]
+    max_tokens_per_page: 2000
+  secondary:
+    sections: [infobox, biography, relationships, references]
+    max_tokens_per_page: 800
+  figurant:
+    sections: [infobox, biography]
+    max_tokens_per_page: 200
+
+export:
+  categories:
+    language: fr
+    labels:
+      persons: Personnages
+      principal: Personnages principaux
+      secondary: Personnages secondaires
+      locations: Lieux
+      organizations: Organisations

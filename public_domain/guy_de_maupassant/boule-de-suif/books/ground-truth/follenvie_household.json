@@ -1,0 +1,55 @@
+{
+  "m_follenvie": {
+    "canonical_aliases_book1": [
+      "M. Follenvie"
+    ],
+    "known_facts_book1": [
+      "The wheezing, asthmatic innkeeper of the Hôtel du Commerce in Tôtes, a former horse-dealer; inherited the name Follenvie from his father.",
+      "Is the sole go-between the Prussian officer allows to speak to him about the travelers' civil affairs.",
+      "Twice relays the officer's question to Boule de Suif, asking whether she has changed her mind.",
+      "Refuses to be woken before ten in the morning because of his asthma, except in case of fire.",
+      "Sits up late playing cards with the male travelers, ignoring their attempts to draw him out about the officer, only ever repeating 'Au jeu, messieurs, au jeu.'",
+      "Sells Loiseau six casks of Bordeaux for after the Prussians have left.",
+      "Confirms to the count, in a whispered exchange, that Boule de Suif has finally given in to the officer."
+    ],
+    "known_relations_book1": {
+      "Mme Follenvie": "His wife; tells her to be quiet at dinner when she complains too loudly about the Prussians.",
+      "l'officier prussien": "The only person the officer permits to relay messages about the travelers.",
+      "Boule de Suif": "Twice brings her the officer's demand and eventually confirms to the count that she has yielded."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "M. Follenvie is a Prussian sympathizer",
+        "M. Follenvie is young"
+      ]
+    },
+    "hallucination_signals": [
+      "is a Prussian sympathizer",
+      "Follenvie is young"
+    ]
+  },
+  "mme_follenvie": {
+    "canonical_aliases_book1": [
+      "Mme Follenvie"
+    ],
+    "known_facts_book1": [
+      "Wife of the innkeeper; talks constantly, unlike her wheezing husband, who can barely speak while eating.",
+      "Complains at length to the countess about the Prussians eating nothing but potatoes and pork and living off the country without working the land.",
+      "Has two sons in the French army, which is part of why the occupation costs her dearly.",
+      "Argues, to Cornudet's approval, that killing people is wicked even when it is Prussians, English or Poles who die, unless done in self-defense.",
+      "Always rises with the sun ('du matin'), unlike her husband who stays up with his card-playing guests ('du soir')."
+    ],
+    "known_relations_book1": {
+      "M. Follenvie": "Her husband; he tells her to hush when she speaks too freely at dinner.",
+      "la comtesse de Bréville": "Addresses most of her complaints about the Prussians to her, flattered to be talking with a lady of quality."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Mme Follenvie supports the Prussians"
+      ]
+    },
+    "hallucination_signals": [
+      "supports the Prussians"
+    ]
+  }
+}

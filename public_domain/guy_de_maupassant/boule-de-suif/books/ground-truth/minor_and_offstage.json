@@ -1,0 +1,25 @@
+{
+  "mme_d_etrelles": {
+    "canonical_aliases_book1": [
+      "Mme d'Étrelles"
+    ],
+    "known_facts_book1": [
+      "Named only once, in passing coach conversation between the countess and Mme Carré-Lamadon, as a mutual society friend — 'a charming woman, a true woman of quality, artistic, sings and draws beautifully.'",
+      "Never appears in the story and has no other role beyond this one exchange of society small talk."
+    ],
+    "known_relations_book1": {
+      "la comtesse de Bréville": "Mentions her as a mutual friend of hers and Mme Carré-Lamadon.",
+      "Mme Carré-Lamadon": "Confirms she is one of her friends."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "Mme d'Étrelles travels in the coach",
+        "Mme d'Étrelles appears at the inn"
+      ]
+    },
+    "hallucination_signals": [
+      "travels in the coach",
+      "appears at the inn"
+    ]
+  }
+}

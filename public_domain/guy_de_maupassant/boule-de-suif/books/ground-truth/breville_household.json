@@ -1,0 +1,61 @@
+{
+  "comte_hubert": {
+    "canonical_aliases_book1": [
+      "comte Hubert",
+      "Hubert de Bréville"
+    ],
+    "known_facts_book1": [
+      "An old gentleman of one of the oldest and most noble names in Normandy, said to cultivate a physical resemblance to King Henri IV, from whom a family legend claims descent.",
+      "Colleague of M. Carré-Lamadon on the Conseil général, representing the Orléanist party in the department.",
+      "Is one of the two men who formally go to petition the Prussian officer for the coach's release, and are refused.",
+      "Persuades Boule de Suif to go to her first meeting with the officer, arguing her refusal risks trouble for everyone; she agrees only 'for the others'.",
+      "Is the strategist of the campaign to talk Boule de Suif around, favoring subtlety over Loiseau's blunt approach.",
+      "Personally walks arm-in-arm with Boule de Suif on an afternoon walk, making the campaign's most direct appeal to her.",
+      "Is the one who quietly confirms to the other men, via a whispered word with Follenvie, that Boule de Suif has finally given in.",
+      "Takes his wife's arm and steers her away from Boule de Suif in disgust once the coach is ready to leave Tôtes, refusing to acknowledge her."
+    ],
+    "known_relations_book1": {
+      "la comtesse de Bréville": "His wife.",
+      "Boule de Suif": "Talks her into her first meeting with the officer, then leads the campaign that finally breaks her resistance; publicly shuns her afterward.",
+      "M. Carré-Lamadon": "Fellow notable; goes with him to petition the officer."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the count apologizes to Boule de Suif",
+        "the count is a Republican"
+      ]
+    },
+    "hallucination_signals": [
+      "apologizes to Boule de Suif",
+      "count is a Republican"
+    ]
+  },
+  "comtesse_de_breville": {
+    "canonical_aliases_book1": [
+      "comtesse de Bréville",
+      "Mme de Bréville"
+    ],
+    "known_facts_book1": [
+      "Wife of the count; her marriage to him, the daughter of a small Nantes shipowner, has always been considered mysterious.",
+      "Said to have grand manner and to have been loved by one of the sons of Louis-Philippe; keeps the most sought-after salon in the region.",
+      "Offers Boule de Suif her own foot-warmer in the coach once the cold begins to bother her.",
+      "Interrogates the elder nun about the lives of the saints during the campaign to persuade Boule de Suif, drawing out the argument that the end justifies the means.",
+      "Is the one who first notices Boule de Suif crying at the very end of the journey and signals it to her husband, who only shrugs.",
+      "Chats with Mme Carré-Lamadon about a mutual society friend, Mme d'Étrelles, once the coach leaves Tôtes."
+    ],
+    "known_relations_book1": {
+      "le comte de Bréville": "Her husband.",
+      "Boule de Suif": "Offers her a foot-warmer early in the trip; later helps steer the persuasion campaign against her."
+    },
+    "forbidden_book1": {
+      "not_in_this_book": [
+        "the countess defends Boule de Suif at the end",
+        "the countess is a commoner"
+      ]
+    },
+    "hallucination_signals": [
+      "defends Boule de Suif at the end",
+      "countess is a commoner"
+    ]
+  }
+}

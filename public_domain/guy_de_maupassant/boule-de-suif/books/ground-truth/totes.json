@@ -1,0 +1,30 @@
+{
+  "entity": "Tôtes",
+  "canonical_aliases_book1": [
+    "Tôtes"
+  ],
+  "known_facts_book1": [
+    "The village where the coach finally arrives after fourteen hours of travel through the snow from occupied Rouen.",
+    "Home to the Hôtel du Commerce, the inn run by M. and Mme Follenvie, where the whole party is put up.",
+    "The Prussian occupying officer is billeted at the same inn and personally blocks the travelers' departure until Boule de Suif agrees to his demand.",
+    "The travelers are held here for several days, unable to leave because the officer refuses to let the coachman harness the horses.",
+    "The coach only leaves Tôtes, resuming its journey toward Dieppe, the morning after Boule de Suif gives in to the officer."
+  ],
+  "known_relations_book1": {
+    "l'officier prussien": "Is billeted at the inn here and uses his authority over the village to detain the whole coach.",
+    "M. et Mme Follenvie": "Run the Hôtel du Commerce where the travelers are stranded.",
+    "Boule de Suif": "Is pressured into yielding to the officer here before the party is allowed to leave."
+  },
+  "forbidden_book1": {
+    "not_in_this_book": [
+      "the officer's demand happens in Rouen",
+      "the officer's demand happens in Dieppe",
+      "the officer's demand happens on the road"
+    ]
+  },
+  "hallucination_signals": [
+    "demand happens in Rouen",
+    "demand happens in Dieppe",
+    "demand happens on the road"
+  ]
+}
