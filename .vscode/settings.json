@@ -1,0 +1,44 @@
+{
+  // Worktrees live under .worktrees/<name>/ (two levels below workspace
+  // root) — default scan depth is 1, so bump it and turn on subfolder
+  // detection or the Source Control tab only ever shows main.
+  "git.autoRepositoryDetection": true,
+  "git.repositoryScanMaxDepth": 2,
+  "git.autorefresh": true,
+  "git.autofetch": true,
+
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": ["-q"],
+  "python.testing.unittestEnabled": false,
+  // mypy is the project's type checker (pyproject.toml [[tool.mypy.overrides]]);
+  // avoid duplicate/conflicting diagnostics from Pylance.
+  "python.analysis.typeCheckingMode": "off",
+
+  "files.associations": {
+    "*.wiki": "wikitext"
+  },
+
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.egg-info": true,
+    "**/.pytest_cache": true,
+    "**/.mypy_cache": true
+  },
+
+  "search.exclude": {
+    "**/library/**/processing_output": true,
+    "**/library/**/wiki_inputs": true,
+    "**/public_domain/**/processing_output": true,
+    "**/bak_*": true,
+    "**/.studio/runs": true,
+    "**/models": true,
+    "**/.worktrees": true
+  },
+
+  "files.watcherExclude": {
+    "**/library/**/processing_output/**": true,
+    "**/public_domain/**/processing_output/**": true,
+    "**/.studio/runs/**": true,
+    "**/models/**": true
+  }
+}
