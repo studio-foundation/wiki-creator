@@ -13,6 +13,7 @@ from scripts.entity_extraction import (
     _resolve_cue_words_language, _load_cue_words,
     _audit_ner_labels,
     _is_valid_span, _warn_if_no_pos_tagger,
+    _extend_leading_honorific,
 )
 from wiki_creator.chapters import is_frontmatter_chapter as _is_frontmatter_chapter
 
@@ -667,6 +668,58 @@ def test_truncate_mention_all_lowercase_returns_full(nlp):
     result = _truncate_mention(span)
     # Pas de token propre → retourne tout (comportement de fallback)
     assert result == span.text
+
+
+# --- _extend_leading_honorific tests (STU-777) ---
+
+
+def test_extend_leading_honorific_reattaches_mrs(nlp):
+    """A PERSON span missing a leading 'Mrs.' is extended to include it."""
+    doc = nlp("Old Mrs. Rabbit went out.")
+    rabbit_idx = next(i for i, t in enumerate(doc) if t.text == "Rabbit")
+    span = Span(doc, rabbit_idx, rabbit_idx + 1, label="PERSON")
+    cue_words = _load_cue_words("en")
+    result = _extend_leading_honorific(span, cue_words)
+    assert result.text == "Mrs. Rabbit", f"Expected 'Mrs. Rabbit', got {result.text!r}"
+    assert result.label_ == "PERSON"
+
+
+def test_extend_leading_honorific_noop_when_not_person(nlp):
+    """A non-PERSON span is left untouched even next to an honorific."""
+    doc = nlp("Old Mrs. Rabbit went out.")
+    rabbit_idx = next(i for i, t in enumerate(doc) if t.text == "Rabbit")
+    span = Span(doc, rabbit_idx, rabbit_idx + 1, label="ORG")
+    cue_words = _load_cue_words("en")
+    result = _extend_leading_honorific(span, cue_words)
+    assert result.text == "Rabbit"
+
+
+def test_extend_leading_honorific_noop_without_adjacent_cue(nlp):
+    """A preceding non-honorific token never extends the span."""
+    doc = nlp("The old Rabbit went out.")
+    rabbit_idx = next(i for i, t in enumerate(doc) if t.text == "Rabbit")
+    span = Span(doc, rabbit_idx, rabbit_idx + 1, label="PERSON")
+    cue_words = _load_cue_words("en")
+    result = _extend_leading_honorific(span, cue_words)
+    assert result.text == "Rabbit"
+
+
+def test_extend_leading_honorific_noop_at_sentence_start(nlp):
+    """A span starting at token 0 has no preceding token to check."""
+    doc = nlp("Rabbit went out.")
+    span = Span(doc, 0, 1, label="PERSON")
+    cue_words = _load_cue_words("en")
+    result = _extend_leading_honorific(span, cue_words)
+    assert result.text == "Rabbit"
+
+
+def test_extend_leading_honorific_noop_without_cue_words(nlp):
+    """No cue_words vocabulary means no extension, not a crash."""
+    doc = nlp("Old Mrs. Rabbit went out.")
+    rabbit_idx = next(i for i, t in enumerate(doc) if t.text == "Rabbit")
+    span = Span(doc, rabbit_idx, rabbit_idx + 1, label="PERSON")
+    result = _extend_leading_honorific(span, None)
+    assert result.text == "Rabbit"
 
 
 def test_save_chapters_json_writes_chapter_texts(tmp_path):
