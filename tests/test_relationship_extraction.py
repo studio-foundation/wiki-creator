@@ -1134,3 +1134,100 @@ def test_coref_sentence_counts_the_entity_as_present():
         mentions_by_entity=attributed,
     )
     assert [(r["entity_a"], r["entity_b"]) for r in rels] == [("Alice", "Bob")]
+
+
+def test_with_untruncated_remainder_appends_past_max_chars():
+    """STU-775: the part of a chapter past max_chars must not be dropped."""
+    from scripts.relationship_extraction import _with_untruncated_remainder
+
+    text = "Alice fell down the hole. " * 10  # > 20 chars
+    resolved_chunk = text[:20].upper()
+    result = _with_untruncated_remainder(resolved_chunk, text, 20)
+    assert result == resolved_chunk + text[20:]
+    assert result.endswith("THE END") is False  # sanity: no accidental truncation of the assertion itself
+    assert len(result) == len(text)
+
+
+def test_with_untruncated_remainder_noop_when_uncapped_or_short():
+    """max_chars=0 (no cap) or text shorter than the cap: nothing to splice."""
+    from scripts.relationship_extraction import _with_untruncated_remainder
+
+    text = "Short chapter."
+    assert _with_untruncated_remainder("RESOLVED", text, 0) == "RESOLVED"
+    assert _with_untruncated_remainder("RESOLVED", text, len(text) + 100) == "RESOLVED"
+
+
+@requires_fastcoref
+def test_patch_fastcoref_possessive_dedup_avoids_double_apostrophe_s():
+    """STU-775: an already-possessive antecedent ("Alice's") must not become "Alice's's"."""
+    from scripts.relationship_extraction import _patch_fastcoref_possessive_dedup
+
+    _patch_fastcoref_possessive_dedup()
+    _patch_fastcoref_possessive_dedup()  # idempotent, must not double-wrap
+    from fastcoref.spacy_component.spacy_component import FastCorefResolver
+
+    class FakeToken:
+        def __init__(self, tag, ws=" "):
+            self.tag_ = tag
+            self.whitespace_ = ws
+
+    class FakeCharSpan:
+        def __init__(self, token, start=0, end=1):
+            self._token = token
+            self.start = start
+            self.end = end
+
+        def __getitem__(self, idx):
+            return self._token
+
+    class FakeDoc:
+        def __init__(self, span):
+            self._span = span
+
+        def char_span(self, start, end):
+            return self._span
+
+    resolver = FastCorefResolver.__new__(FastCorefResolver)
+    mention_span = type("Mention", (), {"text": "Alice's"})()
+    doc = FakeDoc(FakeCharSpan(FakeToken("PRP$")))
+
+    resolved = resolver._core_logic_part(doc, (0, 1), ["her"], mention_span)
+    assert resolved[0] == "Alice's "
+    assert "'s's" not in resolved[0]
+
+
+@requires_fastcoref
+def test_patch_fastcoref_possessive_dedup_still_appends_s_when_needed():
+    """Normal case (antecedent not already possessive) keeps the original 's' behavior."""
+    from scripts.relationship_extraction import _patch_fastcoref_possessive_dedup
+
+    _patch_fastcoref_possessive_dedup()
+    from fastcoref.spacy_component.spacy_component import FastCorefResolver
+
+    class FakeToken:
+        def __init__(self, tag, ws=" "):
+            self.tag_ = tag
+            self.whitespace_ = ws
+
+    class FakeCharSpan:
+        def __init__(self, token, start=0, end=1):
+            self._token = token
+            self.start = start
+            self.end = end
+
+        def __getitem__(self, idx):
+            return self._token
+
+    class FakeDoc:
+        def __init__(self, span):
+            self._span = span
+
+        def char_span(self, start, end):
+            return self._span
+
+    resolver = FastCorefResolver.__new__(FastCorefResolver)
+    mention_span = type("Mention", (), {"text": "Alice"})()
+    doc = FakeDoc(FakeCharSpan(FakeToken("PRP$")))
+
+    resolved = resolver._core_logic_part(doc, (0, 1), ["her"], mention_span)
+    assert resolved[0] == "Alice's "

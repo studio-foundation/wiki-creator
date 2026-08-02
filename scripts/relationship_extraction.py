@@ -498,6 +498,56 @@ def _patch_attn_eager() -> None:
     transformers.AutoModel.from_config = _patched
 
 
+def _with_untruncated_remainder(resolved_chunk: str, text: str, max_chars: int) -> str:
+    """Splice the part of `text` past `max_chars` back onto `resolved_chunk`.
+
+    coref only ever sees the first `max_chars` characters of a chapter; the
+    resolved chunk it returns must not silently stand in for the whole
+    chapter (STU-775: chapters_resolved.json was overwriting complete
+    chapters with an 8000-char-truncated prefix, dropping the rest — e.g.
+    Alice's entire epilogue). The remainder keeps its original pronouns
+    (coref never touched it), which is strictly better than losing the text.
+    """
+    if max_chars > 0 and len(text) > max_chars:
+        return resolved_chunk + text[max_chars:]
+    return resolved_chunk
+
+
+def _patch_fastcoref_possessive_dedup() -> None:
+    """Stop fastcoref's resolved_text from doubling an already-possessive antecedent.
+
+    FastCorefResolver._core_logic_part appends "'s" to the antecedent
+    mention's text whenever the pronoun being replaced is possessive
+    (PRP$/POS/BEZ tag), with no check for whether the antecedent text is
+    itself already possessive (its cluster head can be a possessive noun
+    phrase, e.g. "Alice's"). Produces "Alice's's", "Queen's's", "King's's" in
+    resolved_text — confirmed 17 occurrences in Alice run 5 (STU-775).
+    """
+    from fastcoref.spacy_component.spacy_component import FastCorefResolver
+
+    if getattr(FastCorefResolver._core_logic_part, "_patched_possessive_dedup", False):
+        return
+
+    def _patched(self, document, coref, resolved, mention_span):  # type: ignore[no-untyped-def]
+        char_span = document.char_span(coref[0], coref[1])
+        final_token = char_span[-1]
+        final_token_tag = str(final_token.tag_).lower()
+        is_possessive_pronoun = any(
+            option.lower() in final_token_tag for option in ["prp$", "pos", "bez"]
+        )
+        mention_text = mention_span.text
+        if is_possessive_pronoun and not mention_text.endswith("'s"):
+            resolved[char_span.start] = mention_text + "'s" + final_token.whitespace_
+        else:
+            resolved[char_span.start] = mention_text + final_token.whitespace_
+        for i in range(char_span.start + 1, char_span.end):
+            resolved[i] = ""
+        return resolved
+
+    _patched._patched_possessive_dedup = True  # type: ignore[attr-defined]
+    FastCorefResolver._core_logic_part = _patched
+
+
 def _patch_datasets_pickler_py314() -> None:
     """Make datasets' Pickler._batch_setitems accept the Python 3.14 pickle API.
 
@@ -671,7 +721,8 @@ def _coref_worker(args: tuple) -> tuple[list[tuple[str, str, str]], str, str | N
         (pairs, chapter_id, resolved_chunk) — pairs is a list of
         (canonical_name, chapter_id, sentence) tuples to be merged by the
         parent process, resolved_chunk is the coref-resolved text of the
-        processed chunk (STU-763), or None on any error (graceful degradation).
+        processed prefix with any untouched remainder past max_chars spliced
+        back on (STU-763/775), or None on any error (graceful degradation).
     """
     # Tolerate the legacy 6-tuple (no device) for backward compatibility;
     # default to "cpu" as the old hardcoded behavior did.
@@ -691,6 +742,7 @@ def _coref_worker(args: tuple) -> tuple[list[tuple[str, str, str]], str, str | N
 
         _patch_attn_eager()
         _patch_datasets_pickler_py314()
+        _patch_fastcoref_possessive_dedup()
         if device == "cpu":
             # Parallel CPU path: pin each worker to a single torch thread so N
             # worker processes don't each spawn all-core thread pools and
@@ -725,7 +777,8 @@ def _coref_worker(args: tuple) -> tuple[list[tuple[str, str, str]], str, str | N
 
     raw_clusters = doc._.coref_clusters or []
     pairs = _process_chapter_clusters(raw_clusters, chunk, chapter_id, name_to_canonical, pronouns)
-    return pairs, chapter_id, (doc._.resolved_text or chunk)
+    resolved_chunk = _with_untruncated_remainder(doc._.resolved_text or chunk, text, max_chars)
+    return pairs, chapter_id, resolved_chunk
 
 
 def enrich_mentions_with_fastcoref(
@@ -762,10 +815,12 @@ def enrich_mentions_with_fastcoref(
     Returns:
         (mentions_by_entity, resolved_chapters) — mentions_by_entity enriched
         in-place (also returned for convenience); resolved_chapters (STU-763)
-        holds {chapter_id: coref-resolved chunk text} for every chapter fastcoref
-        actually processed (pronouns replaced by canonical names), empty when
-        nothing was processed (no chapters, no PERSON roster, or fastcoref
-        unavailable).
+        holds {chapter_id: full chapter text} for every chapter fastcoref
+        actually processed — the coref-resolved first max_chars characters
+        (pronouns replaced by canonical names) with any remainder past
+        max_chars appended unresolved rather than dropped (STU-775) — empty
+        when nothing was processed (no chapters, no PERSON roster, or
+        fastcoref unavailable).
     """
     if not chapters:
         return mentions_by_entity, {}
@@ -805,6 +860,7 @@ def enrich_mentions_with_fastcoref(
 
             _patch_attn_eager()
             _patch_datasets_pickler_py314()
+            _patch_fastcoref_possessive_dedup()
             nlp = spacy.load(
                 spacy_model,
                 exclude=["parser", "lemmatizer", "ner", "textcat"],
@@ -834,7 +890,7 @@ def enrich_mentions_with_fastcoref(
                 print(f"[WARN] fastcoref inference failed on {chapter_id}: {e}", file=sys.stderr)
                 continue
 
-            resolved_chapters[chapter_id] = doc._.resolved_text or chunk
+            resolved_chapters[chapter_id] = _with_untruncated_remainder(doc._.resolved_text or chunk, text, max_chars)
             raw_clusters = doc._.coref_clusters or []
             for canonical, cid, sentence in _process_chapter_clusters(raw_clusters, chunk, chapter_id, name_to_canonical, pronouns):
                 if canonical not in mentions_by_entity:
