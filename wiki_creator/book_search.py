@@ -24,13 +24,23 @@ CONTEXT_CHARS = 300
 
 
 def load_chapters(processing_dir: Path | str) -> dict[str, str]:
-    """This book's ``chapters.json`` as ``{chapter_id: text}``, or ``{}``."""
-    try:
-        data = json.loads((Path(processing_dir) / "chapters.json").read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return {}
-    chapters = data.get("chapters") if isinstance(data, dict) else None
-    return chapters if isinstance(chapters, dict) else {}
+    """This book's chapters as ``{chapter_id: text}``, or ``{}``.
+
+    Prefers ``chapters_resolved.json`` (STU-763: coref-resolved text, pronouns
+    replaced by canonical names) when present — a fact stated only through a
+    pronoun then search-hits under the entity's own name. Falls back to
+    ``chapters.json`` for a book that never ran coref.
+    """
+    processing_dir = Path(processing_dir)
+    for filename in ("chapters_resolved.json", "chapters.json"):
+        try:
+            data = json.loads((processing_dir / filename).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        chapters = data.get("chapters") if isinstance(data, dict) else None
+        if isinstance(chapters, dict):
+            return chapters
+    return {}
 
 
 def full_text(chapters: dict[str, str]) -> str:

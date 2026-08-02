@@ -81,3 +81,21 @@ def test_full_text_joins_every_chapter():
 
 def test_full_text_of_no_chapters_is_empty():
     assert full_text({}) == ""
+
+
+def test_load_chapters_prefers_the_coref_resolved_variant(tmp_path):
+    (tmp_path / "chapters.json").write_text(
+        json.dumps({"chapters": {"c1": "He rode north."}}), encoding="utf-8"
+    )
+    (tmp_path / "chapters_resolved.json").write_text(
+        json.dumps({"chapters": {"c1": "Brom rode north."}}), encoding="utf-8"
+    )
+    assert load_chapters(tmp_path) == {"c1": "Brom rode north."}
+
+
+def test_load_chapters_falls_back_when_resolved_variant_is_malformed(tmp_path):
+    (tmp_path / "chapters.json").write_text(
+        json.dumps({"chapters": {"c1": "Brom rode north."}}), encoding="utf-8"
+    )
+    (tmp_path / "chapters_resolved.json").write_text("{not json", encoding="utf-8")
+    assert load_chapters(tmp_path) == {"c1": "Brom rode north."}
