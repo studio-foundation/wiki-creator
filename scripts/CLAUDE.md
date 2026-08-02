@@ -454,6 +454,11 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   case-insensitive substring search over `chapters.json` — never a regex (the
   caller is an LLM tool call; a regex engine on model-shaped input is a
   catastrophic-backtracking surface a substring search never opens).
+  `load_chapters` prefers `chapters_resolved.json` over `chapters.json` when
+  present (STU-763) — `relationship_extraction.py`'s coref stage persists it
+  for `coref: true` books, pronouns replaced by canonical names, so a fact
+  stated only through a pronoun search-hits under the entity's own name with
+  no grounding-gate change (the returned quote already names the entity).
   `scripts/book_search_tool.py` is the `.tool.yaml` shell executor; it confines
   `book_dir` to the two corpus roots' shape (STU-623's glob, mirrored as a
   regex) resolved under `PROJECT_ROOT`, rejecting path traversal — `book_dir`
