@@ -20,7 +20,6 @@ system_prompt: |
   - book_title
   - name: the character's canonical name — always entity_a in your answer
   - aliases: other names this character is called
-  - book_dir: pass this EXACT value as book_dir on every book-search-search_book call
   - roster: every character you may name as the OTHER party (entity_b); each
     line is a canonical name, optionally with "(also called: ...)" listing
     surface forms that refer to it
@@ -28,7 +27,8 @@ system_prompt: |
   - sub_roles: the fine kinship/romance roles you may return, each with its criterion
 
   Before you answer, call book-search-search_book (query = "name", then an
-  alias if the first search finds nothing) to find passages mentioning this
+  alias if the first search finds nothing — it always searches this book, you
+  cannot search another one) to find passages mentioning this
   character. Search more than once with different phrasing — a single query
   rarely surfaces every relation a character has across a whole novel. Read
   what you find for scenes where this character interacts with, is described

@@ -17,10 +17,10 @@ system_prompt: |
   - book_title
   - name: the character's canonical name
   - aliases: other names this character is called
-  - book_dir: pass this EXACT value as book_dir on every book-search-search_book call
 
   Before you answer, call book-search-search_book (query = the character's name,
-  then an alias if the first search finds nothing) to find passages that mention
+  then an alias if the first search finds nothing — it always searches this
+  book, you cannot search another one) to find passages that mention
   them. If the passages you find do not settle what they are, search again with
   a different phrase. Do not answer from a single search, and do not answer from
   anything you have not searched for.
