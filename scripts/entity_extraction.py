@@ -425,6 +425,7 @@ def _truncate_span(span):
       "Barcelone de ténèbres" → "Barcelone"
       "Victor Grandes me sourit" → "Victor Grandes"
       "Victor Hugo" → "Victor Hugo" (unchanged)
+      "Cotton-tail, who" → "Cotton-tail" (hyphen-attached suffix kept)
     """
     tokens = list(span)
     last_proper = 0  # fallback: 0 → return the full span if none is proper
@@ -434,6 +435,12 @@ def _truncate_span(span):
             break
     if last_proper == 0:
         return span
+    # A token glued to the one just kept (no whitespace between them, e.g. a
+    # hyphen compound) is part of the same name even if it's lowercase and
+    # tagged as a common noun — only a real, space-separated word is a
+    # genuine trailing word to drop.
+    while last_proper < len(tokens) and not tokens[last_proper - 1].whitespace_:
+        last_proper += 1
     return span.doc[span.start : span.start + last_proper]
 
 

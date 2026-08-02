@@ -642,6 +642,24 @@ def test_truncate_mention_single_token(nlp):
     assert result == "Alice", f"Expected 'Alice', got {result!r}"
 
 
+def test_truncate_mention_keeps_hyphenated_lowercase_suffix(nlp):
+    """A hyphen-attached suffix (Cotton-tail) is kept even though it's lowercase (STU-767)."""
+    doc = nlp("Flopsy, Mopsy, and Cotton-tail, who were good little bunnies, went down the lane.")
+    start = next(i for i, t in enumerate(doc) if t.text == "Cotton")
+    tail_idx = next(i for i, t in enumerate(doc) if t.text == "tail" and i > start)
+    span = doc[start:tail_idx + 1]  # "Cotton-tail"
+    result = _truncate_mention(span)
+    assert result == "Cotton-tail", f"Expected 'Cotton-tail', got {result!r}"
+
+
+def test_truncate_mention_drops_trailing_word_after_hyphenated_name(nlp):
+    """A genuine trailing word after a hyphen compound is still dropped."""
+    doc = nlp("Cotton-tail replied quickly.")
+    span = doc[0:4]  # "Cotton", "-", "tail", "replied"
+    result = _truncate_mention(span)
+    assert result == "Cotton-tail", f"Expected 'Cotton-tail', got {result!r}"
+
+
 def test_truncate_mention_all_lowercase_returns_full(nlp):
     """Si aucun token n'est title/PROPN, retourner le span complet (cas dégénéré)."""
     doc = nlp("the quick brown fox.")
