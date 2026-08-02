@@ -7,8 +7,8 @@
 == Main characters ==
 * [[Peter]]
 * [[McGregor]]
-* [[Cotton]]
 * [[Flopsy]]
+* [[Mopsy]]
 * [[Cotton-tail]]
 
 == Important locations ==
@@ -22,7 +22,7 @@
 * [[:Category:Organizations|All organizations]]
 
 == Statistics ==
-* 10 wiki pages
-* 8 characters
+* 8 wiki pages
+* 6 characters
 * 0 locations
 * 0 organizations
