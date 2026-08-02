@@ -1,0 +1,30 @@
+{{Infobox location
+|nom=Rouen
+|apparition=Apparaît au tome 1
+}}
+
+== Infobox ==
+
+* Nom: Rouen
+* Statut: Menacée d'occupation prussienne
+
+== Biographie ==
+
+Rouen est une cité française autrefois illustrée par les défenses héroïques de ses bourgeois. Lors de l'invasion prussienne, la ville se trouve menacée d'occupation par les Prussiens qui s'installent dans les foyers de ses habitants. Les bourgeois de Rouen adoptent une stratégie singulière face à l'occupant : ils maintiennent une politesse affectée dans l'enceinte de leurs demeures, accueillant le Prussien au coin du feu chaque soir, tandis qu'ils observent une réserve marquée en public, attitude qu'ils justifient par l'urbanité française.
+
+Contrairement à leurs ancêtres qui se distinguaient par leur vaillance au combat, les bourgeois de Rouen semblent avoir perdu la témérité caractéristique de l'époque des défenses héroïques. Beaucoup refusent de revenir à Rouen, préférant fuir vers Le Havre ou vers l'Angleterre plutôt que d'endurer le contrôle prussien.
+
+== Événements ==
+
+Les Prussiens menacent d'entrer à Rouen. Face à cette occupation imminente, certains habitants refusent d'y revenir, résolus à s'exiler vers Le Havre ou l'Angleterre si les Prussiens s'approchent du Havre.
+
+== Anecdotes ==
+
+L'une des particularités frappantes de la vie à Rouen sous la menace d'occupation est la coexistence paradoxale entre la cordialité des foyers et la froideur de la rue publique. Les bourgeois justifient ce comportement bifide par l'urbanité française, arguant qu'il demeure bien permis d'être poli dans son intérieur pourvu qu'on ne se montre pas familier en public avec le soldat étranger.
+
+== Références ==
+
+<references/>
+
+[[Category:Lieux]]
+[[Category:Lieux du Tome 1]]

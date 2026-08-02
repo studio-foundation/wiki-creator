@@ -1,0 +1,31 @@
+{{Infobox location
+|nom=Tôtes
+|apparition=Apparaît au tome 1
+}}
+
+== Infobox ==
+
+* Nom: Tôtes
+* Type de lieu: Bourg
+* Statut: Actif
+
+== Biographie ==
+
+Tôtes est un bourg servant d'étape aux diligences et aux voyageurs de passage. Le lieu possède les équipements typiques d'une étape routière : cabarets pour la restauration et maisons d'accueil pour le repos nocturne. Son emplacement fait de lui une destination naturelle pour les voyageurs divisant leurs trajets.
+
+== Description physique ==
+
+Le bourg est desservi par une route traversant des régions aux conditions hivernales rigoureuses. L'accumulation de neige y constitue un obstacle substantiel pour les diligences, ralentissant les déplacements et impactant l'accès aux établissements d'accueil. Les cabarets et maisons du bourg témoignent de son rôle de halte de route.
+
+== Anecdotes ==
+
+Durant un voyage hivernal, Tôtes était prévue comme destination simple pour le déjeuner. Mais les conditions de route — accumulation de neige et côtes difficiles — transformèrent cette étape en entreprise incertaine. Les voyageurs, obligés de descendre régulièrement pour gravir les pentes à pied, virent s'évanouir l'espoir d'arriver avant la nuit. Certains doutèrent même de trouver seulement une maison pour y passer la nuit.
+
+Tôtes occupe un point de passage stratégique : elle a été identifiée comme lieu potentiel de rencontre en cas de manœuvre offensive française en provenance de Dieppe.
+
+== Références ==
+
+<references/>
+
+[[Category:Lieux]]
+[[Category:Lieux du Tome 1]]

@@ -1,0 +1,21 @@
+{{Infobox location
+|nom=Français
+|apparition=Apparaît au tome 1
+}}
+
+== Infobox ==
+
+* Nom: Français
+
+== Biographie ==
+
+Une ville reprend peu à peu de son aspect ordinaire. Les Français ne sortaient guère, tandis que les soldats prussiens grouillaient dans les rues. Les officiers de hussards bleus traînaient avec arrogance leurs grands outils de mort sur le pavé, n'affichant aux simples citoyens guère plus de mépris que les officiers de chasseurs, qui, l'année d'avant, buvaient aux mêmes cafés.
+
+On s'entretint de la guerre, naturellement. On raconta des faits horribles des Prussiens, des traits de bravoure des Français. Tous ces gens qui avaient fui rendirent hommage au courage des autres. Et toute la nuit, dans l'obscurité du corridor, coururent comme des frémissements, des bruits légers, à peine sensibles, pareils à des souffles, des effleurements de pieds nus, d'imperceptibles craquements.
+
+== Références ==
+
+<references/>
+
+[[Category:Lieux]]
+[[Category:Lieux du Tome 1]]
