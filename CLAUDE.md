@@ -494,6 +494,9 @@ by someone who has read the novel and nothing else.
   `.worktrees/<slug>` worktree/branch, `git stash pop` inside it, commit there,
   open the PR from the worktree. `main` never carries the files — stash-and-pop
   is the bridge, not a one-off cleanup step.
+- **A finished task ends with an opened PR, not just a pushed branch.** Once a
+  worktree's work is committed and pushed, open the PR as part of finishing the
+  task — don't wait to be asked.
 - Prefer `rg` for search.
 - Use `apply_patch` for manual edits.
 - Do not assume docs are current; verify against `Makefile`, pipeline YAML, and tests.
