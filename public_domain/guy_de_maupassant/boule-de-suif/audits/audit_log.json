@@ -1,0 +1,73 @@
+[
+  {
+    "run": 1,
+    "date": "2026-08-02",
+    "book": "01-boule-de-suif",
+    "providers": {
+      "generation": "claude-code/claude-haiku-4-5",
+      "verdict_agents": "claude-code/claude-haiku-4-5",
+      "chapter_summaries": "claude-code/claude-haiku-4-5"
+    },
+    "pages_generated": 13,
+    "infobox_pct": 100,
+    "lang_expected_pct": 100,
+    "alias_duplicates": 0,
+    "hallucinations": 2,
+    "gt_violations": [
+      {
+        "page": "Cornudet",
+        "signal": "STRUCTURED_REL [Cornudet/romance]: [[Boule de Suif]]",
+        "cause": "relationships_classified.json types the pair 'budding_attraction' (a one-sided, rejected seduction attempt); generation renders it unqualified in the same 'romance' infobox slot a mutual romance would get",
+        "first_seen_in": "wiki_pages.json (generation) — absent from every upstream artifact",
+        "component": "scripts/generate_wiki_pages.py (classified-type -> infobox-slot mapping)",
+        "action": "STU-779 filed"
+      },
+      {
+        "page": "Boule de Suif",
+        "signal": "STRUCTURED_REL [Boule de Suif/romance]: [[Cornudet]]",
+        "cause": "same defect, mirrored on the other page of the pair",
+        "first_seen_in": "wiki_pages.json (generation)",
+        "component": "scripts/generate_wiki_pages.py",
+        "action": "STU-779 filed"
+      }
+    ],
+    "coverage": {
+      "batch_entities": 13,
+      "pages_generated": 13,
+      "missing": [],
+      "failed": [],
+      "filtered_before_batch": 0
+    },
+    "weak_entities": [
+      "Cornudet",
+      "Boule de Suif",
+      "Follenvie",
+      "Mme Carré-Lamadon",
+      "M. Carré-Lamadon",
+      "Mme Loiseau",
+      "Rouen",
+      "Allemand",
+      "Dieppe",
+      "Bréville",
+      "Français",
+      "Tôtes",
+      "Prussiens"
+    ],
+    "regression": {
+      "prefixed_keys": "✅",
+      "epub_ids": "✅",
+      "entity_type_null": "✅",
+      "alias_duplicates": "❌",
+      "cross_serie": "✅",
+      "evolution_quality": "❌",
+      "temporal_context": "✅",
+      "ground_truth": "❌"
+    },
+    "verdict": "First-ever run of the fr language path (Boule de Suif). Extraction/clustering has two real, verified defects: the comte/comtesse de Bréville household is lost entirely (fr_core_news_lg tags the bare surname PLACE; STU-780), and M. Loiseau is merged into his wife's entity because the household-split logic never sees a second independently-titled candidate to conflict against (STU-781) — both are new edge cases of an already-known bug class, not novel mechanisms. Generation also renders a one-sided, rejected seduction attempt as an unqualified mutual 'romance' infobox slot on both parties (STU-779), exactly the plot-inversion the ground-truth corpus was built to catch. Coverage is 13/13 batch entities with pages, but that count already excludes the two lost Bréville characters — it is not a clean roster. Priority for the next run: fix STU-780 (Bréville) first — it is the only defect that outright deletes named principal characters rather than mis-describing them.",
+    "new_issues": [
+      "STU-779",
+      "STU-780",
+      "STU-781"
+    ]
+  }
+]
