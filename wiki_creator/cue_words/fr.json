@@ -121,7 +121,16 @@
     "ce",
     "cet",
     "cette",
-    "ces"
+    "ces",
+    "deux",
+    "trois",
+    "quatre",
+    "cinq",
+    "six",
+    "sept",
+    "huit",
+    "neuf",
+    "dix"
   ],
   "false_positive_words": [
     "cher",
