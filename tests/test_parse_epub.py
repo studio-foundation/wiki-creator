@@ -740,6 +740,61 @@ def test_gutenberg_start_marker_matches_this_variant_case_insensitively():
     assert result[0]["content"] == "Story."
 
 
+from scripts.parse_epub import strip_inline_frontmatter
+
+
+def test_inline_frontmatter_stripped_from_first_chapter():
+    """A title page glued into the story's own chapter is dropped (STU-768).
+
+    Peter Rabbit's Gutenberg "images" edition packs title/author/publisher/print
+    info directly ahead of the story in the one spine item holding both — no
+    chapter boundary to key `is_frontmatter_chapter` off. Every label line lacks a
+    sentence terminal; the story is the first paragraph that has one, even when
+    that terminal is a dash trailing into a list rather than a period.
+    """
+    chapters = [{"id": "c1", "content": (
+        "THE TALE OF PETER RABBIT\n\nBY\n\nBEATRIX POTTER\n\nFREDERICK WARNE\n\n"
+        "FREDERICK WARNE\n\nFirst published 1902\n\nFrederick Warne & Co., 1902\n\n"
+        "Printed and bound in Great Britain by William Clowes Limited, Beccles and London\n\n"
+        "Once upon a time there were four little Rabbits, and their names were—"
+        "\n\nFlopsy, Mopsy, Cotton-tail, and Peter."
+    )}]
+    result = strip_inline_frontmatter(chapters)
+    assert result[0]["content"] == (
+        "Once upon a time there were four little Rabbits, and their names were—"
+        "\n\nFlopsy, Mopsy, Cotton-tail, and Peter."
+    )
+
+
+def test_inline_frontmatter_noop_when_chapter_opens_on_prose():
+    """A chapter that already opens with a real sentence is untouched."""
+    chapters = [{"id": "c1", "content": "Alice was beginning to get very tired.\n\nShe sat by her sister."}]
+    result = strip_inline_frontmatter(chapters)
+    assert result == chapters
+
+
+def test_inline_frontmatter_only_touches_the_first_chapter():
+    """A title page is only ever glued to the start of a book, never mid-book."""
+    chapters = [
+        {"id": "c1", "content": "Alice was beginning to get very tired.\n\nShe sat by her sister."},
+        {"id": "c2", "content": "BY\n\nSOME AUTHOR\n\nShe fell down the hole."},
+    ]
+    result = strip_inline_frontmatter(chapters)
+    assert result[1]["content"] == "BY\n\nSOME AUTHOR\n\nShe fell down the hole."
+
+
+def test_inline_frontmatter_gives_up_past_the_lookahead_cap():
+    """A chapter that never hits a sentence terminal within the cap is left alone."""
+    label_lines = "\n\n".join(f"LABEL {i}" for i in range(20))
+    chapters = [{"id": "c1", "content": label_lines}]
+    result = strip_inline_frontmatter(chapters)
+    assert result == chapters
+
+
+def test_inline_frontmatter_empty_chapters_list():
+    assert strip_inline_frontmatter([]) == []
+
+
 # --- Splitting a many-chapter spine item at TOC fragment anchors (STU-727) ---
 
 
