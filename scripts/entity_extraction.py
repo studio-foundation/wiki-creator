@@ -32,6 +32,7 @@ import re
 import sys
 from pathlib import Path
 import yaml
+from spacy.tokens import Span
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 from wiki_creator import studio_io
@@ -457,6 +458,32 @@ def _truncate_mention(span) -> str:
     return _truncate_span(span).text
 
 
+def _extend_leading_honorific(span, cue_words: dict[str, frozenset[str]] | None):
+    """
+    Extend a PERSON span left by one token when it is immediately preceded by
+    an honorific/title cue word (STU-777): spaCy's PERSON boundary sometimes
+    excludes a leading "Mrs."/"Mr." even though the token is itself
+    title-cased/PROPN — "old Mrs. Rabbit" extracts as bare "Rabbit". Mirrors
+    `_truncate_span`'s trailing-side repair, applied to the leading side
+    before the mention string is finalized.
+
+    Only extends onto an adjacent token (no intervening punctuation) that is
+    itself title-cased or PROPN — a lowercase cue word elsewhere in the
+    sentence must not be swept in.
+    """
+    if span.label_ != "PERSON" or span.start == 0:
+        return span
+    person_cues = (cue_words or {}).get("person_cue_words")
+    if not person_cues:
+        return span
+    prev = span.doc[span.start - 1]
+    if not (prev.is_title or prev.pos_ == "PROPN"):
+        return span
+    if prev.text.rstrip(".").lower() not in person_cues:
+        return span
+    return Span(span.doc, prev.i, span.end, label=span.label_)
+
+
 # Hardcoded chapters for --test mode (English, uses en_core_web_sm)
 TEST_CHAPTERS = [
     {
@@ -550,6 +577,7 @@ def extract_entities(
             if ent.label_ not in KEPT_LABELS:
                 continue
 
+            ent = _extend_leading_honorific(ent, cue_words)
             mention_span = _truncate_span(ent)
             mention_text = mention_span.text
             key = mention_text.lower().strip()
