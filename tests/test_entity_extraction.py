@@ -819,6 +819,18 @@ def test_filter_entities_by_min_mentions_excludes_below_threshold():
     assert set(filtered.keys()) == {"entity_002", "entity_003"}
 
 
+def test_filter_entities_by_min_mentions_exempts_role_seed_below_threshold():
+    """STU-778: a role-seeded entity (e.g. "Father") is kept below the floor."""
+    entities_full = {
+        "entity_001": {"type": "PERSON", "mention_count": 1, "raw_mentions": ["Father"]},
+        "entity_002": {"type": "PERSON", "mention_count": 1, "raw_mentions": ["Random"]},
+    }
+    filtered = filter_entities_by_min_mentions(
+        entities_full, min_mentions_absolute=3, role_seed_keys=frozenset({"father"})
+    )
+    assert set(filtered.keys()) == {"entity_001"}
+
+
 @requires_en_sm
 def test_main_writes_only_entities_meeting_min_mentions_threshold(tmp_path):
     """main() should exclude low-mention entities from persons_full.json."""
@@ -873,6 +885,69 @@ def test_main_writes_only_entities_meeting_min_mentions_threshold(tmp_path):
         for mention in entity.get("raw_mentions", [])
     ]
     assert any("Alice" in mention for mention in all_mentions), f"Expected Alice in {all_mentions}"
+
+
+@requires_en_sm
+def test_main_synthesizes_role_seeded_entity_below_min_mentions(tmp_path):
+    """STU-778: a book-declared role word with a single, never-repeated,
+    never-proper-named mention ("your Father had an accident") still reaches
+    persons_full.json, bypassing min_mentions_absolute."""
+    import json as _json
+    import subprocess
+    env = os.environ.copy()
+    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    env["PYTHONPATH"] = (
+        f"{repo_root}:{env['PYTHONPATH']}" if env.get("PYTHONPATH") else repo_root
+    )
+
+    book_yaml = tmp_path / "library" / "author" / "series" / "books" / "book.yaml"
+    book_yaml.parent.mkdir(parents=True, exist_ok=True)
+    book_yaml.write_text("description: test", encoding="utf-8")
+
+    payload = _json.dumps({
+        "additional_context": (
+            f"file_path: {book_yaml}\n"
+            "spacy_model: en_core_web_sm\n"
+            "min_mentions_absolute: 3\n"
+            "classification:\n"
+            "  roles_naming_one_character: [father]\n"
+        ),
+        "previous_outputs": {
+            "epub-parse": {
+                "title": "Test",
+                "author": None,
+                "chapters": [
+                    {
+                        "id": "ch01",
+                        "title": "Ch1",
+                        "content": (
+                            "Alice met Bob. Alice smiled. Alice waved. "
+                            "Your Father had an accident there; he was put in a pie."
+                        ),
+                    },
+                ],
+            }
+        },
+    })
+
+    result = subprocess.run(
+        [sys.executable, "scripts/entity_extraction.py"],
+        input=payload,
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=60,
+    )
+    assert result.returncode == 0, f"Expected exit 0, got {result.returncode}. stderr={result.stderr}"
+
+    processing = book_yaml.parent.parent / "processing_output" / "book"
+    persons_data = _json.loads((processing / "persons_full.json").read_text(encoding="utf-8"))
+    all_mentions = [
+        mention
+        for entity in persons_data["persons_full"].values()
+        for mention in entity.get("raw_mentions", [])
+    ]
+    assert "Father" in all_mentions, f"Expected Father in {all_mentions}"
     assert all("Bob" not in mention for mention in all_mentions), f"Bob should be filtered out: {all_mentions}"
 
 
