@@ -28,7 +28,7 @@ env/
 
 # Studio (generated)
 .studio/config.yaml
-.studio/runs/
+.studio/runs
 *.keymap.json
 
 # Git worktrees
@@ -79,20 +79,24 @@ library/**/*.epub
 # lives under library/<author>/<series>/, so its derived paths match the
 # expected_outputs globs (library/*/*/...) and its contracts pass. Whole dir
 # ignored — bench yaml/epub/output are never committed.
-library/_bench/
+library/_bench
 
+# Wholly-ignored artifact dirs carry NO trailing slash: the worktree hook
+# (.claude/hooks/link-worktree-artifacts.sh) places them as symlinks to main,
+# and a `dir/` pattern never matches a symlink — the slash would leave every
+# worktree's git status polluted with untracked symlinks.
 # Pipeline output dirs (per-series)
-library/**/processing_output/
-library/**/wiki_inputs/
-library/**/output/
+library/**/processing_output
+library/**/wiki_inputs
+library/**/output
 library/**/registry.json
 library/**/character_graph.json
 # public_domain ships its EPUBs + YAMLs (distributable), and its exported wikis
 # (output/) ARE committed as demo artifacts (STU-617) — the point of the corpus is
 # to show a built wiki. The intermediate artifacts stay out of git: regenerable,
 # large, and not the deliverable.
-public_domain/**/processing_output/
-public_domain/**/wiki_inputs/
+public_domain/**/processing_output
+public_domain/**/wiki_inputs
 public_domain/**/registry.json
 public_domain/**/character_graph.json
 .wiki_runs/
@@ -105,27 +109,27 @@ bak_*/
 # (raw_wikitext per page + every infobox Template: page, per wiki). The curated
 # datasets under processing_output/fandom/ stay tracked; this is the scratch
 # survey, not a deliverable.
-processing_output/fandom_corpus/
+processing_output/fandom_corpus
 
 # Scratch audits at repo root; per-book audit logs under library/ stay tracked
 /audits/
 # Research eval outputs: per-book arm extractions + the oracle verdicts (STU-535)
-research/*/arms/
+research/*/arms
 # ner-eval STU-616: per-book oracle rosters + batch log. Regenerable by
 # batch_all.sh; the judged numbers live in research/ner-eval/results_stu616.md.
-research/ner-eval/stu616/
+research/ner-eval/stu616
 # alias-eval: per-book adjudication verdicts + run log (STU-543). Regenerable by
 # run_books.py; the judged numbers live in research/alias-eval/results.md.
-research/alias-eval/verdicts/
+research/alias-eval/verdicts
 research/alias-eval/run.log
 # embedding-eval: masked mention windows + their encodings (STU-576). Regenerable by
 # build_corpus.py from the processing_output caches, which are themselves gitignored.
-research/embedding-eval/corpus/
+research/embedding-eval/corpus
 # relation-eval chunk sweep (STU-611): per-size discovered snapshots + log,
 # regenerable by run_sweep.sh (live LLM run)
 research/relation-eval/chunk-sweep/discovered_*.json
 research/relation-eval/chunk-sweep/sweep.log
-research/relation-eval/chunk-sweep/stale-*/
+research/relation-eval/chunk-sweep/stale-*
 
 # Local, per-machine agent notes
 CLAUDE.local.md
