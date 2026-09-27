@@ -25,7 +25,7 @@ providers:
   claude-code: {}
   # Local, no API key required. Install: https://ollama.com
   ollama:
-    baseUrl: http://localhost:11434
+    baseUrl: ${OLLAMA_BASE_URL:-http://localhost:11434}
   # Cloud providers, billed per token. anthropic is safe to leave declared
   # with no key set — the SDK only errors on an actual call, never at
   # construction. openai is not: an empty ${VAR} makes its client throw at
