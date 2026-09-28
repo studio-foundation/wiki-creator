@@ -1117,7 +1117,7 @@ def _run_studio_classifier_item(
     role_contexts_a: list[str] | None = None,
     role_contexts_b: list[str] | None = None,
     book_config: dict | None = None,
-    timeout_seconds: int = 120,
+    timeout_seconds: int | None = None,
     max_attempts: int = _CLASSIFIER_MAX_ATTEMPTS,
 ) -> dict:
     """Invoke Studio to classify one relationship pair via relationship-classifier-item pipeline.
@@ -1152,6 +1152,9 @@ def _run_studio_classifier_item(
         yaml.safe_dump(batch_input, tmp, sort_keys=False, allow_unicode=True)
         input_path = tmp.name
 
+    if timeout_seconds is None:
+        # A local reasoning model can outlast 120 s per pair (STU-1766).
+        timeout_seconds = int(os.environ.get("RELATIONSHIP_CLASSIFIER_TIMEOUT_S", "120"))
     cmd = ["studio", "run", "relationship-classifier-item", "--input-file", input_path, "--json"]
     try:
         outcome: dict = {"error": "studio_run_output_missing"}

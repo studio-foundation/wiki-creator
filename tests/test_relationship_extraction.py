@@ -5,6 +5,8 @@ import sys
 import os
 from unittest.mock import patch, MagicMock
 
+import pytest
+
 from scripts.relationship_extraction import enrich_mentions_with_coref
 
 
@@ -849,6 +851,20 @@ def test_run_studio_classifier_item_returns_classification_on_success():
         rel = {"entity_a": "Celaena", "entity_b": "Chaol", "sample_contexts": ["ctx1"], "cooccurrence_count": 5}
         result = _run_studio_classifier_item(rel, novel_summary="", additional_context="")
     assert result["relationship_type"] == "ami"
+
+
+@pytest.mark.parametrize("env, expected", [(None, 120), ("600", 600)])
+def test_run_studio_classifier_item_timeout_reads_env(monkeypatch, env, expected):
+    """STU-1766: the per-pair timeout defaults to 120 s and RELATIONSHIP_CLASSIFIER_TIMEOUT_S overrides it."""
+    if env is None:
+        monkeypatch.delenv("RELATIONSHIP_CLASSIFIER_TIMEOUT_S", raising=False)
+    else:
+        monkeypatch.setenv("RELATIONSHIP_CLASSIFIER_TIMEOUT_S", env)
+    ok = MagicMock(returncode=0, stdout=_SUCCESS_STDOUT, stderr="")
+    with patch("subprocess.run", return_value=ok) as run:
+        rel = {"entity_a": "A", "entity_b": "B", "sample_contexts": [], "cooccurrence_count": 1}
+        _run_studio_classifier_item(rel, novel_summary="", additional_context="")
+    assert run.call_args.kwargs["timeout"] == expected
 
 
 def test_run_studio_classifier_item_degrades_on_studio_missing():
