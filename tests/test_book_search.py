@@ -1,7 +1,14 @@
 """STU-753: full-text search over a book's parsed chapters."""
 import json
 
-from wiki_creator.book_search import full_text, load_chapters, quote_surface, search_chapters
+from wiki_creator.book_search import (
+    estimate_tokens,
+    full_text,
+    load_chapters,
+    quote_surface,
+    search_chapters,
+    select_passages,
+)
 
 
 def test_finds_a_literal_phrase():
@@ -118,3 +125,76 @@ def test_quote_surface_without_coref_is_the_original_text(tmp_path):
         json.dumps({"chapters": {"c1": "He rode north."}}), encoding="utf-8"
     )
     assert "He rode north." in quote_surface(tmp_path)
+
+
+# --- select_passages (STU-2018) ----------------------------------------------
+
+STATUS_KEYWORDS = ["died", "dead", "buried"]
+
+
+def _book(n_chapters: int, paragraph: str) -> dict[str, str]:
+    return {f"c{n}": "\n\n".join([paragraph] * 5) for n in range(1, n_chapters + 1)}
+
+
+def test_selector_never_exceeds_the_budget():
+    chapters = _book(40, "Brom rode north and spoke at length of the old riders. " * 6)
+    for budget in (0, 50, 500, 5000):
+        picked = select_passages(chapters, {}, "Brom", [], STATUS_KEYWORDS, budget_tokens=budget)
+        assert sum(estimate_tokens(p["text"]) for p in picked) <= budget
+    assert picked
+
+
+def test_selector_caps_a_long_paragraph_around_the_mention():
+    text = "filler " * 400 + "Brom died there. " + "filler " * 400
+    [passage] = select_passages({"c1": text}, {}, "Brom", [], STATUS_KEYWORDS)
+    assert "Brom died" in passage["text"]
+    assert len(passage["text"]) <= 800
+
+
+def test_selector_covers_every_alias():
+    chapters = {
+        "c1": "The Storyteller sat by the fire.",
+        "c2": "Old Brom sharpened his sword.",
+        "c3": "Nobody else was there.",
+    }
+    picked = select_passages(chapters, {}, "Brom", ["Storyteller"], STATUS_KEYWORDS)
+    assert [p["chapter"] for p in picked] == ["c1", "c2"]
+
+
+def test_selector_matches_whole_words_only():
+    assert select_passages({"c1": "Bromley went home."}, {}, "Brom", [], []) == []
+
+
+def test_selector_includes_a_coref_only_passage_once():
+    original = {"c1": "Brom rode north.\n\nThen he fell, and he was dead."}
+    resolved = {"c1": "Brom rode north.\n\nThen Brom fell, and Brom was dead."}
+    picked = select_passages(original, resolved, "Brom", [], STATUS_KEYWORDS)
+    assert [p["text"] for p in picked] == ["Brom rode north.", "Then Brom fell, and Brom was dead."]
+
+
+def test_selector_prefers_keyword_passages_under_a_tight_budget():
+    chapters = {"c1": "Brom rode north.\n\nBrom talked.\n\nBrom was buried at dawn."}
+    [picked] = select_passages(
+        chapters, {}, "Brom", [], STATUS_KEYWORDS,
+        budget_tokens=estimate_tokens("Brom was buried at dawn."),
+    )
+    assert picked["text"] == "Brom was buried at dawn."
+
+
+def test_selector_spreads_across_chapters_latest_first():
+    chapters = _book(10, "Brom rode north.")
+    one = estimate_tokens("Brom rode north.")
+    picked = select_passages(chapters, {}, "Brom", [], [], budget_tokens=3 * one)
+    assert [p["chapter"] for p in picked] == ["c8", "c9", "c10"]
+
+
+def test_selector_returns_book_order_and_is_deterministic():
+    chapters = {
+        "c1": "Brom was buried.\n\nBrom spoke.",
+        "c2": "Brom spoke again.\n\nBrom died.",
+    }
+    first = select_passages(chapters, {}, "Brom", [], STATUS_KEYWORDS)
+    assert first == select_passages(dict(chapters), {}, "Brom", [], list(STATUS_KEYWORDS))
+    assert [p["text"] for p in first] == [
+        "Brom was buried.", "Brom spoke.", "Brom spoke again.", "Brom died.",
+    ]
