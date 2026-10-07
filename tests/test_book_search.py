@@ -1,7 +1,7 @@
 """STU-753: full-text search over a book's parsed chapters."""
 import json
 
-from wiki_creator.book_search import full_text, load_chapters, search_chapters
+from wiki_creator.book_search import full_text, load_chapters, quote_surface, search_chapters
 
 
 def test_finds_a_literal_phrase():
@@ -99,3 +99,22 @@ def test_load_chapters_falls_back_when_resolved_variant_is_malformed(tmp_path):
     )
     (tmp_path / "chapters_resolved.json").write_text("{not json", encoding="utf-8")
     assert load_chapters(tmp_path) == {"c1": "Brom rode north."}
+
+
+def test_quote_surface_carries_both_chapter_variants(tmp_path):
+    (tmp_path / "chapters.json").write_text(
+        json.dumps({"chapters": {"c1": "He rode north."}}), encoding="utf-8"
+    )
+    (tmp_path / "chapters_resolved.json").write_text(
+        json.dumps({"chapters": {"c1": "Brom rode north."}}), encoding="utf-8"
+    )
+    surface = quote_surface(tmp_path)
+    assert "He rode north." in surface
+    assert "Brom rode north." in surface
+
+
+def test_quote_surface_without_coref_is_the_original_text(tmp_path):
+    (tmp_path / "chapters.json").write_text(
+        json.dumps({"chapters": {"c1": "He rode north."}}), encoding="utf-8"
+    )
+    assert "He rode north." in quote_surface(tmp_path)

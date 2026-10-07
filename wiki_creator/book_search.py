@@ -31,16 +31,31 @@ def load_chapters(processing_dir: Path | str) -> dict[str, str]:
     pronoun then search-hits under the entity's own name. Falls back to
     ``chapters.json`` for a book that never ran coref.
     """
-    processing_dir = Path(processing_dir)
     for filename in ("chapters_resolved.json", "chapters.json"):
-        try:
-            data = json.loads((processing_dir / filename).read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            continue
-        chapters = data.get("chapters") if isinstance(data, dict) else None
-        if isinstance(chapters, dict):
+        chapters = _read_chapters(Path(processing_dir) / filename)
+        if chapters is not None:
             return chapters
     return {}
+
+
+def quote_surface(processing_dir: Path | str) -> str:
+    """The text a verdict's quote may be verbatim in: the original chapters and
+    the coref-resolved ones (STU-2008). Search runs on the resolved text, but a
+    model quoting the book's real sentence must not fail the gate because coref
+    rewrote its pronouns."""
+    return "\n".join(
+        full_text(_read_chapters(Path(processing_dir) / filename) or {})
+        for filename in ("chapters.json", "chapters_resolved.json")
+    )
+
+
+def _read_chapters(path: Path) -> dict[str, str] | None:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    chapters = data.get("chapters") if isinstance(data, dict) else None
+    return chapters if isinstance(chapters, dict) else None
 
 
 def full_text(chapters: dict[str, str]) -> str:
