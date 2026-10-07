@@ -211,6 +211,11 @@ def _load_single_cue_words_file(language: str) -> dict[str, frozenset[str]]:
         "person_cue_words": frozenset(data.get("person_cue_words", [])),
         "place_prepositions": frozenset(data.get("place_prepositions", [])),
         "event_suffixes": frozenset(data.get("event_suffixes", [])),
+        "demonyms": frozenset(
+            word + ending
+            for word in data.get("demonyms", [])
+            for ending in ("", "s")
+        ),
     }
 
 
@@ -221,7 +226,7 @@ def _load_cue_words(language: str) -> dict[str, frozenset[str]]:
         fr = _load_single_cue_words_file("fr")
         return {
             key: en[key] | fr[key]
-            for key in ("place_cue_words", "person_cue_words", "place_prepositions", "event_suffixes")
+            for key in ("place_cue_words", "person_cue_words", "place_prepositions", "event_suffixes", "demonyms")
         }
     if language in {"en", "fr", "es"}:
         return _load_single_cue_words_file(language)
@@ -484,6 +489,24 @@ def _extend_leading_honorific(span, cue_words: dict[str, frozenset[str]] | None)
     return Span(span.doc, prev.i, span.end, label=span.label_)
 
 
+def _retype_demonym(span, cue_words: dict[str, frozenset[str]] | None):
+    """
+    Retype a capitalized demonym ("les Prussiens", "l'Allemand") as a one-token
+    FACTION span (STU-787). fr_core_news has no NORP label: it types demonyms
+    LOC or MISC, so without this a French book on a stock model can never
+    produce a FACTION. A leading determiner is dropped from the span.
+
+    A PERSON span is left alone: a demonym can also be a surname ("Normand").
+    """
+    demonyms = (cue_words or {}).get("demonyms")
+    if not demonyms or LABEL_TO_TYPE.get(span.label_) == "PERSON":
+        return span
+    tokens = [t for t in span if t.pos_ != "DET"]
+    if len(tokens) != 1 or not tokens[0].is_title or tokens[0].lower_ not in demonyms:
+        return span
+    return Span(span.doc, tokens[0].i, tokens[0].i + 1, label="FACTION")
+
+
 # Hardcoded chapters for --test mode (English, uses en_core_web_sm)
 TEST_CHAPTERS = [
     {
@@ -574,6 +597,7 @@ def extract_entities(
         chapter_id = chapter["id"]
         doc = nlp(chapter["content"])
         for ent in doc.ents:
+            ent = _retype_demonym(ent, cue_words)
             if ent.label_ not in KEPT_LABELS:
                 continue
 
