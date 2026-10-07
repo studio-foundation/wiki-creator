@@ -54,6 +54,7 @@ from wiki_creator.canonicalize import (
     fold_tokens,
     fold_vocabulary,
 )
+from wiki_creator.book_search import full_text, load_chapters
 from wiki_creator.entity_taxonomy import resolution_types
 from wiki_creator.paths import book_paths_from_epub, book_paths_from_yaml
 from wiki_creator.registry import Registry
@@ -207,6 +208,26 @@ def has_conflicting_gender_title(
     masc1, fem1 = bool(t1 & masculine), bool(t1 & feminine)
     masc2, fem2 = bool(t2 & masculine), bool(t2 & feminine)
     return (masc1 and fem2) or (fem1 and masc2)
+
+
+def find_joint_honorific_surnames(
+    text: str,
+    connectors: frozenset[str],
+    masculine_titles: frozenset[str] = MASCULINE_TITLES,
+    feminine_titles: frozenset[str] = FEMININE_TITLES,
+) -> frozenset[str]:
+    """Folded surnames the text introduces as a couple ("M. et Mme Loiseau",
+    "Mr. and Mrs. Beaver"): two opposite-gender titles joined by a connector."""
+    masculine, feminine = fold_vocabulary(masculine_titles), fold_vocabulary(feminine_titles)
+    connectors = fold_vocabulary(connectors)
+    tokens = fold_tokens(text)
+    found = set()
+    for a, conj, b, surname in zip(tokens, tokens[1:], tokens[2:], tokens[3:]):
+        if conj in connectors and (
+            (a in masculine and b in feminine) or (a in feminine and b in masculine)
+        ):
+            found.add(surname)
+    return frozenset(found)
 
 
 def is_single_given_name(tokens: list[str]) -> bool:
@@ -421,7 +442,10 @@ def _resolve_cluster_type(member_ids: list[str], entities: dict) -> str:
 # --- Union-Find clustering ---
 
 def build_clusters(
-    entities: dict, language: str | None = None, seed: dict | None = None
+    entities: dict,
+    language: str | None = None,
+    seed: dict | None = None,
+    book_text: str = "",
 ) -> tuple[list[dict], dict]:
     """
     Cluster entities by name similarity using Union-Find.
@@ -431,6 +455,9 @@ def build_clusters(
     (``Registry.seed_table()``). Entities whose mentions are known aliases of
     the same series entity are pre-unioned — tome N starts from identities
     already established in tomes 1..N-1, regardless of name similarity.
+
+    book_text (STU-781): the book's prose, read for couples introduced jointly
+    ("M. et Mme Loiseau"), whose untitled spouse must not fold into the titled one.
 
     Returns: (clusters_list, unclustered_entities)
     """
@@ -529,8 +556,13 @@ def build_clusters(
             })
 
     # Rule 2 post-processing: split clusters with conflicting first names
+    couples = find_joint_honorific_surnames(
+        book_text, _extend_from_lang(frozenset(), "coordination_connectors", language),
+        masculine_titles, feminine_titles,
+    ) if book_text else frozenset()
     clusters_list, unclustered = split_conflicting_first_names(
-        clusters_list, unclustered, entities, title_prefixes, masculine_titles, feminine_titles
+        clusters_list, unclustered, entities, title_prefixes, masculine_titles, feminine_titles,
+        couples,
     )
     clusters_list.sort(key=lambda c: c["total_mentions"], reverse=True)
     return clusters_list, unclustered
@@ -618,6 +650,7 @@ def split_conflicting_first_names(
     title_prefixes: frozenset[str] = TITLE_PREFIXES,
     masculine_titles: frozenset[str] = MASCULINE_TITLES,
     feminine_titles: frozenset[str] = FEMININE_TITLES,
+    couples: frozenset[str] = frozenset(),
 ) -> tuple[list[dict], dict]:
     """
     Rule 2 post-processing: split clusters where multiple full-name entities
@@ -633,9 +666,13 @@ def split_conflicting_first_names(
     - Bare-surname entities WITH gender titles are assigned to their gender group
       (feminine together, masculine together); if a cluster has mixed-gender
       bare-surname entities with no full-name disambiguator, they are split by gender.
+    - A surname in `couples` (introduced jointly, "M. et Mme Loiseau") whose
+      cluster has bare-surname entities titled for one gender only splits the
+      untitled ones off as the other spouse (STU-781).
     - If it's a tie, log a warning to stderr.
     - New sub-clusters get reassigned cluster_ids.
     """
+    masculine_titles, feminine_titles = fold_vocabulary(masculine_titles), fold_vocabulary(feminine_titles)
     new_clusters = []
     cluster_counter = [0]
 
@@ -654,6 +691,7 @@ def split_conflicting_first_names(
         # bare_surname: list of (eid, gender_group) where gender_group is
         # "masc", "fem", or "neutral"
         bare_surname_eids: list[tuple[str, str]] = []
+        bare_surnames: set[str] = set()
 
         for eid in cluster["entity_ids"]:
             mention = entities[eid]["raw_mentions"][0] if entities[eid].get("raw_mentions") else eid
@@ -668,6 +706,7 @@ def split_conflicting_first_names(
                 else:
                     gender = "neutral"
                 bare_surname_eids.append((eid, gender))
+                bare_surnames.add(surname)
                 continue
             by_surname.setdefault(surname, []).append((frozenset(firsts), eid))
 
@@ -734,6 +773,12 @@ def split_conflicting_first_names(
                 split_happened = True
                 new_clusters.append(_make_cluster(next_cluster_id(), masc_group, entities, title_prefixes))
                 new_clusters.append(_make_cluster(next_cluster_id(), fem_group, entities, title_prefixes))
+            elif (
+                neutral_eids and not full_name_eids and bool(masc_eids) != bool(fem_eids)
+                and bare_surnames & couples
+            ):
+                new_clusters.append(_make_cluster(next_cluster_id(), masc_eids + fem_eids, entities, title_prefixes))
+                new_clusters.append(_make_cluster(next_cluster_id(), neutral_eids, entities, title_prefixes))
             else:
                 # No conflict found — re-assign a fresh cluster_id for consistency
                 new_clusters.append(_make_cluster(next_cluster_id(), cluster["entity_ids"], entities, title_prefixes))
@@ -926,18 +971,19 @@ def main() -> None:
     # tome's mentions. Absent file_path / series registry ⇒ unseeded (tome 1,
     # unit tests, pre-multi-tome pipelines).
     seed = {}
+    book_text = ""
     file_path = ctx.get("file_path")
     if file_path:
-        seed = Registry.load_seed_table(
-            book_paths_from_epub(file_path).series_registry, load_determiners(language)
-        )
+        paths = book_paths_from_epub(file_path)
+        book_text = full_text(load_chapters(paths.processing))
+        seed = Registry.load_seed_table(paths.series_registry, load_determiners(language))
         if seed:
             print(
                 f"[entity-clustering] series seeding active: {len(seed)} known surfaces",
                 file=sys.stderr,
             )
 
-    clusters, unclustered = build_clusters(entities, language=language, seed=seed)
+    clusters, unclustered = build_clusters(entities, language=language, seed=seed, book_text=book_text)
 
     total = len(entities)
 
