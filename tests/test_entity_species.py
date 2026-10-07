@@ -252,3 +252,44 @@ def test_pre_emits_one_item_per_person_with_context(tmp_path, monkeypatch):
     result = _run_pre(monkeypatch, epub, invented_names=True)
     assert result["needs_verdict"] is True
     assert {e["name"] for e in result["entities"]} == {"Arya"}
+
+
+# --- post stage: the quote gate reads both chapter variants (STU-2008) ------
+
+ORIGINAL_ELF = "Arya was an elf, and she was proud of it."
+RESOLVED_ELF = "Arya was an elf, and Arya was proud of it."
+
+
+@pytest.mark.parametrize("quote", [ORIGINAL_ELF, RESOLVED_ELF])
+def test_post_accepts_a_quote_from_either_chapter_variant(tmp_path, monkeypatch, quote):
+    """Search runs on the coref-resolved text, but the model may quote the book's
+    real sentence: a quote verbatim in only one of the two variants survives."""
+    import scripts.entity_species as post
+
+    epub, processing = _pre_setup(tmp_path)
+    registry = Registry(entities=[
+        EntityRecord(
+            entity_id="arya", canonical_name="Arya", entity_type="PERSON",
+            aliases=["Arya"], mentions=[Mention(surface="Arya", chapter_id="c1", context=ORIGINAL_ELF)],
+        )
+    ])
+    (processing / "registry.json").write_text(json.dumps(registry.to_dict()), encoding="utf-8")
+    (processing / "chapters.json").write_text(
+        json.dumps({"chapters": {"c1": ORIGINAL_ELF}}), encoding="utf-8"
+    )
+    (processing / "chapters_resolved.json").write_text(
+        json.dumps({"chapters": {"c1": RESOLVED_ELF}}), encoding="utf-8"
+    )
+    payload = {
+        "additional_context": yaml.safe_dump(
+            {"title": "Test", "language": "en", "file_path": str(epub), "ner": {"invented_names": True}}
+        ),
+        "all_stage_outputs": {"entity-species-verdict": {"results": [
+            {"index": 0, "status": "success", "output": {"species": "elf", "quote": quote}}
+        ]}},
+    }
+    monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps(payload)))
+    monkeypatch.setattr("sys.stdout", io.StringIO())
+    post.main()
+    artifact = json.loads((processing / "entity_species.json").read_text(encoding="utf-8"))
+    assert artifact["verdicts"]["Arya"] == {"species": "elf", "quote": quote}

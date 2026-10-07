@@ -28,7 +28,7 @@ from pathlib import Path
 
 from scripts.entity_status import contexts_by_entity, verdict_from_payload
 from wiki_creator import studio_io
-from wiki_creator.book_search import full_text, load_chapters
+from wiki_creator.book_search import quote_surface
 from wiki_creator.entity_affiliation import ARTIFACT_VERSION, entity_rows, parse_affiliation_verdict
 from wiki_creator.registry import Registry
 
@@ -111,7 +111,7 @@ def main() -> None:
         return
 
     rows = entity_rows(persons)
-    book_text = full_text(load_chapters(paths.processing))
+    book_text = quote_surface(paths.processing)
     verdicts = resolve_verdicts(rows, verdict_from_payload(payload, VERDICT_STAGE), book_text)
     _write_artifact(cache_path, verdicts)
 
