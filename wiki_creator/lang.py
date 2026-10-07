@@ -60,6 +60,7 @@ OPTIONAL_KEYS = frozenset(
         "species_markers",
         "pipeline_metric_terms",
         "demonyms",
+        "self_introductions",
     }
 )
 

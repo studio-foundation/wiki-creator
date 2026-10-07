@@ -166,6 +166,12 @@
     "hidden identity",
     "alias"
   ],
+  "self_introductions": [
+    "i'm",
+    "i am",
+    "my name is",
+    "call me"
+  ],
   "geo_keywords": [
     "kingdom",
     "country",
