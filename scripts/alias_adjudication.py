@@ -30,10 +30,44 @@ from wiki_creator.alias_adjudication import (
     roster_rows,
     save_merge_cache,
 )
+from wiki_creator.canonicalize import canonical_key
 from wiki_creator.lang import infer_language, load_lang_config
 from wiki_creator.roster import quote_names_entity
+from wiki_creator.tokens import contains_token_run
 
 VERDICT_STAGE = "alias-adjudication-verdict"
+
+
+def _unnamed_sides(quote: str, sides: dict[str, list[str]], lang_cfg: dict) -> list[str]:
+    """The sides of a merge pair its quote does not name; empty when it binds them.
+
+    ``sides`` maps each canonical name to its surfaces (canonical name first).
+    Names also match with their leading article stripped (``The Witch`` in
+    "the White Witch"). A first-person self-introduction naming one side
+    ("I'm Neal") binds both: its speaker is the other side, never named.
+    """
+    determiners = lang_cfg.get("determiners", [])
+    quote_key = canonical_key(quote)
+
+    def named(surfaces: list[str], intro: str = "") -> bool:
+        return any(
+            contains_token_run(
+                quote_key, f"{canonical_key(intro)} {key}", boundary="word"
+            )
+            for key in (canonical_key(surface, determiners) for surface in surfaces)
+            if key
+        )
+
+    if any(
+        named(surfaces, intro)
+        for surfaces in sides.values()
+        for intro in lang_cfg.get("self_introductions", [])
+    ):
+        return []
+    return [
+        name for name, surfaces in sides.items()
+        if not quote_names_entity(quote, name, surfaces[1:]) and not named(surfaces)
+    ]
 
 
 def _apply_merges(
@@ -42,6 +76,7 @@ def _apply_merges(
     merges: list[dict],
     persons_full: dict,
     role_words: list[str],
+    lang_cfg: dict,
 ) -> list[dict]:
     """Fold each merge pair into one entity, keeping roster order.
 
@@ -65,10 +100,11 @@ def _apply_merges(
                 file=sys.stderr,
             )
             continue
-        unnamed = [
-            name for name in (name_a, name_b)
-            if not quote_names_entity(merge["quote"], name, by_name[name].get("aliases", []))
-        ]
+        unnamed = _unnamed_sides(
+            merge["quote"],
+            {name: [name, *by_name[name].get("aliases", [])] for name in (name_a, name_b)},
+            lang_cfg,
+        )
         if unnamed:
             print(
                 f"[alias-adjudication] skipping {name_a} = {name_b}: "
@@ -112,6 +148,7 @@ def adjudicate_aliases(
     verdict_output: object | None,
     cache_path: Path,
     role_words: list[str],
+    lang_cfg: dict,
 ) -> list[dict]:
     """Merge contextually-evidenced alias pairs, from cache or the call stage's verdict.
 
@@ -148,7 +185,7 @@ def adjudicate_aliases(
     )
     if not merges:
         return entities
-    return _apply_merges(entities, persons, merges, persons_full, role_words)
+    return _apply_merges(entities, persons, merges, persons_full, role_words, lang_cfg)
 
 
 def main() -> None:
@@ -184,6 +221,7 @@ def main() -> None:
         verdict_output=verdict_output,
         cache_path=paths.processing / "alias_adjudication.json",
         role_words=role_words,
+        lang_cfg=lang_cfg,
     )
 
     json.dump({**source, "entities": resolved}, sys.stdout, ensure_ascii=False)

@@ -63,7 +63,7 @@ def book(tmp_path):
     return epub, processing
 
 
-def _payload(epub, entities=None, verdict=None):
+def _payload(epub, entities=None, verdict=None, spacy_model="en_core_web_lg"):
     all_stage_outputs = {
         "alias-resolution": {
             "entities": [dict(e) for e in (entities or ENTITIES)],
@@ -74,7 +74,7 @@ def _payload(epub, entities=None, verdict=None):
     if verdict is not None:
         all_stage_outputs["alias-adjudication-verdict"] = verdict
     return {
-        "additional_context": yaml.safe_dump({"file_path": str(epub), "spacy_model": "en_core_web_lg"}),
+        "additional_context": yaml.safe_dump({"file_path": str(epub), "spacy_model": spacy_model}),
         "all_stage_outputs": all_stage_outputs,
     }
 
@@ -266,3 +266,28 @@ def test_stage_keeps_a_merge_whose_quote_names_both_sides(monkeypatch, book):
     result = _run(monkeypatch, _payload(epub, ALICE))
 
     assert len(result["entities"]) == 2
+
+
+def _pair(a, b):
+    return [{"canonical_name": name, "type": "PERSON", "aliases": [],
+             "source_ids": [f"p{i}"], "relevant": True} for i, name in enumerate((a, b))]
+
+
+@pytest.mark.parametrize("a, b, quote, spacy_model", [
+    # The speaker is the unnamed side of a self-introduction (Eragon, STU-2009).
+    ("Brom", "Neal", "I'm Neal, and the boy is Evan", "en_core_web_lg"),
+    ("Jean Valjean", "Monsieur Madeleine",
+     "Je m\u2019appelle Monsieur Madeleine, dit-il.", "fr_core_news_lg"),
+    # A leading article is not part of the name (Narnia).
+    ("White Witch", "The Witch",
+     "the White Witch has done nothing to him for letting me go", "en_core_web_lg"),
+])
+def test_stage_keeps_a_merge_its_quote_binds_without_naming_both_verbatim(
+    monkeypatch, book, a, b, quote, spacy_model
+):
+    epub, processing = book
+    entities = _pair(a, b)
+    _seed_cache(processing, [{"a": a, "b": b, "quote": quote, "reason": "r"}], entities)
+    result = _run(monkeypatch, _payload(epub, entities, spacy_model=spacy_model))
+
+    assert len(result["entities"]) == 1
