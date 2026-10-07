@@ -9,6 +9,7 @@ import json
 import re
 from pathlib import Path
 
+import pytest
 import yaml
 
 from scripts.entity_status import contexts_by_entity, resolve_verdicts
@@ -563,3 +564,42 @@ def test_pre_skips_without_chapters_json(tmp_path, monkeypatch):
     (processing / "registry.json").write_text(json.dumps(registry.to_dict()), encoding="utf-8")
     result = _run_pre(monkeypatch, epub)
     assert result["needs_verdict"] is False
+
+
+# --- post stage: the quote gate reads both chapter variants (STU-2008) ------
+
+ORIGINAL_DEATH = "Brom's chest rose one last time, and then he was still."
+RESOLVED_DEATH = "Brom's chest rose one last time, and then Brom was still."
+
+
+@pytest.mark.parametrize("quote", [ORIGINAL_DEATH, RESOLVED_DEATH])
+def test_post_accepts_a_quote_from_either_chapter_variant(tmp_path, monkeypatch, quote):
+    """Search runs on the coref-resolved text, but the model may quote the book's
+    real sentence: a quote verbatim in only one of the two variants survives."""
+    import scripts.entity_status as post
+
+    epub, processing = _pre_setup(tmp_path)
+    registry = Registry(entities=[
+        EntityRecord(
+            entity_id="brom", canonical_name="Brom", entity_type="PERSON",
+            aliases=["Brom"], mentions=[Mention(surface="Brom", chapter_id="c1", context=ORIGINAL_DEATH)],
+        )
+    ])
+    (processing / "registry.json").write_text(json.dumps(registry.to_dict()), encoding="utf-8")
+    (processing / "chapters.json").write_text(
+        json.dumps({"chapters": {"c1": ORIGINAL_DEATH}}), encoding="utf-8"
+    )
+    (processing / "chapters_resolved.json").write_text(
+        json.dumps({"chapters": {"c1": RESOLVED_DEATH}}), encoding="utf-8"
+    )
+    payload = {
+        "additional_context": yaml.safe_dump({"title": "Test", "language": "en", "file_path": str(epub)}),
+        "all_stage_outputs": {"entity-status-verdict": {"results": [
+            {"index": 0, "status": "success", "output": {"status": "deceased", "quote": quote}}
+        ]}},
+    }
+    monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps(payload)))
+    monkeypatch.setattr("sys.stdout", io.StringIO())
+    post.main()
+    artifact = json.loads((processing / "entity_status.json").read_text(encoding="utf-8"))
+    assert artifact["verdicts"]["Brom"] == {"status": "deceased", "quote": quote}

@@ -267,3 +267,42 @@ def test_pre_emits_one_item_per_person_with_context(tmp_path, monkeypatch):
     names = {e["name"] for e in result["entities"]}
     assert names == {"Eragon"}
     assert result["prompt_fingerprint"]
+
+
+# --- post stage: the quote gate reads both chapter variants (STU-2008) ------
+
+ORIGINAL_JOIN = "Eragon joined the Varden, and he stayed."
+RESOLVED_JOIN = "Eragon joined the Varden, and Eragon stayed."
+
+
+@pytest.mark.parametrize("quote", [ORIGINAL_JOIN, RESOLVED_JOIN])
+def test_post_accepts_a_quote_from_either_chapter_variant(tmp_path, monkeypatch, quote):
+    """Search runs on the coref-resolved text, but the model may quote the book's
+    real sentence: a quote verbatim in only one of the two variants survives."""
+    import scripts.entity_affiliation as post
+
+    epub, processing = _pre_setup(tmp_path)
+    registry = Registry(entities=[
+        EntityRecord(
+            entity_id="eragon", canonical_name="Eragon", entity_type="PERSON",
+            aliases=["Eragon"], mentions=[Mention(surface="Eragon", chapter_id="c1", context=ORIGINAL_JOIN)],
+        )
+    ])
+    (processing / "registry.json").write_text(json.dumps(registry.to_dict()), encoding="utf-8")
+    (processing / "chapters.json").write_text(
+        json.dumps({"chapters": {"c1": ORIGINAL_JOIN}}), encoding="utf-8"
+    )
+    (processing / "chapters_resolved.json").write_text(
+        json.dumps({"chapters": {"c1": RESOLVED_JOIN}}), encoding="utf-8"
+    )
+    payload = {
+        "additional_context": yaml.safe_dump({"title": "Test", "language": "en", "file_path": str(epub)}),
+        "all_stage_outputs": {"entity-affiliation-verdict": {"results": [
+            {"index": 0, "status": "success", "output": {"affiliation": "Varden", "quote": quote}}
+        ]}},
+    }
+    monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps(payload)))
+    monkeypatch.setattr("sys.stdout", io.StringIO())
+    post.main()
+    artifact = json.loads((processing / "entity_affiliation.json").read_text(encoding="utf-8"))
+    assert artifact["verdicts"]["Eragon"] == {"affiliation": "Varden", "quote": quote}
