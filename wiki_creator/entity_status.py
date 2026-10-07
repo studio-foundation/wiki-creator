@@ -7,12 +7,11 @@ entity's context was credited to whichever entity happened to be paired with it.
 "Eragon watched Brom die" holds a death marker in both characters' contexts and
 kills exactly one of them.
 
-Since STU-753 the classifier no longer receives a pre-selected snippet pack —
-it searches the book itself (`wiki_creator.book_search`, one call per PERSON,
-STU-605-style per-item resume) and must ground every claim in what it found.
-The marker vocabulary that used to *retrieve* (`status_markers` in each
-language's cue_words) is gone from this path along with it: nothing here picks
-which passages the model sees anymore, so nothing here needs to.
+Since STU-2018 code picks the evidence: `book_search.select_passages` chooses
+the passages naming each PERSON, favouring those holding a `status_markers`
+keyword (cue_words), within a fixed token budget, and the classifier judges
+them in one call with no tools (STU-753's search loop is gone). It must still
+ground every claim in a verbatim quote.
 
 Every helper here fails toward `unknown`. The asymmetry is STU-539's: a false
 `deceased` kills a living character on a page nobody will reread, while a false
@@ -42,8 +41,8 @@ _CIRCUMSTANCE_TYPES = ("PERSON", "PLACE")
 def entity_rows(entities: list[dict]) -> list[dict]:
     """One row per PERSON entity — the map fan-out's items.
 
-    Identity only (``name``, ``aliases``): since STU-753 there is no snippet
-    pack to attach, the agent searches the book itself for each one.
+    Identity only (``name``, ``aliases``); the pre stage attaches each row's
+    passages (STU-2018).
     """
     return [
         {

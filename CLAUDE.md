@@ -202,8 +202,8 @@ Important:
   split** inside their host pipeline (a `*-pre` script, a native `call: *-verdict`
   stage, a `*` post script) — one call per book, no subprocess; the entity trio
   is *also* pre/call/post at the host-pipeline level, but its `call:` target is a
-  map fan-out (one agentic call per PERSON, not one call over the whole roster —
-  see "Point-Query Verdicts Search The Book" below). Persistence for all of these
+  map fan-out (one single-shot call per PERSON over passages picked in code, not
+  one call over the whole roster: STU-753/2018, see "A Long Run Persists" below). Persistence for all of these
   is in **"A Long Run Persists As It Goes"**.
 - **A stage declares the files it writes (STU-600).** `expected_outputs.files` in
   `.studio/contracts/*.contract.yaml` names them per *stage*, not per pipeline —
@@ -299,8 +299,8 @@ library/sarah_j_maas/throne-of-glass/output/_series/
 - [scripts/generate_series_arc.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_series_arc.py): series hub arc paragraph (STU-708) — one LLM call per series grounded on every tome's synopsis + high-salience events + the assembled series characters, writes `library/<author>/<series>/series_arc.json` (cached on the rendered prompt + agent fingerprint); pure logic in `wiki_creator/series_arc.py`. Runs as the `series-arc-pre` / `call: series-arc-verdict` split of `wiki-series` (STU-720, `scripts/series_arc_pre.py`); `--series` stays a standalone dev tool
 - [scripts/generate_event_pages.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/generate_event_pages.py): one `EVENT` page per high-salience event from `events.json` (SP3/STU-481), writes `event_pages.json`; pure logic in `wiki_creator/event_pages.py`
 - [scripts/consolidate_editorial_stance.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/consolidate_editorial_stance.py): post-generation editorial-stance consolidation pass (STU-508), writes `editorial_stance_report.json`; pure logic in `wiki_creator/consolidation.py`
-- [scripts/entity_status.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/entity_status.py): per-tome character status stage of wiki-preparation (STU-488; pre/call/post split since STU-457, with `entity_status_pre.py`; the call fans out one agentic search-and-decide call per PERSON since STU-753, `.studio/pipelines/entity-status-verdicts.pipeline.yaml`), writes `entity_status.json`; pure logic in `wiki_creator/entity_status.py`. `entity_affiliation.py`/`entity_species.py` are the same shape for the `affiliation`/`species` slots (STU-551/574/753)
-- [wiki_creator/book_search.py](/home/arianeguay/dev/src/wiki-creator-by-studio/wiki_creator/book_search.py): full-text search over a book's `chapters.json` (STU-753) — the retrieval primitive the entity trio's agents search with instead of receiving a pre-selected snippet pack; `scripts/book_search_tool.py` is its Studio tool-plugin executor (`.studio/tools/book-search.tool.yaml`)
+- [scripts/entity_status.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/entity_status.py): per-tome character status stage of wiki-preparation (STU-488; pre/call/post split since STU-457, with `entity_status_pre.py`; the call fans out one single-shot verdict call per PERSON since STU-753, over passages picked in code since STU-2018, `.studio/pipelines/entity-status-verdicts.pipeline.yaml`), writes `entity_status.json`; pure logic in `wiki_creator/entity_status.py`. `entity_affiliation.py`/`entity_species.py` are the same shape for the `affiliation`/`species` slots (STU-551/574/753)
+- [wiki_creator/book_search.py](/home/arianeguay/dev/src/wiki-creator-by-studio/wiki_creator/book_search.py): full-text search over a book's `chapters.json` (STU-753), plus `select_passages` (STU-2018), the deterministic, token-budgeted evidence picker the entity trio's single-shot verdicts read; `scripts/book_search_tool.py` is the search's Studio tool-plugin executor (`.studio/tools/book-search.tool.yaml`, used by relation-reconciliation)
 - [scripts/wiki_export.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/wiki_export.py): Markdown -> wikitext
 - [scripts/check_wikilinks.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/check_wikilinks.py): wikilink integrity gate (STU-725) over a rendered `.wiki` set (book or `--series`), exits non-zero on a dead link; pure logic in `wiki_creator/wikilinks.py` (`find_dead_links`, book/series scope share it). Intentional red links live in book YAML `export.red_links`
 - [scripts/resolve_clusters.py](/home/arianeguay/dev/src/wiki-creator-by-studio/scripts/resolve_clusters.py): resolves NER clusters
@@ -389,12 +389,18 @@ subprocess, not the JSON.
 
 The entity trio — `entity-status`, `entity-affiliation`, `entity-species` — was the
 last one-call-per-book verdict left after STU-457; STU-753 moved it to the engine
-map shape too, but as a **point-query fan-out**, not a roster sweep: one agentic
-call per PERSON entity (name + aliases + `book_dir`, no snippet pack), each with a
-`book-search-search_book` tool over `chapters.json` and `tool_calls.minimum: 1`
-(anti-theatre — the agent cannot answer without having searched). The per-unit
+map shape too, but as a **point-query fan-out**, not a roster sweep: one call per
+PERSON entity. STU-753 made that call an agentic search loop; STU-2018 replaced
+the loop with **code-picked evidence and one single-shot call, no tools**: the
+model never decides when to stop searching. `book_search.select_passages` picks
+the paragraphs naming the entity or an alias, from `chapters.json` plus the
+coref-only ones from `chapters_resolved.json`, in rounds across chapters (latest
+first), slot-keyword paragraphs (`<slot>_markers` in `cue_words/<lang>.json`)
+before the rest, until a fixed budget (`PASSAGE_TOKEN_BUDGET`, a quarter of the
+32768-token local window, chars/4 estimate). Anti-theatre rests on the
+verbatim-quote gate; there is no `tool_calls` floor. The per-unit
 cache is the engine's, same as the four fan-outs above, keyed on the item input
-(name, aliases, book_dir) plus a `prompt_fingerprint` that now covers **both** the
+(name, aliases, passages) plus a `prompt_fingerprint` that covers **both** the
 agent's system prompt **and the book's own text** (`studio_io.prompt_fingerprint`
 hashing the agent yaml + `chapters.json`) — either changing re-runs every
 character, since either can change the answer. The pre stage no longer keeps its
@@ -403,13 +409,12 @@ skips an unchanged item for free. The post stage still writes the same
 `entity_status.json` / `entity_affiliation.json` / `entity_species.json` artifact
 `wiki_preparation.py` reads, unconditionally rebuilt from the fresh map output on
 every run, so downstream is unaffected: see `wiki_creator/roster.py`,
-`wiki_creator/book_search.py`, `scripts/book_search_tool.py`,
-`.studio/tools/book-search.tool.yaml`.
+`wiki_creator/book_search.py`.
 
 **Grounding widened, so a name-in-quote gate stands in the old scoping's place.**
 The old design's snippet pack was scoped per entity, so a quote lifted from a
-different character's evidence failed the check by construction. Free retrieval
-searches the whole book, so `is_quoted` alone would accept any real sentence
+different character's evidence failed the check by construction. The quote gate
+checks the whole book, so `is_quoted` alone would accept any real sentence
 regardless of who it is about — `roster.quote_names_entity` (the quote must
 literally name this entity or one of its aliases) is the mechanical replacement;
 the "who the sentence is *about*" ambiguity within a single co-mention sentence

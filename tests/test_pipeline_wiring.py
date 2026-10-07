@@ -140,6 +140,21 @@ def test_wiki_preparation_wires_the_entity_trio_as_pre_call_post() -> None:
         assert "needs_verdict" in call["condition"]
 
 
+@pytest.mark.parametrize("slot", ["status", "affiliation", "species"])
+def test_entity_trio_items_are_single_shot_over_passages(slot: str) -> None:
+    """STU-2018: the passages ride in the map item (so per-item resume keys on
+    them), and the item call has no tool loop to bound or prove."""
+    [fan_out] = _pipeline(f"entity-{slot}-verdicts")["stages"]
+    assert fan_out["input"]["passages"] == "{{item.passages}}"
+    assert "book_dir" not in fan_out["input"]
+    [item] = _pipeline(f"entity-{slot}-item")["stages"]
+    assert "max_tool_calls" not in item["ralph"]
+    contract = yaml.safe_load(
+        (CONTRACTS_DIR / f"entity-{slot}-item.contract.yaml").read_text(encoding="utf-8")
+    )
+    assert "tool_calls" not in contract
+
+
 def test_wiki_preparation_wires_discover_and_classify_as_pre_call_post() -> None:
     """STU-621: the relation fan-outs are native `call` stages, not subprocess
     fan-outs — condition-gated on the pre stage, on_failure: continue."""

@@ -1,5 +1,5 @@
 name: entity-species-item
-description: Decide which species/race one PERSON entity is — searches the book itself (STU-753)
+description: Decide which species/race one PERSON entity is from passages picked in code, one call, no tools (STU-2018)
 version: 1
 
 stages:
@@ -9,7 +9,6 @@ stages:
     contract: entity-species-item
     ralph:
       max_attempts: 3
-      max_tool_calls: 8
     context:
       include:
         - input

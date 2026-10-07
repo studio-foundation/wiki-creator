@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-"""Pre-step of the entity-affiliation split (STU-457/753): build the fan-out items.
+"""Pre-step of the entity-affiliation split (STU-457/753/2018): build the fan-out items.
 
 Script executor interface: reads JSON from stdin, writes JSON to stdout.
 
-Emits one item per PERSON entity — the `call: entity-affiliation-verdict`
-stage that follows fans out one agentic search-and-decide call per character
-via the engine map (STU-589/605-style per-item resume). There is no
-roster/snippet pack to build anymore (STU-753): each item carries only
-identity (name, aliases) plus `book_dir`, so the agent can search the book
-itself, and a `prompt_fingerprint` covering both the agent's system prompt and
-the book's own text — either changing busts the engine's per-item resume
-cache, since either can change the answer.
+Emits one item per PERSON entity: the `call: entity-affiliation-verdict` stage
+that follows fans out one single-shot verdict call per character via the
+engine map (STU-589/605-style per-item resume). Each item carries identity
+(name, aliases) and the passages `book_search.select_passages` picked for it
+(STU-2018): code chooses the evidence, within a fixed token budget, and the
+model judges it in one call with no tools. The passages ride in the item, so
+the engine's per-item resume re-runs a character whose evidence changed.
+`prompt_fingerprint` still covers the agent's system prompt and the book's own
+text.
 
 Input:  { "additional_context": "<book yaml>" }
 Output: { "book_title", "entities", "prompt_fingerprint", "needs_verdict" }
@@ -24,8 +25,9 @@ import yaml
 
 from scripts.entity_status import contexts_by_entity
 from wiki_creator import studio_io
-from wiki_creator.book_search import load_chapters
+from wiki_creator.book_search import load_chapters, with_passages
 from wiki_creator.entity_affiliation import entity_rows
+from wiki_creator.lang import book_language, load_lang_config
 from wiki_creator.registry import Registry
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -86,22 +88,22 @@ def main() -> None:
     if not chapters:
         print(
             f"[entity-affiliation] chapters.json not found in {paths.processing} — "
-            "nothing for the agent to search",
+            "no passage to judge",
             file=sys.stderr,
         )
         Path(cache_path).unlink(missing_ok=True)
         _emit()
         return
 
-    book_dir = str(paths.processing)
     rows = entity_rows(persons)
+    markers = load_lang_config(book_language(ctx), allow_en_fallback=True).get("affiliation_markers", [])
     fingerprint = studio_io.prompt_fingerprint(
         [_AGENT_YAML, paths.processing / "chapters.json"], {}
     )
 
     _emit(
         book_title=str(ctx.get("title") or paths.processing.name),
-        entities=[{**row, "book_dir": book_dir} for row in rows],
+        entities=with_passages(rows, paths.processing, markers),
         prompt_fingerprint=fingerprint,
         needs_verdict=True,
     )

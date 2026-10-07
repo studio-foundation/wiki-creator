@@ -1,4 +1,6 @@
-"""Full-text search over a book's parsed chapters (STU-753).
+"""Full-text search over a book's parsed chapters (STU-753), and the
+deterministic evidence picker the entity trio's single-shot verdicts read
+(`select_passages`, STU-2018).
 
 The retrieval primitive an agentic point-query verdict searches with, instead
 of receiving a pre-selected snippet pack. ``chapters.json`` (written by
@@ -14,6 +16,7 @@ catastrophic-backtracking surface a substring search never opens.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from wiki_creator.chapters import chapter_number
@@ -21,6 +24,20 @@ from wiki_creator.roster import fold_typography
 
 MAX_RESULTS = 8
 CONTEXT_CHARS = 300
+
+# The smallest window any configured provider runs with: the athena-* Ollama
+# variants pin num_ctx 32768, and Studio cannot report a provider's window. A
+# quarter of it leaves the system prompt, the reply and the chars/4 estimate's
+# error (a non-English text tokenizes denser) well inside the window.
+CONTEXT_WINDOW_TOKENS = 32768
+PASSAGE_TOKEN_BUDGET = CONTEXT_WINDOW_TOKENS // 4
+MAX_PASSAGE_CHARS = 800
+# A resolved paragraph whose words are mostly an original mention paragraph's
+# is that paragraph with its pronouns rewritten, not new evidence.
+_DUPLICATE_OVERLAP = 0.5
+
+_PARAGRAPH_RE = re.compile(r"\n\s*\n")
+_WORD_RE = re.compile(r"\w+")
 
 
 def load_chapters(processing_dir: Path | str) -> dict[str, str]:
@@ -36,6 +53,15 @@ def load_chapters(processing_dir: Path | str) -> dict[str, str]:
         if chapters is not None:
             return chapters
     return {}
+
+
+def chapter_variants(processing_dir: Path | str) -> tuple[dict[str, str], dict[str, str]]:
+    """The original chapters and the coref-resolved ones (``{}`` when absent)."""
+    root = Path(processing_dir)
+    return (
+        _read_chapters(root / "chapters.json") or {},
+        _read_chapters(root / "chapters_resolved.json") or {},
+    )
 
 
 def quote_surface(processing_dir: Path | str) -> str:
@@ -94,3 +120,96 @@ def search_chapters(
         hits.append({"chapter_id": chapter_id, "text": text[start:end].strip()})
     hits.sort(key=lambda h: chapter_number(h["chapter_id"]) or 0, reverse=True)
     return hits[:max_results]
+
+
+def estimate_tokens(text: str) -> int:
+    return -(-len(text) // 4)
+
+
+def _surface_pattern(surfaces: list[str]) -> re.Pattern | None:
+    parts = sorted(
+        {r"\s+".join(map(re.escape, fold_typography(s).split())) for s in surfaces if str(s or "").strip()},
+        key=len,
+        reverse=True,
+    )
+    return re.compile(r"\b(?:" + "|".join(parts) + r")\b") if parts else None
+
+
+def _passage(paragraph: str, pos: int) -> str:
+    """The paragraph, or a ``MAX_PASSAGE_CHARS`` window centred on the mention."""
+    if len(paragraph) <= MAX_PASSAGE_CHARS:
+        return paragraph
+    start = max(0, min(pos - MAX_PASSAGE_CHARS // 2, len(paragraph) - MAX_PASSAGE_CHARS))
+    return paragraph[start:start + MAX_PASSAGE_CHARS].strip()
+
+
+def _mentions(text: str, pattern: re.Pattern) -> list[tuple[int, str]]:
+    found = []
+    for index, paragraph in enumerate(p.strip() for p in _PARAGRAPH_RE.split(str(text or ""))):
+        match = pattern.search(fold_typography(paragraph))
+        if match:
+            found.append((index, _passage(paragraph, match.start())))
+    return found
+
+
+def _words(text: str) -> set[str]:
+    return set(_WORD_RE.findall(fold_typography(text)))
+
+
+def select_passages(
+    original: dict[str, str],
+    resolved: dict[str, str],
+    name: str,
+    aliases: list[str],
+    keywords: list[str],
+    *,
+    budget_tokens: int = PASSAGE_TOKEN_BUDGET,
+) -> list[dict]:
+    """The passages one verdict call reads about one character (STU-2018).
+
+    Every paragraph naming ``name`` or an alias in the original chapters, plus
+    each coref-resolved paragraph that names them where the original only had a
+    pronoun (STU-763). Picked in rounds across chapters, latest chapter first in
+    each round, paragraphs holding a slot ``keyword`` before the rest, until the
+    next one would pass ``budget_tokens``. Returned in book order. Deterministic:
+    the engine's per-item resume keys on this list.
+    """
+    pattern = _surface_pattern([name, *aliases])
+    if pattern is None:
+        return []
+    keyword_re = _surface_pattern(keywords)
+
+    candidates = []
+    for order, chapter_id in enumerate(dict.fromkeys([*original, *resolved])):
+        found = _mentions(original.get(chapter_id, ""), pattern)
+        seen = [_words(text) for _, text in found]
+        for index, text in _mentions(resolved.get(chapter_id, ""), pattern):
+            words = _words(text)
+            if not any(len(words & other) >= _DUPLICATE_OVERLAP * len(words) for other in seen):
+                found.append((index, text))
+        found.sort(key=lambda hit: hit[0])
+        for tier in (True, False):
+            tiered = [
+                hit for hit in found
+                if bool(keyword_re and keyword_re.search(fold_typography(hit[1]))) is tier
+            ]
+            for rank, (index, text) in enumerate(tiered):
+                candidates.append(((not tier, rank, -order), (order, index), chapter_id, text))
+
+    picked, used = [], 0
+    for _, position, chapter_id, text in sorted(candidates):
+        cost = estimate_tokens(text)
+        if used + cost > budget_tokens:
+            continue
+        used += cost
+        picked.append((position, chapter_id, text))
+    return [{"chapter": chapter_id, "text": text} for _, chapter_id, text in sorted(picked)]
+
+
+def with_passages(rows: list[dict], processing_dir: Path | str, keywords: list[str]) -> list[dict]:
+    """Each fan-out row with the passages its single verdict call reads."""
+    original, resolved = chapter_variants(processing_dir)
+    return [
+        {**row, "passages": select_passages(original, resolved, row["name"], row["aliases"], keywords)}
+        for row in rows
+    ]

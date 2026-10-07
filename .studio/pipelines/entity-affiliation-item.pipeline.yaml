@@ -1,5 +1,5 @@
 name: entity-affiliation-item
-description: Decide which faction one PERSON entity belongs to at the end of this book — searches the book itself (STU-753)
+description: Decide which faction one PERSON entity belongs to at the end of this book from passages picked in code, one call, no tools (STU-2018)
 version: 1
 
 stages:
@@ -9,7 +9,6 @@ stages:
     contract: entity-affiliation-item
     ralph:
       max_attempts: 3
-      max_tool_calls: 8
     context:
       include:
         - input

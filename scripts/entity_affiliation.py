@@ -4,8 +4,8 @@
 Script executor interface: reads JSON from stdin, writes JSON to stdout.
 
 Post-step of the entity-affiliation split (STU-457/753). The `call:
-entity-affiliation-verdict` stage that precedes this one fans out one agentic
-search-and-decide call per PERSON entity over the engine map (STU-589/605);
+entity-affiliation-verdict` stage that precedes this one fans out one single-shot
+verdict call per PERSON entity over the engine map (STU-589/605);
 this stage folds the per-entity results, verifies each against the book's own
 text, and writes `entity_affiliation.json`, which `wiki_preparation.py` then
 stamps onto the batch entity so `generate_wiki_pages.py` can render the

@@ -7,10 +7,9 @@ the model's training data, so an ungrounded verdict is the model's memory of
 the plot, not this book). What differs is the question; that stays in each
 stage, this is the rest.
 
-Since STU-753, the evidence is not a pre-selected snippet pack — the agent
-searches the book itself (`wiki_creator.book_search`) — so "grounded" means
-"verbatim somewhere in the book's full text", not "verbatim in the snippets we
-happened to show".
+"Grounded" means "verbatim somewhere in the book's full text" (STU-753), not
+"verbatim in the passages the model was shown" (`book_search.select_passages`,
+STU-2018).
 
 `normalize`'s typographic folding is load-bearing (99a6a71): an EPUB's dialogue
 ships curly quotes and the model echoes straight ones, so without folding both
