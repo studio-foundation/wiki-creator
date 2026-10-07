@@ -57,9 +57,15 @@ coref = [
 ]
 # GLiNER zero-shot NER (scripts/entity_extraction.py, opt-in per book via
 # `ner.invented_names: true`). An extra rather than a core dep for the same
-# reason as coref: it pulls torch (STU-521).
+# reason as coref: it pulls torch (STU-521). huggingface_hub 1.x checks the
+# offline flag per request; the offline-first load relies on that. transformers 5
+# converts the deberta tokenizer at load and needs sentencepiece + protobuf for it,
+# which nothing pulls transitively.
 gliner = [
     "gliner>=0.2.13",
+    "huggingface_hub>=1.0",
+    "sentencepiece",
+    "protobuf",
 ]
 embeddings = ["sentence-transformers>=3"]  # research/embedding-eval only (STU-601); numpy comes transitively via spaCy
 
