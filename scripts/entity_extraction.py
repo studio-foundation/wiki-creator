@@ -216,6 +216,8 @@ def _load_single_cue_words_file(language: str) -> dict[str, frozenset[str]]:
             for word in data.get("demonyms", [])
             for ending in ("", "s")
         ),
+        "surname_titles": frozenset(data.get("surname_titles", [])),
+        "name_connectors": frozenset(data.get("name_connectors", [])),
     }
 
 
@@ -226,7 +228,10 @@ def _load_cue_words(language: str) -> dict[str, frozenset[str]]:
         fr = _load_single_cue_words_file("fr")
         return {
             key: en[key] | fr[key]
-            for key in ("place_cue_words", "person_cue_words", "place_prepositions", "event_suffixes", "demonyms")
+            for key in (
+                "place_cue_words", "person_cue_words", "place_prepositions", "event_suffixes",
+                "demonyms", "surname_titles", "name_connectors",
+            )
         }
     if language in {"en", "fr", "es"}:
         return _load_single_cue_words_file(language)
@@ -507,6 +512,22 @@ def _retype_demonym(span, cue_words: dict[str, frozenset[str]] | None):
     return Span(span.doc, tokens[0].i, tokens[0].i + 1, label="FACTION")
 
 
+def _follows_surname_title(span, cue_words: dict[str, frozenset[str]] | None) -> bool:
+    """
+    True when *span* directly follows a title that only takes a surname
+    ("comtesse", "Mme"), optionally through a name particle: "la comtesse de
+    Bréville" (STU-780). The span alone is a bare surname that is also a real
+    commune, so spaCy types it LOC; the title is the only evidence it is a name.
+    """
+    titles = (cue_words or {}).get("surname_titles")
+    if not titles or span.start == 0:
+        return False
+    i = span.start - 1
+    if span.doc[i].lower_.replace("’", "'") in cue_words.get("name_connectors", ()) and i > 0:
+        i -= 1
+    return span.doc[i].lower_.rstrip(".") in titles
+
+
 # Hardcoded chapters for --test mode (English, uses en_core_web_sm)
 TEST_CHAPTERS = [
     {
@@ -624,11 +645,15 @@ def extract_entities(
                     "mentions_by_chapter": {},
                     "mention_spans_by_chapter": {},
                     "mention_count": 1,
+                    "titled_mentions": 0,
                 }
             else:
                 if mention_text not in registry[key]["raw_mentions"]:
                     registry[key]["raw_mentions"].append(mention_text)
                 registry[key]["mention_count"] += 1
+
+            if registry[key]["type"] == "PLACE" and _follows_surname_title(ent, cue_words):
+                registry[key]["titled_mentions"] += 1
 
             registry[key]["mentions_by_chapter"].setdefault(chapter_id, [])
             if len(registry[key]["mentions_by_chapter"][chapter_id]) < 3:
@@ -641,6 +666,11 @@ def extract_entities(
                 }
             )
 
+    for v in registry.values():
+        # A surname title on at least half the mentions outweighs spaCy's LOC;
+        # one "comte de Paris" among many "Paris" does not.
+        if 2 * v.pop("titled_mentions") >= v["mention_count"] and v["type"] == "PLACE":
+            v["type"] = "PERSON"
     entities = {
         "entities": {
             v["id"]: {k: v[k] for k in v if k != "id"}

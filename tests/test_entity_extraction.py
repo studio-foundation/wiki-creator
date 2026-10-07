@@ -1428,3 +1428,73 @@ def test_demonyms_type_faction_with_the_stock_french_model():
     assert types["Allemand"] == "FACTION"
     assert types["Français"] == "FACTION"
     assert types["Rouen"] == "PLACE"
+
+
+class _LocTypingNlp:
+    """Blank French pipeline typing each listed word LOC, as fr_core_news_lg does a bare surname."""
+
+    def __init__(self, *loc_words):
+        self._nlp = spacy.blank("fr")
+        self._nlp.add_pipe("sentencizer")
+        self._loc_words = set(loc_words)
+
+    def __call__(self, text):
+        doc = self._nlp(text)
+        doc.ents = [Span(doc, t.i, t.i + 1, label="LOC") for t in doc if t.text in self._loc_words]
+        return doc
+
+
+def _loc_types(content, *loc_words):
+    chapters = [{"id": "ch01", "content": content}]
+    return _types(extract_entities(
+        chapters, _LocTypingNlp(*loc_words), cue_words=_load_cue_words("fr"), retag_from_context=False
+    ))
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        "Le comte de Bréville se taisait.",
+        "La comtesse de Bréville souriait.",
+        "Mme de Bréville lui proposa sa chaufferette.",
+        "Il salua la marquise d’Harcourt.",
+        "Le baron Bréville entra.",
+    ],
+)
+def test_loc_surname_after_a_surname_title_is_retyped_person(content):
+    """STU-780: fr_core_news_lg types a bare noble surname LOC; the title says it is a name."""
+    surname = "Harcourt" if "Harcourt" in content else "Bréville"
+    assert _loc_types(content, surname) == {surname: "PERSON"}
+
+
+@pytest.mark.parametrize(
+    "content,place",
+    [
+        ("Ils quittèrent la ville de Rouen.", "Rouen"),
+        ("La voiture arriva à Tôtes.", "Tôtes"),
+        ("Le curé de Tôtes passa.", "Tôtes"),
+    ],
+)
+def test_loc_without_a_surname_title_stays_place(content, place):
+    assert _loc_types(content, place) == {place: "PLACE"}
+
+
+def test_titled_mentions_must_be_at_least_half_of_the_entity():
+    """One 'comte de Paris' does not retype a city the book names everywhere else."""
+    content = "Le comte de Paris dormait. Paris brûlait. On quitta Paris. Paris était loin."
+    assert _loc_types(content, "Paris") == {"Paris": "PLACE"}
+    content = "La comtesse de Bréville dormait. Mme de Bréville rit. La fortune des Bréville."
+    assert _loc_types(content, "Bréville") == {"Bréville": "PERSON"}
+
+
+@requires_fr_lg
+def test_breville_is_a_person_with_the_real_french_model():
+    """STU-780: Boule de Suif's own sentences, through the model that mistyped them."""
+    nlp = spacy.load("fr_core_news_lg")
+    chapters = [{"id": "ch01", "content": (
+        "Le comte et la comtesse de Bréville, ainsi que M. et Mme Carré-Lamadon souffrirent ce supplice. "
+        "Mmes de Bréville et Carré-Lamadon, qui avaient un grand savoir-vivre, se firent gracieuses. "
+        "La fortune des Bréville, toute en biens-fonds, atteignait cinq cent mille livres."
+    )}]
+    types = _types(extract_entities(chapters, nlp, cue_words=_load_cue_words("fr")))
+    assert types.get("Bréville") == "PERSON"
