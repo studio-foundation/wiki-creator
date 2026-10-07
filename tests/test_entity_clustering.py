@@ -553,6 +553,52 @@ def test_build_clusters_captain_westfall_still_merges():
     assert set(clusters[0]["entity_ids"]) == {"e_chaol", "e_capt"}
 
 
+_LOISEAU = {
+    "e_mme":  {"type": "PERSON", "raw_mentions": ["Mme Loiseau"], "first_seen": "ch01", "mention_count": 9},
+    "e_bare": {"type": "PERSON", "raw_mentions": ["Loiseau"], "first_seen": "ch01", "mention_count": 50},
+}
+_LOISEAU_TEXT = (
+    "Tout au fond sommeillaient, en face l'un de l'autre, M. et Mme Loiseau, "
+    "des marchands de vins en gros. Loiseau se frotta les mains. Mme Loiseau ne dit rien."
+)
+
+
+def test_build_clusters_joint_intro_splits_untitled_spouse():
+    """STU-781: "M. et Mme Loiseau" once, then only bare `Loiseau` (the husband)
+    and `Mme Loiseau`. No `M. Loiseau` entity exists to conflict with, so bare
+    `Loiseau` used to fold into the wife; the joint intro splits it off."""
+    clusters, unclustered = build_clusters(_LOISEAU, language="fr", book_text=_LOISEAU_TEXT)
+    assert _cluster_of(clusters, unclustered, "e_mme") != _cluster_of(clusters, unclustered, "e_bare")
+
+
+def test_build_clusters_joint_intro_en_splits_untitled_spouse():
+    entities = {
+        "e_mr":   {"type": "PERSON", "raw_mentions": ["Mr. Beaver"], "first_seen": "ch01"},
+        "e_bare": {"type": "PERSON", "raw_mentions": ["Beaver"], "first_seen": "ch01"},
+    }
+    text = "There lived Mr. and Mrs. Beaver by the dam. Beaver smiled."
+    clusters, unclustered = build_clusters(entities, language="en", book_text=text)
+    assert _cluster_of(clusters, unclustered, "e_mr") != _cluster_of(clusters, unclustered, "e_bare")
+
+
+def test_build_clusters_titled_and_bare_merge_without_joint_intro():
+    """No couple in the text: `Mme Loiseau` and `Loiseau` stay one person."""
+    clusters, unclustered = build_clusters(
+        _LOISEAU, language="fr", book_text="Mme Loiseau entra. Loiseau sourit."
+    )
+    assert len(clusters) == 1
+    assert set(clusters[0]["entity_ids"]) == {"e_mme", "e_bare"}
+
+
+def test_find_joint_honorific_surnames():
+    from scripts.entity_clustering import (
+        find_joint_honorific_surnames, load_feminine_titles, load_masculine_titles,
+    )
+    masc, fem = load_masculine_titles("fr"), load_feminine_titles("fr")
+    text = "M. et Mme Loiseau, Madame et Monsieur Follenvie, M. Cornudet et Boule de Suif."
+    assert find_joint_honorific_surnames(text, frozenset({"et"}), masc, fem) == {"loiseau", "follenvie"}
+
+
 def test_main_warns_when_no_reduction_and_many_entities():
     """main() must print a stderr warning when reduction_pct==0 with >10 input entities."""
     import subprocess
