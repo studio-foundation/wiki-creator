@@ -772,6 +772,13 @@ def test_custom_ontology_labels_survive_extraction(custom_ontology_nlp):
     assert types_by_mention.get("Silent Assassins") == "FACTION"  # first-order (STU-505)
 
 
+
+def test_norp_types_faction_not_org():
+    """NORP is a people-group (nationality, religious or political group), not
+    an institution (STU-787)."""
+    assert LABEL_TO_TYPE["NORP"] == "FACTION"
+    assert LABEL_TO_TYPE["ORG"] == "ORG"
+
 @requires_fr_lg
 def test_pos_filter_rejects_verb_at_sentence_start():
     """Capitalized French verb at dialogue start must not appear as entity."""
