@@ -277,6 +277,17 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   inventing hand-written truth. The verdict cache is keyed on the roster, not the
   prompt, so re-measuring the fix requires re-extraction (which regenerates it), not
   just a re-run.
+  **STU-2009 added the narrower gate STU-544 did not**: `alias_adjudication.py`
+  skips a merge whose quote does not name both sides (canonical or alias,
+  `roster.quote_names_entity`), at apply time so cached verdicts pass through it
+  too. It kills `King = Tortoise` ("The judge, by the way, was the King", Alice).
+  Two refinements keep it from costing recall, both measured by replaying every
+  cached verdict (current and `bak_*`): a first-person self-introduction naming
+  one side (`self_introductions` in the lang pack: "I'm Neal, and the boy is
+  Evan") binds its speaker, who is the unnamed side by construction (`Brom =
+  Neal`); and a name also matches with its leading article stripped
+  (`canonical_key`), so "the White Witch" names `The Witch`. With both, the
+  replay drops King = Tortoise and no true positive.
 
 
 - Entity status (STU-488, retrieval mechanism replaced by STU-753 then STU-2018,
