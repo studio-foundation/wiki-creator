@@ -229,3 +229,40 @@ def test_stage_skips_a_second_merge_that_chains_off_the_first(monkeypatch, book,
 
     assert "Dorian" in [e["canonical_name"] for e in result["entities"]]
     assert "already merged" in capsys.readouterr().err
+
+
+ALICE = [
+    {"canonical_name": "King", "type": "PERSON", "aliases": ["the King"],
+     "source_ids": ["a1"], "relevant": True},
+    {"canonical_name": "Tortoise", "type": "PERSON", "aliases": [],
+     "source_ids": ["a2"], "relevant": True},
+    {"canonical_name": "Mock Turtle", "type": "PERSON", "aliases": ["the Mock Turtle"],
+     "source_ids": ["a3"], "relevant": True},
+]
+
+
+@pytest.mark.parametrize("merge", [
+    # Both false merges observed on Alice (STU-2009), each quoting one side only.
+    {"a": "King", "b": "Tortoise", "quote": "The judge, by the way, was the King",
+     "reason": "haiku"},
+    {"a": "Tortoise", "b": "Mock Turtle",
+     "quote": "the Mock Turtle angrily: “really you are very dull!”",
+     "reason": "athena-qwen38"},
+])
+def test_stage_skips_a_merge_whose_quote_names_only_one_side(monkeypatch, book, capsys, merge):
+    epub, processing = book
+    _seed_cache(processing, [merge], ALICE)
+    result = _run(monkeypatch, _payload(epub, ALICE))
+
+    assert [e["canonical_name"] for e in result["entities"]] == ["King", "Tortoise", "Mock Turtle"]
+    assert "quote does not name Tortoise" in capsys.readouterr().err
+
+
+def test_stage_keeps_a_merge_whose_quote_names_both_sides(monkeypatch, book):
+    epub, processing = book
+    _seed_cache(processing, [{"a": "Tortoise", "b": "Mock Turtle",
+                             "quote": "The Mock Turtle was the Tortoise all along.",
+                             "reason": "A was B"}], ALICE)
+    result = _run(monkeypatch, _payload(epub, ALICE))
+
+    assert len(result["entities"]) == 2

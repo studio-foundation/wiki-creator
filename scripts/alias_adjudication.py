@@ -31,6 +31,7 @@ from wiki_creator.alias_adjudication import (
     save_merge_cache,
 )
 from wiki_creator.lang import infer_language, load_lang_config
+from wiki_creator.roster import quote_names_entity
 
 VERDICT_STAGE = "alias-adjudication-verdict"
 
@@ -46,7 +47,9 @@ def _apply_merges(
 
     A name already consumed by an earlier merge is skipped rather than chained:
     the classifier judged the roster it was shown, and A=B plus B=C is not a
-    verdict it was asked for.
+    verdict it was asked for. A merge whose quote does not name both sides is
+    skipped too (STU-2009): a sentence naming one of them cannot bind the two.
+    Checked here rather than at parse time so cached verdicts go through it.
     """
     # Keyed over the roster, not over `entities`: a PERSON and a PLACE may legally
     # share a canonical_name (STU-506), and only the PERSON was adjudicated.
@@ -59,6 +62,17 @@ def _apply_merges(
             print(
                 f"[alias-adjudication] skipping {name_a} = {name_b}: "
                 "one side is already merged",
+                file=sys.stderr,
+            )
+            continue
+        unnamed = [
+            name for name in (name_a, name_b)
+            if not quote_names_entity(merge["quote"], name, by_name[name].get("aliases", []))
+        ]
+        if unnamed:
+            print(
+                f"[alias-adjudication] skipping {name_a} = {name_b}: "
+                f"quote does not name {', '.join(unnamed)}",
                 file=sys.stderr,
             )
             continue
