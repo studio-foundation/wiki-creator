@@ -1,13 +1,10 @@
 name: entity-species
-# Point-query verdict (STU-753): one call per PERSON entity, searching the book
-# instead of receiving a pre-selected snippet pack. Pinned to a capable model —
-# the whole-roster verdict this replaces needed one because a 7B loses strict
-# JSON on a big prompt (STU-624); a multi-turn tool loop needs a model that
-# tool-calls reliably, which a 7B is no more suited to.
+# Single-shot verdict (STU-2018): one call per PERSON entity over passages
+# picked in code (`book_search.select_passages`), no tools. STU-753's search
+# loop let the model decide when to stop and ran past the local context window.
+# Pinned to a capable model: a 7B loses strict JSON on a big prompt (STU-624).
 provider: ${STUDIO_SMART_PROVIDER:-claude-code}
 model: ${STUDIO_SMART_MODEL:-claude-haiku-4-5}
-tools:
-  - book-search-search_book
 system_prompt: |
   Respond with ONLY a valid JSON object. No markdown fences, no explanation, no other text.
 
@@ -17,13 +14,11 @@ system_prompt: |
   - book_title
   - name: the character's canonical name
   - aliases: other names this character is called
+  - passages: excerpts of this book that name the character, in book order, each
+    {"chapter", "text"}. In some, a pronoun was replaced by the name it stands for.
 
-  Before you answer, call book-search-search_book (query = the character's name,
-  then an alias if the first search finds nothing — it always searches this
-  book, you cannot search another one) to find passages that mention
-  them. If the passages you find do not settle what they are, search again with
-  a different phrase. Do not answer from a single search, and do not answer from
-  anything you have not searched for.
+  Read every passage before you answer. Do not answer from anything that is not
+  in them.
 
   Return exactly:
   {
@@ -32,7 +27,7 @@ system_prompt: |
 
   "species" is what the character IS — human, elf, dwarf, dragon, faun, werecat,
   Urgal — WRITTEN EXACTLY AS IT APPEARS IN YOUR QUOTE.
-  "quote" is copied VERBATIM from a passage book-search-search_book returned.
+  "quote" is copied VERBATIM from one of the passages.
 
   A species is what a person cannot stop being: their race or kind. It is NOT:
   - A faction, army, order, or allegiance. That is something they joined and could
@@ -41,7 +36,7 @@ system_prompt: |
   - A family or house name.
   - A place they are from.
 
-  THE TEST — does a passage you found say what THIS character IS?
+  THE TEST — does a passage say what THIS character IS?
 
   A species named in a passage about a character is not automatically theirs.
   "Eragon killed the Urgal" names a species that is the VICTIM's, not Eragon's.
@@ -50,18 +45,18 @@ system_prompt: |
 
   NEVER answer these from memory:
   - A race you know because you have read this novel before. Your memory of the
-    plot is not evidence. If no passage you found says it, it is not here.
+    plot is not evidence. If no passage says it, it is not here.
   - A species that is guessed, suspected, disguised, or mistaken. Only what the
     text states the character is.
 
-  Return {"species": ""} if nothing you found settles this character's species.
+  Return {"species": ""} if no passage settles this character's species.
   WHEN IN DOUBT, RETURN NOTHING. A wrong species labels a character the wrong
   race on a page nobody will reread. Rendering nothing is honest.
 
   Rules:
-  - "quote" must be text you can find with book-search-search_book, character
-    for character. A verdict whose quote is not real is discarded.
+  - "quote" must be text from one passage, character for character. A verdict
+    whose quote is not real is discarded.
   - The species you return MUST appear inside the quote you cite, word for word.
-    If your quote shows the character acting but never names their race, search
-    for another passage or return nothing.
+    If your quote shows the character acting but never names their race, quote
+    another passage or return nothing.
   - Do not return a string in place of the object.

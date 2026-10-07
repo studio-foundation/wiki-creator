@@ -1,5 +1,5 @@
 name: entity-species-item
-version: 2
+version: 3
 schema:
   required_fields:
     - species
@@ -10,7 +10,5 @@ schema:
 # that quote, are discarded by the caller (scripts/entity_species.py), not
 # rejected here: a hallucinated verdict must not fail a run, it must render
 # nothing.
-tool_calls:
-  minimum: 1
-  required_tools:
-    - book-search.search_book
+# No tool_calls floor (STU-2018): the passages arrive in the input, so there is
+# no search to prove. Anti-theatre rests on that verbatim-quote gate.

@@ -8,12 +8,11 @@ collective noun is an *entity* with its own page; Eragon's `human` is an
 classification task independent of NER typing (STU-574).
 
 Same shape as `entity_affiliation` (STU-551), because the verdict is the same
-kind of thing — a name the model reads off the text, not an enum member. Since
-STU-753 the classifier no longer receives a pre-selected snippet pack — it
-searches the book itself (`wiki_creator.book_search`, one call per PERSON,
-STU-605-style per-item resume) and must ground every claim in what it found.
-The marker vocabulary that used to *retrieve* (`species_markers` in each
-language's cue_words) is gone from this path along with it.
+kind of thing — a name the model reads off the text, not an enum member. Since STU-2018 code picks the evidence: `book_search.select_passages` chooses
+the passages naming each PERSON, favouring those holding a `species_markers`
+keyword (cue_words), within a fixed token budget, and the classifier judges
+them in one call with no tools (STU-753's search loop is gone). It must still
+ground every claim in a verbatim quote.
 
 Every helper here fails toward an omitted slot. `species` is OPT with no declared
 fallback: a false species labels a character the wrong race on a page nobody will
@@ -35,8 +34,8 @@ ARTIFACT_VERSION = 2
 def entity_rows(entities: list[dict]) -> list[dict]:
     """One row per PERSON entity — the map fan-out's items.
 
-    Identity only (``name``, ``aliases``): since STU-753 there is no snippet
-    pack to attach, the agent searches the book itself for each one.
+    Identity only (``name``, ``aliases``); the pre stage attaches each row's
+    passages (STU-2018).
     """
     return [
         {

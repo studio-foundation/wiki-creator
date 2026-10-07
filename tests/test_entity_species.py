@@ -20,9 +20,11 @@ from wiki_creator.registry import EntityRecord, Mention, Registry
 AGENT_YAML = Path(__file__).resolve().parents[1] / ".studio" / "agents" / "entity-species.agent.yaml"
 
 
-def test_prompt_declares_the_search_tool():
+def test_agent_is_single_shot_with_no_tools():
+    """STU-2018: code picks the passages; the model never decides when to stop searching."""
     agent = yaml.safe_load(AGENT_YAML.read_text(encoding="utf-8"))
-    assert agent["tools"] == ["book-search-search_book"]
+    assert "tools" not in agent
+    assert "passages" in agent["system_prompt"]
 
 
 def test_entity_rows_carries_name_and_sorted_aliases():
@@ -252,6 +254,7 @@ def test_pre_emits_one_item_per_person_with_context(tmp_path, monkeypatch):
     result = _run_pre(monkeypatch, epub, invented_names=True)
     assert result["needs_verdict"] is True
     assert {e["name"] for e in result["entities"]} == {"Arya"}
+    assert result["entities"][0]["passages"] == [{"chapter": "c1", "text": "Arya was an elf."}]
 
 
 # --- post stage: the quote gate reads both chapter variants (STU-2008) ------
@@ -262,8 +265,8 @@ RESOLVED_ELF = "Arya was an elf, and Arya was proud of it."
 
 @pytest.mark.parametrize("quote", [ORIGINAL_ELF, RESOLVED_ELF])
 def test_post_accepts_a_quote_from_either_chapter_variant(tmp_path, monkeypatch, quote):
-    """Search runs on the coref-resolved text, but the model may quote the book's
-    real sentence: a quote verbatim in only one of the two variants survives."""
+    """Passages come from both the original and the coref-resolved text: a quote
+    verbatim in only one of the two variants survives."""
     import scripts.entity_species as post
 
     epub, processing = _pre_setup(tmp_path)

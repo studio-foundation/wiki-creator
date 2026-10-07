@@ -4,8 +4,8 @@
 Script executor interface: reads JSON from stdin, writes JSON to stdout.
 
 Post-step of the entity-status split (STU-457/753). The `call:
-entity-status-verdict` stage that precedes this one fans out one agentic
-search-and-decide call per PERSON entity over the engine map (STU-589/605);
+entity-status-verdict` stage that precedes this one fans out one single-shot
+verdict call per PERSON entity over the engine map (STU-589/605);
 this stage folds the per-entity results, verifies each against the book's own
 text, and writes `entity_status.json`, which `wiki_preparation.py` then stamps
 onto the batch entity so `generate_wiki_pages.py` can render the `status`
@@ -43,8 +43,8 @@ VERDICT_STAGE = "entity-status-verdict"
 
 def contexts_by_entity(registry: Registry) -> dict[str, list]:
     """PERSON entities that have at least one mention — the set with anything to
-    decide. The mentions' text is not read here (STU-753: the agent searches the
-    book directly); only presence matters, so callers just check membership."""
+    decide. The mentions' text is not read here (STU-2018: the passages come from
+    the chapters); only presence matters, so callers just check membership."""
     contexts: dict[str, list] = {}
     for record in registry.entities:
         if record.entity_type != "PERSON":

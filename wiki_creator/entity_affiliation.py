@@ -7,11 +7,11 @@ and STU-488 measured that dating a fact from the snippet that quotes it does not
 work (3 of 4 derived chapters wrong: the place where the text states a fact is not
 the place where the fact happens).
 
-Since STU-753 the classifier no longer receives a pre-selected snippet pack — it
-searches the book itself (`wiki_creator.book_search`, one call per PERSON,
-STU-605-style per-item resume) and must ground every claim in what it found. The
-marker vocabulary that used to *retrieve* (`affiliation_markers` in each
-language's cue_words) is gone from this path along with it.
+Since STU-2018 code picks the evidence: `book_search.select_passages` chooses
+the passages naming each PERSON, favouring those holding a `affiliation_markers`
+keyword (cue_words), within a fixed token budget, and the classifier judges
+them in one call with no tools (STU-753's search loop is gone). It must still
+ground every claim in a verbatim quote.
 
 Every helper here fails toward an omitted slot. `affiliation` is OPT with no declared
 fallback: a false affiliation puts a character in the wrong army on a page nobody will
@@ -33,8 +33,8 @@ ARTIFACT_VERSION = 2
 def entity_rows(entities: list[dict]) -> list[dict]:
     """One row per PERSON entity — the map fan-out's items.
 
-    Identity only (``name``, ``aliases``): since STU-753 there is no snippet
-    pack to attach, the agent searches the book itself for each one.
+    Identity only (``name``, ``aliases``); the pre stage attaches each row's
+    passages (STU-2018).
     """
     return [
         {

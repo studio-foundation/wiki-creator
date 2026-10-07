@@ -1,13 +1,10 @@
 name: entity-status
-# Point-query verdict (STU-753): one call per PERSON entity, searching the book
-# instead of receiving a pre-selected snippet pack. Pinned to a capable model —
-# the whole-roster verdict this replaces needed one because a 7B loses strict
-# JSON on a big prompt (STU-624); a multi-turn tool loop needs a model that
-# tool-calls reliably, which a 7B is no more suited to.
+# Single-shot verdict (STU-2018): one call per PERSON entity over passages
+# picked in code (`book_search.select_passages`), no tools. STU-753's search
+# loop let the model decide when to stop and ran past the local context window.
+# Pinned to a capable model: a 7B loses strict JSON on a big prompt (STU-624).
 provider: ${STUDIO_SMART_PROVIDER:-claude-code}
 model: ${STUDIO_SMART_MODEL:-claude-haiku-4-5}
-tools:
-  - book-search-search_book
 system_prompt: |
   Respond with ONLY a valid JSON object. No markdown fences, no explanation, no other text.
 
@@ -17,13 +14,11 @@ system_prompt: |
   - book_title
   - name: the character's canonical name
   - aliases: other names this character is called
+  - passages: excerpts of this book that name the character, in book order, each
+    {"chapter", "text"}. In some, a pronoun was replaced by the name it stands for.
 
-  Before you answer, call book-search-search_book (query = the character's name,
-  then an alias if the first search finds nothing — it always searches this
-  book, you cannot search another one) to find passages that mention
-  them. If the passages you find do not settle their fate, search again with a
-  different phrase — a death, a departure, a wound. Do not answer from a single
-  search, and do not answer from anything you have not searched for.
+  Read every passage before you answer. Do not answer from anything that is not
+  in them.
 
   Return exactly:
   {
@@ -31,7 +26,7 @@ system_prompt: |
   }
 
   "status" is exactly one of: alive, deceased, missing, undead, unknown
-  "quote" is copied VERBATIM from a passage book-search-search_book returned —
+  "quote" is copied VERBATIM from one of the passages —
   required for every status except "unknown".
 
   "agent" and "place" are OPTIONAL and only for "deceased". Omit either one you
@@ -45,7 +40,7 @@ system_prompt: |
   killer, omit "agent". If it names no place, omit "place". Neither is a guess:
   a field we cannot read off the quote is dropped, and the status still stands.
 
-  THE TEST — does a passage you found state what became of THIS character?
+  THE TEST — does a passage state what became of THIS character?
 
   - deceased: a passage shows this character dying or dead.
   - missing: a passage shows this character vanishing, with their fate left open.
@@ -53,23 +48,23 @@ system_prompt: |
   - alive: a passage shows this character acting, and no passage shows them dead.
 
   WHO THE SENTENCE IS ABOUT IS THE WHOLE QUESTION.
-  "Eragon watched Brom die" surfaces under a search for either name. It makes
+  "Eragon watched Brom die" is a passage for either name. It makes
   Brom deceased. It says nothing about Eragon except that he was there.
   A character who witnesses, mourns, avenges, buries, or is threatened with death
   is not dead. A character who kills is not dead.
 
   NEVER answer these from memory:
   - A character's fate you know because you have read this novel before. Your
-    memory of the plot is not evidence. If no passage you found says it, it is
+    memory of the plot is not evidence. If no passage says it, it is
     not here — this book may end before the death you remember.
   - A death that is feared, predicted, dreamt, threatened, or told as a story
     about someone else. Only what happens to this character in this book counts.
 
-  Return {"status": "unknown"} if nothing you found settles this character's
+  Return {"status": "unknown"} if no passage settles this character's
   fate. WHEN IN DOUBT, RETURN "unknown". A wrong "deceased" kills a living
   character on a page nobody will reread. "unknown" is honest.
 
   Rules:
-  - "quote" must be text you can find with book-search-search_book, character
-    for character. A verdict whose quote is not real is discarded.
+  - "quote" must be text from one passage, character for character. A verdict
+    whose quote is not real is discarded.
   - Do not return a string in place of the object.

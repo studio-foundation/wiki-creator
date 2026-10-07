@@ -1,13 +1,10 @@
 name: entity-affiliation
-# Point-query verdict (STU-753): one call per PERSON entity, searching the book
-# instead of receiving a pre-selected snippet pack. Pinned to a capable model —
-# the whole-roster verdict this replaces needed one because a 7B loses strict
-# JSON on a big prompt (STU-624); a multi-turn tool loop needs a model that
-# tool-calls reliably, which a 7B is no more suited to.
+# Single-shot verdict (STU-2018): one call per PERSON entity over passages
+# picked in code (`book_search.select_passages`), no tools. STU-753's search
+# loop let the model decide when to stop and ran past the local context window.
+# Pinned to a capable model: a 7B loses strict JSON on a big prompt (STU-624).
 provider: ${STUDIO_SMART_PROVIDER:-claude-code}
 model: ${STUDIO_SMART_MODEL:-claude-haiku-4-5}
-tools:
-  - book-search-search_book
 system_prompt: |
   Respond with ONLY a valid JSON object. No markdown fences, no explanation, no other text.
 
@@ -17,14 +14,11 @@ system_prompt: |
   - book_title
   - name: the character's canonical name
   - aliases: other names this character is called
+  - passages: excerpts of this book that name the character, in book order, each
+    {"chapter", "text"}. In some, a pronoun was replaced by the name it stands for.
 
-  Before you answer, call book-search-search_book (query = the character's name,
-  then an alias if the first search finds nothing — it always searches this
-  book, you cannot search another one) to find passages that mention
-  them. If the passages you find do not settle their allegiance, search again
-  with a different phrase — the name of an army, an order, a rebellion. Do not
-  answer from a single search, and do not answer from anything you have not
-  searched for.
+  Read every passage before you answer. Do not answer from anything that is not
+  in them.
 
   Return exactly:
   {
@@ -32,7 +26,7 @@ system_prompt: |
   }
 
   "affiliation" is the faction's name, WRITTEN EXACTLY AS IT APPEARS IN YOUR QUOTE.
-  "quote" is copied VERBATIM from a passage book-search-search_book returned.
+  "quote" is copied VERBATIM from one of the passages.
 
   A faction is a group a person can BELONG to and could leave: an army, an order,
   a guild, a rebellion, a kingdom's service, a criminal band.
@@ -45,9 +39,9 @@ system_prompt: |
   - A job or title held alone ("blacksmith", "king") with no group behind it.
 
   THE END OF THE BOOK IS WHAT COUNTS. A character who leaves the Empire to join the
-  rebellion belongs to the rebellion. Prefer the latest passage you find.
+  rebellion belongs to the rebellion. Prefer the latest passage.
 
-  THE TEST — does a passage you found say which group THIS character belongs to?
+  THE TEST — does a passage say which group THIS character belongs to?
 
   A character who fights AGAINST a faction does not belong to it. A character who is
   captured by, hunted by, or bargains with a faction does not belong to it. A
@@ -57,19 +51,19 @@ system_prompt: |
 
   NEVER answer these from memory:
   - An allegiance you know because you have read this novel before. Your memory of
-    the plot is not evidence. If no passage you found says it, it is not here —
+    the plot is not evidence. If no passage says it, it is not here —
     this book may end before the change you remember.
   - An allegiance that is offered, refused, suspected, predicted, or feared. Only
     what is true of this character at the end of this book counts.
 
-  Return {"affiliation": ""} if nothing you found settles this character's faction.
+  Return {"affiliation": ""} if no passage settles this character's faction.
   WHEN IN DOUBT, RETURN NOTHING. A wrong faction puts a character in the wrong army
   on a page nobody will reread. Rendering nothing is honest.
 
   Rules:
-  - "quote" must be text you can find with book-search-search_book, character
-    for character. A verdict whose quote is not real is discarded.
+  - "quote" must be text from one passage, character for character. A verdict
+    whose quote is not real is discarded.
   - The faction name you return MUST appear inside the quote you cite, word for
-    word. If your quote proves the allegiance without naming the group, search
-    for another passage or return nothing.
+    word. If your quote proves the allegiance without naming the group, quote
+    another passage or return nothing.
   - Do not return a string in place of the object.
