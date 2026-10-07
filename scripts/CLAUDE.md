@@ -279,10 +279,10 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   just a re-run.
 
 
-- Entity status (STU-488, retrieval mechanism replaced by STU-753 — see that
-  bullet below): the `status` infobox slot was declared `MIN` with
+- Entity status (STU-488, retrieval mechanism replaced by STU-753 then STU-2018,
+  see those bullets below): the `status` infobox slot was declared `MIN` with
   `fallback: unknown` in STU-504 and never populated. It is filled by one
-  agentic call per PERSON entity, fanned out over the engine map (native `call`
+  single-shot call per PERSON entity, fanned out over the engine map (native `call`
   stage since STU-457, per-entity fan-out since STU-753) — the STU-529/STU-539
   shape — as a **wiki-preparation stage** (pre/call/post since STU-457), not a
   wiki-resolution stage: it changes no identity (unlike `alias-adjudication`,
@@ -366,8 +366,8 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
 
 
 - Affiliation is a scalar, not a dated edge (STU-551; retrieval mechanism
-  replaced by STU-753 — see that bullet below): the `affiliation` slot is
-  filled by one agentic call per PERSON entity, fanned out over the engine map
+  replaced by STU-753 then STU-2018, see those bullets below): the `affiliation`
+  slot is filled by one single-shot call per PERSON entity, fanned out over the engine map
   (native `call` stage since STU-457, per-entity fan-out since STU-753) — the
   STU-488 shape, a wiki-preparation stage so resolution stays
   LLM-free. The ticket asked for a **dated edge** and three findings refused it.
@@ -429,9 +429,9 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
 
 
 - Species is an attribute, not the collective entity (STU-574; retrieval
-  mechanism replaced by STU-753 — see that bullet below): the `species`
-  PERSON infobox slot (declared, `genre_gated: true`, inert since STU-504) is
-  filled by one agentic call per PERSON entity, fanned out over the engine map
+  mechanism replaced by STU-753 then STU-2018, see those bullets below): the
+  `species` PERSON infobox slot (declared, `genre_gated: true`, inert since
+  STU-504) is filled by one single-shot call per PERSON entity, fanned out over the engine map
   (native `call` stage since STU-457, per-entity fan-out since STU-753)
   — the STU-551 shape: a verdict survives only when its species is verbatim in
   a quote that names this entity (`quote_names_value`, lifted to `roster.py`
@@ -467,7 +467,9 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   precision is human-judged against canon like STU-543.
 
 
-- **Point-query verdicts search the book instead of receiving it (STU-753).**
+- **Point-query verdicts search the book instead of receiving it (STU-753;
+  the search loop is superseded by STU-2018, next bullet; the per-PERSON map,
+  the fingerprint and the grounding gates below still hold).**
   The trio above (status/affiliation/species) was the last one-call-per-book
   verdict shape left after STU-457; each converted to a per-PERSON agentic
   fan-out, the same `map` shape the four other fan-outs already used (STU-589),
@@ -528,10 +530,8 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   watched Brom die" names both) — that was always the prompt's job ("WHO THE
   SENTENCE IS ABOUT IS THE WHOLE QUESTION"), in both the old and new shape.
   **The marker vocabulary (`status_markers`/`affiliation_markers`/
-  `species_markers` in `cue_words/<lang>.json`) is now unread** — it only ever
-  retrieved, and retrieval is the agent's job now. Left in place rather than
-  deleted (a config-surface cleanup, not required by this change); a lang pack
-  omitting it degrades to empty exactly as before, so nothing breaks either way.
+  `species_markers` in `cue_words/<lang>.json`) went unread** under STU-753;
+  STU-2018 reads it again as the selector's keyword tier.
   **Not (yet) measured against the acceptance criteria STU-753 asked for**: a
   live-provider A/B on The Hobbit (contract pass rate across RALPH attempts,
   verdict agreement with a human check, tokens/wall-clock per entity) needs a
@@ -542,6 +542,40 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
   pass — so the context-stuffing premise this shape was meant to attack was
   already false on the one measured case; the value case here is the reusable
   point-query pattern for STU-754/755, not a re-fix of STU-624.
+
+
+- **Entity-trio evidence is picked in code; the model judges it once
+  (STU-2018).** The STU-753 loop let the model decide what to search and when
+  to stop (`max_tool_calls: 8`). On the all-local Alice run (athena-qwen38,
+  2026-10-06) it made most of ~1000 requests, ~8 per item; 8 items ended on
+  `Maximum tool calling iterations (8) reached` with no verdict, and one
+  transcript reached 32,735 of a 32,768 window (Ollama truncates silently).
+  STU-753 searched freely because a pre-selected pack missed pronoun-only
+  facts; STU-763's `chapters_resolved.json` covers those now. Rule: retrieval
+  is code with a known size, and the model judges what it is given, once.
+  **Selector** (`book_search.select_passages`, deterministic): every paragraph
+  of `chapters.json` naming the entity or an alias (whole word, typography
+  folded), plus each `chapters_resolved.json` paragraph naming it that is not
+  the same paragraph as an original hit (under half its words shared with every
+  original hit in the chapter: a coref-only fact). A paragraph over 800 chars
+  is cut to an 800-char window on the mention. Candidates are taken in rounds
+  across chapters, latest chapter first in each round, paragraphs holding a
+  `<slot>_markers` keyword before the rest, and skipped once the next one would
+  pass `PASSAGE_TOKEN_BUDGET`; the picked set is returned in book order.
+  **Budget**: Studio cannot report a provider's context window, so the budget
+  derives from the smallest one configured, the athena-* variants' pinned
+  `num_ctx` 32768: a quarter of it, 8192 tokens at chars/4, leaving the system
+  prompt, the reply and the estimate's error (denser tokenization outside
+  English) inside the window. On Alice that is 122 passages (8191 tokens,
+  13 chapters) for Alice herself; minor characters fit whole.
+  **Wiring**: each `*-pre` attaches `passages` to its items
+  (`book_search.with_passages`), the `entity-<slot>-verdicts` map passes them
+  into the item (so per-item resume keys on them), the agents have no `tools`,
+  the item pipelines no `max_tool_calls`, the item contracts no `tool_calls`
+  floor. Anti-theatre rests on the post stage's gates, unchanged: the quote is
+  verbatim in `quote_surface` (original or resolved text, STU-2008) and names
+  the entity (`quote_names_entity`). The `book-search` tool plugin stays for
+  relation-reconciliation (STU-754) and future agents.
 
 
 - **The relation graph is reconciled against the roster, not just discovered
