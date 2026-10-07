@@ -13,7 +13,7 @@ def _entity(relationships):
 def test_bucket_for_type_maps_and_omits():
     assert bucket_for_type("family") == "family"
     assert bucket_for_type("romance") == "romance"
-    assert bucket_for_type("budding_attraction") == "romance"
+    assert bucket_for_type("budding_attraction") is None
     assert bucket_for_type("mentor") == "friends_allies"
     assert bucket_for_type("enemy") == "enemies"
     # Too weak / too specific for the infobox.
@@ -43,6 +43,16 @@ def test_acquaintance_and_untyped_omitted():
         {"entity_a": "Alice", "entity_b": "Nobody", "relationship_type": "null"},
     ]))
     assert fields == {}
+
+
+def test_budding_attraction_earns_no_romance_slot():
+    # STU-779: Cornudet's one refused advance on Boule de Suif is not a romance.
+    fields = relationship_infobox_fields(_entity([
+        {"entity_a": "Alice", "entity_b": "Cornudet", "relationship_type": "budding_attraction",
+         "cooccurrence_count": 9},
+        {"entity_a": "Alice", "entity_b": "Chaol", "relationship_type": "romance"},
+    ]))
+    assert fields == {"romance": "[[Chaol]]"}
 
 
 def test_deceased_marker():

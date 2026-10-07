@@ -20,10 +20,11 @@ from wiki_creator.relationship_types import usable_relationship_type
 # Canonical relationship type -> infobox bucket token. Types with no entry
 # (acquaintance, employment, other, and any book-specific type) are too weak or
 # too specific for the infobox and stay in the body section only (STU-664).
+# budding_attraction has none on purpose: an unacted, deniable pull is not a
+# romance, and an unqualified Romance row states it as one (STU-779).
 _BUCKET_BY_TYPE = {
     "family": "family",
     "romance": "romance",
-    "budding_attraction": "romance",
     "friend": "friends_allies",
     "ally": "friends_allies",
     "mentor": "friends_allies",
