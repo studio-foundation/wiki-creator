@@ -72,7 +72,7 @@ entity_types:
       - {token: trivia,        group: section, provenance: llm-prose,      obligation: OPT, tiers: [principal]}
       - {token: references,    group: section, provenance: extracted-fact, obligation: MIN, fallback: none, tiers: [figurant, secondary, principal]}
   ORG:
-    ner_labels: [ORG, NORP]
+    ner_labels: [ORG]
     gliner_label: "kingdom, empire, or government"
     export:
       subdir: organizations
@@ -114,8 +114,10 @@ entity_types:
   # FACTION (STU-505): first-order now that the taxonomy carries it. The custom
   # fantasy-NER model emits FACTION; before STU-505 the extractor retagged it to
   # ORG because the frozen Literal downstream refused to carry it.
+  # STU-787: spaCy's NORP (nationalities, religious and political groups) is a
+  # people-group, not an institution, so it lands here; ORG keeps institutions.
   FACTION:
-    ner_labels: [FACTION]
+    ner_labels: [FACTION, NORP]
     gliner_label: "people, race, or order"
     export:
       subdir: factions

@@ -86,6 +86,7 @@ A pack may omit these; the consumer degrades to an empty collection.
 | `masculine_titles` | clustering | Gendered honorifics marking a masculine title (`m.`, `monsieur`, Spanish `don`/`señor`) — used to block a masculine/feminine merge. No hardcoded default; each pack declares its own. |
 | `feminine_titles` | clustering | Gendered honorifics marking a feminine title (`mme`, `madame`, Spanish `doña`/`señora`). Counterpart of `masculine_titles`. |
 | `geographic_keywords` | verify-entity-types | Place-type nouns (`rue`, `église`, Spanish `calle`/`plaza`) that mark a name as obviously geographic, skipping the LLM type check. Absent → the check never short-circuits. |
+| `demonyms` | extraction | Masculine singular demonyms (`prussien`, `français`); a capitalized one (or its `-s` plural) on a non-PERSON span is retyped FACTION (STU-787). For a model with no NORP label (French); absent → no retype. |
 
 ## The required/optional split
 

@@ -13,7 +13,7 @@ from scripts.entity_extraction import (
     _resolve_cue_words_language, _load_cue_words,
     _audit_ner_labels,
     _is_valid_span, _warn_if_no_pos_tagger,
-    _extend_leading_honorific,
+    _extend_leading_honorific, _retype_demonym,
 )
 from wiki_creator.chapters import is_frontmatter_chapter as _is_frontmatter_chapter
 
@@ -772,6 +772,13 @@ def test_custom_ontology_labels_survive_extraction(custom_ontology_nlp):
     assert types_by_mention.get("Silent Assassins") == "FACTION"  # first-order (STU-505)
 
 
+
+def test_norp_types_faction_not_org():
+    """NORP is a people-group (nationality, religious or political group), not
+    an institution (STU-787)."""
+    assert LABEL_TO_TYPE["NORP"] == "FACTION"
+    assert LABEL_TO_TYPE["ORG"] == "ORG"
+
 @requires_fr_lg
 def test_pos_filter_rejects_verb_at_sentence_start():
     """Capitalized French verb at dialogue start must not appear as entity."""
@@ -1352,3 +1359,72 @@ def test_extraction_cache_reextracts_on_fingerprint_change(tmp_path, monkeypatch
 
     _run_extraction(stage, epub, chapters, extra={"ner": {"threshold": 0.3}})
     assert calls == [1], "a fingerprint change must invalidate the cache"
+
+
+# --- demonyms (STU-787) ---
+
+@pytest.fixture()
+def fr_demonym_nlp():
+    """fr_core_news types demonyms LOC or MISC; it has no NORP label."""
+    nlp = spacy.blank("fr")
+    nlp.add_pipe("sentencizer")
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns([
+        {"label": "LOC", "pattern": "Prussiens"},
+        {"label": "MISC", "pattern": "Anglais"},
+        {"label": "LOC", "pattern": "Rouen"},
+        {"label": "PER", "pattern": "Normand"},
+    ])
+    return nlp
+
+
+def _types(result):
+    return {e["raw_mentions"][0]: e["type"] for e in result["entities"].values()}
+
+
+def test_demonym_is_retyped_faction(fr_demonym_nlp):
+    chapters = [{"id": "ch01", "content": "Les Prussiens prirent Rouen. Les Anglais attendaient."}]
+    types = _types(extract_entities(chapters, fr_demonym_nlp, cue_words=_load_cue_words("fr")))
+    assert types == {"Prussiens": "FACTION", "Rouen": "PLACE", "Anglais": "FACTION"}
+
+
+def test_demonym_person_span_is_left_alone(fr_demonym_nlp):
+    chapters = [{"id": "ch01", "content": "Normand entra."}]
+    types = _types(extract_entities(chapters, fr_demonym_nlp, cue_words=_load_cue_words("fr")))
+    assert types == {"Normand": "PERSON"}
+
+
+def test_demonym_needs_the_gazetteer(fr_demonym_nlp):
+    chapters = [{"id": "ch01", "content": "Les Prussiens prirent Rouen."}]
+    types = _types(extract_entities(chapters, fr_demonym_nlp, cue_words=_load_cue_words("en")))
+    assert types == {"Prussiens": "PLACE", "Rouen": "PLACE"}
+
+
+def test_demonym_gazetteer_matches_plural_not_feminine():
+    demonyms = _load_cue_words("fr")["demonyms"]
+    assert {"prussien", "prussiens", "allemands", "français"} <= demonyms
+    assert "marseillaise" not in demonyms
+
+
+def test_retype_demonym_ignores_lowercase(fr_demonym_nlp):
+    doc = fr_demonym_nlp("les prussiens")
+    span = Span(doc, 1, 2, label="LOC")
+    assert _retype_demonym(span, _load_cue_words("fr")).label_ == "LOC"
+
+
+@requires_fr_lg
+def test_demonyms_type_faction_with_the_stock_french_model():
+    nlp = spacy.load("fr_core_news_lg")
+    chapters = [{
+        "id": "ch01",
+        "content": (
+            "Les Prussiens entrèrent dans Rouen au matin. "
+            "On disait que l'Allemand était cruel. "
+            "Les Français avaient fui vers Dieppe."
+        ),
+    }]
+    types = _types(extract_entities(chapters, nlp, cue_words=_load_cue_words("fr")))
+    assert types["Prussiens"] == "FACTION"
+    assert types["Allemand"] == "FACTION"
+    assert types["Français"] == "FACTION"
+    assert types["Rouen"] == "PLACE"
