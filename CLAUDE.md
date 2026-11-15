@@ -511,37 +511,35 @@ by someone who has read the novel and nothing else.
 - Do not assume docs are current; verify against `Makefile`, pipeline YAML, and tests.
 - Before claiming a fix, rerun the relevant tests and ideally `pytest -q`.
 
-## Where a Task Runs: `claude:local` vs `claude:web`
+## Where a Task Runs: `host:*` labels
 
-Every actionable wiki-creator issue in Linear carries one of two labels under the
-`claude` group, so it is unambiguous before starting whether a task can be *both
-done and verified* in a Claude Code **web** sandbox or must run on a **local**
-machine. The web sandbox has **no torch/GLiNER, no GPU, no `library/` EPUBs, no
-gold corpus, no `models/`, no API key** — all gitignored or absent by
-construction — and cannot install or run any of them.
+An issue's `host:*` label names where it can be *both done and verified*. A
+fresh clone has **no torch/GLiNER, no GPU, no `library/` EPUBs, no gold corpus,
+no `models/`, no API key** — all gitignored or absent by construction. athena
+has the EPUBs, the gold corpus, `models/`, GLiNER, the GPU and Ollama.
 
-The test is verification, not just editing: if you can write the change on web
-but cannot prove it works there, it is `claude:local`.
+The test is verification, not just editing: if you can write the change anywhere
+but cannot prove it without those, it is `host:athena`.
 
-- **`claude:local`** — the deliverable or its verification needs any of: GLiNER /
+- **`host:athena`** — the deliverable or its verification needs any of: GLiNER /
   torch / a GPU (NER, extraction re-runs, the label sweep, the OOM/device bug);
   LoRA / Ollama training or benchmarking; the gitignored assets (EPUBs,
   `research/ner-eval` gold, `models/`); or a **full live-LLM run over real books**
   to produce or measure the result (relation-typing accuracy, alias-adjudication
   precision across the library, embedding disambiguation, GraphRAG eval,
   orchestrator parity when removing `run_wiki.py`). A number the norms require
-  ("load-bearing and swept, not guessed") is a local number.
-- **`claude:web`** — self-contained: pure logic + deterministic tests (`pytest`
+  ("load-bearing and swept, not guessed") is an athena number.
+- **No host label** — self-contained, runs on any host: pure logic + deterministic tests (`pytest`
   with `en_core_web_sm`), YAML/config covered by `make golden` / `make smoke`
   (LLM-free by construction), rendering/goldens, docs, refactors, wiring tests.
-  A change whose whole proof is the test suite on the committed fixture novella is
-  a web task.
+  A change whose whole proof is the test suite on the committed fixture novella
+  needs no host.
 
-Rule of thumb: **STU-571 is the archetype `claude:local`** — the fix is a one-line
+Rule of thumb: **STU-571 is the archetype `host:athena`** — the fix is a one-line
 `gliner_label` edit, but the norm forbids shipping it without re-running
-`research/ner-eval/sweep_labels.py` against GLiNER + gold, none of which the
-sandbox has. A task is not web just because the *edit* is small; it is web only if
-its *evidence* is reachable there.
+`research/ner-eval/sweep_labels.py` against GLiNER + gold, none of which a fresh
+clone has. A task needs no host label only if its *evidence* is reachable anywhere,
+however small the *edit*.
 
 ## Personal Working Style — Ariane
 
@@ -570,7 +568,7 @@ Only stop and ask for: irreversible/destructive actions (force-push, history rew
 
 Every issue created or updated carries the full metadata, not just a title and description. An issue missing these is incomplete — fill them at creation, don't defer:
 
-- **Labels** — defects get `bug`; feature/refactor tasks don't. On wiki-creator, every actionable issue also carries `claude:local` or `claude:web` (see "Where a Task Runs" above).
+- **Labels** — defects get `bug`; feature/refactor tasks don't. On wiki-creator, an issue whose proof needs GLiNER, the GPU or the gitignored assets also carries `host:athena` (see "Where a Task Runs" above).
 - **Estimate** — always set, even if rough.
 - **Priority** — always set, never left at "No priority".
 - **Project / cycle** — assign when one applies.
