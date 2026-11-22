@@ -17,6 +17,7 @@ Output: the alias-resolution payload, merges applied.
 """
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -70,6 +71,31 @@ def _unnamed_sides(quote: str, sides: dict[str, list[str]], lang_cfg: dict) -> l
     ]
 
 
+def _attributive_only(surfaces: list[str], contexts: list[str], lang_cfg: dict) -> bool:
+    """True when every mention of the side sits between a lowercase word and a noun.
+
+    That is a word modifying a noun ("the little Kansas girl", "a Kansas farmer"),
+    not a name standing for a person (STU-2023). A function word after it ("the
+    Queen of Ev and her") is a name continuing its clause. No mention is no evidence.
+    """
+    function_words = {
+        word for key in (
+            "determiners", "coordination_connectors", "name_connectors",
+            "place_prepositions", "pronouns",
+        )
+        for word in lang_cfg.get(key, [])
+    }
+    names = "|".join(re.escape(surface) for surface in surfaces if surface)
+    mention = re.compile(rf"(?<!\w)(?:{names})(?!\w)")
+    flanked = re.compile(rf"(?<![^\W\d_])[a-z]+\s+(?:{names})\s+([a-z]+)(?!\w)")
+    mentions = sum(len(mention.findall(text)) for text in contexts)
+    modifying = sum(
+        next_word not in function_words
+        for text in contexts
+        for next_word in flanked.findall(text)
+    )
+    return mentions > 0 and mentions == modifying
+
 def _apply_merges(
     entities: list[dict],
     persons: list[dict],
@@ -84,6 +110,8 @@ def _apply_merges(
     the classifier judged the roster it was shown, and A=B plus B=C is not a
     verdict it was asked for. A merge whose quote does not name both sides is
     skipped too (STU-2009): a sentence naming one of them cannot bind the two.
+    So is a side the book only ever uses before a noun, like Kansas in "the
+    Kansas girl" (STU-2023): an epithet built on a place is not another name.
     Checked here rather than at parse time so cached verdicts go through it.
     """
     # Keyed over the roster, not over `entities`: a PERSON and a PLACE may legally
@@ -109,6 +137,21 @@ def _apply_merges(
             print(
                 f"[alias-adjudication] skipping {name_a} = {name_b}: "
                 f"quote does not name {', '.join(unnamed)}",
+                file=sys.stderr,
+            )
+            continue
+        attributive = [
+            name for name in (name_a, name_b)
+            if _attributive_only(
+                [name, *by_name[name].get("aliases", [])],
+                _gather_contexts(by_name[name], persons_full),
+                lang_cfg,
+            )
+        ]
+        if attributive:
+            print(
+                f"[alias-adjudication] skipping {name_a} = {name_b}: "
+                f"{', '.join(attributive)} only ever modifies a noun, it is not a name",
                 file=sys.stderr,
             )
             continue
