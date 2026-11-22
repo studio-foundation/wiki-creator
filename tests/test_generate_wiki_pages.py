@@ -2291,10 +2291,11 @@ def test_dry_run_stub_does_not_poison_the_next_real_run(tmp_path):
 def test_generate_pages_resumes_completed_pages(tmp_path):
     output_file = tmp_path / "wiki_pages.json"
     fingerprint = _gwp._page_prompt_fingerprint(_config(tmp_path))
+    entity = _place_batch()[0][1]["entities"][0]
     output_file.write_text(
         json.dumps({"pages": [{"title": "Rifthold", "importance": "secondary",
                                 "entity_type": "PLACE", "content": "## Description\n\nDéjà fait.",
-                                "_prompt": fingerprint}]}),
+                                "_prompt": _gwp._page_stamp(fingerprint, entity)}]}),
         encoding="utf-8",
     )
     runner = _FakeRunner()
@@ -2320,6 +2321,56 @@ def test_generate_pages_regenerates_on_prompt_fingerprint_change(tmp_path):
 
     assert runner.run_calls == ["Rifthold"]  # stale fingerprint → regenerated
     assert "Stale." not in pages[0]["content"]
+
+
+def _two_place_batch():
+    entities = [
+        {"canonical_name": name, "importance": "secondary", "type": "PLACE",
+         "context_by_chapter": {"C01": [f"{name}."]},
+         "relations": [{"target": "Orynth", "type": "allied_with"}]}
+        for name in ("Rifthold", "Endovier")
+    ]
+    return [("batch_00.json", {"batch_id": "batch_00", "entities": entities})]
+
+
+def test_generate_pages_rerun_over_unchanged_batch_keeps_every_page(tmp_path):
+    """STU-2026: an unchanged entity input still rides through for free."""
+    generate_pages(_two_place_batch(), _config(tmp_path), _FakeRunner())
+    first = (tmp_path / "wiki_pages.json").read_text(encoding="utf-8")
+
+    runner = _FakeRunner()
+    generate_pages(_two_place_batch(), _config(tmp_path), runner)
+
+    assert runner.run_calls == []
+    assert (tmp_path / "wiki_pages.json").read_text(encoding="utf-8") == first
+
+
+def test_generate_pages_regenerates_only_the_entity_whose_input_changed(tmp_path):
+    """STU-2026: a kept entity whose batch entry changed upstream (one relation
+    here) is regenerated; the others stay byte-identical."""
+    generate_pages(_two_place_batch(), _config(tmp_path), _FakeRunner())
+    before = {p["title"]: p for p in json.loads(
+        (tmp_path / "wiki_pages.json").read_text(encoding="utf-8"))["pages"]}
+
+    batches = _two_place_batch()
+    batches[0][1]["entities"][0]["relations"][0]["type"] = "enemy_of"
+    runner = _FakeRunner()
+    pages = generate_pages(batches, _config(tmp_path), runner)
+
+    assert runner.run_calls == ["Rifthold"]
+    after = {p["title"]: p for p in pages}
+    assert after["Endovier"] == before["Endovier"]
+    assert after["Rifthold"]["_prompt"] != before["Rifthold"]["_prompt"]
+
+
+def test_generate_pages_prompt_change_regenerates_every_page(tmp_path, monkeypatch):
+    generate_pages(_two_place_batch(), _config(tmp_path), _FakeRunner())
+
+    monkeypatch.setattr(_gwp, "_page_prompt_fingerprint", lambda config: "edited-prompt")
+    runner = _FakeRunner()
+    generate_pages(_two_place_batch(), _config(tmp_path), runner)
+
+    assert sorted(runner.run_calls) == ["Endovier", "Rifthold"]
 
 
 def test_generate_pages_preserves_stale_pages_outside_a_filtered_run(tmp_path):
@@ -2381,7 +2432,8 @@ def _seed_pages(output_file, titles, fingerprint=None):
     output_file.write_text(
         json.dumps({"pages": [
             {"title": t, "importance": "secondary", "entity_type": "PLACE",
-             "content": f"## Description\n\nPage originale de {t}.", "_prompt": fingerprint}
+             "content": f"## Description\n\nPage originale de {t}.",
+             "_prompt": _gwp._page_stamp(fingerprint, _named_place_batch(t)[0][1]["entities"][0])}
             for t in titles
         ]}),
         encoding="utf-8",

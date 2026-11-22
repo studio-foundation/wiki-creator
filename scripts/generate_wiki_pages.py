@@ -2352,7 +2352,7 @@ def _page_prompt_fingerprint(config: GenerationConfig) -> str:
     STU-589 an edited page prompt or a changed generation profile (sections, lengths,
     editorial stance, language, model, spoiler/grounding config) replayed the stale
     pages silently. A page whose stored fingerprint no longer matches is regenerated
-    rather than resumed (the per-entity context is the item input and re-keys itself).
+    rather than resumed; `_page_stamp` adds the entity's own input to the key.
     """
     return studio_io.prompt_fingerprint(
         agents=[
@@ -2366,6 +2366,19 @@ def _page_prompt_fingerprint(config: GenerationConfig) -> str:
             "forbidden_names": config.forbidden_names,
             "grounding": config.grounding,
         },
+    )
+
+
+# Bump to evict every saved page once when the stamp's inputs change shape.
+PAGE_STAMP_VERSION = 2
+
+
+def _page_stamp(fingerprint: str, entity: dict) -> str:
+    """A saved page's resume key: the prompt fingerprint plus the batch entry the
+    page is generated from, so an upstream change to one entity (relations,
+    status, aliases, context) regenerates that page alone (STU-2026)."""
+    return studio_io.prompt_fingerprint(
+        agents=[], config=[PAGE_STAMP_VERSION, fingerprint, entity]
     )
 
 
@@ -2394,6 +2407,17 @@ def generate_pages(
         for _, batch in batches
         for e in batch.get("entities", [])
     }
+    # Stamped before identity binding mutates the entities, so every walk agrees.
+    stamp_of = {
+        id(e): _page_stamp(fingerprint, e)
+        for _, batch in batches
+        for e in batch.get("entities", [])
+    }
+    stamp_by_title = {
+        e.get("canonical_name", ""): stamp_of[id(e)]
+        for _, batch in batches
+        for e in batch.get("entities", [])
+    }
     # STU-771: on an unfiltered run, `regenerable` is the whole current roster —
     # a saved page whose title isn't in it belongs to an entity the roster no
     # longer has (renamed or dropped upstream) and must not ride through, or it
@@ -2402,16 +2426,16 @@ def generate_pages(
     all_pages = [
         p for p in _load_existing(config.output_file)
         if not p.get("_failed") and not p.get("_dry_run") and _is_page_complete(p)
-        and not (p.get("title") in regenerable and p.get("_prompt") != fingerprint)
+        and not (p.get("title") in regenerable and p.get("_prompt") != stamp_by_title[p.get("title")])
         and not (not config.filtered_run and p.get("title") not in regenerable)
     ]
 
-    def _commit(page: dict) -> None:
+    def _commit(page: dict, entity: dict) -> None:
         # A dry run is a preview, not a result: leaving the stub unstamped
-        # (_prompt None != fingerprint) makes the resume filter evict it on the
+        # (_prompt None != stamp) makes the resume filter evict it on the
         # next real run instead of skipping the entity as already done (STU-618).
         if not config.dry_run:
-            page["_prompt"] = fingerprint
+            page["_prompt"] = stamp_of[id(entity)]
         all_pages.append(page)
         _save(all_pages, config.output_file)
 
@@ -2457,7 +2481,7 @@ def generate_pages(
                 if not context:
                     print(f"  [STUB] {name} (no context)", file=sys.stderr)
                     page = make_stub_page(entity, lang=config.language)
-                    _commit(page)
+                    _commit(page, entity)
                     done_titles.add(name)
                     continue
 
@@ -2465,7 +2489,7 @@ def generate_pages(
                     print(f"  [DRY]  {name}", file=sys.stderr)
                     page = make_stub_page(entity, lang=config.language)
                     page["_dry_run"] = True
-                    _commit(page)
+                    _commit(page, entity)
                     done_titles.add(name)
                     continue
 
@@ -2490,7 +2514,7 @@ def generate_pages(
                         book_config=config.book_config,
                         runner=runner,
                     )
-                    _commit(page)
+                    _commit(page, entity)
                     if not page.get("_failed"):
                         done_titles.add(name)
                         print(" ✓", file=sys.stderr)
@@ -2499,7 +2523,7 @@ def generate_pages(
                 except Exception as e:
                     print(f" ✗ {e}", file=sys.stderr)
                     page = make_stub_page(entity, failed=True, lang=config.language)
-                    _commit(page)
+                    _commit(page, entity)
                     # Do NOT add to done_titles — will be retried on next run
     except KeyboardInterrupt:
         print(f"\n[generate-wiki-pages] Interrupted — {len(all_pages)} pages saved", file=sys.stderr)
