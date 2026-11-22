@@ -775,18 +775,41 @@ def save_chapters_json(chapters: list[dict], path: str = "chapters.json") -> Non
 
 EXTRACTION_CACHE_FILE = "extraction_cache.json"
 
+# The code and word lists that decide what extraction emits, beyond the book's own input.
+EXTRACTOR_SOURCES = (
+    Path(__file__).resolve(),
+    *sorted((PROJECT_ROOT / "wiki_creator" / "nlp").glob("*.py")),
+    *sorted(CUE_WORDS_DIR.glob("*.json")),
+)
+
+
+def _extractor_version() -> str:
+    """Hash of the extractor itself (STU-2020): its source, the cue-word packs and the
+    label-to-type mappings from base.yaml, so an extraction fix misses a warm cache
+    without anyone remembering to bump a constant."""
+    h = hashlib.sha256()
+    h.update(json.dumps([ner_label_map(), gliner_label_map()], sort_keys=True).encode("utf-8"))
+    for path in EXTRACTOR_SOURCES:
+        h.update(path.read_bytes())
+    return h.hexdigest()
+
 
 def _extraction_cache_key(chapters: list[dict], input_data: dict) -> str:
     """Key extraction on exactly what the stage consumes (STU-631).
 
     The chapters payload already carries the EPUB content, the WIKI_MAX_CHAPTERS
     truncation and the section-filter front-matter tags; the fingerprint carries
-    the resolved `ner` block (STU-560). So a re-imported EPUB, a chapter-cap
-    change or a `ner.invented_names` flip all move the key by construction — the
-    exact case STU-457's completion-flag skip got wrong.
+    the resolved `ner` block (STU-560); the extractor version carries the code
+    and type mapping (STU-2020). So a re-imported EPUB, a chapter-cap change, a
+    `ner.invented_names` flip or an extraction fix all move the key by
+    construction — the exact case STU-457's completion-flag skip got wrong.
     """
     material = json.dumps(
-        {"chapters": chapters, "fingerprint": extraction_fingerprint(input_data)},
+        {
+            "chapters": chapters,
+            "fingerprint": extraction_fingerprint(input_data),
+            "extractor": _extractor_version(),
+        },
         sort_keys=True,
         ensure_ascii=False,
     )

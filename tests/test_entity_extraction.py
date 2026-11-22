@@ -1292,6 +1292,32 @@ def test_extraction_cache_key_moves_on_ner_flip_and_chapters():
     assert _extraction_cache_key(chapters, {}) == base  # deterministic
 
 
+def test_extraction_cache_key_moves_on_extractor_change(monkeypatch, tmp_path):
+    """Same chapters and ner block, changed extractor: the key must move (STU-2020)."""
+    import scripts.entity_extraction as ee
+
+    source = tmp_path / "extractor.py"
+    source.write_text("v1", encoding="utf-8")
+    monkeypatch.setattr(ee, "EXTRACTOR_SOURCES", (source,))
+    chapters = [{"id": "c01", "title": "One", "content": "Alice met Bob."}]
+    base = ee._extraction_cache_key(chapters, {})
+    assert ee._extraction_cache_key(chapters, {}) == base
+
+    source.write_text("v2", encoding="utf-8")
+    assert ee._extraction_cache_key(chapters, {}) != base
+
+    source.write_text("v1", encoding="utf-8")
+    monkeypatch.setattr(ee, "ner_label_map", lambda: {"NORP": "FACTION"})
+    assert ee._extraction_cache_key(chapters, {}) != base
+
+
+def test_extractor_sources_cover_the_extraction_code_and_cue_words():
+    import scripts.entity_extraction as ee
+
+    names = {p.name for p in ee.EXTRACTOR_SOURCES}
+    assert {"entity_extraction.py", "gliner_ner.py", "en.json", "fr.json"} <= names
+
+
 def _run_extraction(stage, epub, chapters, extra=None):
     import io
     import json as _json
