@@ -215,18 +215,35 @@ def find_joint_honorific_surnames(
     connectors: frozenset[str],
     masculine_titles: frozenset[str] = MASCULINE_TITLES,
     feminine_titles: frozenset[str] = FEMININE_TITLES,
+    name_connectors: frozenset[str] = frozenset(),
 ) -> frozenset[str]:
     """Folded surnames the text introduces as a couple ("M. et Mme Loiseau",
-    "Mr. and Mrs. Beaver"): two opposite-gender titles joined by a connector."""
+    "Mr. and Mrs. Beaver"): two opposite-gender titles joined by a connector.
+    A name connector may precede the second title and the surname ("le comte et
+    la comtesse de Bréville")."""
     masculine, feminine = fold_vocabulary(masculine_titles), fold_vocabulary(feminine_titles)
-    connectors = fold_vocabulary(connectors)
+    connectors, particles = fold_vocabulary(connectors), fold_vocabulary(name_connectors)
     tokens = fold_tokens(text)
+
+    def skip_particles(j: int) -> int:
+        while j < len(tokens) and tokens[j] in particles:
+            j += 1
+        return j
+
     found = set()
-    for a, conj, b, surname in zip(tokens, tokens[1:], tokens[2:], tokens[3:]):
-        if conj in connectors and (
-            (a in masculine and b in feminine) or (a in feminine and b in masculine)
-        ):
-            found.add(surname)
+    for i in range(len(tokens) - 1):
+        a, conj = tokens[i], tokens[i + 1]
+        if conj not in connectors:
+            continue
+        j = skip_particles(i + 2)
+        if j >= len(tokens):
+            continue
+        b = tokens[j]
+        if not ((a in masculine and b in feminine) or (a in feminine and b in masculine)):
+            continue
+        j = skip_particles(j + 1)
+        if j < len(tokens):
+            found.add(tokens[j])
     return frozenset(found)
 
 
@@ -558,7 +575,7 @@ def build_clusters(
     # Rule 2 post-processing: split clusters with conflicting first names
     couples = find_joint_honorific_surnames(
         book_text, _extend_from_lang(frozenset(), "coordination_connectors", language),
-        masculine_titles, feminine_titles,
+        masculine_titles, feminine_titles, name_connectors,
     ) if book_text else frozenset()
     clusters_list, unclustered = split_conflicting_first_names(
         clusters_list, unclustered, entities, title_prefixes, masculine_titles, feminine_titles,

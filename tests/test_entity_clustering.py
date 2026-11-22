@@ -599,6 +599,33 @@ def test_find_joint_honorific_surnames():
     assert find_joint_honorific_surnames(text, frozenset({"et"}), masc, fem) == {"loiseau", "follenvie"}
 
 
+def test_find_joint_honorific_surnames_noble_titles_and_particle():
+    """STU-2024: a particle before the second title and the surname, and
+    gendered noble titles, as in Boule de Suif's Bréville household."""
+    from scripts.entity_clustering import (
+        find_joint_honorific_surnames, load_feminine_titles, load_masculine_titles,
+        load_name_connectors,
+    )
+    masc, fem, particles = load_masculine_titles("fr"), load_feminine_titles("fr"), load_name_connectors("fr")
+    text = "le comte et la comtesse de Bréville, M. et Mme de Bréville, le baron et la baronne d'Avray."
+    assert find_joint_honorific_surnames(text, frozenset({"et"}), masc, fem, particles) == {"breville", "davray"}
+
+
+def test_build_clusters_noble_joint_intro_splits_untitled_spouse():
+    """STU-2024: "le comte et la comtesse de Bréville" gives two entities, the
+    untitled `Bréville` split off `Mme de Bréville`."""
+    entities = {
+        "e_mme":  {"type": "PERSON", "raw_mentions": ["Mme de Bréville"], "first_seen": "ch01", "mention_count": 3},
+        "e_bare": {"type": "PERSON", "raw_mentions": ["Bréville"], "first_seen": "ch01", "mention_count": 4},
+    }
+    text = (
+        "Le comte et la comtesse de Bréville sommeillaient. Bréville se tut. "
+        "Mme de Bréville lui proposa sa chaufferette."
+    )
+    clusters, unclustered = build_clusters(entities, language="fr", book_text=text)
+    assert _cluster_of(clusters, unclustered, "e_mme") != _cluster_of(clusters, unclustered, "e_bare")
+
+
 def test_main_warns_when_no_reduction_and_many_entities():
     """main() must print a stderr warning when reduction_pct==0 with >10 input entities."""
     import subprocess

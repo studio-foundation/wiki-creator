@@ -430,7 +430,12 @@
     "mr.",
     "monsieur",
     "don",
-    "señor"
+    "señor",
+    "comte",
+    "vicomte",
+    "baron",
+    "marquis",
+    "duc"
   ],
   "feminine_titles": [
     "mme",
@@ -438,7 +443,12 @@
     "madame",
     "doña",
     "señora",
-    "señorita"
+    "señorita",
+    "comtesse",
+    "vicomtesse",
+    "baronne",
+    "marquise",
+    "duchesse"
   ],
   "geographic_keywords": [
     "rue",
