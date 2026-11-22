@@ -1004,8 +1004,11 @@ Pipeline stage behavior. Moved verbatim from the root CLAUDE.md Gotchas section 
 - classify-relationships batches pairs per call and grades a discovered pair's
   confidence without a second LLM call (STU-751), two independent cuts on the
   same stage (49 calls / $3.76-equivalent / 27% of the Alice run). **Batching**:
-  `classify_relationships._batched` groups `_BATCH_SIZE` (6) pairs into one map
-  item — `over: input.batches` instead of `input.pairs`
+  `classify_relationships._batched` groups up to `_BATCH_SIZE` (6) pairs into one map
+  item, closing a batch early once its estimated tokens would pass half the
+  provider's window (STU-2021: six Alice pairs reached ~31k of athena's 32k and
+  timed out; a lone oversized pair has its contexts trimmed, never dropped). The
+  window is `STUDIO_BULK_CONTEXT_TOKENS`, 32768 unset, since Studio cannot report it — `over: input.batches` instead of `input.pairs`
   (`.studio/pipelines/classify-relationships.pipeline.yaml`), each item
   `{"pairs": [...]}` classified by one `relationship-classifier` call returning
   `{"classifications": [...]}` in the same order. The child pipeline kept its
