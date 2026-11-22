@@ -15,13 +15,15 @@ git -C "$ROOT" ls-files -co --exclude-standard | sed 's|^|/|' |
     "$ROOT/" "athena:$DIR/"
 
 [ $# -gt 0 ] || set -- -q
-ssh athena bash -s -- "$DIR" "$@" <<'EOF'
+# ssh joins its arguments into one string for the remote shell, so each one is quoted first.
+ssh athena "bash -s -- $(printf '%q ' "$DIR" "$@")" <<'EOF'
 set -euo pipefail
 dir=$HOME/$1; shift
 cd ~/wiki-test
-# One run at a time on athena, install included: two suites loading models side by side is
-# the same memory problem moved to another host.
-exec 9>lock
+# One run at a time on athena, install included, in the same queue as `athena-run` (dotfiles):
+# two jobs loading models side by side is the same memory problem moved to another host.
+mkdir -p ~/athena-run
+exec 9>~/athena-run/lock
 flock -n 9 || { echo "Waiting for another session's test run on athena"; flock 9; }
 stamp=$(sha256sum "$dir/pyproject.toml" | cut -c1-16)
 if [ "$(cat .venv/stamp 2>/dev/null)" != "$stamp" ]; then
