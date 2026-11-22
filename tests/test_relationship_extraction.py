@@ -10,7 +10,7 @@ import pytest
 from scripts.relationship_extraction import enrich_mentions_with_coref
 
 
-from _markers import requires_fastcoref, requires_fr_lg
+from _markers import requires_fastcoref, requires_fr_lg, requires_lingmess_cached
 
 
 @requires_fastcoref
@@ -204,9 +204,15 @@ def test_enrich_fastcoref_accepts_device_param():
 
 @requires_fastcoref
 @requires_fr_lg
-def test_enrich_fastcoref_returns_resolved_chapters_with_pronouns_replaced():
+@requires_lingmess_cached
+def test_enrich_fastcoref_returns_resolved_chapters_with_pronouns_replaced(monkeypatch):
     """STU-763: resolved_chapters replaces a pronoun with the entity's canonical name."""
+    import huggingface_hub.constants
+
     from scripts.relationship_extraction import enrich_mentions_with_fastcoref
+
+    # The repo ships only pytorch_model.bin, so an online load asks the Hub for a safetensors conversion.
+    monkeypatch.setattr(huggingface_hub.constants, "HF_HUB_OFFLINE", True)
 
     chapters = {
         "ch01": (
