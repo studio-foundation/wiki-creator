@@ -873,6 +873,30 @@ def _find_latest_extraction_file(book_yaml: str | None = None) -> Path | None:
     return Path(jsonl_files[0])
 
 
+def _book_inputs(ctx: dict) -> dict:
+    """build_clusters' book-derived kwargs from a book yaml, shared by the stage and live mode."""
+    from wiki_creator.lang import infer_language
+    spacy_model = ctx.get("spacy_model", "")
+    language = ctx.get("language") or (infer_language(spacy_model) if spacy_model else None)
+
+    # Series seeding (STU-485): known aliases from tomes 1..N-1 pre-link this
+    # tome's mentions. Absent file_path / series registry ⇒ unseeded (tome 1,
+    # unit tests, pre-multi-tome pipelines).
+    seed = {}
+    book_text = ""
+    file_path = ctx.get("file_path")
+    if file_path:
+        paths = book_paths_from_epub(file_path)
+        book_text = full_text(load_chapters(paths.processing))
+        seed = Registry.load_seed_table(paths.series_registry, load_determiners(language))
+        if seed:
+            print(
+                f"[entity-clustering] series seeding active: {len(seed)} known surfaces",
+                file=sys.stderr,
+            )
+    return {"language": language, "seed": seed, "book_text": book_text}
+
+
 def run_live_mode(*, book_yaml: str | None = None) -> None:
     """Live mode: read the latest extraction-*.jsonl and run clustering on real data."""
     latest = _find_latest_extraction_file(book_yaml)
@@ -898,7 +922,11 @@ def run_live_mode(*, book_yaml: str | None = None) -> None:
                 "mention_count": mention_count or len(e.get("raw_mentions", [])),
             }
 
-    clusters, unclustered = build_clusters(entities)
+    ctx = {}
+    if book_yaml:
+        import yaml as _yaml
+        ctx = _yaml.safe_load(Path(book_yaml).read_text(encoding="utf-8")) or {}
+    clusters, unclustered = build_clusters(entities, **_book_inputs(ctx))
     all_clusters = sorted(clusters + [
         {
             "cluster_id": f"single_{eid}",
@@ -962,28 +990,8 @@ def main() -> None:
         sys.exit(1)
 
     import yaml as _yaml
-    from wiki_creator.lang import infer_language
     ctx = _yaml.safe_load(payload.get("additional_context", "") or "") or {}
-    spacy_model = ctx.get("spacy_model", "")
-    language = ctx.get("language") or (infer_language(spacy_model) if spacy_model else None)
-
-    # Series seeding (STU-485): known aliases from tomes 1..N-1 pre-link this
-    # tome's mentions. Absent file_path / series registry ⇒ unseeded (tome 1,
-    # unit tests, pre-multi-tome pipelines).
-    seed = {}
-    book_text = ""
-    file_path = ctx.get("file_path")
-    if file_path:
-        paths = book_paths_from_epub(file_path)
-        book_text = full_text(load_chapters(paths.processing))
-        seed = Registry.load_seed_table(paths.series_registry, load_determiners(language))
-        if seed:
-            print(
-                f"[entity-clustering] series seeding active: {len(seed)} known surfaces",
-                file=sys.stderr,
-            )
-
-    clusters, unclustered = build_clusters(entities, language=language, seed=seed, book_text=book_text)
+    clusters, unclustered = build_clusters(entities, **_book_inputs(ctx))
 
     total = len(entities)
 
