@@ -42,6 +42,20 @@ requires_fastcoref = pytest.mark.skipif(
 )
 
 
+def lingmess_cached() -> bool:
+    try:
+        from huggingface_hub import try_to_load_from_cache
+    except ImportError:
+        return False
+    return isinstance(try_to_load_from_cache("biu-nlp/lingmess-coref", "config.json"), str)
+
+
+requires_lingmess_cached = pytest.mark.skipif(
+    not lingmess_cached(),
+    reason="requires biu-nlp/lingmess-coref in the local Hugging Face cache",
+)
+
+
 def gliner_available() -> bool:
     return importlib.util.find_spec("gliner") is not None
 
