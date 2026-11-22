@@ -253,12 +253,47 @@ def test_fanout_level_failure_stamps_every_pair(tmp_path, monkeypatch):
 # STU-751: batching pairs per classify-relationships map item
 # ---------------------------------------------------------------------------
 
-def test_batched_groups_by_size():
-    assert _batched(list(range(8)), 6) == [[0, 1, 2, 3, 4, 5], [6, 7]]
+def _item(name, contexts=1, context_chars=400):
+    return {"entity_a": name, "entity_b": "X", "sample_contexts": ["c" * context_chars] * contexts,
+            "role_contexts_a": [], "role_contexts_b": []}
+
+
+def test_batched_caps_pairs_per_batch_under_a_large_window():
+    items = [_item(f"E{i}") for i in range(8)]
+    batches = _batched(items, budget=100_000)
+    assert [len(b) for b in batches] == [_BATCH_SIZE, 2]
 
 
 def test_batched_empty_input():
-    assert _batched([], 6) == []
+    assert _batched([], budget=1000) == []
+
+
+def test_batched_small_window_never_exceeds_budget_and_keeps_every_pair():
+    """STU-2021: six Alice pairs filled a 32k local window; packing is by tokens."""
+    items = [_item(f"E{i}", contexts=4) for i in range(10)]
+    budget = 1200
+    batches = _batched(items, budget=budget)
+    assert len(batches) > 2
+    assert all(sum(clf._item_tokens(p) for p in b) <= budget for b in batches)
+    assert [p["entity_a"] for b in batches for p in b] == [f"E{i}" for i in range(10)]
+
+
+def test_batched_trims_an_oversized_pair_instead_of_dropping_it():
+    big = _item("Big", contexts=20)
+    small = _item("Small")
+    batches = _batched([big, small], budget=1200)
+    flat = [p for b in batches for p in b]
+    assert [p["entity_a"] for p in flat] == ["Big", "Small"]
+    assert 0 < len(flat[0]["sample_contexts"]) < 20
+    assert clf._item_tokens(flat[0]) <= 1200
+    assert len(big["sample_contexts"]) == 20
+
+
+def test_batch_budget_follows_the_declared_window(monkeypatch):
+    monkeypatch.delenv("STUDIO_BULK_CONTEXT_TOKENS", raising=False)
+    assert clf._batch_token_budget() == 32768 // 2
+    monkeypatch.setenv("STUDIO_BULK_CONTEXT_TOKENS", "200000")
+    assert clf._batch_token_budget() == 100_000
 
 
 def _pairs(n):

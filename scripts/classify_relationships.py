@@ -8,8 +8,8 @@ Usage:
 Input:  processing_output/<slug>/relationships.json
 Output: processing_output/<slug>/relationships_classified.json
 
-The engine fans out one child run per batch of ~`_BATCH_SIZE` pairs (`map`
-stage, STU-589/751) with `resume: true` (STU-605): a completed batch replays
+The engine fans out one child run per batch of at most `_BATCH_SIZE` pairs,
+packed under a token budget (`map` stage, STU-589/751/2021) with `resume: true` (STU-605): a completed batch replays
 free on a re-run, a failed batch is never cached and retries whole (resume
 granularity coarsened from pair to batch in STU-751 — a failed batch re-pays
 every pair in it), and the resume key carries the classifier prompt
@@ -20,6 +20,7 @@ pipeline — the subprocess-level retry layer this script used to need
 """
 import argparse
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -29,6 +30,7 @@ import yaml
 
 
 from wiki_creator import studio_io
+from wiki_creator.book_search import CONTEXT_WINDOW_TOKENS, estimate_tokens
 from wiki_creator.page_templates import confidence_definitions, relationship_definitions
 from wiki_creator.paths import book_paths_from_yaml
 from wiki_creator.registry import Registry
@@ -92,9 +94,49 @@ _PROSE_KEYS = frozenset({"evolution", "key_moments"})
 # measured on discovery — so batching amortizes it across several pairs.
 _BATCH_SIZE = 6
 
+# STU-2021: a pair carries its sample contexts, so a batch's size depends on the
+# pairs, not their count; six Alice pairs filled a 32k local window. The pairs
+# get half the window, the other half holds the system prompt, the reply and the
+# chars/4 estimate's error. Studio cannot report a provider's window, so a
+# large-window provider declares it in .env to keep full batches.
+_TRIMMABLE_KEYS = ("sample_contexts", "role_contexts_a", "role_contexts_b")
 
-def _batched(items: list, size: int) -> list[list]:
-    return [items[i:i + size] for i in range(0, len(items), size)]
+
+def _batch_token_budget() -> int:
+    window = int(os.environ.get("STUDIO_BULK_CONTEXT_TOKENS") or CONTEXT_WINDOW_TOKENS)
+    return window // 2
+
+
+def _item_tokens(item: dict) -> int:
+    return estimate_tokens(json.dumps(item, ensure_ascii=False))
+
+
+def _trim_to_budget(item: dict, budget: int) -> dict:
+    """Drop the last context of the longest list until the pair fits; never drop the pair."""
+    item = {**item, **{k: list(item.get(k) or []) for k in _TRIMMABLE_KEYS}}
+    while _item_tokens(item) > budget:
+        longest = max(_TRIMMABLE_KEYS, key=lambda k: len(item[k]))
+        if not item[longest]:
+            break
+        item[longest].pop()
+    return item
+
+
+def _batched(items: list[dict], budget: int, max_pairs: int = _BATCH_SIZE) -> list[list[dict]]:
+    batches: list[list[dict]] = []
+    batch: list[dict] = []
+    used = 0
+    for item in items:
+        item = _trim_to_budget(item, budget)
+        tokens = _item_tokens(item)
+        if batch and (len(batch) == max_pairs or used + tokens > budget):
+            batches.append(batch)
+            batch, used = [], 0
+        batch.append(item)
+        used += tokens
+    if batch:
+        batches.append(batch)
+    return batches
 
 
 def _select_input(processing: Path) -> tuple[Path, bool]:
@@ -283,11 +325,12 @@ def prepare_classify(book_cfg: dict, book_paths) -> tuple[dict | None, str | Non
         )
         for pair in to_classify
     ]
-    batches = _batched(items, _BATCH_SIZE)
+    budget = _batch_token_budget()
+    batches = _batched(items, budget)
     if batches:
         print(
             f"[classify-relationships] {len(items)} pairs → {len(batches)} batches "
-            f"of up to {_BATCH_SIZE} (STU-751)",
+            f"of up to {_BATCH_SIZE} pairs / ~{budget} tokens (STU-751/2021)",
             file=sys.stderr,
         )
     return {
@@ -324,12 +367,12 @@ def collect_and_save_classify(prep: dict, map_output: dict | None, error: str | 
         for result in map_output.get("results") or []:
             if isinstance(result, dict) and isinstance(result.get("index"), int):
                 results_by_index[result["index"]] = result
-        for i, pair in enumerate(to_classify):
-            # STU-751: a map item is now a batch of _BATCH_SIZE pairs — unbatch by
-            # position within it. A batch-level failure (or a short/off-shape
-            # `classifications` list) stamps every pair still in it, mirroring the
-            # STU-562 per-pair error path one level up.
-            batch_index, within_batch = divmod(i, _BATCH_SIZE)
+        # STU-751: a map item is a batch of pairs — unbatch by position within it.
+        # A batch-level failure (or a short/off-shape `classifications` list)
+        # stamps every pair still in it, mirroring the STU-562 per-pair error
+        # path one level up.
+        positions = [(b, j) for b, batch in enumerate(prep["batches"]) for j in range(len(batch))]
+        for pair, (batch_index, within_batch) in zip(to_classify, positions, strict=True):
             result = results_by_index.get(batch_index)
             label = f"{pair.get('entity_a', '?')}↔{pair.get('entity_b', '?')}"
             classification = None

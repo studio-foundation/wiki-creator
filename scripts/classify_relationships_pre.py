@@ -31,7 +31,7 @@ def main() -> None:
         studio_io.write_output({"batches": [], "prompt_fingerprint": "", "needs_verdict": False})
         return
 
-    # STU-751: a map item is a batch of ~_BATCH_SIZE pairs, mirroring the
+    # STU-751: a map item is a batch of pairs (STU-2021: token-packed), mirroring the
     # standalone dispatcher's own wrapping (`_run_classify_fanout`).
     batches = [{"pairs": batch} for batch in prep["batches"]]
 
