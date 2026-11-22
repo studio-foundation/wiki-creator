@@ -291,3 +291,63 @@ def test_stage_keeps_a_merge_its_quote_binds_without_naming_both_verbatim(
     result = _run(monkeypatch, _payload(epub, entities, spacy_model=spacy_model))
 
     assert len(result["entities"]) == 1
+
+
+KANSAS_QUOTE = (
+    "Dorothy passed several very happy weeks in the Land of Oz as the guest of the "
+    "royal Ozma, who delighted to please and interest the little Kansas girl."
+)
+OZ = [
+    {"canonical_name": "DOROTHY", "type": "PERSON", "aliases": ["Dorothy"],
+     "source_ids": ["o1"], "relevant": True},
+    {"canonical_name": "Kansas", "type": "PERSON", "aliases": [],
+     "source_ids": ["o2"], "relevant": True},
+    {"canonical_name": "Ozma", "type": "PERSON", "aliases": [],
+     "source_ids": ["o3"], "relevant": True},
+]
+OZ_FULL = {
+    "o1": _full("Dorothy", {"C1": [KANSAS_QUOTE, "\"Oh!\" cried Dorothy."]}),
+    # Every mention the extractor kept for Kansas in Ozma of Oz modifies a noun.
+    "o2": _full("Kansas", {"C1": [KANSAS_QUOTE, "But if a Kansas farmer sold me to some one",
+                                  "the beautiful palace on the old Kansas farm, said she"]}),
+    # A name before a function word is still a name ("the Queen of Ev and her children").
+    "o3": _full("Ozma", {"C1": ["they bowed to the royal Ozma and her guards"]}),
+}
+
+
+@pytest.fixture
+def oz_book(book):
+    epub, processing = book
+    (processing / "persons_full.json").write_text(
+        json.dumps({"persons_full": OZ_FULL}), encoding="utf-8"
+    )
+    return epub, processing
+
+
+def _seed_oz_cache(processing, merge):
+    contexts = {
+        e["canonical_name"]: [m for ms in OZ_FULL[e["source_ids"][0]]["mentions_by_chapter"].values() for m in ms]
+        for e in OZ
+    }
+    save_merge_cache(processing / "alias_adjudication.json", roster_rows(OZ, contexts), [merge])
+
+
+def test_stage_skips_a_merge_with_a_side_only_ever_used_before_a_noun(
+    monkeypatch, oz_book, capsys
+):
+    """DOROTHY = Kansas, from "the little Kansas girl" (Ozma of Oz, STU-2023)."""
+    epub, processing = oz_book
+    _seed_oz_cache(processing, {"a": "DOROTHY", "b": "Kansas", "quote": KANSAS_QUOTE,
+                                "reason": "epithet for Dorothy, no one else"})
+    result = _run(monkeypatch, _payload(epub, OZ))
+
+    assert [e["canonical_name"] for e in result["entities"]] == ["DOROTHY", "Kansas", "Ozma"]
+    assert "Kansas only ever modifies a noun" in capsys.readouterr().err
+
+
+def test_stage_keeps_a_merge_between_two_names_used_as_names(monkeypatch, oz_book):
+    epub, processing = oz_book
+    _seed_oz_cache(processing, {"a": "DOROTHY", "b": "Ozma", "quote": KANSAS_QUOTE, "reason": "r"})
+    result = _run(monkeypatch, _payload(epub, OZ))
+
+    assert [e["canonical_name"] for e in result["entities"]] == ["DOROTHY", "Kansas"]
