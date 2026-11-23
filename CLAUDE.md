@@ -32,6 +32,7 @@
 pip install -e ".[dev]"      # test suite: carries en_core_web_sm
 pip install -e ".[models]"   # to run a book: the lg models the books declare (~1 GB)
 pytest -q
+scripts/athena-test.sh [pytest args]   # the same suite, run on athena (see below)
 mypy wiki_creator/
 
 make run          # studio run wiki-full: the whole build, one Studio run
@@ -510,6 +511,27 @@ by someone who has read the novel and nothing else.
 - Use `apply_patch` for manual edits.
 - Do not assume docs are current; verify against `Makefile`, pipeline YAML, and tests.
 - Before claiming a fix, rerun the relevant tests and ideally `pytest -q`.
+
+## Tests Run on athena, Not the Laptop
+
+**From the laptop, run pytest through `scripts/athena-test.sh`**, never with the
+local `.venv`, unless it is one small file that loads no model. The full suite
+and any test touching fastcoref, GLiNER, transformers or an `_lg` spaCy model
+count as heavy (`make golden` loads none and can stay local). The script rsyncs the worktree to
+`athena:wiki-test/runs/<branch>/` (tracked files and untracked ones not in
+`.gitignore`), runs `pytest` there with its arguments (`-q` by default), and
+exits with pytest's code. Runs queue one at a time on athena behind a `flock`,
+at the lowest CPU and disk priority, so llama-swap (voice assistant, email
+drafting) never waits on one.
+Its venv `~/wiki-test/.venv` holds the `dev,models,coref,gliner` extras with the
+CPU torch, reinstalled whenever `pyproject.toml` changes. The gitignored assets
+(`library/`, `models/`, the gold corpus) are not synced, so tests needing them
+skip as they do on a fresh clone.
+
+**Why:** on 2026-11-22 three sessions ran pytest on the laptop at once (the full
+suite, `test_relationship_extraction.py`, `make golden`). Each one loaded torch,
+one process reached 3.6 GB, swap filled, and the desktop app crashed with every
+session open.
 
 ## Where a Task Runs: `host:*` labels
 
