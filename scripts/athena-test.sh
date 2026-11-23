@@ -20,7 +20,7 @@ ssh athena "bash -s -- $(printf '%q ' "$DIR" "$@")" <<'EOF'
 set -euo pipefail
 dir=$HOME/$1; shift
 cd ~/wiki-test
-# One run at a time on athena, install included, in the same queue as `athena-run` (dotfiles):
+# One run at a time on athena, install included, in the same queue as `athena-run`:
 # two jobs loading models side by side is the same memory problem moved to another host.
 mkdir -p ~/athena-run
 exec 9>~/athena-run/lock
@@ -37,6 +37,6 @@ if [ "$(cat .venv/stamp 2>/dev/null)" != "$stamp" ]; then
 fi
 cd "$dir"
 # Tests spawn a bare `python`, which athena only has inside the venv. Lowest CPU and disk priority:
-# llama-swap there answers the voice assistant and email drafting, which must not wait on a test run.
+# athena's own services must not wait on a test run.
 PATH=$HOME/wiki-test/.venv/bin:$PATH PYTHONPATH=$dir exec nice -n 19 ionice -c3 python -m pytest "$@"
 EOF
