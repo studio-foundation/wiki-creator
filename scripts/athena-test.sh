@@ -20,7 +20,7 @@ ssh athena "bash -s -- $(printf '%q ' "$DIR" "$@")" <<'EOF'
 set -euo pipefail
 dir=$HOME/$1; shift
 cd ~/wiki-test
-# One run at a time on athena, install included, in the same queue as `athena-run` (dotfiles):
+# One run at a time on athena, install included, in the same queue as `athena-run`:
 # two jobs loading models side by side is the same memory problem moved to another host.
 mkdir -p ~/athena-run
 exec 9>~/athena-run/lock
