@@ -521,8 +521,7 @@ count as heavy (`make golden` loads none and can stay local). The script rsyncs 
 `athena:wiki-test/runs/<branch>/` (tracked files and untracked ones not in
 `.gitignore`), runs `pytest` there with its arguments (`-q` by default), and
 exits with pytest's code. Runs queue one at a time on athena behind a `flock`,
-at the lowest CPU and disk priority, so llama-swap (voice assistant, email
-drafting) never waits on one.
+at the lowest CPU and disk priority, so athena's own services never wait on one.
 Its venv `~/wiki-test/.venv` holds the `dev,models,coref,gliner` extras with the
 CPU torch, reinstalled whenever `pyproject.toml` changes. The gitignored assets
 (`library/`, `models/`, the gold corpus) are not synced, so tests needing them
@@ -530,8 +529,7 @@ skip as they do on a fresh clone.
 
 **Why:** on 2026-11-22 three sessions ran pytest on the laptop at once (the full
 suite, `test_relationship_extraction.py`, `make golden`). Each one loaded torch,
-one process reached 3.6 GB, swap filled, and the desktop app crashed with every
-session open.
+one process reached 3.6 GB and the laptop ran out of memory.
 
 ## Where a Task Runs: `host:*` labels
 
