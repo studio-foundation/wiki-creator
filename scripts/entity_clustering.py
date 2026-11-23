@@ -215,18 +215,35 @@ def find_joint_honorific_surnames(
     connectors: frozenset[str],
     masculine_titles: frozenset[str] = MASCULINE_TITLES,
     feminine_titles: frozenset[str] = FEMININE_TITLES,
+    name_connectors: frozenset[str] = frozenset(),
 ) -> frozenset[str]:
     """Folded surnames the text introduces as a couple ("M. et Mme Loiseau",
-    "Mr. and Mrs. Beaver"): two opposite-gender titles joined by a connector."""
+    "Mr. and Mrs. Beaver"): two opposite-gender titles joined by a connector.
+    A name connector may precede the second title and the surname ("le comte et
+    la comtesse de Bréville")."""
     masculine, feminine = fold_vocabulary(masculine_titles), fold_vocabulary(feminine_titles)
-    connectors = fold_vocabulary(connectors)
+    connectors, particles = fold_vocabulary(connectors), fold_vocabulary(name_connectors)
     tokens = fold_tokens(text)
+
+    def skip_particles(j: int) -> int:
+        while j < len(tokens) and tokens[j] in particles:
+            j += 1
+        return j
+
     found = set()
-    for a, conj, b, surname in zip(tokens, tokens[1:], tokens[2:], tokens[3:]):
-        if conj in connectors and (
-            (a in masculine and b in feminine) or (a in feminine and b in masculine)
-        ):
-            found.add(surname)
+    for i in range(len(tokens) - 1):
+        a, conj = tokens[i], tokens[i + 1]
+        if conj not in connectors:
+            continue
+        j = skip_particles(i + 2)
+        if j >= len(tokens):
+            continue
+        b = tokens[j]
+        if not ((a in masculine and b in feminine) or (a in feminine and b in masculine)):
+            continue
+        j = skip_particles(j + 1)
+        if j < len(tokens):
+            found.add(tokens[j])
     return frozenset(found)
 
 
@@ -558,7 +575,7 @@ def build_clusters(
     # Rule 2 post-processing: split clusters with conflicting first names
     couples = find_joint_honorific_surnames(
         book_text, _extend_from_lang(frozenset(), "coordination_connectors", language),
-        masculine_titles, feminine_titles,
+        masculine_titles, feminine_titles, name_connectors,
     ) if book_text else frozenset()
     clusters_list, unclustered = split_conflicting_first_names(
         clusters_list, unclustered, entities, title_prefixes, masculine_titles, feminine_titles,
@@ -873,6 +890,30 @@ def _find_latest_extraction_file(book_yaml: str | None = None) -> Path | None:
     return Path(jsonl_files[0])
 
 
+def _book_inputs(ctx: dict) -> dict:
+    """build_clusters' book-derived kwargs from a book yaml, shared by the stage and live mode."""
+    from wiki_creator.lang import infer_language
+    spacy_model = ctx.get("spacy_model", "")
+    language = ctx.get("language") or (infer_language(spacy_model) if spacy_model else None)
+
+    # Series seeding (STU-485): known aliases from tomes 1..N-1 pre-link this
+    # tome's mentions. Absent file_path / series registry ⇒ unseeded (tome 1,
+    # unit tests, pre-multi-tome pipelines).
+    seed = {}
+    book_text = ""
+    file_path = ctx.get("file_path")
+    if file_path:
+        paths = book_paths_from_epub(file_path)
+        book_text = full_text(load_chapters(paths.processing))
+        seed = Registry.load_seed_table(paths.series_registry, load_determiners(language))
+        if seed:
+            print(
+                f"[entity-clustering] series seeding active: {len(seed)} known surfaces",
+                file=sys.stderr,
+            )
+    return {"language": language, "seed": seed, "book_text": book_text}
+
+
 def run_live_mode(*, book_yaml: str | None = None) -> None:
     """Live mode: read the latest extraction-*.jsonl and run clustering on real data."""
     latest = _find_latest_extraction_file(book_yaml)
@@ -898,7 +939,11 @@ def run_live_mode(*, book_yaml: str | None = None) -> None:
                 "mention_count": mention_count or len(e.get("raw_mentions", [])),
             }
 
-    clusters, unclustered = build_clusters(entities)
+    ctx = {}
+    if book_yaml:
+        import yaml as _yaml
+        ctx = _yaml.safe_load(Path(book_yaml).read_text(encoding="utf-8")) or {}
+    clusters, unclustered = build_clusters(entities, **_book_inputs(ctx))
     all_clusters = sorted(clusters + [
         {
             "cluster_id": f"single_{eid}",
@@ -962,28 +1007,8 @@ def main() -> None:
         sys.exit(1)
 
     import yaml as _yaml
-    from wiki_creator.lang import infer_language
     ctx = _yaml.safe_load(payload.get("additional_context", "") or "") or {}
-    spacy_model = ctx.get("spacy_model", "")
-    language = ctx.get("language") or (infer_language(spacy_model) if spacy_model else None)
-
-    # Series seeding (STU-485): known aliases from tomes 1..N-1 pre-link this
-    # tome's mentions. Absent file_path / series registry ⇒ unseeded (tome 1,
-    # unit tests, pre-multi-tome pipelines).
-    seed = {}
-    book_text = ""
-    file_path = ctx.get("file_path")
-    if file_path:
-        paths = book_paths_from_epub(file_path)
-        book_text = full_text(load_chapters(paths.processing))
-        seed = Registry.load_seed_table(paths.series_registry, load_determiners(language))
-        if seed:
-            print(
-                f"[entity-clustering] series seeding active: {len(seed)} known surfaces",
-                file=sys.stderr,
-            )
-
-    clusters, unclustered = build_clusters(entities, language=language, seed=seed, book_text=book_text)
+    clusters, unclustered = build_clusters(entities, **_book_inputs(ctx))
 
     total = len(entities)
 

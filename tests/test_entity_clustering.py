@@ -590,6 +590,58 @@ def test_build_clusters_titled_and_bare_merge_without_joint_intro():
     assert set(clusters[0]["entity_ids"]) == {"e_mme", "e_bare"}
 
 
+def test_live_mode_clusters_like_the_stage_on_a_french_couple(tmp_path, monkeypatch, capsys):
+    """STU-2025: live mode reads the book yaml's language and text, so it splits
+    the Loiseau couple exactly as the pipeline stage does."""
+    import io
+    import json as _json
+    import scripts.entity_clustering as clustering
+
+    books = tmp_path / "author" / "series" / "books"
+    books.mkdir(parents=True)
+    book_yaml = books / "01-boule.yaml"
+    book_yaml.write_text(
+        f"file_path: {books / '01-boule.epub'}\nlanguage: fr\n", encoding="utf-8"
+    )
+    processing = tmp_path / "author" / "series" / "processing_output" / "01-boule"
+    processing.mkdir(parents=True)
+    (processing / "chapters.json").write_text(
+        _json.dumps({"chapters": {"ch01": _LOISEAU_TEXT}}), encoding="utf-8"
+    )
+    (processing / "extraction-1.jsonl").write_text(
+        "".join(
+            _json.dumps({"id": eid, "type": e["type"], "raw_mentions": e["raw_mentions"],
+                         "first_seen": e["first_seen"]}) + "\n"
+            for eid, e in _LOISEAU.items()
+        ),
+        encoding="utf-8",
+    )
+
+    real_build = clustering.build_clusters
+    results = []
+    monkeypatch.setattr(
+        clustering, "build_clusters",
+        lambda *a, **kw: results.append(real_build(*a, **kw)) or results[-1],
+    )
+
+    clustering.run_live_mode(book_yaml=str(book_yaml))
+    payload = {
+        "additional_context": book_yaml.read_text(encoding="utf-8"),
+        "previous_outputs": {"entity-extraction": {"entities_for_resolution": _LOISEAU}},
+    }
+    monkeypatch.setattr(sys, "stdin", io.StringIO(_json.dumps(payload)))
+    monkeypatch.setattr(sys, "argv", ["entity_clustering.py"])
+    clustering.main()
+    capsys.readouterr()
+
+    (live_clusters, live_single), (stage_clusters, stage_single) = results
+    def partition(clusters, single):
+        return sorted([sorted(c["entity_ids"]) for c in clusters] + [[eid] for eid in single])
+
+    assert partition(live_clusters, live_single) == partition(stage_clusters, stage_single)
+    assert _cluster_of(live_clusters, live_single, "e_mme") != _cluster_of(live_clusters, live_single, "e_bare")
+
+
 def test_find_joint_honorific_surnames():
     from scripts.entity_clustering import (
         find_joint_honorific_surnames, load_feminine_titles, load_masculine_titles,
@@ -597,6 +649,33 @@ def test_find_joint_honorific_surnames():
     masc, fem = load_masculine_titles("fr"), load_feminine_titles("fr")
     text = "M. et Mme Loiseau, Madame et Monsieur Follenvie, M. Cornudet et Boule de Suif."
     assert find_joint_honorific_surnames(text, frozenset({"et"}), masc, fem) == {"loiseau", "follenvie"}
+
+
+def test_find_joint_honorific_surnames_noble_titles_and_particle():
+    """STU-2024: a particle before the second title and the surname, and
+    gendered noble titles, as in Boule de Suif's Bréville household."""
+    from scripts.entity_clustering import (
+        find_joint_honorific_surnames, load_feminine_titles, load_masculine_titles,
+        load_name_connectors,
+    )
+    masc, fem, particles = load_masculine_titles("fr"), load_feminine_titles("fr"), load_name_connectors("fr")
+    text = "le comte et la comtesse de Bréville, M. et Mme de Bréville, le baron et la baronne d'Avray."
+    assert find_joint_honorific_surnames(text, frozenset({"et"}), masc, fem, particles) == {"breville", "davray"}
+
+
+def test_build_clusters_noble_joint_intro_splits_untitled_spouse():
+    """STU-2024: "le comte et la comtesse de Bréville" gives two entities, the
+    untitled `Bréville` split off `Mme de Bréville`."""
+    entities = {
+        "e_mme":  {"type": "PERSON", "raw_mentions": ["Mme de Bréville"], "first_seen": "ch01", "mention_count": 3},
+        "e_bare": {"type": "PERSON", "raw_mentions": ["Bréville"], "first_seen": "ch01", "mention_count": 4},
+    }
+    text = (
+        "Le comte et la comtesse de Bréville sommeillaient. Bréville se tut. "
+        "Mme de Bréville lui proposa sa chaufferette."
+    )
+    clusters, unclustered = build_clusters(entities, language="fr", book_text=text)
+    assert _cluster_of(clusters, unclustered, "e_mme") != _cluster_of(clusters, unclustered, "e_bare")
 
 
 def test_main_warns_when_no_reduction_and_many_entities():
